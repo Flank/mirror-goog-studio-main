@@ -32,14 +32,20 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.USE_APK_FLINGER;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
+import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
+import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -681,40 +687,36 @@ public class VariantScopeImpl implements VariantScope {
                                                 .get());
             }
         } else {
-            if (getType().isAar()) {
-                Provider<FileSystemLocation> rJar =
-                        artifacts.getFinalProduct(
-                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = getProject().files(mainCollection, rJar);
-            } else if (getType().isApk()) {
-                // Add R class jars to the front of the classpath, as libraries might also export
-                // compile-only classes. This behavior is verified in CompileRClassFlowTest
-                // While relying on this order seems brittle, it avoids doubling the number of
-                // files on the compilation classpath by exporting the R class separately or
-                // and is much simpler than having two different outputs from each library, with
-                // and without the R class, as AGP publishing code assumes there is exactly one
-                // artifact for each publication.
-                Provider<FileCollection> rJar =
-                        artifacts.getFinalProductAsFileCollection(
-                                InternalArtifactType
-                                        .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = getProject().files(rJar, mainCollection);
-            }
-
-            if (tested != null) {
-                VariantScope testedScope = tested.getScope();
-                BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
-
-                if (testedScope.getType().isAar()) {
+            //noinspection VariableNotUsedInsideIf
+            if (tested == null) {
+                if (getType().isAar()) {
                     Provider<FileSystemLocation> rJar =
-                            testedArtifacts.getFinalProduct(
-                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                            artifacts.getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                     mainCollection = getProject().files(mainCollection, rJar);
-                } else if (testedScope.getType().isApk()) {
+                } else {
+                    checkState(getType().isApk(), "Expected APK type but found: " + getType());
+                    // Add R class jars to the front of the classpath as libraries might also export
+                    // compile-only classes. This behavior is verified in CompileRClassFlowTest
+                    // While relying on this order seems brittle, it avoids doubling the number of
+                    // files on the compilation classpath by exporting the R class separately or
+                    // and is much simpler than having two different outputs from each library, with
+                    // and without the R class, as AGP publishing code assumes there is exactly one
+                    // artifact for each publication.
                     Provider<FileCollection> rJar =
-                            testedArtifacts.getFinalProductAsFileCollection(
-                                    InternalArtifactType
-                                            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                            artifacts.getFinalProductAsFileCollection(
+                                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                    mainCollection = getProject().files(rJar, mainCollection);
+                }
+            } else { // Android test or unit test
+                if (!globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
+                    Provider<FileSystemLocation> rJar;
+                    if (getType() == ANDROID_TEST) {
+                        rJar =
+                                artifacts.getFinalProduct(
+                                        COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                    } else {
+                        rJar = getRJarForUnitTests();
+                    }
                     mainCollection = getProject().files(mainCollection, rJar);
                 }
             }
@@ -1017,6 +1019,30 @@ public class VariantScopeImpl implements VariantScope {
         ArtifactCollection runtime = getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
 
         return ProvidedClasspath.getProvidedClasspath(compile, runtime);
+    }
+
+    @NonNull
+    @Override
+    public Provider<FileSystemLocation> getRJarForUnitTests() {
+        VariantScope testedScope =
+                checkNotNull(
+                                getTestedVariantData(),
+                                "Variant type does not have a tested variant: " + getType())
+                        .getScope();
+        checkState(getType() == UNIT_TEST, "Expected unit test type but found: " + getType());
+
+        if (testedScope.getType().isAar()) {
+            return testedScope
+                    .getArtifacts()
+                    .getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+        } else {
+            checkState(
+                    testedScope.getType().isApk(),
+                    "Expected APK type but found: " + testedScope.getType());
+            return testedScope
+                    .getArtifacts()
+                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+        }
     }
 
     /**

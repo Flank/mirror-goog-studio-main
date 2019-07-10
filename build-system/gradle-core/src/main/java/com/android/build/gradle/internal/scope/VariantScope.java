@@ -196,6 +196,9 @@ public interface VariantScope extends TransformVariantScope {
     FileCollection getProvidedOnlyClasspath();
 
     @NonNull
+    Provider<FileSystemLocation> getRJarForUnitTests();
+
+    @NonNull
     File getDefaultMergeResourcesOutputDir();
 
     @NonNull

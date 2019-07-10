@@ -37,7 +37,6 @@ import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -168,6 +167,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
         @NonNull
         private ConfigurableFileCollection computeClasspath(boolean includeAndroidResources) {
             VariantScope scope = getVariantScope();
+            GlobalScope globalScope = scope.getGlobalScope();
             BuildArtifactsHolder artifacts = scope.getArtifacts();
 
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
@@ -193,18 +193,9 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                             ArtifactType.JAVA_RES));
 
             // 4. The separately compile R class, if applicable.
-            VariantScope testedScope =
-                    Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-            BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
-            if (testedScope.getType().isAar()) {
-                collection.from(
-                        testedArtifacts.getFinalProductAsFileCollection(
-                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
-            } else if (testedScope.getType().isApk()) {
-                collection.from(
-                        testedArtifacts.getFinalProductAsFileCollection(
-                                InternalArtifactType
-                                        .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
+            if (!globalScope.getExtension().getAaptOptions().getNamespaced()
+                    && !globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
+                collection.from(scope.getRJarForUnitTests());
             }
 
             // 5. Any additional or requested optional libraries

@@ -111,7 +111,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -130,8 +129,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
-import org.gradle.api.provider.Provider;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -728,24 +725,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                             .getAsFile());
         }
         // The separately compile R class, if applicable.
-        BuildArtifactsHolder testedArtifacts =
-                Objects.requireNonNull(scope.getTestedVariantData()).getScope().getArtifacts();
-        if (testedArtifacts.hasFinalProduct(
-                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-            additionalTestClasses.add(
-                    testedArtifacts
-                            .getFinalProduct(
-                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
-                            .get()
-                            .getAsFile());
-        }
-
-        if (testedArtifacts.hasFinalProduct(
-                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)) {
-            Provider<FileSystemLocation> rClassJar =
-                    testedArtifacts.getFinalProduct(
-                            InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
-            additionalTestClasses.add(rClassJar.get().getAsFile());
+        if (!globalScope.getExtension().getAaptOptions().getNamespaced()
+                && !globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
+            additionalTestClasses.add(scope.getRJarForUnitTests().get().getAsFile());
         }
 
         // No files are possible if the SDK was not configured properly.
