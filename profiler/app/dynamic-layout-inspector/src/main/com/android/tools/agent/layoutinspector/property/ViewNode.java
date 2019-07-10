@@ -151,8 +151,9 @@ public class ViewNode<V extends View> {
             if (o instanceof String) {
                 readAny(id, o.toString().intern());
                 mProperties.get(id).setType(ValueType.STRING);
-            } else if (o instanceof ColorStateList && !((ColorStateList) o).isStateful()) {
-                readAny(id, ((ColorStateList) o).getDefaultColor());
+            } else if (o instanceof ColorStateList) {
+                ColorStateList cl = (ColorStateList) o;
+                readAny(id, cl.getColorForState(mView.getDrawableState(), cl.getDefaultColor()));
                 mProperties.get(id).setType(ValueType.COLOR);
             } else if (o instanceof ColorDrawable && !((ColorDrawable) o).isStateful()) {
                 readAny(id, ((ColorDrawable) o).getColor());
