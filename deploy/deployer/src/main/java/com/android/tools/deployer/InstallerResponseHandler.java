@@ -77,7 +77,7 @@ public class InstallerResponseHandler {
         } else if (details.getType() == JvmtiError.Details.Type.FIELD_REMOVED) {
             throw DeployerException.removedResources(details.getName(), resType);
         } else {
-            throw DeployerException.swapFailed("Invalid error code");
+            throw DeployerException.unknownJvmtiError(details.getType().name());
         }
     }
 }

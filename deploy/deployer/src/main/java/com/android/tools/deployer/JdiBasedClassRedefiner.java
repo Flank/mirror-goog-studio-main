@@ -100,7 +100,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
                 try {
                     vm.redefineClasses(redefinitionRequest);
                 } catch (Throwable t) {
-                    throw DeployerException.swapFailed(t.getMessage());
+                    throw DeployerException.jdwpRedefineClassesException(t);
                 }
                 break;
             case MAIN_THREAD_RUNNING:
@@ -116,8 +116,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
                                 debug.concreteMethodByName("attachAgent", "(Ljava/lang/String;)V");
                         if (attachAgentMethod == null) {
                             // This should not happen.
-                            throw DeployerException.swapFailed(
-                                    "dalvik.system.VMDebug does not contain proper attachAgent method");
+                            throw DeployerException.attachAgentNotFound();
                         } else {
                             String agentLoc =
                                     "/data/data/"
@@ -150,8 +149,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
                                             Lists.newArrayList(vm.mirrorOf(agentLoc)),
                                             ObjectReference.INVOKE_SINGLE_THREADED);
                                 } catch (Exception e1) {
-                                    throw DeployerException.swapFailed(
-                                            "Debugger attachAgent invocation failed.");
+                                    throw DeployerException.attachAgentException(e1);
                                 }
                             }
                         }
@@ -160,7 +158,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
                 break;
             default:
                 // This should not happen.
-                throw DeployerException.swapFailed("Invalid Redefinition State.");
+                throw DeployerException.jdiInvalidState();
         }
 
         response.setStatus(Deploy.SwapResponse.Status.OK);

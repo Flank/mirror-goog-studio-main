@@ -260,7 +260,7 @@ public class TaskRunnerTest {
                 runner.create(
                         Tasks.TASK1,
                         a -> {
-                            throw DeployerException.swapFailed("failed");
+                            throw DeployerException.operationNotSupported("failed");
                         },
                         start);
 
@@ -268,7 +268,7 @@ public class TaskRunnerTest {
             runner.run();
             fail("Exception should have been thrown");
         } catch (DeployerException e) {
-            assertEquals(DeployerException.Error.SWAP_FAILED, e.getError());
+            assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
             assertEquals("failed", e.getDetails());
         }
         service.shutdown();
@@ -285,7 +285,7 @@ public class TaskRunnerTest {
                 runner.create(
                         Tasks.TASK1,
                         a -> {
-                            throw DeployerException.swapFailed("failed");
+                            throw DeployerException.operationNotSupported("failed");
                         },
                         start);
         Task<String> task2 = runner.create(Tasks.TASK2, a -> a + "2", task1);
@@ -294,7 +294,7 @@ public class TaskRunnerTest {
             runner.run();
             fail("Exception should have been thrown");
         } catch (DeployerException e) {
-            assertEquals(DeployerException.Error.SWAP_FAILED, e.getError());
+            assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
             assertEquals("failed", e.getDetails());
         }
         service.shutdown();
@@ -328,7 +328,7 @@ public class TaskRunnerTest {
                 runner.create(
                         Tasks.TASK1,
                         a -> {
-                            throw DeployerException.swapFailed("async failed");
+                            throw DeployerException.operationNotSupported("async failed");
                         },
                         start);
 
@@ -346,7 +346,7 @@ public class TaskRunnerTest {
         assertTrue(t instanceof RuntimeException);
         assertTrue(t.getCause() instanceof DeployerException);
         DeployerException e = (DeployerException) t.getCause();
-        assertEquals(DeployerException.Error.SWAP_FAILED, e.getError());
+        assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
         assertEquals("async failed", e.getDetails());
         service.shutdown();
     }

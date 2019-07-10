@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 
 /**
  * Represents a failed deployment. When installing, apply changes or apply code changes failed, this
@@ -178,11 +179,38 @@ public class DeployerException extends Exception {
         SWAP_FAILED(
                 "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
 
+        PREINSTALL_APPID_CHANGED(
+                "Cannot preinstall: apks have different package name (%s and %s)",
+                "%s", "Retry", ResolutionAction.RETRY),
+
         AGENT_SWAP_FAILED(
                 "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
 
         PARSE_FAILED(
                 "We were unable to deploy your changes.", "%s", "Retry", ResolutionAction.RETRY),
+
+        SWAP_MULTIPLE_PACKAGES(
+                "Cannot swap multiple packages", "", "Retry", ResolutionAction.RETRY),
+
+        INSTALLER_IO_EXCEPTION(
+                "IOException occurred within Installer", "%s", "Retry", ResolutionAction.RETRY),
+
+        UNKNOWN_JVMTI_ERROR("Invalid error code %s", "", "Retry", ResolutionAction.RETRY),
+
+        JDWP_REDEFINE_CLASSES_EXCEPTION(
+                "Exception during VM RedfineClasses", "%s", "Retry", ResolutionAction.RETRY),
+
+        ATTACHAGENT_NOT_FOUND(
+                "dalvik.system.VMDebug does not contain proper attachAgent method",
+                "",
+                "Retry",
+                ResolutionAction.RETRY),
+
+        ATTACHAGENT_EXCEPTION(
+                "Debugger attachAgent invocation failed due to %s",
+                "%s", "Retry", ResolutionAction.RETRY),
+
+        JDI_INVAlID_STATE("Invalid Redefinition State.", "", "", ResolutionAction.RETRY),
 
         INTERRUPTED("Deployment was interrupted.", "%s", "Retry", ResolutionAction.RETRY),
 
@@ -347,10 +375,42 @@ public class DeployerException extends Exception {
         String suffix = code != Deploy.AgentSwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
         return new DeployerException(Error.AGENT_SWAP_FAILED, code, new String[] {suffix}, "");
     }
+    
+    public static DeployerException appIdChanged(String before, String after) {
+        return new DeployerException(
+                Error.PREINSTALL_APPID_CHANGED, new String[] {before, after}, "");
+    }
 
-    // TODO: There are things calling swapFailed() that should have a more specific error. Once we fix those, remove this overload.
-    public static DeployerException swapFailed(String reason) {
-        return new DeployerException(Error.SWAP_FAILED, new String[] {"."}, reason);
+    public static DeployerException swapMultiplePackages() {
+        return new DeployerException(Error.SWAP_MULTIPLE_PACKAGES, NO_ARGS, NO_ARGS);
+    }
+
+    public static DeployerException installerIoException(IOException e) {
+        return new DeployerException(Error.INSTALLER_IO_EXCEPTION, NO_ARGS, e.getMessage());
+    }
+
+    public static DeployerException unknownJvmtiError(String type) {
+        return new DeployerException(Error.UNKNOWN_JVMTI_ERROR, new String[] {type}, NO_ARGS);
+    }
+
+    public static DeployerException jdwpRedefineClassesException(Throwable t) {
+        return new DeployerException(
+                Error.JDWP_REDEFINE_CLASSES_EXCEPTION, NO_ARGS, t.getMessage());
+    }
+
+    public static DeployerException attachAgentNotFound() {
+        return new DeployerException(Error.ATTACHAGENT_NOT_FOUND, NO_ARGS, NO_ARGS);
+    }
+
+    public static DeployerException attachAgentException(Exception e) {
+        return new DeployerException(
+                Error.ATTACHAGENT_EXCEPTION,
+                new String[] {e.getClass().getSimpleName()},
+                e.getMessage());
+    }
+
+    public static DeployerException jdiInvalidState() {
+        return new DeployerException(Error.JDI_INVAlID_STATE, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException interrupted(String reason) {

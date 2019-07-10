@@ -92,11 +92,7 @@ public class ApkPreInstaller {
                 packageName = apk.packageName;
             }
             if (!packageName.equals(apk.packageName)) {
-                String errorMessage =
-                        String.format(
-                                "Cannot preinstall: apks have different package name (%s and %s)",
-                                packageName, apk.packageName);
-                throw DeployerException.swapFailed(errorMessage);
+                throw DeployerException.appIdChanged(packageName, apk.packageName);
             }
         }
 

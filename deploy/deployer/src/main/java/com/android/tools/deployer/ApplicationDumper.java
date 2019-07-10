@@ -73,7 +73,7 @@ public class ApplicationDumper {
 
             if (!entry.apk.packageName.equals(packageName)) {
                 // This is intentionally a swap failure, not a dump failure; we just discover it during dump.
-                throw DeployerException.swapFailed("Cannot deploy multiple packages");
+                throw DeployerException.swapMultiplePackages();
             }
 
             targetPackages.addAll(entry.apk.targetPackages);
