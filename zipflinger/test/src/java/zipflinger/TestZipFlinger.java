@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -358,8 +359,8 @@ public class TestZipFlinger extends TestBase {
 
     // Test deleting an entry resulting in virtual entry.
     @Test
-    public void testVirtualEntry() throws IOException {
-        File file = getFile("testVirtualEntry.zip");
+    public void testVirtualEntryExistingEntryDeleted() throws IOException {
+        File file = getFile("testVirtualEntryExisting.zip");
         ZipArchive archive = new ZipArchive(file);
 
         byte[] entry1Bytes = new byte[1_000];
@@ -376,9 +377,76 @@ public class TestZipFlinger extends TestBase {
 
         archive.close();
 
+        archive = new ZipArchive(file);
+        archive.delete("entry2");
+        archive.close();
+
         verifyArchive(file);
     }
 
+    @Test
+    public void testVirtualEntryNewEntryDeleted() throws IOException {
+        File file = getFile("testVirtualEntryNew.zip");
+        ZipArchive archive = new ZipArchive(file);
+
+        byte[] entry1Bytes = new byte[1_000];
+        BytesSource source1 = new BytesSource(entry1Bytes, "entry1", COMP_NONE);
+        archive.add(source1);
+
+        byte[] entry2Bytes = new byte[1_000];
+        BytesSource source2 = new BytesSource(entry2Bytes, "entry2", COMP_NONE);
+        archive.add(source2);
+
+        byte[] entry3Bytes = new byte[1_000];
+        BytesSource source3 = new BytesSource(entry3Bytes, "entry3", COMP_NONE);
+        archive.add(source3);
+
+        archive.delete("entry2");
+        archive.close();
+
+        verifyArchive(file);
+    }
+
+    @Test
+    public void testVirtualEntryLargeDelete() throws IOException {
+        File file = getFile("testVirtualEntryLargeDelete.zip");
+        ZipArchive archive = new ZipArchive(file);
+
+        byte[] padding1Bytes = new byte[1];
+        BytesSource source1 = new BytesSource(padding1Bytes, "padding1", COMP_NONE);
+        archive.add(source1);
+
+        byte[] entry2Bytes = new byte[1_000_000];
+        BytesSource source2 = new BytesSource(entry2Bytes, "entry1", COMP_NONE);
+        archive.add(source2);
+
+        BytesSource source3 = new BytesSource(padding1Bytes, "padding2", COMP_NONE);
+        archive.add(source3);
+
+        byte[] entry4Bytes = new byte[65_536];
+        BytesSource source4 = new BytesSource(entry4Bytes, "entry2", COMP_NONE);
+        archive.add(source4);
+
+        BytesSource source5 = new BytesSource(padding1Bytes, "padding3", COMP_NONE);
+        archive.add(source5);
+
+        byte[] entry6Bytes = new byte[32_767];
+        BytesSource source6 = new BytesSource(entry6Bytes, "entry3", COMP_NONE);
+        archive.add(source6);
+
+        BytesSource source7 = new BytesSource(padding1Bytes, "padding4", COMP_NONE);
+        archive.add(source7);
+
+        archive.close();
+
+        archive = new ZipArchive(file);
+        archive.delete("entry1");
+        archive.delete("entry2");
+        archive.delete("entry3");
+        archive.close();
+
+        verifyArchive(file);
+    }
     // Test deleting an entry resulting in multiple virtual entry (more than 64KiB entry).
     @Test
     public void testMultipleVirtualEntry() throws IOException {
@@ -488,5 +556,62 @@ public class TestZipFlinger extends TestBase {
         Assert.assertTrue("Entry b was not modified", entries.get("b").isCompressed());
         Assert.assertTrue("Entry c was not modified", !entries.get("c").isCompressed());
         Assert.assertTrue("Entry d was modified", entries.get("d").isCompressed());
+    }
+
+    @Test
+    public void testZipExtraction() throws Exception {
+
+        ZipArchive archive = new ZipArchive(getFile("testZipExtraction.zip"));
+
+        // Add compressed file
+        File file1File = getFile("file1.txt");
+        byte[] file1Bytes = Files.readAllBytes(file1File.toPath());
+        archive.add(new BytesSource(file1Bytes, "file1.txt", Deflater.BEST_SPEED));
+        ByteBuffer file1ByteBuffer = archive.getContent("file1.txt");
+        Assert.assertArrayEquals(
+                "Extracted content does not match what was presented for compression",
+                file1Bytes,
+                toByteArray(file1ByteBuffer));
+
+        // Add uncompressed file
+        archive.add(new BytesSource(file1Bytes, "file1-2.txt", Deflater.NO_COMPRESSION));
+        ByteBuffer file1_2ByteBuffer = archive.getContent("file1-2.txt");
+        Assert.assertArrayEquals(
+                "Extracted content does not match what was presented for storage(uncompressed)",
+                file1Bytes,
+                toByteArray(file1_2ByteBuffer));
+
+        archive.close();
+    }
+
+    @Test
+    public void testZipExtractionFromJavaZip() throws Exception {
+        File[] files = {getFile("file1.txt"), getFile("file2.txt"), getFile("file3.txt")};
+        File archive = getFile("testZipExtractionFromJavaZip.zip");
+        createZip(archive, files);
+
+        try (ZipArchive zipArchive = new ZipArchive(archive)) {
+            for (File file : files) {
+                byte[] fileBytes = Files.readAllBytes(file.toPath());
+                byte[] archiveBytes = toByteArray(zipArchive.getContent(file.getName()));
+                Assert.assertArrayEquals(fileBytes, archiveBytes);
+            }
+        }
+    }
+
+    @Test
+    public void testZipExtractionFromZipUtils() throws Exception {
+        Path src = getPath("1-2-3files.zip");
+        Path dst = getPath("testZipExtractionFromZipUtils.zip");
+        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            File[] files = {getFile("file1.txt"), getFile("file2.txt"), getFile("file3.txt")};
+            for (File file : files) {
+                byte[] fileBytes = Files.readAllBytes(file.toPath());
+                byte[] archiveBytes = toByteArray(archive.getContent(file.getName()));
+                Assert.assertArrayEquals(fileBytes, archiveBytes);
+            }
+        }
     }
 }

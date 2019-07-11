@@ -40,18 +40,19 @@ class CentralDirectory {
         this.entries = entries;
     }
 
-    @Nullable
-    Entry delete(@NonNull String name) {
+    @NonNull
+    Location delete(@NonNull String name) {
         if (entries.containsKey(name)) {
             Entry entry = entries.get(name);
             deletedLocations.add(entry.getCdLocation());
             entries.remove(name);
-            return entry;
+            return entry.getLocation();
         }
         if (addedEntries.containsKey(name)) {
-            addedEntries.remove(name);
+            CentralDirectoryRecord record = addedEntries.remove(name);
+            return record.getLocation();
         }
-        return null;
+        return Location.INVALID;
     }
 
     long getNumEntries() {
@@ -115,11 +116,35 @@ class CentralDirectory {
         writer.write(cdBuffer);
     }
 
-    public void add(@NonNull String name, @NonNull CentralDirectoryRecord record) {
+    void add(@NonNull String name, @NonNull CentralDirectoryRecord record) {
         addedEntries.put(name, record);
     }
 
-    public boolean contains(@NonNull String name) {
+    boolean contains(@NonNull String name) {
         return entries.containsKey(name) || addedEntries.containsKey(name);
+    }
+
+    @NonNull
+    List<String> listEntries() {
+        List<String> list = new ArrayList<>();
+        list.addAll(entries.keySet());
+        list.addAll(addedEntries.keySet());
+        return list;
+    }
+
+    @Nullable
+    public ExtractionInfo getExtractionInfo(@NonNull String name) {
+        Entry entry = entries.get(name);
+        if (entry != null) {
+            return new ExtractionInfo(entry.getPayloadLocation(), entry.isCompressed());
+        }
+
+        CentralDirectoryRecord cd = addedEntries.get(name);
+        if (cd != null) {
+            boolean isCompressed = cd.getCompressionFlag() != LocalFileHeader.COMPRESSION_NONE;
+            return new ExtractionInfo(cd.getPayloadLocation(), isCompressed);
+        }
+
+        return null;
     }
 }

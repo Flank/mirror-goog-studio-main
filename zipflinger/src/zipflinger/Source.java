@@ -36,7 +36,7 @@ public abstract class Source {
     }
 
     @NonNull
-    String getName() {
+    public String getName() {
         return name;
     }
 
@@ -76,5 +76,6 @@ public abstract class Source {
     // Guaranteed to be called before writeTo
     abstract void prepare() throws IOException;
 
-    abstract void writeTo(@NonNull ZipWriter writer) throws IOException;
+    // Return the number of bytes written.
+    abstract int writeTo(@NonNull ZipWriter writer) throws IOException;
 }

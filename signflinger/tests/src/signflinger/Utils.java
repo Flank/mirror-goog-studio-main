@@ -135,6 +135,10 @@ public class Utils {
         apkVerifierBuilder.setMinCheckedPlatformVersion(24);
         ApkVerifier verifier = apkVerifierBuilder.build();
         ApkVerifier.Result result = verifier.verify();
+        if (result.containsErrors()) {
+            System.out.println(result.getErrors());
+            System.out.println(result.getWarnings());
+        }
         Assert.assertTrue(result.isVerified());
     }
 

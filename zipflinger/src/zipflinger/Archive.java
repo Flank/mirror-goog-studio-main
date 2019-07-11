@@ -17,9 +17,10 @@
 package zipflinger;
 
 import com.android.annotations.NonNull;
+import java.io.Closeable;
 import java.io.IOException;
 
-public interface Archive extends AutoCloseable {
+public interface Archive extends Closeable {
 
     /**
      * Add a source to the archive.

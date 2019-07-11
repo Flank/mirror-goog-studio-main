@@ -19,7 +19,10 @@ package zipflinger;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -27,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import org.junit.Assert;
 
 public class TestBase {
@@ -101,5 +105,29 @@ public class TestBase {
     protected static long median(long[] values) {
         Arrays.sort(values);
         return values[values.length / 2];
+    }
+
+    protected byte[] toByteArray(ByteBuffer byteBuffer) {
+        byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes);
+        return bytes;
+    }
+
+    protected void createZip(File archive, File[] files) throws IOException {
+        if (archive.exists()) {
+            archive.delete();
+        }
+
+        try (FileOutputStream f = new FileOutputStream(archive);
+                ZipOutputStream s = new ZipOutputStream(f)) {
+            for (File file : files) {
+                String name = file.getName();
+                ZipEntry entry = new ZipEntry(name);
+                byte[] bytes = Files.readAllBytes(file.toPath());
+                s.putNextEntry(entry);
+                s.write(bytes);
+                s.closeEntry();
+            }
+        }
     }
 }

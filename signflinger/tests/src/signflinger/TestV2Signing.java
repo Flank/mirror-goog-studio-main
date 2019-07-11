@@ -18,6 +18,7 @@ package signflinger;
 
 import java.io.File;
 import org.junit.Test;
+import zipflinger.FileSource;
 
 public class TestV2Signing {
 
@@ -29,7 +30,7 @@ public class TestV2Signing {
     }
 
     @Test
-    public void testV2kSignBigApk() throws Exception {
+    public void testV2SignBigApk() throws Exception {
         File file = Utils.getTestOuputFile("apk-42MiB.apk");
         Utils.createZip(1, 42_000_000, file);
         v2Sign(file);
@@ -40,5 +41,29 @@ public class TestV2Signing {
             SignResult result = V2Signer.sign(file, signer);
             Utils.verify(result.file);
         }
+    }
+
+    @Test
+    public void testBenchmarkAddAndV2sign() throws Exception {
+        File file = Utils.getTestOuputFile("apk-42MiB-400files.apk");
+        Utils.createZip(400, 120_000, file);
+
+        SignerConfig signerConfig = Signers.getDefaultRSA();
+        SignedApkOptions.Builder builder =
+                new SignedApkOptions.Builder()
+                        .setV2Enabled(true)
+                        .setV1Enabled(false)
+                        .setPrivateKey(signerConfig.privateKey)
+                        .setCertificates(signerConfig.certificates)
+                        .setExecutor(Utils.createExecutor());
+        SignedApkOptions options = builder.build();
+
+        long start = System.nanoTime();
+        SignedApk signedApk = new SignedApk(file, options);
+        signedApk.add(new FileSource(Utils.getFile("test1.txt"), "test1", 1));
+        signedApk.close();
+        long totalTime = (System.nanoTime() - start) / 1000000;
+        Utils.verify(file);
+        System.out.println("Adding and Signing time=" + totalTime);
     }
 }

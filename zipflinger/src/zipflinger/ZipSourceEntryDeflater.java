@@ -48,7 +48,7 @@ public class ZipSourceEntryDeflater extends Source {
     }
 
     @Override
-    void writeTo(@NonNull ZipWriter writer) throws IOException {
-        writer.write(compressedByteBuffer);
+    int writeTo(@NonNull ZipWriter writer) throws IOException {
+        return writer.write(compressedByteBuffer);
     }
 }

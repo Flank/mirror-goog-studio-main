@@ -16,28 +16,40 @@
 
 package signflinger;
 
-import java.io.File;
-import java.nio.file.Path;
+import org.junit.Test;
 
-public class V2Signer {
+public class TestV1andV2Signing extends TestBaseSigning {
 
-    public static SignResult sign(File fileToSign, Signer signer) throws Exception {
-        SignerConfig signerConfig = Utils.getSignerConfig(signer.type, signer.subtype);
+    @Test
+    @Override
+    public void testSimpleZipWithOneFile() throws Exception {
+        super.testSimpleZipWithOneFile();
+    }
 
-        Path dst = Utils.getTestOuputPath("signed.apk");
-        Utils.copy(fileToSign.toPath(), dst);
+    @Test
+    @Override
+    public void testIncrementalSimpleFileTrustManifest() throws Exception {
+        super.testIncrementalSimpleFileTrustManifest();
+    }
 
+    @Test
+    @Override
+    public void testIncrementalSimpleFileNoTrustManifest() throws Exception {
+        super.testIncrementalSimpleFileNoTrustManifest();
+    }
+
+    @Override
+    protected SignedApkOptions getOptions(SignerConfig signerConfig, boolean trustManifest) {
         SignedApkOptions.Builder builder =
                 new SignedApkOptions.Builder()
                         .setV2Enabled(true)
-                        .setV1Enabled(false)
+                        .setV1Enabled(true)
+                        .v1CreatedBy("Signflinger")
+                        .v1TrustManifest(trustManifest)
+                        .setMinSdkVersion(21)
                         .setPrivateKey(signerConfig.privateKey)
                         .setCertificates(signerConfig.certificates)
                         .setExecutor(Utils.createExecutor());
-        SignedApkOptions options = builder.build();
-
-        long startTime = System.nanoTime();
-        try (SignedApk s = new SignedApk(dst.toFile(), options)) {}
-        return new SignResult(dst.toFile(), (System.nanoTime() - startTime) / 1_000_000);
+        return builder.build();
     }
 }

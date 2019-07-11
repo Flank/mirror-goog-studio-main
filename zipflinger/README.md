@@ -31,8 +31,7 @@ The library is made of four components named ZipArchive, Freestore, Mapper (Inpu
 
 Design choice discussion:
 
-In order to avoid creating holes when editing an archive, zipflinger mandates to submit all delete
-operations first and then submit add operations. A "deferred add" mechanism was initially used where
+In order to avoid creating holes when editing an archive, zipflinger recommends (but does not enforce) submitting all delete operations first and then submit add operations. A "deferred add" mechanism was initially used where
 delete operations were carried immediately but additions were deferred until the archive was closed.
 This approach was ultimately abandoned since it increased the memory footprint significantly when 
 BytesSource were involved.

@@ -110,6 +110,9 @@ java_test(
     data = glob([
         "test/resource/1-2-3files.zip",
         "test/resource/4-5files.zip",
+        "test/resource/file1.txt",
+        "test/resource/file2.txt",
+        "test/resource/file3.txt",
         "test/resource/file4.txt",
         "test/resource/text.txt",
         "test/resource/zip_with_directories.zip",

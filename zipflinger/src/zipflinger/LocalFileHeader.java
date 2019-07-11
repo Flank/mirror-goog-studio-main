@@ -42,6 +42,29 @@ class LocalFileHeader {
 
     static final long OFFSET_TO_NAME = 26;
 
+    private final byte[] nameBytes;
+    private final short compressionFlag;
+    private final int crc;
+    private final long compressedSize;
+    private final long uncompressedSize;
+    private final int extraPadding;
+
+    LocalFileHeader(
+            byte[] nameBytes,
+            short compressionFlag,
+            int crc,
+            long compressedSize,
+            long uncompressedSize,
+            int extraPadding) {
+        this.nameBytes = nameBytes;
+        this.compressionFlag = compressionFlag;
+        this.crc = crc;
+        this.compressedSize = compressedSize;
+        this.uncompressedSize = uncompressedSize;
+        this.extraPadding = extraPadding;
+    }
+
+
     public static void fillVirtualEntry(@NonNull ByteBuffer virtualEntry) {
         virtualEntry.order(ByteOrder.LITTLE_ENDIAN);
         virtualEntry.putInt(SIGNATURE);
@@ -54,35 +77,33 @@ class LocalFileHeader {
         virtualEntry.putInt(0); // compressed size
         virtualEntry.putInt(0); // uncompressed size
         virtualEntry.putShort((short) 0); // file name length
-        virtualEntry.putShort((short) (virtualEntry.capacity() - LOCAL_FILE_HEADER_SIZE));
+        // -2 for the short we are about to write
+        virtualEntry.putShort((short) (virtualEntry.remaining() - 2));
 
         // Write the extra field header
         virtualEntry.putShort(ALIGN_SIGNATURE);
 
         // -2 for the short we are about to write
-        short extraFieldSize = (short) (virtualEntry.capacity() - virtualEntry.position() - 2);
+        short extraFieldSize = (short) (virtualEntry.remaining() - 2);
         virtualEntry.putShort(extraFieldSize);
 
-        assert virtualEntry.remaining() == extraFieldSize;
         virtualEntry.rewind();
     }
 
-    public static void writeEntry(@NonNull CentralDirectoryRecord entry, @NonNull ZipWriter writer)
-            throws IOException {
-        byte[] nameBytes = entry.getNameBytes();
-        ByteBuffer extraField = buildExtraField(entry);
+    public void write(@NonNull ZipWriter writer) throws IOException {
+        ByteBuffer extraField = buildExtraField();
         int bytesNeeded = LOCAL_FILE_HEADER_SIZE + nameBytes.length + extraField.capacity();
 
         ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(SIGNATURE);
         buffer.putShort(DEFAULT_VERSION_NEEDED);
         buffer.putShort((short) 0); // general purpose flag
-        buffer.putShort(entry.getCompressionFlag());
+        buffer.putShort(compressionFlag);
         buffer.putShort((short) 0); // time
         buffer.putShort((short) 0); // date
-        buffer.putInt(entry.getCrc());
-        buffer.putInt((int) entry.getCompressedSize());
-        buffer.putInt((int) entry.getUncompressedSize());
+        buffer.putInt(crc);
+        buffer.putInt((int) compressedSize);
+        buffer.putInt((int) uncompressedSize);
         buffer.putShort((short) nameBytes.length);
         buffer.putShort((short) extraField.capacity()); // Extra size
         buffer.put(nameBytes);
@@ -92,17 +113,17 @@ class LocalFileHeader {
         writer.write(buffer);
     }
 
-    private static ByteBuffer buildExtraField(CentralDirectoryRecord entry) {
-        if (entry.getExtraPadding() == 0) {
+    private ByteBuffer buildExtraField() {
+        int bytesNeeded = extraPadding;
+        if (bytesNeeded == 0) {
             return ByteBuffer.wrap(new byte[0]);
         }
 
-        int bytesNeeded = entry.getExtraPadding();
         ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
         buffer.putShort(ALIGN_SIGNATURE);
 
         int paddingSize =
-                entry.getExtraPadding()
+                bytesNeeded
                         - CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE
                         - CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE;
         buffer.putShort((short) paddingSize);

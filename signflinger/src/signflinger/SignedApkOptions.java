@@ -40,17 +40,42 @@ public class SignedApkOptions {
 
     final RunnablesExecutor executor;
 
+    final boolean v1Enabled;
+    final boolean v2Enabled;
+
+    final String v1CreatedBy;
+    final boolean v1TrustManifest;
+
+    final int minSdkVersion;
+
     private SignedApkOptions(
-            PrivateKey privateKey, List<X509Certificate> certificates, RunnablesExecutor executor) {
+            PrivateKey privateKey,
+            List<X509Certificate> certificates,
+            RunnablesExecutor executor,
+            boolean v1Enabled,
+            boolean v2Enabled,
+            String v1CreatedBy,
+            boolean v1TrustManifest,
+            int minSdkVersion) {
         this.privateKey = privateKey;
         this.certificates = certificates;
         this.executor = executor;
+        this.v1Enabled = v1Enabled;
+        this.v2Enabled = v2Enabled;
+        this.v1CreatedBy = v1CreatedBy;
+        this.v1TrustManifest = v1TrustManifest;
+        this.minSdkVersion = minSdkVersion;
     }
 
     public static class Builder {
         PrivateKey privateKey;
         List<X509Certificate> certificates;
         RunnablesExecutor executor;
+        boolean v1Enabled = false;
+        boolean v2Enabled = true;
+        String v1CreatedBy = "Signflinger";
+        boolean v1TrustManifest;
+        int minSdkVersion;
 
         public Builder setPrivateKey(@NonNull PrivateKey privateKey) {
             this.privateKey = privateKey;
@@ -67,9 +92,42 @@ public class SignedApkOptions {
             return this;
         }
 
+        public Builder setV1Enabled(boolean enabled) {
+            this.v1Enabled = enabled;
+            return this;
+        }
+
+        public Builder setV2Enabled(boolean enabled) {
+            this.v2Enabled = enabled;
+            return this;
+        }
+
+        public Builder v1CreatedBy(@NonNull String creator) {
+            v1CreatedBy = creator;
+            return this;
+        }
+
+        public Builder v1TrustManifest(boolean trust) {
+            v1TrustManifest = trust;
+            return this;
+        }
+
+        public Builder setMinSdkVersion(int minSdkVersion) {
+            this.minSdkVersion = minSdkVersion;
+            return this;
+        }
+
         @NonNull
         SignedApkOptions build() {
-            return new SignedApkOptions(privateKey, certificates, executor);
+            return new SignedApkOptions(
+                    privateKey,
+                    certificates,
+                    executor,
+                    v1Enabled,
+                    v2Enabled,
+                    v1CreatedBy,
+                    v1TrustManifest,
+                    minSdkVersion);
         }
     }
 }

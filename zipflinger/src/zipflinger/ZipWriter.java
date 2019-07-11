@@ -18,19 +18,15 @@ package zipflinger;
 
 import com.android.annotations.NonNull;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 
 class ZipWriter implements Closeable {
     private final FileChannel channel;
 
-    public ZipWriter(File file) throws IOException {
-        channel =
-                FileChannel.open(
-                        file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+    public ZipWriter(FileChannel channel) {
+        this.channel = channel;
     }
 
     @Override

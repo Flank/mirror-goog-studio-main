@@ -17,6 +17,12 @@
 package signflinger;
 
 public class Signers {
+    static SignerConfig getDefaultRSA() throws Exception {
+        int defaultRSAindex = 1;
+        return Utils.getSignerConfig(
+                signers[defaultRSAindex].type, signers[defaultRSAindex].subtype);
+    }
+
     static Signer[] signers = {
         new Signer("rsa", "1024"), //  80-bit (obsolete)
         new Signer("rsa", "2048"), // 112-bit

@@ -1,16 +1,1 @@
-Lorem ipsum potenti primis nisi dapibus etiam dui lectus, quisque fringilla ac ornare dapibus vehicula non,
-nostra massa gravida luctus ac sit lacinia.
-
-Dictum eleifend porta vulputate vitae at urna orci sodales, ante purus eros quam pharetra posuere eleifend
-sed, nulla mi commodo nisl in nisl lorem.
-
-Condimentum blandit proin sollicitudin commodo erat condimentum donec feugiat, iaculis tincidunt fusce elit
-gravida varius mattis, est cubilia elementum pulvinar mollis nibh lobortis varius cubilia euismod neque
-elementum cubilia proin.
-
-Fermentum varius aptent urna habitasse adipiscing massa erat, congue tempus lorem sapien lacinia porttitor
-quisque, vulputate consequat nisi fermentum odio blandit curabitur, mauris pulvinar turpis pharetra nostra
-quisque.
-
-Mollis feugiat ipsum quis rhoncus class fermentum feugiat dapibus pulvinar rutrum laoreet, consectetur donec
-phasellus donec ullamcorper bibendum eget neque maecenas nullam.
+Lorem ipsum potenti primis nisi dapibus etiam dui lectus, quisque fringilla ac ornare dapibus vehicula non, nostra massa gravida luctus ac sit lacinia. Dictum eleifend porta vulputate vitae at urna orci sodales, ante purus eros quam pharetra posuere eleifend sed, nulla mi commodo nisl in nisl lorem. Condimentum blandit proin sollicitudin commodo erat condimentum donec feugiat, iaculis tincidunt fusce elit gravida varius mattis, est cubilia elementum pulvinar mollis nibh lobortis varius cubilia euismod neque elementum cubilia proin. Fermentum varius aptent urna habitasse adipiscing massa erat, congue tempus lorem sapien lacinia porttitor quisque, vulputate consequat nisi fermentum odio blandit curabitur, mauris pulvinar turpis pharetra nostra quisque. Mollis feugiat ipsum quis rhoncus class fermentum feugiat dapibus pulvinar rutrum laoreet, consectetur donec phasellus donec ullamcorper bibendum eget neque maecenas nullam.

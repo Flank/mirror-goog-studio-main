@@ -17,11 +17,14 @@
 package zipflinger;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,7 @@ public class ZipArchive implements Archive {
     private final File file;
     private final CentralDirectory cd;
     private final ZipWriter writer;
+    private final ZipReader reader;
 
     /**
      * The object used to manipulate a zip archive.
@@ -51,7 +55,15 @@ public class ZipArchive implements Archive {
             cd = new CentralDirectory(ByteBuffer.allocate(0), entries);
             freestore = new FreeStore(entries);
         }
-        writer = new ZipWriter(file);
+
+        FileChannel channel =
+                FileChannel.open(
+                        file.toPath(),
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.READ,
+                        StandardOpenOption.CREATE);
+        writer = new ZipWriter(channel);
+        reader = new ZipReader(channel);
         closed = false;
     }
 
@@ -67,6 +79,27 @@ public class ZipArchive implements Archive {
     @NonNull
     public static Map<String, Entry> listEntries(@NonNull File file) throws IOException {
         return ZipMap.from(file, false).getEntries();
+    }
+
+    @NonNull
+    public List<String> listEntries() {
+        return cd.listEntries();
+    }
+
+    @Nullable
+    public ByteBuffer getContent(@NonNull String name) throws IOException {
+        ExtractionInfo extractInfo = cd.getExtractionInfo(name);
+        if (extractInfo == null) {
+            return null;
+        }
+        Location loc = extractInfo.getLocation();
+        ByteBuffer payloadByteBuffer = ByteBuffer.allocate((int) loc.size());
+        reader.read(payloadByteBuffer, loc.first);
+        if (extractInfo.isCompressed()) {
+            return Compressor.inflate(payloadByteBuffer.array());
+        } else {
+            return payloadByteBuffer;
+        }
     }
 
     /** See Archive.add documentation */
@@ -104,9 +137,9 @@ public class ZipArchive implements Archive {
             throw new IllegalStateException(
                     String.format("Cannot delete '%s' from closed archive %s", name, file));
         }
-        Entry entry = cd.delete(name);
-        if (entry != null) {
-            freestore.free(entry.getLocation());
+        Location loc = cd.delete(name);
+        if (loc != Location.INVALID) {
+            freestore.free(loc);
         }
     }
 
@@ -128,16 +161,19 @@ public class ZipArchive implements Archive {
             throw new IllegalStateException("Attempt to close a closed archive");
         }
         closed = true;
-        try {
-            return writeArchive(writer);
-        } finally {
-            writer.close();
+        try (ZipWriter w = writer;
+                ZipReader r = reader) {
+            return writeArchive(w);
         }
     }
 
     @NonNull
     public File getFile() {
         return file;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 
     @NonNull
@@ -218,23 +254,34 @@ public class ZipArchive implements Archive {
             paddingForAlignment = 0;
         }
 
+        // Write LFH
+        LocalFileHeader lfh =
+                new LocalFileHeader(
+                        source.getNameBytes(),
+                        source.getCompressionFlag(),
+                        source.getCrc(),
+                        source.getCompressedSize(),
+                        source.getUncompressedSize(),
+                        paddingForAlignment);
+
+        writer.position(loc.first);
+        lfh.write(writer);
+
+        // Write payload
+        long payloadStart = writer.position();
+        long payloadSize = source.writeTo(writer);
+
+        // Update Central Directory record
         CentralDirectoryRecord cdRecord =
                 new CentralDirectoryRecord(
                         source.getNameBytes(),
                         source.getCrc(),
                         source.getCompressedSize(),
                         source.getUncompressedSize(),
-                        loc.first,
+                        loc,
                         source.getCompressionFlag(),
-                        paddingForAlignment);
+                        new Location(payloadStart, payloadSize));
         cd.add(source.getName(), cdRecord);
-
-        // Write LFH
-        writer.position(loc.first);
-        LocalFileHeader.writeEntry(cdRecord, writer);
-
-        // Write payload
-        source.writeTo(writer);
     }
 
     private void validateName(@NonNull Source source) {

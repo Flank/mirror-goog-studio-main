@@ -30,29 +30,30 @@ class CentralDirectoryRecord {
     // Unix = 3 (0x0300) + Version 3.0 (0x001E)
     public static final short DEFAULT_VERSION_MADE_BY = 0x031E;
 
-    private byte[] nameBytes;
-    private int crc;
-    private long compressedSize;
-    private long uncompressedSize;
-    private long offsetToLFH;
-    private short compressionFlag;
-    private final int extraPadding;
+    private final byte[] nameBytes;
+    private final int crc;
+    private final long compressedSize;
+    private final long uncompressedSize;
+    // Location of the Local file header to end of payload in file space.
+    private final Location location;
+    private final short compressionFlag;
+    private final Location payloadLocation;
 
     CentralDirectoryRecord(
             @NonNull byte[] nameBytes,
             int crc,
             long compressedSize,
             long uncompressedSize,
-            long offsetToLFH,
+            Location location,
             short compressionFlag,
-            int extraPadding) {
+            Location payloadLocation) {
         this.nameBytes = nameBytes;
         this.crc = crc;
         this.compressedSize = compressedSize;
         this.uncompressedSize = uncompressedSize;
-        this.offsetToLFH = offsetToLFH;
+        this.location = location;
         this.compressionFlag = compressionFlag;
-        this.extraPadding = extraPadding;
+        this.payloadLocation = payloadLocation;
     }
 
     void write(@NonNull ByteBuffer buf) {
@@ -73,7 +74,7 @@ class CentralDirectoryRecord {
         buf.putShort((short) 0); // disk # start
         buf.putShort((short) 0); // internal att
         buf.putInt(0); // external att
-        buf.putInt((int) offsetToLFH);
+        buf.putInt((int) location.first);
         buf.put(nameBytes);
     }
 
@@ -103,7 +104,13 @@ class CentralDirectoryRecord {
         return SIZE + nameBytes.length;
     }
 
-    int getExtraPadding() {
-        return extraPadding;
+    @NonNull
+    Location getPayloadLocation() {
+        return payloadLocation;
+    }
+
+    @NonNull
+    Location getLocation() {
+        return location;
     }
 }
