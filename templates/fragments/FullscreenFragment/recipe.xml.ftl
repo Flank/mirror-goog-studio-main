@@ -4,6 +4,7 @@
     <@kt.addAllKotlinDependencies />
 
     <#assign escapedResOut="${escapeXmlAttribute(resOut)}">
+    <#assign escapedSrcOut="${escapeXmlAttribute(srcOut)}">
 
     <merge from="root/res/values/strings.xml.ftl"
              to="${escapedResOut}/values/strings.xml" />
@@ -13,7 +14,8 @@
                    to="${escapedResOut}/layout/${layoutName}.xml" />
 
     <instantiate from="root/src/app_package/FullscreenFragment.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
+                   to="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 
     <open file="${escapedResOut}/layout/${layoutName}.xml" />
+    <open file="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 </recipe>

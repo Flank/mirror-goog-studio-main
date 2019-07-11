@@ -4,23 +4,23 @@
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
     <dependency mavenUrl="android.arch.lifecycle:extensions:+"/>
+    <#assign escapedResOut="${escapeXmlAttribute(resOut)}">
+    <#assign escapedSrcOut="${escapeXmlAttribute(srcOut)}">
+
     <#if generateKotlin && useAndroidX>
         <dependency mavenUrl="androidx.lifecycle:lifecycle-viewmodel-ktx:+"/>
     </#if>
 
     <instantiate from="root/res/layout/blank_fragment.xml.ftl"
-                   to="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(layoutName)}.xml" />
+                   to="${escapedResOut}/layout/${escapeXmlAttribute(layoutName)}.xml" />
 
-    <open file="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(layoutName)}.xml" />
+    <open file="${escapedResOut}/layout/${escapeXmlAttribute(layoutName)}.xml" />
 
     <instantiate from="root/src/app_package/BlankFragment.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+                   to="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+    <open file="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
 
     <instantiate from="root/src/app_package/BlankViewModel.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${viewModelName}.${ktOrJavaExt}" />
-
-    <open file="${escapeXmlAttribute(srcOut)}/${viewModelName}.${ktOrJavaExt}" />
-
+                   to="${escapedSrcOut}/${viewModelName}.${ktOrJavaExt}" />
 </recipe>

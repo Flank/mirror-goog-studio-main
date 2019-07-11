@@ -3,18 +3,21 @@
 <recipe>
     <@kt.addAllKotlinDependencies />
 
+    <#assign escapedResOut="${escapeXmlAttribute(resOut)}">
+    <#assign escapedSrcOut="${escapeXmlAttribute(srcOut)}">
+
     <merge from="root/res/values/strings.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
+             to="${escapedResOut}/values/strings.xml" />
     <merge from="root/res/values/dimens.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />
+             to="${escapedResOut}/values/dimens.xml" />
 
     <instantiate from="root/res/layout/simple.xml.ftl"
-                 to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
+                 to="${escapedResOut}/layout/${layoutName}.xml" />
 
-    <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
+    <open file="${escapedResOut}/layout/${layoutName}.xml" />
 
     <instantiate from="root/src/app_package/ScrollFragment.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
-    <open file="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
+                   to="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
+    <open file="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 
 </recipe>

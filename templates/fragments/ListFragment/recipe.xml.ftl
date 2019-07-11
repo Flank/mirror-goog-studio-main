@@ -5,19 +5,23 @@
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
     <dependency mavenUrl="com.android.support:recyclerview-v7:${buildApi}.+" />
 
+    <#assign escapedResOut="${escapeXmlAttribute(resOut)}">
+    <#assign escapedSrcOut="${escapeXmlAttribute(srcOut)}">
+
     <instantiate from="root/res/layout/fragment_list.xml"
-                 to="${escapeXmlAttribute(resOut)}/layout/${fragment_layout_list}.xml" />
+                 to="${escapedResOut}/layout/${fragment_layout_list}.xml" />
     <instantiate from="root/res/layout/item_list_content.xml"
-                 to="${escapeXmlAttribute(resOut)}/layout/${fragment_layout}.xml" />
+                 to="${escapedResOut}/layout/${fragment_layout}.xml" />
 
     <instantiate from="root/src/app_package/ListFragment.${ktOrJavaExt}.ftl"
-                 to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+                 to="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
     <instantiate from="root/src/app_package/RecyclerViewAdapter.${ktOrJavaExt}.ftl"
-                 to="${escapeXmlAttribute(srcOut)}/${adapterClassName}.${ktOrJavaExt}" />
+                 to="${escapedSrcOut}/${adapterClassName}.${ktOrJavaExt}" />
     <#include "../../activities/common/recipe_dummy_content.xml.ftl" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+    <open file="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+    <open file="${escapedResOut}/layout/${fragment_layout_list}.xml" />
 
     <merge from="root/res/values/dimens.xml"
-             to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />
+             to="${escapedResOut}/values/dimens.xml" />
 </recipe>
