@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildElementsCopyParams;
-import com.android.build.gradle.internal.scope.BuildElementsCopyRunnable;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskProvider;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildElements
+import com.android.build.gradle.internal.scope.BuildElementsCopyParams
+import com.android.build.gradle.internal.scope.BuildElementsCopyRunnable
+import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
+import java.io.File
+import java.util.ArrayList
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Copy the location our various tasks outputs into a single location.
@@ -47,110 +45,107 @@ import org.gradle.api.tasks.TaskProvider;
  * <p>This is useful when having configuration or feature splits which are located in different
  * folders since they are produced by different tasks.
  */
-public abstract class CopyOutputs extends NonIncrementalTask {
+abstract class CopyOutputs : NonIncrementalTask() {
 
-    @OutputDirectory
-    public abstract DirectoryProperty getDestinationDir();
+    @get:OutputDirectory
+    abstract val destinationDir: DirectoryProperty
 
-    @InputFiles
-    public abstract DirectoryProperty getFullApks();
+    @get:InputFiles
+    abstract val fullApks: DirectoryProperty
 
-    @InputFiles
-    @Optional
-    public abstract DirectoryProperty getAbiSplits();
+    @get:InputFiles
+    @get:Optional
+    abstract val abiSplits: DirectoryProperty
 
-    @InputFiles
-    @Optional
-    public abstract DirectoryProperty getResourcesSplits();
+    @get:InputFiles
+    @get:Optional
+    abstract val resourcesSplits: DirectoryProperty
 
     // FIX ME : add incrementality
-    @Override
-    protected void doTaskAction() throws IOException, ExecutionException {
-        FileUtils.cleanOutputDir(getDestinationDir().get().getAsFile());
+    override fun doTaskAction() {
+        FileUtils.cleanOutputDir(destinationDir.get().asFile)
 
-        List<Callable<BuildElements>> buildElementsCallables = new ArrayList<>();
+        val buildElementsCallables = ArrayList<Callable<BuildElements>>()
 
-        buildElementsCallables.add(copy(InternalArtifactType.FULL_APK, getFullApks()));
-        buildElementsCallables.add(copy(InternalArtifactType.ABI_PACKAGED_SPLIT, getAbiSplits()));
+        buildElementsCallables.add(copy(InternalArtifactType.FULL_APK, fullApks))
+        buildElementsCallables.add(copy(InternalArtifactType.ABI_PACKAGED_SPLIT, abiSplits))
         buildElementsCallables.add(
-                copy(
-                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                        getResourcesSplits()));
+            copy(
+                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                resourcesSplits
+            )
+        )
 
-        ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
+        val buildOutputs = ImmutableList.builder<BuildOutput>()
 
-        for (Callable<BuildElements> buildElementsCallable : buildElementsCallables) {
+        for (buildElementsCallable in buildElementsCallables) {
             try {
-                buildOutputs.addAll(buildElementsCallable.call());
-            } catch (Exception e) {
-                throw new ExecutionException(e);
+                buildOutputs.addAll(buildElementsCallable.call())
+            } catch (e: Exception) {
+                throw ExecutionException(e)
             }
+
         }
 
-        new BuildElements(buildOutputs.build()).save(getDestinationDir().get().getAsFile());
+        BuildElements(buildOutputs.build()).save(destinationDir.get().asFile)
     }
 
-    private Callable<BuildElements> copy(InternalArtifactType inputType, DirectoryProperty inputs) {
+    private fun copy(
+        inputType: InternalArtifactType,
+        inputs: DirectoryProperty
+    ): Callable<BuildElements> {
         return ExistingBuildElements.from(inputType, inputs)
-                .transform(
-                        getWorkerFacadeWithWorkers(),
-                        BuildElementsCopyRunnable.class,
-                        (apkInfo, inputFile) ->
-                                new BuildElementsCopyParams(
-                                        inputFile,
-                                        new File(
-                                                getDestinationDir().get().getAsFile(),
-                                                inputFile.getName())))
-                .intoCallable(InternalArtifactType.APK);
+            .transform(
+                getWorkerFacadeWithWorkers(),
+                BuildElementsCopyRunnable::class.java
+            ) { _, inputFile ->
+                BuildElementsCopyParams(
+                    inputFile,
+                    File(
+                        destinationDir.get().asFile,
+                        inputFile.name
+                    )
+                )
+            }
+            .intoCallable(InternalArtifactType.APK)
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<CopyOutputs> {
+    class CreationAction(variantScope: VariantScope, private val destinationDir: File) :
+        VariantTaskCreationAction<CopyOutputs>(variantScope) {
 
-        private final File destinationDir;
+        override val name: String = variantScope.getTaskName("copyOutputs")
+        override val type: Class<CopyOutputs> = CopyOutputs::class.java
 
-        public CreationAction(VariantScope variantScope, File destinationDir) {
-            super(variantScope);
-            this.destinationDir = destinationDir;
+        override fun handleProvider(taskProvider: TaskProvider<out CopyOutputs>) {
+            super.handleProvider(taskProvider)
+
+            variantScope
+                .artifacts
+                .producesDir(
+                    InternalArtifactType.APK,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    CopyOutputs::destinationDir,
+                    destinationDir.absolutePath,
+                    ""
+                )
         }
 
-        @NonNull
-        @Override
-        public String getName() {
-            return getVariantScope().getTaskName("copyOutputs");
-        }
+        override fun configure(task: CopyOutputs) {
+            super.configure(task)
 
-        @NonNull
-        @Override
-        public Class<CopyOutputs> getType() {
-            return CopyOutputs.class;
-        }
-
-        @Override
-        public void handleProvider(@NonNull TaskProvider<? extends CopyOutputs> taskProvider) {
-            super.handleProvider(taskProvider);
-
-            getVariantScope()
-                    .getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.APK,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            CopyOutputs::getDestinationDir,
-                            destinationDir.getAbsolutePath(),
-                            "");
-        }
-
-        @Override
-        public void configure(@NonNull CopyOutputs task) {
-            super.configure(task);
-
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
-            artifacts.setTaskInputToFinalProduct(InternalArtifactType.FULL_APK, task.getFullApks());
-            artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.ABI_PACKAGED_SPLIT, task.getAbiSplits());
-            artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                    task.getResourcesSplits());
+            val artifacts = variantScope.artifacts
+            artifacts.setTaskInputToFinalProduct<Directory>(
+                InternalArtifactType.FULL_APK,
+                task.fullApks
+            )
+            artifacts.setTaskInputToFinalProduct<Directory>(
+                InternalArtifactType.ABI_PACKAGED_SPLIT, task.abiSplits
+            )
+            artifacts.setTaskInputToFinalProduct<Directory>(
+                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                task.resourcesSplits
+            )
         }
     }
 }

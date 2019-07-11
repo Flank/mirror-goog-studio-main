@@ -125,7 +125,7 @@ class CopyOutputsTest {
         task.resourcesSplits.set(resDir)
 
         task.destinationDir.set(outputDir)
-        task.doTaskAction()
+        task.taskAction()
 
         assertThat(outputDir.listFiles()).hasLength(7)
         assertThat(outputDir.listFiles().map { it.name }.toSet()).containsExactlyElementsIn(
