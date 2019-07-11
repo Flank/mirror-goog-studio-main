@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 public class AndroidProjectStub extends BaseStub implements AndroidProject {
@@ -54,6 +55,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     private final boolean myLibrary;
     private final int myProjectType;
     private final boolean myBaseSplit;
+    @NonNull private final AndroidGradlePluginProjectFlagsStub myFlags;
 
     public AndroidProjectStub(@NonNull String modelVersion) {
         this(
@@ -83,7 +85,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 1,
                 true,
                 2,
-                true);
+                true,
+                new AndroidGradlePluginProjectFlagsStub(Collections.emptyMap()));
     }
 
     public AndroidProjectStub(
@@ -113,7 +116,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             int apiVersion,
             boolean library,
             int projectType,
-            boolean baseSplit) {
+            boolean baseSplit,
+            AndroidGradlePluginProjectFlagsStub flags) {
         myModelVersion = modelVersion;
         myName = name;
         myGroupId = groupId;
@@ -141,6 +145,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myLibrary = library;
         myProjectType = projectType;
         myBaseSplit = baseSplit;
+        myFlags = flags;
     }
 
     @Override
@@ -325,6 +330,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         return myViewBindingOptions;
     }
 
+    @NonNull
+    @Override
+    public AndroidGradlePluginProjectFlags getFlags() {
+        return myFlags;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -358,7 +369,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getJavaCompileOptions(), stub.getJavaCompileOptions())
                 && Objects.equals(getBuildFolder(), stub.getBuildFolder())
                 && Objects.equals(getResourcePrefix(), stub.getResourcePrefix())
-                && Objects.equals(getViewBindingOptions(), stub.getViewBindingOptions());
+                && Objects.equals(getViewBindingOptions(), stub.getViewBindingOptions())
+                && Objects.equals(getFlags(), stub.getFlags());
     }
 
     @Override
@@ -388,7 +400,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 isLibrary(),
                 getProjectType(),
                 isBaseSplit(),
-                getViewBindingOptions());
+                getViewBindingOptions(),
+                getFlags());
     }
 
     @Override
@@ -452,6 +465,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myBaseSplit
                 + ", myViewBindingOptions="
                 + myViewBindingOptions
+                + ", myFlags="
+                + myFlags
                 + "}";
     }
 }

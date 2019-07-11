@@ -80,6 +80,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     private final int myApiVersion;
     private final int myProjectType;
     private final boolean myBaseSplit;
+    @NonNull private final IdeAndroidGradlePluginProjectFlags myAgpFlags;
     private final int myHashCode;
 
     public static IdeAndroidProjectImpl create(
@@ -212,6 +213,14 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         //noinspection ConstantConditions
         boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
 
+        IdeAndroidGradlePluginProjectFlags agpFlags =
+                Objects.requireNonNull(
+                        IdeModel.copyNewProperty(
+                                modelCache,
+                                project::getFlags,
+                                IdeAndroidGradlePluginProjectFlags::new,
+                                new IdeAndroidGradlePluginProjectFlags()));
+
         return new IdeAndroidProjectImpl(
                 project.getModelVersion(),
                 parsedModelVersion,
@@ -241,7 +250,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 IdeModel.copyNewProperty(project::getPluginGeneration, null) != null,
                 project.getApiVersion(),
                 getProjectType(project, parsedModelVersion),
-                isBaseSplit);
+                isBaseSplit,
+                agpFlags);
     }
 
     // Used for serialization by the IDE.
@@ -277,7 +287,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myApiVersion = 0;
         myProjectType = 0;
         myBaseSplit = false;
-
+        myAgpFlags = new IdeAndroidGradlePluginProjectFlags();
         myHashCode = 0;
     }
 
@@ -310,7 +320,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             boolean supportsPluginGeneration,
             int apiVersion,
             int projectType,
-            boolean baseSplit) {
+            boolean baseSplit,
+            @NonNull IdeAndroidGradlePluginProjectFlags agpFlags) {
         myModelVersion = modelVersion;
         myParsedModelVersion = parsedModelVersion;
         myName = name;
@@ -340,7 +351,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myApiVersion = apiVersion;
         myProjectType = projectType;
         myBaseSplit = baseSplit;
-
+        myAgpFlags = agpFlags;
         myHashCode = calculateHashCode();
     }
 
@@ -548,6 +559,11 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     }
 
     @Override
+    public IdeAndroidGradlePluginProjectFlags getAgpFlags() {
+        return myAgpFlags;
+    }
+
+    @Override
     public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
         for (Variant variant : myVariants) {
             action.accept((IdeVariant) variant);
@@ -612,7 +628,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 && Objects.equals(myResourcePrefix, project.myResourcePrefix)
                 && Objects.equals(myDynamicFeatures, project.myDynamicFeatures)
                 && Objects.equals(myViewBindingOptions, project.myViewBindingOptions)
-                && Objects.equals(myGroupId, project.myGroupId);
+                && Objects.equals(myGroupId, project.myGroupId)
+                && Objects.equals(myAgpFlags, project.myAgpFlags);
     }
 
     @Override
@@ -650,7 +667,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 myBaseSplit,
                 myDynamicFeatures,
                 myViewBindingOptions,
-                myGroupId);
+                myGroupId,
+                myAgpFlags);
     }
 
     @Override
@@ -717,6 +735,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 + myViewBindingOptions
                 + ", myGroupId="
                 + myGroupId
+                + ", myAgpFlags="
+                + myAgpFlags
                 + "}";
     }
 }

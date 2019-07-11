@@ -71,6 +71,7 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidGradlePluginProjectFlags;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BaseArtifact;
@@ -403,6 +404,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         // get groupId/artifactId for project
         String groupId = project.getGroup().toString();
 
+        AndroidGradlePluginProjectFlagsImpl flags = getFlags();
+
         return new DefaultAndroidProject(
                 project.getName(),
                 groupId,
@@ -430,7 +433,26 @@ public class ModelBuilder<Extension extends BaseExtension>
                 Version.BUILDER_MODEL_API_VERSION,
                 isBaseSplit(),
                 getDynamicFeatures(),
-                viewBindingOptions);
+                viewBindingOptions,
+                flags);
+    }
+
+    private AndroidGradlePluginProjectFlagsImpl getFlags() {
+        ImmutableMap.Builder<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean> flags =
+                ImmutableMap.builder();
+        boolean finalResIds =
+                !globalScope.getProjectOptions().get(BooleanOption.USE_NON_FINAL_RES_IDS);
+        flags.put(
+                AndroidGradlePluginProjectFlags.BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS,
+                finalResIds);
+        flags.put(
+                AndroidGradlePluginProjectFlags.BooleanFlag.TEST_R_CLASS_CONSTANT_IDS, finalResIds);
+
+        boolean transitiveRClass =
+                !globalScope.getProjectOptions().get(BooleanOption.NAMESPACED_R_CLASS);
+        flags.put(AndroidGradlePluginProjectFlags.BooleanFlag.TRANSITIVE_R_CLASS, transitiveRClass);
+
+        return new AndroidGradlePluginProjectFlagsImpl(flags.build());
     }
 
     protected boolean isBaseSplit() {

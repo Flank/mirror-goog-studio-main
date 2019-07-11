@@ -228,7 +228,8 @@ public class InstantAppModelBuilder
                 Version.BUILDER_MODEL_API_VERSION,
                 false,
                 ImmutableList.of(),
-                ViewBindingOptionsImpl.createDummy());
+                ViewBindingOptionsImpl.createDummy(),
+                new AndroidGradlePluginProjectFlagsImpl(Collections.emptyMap()));
     }
 
     private Object buildMinimalisticModel() {

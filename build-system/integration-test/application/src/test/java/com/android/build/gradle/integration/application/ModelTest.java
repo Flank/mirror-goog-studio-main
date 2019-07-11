@@ -23,11 +23,13 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
@@ -132,5 +134,35 @@ public class ModelTest {
 
         Truth.assertThat(androidTestArtifact.getInstrumentedTestTaskName())
                 .isEqualTo("connectedDebugAndroidTest");
+    }
+
+    @Test
+    public void checkFlags() throws Exception {
+        {
+            AndroidProject model =
+                    project.model()
+                            .with(BooleanOption.NAMESPACED_R_CLASS, false)
+                            .with(BooleanOption.USE_NON_FINAL_RES_IDS, false)
+                            .fetchAndroidProjects()
+                            .getOnlyModel();
+            IdeAndroidGradlePluginProjectFlags flags =
+                    new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+            assertThat(flags.getApplicationRClassConstantIds()).isTrue();
+            assertThat(flags.getTestRClassConstantIds()).isTrue();
+            assertThat(flags.getTransitiveRClasses()).isTrue();
+        }
+        {
+            AndroidProject model =
+                    project.model()
+                            .with(BooleanOption.NAMESPACED_R_CLASS, true)
+                            .with(BooleanOption.USE_NON_FINAL_RES_IDS, true)
+                            .fetchAndroidProjects()
+                            .getOnlyModel();
+            IdeAndroidGradlePluginProjectFlags flags =
+                    new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+            assertThat(flags.getApplicationRClassConstantIds()).isFalse();
+            assertThat(flags.getTestRClassConstantIds()).isFalse();
+            assertThat(flags.getTransitiveRClasses()).isFalse();
+        }
     }
 }

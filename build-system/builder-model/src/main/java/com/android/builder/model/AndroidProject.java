@@ -426,4 +426,8 @@ public interface AndroidProject {
     /** Returns the options for view binding. */
     @NonNull
     ViewBindingOptions getViewBindingOptions();
+
+    /** Returns the AGP flags for this project. */
+    @NonNull
+    AndroidGradlePluginProjectFlags getFlags();
 }

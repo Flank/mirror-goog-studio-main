@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.builder.model.AaptOptions;
+import com.android.builder.model.AndroidGradlePluginProjectFlags;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
@@ -94,6 +95,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
 
     @NonNull private final ViewBindingOptions viewBindingOptions;
 
+    @NonNull private final AndroidGradlePluginProjectFlags flags;
+
     DefaultAndroidProject(
             @NonNull String name,
             @Nullable String groupId,
@@ -121,7 +124,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             int apiVersion,
             boolean baseSplit,
             @NonNull Collection<String> dynamicFeatures,
-            @NonNull ViewBindingOptions viewBindingOptions) {
+            @NonNull ViewBindingOptions viewBindingOptions,
+            @NonNull AndroidGradlePluginProjectFlags flags) {
         this.name = name;
         this.groupId = groupId;
         this.defaultConfig = defaultConfig;
@@ -149,6 +153,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.baseSplit = baseSplit;
         this.dynamicFeatures = ImmutableList.copyOf(dynamicFeatures);
         this.viewBindingOptions = viewBindingOptions;
+        this.flags = flags;
     }
 
     @Override
@@ -332,6 +337,12 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return viewBindingOptions;
     }
 
+    @NonNull
+    @Override
+    public AndroidGradlePluginProjectFlags getFlags() {
+        return flags;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -367,7 +378,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(flavorDimensions, that.flavorDimensions)
                 && Objects.equals(baseSplit, that.baseSplit)
                 && Objects.equals(dynamicFeatures, that.dynamicFeatures)
-                && Objects.equals(viewBindingOptions, that.viewBindingOptions);
+                && Objects.equals(viewBindingOptions, that.viewBindingOptions)
+                && Objects.equals(flags, that.flags);
     }
 
     @Override
@@ -399,6 +411,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 flavorDimensions,
                 baseSplit,
                 dynamicFeatures,
-                viewBindingOptions);
+                viewBindingOptions,
+                flags);
     }
 }
