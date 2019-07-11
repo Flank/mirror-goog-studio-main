@@ -14,124 +14,123 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
-import static com.android.testutils.truth.FileSubject.assertThat;
-import static com.google.common.base.Verify.verifyNotNull;
-import static com.google.common.truth.Truth.assertThat;
+package com.android.build.gradle.integration.application
 
-import com.android.Version;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.StringOption;
-import com.android.utils.FileUtils;
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.testutils.truth.FileSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 
-/** Integration test for build cache. */
-public class BuildCacheTest {
+import com.android.Version
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
+import com.android.utils.FileUtils
+import java.io.File
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    .create();
+/** Integration test for build cache.  */
+class BuildCacheTest {
+
+    @get:Rule
+    var project = GradleTestProject.builder()
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+        .create()
 
     @Before
-    public void setUp() throws Exception {
+    fun setUp() {
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\ndependencies {\n    compile 'com.google.guava:guava:18.0'\n}\n");
+            project.buildFile,
+            """|
+               |dependencies {
+               |    compile 'com.google.guava:guava:18.0'
+               |}
+               |""".trimMargin("|")
+        )
     }
 
     @Test
-    public void testBuildCacheEnabled() throws Exception {
-        File sharedBuildCacheDir = FileUtils.join(project.getTestDir(), "shared", "build-cache");
-        File privateBuildCacheDir =
-                new File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION);
+    fun testBuildCacheEnabled() {
+        val sharedBuildCacheDir = FileUtils.join(project.testDir, "shared", "build-cache")
+        val privateBuildCacheDir = File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION)
 
         // Make sure the parent directory of the shared build cache directory does not yet exist.
         // This is to test that the locking mechanism used by the build cache can work with
         // non-existent directories (and parent directories).
-        assertThat(sharedBuildCacheDir.getParentFile()).doesNotExist();
+        assertThat(sharedBuildCacheDir.parentFile).doesNotExist()
 
-        GradleTaskExecutor executor =
-                project.executor()
-                        .with(BooleanOption.ENABLE_BUILD_CACHE, true)
-                        .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-                        .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.getAbsolutePath());
-        executor.run("clean", "assembleDebug");
+        val executor = project.executor()
+            .with(BooleanOption.ENABLE_BUILD_CACHE, true)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.absolutePath)
+        executor.run("clean", "assembleDebug")
 
-        List<File> cachedEntryDirs =
-                Arrays.stream(verifyNotNull(privateBuildCacheDir.listFiles()))
-                        .filter(File::isDirectory) // Remove the lock files
-                        .filter(f -> !containsAapt(f)) // Remove aapt2 cache
-                        .collect(Collectors.toList());
+        var cachedEntryDirs = privateBuildCacheDir.listFiles()
+            .filter{ it.isDirectory } // Remove the lock files
+            .filter { f -> !containsAapt(f) } // Remove aapt2 cache
+            .toList()
 
         // only guava should be cached
-        assertThat(cachedEntryDirs).hasSize(1);
+        assertThat(cachedEntryDirs).hasSize(1)
 
         // Check the timestamps of the guava library's cached file to make
         // sure we actually copied one to the other and did not run pre-dexing twice to create the
         // two files
-        File cachedGuavaDexFile = new File(cachedEntryDirs.get(0), "output");
-        long cachedGuavaTimestamp = cachedGuavaDexFile.lastModified();
+        val cachedGuavaDexFile = File(cachedEntryDirs[0], "output")
+        val cachedGuavaTimestamp = cachedGuavaDexFile.lastModified()
 
-        executor.run("clean", "assembleDebug");
+        executor.run("clean", "assembleDebug")
 
-        cachedEntryDirs =
-                Arrays.stream(verifyNotNull(privateBuildCacheDir.listFiles()))
-                        .filter(File::isDirectory) // Remove the lock files
-                        .filter(f -> !containsAapt(f)) // Remove aapt2 cache
-                        .collect(Collectors.toList());
-        assertThat(cachedEntryDirs).hasSize(1);
+        cachedEntryDirs = privateBuildCacheDir.listFiles()
+            .filter{ it.isDirectory } // Remove the lock files
+            .filter { f -> !containsAapt(f) } // Remove aapt2 cache
+            .toList()
+        assertThat(cachedEntryDirs).hasSize(1)
         // Assert that the cached file is unchanged
-        assertThat(cachedGuavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
+        assertThat(cachedGuavaDexFile).wasModifiedAt(cachedGuavaTimestamp)
 
-        executor.run("cleanBuildCache");
-        assertThat(sharedBuildCacheDir).exists();
-        assertThat(privateBuildCacheDir).doesNotExist();
+        executor.run("cleanBuildCache")
+        assertThat(sharedBuildCacheDir).exists()
+        assertThat(privateBuildCacheDir).doesNotExist()
     }
 
     @Test
-    public void testBuildCacheDisabled() throws Exception {
+    fun testBuildCacheDisabled() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.defaultConfig.minSdkVersion "
-                        + TestVersions.SUPPORT_LIB_MIN_SDK
-                        + "\n"
-                        + "dependencies {\n"
-                        + "    compile \"com.android.support:support-v13:${rootProject.supportLibVersion}\"\n"
-                        + "}\n");
+            project.buildFile,
+            """|
+               |android.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK
+               |
+               |dependencies {
+               |    compile "com.android.support:support-v13:${"$"}{rootProject.supportLibVersion}"
+               |}
+               |""".trimMargin("|")
+        )
 
-        File sharedBuildCacheDir = FileUtils.join(project.getTestDir(), "shared", "build-cache");
-        File privateBuildCacheDir =
-                new File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION);
-        assertThat(sharedBuildCacheDir.getParentFile()).doesNotExist();
+        val sharedBuildCacheDir = FileUtils.join(project.testDir, "shared", "build-cache")
+        val privateBuildCacheDir = File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION)
+        assertThat(sharedBuildCacheDir.parentFile).doesNotExist()
 
         project.executor()
-                .with(BooleanOption.ENABLE_BUILD_CACHE, false)
-                .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-                .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.getAbsolutePath())
-                .run("clean", "assembleDebug");
+            .with(BooleanOption.ENABLE_BUILD_CACHE, false)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.absolutePath)
+            .run("clean", "assembleDebug")
 
-        assertThat(sharedBuildCacheDir).doesNotExist();
-        assertThat(privateBuildCacheDir).doesNotExist();
+        assertThat(sharedBuildCacheDir).doesNotExist()
+        assertThat(privateBuildCacheDir).doesNotExist()
     }
 
-    private static boolean containsAapt(File dir) {
-        if (dir.isFile()) {
-            return dir.getName().contains("libaapt2_jni");
+    private fun containsAapt(dir: File): Boolean {
+        return if (dir.isFile) {
+            dir.name.contains("libaapt2_jni")
+        } else {
+            dir.listFiles().any{ containsAapt(it) }
         }
-        return Arrays.stream(verifyNotNull(dir.listFiles())).anyMatch(BuildCacheTest::containsAapt);
     }
 }
+
