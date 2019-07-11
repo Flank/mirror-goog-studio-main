@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.common
+package com.android.tools.idea.wizard.template.impl.emptyActivity.src
 
-import com.android.tools.idea.wizard.template.renderIf
+fun nativeLibCpp(packageName: String, activityClass: String): String {
+  val pn = packageName.replaceFirst("_", "_1").replaceFirst('.', '_')
+  return (
+    """
+#include <jni.h>
+#include <string>
 
-fun jniCodeSnippet(includeCppSupport: Boolean): String = renderIf(includeCppSupport) {
-  """
-/**
- * A native method that is implemented by the 'native-lib' native library,
- * which is packaged with this application.
- */
-external fun stringFromJNI(): String
-
-companion object {
-
-  // Used to load the 'native-lib' library on application startup.
-  init {
-    System.loadLibrary("native-lib"
-  }
+extern "C" JNIEXPORT jstring JNICALL
+Java_${pn}_${activityClass}_stringFromJNI(
+        JNIEnv* env,
+        jobject /* this */) {
+    std::string hello = "Hello from C++";
+    return env->NewStringUTF(hello.c_str());
 }
-"""
+    """
+         )
 }

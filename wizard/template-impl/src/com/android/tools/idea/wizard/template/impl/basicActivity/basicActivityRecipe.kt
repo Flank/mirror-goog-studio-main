@@ -40,7 +40,7 @@ import com.android.tools.idea.wizard.template.impl.common.recipeSimpleMenu
 import com.android.tools.idea.wizard.template.layoutToFragment
 
 fun RecipeExecutor.basicActivityRecipe(
-  data: ModuleTemplateData,
+  moduleData: ModuleTemplateData,
   activityClass: String,
   layoutName: String,
   simpleLayoutName: String,
@@ -51,9 +51,9 @@ fun RecipeExecutor.basicActivityRecipe(
   firstFragmentLayoutName: String,
   secondFragmentLayoutName: String
 ) {
-  val (projectData, srcOut, resOut, manifestOut) = data
-  val buildApi = data.projectTemplateData.buildApi
-  val useAndroidX = data.projectTemplateData.androidXSupport
+  val (projectData, srcOut, resOut) = moduleData
+  val buildApi = moduleData.projectTemplateData.buildApi
+  val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   if (useAndroidX) {
     addClasspathDependency("androidx.navigation:navigation-safe-args-gradle-plugin:+")
@@ -62,19 +62,21 @@ fun RecipeExecutor.basicActivityRecipe(
     addClasspathDependency("android.arch.navigation:navigation-safe-args-gradle-plugin:+")
   }
   addSafeArgsPluginToClasspath(useAndroidX)
-  addAllKotlinDependencies(data)
-  recipeManifest(data.isNew, true, data.packageName, activityClass, activityTitle,
-                 isLauncher, data.isLibrary, data.themesData.main, data.themesData.noActionBar, manifestOut,
-                 data.resDir, requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2)
-  recipeAppBar(buildApi, data.baseFeature?.resDir, data.resDir, layoutName, data.themesData, useAndroidX, useMaterial2, packageName,
-               activityClass, simpleLayoutName)
+  addAllKotlinDependencies(moduleData)
+  recipeManifest(
+    moduleData, activityClass, activityTitle, packageName, isLauncher, true,
+    requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
+  )
+  recipeAppBar(
+    moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX, useMaterial2 = useMaterial2
+  )
 
   addDependency("com.android.support:appcompat-v7:$buildApi.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   applyPlugin("androidx.navigation.safeargs")
-  save(fragmentSimpleXml(projectData.androidXSupport, data.isNew), data.resDir.resolve("layout/$simpleLayoutName.xml"), true, true)
-  if (data.isNew) {
-    recipeSimpleMenu(packageName, activityClass, data.resDir, menuName)
+  save(fragmentSimpleXml(projectData.androidXSupport, moduleData.isNew), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
+  if (moduleData.isNew) {
+    recipeSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
   }
 
   val ktOrJavaExt = projectData.language.extension
@@ -82,14 +84,14 @@ fun RecipeExecutor.basicActivityRecipe(
   val generateKotlin = projectData.language == Language.Kotlin
 
   val simpleActivity = when (projectData.language) {
-      Language.Java ->
-        basicActivityJava(
-          data.isNew, projectData.applicationPackage, data.packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
-        )
-      Language.Kotlin ->
-        basicActivityKt(
-          data.isNew, projectData.applicationPackage, data.packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
-        )
+    Language.Java ->
+      basicActivityJava(
+        moduleData.isNew, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+      )
+    Language.Kotlin ->
+      basicActivityKt(
+        moduleData.isNew, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+      )
   }
 
   save(simpleActivity, simpleActivityPath)
@@ -128,7 +130,8 @@ fun RecipeExecutor.basicActivityRecipe(
   if (generateKotlin) {
     addDependency("android.arch.navigation:navigation-fragment-ktx:+")
     addDependency("android.arch.navigation:navigation-ui-ktx:+")
-  } else {
+  }
+  else {
     addDependency("android.arch.navigation:navigation-fragment:+")
     addDependency("android.arch.navigation:navigation-ui:+")
   }

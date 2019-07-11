@@ -1,4 +1,5 @@
 /*
+
  * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +16,28 @@
  */
 package com.android.tools.idea.wizard.template.impl.common
 
+import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.ThemeData
 import java.io.File
 
 fun RecipeExecutor.recipeManifest(
-  isNew: Boolean, hasNoActionBar: Boolean, packageName: String, activityClass: String, activityTitle: String, isLauncher: Boolean,
-  isLibrary: Boolean, mainTheme: ThemeData, noActionBarTheme: ThemeData, manifestOut: File, resOut: File, requireTheme: Boolean,
-  generateActivityTitle: Boolean, useMaterial2: Boolean, isDynamicFeature: Boolean = false
+  moduleData: ModuleTemplateData,
+  activityClass: String,
+  activityTitle: String,
+  packageName: String,
+  isLauncher: Boolean,
+  hasNoActionBar: Boolean,
+  noActionBarTheme: ThemeData = moduleData.themesData.noActionBar,
+  isNew: Boolean = moduleData.isNew,
+  isLibrary: Boolean = moduleData.isLibrary,
+  mainTheme: ThemeData = moduleData.themesData.main,
+  manifestOut: File = moduleData.manifestDir,
+  resOut: File = moduleData.resDir,
+  requireTheme: Boolean,
+  generateActivityTitle: Boolean,
+  useMaterial2: Boolean,
+  isDynamicFeature: Boolean = false
 ) {
   if (requireTheme) {
     recipeTheme(
@@ -36,7 +51,7 @@ fun RecipeExecutor.recipeManifest(
 
   recipeManifestStrings(activityClass, activityTitle, resOut, resOut, isNew, generateActivityTitle, isDynamicFeature)
 
-  val manifest = androidManifestXml(isNew, hasNoActionBar, packageName, activityClass, isLauncher, isLibrary, mainTheme, noActionBarTheme)
+  val manifest = androidManifestXml(isNew, hasNoActionBar, packageName, activityClass, isLauncher, isLibrary, mainTheme, noActionBarTheme, generateActivityTitle)
 
   mergeXml(manifest, manifestOut.resolve("AndroidManifest.xml"))
 }

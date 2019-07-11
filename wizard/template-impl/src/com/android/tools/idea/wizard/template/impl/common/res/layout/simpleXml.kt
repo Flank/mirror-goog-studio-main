@@ -24,35 +24,35 @@ fun simpleLayoutXml(
   val layout = getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)
   val appBarLayoutNameBlock = renderIf(appBarLayoutName != null) {
     """
-app:layout_behavior = "@string/appbar_scrolling_view_behavior"
-tools:showIn = "@layout/${appBarLayoutName}"
+app:layout_behavior="@string/appbar_scrolling_view_behavior"
+tools:showIn="@layout/${appBarLayoutName}"
 """
   }
 
-  val includeCppSupportBlock = renderIf(includeCppSupport) { """android:id = "@+id/sample_text"""" }
+  val includeCppSupportBlock = renderIf(includeCppSupport) { """android:id="@+id/sample_text"""" }
 
   val isNewBlock = renderIf(isNew) {
     """<TextView
     $includeCppSupportBlock
-  android:layout_width = "wrap_content"
-  android:layout_height = "wrap_content"
-  android:text = "Hello World!"
-  app:layout_constraintBottom_toBottomOf = "parent"
-  app:layout_constraintLeft_toLeftOf = "parent"
-  app:layout_constraintRight_toRightOf = "parent"
-  app:layout_constraintTop_toTopOf = "parent" />"""
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:text="Hello World!"
+  app:layout_constraintBottom_toBottomOf="parent"
+  app:layout_constraintLeft_toLeftOf="parent"
+  app:layout_constraintRight_toRightOf="parent"
+  app:layout_constraintTop_toTopOf="parent" />"""
   }
 
 
-  return """<?xml version = "1.0" encoding = "utf-8"?>
+  return """<?xml version="1.0" encoding="utf-8"?>
   <$layout
-  xmlns:android = "http://schemas.android.com/apk/res/android"
-  xmlns:tools = "http://schemas.android.com/tools"
-  xmlns:app = "http://schemas.android.com/apk/res-auto"
-  android:layout_width = "match_parent"
-  android:layout_height = "match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
   $appBarLayoutNameBlock
-  tools:context = "$packageName.$activityClass">
+  tools:context="$packageName.$activityClass">
 
   $isNewBlock
 

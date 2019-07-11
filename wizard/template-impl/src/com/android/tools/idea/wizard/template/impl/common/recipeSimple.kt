@@ -20,23 +20,33 @@ import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.common.res.layout.simpleLayoutXml
 
-fun RecipeExecutor.recipeSimple(
-  data : ModuleTemplateData, activityClass: String, simpleLayoutName: String, excludeMenu: Boolean,
-  packageName: PackageName, menuName: String
+fun RecipeExecutor.recipeSimpleLayout(
+  data: ModuleTemplateData, activityClass: String, simpleLayoutName: String, excludeMenu: Boolean, packageName: PackageName,
+  menuName: String? = null, openLayout: Boolean = true
 ) {
+  if (menuName == null) {
+    require(!data.isNew || excludeMenu)
+  }
   val projectData = data.projectTemplateData
   val buildApi = projectData.buildApi
   val resOut = data.resDir
   addDependency("com.android.support:appcompat-v7:$buildApi.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
+  // TODO(qumeric): check if we sometimes need to pass appBarLayoutName
   val simpleLayout = simpleLayoutXml(
-    data.isNew, false, projectData.androidXSupport, data.packageName, activityClass, "appBarLayout"
+    data.isNew, false, projectData.androidXSupport, data.packageName, activityClass, null
   )
 
-  save(simpleLayout, resOut.resolve("layout/$simpleLayoutName.xml"), true, true)
+  val layoutFile = resOut.resolve("layout/$simpleLayoutName.xml")
+
+  save(simpleLayout, layoutFile)
 
   if (data.isNew && !excludeMenu) {
-    recipeSimpleMenu( packageName, activityClass, data.resDir, menuName)
+    recipeSimpleMenu(packageName, activityClass, data.resDir, menuName!!)
+  }
+
+  if (openLayout) {
+    open(layoutFile)
   }
 }

@@ -19,10 +19,11 @@ package com.android.tools.idea.wizard.template.impl
 import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
 import com.android.tools.idea.wizard.template.impl.basicActivity.basicActivityTemplate
+import com.android.tools.idea.wizard.template.impl.emptyActivity.emptyActivityTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
  */
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
-  override fun getTemplates(): List<Template> = listOf(basicActivityTemplate)
+  override fun getTemplates(): List<Template> = listOf(basicActivityTemplate, emptyActivityTemplate)
 }

@@ -19,7 +19,6 @@ import com.android.tools.idea.wizard.template.ThemeData
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.renderIf
 
-
 fun androidManifestXml(
   isNewProject: Boolean,
   hasNoActionBar: Boolean,
@@ -29,17 +28,15 @@ fun androidManifestXml(
   isLibraryProject: Boolean,
   mainTheme: ThemeData,
   hasNoActionBarTheme: ThemeData,
+  generateActivityTitle: Boolean = true,
   // TODO(qumeric): actually pass values to following booleans
   requireTheme: Boolean = false,
-  hasApplicationTheme: Boolean = false,
-  generateActivityTitle: Boolean = true
+  hasApplicationTheme: Boolean = false
 ): String {
 
   val appName = if (isNewProject) "app_name" else "title_" + activityToLayout(activityClass)
 
-  val generateActivityTitleBlock = renderIf(generateActivityTitle) {
-    "android:label = \"@string/$appName\""
-  }
+  val generateActivityTitleBlock = renderIf(generateActivityTitle) { "android:label = \"@string/$appName\"" }
 
     val hasActionBarBlock = when {
       hasNoActionBar -> """android:theme = "@style/${hasNoActionBarTheme.name}""""

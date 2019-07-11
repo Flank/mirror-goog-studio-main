@@ -15,6 +15,7 @@
  */
 package com.android.tools.idea.wizard.template.impl.common
 
+import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.common.res.layout.appBarLayoutXml
@@ -22,8 +23,17 @@ import com.android.tools.idea.wizard.template.impl.common.res.values.appBarDimen
 import java.io.File
 
 fun RecipeExecutor.recipeAppBar(
-  buildApi: Int, baseFeatureResOut: File?, resDir: File, appBarLayoutName: String, themesData: ThemesData, useAndroidX: Boolean,
-  useMaterial2: Boolean, packageName: String, activityClass: String, simpleLayoutName: String
+  moduleData: ModuleTemplateData,
+  activityClass: String,
+  packageName: String,
+  simpleLayoutName: String,
+  appBarLayoutName: String,
+  buildApi: Int = moduleData.projectTemplateData.buildApi,
+  resDir: File = moduleData.resDir,
+  baseFeatureResOut: File? = moduleData.baseFeature?.resDir,
+  themesData: ThemesData = moduleData.themesData,
+  useAndroidX: Boolean,
+  useMaterial2: Boolean
 ) {
     addDependency("com.android.support:appcompat-v7:$buildApi.+")
 
