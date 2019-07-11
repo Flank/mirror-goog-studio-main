@@ -18,12 +18,9 @@
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
     <instantiate from="root://gradle-projects/NewAndroidModule/root/test/app_package/ExampleInstrumentedTest.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.${ktOrJavaExt}" />
-
-<#if unitTestsSupported>
     <instantiate from="root://gradle-projects/NewAndroidModule/root/test/app_package/ExampleUnitTest.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.${ktOrJavaExt}" />
     <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="testCompile" />
-</#if>
 
     <dependency mavenUrl="com.android.support.test:runner:+" gradleConfiguration="androidTestCompile" />
     <dependency mavenUrl="com.android.support.test.espresso:espresso-core:+" gradleConfiguration="androidTestCompile" />
