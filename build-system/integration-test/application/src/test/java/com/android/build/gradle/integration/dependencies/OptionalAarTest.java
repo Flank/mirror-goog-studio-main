@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -73,7 +74,9 @@ public class OptionalAarTest {
         // build the app and need to build the aar separately since building the app
         // doesn't build the aar anymore.
 
-        project.execute("clean", ":app:assembleDebug", "library:assembleDebug");
+        project.executor()
+                .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, true)
+                .run("clean", ":app:assembleDebug", "library:assembleDebug");
         models = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(models);
 
@@ -106,7 +109,9 @@ public class OptionalAarTest {
 
         assertThatAar(aar).doesNotContainResource("layout/lib2layout.xml");
         assertThatAar(aar).textSymbolFile().contains("int layout liblayout");
-        assertThatAar(aar).textSymbolFile().doesNotContain("int layout lib2layout");
+        // With the new Compile library R class flow, the text symbol file will contain
+        // provided resources.
+        assertThatAar(aar).textSymbolFile().contains("int layout lib2layout");
     }
 
     @Test
