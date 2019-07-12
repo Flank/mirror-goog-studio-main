@@ -32,10 +32,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -86,6 +83,9 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -104,13 +104,18 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
     private Supplier<Integer> maxSdkVersion;
-    private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
-            variantConfiguration;
     private ArtifactCollection manifests;
     private ArtifactCollection featureManifests;
     private FileCollection microApkManifest;
     private FileCollection packageManifest;
     private Supplier<EnumSet<Feature>> optionalFeatures;
+
+    private final RegularFileProperty mainManifest;
+    private final Property<String> packageOverride;
+    private final ListProperty<File> manifestOverlays;
+    private final MapProperty<String, Object> manifestPlaceholders;
+    private boolean isHybridVariantType;
+    private String buildTypeName;
 
     private FileCollection navigationJsons;
 
@@ -120,6 +125,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Inject
     public ProcessApplicationManifest(ObjectFactory objectFactory) {
         super(objectFactory);
+        mainManifest = objectFactory.fileProperty();
+        packageOverride = objectFactory.property(String.class);
+        manifestOverlays = objectFactory.listProperty(File.class);
+        manifestPlaceholders = objectFactory.mapProperty(String.class, Object.class);
     }
 
     @Override
@@ -135,10 +144,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
             boolean isDebuggable = optionalFeatures.get().contains(Feature.DEBUGGABLE);
             if (moduleMetadata.getDebuggable() != isDebuggable) {
-                String moduleType =
-                        variantConfiguration.getType().isHybrid()
-                                ? "Instant App Feature"
-                                : "Dynamic Feature";
+                String moduleType = isHybridVariantType ? "Instant App Feature" : "Dynamic Feature";
                 String errorMessage =
                         String.format(
                                 "%1$s '%2$s' (build type '%3$s') %4$s debuggable,\n"
@@ -149,7 +155,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         + "   set android.buildTypes.%3$s.debuggable = %7$s",
                                 moduleType,
                                 getProject().getPath(),
-                                variantConfiguration.getBuildType().getName(),
+                                buildTypeName,
                                 isDebuggable ? "is" : "is not",
                                 moduleMetadata.getDebuggable() ? "is" : "is not",
                                 getProject().getBuildFile(),
@@ -202,13 +208,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             MergingReport mergingReport =
                     ManifestHelperKt.mergeManifestsForApplication(
-                            getMainManifest(),
-                            getManifestOverlays(),
+                            mainManifest.getAsFile().get(),
+                            manifestOverlays.get(),
                             computeFullProviderList(compatibleScreenManifestForSplit),
                             navJsons,
                             getFeatureName(),
                             moduleMetadata == null
-                                    ? getPackageOverride()
+                                    ? packageOverride.getOrNull()
                                     : moduleMetadata.getApplicationId(),
                             moduleMetadata == null
                                     ? apkData.getVersionCode()
@@ -228,7 +234,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                     ? instantAppManifestOutputFile.getAbsolutePath()
                                     : null,
                             ManifestMerger2.MergeType.APPLICATION,
-                            variantConfiguration.getManifestPlaceholders(),
+                            manifestPlaceholders.get(),
                             getOptionalFeatures(),
                             getReportFile().get().getAsFile(),
                             LoggerWrapper.getLogger(ProcessApplicationManifest.class));
@@ -299,32 +305,32 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public File getMainManifest() {
-        return variantConfiguration.getMainManifest();
+    public RegularFileProperty getMainManifest() {
+        return mainManifest;
     }
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public List<File> getManifestOverlays() {
-        return variantConfiguration.getManifestOverlays();
+    public ListProperty<File> getManifestOverlays() {
+        return manifestOverlays;
     }
 
     @Input
     @Optional
-    public String getPackageOverride() {
-        return variantConfiguration.getIdOverride();
+    public Property<String> getPackageOverride() {
+        return packageOverride;
     }
 
     /**
      * Returns a serialized version of our map of key value pairs for placeholder substitution.
      *
-     * This serialized form is only used by gradle to compare past and present tasks to determine
+     * <p>This serialized form is only used by gradle to compare past and present tasks to determine
      * whether a task need to be re-run or not.
      */
     @Input
     @Optional
-    public String getManifestPlaceholders() {
-        return serializeMap(variantConfiguration.getManifestPlaceholders());
+    public MapProperty<String, Object> getManifestPlaceholders() {
+        return manifestPlaceholders;
     }
 
     private List<ManifestProvider> computeProviders(
@@ -472,16 +478,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Input
     public List<String> getOptionalFeaturesString() {
         return getOptionalFeatures().stream().map(Enum::toString).collect(Collectors.toList());
-    }
-
-    @Internal
-    public VariantConfiguration getVariantConfiguration() {
-        return variantConfiguration;
-    }
-
-    public void setVariantConfiguration(
-            VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> variantConfiguration) {
-        this.variantConfiguration = variantConfiguration;
     }
 
     @InputFiles
@@ -656,8 +652,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             VariantType variantType = getVariantScope().getType();
 
-            task.setVariantConfiguration(config);
-
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
@@ -756,6 +750,21 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
+            task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.manifestPlaceholders.set(
+                    task.getProject().provider(config::getManifestPlaceholders));
+            task.mainManifest.set(
+                    task.getProject()
+                            .provider(
+                                    () -> {
+                                        RegularFileProperty fileProp =
+                                                task.getProject().getObjects().fileProperty();
+                                        fileProp.set(config.getMainManifest());
+                                        return fileProp.get();
+                                    }));
+            task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
+            task.isHybridVariantType = config.getType().isHybrid();
+            task.buildTypeName = config.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

@@ -55,6 +55,9 @@ import org.apache.tools.ant.BuildException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -74,11 +77,15 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     private Supplier<String> targetSdkVersion;
     private Supplier<Integer> maxSdkVersion;
 
-    private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
-            variantConfiguration;
     private OutputScope outputScope;
 
     private final RegularFileProperty manifestOutputFile;
+    private final RegularFileProperty mainManifest;
+    private final Property<String> packageOverride;
+    private final Property<Integer> versionCode;
+    private final Property<String> versionName;
+    private final ListProperty<File> manifestOverlays;
+    private final MapProperty<String, Object> manifestPlaceholders;
 
     private boolean isNamespaced;
 
@@ -86,6 +93,12 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     public ProcessLibraryManifest(ObjectFactory objectFactory) {
         super(objectFactory);
         manifestOutputFile = objectFactory.fileProperty();
+        mainManifest = objectFactory.fileProperty();
+        packageOverride = objectFactory.property(String.class);
+        versionCode = objectFactory.property(Integer.class);
+        versionName = objectFactory.property(String.class);
+        manifestOverlays = objectFactory.listProperty(File.class);
+        manifestPlaceholders = objectFactory.mapProperty(String.class, Object.class);
     }
 
     @OutputFile
@@ -106,16 +119,16 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     new ProcessLibParams(
                             getAaptFriendlyManifestOutputFile(),
                             isNamespaced,
-                            getMainManifest(),
-                            getManifestOverlays(),
-                            getPackageOverride(),
-                            getVersionCode(),
-                            getVersionName(),
+                            mainManifest.getAsFile().get(),
+                            manifestOverlays.get(),
+                            packageOverride.getOrNull(),
+                            versionCode.get(),
+                            versionName.getOrNull(),
                             getMinSdkVersion(),
                             getTargetSdkVersion(),
                             getMaxSdkVersion(),
                             manifestOutputFile.get().getAsFile(),
-                            variantConfiguration.getManifestPlaceholders(),
+                            manifestPlaceholders.get(),
                             getReportFile().get().getAsFile(),
                             getMergeBlameFile().get().getAsFile(),
                             manifestOutputDirectory.isPresent()
@@ -133,7 +146,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         private final boolean isNamespaced;
         @NonNull private final File mainManifest;
         @NonNull private final List<File> manifestOverlays;
-        @NonNull private final String packageOverride;
+        @Nullable private final String packageOverride;
         private final int versionCode;
         @Nullable private final String versionName;
         @Nullable private final String minSdkVersion;
@@ -152,7 +165,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                 boolean isNamespaced,
                 @NonNull File mainManifest,
                 @NonNull List<File> manifestOverlays,
-                @NonNull String packageOverride,
+                @Nullable String packageOverride,
                 int versionCode,
                 @Nullable String versionName,
                 @Nullable String minSdkVersion,
@@ -298,57 +311,45 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         return maxSdkVersion.get();
     }
 
-    @Internal
-    public VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
-            getVariantConfiguration() {
-        return variantConfiguration;
-    }
-
-    public void setVariantConfiguration(
-            VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> variantConfiguration) {
-        this.variantConfiguration = variantConfiguration;
-    }
-
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public File getMainManifest() {
-        return variantConfiguration.getMainManifest();
+    public RegularFileProperty getMainManifest() {
+        return mainManifest;
     }
 
     @Input
     @Optional
-    public String getPackageOverride() {
-        return variantConfiguration.getApplicationId();
+    public Property<String> getPackageOverride() {
+        return packageOverride;
     }
 
     @Input
-    public int getVersionCode() {
-        return variantConfiguration.getVersionCode();
+    public Property<Integer> getVersionCode() {
+        return versionCode;
     }
 
     @Input
     @Optional
-    @Nullable
-    public String getVersionName() {
-        return variantConfiguration.getVersionName();
+    public Property<String> getVersionName() {
+        return versionName;
     }
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public List<File> getManifestOverlays() {
-        return variantConfiguration.getManifestOverlays();
+    public ListProperty<File> getManifestOverlays() {
+        return manifestOverlays;
     }
 
     /**
      * Returns a serialized version of our map of key value pairs for placeholder substitution.
      *
-     * This serialized form is only used by gradle to compare past and present tasks to determine
+     * <p>This serialized form is only used by gradle to compare past and present tasks to determine
      * whether a task need to be re-run or not.
      */
     @Input
     @Optional
-    public String getManifestPlaceholders() {
-        return serializeMap(variantConfiguration.getManifestPlaceholders());
+    public MapProperty<String, Object> getManifestPlaceholders() {
+        return manifestPlaceholders;
     }
 
     @Input
@@ -443,8 +444,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getVariantScope().getVariantConfiguration();
 
-            task.variantConfiguration = config;
-
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 
             task.minSdkVersion =
@@ -477,6 +476,21 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             .getExtension()
                             .getAaptOptions()
                             .getNamespaced();
+            task.versionName.set(task.getProject().provider(config::getVersionName));
+            task.versionCode.set(task.getProject().provider(config::getVersionCode));
+            task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.manifestPlaceholders.set(
+                    task.getProject().provider(config::getManifestPlaceholders));
+            task.mainManifest.set(
+                    task.getProject()
+                            .provider(
+                                    () -> {
+                                        RegularFileProperty fileProp =
+                                                task.getProject().getObjects().fileProperty();
+                                        fileProp.set(config.getMainManifest());
+                                        return fileProp.get();
+                                    }));
+            task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
         }
     }
 }

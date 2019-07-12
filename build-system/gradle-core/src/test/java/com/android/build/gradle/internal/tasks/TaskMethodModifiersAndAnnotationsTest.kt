@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.core.VariantConfiguration
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
@@ -172,8 +173,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setSigningConfig",
-                "com.android.build.gradle.tasks.ProcessApplicationManifest::setVariantConfiguration",
-                "com.android.build.gradle.tasks.ProcessLibraryManifest::setVariantConfiguration",
                 "com.android.build.gradle.tasks.ProcessTestManifest::setTestManifestFile",
                 "com.android.build.gradle.tasks.ProcessTestManifest::setTmpDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setDebugBuild",
@@ -215,6 +214,11 @@ class TaskMethodModifiersAndAnnotationsTest {
     @Test
     fun checkVariantScopeIsNotAField() {
         Truth.assertThat(findTaskFieldsOfType(VariantScope::class.java)).isEmpty()
+    }
+
+    @Test
+    fun checkVariantConfigurationIsNotAField() {
+        Truth.assertThat(findTaskFieldsOfType(VariantConfiguration::class.java)).isEmpty()
     }
 
     private fun findTaskFieldsOfType(ofType: Class<*>): List<Field> {
