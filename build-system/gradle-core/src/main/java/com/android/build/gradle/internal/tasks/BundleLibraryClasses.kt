@@ -154,7 +154,9 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
             task.packageName = lazy { variantScope.variantConfiguration.packageFromManifest }
             task.classes.from(inputs)
             val packageRClass =
-                variantScope.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] && publishedType == PublishedConfigType.API_ELEMENTS
+                variantScope.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
+                        publishedType == PublishedConfigType.API_ELEMENTS &&
+                        !variantScope.globalScope.extension.aaptOptions.namespaced
             task.packageRClass.set(packageRClass)
             if (packageRClass) {
                 task.classes.from(variantScope.artifacts.getFinalProduct<RegularFile>(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
