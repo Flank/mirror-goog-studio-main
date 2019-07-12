@@ -12,7 +12,7 @@ Warning: Type 'com.android.build.gradle.internal.pipeline.TransformTask': proper
 Warning: Type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'transform' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.res.GenerateLibraryRFileTask': property 'manifestFile' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.res.GenerateLibraryRFileTask': property 'sourceOutputDir' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask': non-property method 'canHaveSplits()' should not be annotated with: @Input
+Warning: Type 'com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask': non-property method 'isFeatureVariantType()' should not be annotated with: @Input
 Warning: Type 'com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask': property 'manifestFile' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.res.namespaced.CompileSourceSetResources': property 'inputDirectories' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'reportType' is not annotated with an input or output annotation.

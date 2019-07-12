@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken
@@ -40,6 +41,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.junit.Test
 import java.lang.reflect.AnnotatedElement
+import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
 class TaskMethodModifiersAndAnnotationsTest {
@@ -207,19 +209,25 @@ class TaskMethodModifiersAndAnnotationsTest {
 
     @Test
     fun checkWorkerFacadeIsNotAField() {
-        val classPath = ClassPath.from(this.javaClass.classLoader)
-        val taskInterface = TypeToken.of(Task::class.java)
-        val workerFacadeFields =
-            classPath
-                .getTopLevelClassesRecursive("com.android.build")
-                .map { classInfo -> classInfo.load() as Class<*> }
-                .filter { clazz -> TypeToken.of(clazz).types.contains(taskInterface) }
-                .flatMap { it.declaredFields.asIterable() }
-                .filter { it.type.name == WorkerExecutorFacade::class.java.name }
-
-        Truth.assertThat(workerFacadeFields).isEmpty()
+        Truth.assertThat(findTaskFieldsOfType(WorkerExecutorFacade::class.java)).isEmpty()
     }
 
+    @Test
+    fun checkVariantScopeIsNotAField() {
+        Truth.assertThat(findTaskFieldsOfType(VariantScope::class.java)).isEmpty()
+    }
+
+    private fun findTaskFieldsOfType(ofType: Class<*>): List<Field> {
+        val classPath = ClassPath.from(this.javaClass.classLoader)
+        val taskInterface = TypeToken.of(Task::class.java)
+        val fieldType = TypeToken.of(ofType)
+        return classPath
+            .getTopLevelClassesRecursive("com.android.build")
+            .map { classInfo -> classInfo.load() as Class<*> }
+            .filter { clazz -> TypeToken.of(clazz).types.contains(taskInterface) }
+            .flatMap { it.declaredFields.asIterable() }
+            .filter { TypeToken.of(it.type).isSubtypeOf(fieldType) }
+    }
 
     private fun AnnotatedElement.hasGradleInputOrOutputAnnotation(): Boolean {
         // look for all org.gradle.api.tasks annotations, except @CacheableTask, @Internal, and

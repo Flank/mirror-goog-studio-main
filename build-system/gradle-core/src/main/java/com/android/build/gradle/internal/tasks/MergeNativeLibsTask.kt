@@ -39,6 +39,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -62,26 +63,13 @@ abstract class MergeNativeLibsTask
     // custom snapshots from gradle: https://github.com/gradle/gradle/issues/8503
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    val projectNativeLibs: FileCollection
-        get() = getProjectNativeLibs(variantScope).asFileTree.filter(spec)
+    abstract val projectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
-    @get:Optional
-    val subProjectNativeLibs: FileCollection?
-        get() = if (mergeScopes.contains(SUB_PROJECTS)) {
-                    getSubProjectNativeLibs(variantScope)
-                } else null
+    abstract val subProjectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
-    @get:Optional
-    val externalLibNativeLibs: FileCollection?
-        get() = if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
-                    getExternalNativeLibs(variantScope)
-                } else null
-
-    @get:Input
-    lateinit var mergeScopes: Collection<ScopeType>
-        private set
+    abstract val externalLibNativeLibs: ConfigurableFileCollection
 
     @get:Nested
     lateinit var packagingOptions: SerializablePackagingOptions
@@ -98,8 +86,6 @@ abstract class MergeNativeLibsTask
     @get:OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()
 
-    private lateinit var variantScope: VariantScope
-
     override val incremental: Boolean
         get() = true
 
@@ -107,8 +93,8 @@ abstract class MergeNativeLibsTask
     // instead is expecting directories of files. Use the unfiltered collection (since the filtering
     // changes the FileCollection of directories into a FileTree of files) to process, but don't
     // use it as an input, it's covered by the [projectNativeLibs] above.
-    private val unfilteredProjectNativeLibs: FileCollection
-        get() = getProjectNativeLibs(variantScope)
+    @get:Internal
+    abstract val unfilteredProjectNativeLibs: ConfigurableFileCollection
 
     override fun doFullTaskAction() {
         getWorkerFacadeWithWorkers().use {
@@ -116,8 +102,8 @@ abstract class MergeNativeLibsTask
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(
                     unfilteredProjectNativeLibs.files,
-                    subProjectNativeLibs?.files,
-                    externalLibNativeLibs?.files,
+                    subProjectNativeLibs.files,
+                    externalLibNativeLibs.files,
                     null,
                     outputDir.get().asFile,
                     packagingOptions,
@@ -142,8 +128,8 @@ abstract class MergeNativeLibsTask
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(
                     unfilteredProjectNativeLibs.files,
-                    subProjectNativeLibs?.files,
-                    externalLibNativeLibs?.files,
+                    subProjectNativeLibs.files,
+                    externalLibNativeLibs.files,
                     null,
                     outputDir.get().asFile,
                     packagingOptions,
@@ -184,9 +170,6 @@ abstract class MergeNativeLibsTask
         override fun configure(task: MergeNativeLibsTask) {
             super.configure(task)
 
-            task.variantScope = variantScope
-
-            task.mergeScopes = mergeScopes
             task.packagingOptions =
                     SerializablePackagingOptions(
                         variantScope.globalScope.extension.packagingOptions)
@@ -195,6 +178,15 @@ abstract class MergeNativeLibsTask
                         "${variantScope.fullVariantName}-mergeNativeLibs")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
+
+            task.projectNativeLibs.from(getProjectNativeLibs(variantScope).asFileTree.filter(spec))
+            if (mergeScopes.contains(SUB_PROJECTS)) {
+                task.subProjectNativeLibs.from(getSubProjectNativeLibs(variantScope))
+            }
+            if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
+                task.externalLibNativeLibs.from(getExternalNativeLibs(variantScope))
+            }
+            task.unfilteredProjectNativeLibs.from(getProjectNativeLibs(variantScope))
         }
     }
 

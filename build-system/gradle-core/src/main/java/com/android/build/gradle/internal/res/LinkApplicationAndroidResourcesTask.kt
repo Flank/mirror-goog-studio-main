@@ -70,6 +70,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -157,6 +158,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Internal
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
+    @get:Input
+    val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
+
+    @get:Input
+    val isFeatureVariantType: Property<Boolean> = objects.property(Boolean::class.java)
+
     private var debuggable: Boolean = false
 
     private lateinit var aaptOptions: AaptOptions
@@ -221,8 +228,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputResourcesDir: DirectoryProperty
-
-    private lateinit var variantScope: VariantScope
 
     @get:Input
     var isLibrary: Boolean = false
@@ -297,7 +302,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             )
 
-            if (variantScope.type.canHaveSplits) {
+            if (canHaveSplits.get()) {
                 // If there are remaining splits to be processed we await for the main split to
                 // finish since the output of the main split is used by the full splits bellow.
                 it.await()
@@ -495,7 +500,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_LIST, task.apkList)
 
-            task.variantScope = variantScope
             task.outputScope = variantData.outputScope
             task.originalApplicationId = TaskInputHelper.memoize { config.originalApplicationId }
 
@@ -515,6 +519,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
             task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
+            task.canHaveSplits.set(variantScope.type.canHaveSplits)
+            task.isFeatureVariantType.set(variantScope.type == VariantTypeImpl.FEATURE)
 
             task.setMergeBlameLogFolder(variantScope.resourceBlameLogDir)
 
@@ -759,7 +765,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 // workaround for b/74068247. Until that's fixed, if it's a namespaced feature,
                 // an extra empty dummy R.java file will be generated as well
                 packageForR =
-                    if (params.isNamespaced && params.variantDataType === VariantTypeImpl.FEATURE) {
+                    if (params.isNamespaced && params.isFeatureVariantType) {
                         "dummy"
                     } else {
                         params.originalApplicationId
@@ -900,10 +906,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     ) : Serializable {
         val resourceConfigs: Set<String> = splitList.resourceConfigs
         val multiOutputPolicySplitList: Set<String> = splitList.getSplits(task.multiOutputPolicy)
-        val variantScopeMainSplit: ApkData = task.variantScope.outputScope.mainSplit
+        val variantScopeMainSplit: ApkData = task.outputScope.mainSplit
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
-        val variantDataType: VariantType = task.variantScope.variantData.type
+        val isFeatureVariantType: Boolean = task.isFeatureVariantType.get()
         val originalApplicationId: String? = task.originalApplicationId.get()
         val sourceOutputDir: File? = task.getSourceOutputDir()
         val textSymbolOutputFile: File? = task.textSymbolOutputFileProperty.orNull?.asFile
@@ -926,11 +932,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val useFinalIds: Boolean = task.useFinalIds
         val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
         val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile
-    }
-
-    @Input
-    fun canHaveSplits(): Boolean {
-        return variantScope.type.canHaveSplits
     }
 
     @Input
