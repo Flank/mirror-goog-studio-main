@@ -45,7 +45,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -69,34 +68,18 @@ public class UnitTestingAndroidResourcesTest {
         APPLICATION
     }
 
-    enum RClassStrategy {
-        COMPILE_SOURCES,
-        GENERATE_JAR,
-    }
-
-    enum ResourcesMode {
-        RAW,
-        COMPILED
-    }
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("unitTestingAndroidResources").create();
 
-    @Parameterized.Parameters(name = "plugin={0}, rClassStrategy={1}, resourcesMode={2}")
+    @Parameterized.Parameters(name = "plugin={0}")
     public static Object[][] data() {
         return new Object[][] {
-            {Plugin.APPLICATION, ResourcesMode.RAW},
-            {Plugin.APPLICATION, ResourcesMode.COMPILED},
-            {Plugin.LIBRARY, ResourcesMode.RAW},
-            {Plugin.LIBRARY, ResourcesMode.COMPILED},
+            {Plugin.APPLICATION}, {Plugin.LIBRARY},
         };
     }
 
     @Parameterized.Parameter public Plugin plugin;
-
-    @Parameterized.Parameter(value = 1)
-    public ResourcesMode resourcesMode;
 
     @Before
     public void changePlugin() throws Exception {
@@ -136,10 +119,6 @@ public class UnitTestingAndroidResourcesTest {
     public void runUnitTests() throws Exception {
         GradleTaskExecutor runGradleTasks =
                 project.executor().with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true);
-
-        runGradleTasks.with(
-                BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES,
-                resourcesMode == ResourcesMode.COMPILED);
 
         runGradleTasks.run("testDebugUnitTest");
 
@@ -209,9 +188,7 @@ public class UnitTestingAndroidResourcesTest {
                     }
                 });
 
-        if (resourcesMode == ResourcesMode.COMPILED && plugin != Plugin.LIBRARY) {
-            assertThat(Paths.get(properties.getProperty("android_resource_apk"))).isNotNull();
-        }
+        assertThat(properties.getProperty("android_resource_apk")).isNotNull();
 
         // Check the tests see the assets from dependencies, even in the library case where they
         // would not otherwise be merged.

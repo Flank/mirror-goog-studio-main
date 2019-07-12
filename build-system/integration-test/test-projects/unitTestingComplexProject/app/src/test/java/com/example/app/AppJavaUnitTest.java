@@ -213,11 +213,10 @@ public class AppJavaUnitTest {
         assertEquals("javalib", s);
     }
 
+    /** Check that the R class is on the compilation and runtime classpath. */
     @Test
     public void prodRClass() {
         int id = R.string.app_name;
-        //noinspection ConstantConditions
-        assertTrue(id > 0);
     }
 
     @Test

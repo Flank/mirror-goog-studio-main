@@ -772,18 +772,10 @@ public abstract class TaskManager {
             boolean processResources,
             ImmutableSet<MergeResources.Flag> flags) {
 
-        boolean unitTestRawResources =
-                globalScope
-                                .getExtension()
-                                .getTestOptions()
-                                .getUnitTests()
-                                .isIncludeAndroidResources()
-                        && !projectOptions.get(BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
-
         boolean alsoOutputNotCompiledResources =
                 scope.getType().isApk()
                         && !scope.getType().isForTesting()
-                        && (scope.useResourceShrinker() || unitTestRawResources);
+                        && scope.useResourceShrinker();
 
         return basicCreateMergeResourcesTask(
                 scope,
@@ -1413,9 +1405,6 @@ public abstract class TaskManager {
 
         boolean includeAndroidResources = extension.getTestOptions().getUnitTests()
                 .isIncludeAndroidResources();
-        boolean enableBinaryResources = includeAndroidResources
-                && globalScope.getProjectOptions().get(
-                        BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
 
         createAnchorTasks(variantScope);
 
@@ -1436,31 +1425,17 @@ public abstract class TaskManager {
                 // Add a task to merge the assets folders
                 createMergeAssetsTask(variantScope);
 
-                if (enableBinaryResources) {
-                    createMergeResourcesTask(variantScope, true, ImmutableSet.of());
-                    // Add a task to process the Android Resources and generate source files
-                    createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
-                    taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
-                } else {
-                    createMergeResourcesTask(variantScope, false, ImmutableSet.of());
-                }
+                createMergeResourcesTask(variantScope, true, ImmutableSet.of());
+                // Add a task to process the Android Resources and generate source files
+                createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
+                taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
             } else if (testedVariantScope.getType().isApk()) {
-                if (enableBinaryResources) {
-                    // The IDs will have been inlined for an non-namespaced application
-                    // so just re-export the artifacts here.
-                    artifacts.copy(PROCESSED_RES, testedVariantScope.getArtifacts());
-                    artifacts.copy(MERGED_ASSETS, testedVariantScope.getArtifacts());
+                // The IDs will have been inlined for an non-namespaced application
+                // so just re-export the artifacts here.
+                artifacts.copy(PROCESSED_RES, testedVariantScope.getArtifacts());
+                artifacts.copy(MERGED_ASSETS, testedVariantScope.getArtifacts());
 
-                    taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
-                } else {
-                    // TODO: don't implicitly subtract tested component in APKs, as that only
-                    // makes sense for instrumentation tests. For now, rely on the production
-                    // merged resources.
-                    artifacts.copy(
-                            InternalArtifactType.MERGED_RES,
-                            testedVariantScope.getArtifacts(),
-                            MERGED_NOT_COMPILED_RES);
-                }
+                taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
             } else {
                 throw new IllegalStateException(
                         "Tested variant "
@@ -1494,11 +1469,6 @@ public abstract class TaskManager {
                         taskInputs
                                 .files(testConfigInputs.getResourceApk())
                                 .withPropertyName("resourceApk")
-                                .optional()
-                                .withPathSensitivity(PathSensitivity.RELATIVE);
-                        taskInputs
-                                .files(testConfigInputs.getMergedResources())
-                                .withPropertyName("mergedResources")
                                 .optional()
                                 .withPathSensitivity(PathSensitivity.RELATIVE);
                         taskInputs

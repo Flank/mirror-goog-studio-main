@@ -99,6 +99,8 @@ enum class RemovedOptions(
         "android.androidTest.nonFinalResIds",
         "This property has been replaced by android.nonFinalResIds"
     ),
+
+    ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", "The raw resource for unit test functionality is removed."),
     ;
 
     override val status: Option.Status

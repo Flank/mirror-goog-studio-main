@@ -191,11 +191,10 @@ class AppKotlinUnitTest {
         assertEquals("javalib", s)
     }
 
+    /** Check that the R class is on the compilation and runtime classpath. */
     @Test
     fun prodRClass() {
         val id = R.string.app_name
-
-        assertTrue(id > 0)
     }
 
     @Test

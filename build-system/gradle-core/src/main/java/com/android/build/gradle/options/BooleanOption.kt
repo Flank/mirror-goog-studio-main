@@ -113,7 +113,6 @@ enum class BooleanOption(
     ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true, status=Option.Status.STABLE),
     USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, status=Option.Status.STABLE),
-    ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", true, Option.Status.STABLE),
     ENABLE_DUPLICATE_CLASSES_CHECK("android.enableDuplicateClassesCheck", true),
     ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true),
     GENERATE_R_JAVA("android.generateRJava", false),

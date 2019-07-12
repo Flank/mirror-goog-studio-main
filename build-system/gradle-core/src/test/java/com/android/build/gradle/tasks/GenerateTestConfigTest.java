@@ -39,35 +39,7 @@ public class GenerateTestConfigTest {
         Path outputDir = fileSystem.getPath("outputDir");
         GenerateTestConfig.generateTestConfigFile(
                 new GenerateTestConfig.TestConfigProperties(
-                        null,
-                        "/project/build/resources",
-                        "/project/build/assets",
-                        "/project/build/mergedManifest.xml",
-                        "com.example.app"),
-                outputDir);
-
-        Path expectedOutputPath = outputDir.resolve("com/android/tools/test_config.properties");
-        assertThat(expectedOutputPath).isFile();
-        try (Reader reader = Files.newBufferedReader(expectedOutputPath)) {
-            Properties result = new Properties();
-            result.load(reader);
-            Map<String, String> expected = new HashMap<>();
-            expected.put("android_merged_resources", "/project/build/resources");
-            expected.put("android_merged_assets", "/project/build/assets");
-            expected.put("android_merged_manifest", "/project/build/mergedManifest.xml");
-            expected.put("android_custom_package", "com.example.app");
-            Truth.assertThat(result).containsExactlyEntriesIn(expected);
-        }
-    }
-
-    @Test
-    public void smokeTest_binaryMode() throws Exception {
-        FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix());
-        Path outputDir = fileSystem.getPath("outputDir");
-        GenerateTestConfig.generateTestConfigFile(
-                new GenerateTestConfig.TestConfigProperties(
                         "/project/build/app.ap_",
-                        null,
                         "/project/build/assets",
                         "/project/build/mergedManifest.xml",
                         "com.example.app"),

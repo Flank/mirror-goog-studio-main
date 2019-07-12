@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -132,11 +131,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
 
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
-        @get:Optional
-        val mergedResources: Provider<Directory>?
-
-        @get:InputFiles
-        @get:PathSensitive(PathSensitivity.RELATIVE)
         val mergedAssets: Provider<Directory>
 
         @get:InputFiles
@@ -151,26 +145,11 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         init {
             val testedVariantData = scope.testedVariantData ?: error("Not a unit test variant")
             val testedScope = testedVariantData.scope
-            val unitTestBinaryResourcesEnabled = scope
-                .globalScope
-                .projectOptions
-                .get(BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES)
 
             isUseRelativePathEnabled = scope.globalScope.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = if (unitTestBinaryResourcesEnabled) {
-                scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
-            } else {
-                null
-            }
-            mergedResources = if (unitTestBinaryResourcesEnabled) {
-                null
-            } else {
-                if (scope.artifacts.hasFinalProduct(MERGED_RES)) {
-                    scope.artifacts.getFinalProduct(MERGED_RES)
-                } else null
-            }
+            resourceApk = scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
             mergedAssets = testedScope.artifacts.getFinalProduct(MERGED_ASSETS)
             mergedManifest = testedScope.artifacts.getFinalProduct(MERGED_MANIFESTS)
             mainApkInfo = testedScope.outputScope.mainSplit
@@ -191,7 +170,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
 
             return TestConfigProperties(
                 resourceApk?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
-                mergedResources?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
                 getRelativePathIfRequired(mergedAssets.get().asFile, projectDir),
                 getRelativePathIfRequired(manifestOutput.outputFile, projectDir),
                 packageNameOfFinalRClass
@@ -209,7 +187,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
 
     class TestConfigProperties constructor(
         val resourceApkFile: String?,
-        val mergedResourcesDir: String?,
         val mergedAssetsDir: String,
         val mergedManifestDir: String,
         val customPackage: String
@@ -219,7 +196,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
 
         private const val TEST_CONFIG_FILE = "com/android/tools/test_config.properties"
         private const val ANDROID_RESOURCE_APK = "android_resource_apk"
-        private const val ANDROID_MERGED_RESOURCES = "android_merged_resources"
         private const val ANDROID_MERGED_ASSETS = "android_merged_assets"
         private const val ANDROID_MERGED_MANIFEST = "android_merged_manifest"
         private const val ANDROID_CUSTOM_PACKAGE = "android_custom_package"
@@ -232,9 +208,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             val properties = Properties()
             if (config.resourceApkFile != null) {
                 properties.setProperty(ANDROID_RESOURCE_APK, config.resourceApkFile)
-            }
-            if (config.mergedResourcesDir != null) {
-                properties.setProperty(ANDROID_MERGED_RESOURCES, config.mergedResourcesDir)
             }
             properties.setProperty(ANDROID_MERGED_ASSETS, config.mergedAssetsDir)
             properties.setProperty(ANDROID_MERGED_MANIFEST, config.mergedManifestDir)
