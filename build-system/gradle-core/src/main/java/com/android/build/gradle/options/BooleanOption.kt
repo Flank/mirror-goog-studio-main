@@ -84,13 +84,12 @@ enum class BooleanOption(
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
     USE_APK_FLINGER("android.useApkFlinger", false),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
-    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", false),
     PRECOMPILE_LOCAL_RESOURCES("android.precompileLocalResources", false),
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled
-
+    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true),
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true),
