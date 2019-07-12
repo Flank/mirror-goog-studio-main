@@ -1,0 +1,91 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package app.inspection;
+option java_package = "com.android.tools.app.inspection";
+option java_outer_classname = "AppInspection";
+
+// Union of all commands.
+// See descriptions of command next to their types declaration
+message AppInspectionCommand {
+  oneof union {
+    CreateInspectorCommand create_inspector_command = 1;
+    DisposeInspectorCommand dispose_inspector_command = 2;
+    RawCommand raw_inspector_command = 3;
+  }
+}
+
+// A command to create an inspector and register it as a listener
+// for incoming commands.
+message CreateInspectorCommand {
+  // Unique id for an inspector that is used for routing of commands and events
+  // to this inspector.
+  // This id is defined by inspector's owner. (e.g “androidx.workmanager")
+  string inspector_id = 1;
+  // On device path to the jar that has a dexed code of the given inspector.
+  string dex_path = 2;
+}
+
+// A command to dispose the inspector with the given inspector_id.
+// Service layer won't keep reference to an inspector anymore.
+// All events from and commands to it will be ignored
+// This command will be propagated to inspector instance as well, so it should react accordingly.
+// For example, if an inspector was listening for db changes, it should unregister
+// itself.
+message DisposeInspectorCommand {
+  string inspector_id = 1;
+}
+
+// Opaque command to an inspector.
+message RawCommand {
+  // inspector_id identifies an inspector that should handle this command
+  string inspector_id = 1;
+  // An opaque serialized command, inspectors themselves define serialization format
+  bytes raw_command = 2;
+}
+
+// Union of all events and responses.
+message AppInspectionEvent {
+  oneof union {
+    ServiceResponse response = 1;
+    RawEvent raw_event = 2;
+  }
+}
+
+// Response to service commands: EnableAppInspectionCommand, DisableAppInspectionCommand,
+// CreateInspectorCommand, DisposeInspectorCommand.
+//
+// It will be send as an event with the command_id that
+// is set to id of originating command.
+message ServiceResponse {
+  enum Status {
+    SUCCESS = 0;
+    ERROR = 1;
+  }
+  // SUCCESS if originating command successed.
+  Status status = 1;
+  // Additional info if command failed.
+  string error_message = 2;
+}
+
+// Opaque event from an inspector.
+message RawEvent {
+  // inspector_id identifies an inspector that sent given event
+  string inspector_id = 1;
+  // An opaque serialized event, inspectors themselves define serialization format
+  bytes raw_event = 2;
+}

@@ -179,3 +179,18 @@ perf_test(
         "//tools/idea/.idea/libraries:truth",
     ],
 )
+
+perf_test(
+    name = "AppInspectionTest",
+    size = "small",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/app/inspection/AppInspectionTest.java",
+    ],
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":test_lib",
+        "//tools/base/fakeandroid",
+        "//tools/base/profiler/tests/test-app:libjni.so",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)

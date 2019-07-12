@@ -67,6 +67,7 @@ cc_binary(
         "-Itools/base/transport",
         "-Itools/base/echo-sample",
         "-Itools/base/dynamic-layout-inspector/src/main/native/agent",
+        "-Itools/base/app-inspection",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS,
@@ -78,6 +79,8 @@ cc_binary(
     deps = [
         ":jvmti_helper",
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/app-inspection:agent_command",
+        "//tools/base/app-inspection:jni",
         "//tools/base/dynamic-layout-inspector:agent_command",
         "//tools/base/dynamic-layout-inspector:jni",
         "//tools/base/echo-sample:agent_command",

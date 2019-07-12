@@ -26,6 +26,7 @@
 #include "utils/device_info.h"
 #include "utils/log.h"
 
+#include "commands/app_inspection_agent_command.h"
 #include "commands/echo_agent_command.h"
 #include "commands/layoutinspector_agent_command.h"
 
@@ -90,6 +91,9 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
     LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(vm);
   }
+
+  // App Inspection agent.
+  AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(vm);
 
   // Profiler agent.
   // We are passing in the AgentConfig stored in the Agent::Instance() because

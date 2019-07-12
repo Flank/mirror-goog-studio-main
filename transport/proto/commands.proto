@@ -19,6 +19,7 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Commands";
 
+import "app_inspection.proto";
 import "common.proto";
 import "cpu_data.proto";
 import "echo.proto";
@@ -58,6 +59,9 @@ message Command {
 
     // Layout inspector command.
     LAYOUT_INSPECTOR = 1100;
+
+    // App inspection command
+    APP_INSPECTION = 1200;
   }
 
   // A stream is an entity that provides data, such as a device or an imported
@@ -101,6 +105,9 @@ message Command {
 
     // Layout editor starts at 1100;
     layoutinspector.LayoutInspectorCommand layout_inspector = 1100;
+
+    // App inspection prefix = 1200;
+    app.inspection.AppInspectionCommand androidx_inspection_command = 1200;
   }
 }
 
