@@ -20,7 +20,6 @@ kotlin_library(
 kotlin_test(
     name = "tests",
     srcs = ["src/test/java"],
-    coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
