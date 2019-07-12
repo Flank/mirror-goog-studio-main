@@ -569,7 +569,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private static boolean canAddTargetToNativeLibrary(@NonNull Target target) {
         // If the target has no artifacts or file groups, the target will be get ignored, so mark
         // it valid.
-        return (target.artifacts != null) && (target.fileGroups != null);
+        return (target.artifacts != null)
+                && (target.fileGroups != null)
+                && !target.type.equals("OBJECT_LIBRARY");
     }
 
     /**
