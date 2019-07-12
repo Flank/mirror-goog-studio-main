@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.ToolsRevisionUtils;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.sdk.DefaultSdkLoader;
@@ -117,31 +116,25 @@ public class SdkHandler {
         try {
             targetInfo = sdkLoader.getTargetInfo(targetHash, buildToolRevision, logger, sdkLibData);
         } catch (LicenceNotAcceptedException e) {
-            evalIssueReporter
-                    .reportError(
-                            EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
-                            new EvalIssueException(
-                                    e.getMessage(),
-                                    e.getAffectedPackages()
-                                            .stream()
-                                            .map(RepoPackage::getPath)
-                                            .collect(Collectors.joining(" "))));
-            return null;
-        } catch (InstallFailedException e) {
-            evalIssueReporter
-                    .reportError(
-                            EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
-                            new EvalIssueException(
-                                    e.getMessage(),
-                                    e.getAffectedPackages()
-                                            .stream()
-                                            .map(RepoPackage::getPath)
-                                            .collect(Collectors.joining(" "))));
-            return null;
-        } catch (IllegalStateException e) {
             evalIssueReporter.reportError(
                     EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
-                    new EvalIssueException(e, e.getMessage()));
+                    e.getMessage(),
+                    e.getAffectedPackages()
+                            .stream()
+                            .map(RepoPackage::getPath)
+                            .collect(Collectors.joining(" ")));
+            return null;
+        } catch (InstallFailedException e) {
+            evalIssueReporter.reportError(
+                    EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
+                    e.getMessage(),
+                    e.getAffectedPackages()
+                            .stream()
+                            .map(RepoPackage::getPath)
+                            .collect(Collectors.joining(" ")));
+            return null;
+        } catch (IllegalStateException e) {
+            evalIssueReporter.reportError(EvalIssueReporter.Type.MISSING_SDK_PACKAGE, e);
             return null;
         }
 
@@ -220,8 +213,7 @@ public class SdkHandler {
                                     + "properties file at '"
                                     + filePath
                                     + "'.";
-                    evalIssueReporter.reportError(
-                            Type.SDK_NOT_SET, new EvalIssueException(message, filePath, null));
+                    evalIssueReporter.reportError(Type.SDK_NOT_SET, message, filePath);
             }
         }
 

@@ -74,7 +74,6 @@ import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -615,8 +614,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                     .getSyncIssueHandler()
                     .reportError(
                             Type.COMPILE_SDK_VERSION_NOT_SET,
-                            new EvalIssueException(
-                                    "compileSdkVersion is not specified. Please add it to build.gradle"));
+                            "compileSdkVersion is not specified. Please add it to build.gradle");
         }
 
         // Make sure unit tests set the required fields.

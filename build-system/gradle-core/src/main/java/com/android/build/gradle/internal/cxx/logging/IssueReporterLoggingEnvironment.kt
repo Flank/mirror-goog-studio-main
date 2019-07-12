@@ -35,19 +35,15 @@ class IssueReporterLoggingEnvironment(
         when (message.level) {
             LoggingLevel.INFO -> logger.info(message.toString())
             LoggingLevel.WARN -> {
-                issueReporter.reportIssue(
+                issueReporter.reportWarning(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    WARNING,
-                    message.toString()
-                )
+                    message.toString())
                 logger.warn(message.toString())
             }
             LoggingLevel.ERROR -> {
-                issueReporter.reportIssue(
+                issueReporter.reportError(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    ERROR,
-                    message.toString()
-                )
+                    message.toString())
                 logger.error(message.toString())
             }
         }

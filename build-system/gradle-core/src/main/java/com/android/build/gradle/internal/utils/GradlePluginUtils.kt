@@ -125,21 +125,17 @@ private fun enforceMinimumVersionOfPlugin(
     if (pathsToViolatingPlugins.isNotEmpty()) {
         issueReporter.reportError(
             EvalIssueReporter.Type.THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD,
-            EvalIssueException(
-                "The Android Gradle plugin supports only ${pluginInfo.displayName} Gradle plugin" +
-                        " version ${pluginInfo.minimumVersion} and higher.\n" +
-                        "The following dependencies do not satisfy the required version:\n" +
-                        pathsToViolatingPlugins.joinToString("\n"),
-                listOf(
-                    pluginInfo.displayName,
-                    pluginInfo.dependencyGroup,
-                    pluginInfo.dependencyName,
-                    pluginInfo.minimumVersion,
-                    pathsToViolatingPlugins.joinToString(",", "[", "]")
-                ).joinToString(";"),
-                null
-            )
-        )
+            "The Android Gradle plugin supports only ${pluginInfo.displayName} Gradle plugin" +
+                    " version ${pluginInfo.minimumVersion} and higher.\n" +
+                    "The following dependencies do not satisfy the required version:\n" +
+                    pathsToViolatingPlugins.joinToString("\n"),
+            listOf(
+                pluginInfo.displayName,
+                pluginInfo.dependencyGroup,
+                pluginInfo.dependencyName,
+                pluginInfo.minimumVersion,
+                pathsToViolatingPlugins.joinToString(",", "[", "]")
+            ).joinToString(";"))
     }
 }
 

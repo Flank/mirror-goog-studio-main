@@ -49,7 +49,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.core.ToolsRevisionUtils;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.api.DeviceProvider;
@@ -949,8 +948,7 @@ public abstract class BaseExtension implements AndroidConfig {
             extraModelInfo
                     .getSyncIssueHandler()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC,
-                            new EvalIssueException(ProguardFiles.UNKNOWN_FILENAME_MESSAGE));
+                            EvalIssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
         }
         return ProguardFiles.getDefaultProguardFile(name, project);
     }

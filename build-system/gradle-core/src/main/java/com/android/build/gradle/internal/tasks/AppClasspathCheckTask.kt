@@ -69,7 +69,7 @@ dependencies {
 }
 """
 
-        reporter.reportError(EvalIssueReporter.Type.GENERIC, EvalIssueException(message))
+        reporter.reportError(EvalIssueReporter.Type.GENERIC, message)
     }
 
     class CreationAction(private val variantScope: VariantScope) :

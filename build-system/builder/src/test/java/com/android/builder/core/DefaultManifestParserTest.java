@@ -17,35 +17,27 @@
 package com.android.builder.core;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.FakeEvalIssueReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.testutils.TestResources;
 import java.io.File;
 import java.util.function.BooleanSupplier;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 public class DefaultManifestParserTest {
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
-
     private BooleanSupplier canParseManifest = () -> true;
 
     private DefaultManifestParser defaultManifestParser;
 
-    @Mock private EvalIssueReporter issueReporter;
+    private FakeEvalIssueReporter issueReporter;
     File manifestFile;
 
     @Before
-    public void before() throws Exception {
+    public void before() {
         manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml");
+        issueReporter = new FakeEvalIssueReporter();
         defaultManifestParser =
                 new DefaultManifestParser(manifestFile, canParseManifest, issueReporter);
     }
@@ -55,10 +47,14 @@ public class DefaultManifestParserTest {
         DefaultManifestParser manifestParser =
                 new DefaultManifestParser(manifestFile, () -> false, issueReporter);
         manifestParser.getPackage();
-        verify(issueReporter)
-                .reportWarning(
-                        eq(EvalIssueReporter.Type.MANIFEST_PARSED_DURING_CONFIGURATION),
-                        anyString());
+
+        assertThat(issueReporter.getWarnings()).hasSize(1);
+        assertThat(issueReporter.getWarnings().get(0))
+                .startsWith(
+                        "The manifest is being parsed during configuration. Please "
+                                + "either remove android.disableConfigurationManifestParsing "
+                                + "from build.gradle or remove any build configuration rules "
+                                + "that read the android manifest file.\n");
     }
 
     @Test

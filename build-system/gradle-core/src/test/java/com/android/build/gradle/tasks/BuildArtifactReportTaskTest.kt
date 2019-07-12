@@ -16,29 +16,20 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
-import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
-import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
+import com.android.builder.errors.FakeEvalIssueReporter
 import com.google.common.truth.Truth.assertThat
-import com.google.gson.JsonParser
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.file.RegularFile
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
-import java.io.FileReader
 
 /**
  * Test for [BuildArtifactReportTask].

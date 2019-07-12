@@ -39,9 +39,8 @@ class DeprecationReporterImpl(
             newDslElement: String,
             oldDslElement: String,
             deprecationTarget: DeprecationTarget) {
-        issueReporter.reportIssue(
+        issueReporter.reportWarning(
                 Type.DEPRECATED_DSL,
-                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
                         "It will be removed ${deprecationTarget.removalTime}.",
                 "$oldDslElement::$newDslElement::${deprecationTarget.name}")
@@ -52,9 +51,8 @@ class DeprecationReporterImpl(
             oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationTarget) {
-        issueReporter.reportIssue(
+        issueReporter.reportWarning(
                 Type.DEPRECATED_DSL,
-                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
                         "It will be removed ${deprecationTarget.removalTime}.\n" +
                         "For more information, see $url.",
@@ -119,20 +117,17 @@ class DeprecationReporterImpl(
                 messageEnd = "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display more information."
             }
 
-            issueReporter.reportIssue(
+            issueReporter.reportWarning(
                 Type.DEPRECATED_DSL,
-                Severity.WARNING,
-                "$messageStart\n$messageEnd"
-            )
+                "$messageStart\n$messageEnd")
 
         }
     }
 
     override fun reportObsoleteUsage(oldDslElement: String,
             deprecationTarget: DeprecationTarget) {
-        issueReporter.reportIssue(
+        issueReporter.reportWarning(
                 Type.DEPRECATED_DSL,
-                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}.",
                 "$oldDslElement::::${deprecationTarget.name}")
     }
@@ -141,9 +136,8 @@ class DeprecationReporterImpl(
             oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationTarget) {
-        issueReporter.reportIssue(
+        issueReporter.reportWarning(
                 Type.DEPRECATED_DSL,
-                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}.\n" +
                         "For more information, see $url.",
                 "$oldDslElement::::${deprecationTarget.name}")
@@ -158,9 +152,8 @@ class DeprecationReporterImpl(
             "Configuration '$oldConfiguration' is obsolete and has been replaced with '$newConfiguration'.\n" +
                     "It will be removed ${deprecationTarget.removalTime}."
 
-        issueReporter.reportIssue(
+        issueReporter.reportWarning(
                 Type.DEPRECATED_CONFIGURATION,
-                Severity.WARNING,
                 if (url != null) "$msg For more information see: $url" else msg,
                 "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")
     }
@@ -170,9 +163,8 @@ class DeprecationReporterImpl(
         oldConfiguration: String,
         deprecationTarget: DeprecationTarget
     ) {
-        issueReporter.reportIssue(
+        issueReporter.reportWarning(
             Type.DEPRECATED_CONFIGURATION,
-            Severity.WARNING,
             "Configuration '$oldConfiguration' is obsolete and has been replaced with DSL element '$newDslElement'.\n" +
                     "It will be removed ${deprecationTarget.removalTime}.",
             "$oldConfiguration::$newDslElement::${deprecationTarget.name}")
@@ -182,9 +174,8 @@ class DeprecationReporterImpl(
             oldValue: String,
             newValue: String?,
             url: String?,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        issueReporter.reportIssue(Type.DEPRECATED_DSL_VALUE,
-                Severity.WARNING,
+            deprecationTarget: DeprecationTarget) {
+        issueReporter.reportWarning(Type.DEPRECATED_DSL_VALUE,
                 "DSL element '$dslElement' has a value '$oldValue' which is obsolete " +
                         if (newValue != null)
                             "and has been replaced with '$newValue'.\n"
@@ -202,13 +193,11 @@ class DeprecationReporterImpl(
             return
         }
         if (!checkAndSet(option, value)) {
-            issueReporter.reportIssue(
+            issueReporter.reportWarning(
                 Type.UNSUPPORTED_PROJECT_OPTION_USE,
-                Severity.WARNING,
                 "The option '$option' is deprecated and should not be used anymore.\n" +
                         (if (value != null) "Use '$option=$value' to remove this warning.\n" else "") +
-                        "It will be removed ${deprecationTarget.removalTime}."
-            )
+                        "It will be removed ${deprecationTarget.removalTime}.")
         }
     }
 
@@ -218,9 +207,8 @@ class DeprecationReporterImpl(
             return
         }
         if (!checkAndSet(option, value)) {
-            issueReporter.reportIssue(
+            issueReporter.reportWarning(
                 Type.UNSUPPORTED_PROJECT_OPTION_USE,
-                Severity.WARNING,
                 "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
                         (if (option.defaultValue != null) "The current default is '${option.defaultValue.toString()}'.\n" else "") +
                         option.additionalInfo,

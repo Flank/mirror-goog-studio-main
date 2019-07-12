@@ -59,7 +59,6 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
@@ -219,10 +218,9 @@ public class LibraryTaskManager extends TaskManager {
                         .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
-                                new EvalIssueException(
-                                        String.format(
-                                                "Transforms with scopes '%s' cannot be applied to library projects.",
-                                                scopes)));
+                                String.format(
+                                        "Transforms with scopes '%s' cannot be applied to library projects.",
+                                        scopes));
             }
 
             List<Object> deps = customTransformsDependencies.get(i);

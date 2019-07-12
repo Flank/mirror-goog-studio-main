@@ -17,13 +17,12 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
+import com.android.builder.errors.FakeEvalIssueReporter
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty

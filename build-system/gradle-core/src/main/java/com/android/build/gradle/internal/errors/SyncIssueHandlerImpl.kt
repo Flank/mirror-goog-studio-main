@@ -20,19 +20,17 @@ import com.android.annotations.concurrency.Immutable
 import com.android.build.gradle.internal.ide.SyncIssueImpl
 import com.android.build.gradle.options.SyncOptions.EvaluationMode
 import com.android.builder.errors.EvalIssueException
-import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import com.google.common.base.MoreObjects
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Maps
-import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
 import javax.annotation.concurrent.GuardedBy
 
 class SyncIssueHandlerImpl(
         private val mode: EvaluationMode,
         private val logger: Logger)
-    : SyncIssueHandler {
+    : SyncIssueHandler() {
 
     @GuardedBy("this")
     private val _syncIssues = Maps.newHashMap<SyncIssueKey, SyncIssue>()
@@ -45,16 +43,16 @@ class SyncIssueHandlerImpl(
         get() = ImmutableList.copyOf(_syncIssues.values)
 
     @Synchronized
-    override fun hasSyncIssue(type: EvalIssueReporter.Type): Boolean {
+    override fun hasSyncIssue(type: Type): Boolean {
         return _syncIssues.values.any { issue -> issue.type == type.type }
     }
 
     @Synchronized
     override fun reportIssue(
-            type: EvalIssueReporter.Type,
-            severity: EvalIssueReporter.Severity,
-            exception: EvalIssueException): SyncIssue {
-        val issue = SyncIssueImpl(type, severity, exception.data, exception.message)
+            type: Type,
+            severity: Severity,
+            exception: EvalIssueException) {
+        val issue = SyncIssueImpl(type, severity, exception)
         when (mode) {
             EvaluationMode.STANDARD -> {
                 if (severity.severity != SyncIssue.SEVERITY_WARNING) {
@@ -67,12 +65,10 @@ class SyncIssueHandlerImpl(
                 if (handlerLocked) {
                     throw IllegalStateException("Issue registered after handler locked.", exception)
                 }
-                _syncIssues.put(syncIssueKeyFrom(issue), issue)
+                _syncIssues[syncIssueKeyFrom(issue)] = issue
             }
             else -> throw RuntimeException("Unknown SyncIssue type")
         }
-
-        return issue
     }
 
     @Synchronized

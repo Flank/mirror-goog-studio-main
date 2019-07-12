@@ -41,7 +41,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
@@ -228,12 +227,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         EvalIssueReporter issueReporter = globalScope.getErrorHandler();
         issueReporter.reportError(
                 EvalIssueReporter.Type.GENERIC,
-                new EvalIssueException(
-                        String.format(
-                                "Conflicting configuration : '%1$s' in ndk abiFilters "
-                                        + "cannot be present when splits abi filters are set : %2$s",
-                                Joiner.on(",").join(ndkConfigAbiFilters),
-                                Joiner.on(",").join(abiFilters))));
+                String.format(
+                        "Conflicting configuration : '%1$s' in ndk abiFilters "
+                                + "cannot be present when splits abi filters are set : %2$s",
+                        Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
     }
 
     private void restrictEnabledOutputs(
@@ -328,12 +325,11 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
                         Type.GENERIC,
-                        new EvalIssueException(
-                                "Dynamic feature modules cannot set minifyEnabled to true. "
-                                        + "minifyEnabled is set to true in build type '"
-                                        + buildType.getBuildType().getName()
-                                        + "'.\nTo enable minification for a dynamic feature "
-                                        + "module, set minifyEnabled to true in the base module."));
+                        "Dynamic feature modules cannot set minifyEnabled to true. "
+                                + "minifyEnabled is set to true in build type '"
+                                + buildType.getBuildType().getName()
+                                + "'.\nTo enable minification for a dynamic feature "
+                                + "module, set minifyEnabled to true in the base module.");
             }
         }
     }
@@ -358,12 +354,11 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         if (versionCode != null && versionCode < 1) {
             issueReporter.reportError(
                     Type.GENERIC,
-                    new EvalIssueException(
-                            "android.defaultConfig.versionCode is set to "
-                                    + versionCode
-                                    + ", but it should be a positive integer.\n"
-                                    + "See https://developer.android.com/studio/publish/versioning#appversioning"
-                                    + " for more information."));
+                    "android.defaultConfig.versionCode is set to "
+                            + versionCode
+                            + ", but it should be a positive integer.\n"
+                            + "See https://developer.android.com/studio/publish/versioning#appversioning"
+                            + " for more information.");
             return;
         }
 
@@ -374,14 +369,13 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             }
             issueReporter.reportError(
                     Type.GENERIC,
-                    new EvalIssueException(
-                            "versionCode is set to "
-                                    + flavorVersionCode
-                                    + " in product flavor "
-                                    + flavorData.getProductFlavor().getName()
-                                    + ", but it should be a positive integer.\n"
-                                    + "See https://developer.android.com/studio/publish/versioning#appversioning"
-                                    + " for more information."));
+                    "versionCode is set to "
+                            + flavorVersionCode
+                            + " in product flavor "
+                            + flavorData.getProductFlavor().getName()
+                            + ", but it should be a positive integer.\n"
+                            + "See https://developer.android.com/studio/publish/versioning#appversioning"
+                            + " for more information.");
         }
     }
 }

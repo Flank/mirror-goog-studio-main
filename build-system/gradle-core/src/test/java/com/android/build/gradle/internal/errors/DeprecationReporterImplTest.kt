@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget.CONFIG_NAME
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.errors.FakeEvalIssueReporter
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
 import org.junit.After

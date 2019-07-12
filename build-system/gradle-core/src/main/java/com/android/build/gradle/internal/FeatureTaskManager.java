@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.sdklib.AndroidTargetHash;
@@ -73,9 +72,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
             if (androidVersion != null) {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
-            globalScope
-                    .getErrorHandler()
-                    .reportError(Type.GENERIC, new EvalIssueException(message));
+            globalScope.getErrorHandler().reportError(Type.GENERIC, message);
         }
 
         // FIXME: This is currently disabled due to b/62301277.
@@ -95,14 +92,13 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                         .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
-                                new EvalIssueException(
-                                        "Currently, data binding does not work for non-base features. "
-                                                + "Move data binding code to the base feature module.\n"
-                                                + "See https://issuetracker.google.com/63814741.\n"
-                                                + "To enable data binding with non-base features, set the "
-                                                + experimentalBinding
-                                                + " properties "
-                                                + "to true."));
+                                "Currently, data binding does not work for non-base features. "
+                                        + "Move data binding code to the base feature module.\n"
+                                        + "See https://issuetracker.google.com/63814741.\n"
+                                        + "To enable data binding with non-base features, set the "
+                                        + experimentalBinding
+                                        + " properties "
+                                        + "to true.");
             }
         }
 

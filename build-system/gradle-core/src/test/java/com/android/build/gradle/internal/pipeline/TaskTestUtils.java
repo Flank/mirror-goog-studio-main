@@ -74,8 +74,6 @@ public class TaskTestUtils {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private static final String FOLDER_TEST_PROJECTS = "test-projects";
-
     protected static final String TASK_NAME = "task name";
 
     protected TaskFactory taskFactory;
@@ -85,88 +83,6 @@ public class TaskTestUtils {
 
     protected Supplier<RuntimeException> mTransformTaskFailed;
     protected Project project;
-
-    static class FakeConfigurableErrorReporter implements SyncIssueHandler {
-
-        private SyncIssue syncIssue = null;
-
-        protected FakeConfigurableErrorReporter() {}
-
-        public SyncIssue getSyncIssue() {
-            return syncIssue;
-        }
-
-        @Override
-        public synchronized void lockHandler() {
-            throw new UnsupportedOperationException(
-                    "lockHandler() shouldn't be called from inside tasks.");
-        }
-
-        @NonNull
-        @Override
-        public synchronized SyncIssue reportIssue(
-                @NonNull Type type,
-                @NonNull Severity severity,
-                @NonNull EvalIssueException exception) {
-            // always create a sync issue, no matter what the mode is. This can be used to validate
-            // what error is thrown anyway.
-            syncIssue =
-                    new SyncIssueImpl(type, severity, exception.getData(), exception.getMessage());
-            return syncIssue;
-        }
-
-        @Override
-        public synchronized boolean hasSyncIssue(@NonNull Type type) {
-            return syncIssue != null && syncIssue.getType() == type.getType();
-        }
-
-        @NonNull
-        @Override
-        public synchronized ImmutableList<SyncIssue> getSyncIssues() {
-            if (syncIssue != null) {
-                return ImmutableList.of(syncIssue);
-            }
-
-            return ImmutableList.of();
-        }
-
-        // Kotlin default impl doesn't work in java...
-        @NonNull
-        @Override
-        public SyncIssue reportIssue(
-                @NonNull Type type, @NonNull Severity severity, @NonNull String msg) {
-            return reportIssue(type, severity, msg, null);
-        }
-
-        @NonNull
-        @Override
-        public SyncIssue reportIssue(
-                @NonNull Type type,
-                @NonNull Severity severity,
-                @NonNull String msg,
-                @Nullable String data) {
-            return reportIssue(type, severity, new EvalIssueException(msg, data));
-        }
-
-        @NonNull
-        @Override
-        public SyncIssue reportError(@NonNull Type type, @NonNull EvalIssueException exception) {
-            return reportIssue(type, Severity.ERROR, exception);
-        }
-
-        @NonNull
-        @Override
-        public SyncIssue reportWarning(
-                @NonNull Type type, @NonNull String msg, @Nullable String data) {
-            return reportIssue(type, Severity.WARNING, msg, data);
-        }
-
-        @NonNull
-        @Override
-        public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg) {
-            return reportIssue(type, Severity.WARNING, msg, null);
-        }
-    }
 
     @Before
     public void setUp() throws IOException {

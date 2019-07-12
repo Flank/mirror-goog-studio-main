@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -411,9 +410,8 @@ public class VariantDependencies {
                         if (!notFound.isEmpty()) {
                             errorReporter.reportError(
                                     EvalIssueReporter.Type.GENERIC,
-                                    new EvalIssueException(
-                                            "Unable to find matching projects for Dynamic Features: "
-                                                    + notFound));
+                                    "Unable to find matching projects for Dynamic Features: "
+                                            + notFound);
                         }
                     } else {
                         //noinspection deprecation

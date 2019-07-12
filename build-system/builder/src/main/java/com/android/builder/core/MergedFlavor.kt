@@ -16,7 +16,6 @@
 
 package com.android.builder.core
 
-import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
@@ -121,6 +120,6 @@ android {
     }
 }"""
 
-        issueReporter.reportError(EvalIssueReporter.Type.GENERIC, EvalIssueException(message))
+        issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
     }
 }

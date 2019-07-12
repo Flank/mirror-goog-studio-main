@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
@@ -104,12 +103,11 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
                         Type.GENERIC,
-                        new EvalIssueException(
-                                "Feature modules cannot set minifyEnabled to true. "
-                                        + "minifyEnabled is set to true in build type '"
-                                        + buildType.getBuildType().getName()
-                                        + "'.\nTo enable minification for a feature module, "
-                                        + "set minifyEnabled to true in the base module."));
+                        "Feature modules cannot set minifyEnabled to true. "
+                                + "minifyEnabled is set to true in build type '"
+                                + buildType.getBuildType().getName()
+                                + "'.\nTo enable minification for a feature module, "
+                                + "set minifyEnabled to true in the base module.");
             }
         }
     }

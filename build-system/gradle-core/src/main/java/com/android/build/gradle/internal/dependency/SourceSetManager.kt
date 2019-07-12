@@ -199,7 +199,7 @@ class SourceSetManager(
             if (!configuredSourceSets.contains(sourceSet.name)) {
                 val message = ("The SourceSet '${sourceSet.name}' is not recognized " +
                         "by the Android Gradle Plugin. Perhaps you misspelled something?")
-                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, EvalIssueException(message))
+                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
             }
         }
     }

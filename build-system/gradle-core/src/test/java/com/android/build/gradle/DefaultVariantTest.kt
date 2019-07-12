@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.ide.SyncIssueImpl
 import com.android.builder.errors.EvalIssueException
-import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -274,10 +273,9 @@ class DefaultVariantTest {
         assertThat(result.syncIssues.first().type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_BUILD_TYPE_DEFAULT)
         assertThat(result.syncIssues.first().severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
         assertThat(result.syncIssues.first().message).isEqualTo(
-            "Ambiguous default build type: 'a', 'z'.")
-        assertThat(result.syncIssues.first().multiLineMessage).containsExactly(
-            "Ambiguous default build type: 'a', 'z'.",
-            "Please only set `isDefault = true` for one build type.")
+            "Ambiguous default build type: 'a', 'z'.\n" +
+                    "Please only set `isDefault = true` " +
+                    "for one build type.")
     }
 
 
@@ -297,10 +295,9 @@ class DefaultVariantTest {
         assertThat(result.syncIssues.first().type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT)
         assertThat(result.syncIssues.first().severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
         assertThat(result.syncIssues.first().message).isEqualTo(
-            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.")
-        assertThat(result.syncIssues.first().multiLineMessage).containsExactly(
-            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.",
-            "Please only set `isDefault = true` for one product flavor in each flavor dimension.")
+            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.\n" +
+                    "Please only set `isDefault = true` " +
+                    "for one product flavor in each flavor dimension.")
     }
 
     @Test
@@ -324,13 +321,12 @@ class DefaultVariantTest {
         }
         assertThat(result.syncIssues.map { it.data }).containsExactly("1", "2")
         assertThat(result.syncIssues.map { it.message }).containsExactly(
-            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.",
-            "Ambiguous default product flavors for flavor dimension '2': 'f4', 'f5'.")
-        assertThat(result.syncIssues.flatMap { it.multiLineMessage!!.asIterable() }).containsExactly(
-            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.",
-            "Please only set `isDefault = true` for one product flavor in each flavor dimension.",
-            "Ambiguous default product flavors for flavor dimension '2': 'f4', 'f5'.",
-            "Please only set `isDefault = true` for one product flavor in each flavor dimension.")
+            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.\n" +
+                    "Please only set `isDefault = true` " +
+                    "for one product flavor in each flavor dimension.",
+            "Ambiguous default product flavors for flavor dimension '2': 'f4', 'f5'.\n" +
+                    "Please only set `isDefault = true` " +
+                    "for one product flavor in each flavor dimension.")
     }
 
     @Test
@@ -360,7 +356,7 @@ class DefaultVariantTest {
         project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
             .withPlugin(pluginType)
             .build()
-        project.extensions.getByType<TestedExtension>(TestedExtension::class.java).apply {
+        project.extensions.getByType(TestedExtension::class.java).apply {
             setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         }
         Eval.me(
@@ -381,13 +377,13 @@ class DefaultVariantTest {
         return Result(defaultVariant, ImmutableSet.copyOf(syncIssuesHandler.syncIssues))
     }
 
-    class FakeSyncIssueHandler: SyncIssueHandler {
+    class FakeSyncIssueHandler: SyncIssueHandler() {
         override val syncIssues: ImmutableList<SyncIssue>
             get() = ImmutableList.copyOf(_syncIssues)
 
         private val _syncIssues = mutableListOf<SyncIssue>()
 
-        override fun hasSyncIssue(type: EvalIssueReporter.Type): Boolean {
+        override fun hasSyncIssue(type: Type): Boolean {
             return _syncIssues.any { issue -> issue.type == type.type }
         }
 
@@ -396,13 +392,12 @@ class DefaultVariantTest {
         }
 
         override fun reportIssue(
-            type: EvalIssueReporter.Type,
-            severity: EvalIssueReporter.Severity,
+            type: Type,
+            severity: Severity,
             exception: EvalIssueException
-        ): SyncIssue {
-            val issue = SyncIssueImpl(type, severity, exception.data, exception.message)
+        ) {
+            val issue = SyncIssueImpl(type, severity, exception)
             _syncIssues.add(issue)
-            return issue
         }
     }
 }

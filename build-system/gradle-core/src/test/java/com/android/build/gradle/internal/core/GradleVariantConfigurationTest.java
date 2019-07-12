@@ -22,11 +22,11 @@ import static org.mockito.Mockito.when;
 
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultVectorDrawablesOptions;
 import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.errors.FakeEvalIssueReporter;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;

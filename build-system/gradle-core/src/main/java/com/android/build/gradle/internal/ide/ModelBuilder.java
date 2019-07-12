@@ -488,14 +488,12 @@ public class ModelBuilder<Extension extends BaseExtension>
             } catch (XMLStreamException | IOException e) {
                 extraModelInfo
                         .getSyncIssueHandler()
-                        .reportIssue(
+                        .reportError(
                                 Type.GENERIC,
-                                EvalIssueReporter.Severity.ERROR,
                                 "Failed to parse XML in "
                                         + manifest.getPath()
                                         + "\n"
-                                        + e.getMessage(),
-                                null);
+                                        + e.getMessage());
             }
         }
         return false;
@@ -576,14 +574,12 @@ public class ModelBuilder<Extension extends BaseExtension>
             } catch (Throwable e) {
                 extraModelInfo
                         .getSyncIssueHandler()
-                        .reportIssue(
+                        .reportError(
                                 Type.GENERIC,
-                                EvalIssueReporter.Severity.ERROR,
                                 "Failed to parse XML in "
                                         + manifest.getPath()
                                         + "\n"
-                                        + e.getMessage(),
-                                null);
+                                        + e.getMessage());
             }
         }
 
@@ -660,14 +656,10 @@ public class ModelBuilder<Extension extends BaseExtension>
                     isDynamicFeature,
                     hasFeaturePlugin,
                     consumerProguardFiles,
-                    exception ->
+                    errorMessage ->
                             extraModelInfo
                                     .getSyncIssueHandler()
-                                    .reportIssue(
-                                            Type.GENERIC,
-                                            EvalIssueReporter.Severity.ERROR,
-                                            exception.getMessage(),
-                                            exception.getData()));
+                                    .reportError(Type.GENERIC, errorMessage));
         }
     }
 
@@ -841,10 +833,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 + "declared in the application module.";
                 extraModelInfo
                         .getSyncIssueHandler()
-                        .reportIssue(
-                                Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
-                                EvalIssueReporter.Severity.WARNING,
-                                message);
+                        .reportWarning(Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
             }
         }
     }
@@ -907,11 +896,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                     message ->
                             extraModelInfo
                                     .getSyncIssueHandler()
-                                    .reportIssue(
-                                            Type.GENERIC,
-                                            EvalIssueReporter.Severity.ERROR,
-                                            message,
-                                            null));
+                                    .reportError(Type.GENERIC, message));
 
             TestOptions testOptionsDsl = scope.getGlobalScope().getExtension().getTestOptions();
             testOptions =
@@ -929,9 +914,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         } catch (RuntimeException e) {
             // don't crash. just throw a sync error.
             applicationId = "";
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportIssue(Type.GENERIC, EvalIssueReporter.Severity.ERROR, e.getMessage());
+            extraModelInfo.getSyncIssueHandler().reportError(Type.GENERIC, e);
         }
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
         return new AndroidArtifactImpl(
@@ -976,9 +959,8 @@ public class ModelBuilder<Extension extends BaseExtension>
             // report an error since min sdk version should not be in the manifest.
             extraModelInfo
                     .getSyncIssueHandler()
-                    .reportIssue(
+                    .reportError(
                             EvalIssueReporter.Type.MIN_SDK_VERSION_IN_MANIFEST,
-                            EvalIssueReporter.Severity.ERROR,
                             "The minSdk version should not be declared in the android"
                                     + " manifest file. You can move the version from the manifest"
                                     + " to the defaultConfig in the build.gradle file.");
@@ -990,9 +972,8 @@ public class ModelBuilder<Extension extends BaseExtension>
             // report a warning since target sdk version should not be in the manifest.
             extraModelInfo
                     .getSyncIssueHandler()
-                    .reportIssue(
+                    .reportWarning(
                             EvalIssueReporter.Type.TARGET_SDK_VERSION_IN_MANIFEST,
-                            EvalIssueReporter.Severity.WARNING,
                             "The targetSdk version should not be declared in the android"
                                     + " manifest file. You can move the version from the manifest"
                                     + " to the defaultConfig in the build.gradle file.");

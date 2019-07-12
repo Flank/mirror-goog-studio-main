@@ -39,7 +39,6 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
@@ -183,7 +182,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         .getErrorHandler()
                         .reportError(
                                 EvalIssueReporter.Type.GENERIC,
-                                new EvalIssueException("Unknown SourceKind value: " + folderType));
+                                "Unknown SourceKind value: " + folderType);
         }
 
         return ImmutableList.of();
@@ -223,8 +222,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                     .getIssueReporter()
                     .reportError(
                             EvalIssueReporter.Type.GENERIC,
-                            new EvalIssueException(
-                                    "variant.getApplicationId() is not supported by feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead."));
+                            "variant.getApplicationId() is not supported by feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
         }
 
         return variantData.getApplicationId();

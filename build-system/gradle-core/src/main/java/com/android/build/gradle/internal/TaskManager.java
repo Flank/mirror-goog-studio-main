@@ -51,13 +51,11 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import android.databinding.tool.DataBindingBuilder;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -208,7 +206,6 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -217,7 +214,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -228,7 +224,17 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -260,18 +266,6 @@ import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /** Manages tasks creation. */
 public abstract class TaskManager {
@@ -3496,13 +3490,12 @@ public abstract class TaskManager {
                                 .getErrorHandler()
                                 .reportError(
                                         Type.GENERIC,
-                                        new EvalIssueException(
-                                                "Data Binding annotation processor version needs to match the"
-                                                        + " Android Gradle Plugin version. You can remove the kapt"
-                                                        + " dependency "
-                                                        + depString
-                                                        + " and Android Gradle Plugin will inject"
-                                                        + " the right version."));
+                                        "Data Binding annotation processor version needs to match the"
+                                                + " Android Gradle Plugin version. You can remove the kapt"
+                                                + " dependency "
+                                                + depString
+                                                + " and Android Gradle Plugin will inject"
+                                                + " the right version.");
                     }
                 });
         project.getDependencies()

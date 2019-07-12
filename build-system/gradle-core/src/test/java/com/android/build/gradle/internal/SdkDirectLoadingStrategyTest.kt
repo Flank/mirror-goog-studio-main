@@ -19,8 +19,8 @@ package com.android.build.gradle.internal
 import com.android.SdkConstants
 import com.google.common.truth.Truth.assertThat
 
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.errors.FakeEvalIssueReporter
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
@@ -31,8 +31,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.io.IOException
-import java.lang.IllegalStateException
 import java.util.Properties
 import java.util.function.Supplier
 
@@ -280,7 +278,7 @@ class SdkDirectLoadingStrategyTest {
             Supplier { platformHash },
             Supplier { Revision.parseRevision(buildTools) },
             true,
-            FakeEvalIssueReporter(false))
+            FakeEvalIssueReporter())
     }
 
     // Configures the SDK Test directory and return the root of the SDK dir.

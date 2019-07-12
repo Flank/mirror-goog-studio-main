@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AndroidProject;
@@ -216,14 +215,13 @@ public class TransformManager extends FilterableStreamCollection {
             // didn't find any match. Means there is a broken order somewhere in the streams.
             issueReporter.reportError(
                     Type.GENERIC,
-                    new EvalIssueException(
-                            String.format(
-                                    "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
-                                    transform.getName(),
-                                    scope.getFullVariantName(),
-                                    transform.getScopes(),
-                                    transform.getReferencedScopes(),
-                                    transform.getInputTypes())));
+                    String.format(
+                            "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
+                            transform.getName(),
+                            scope.getFullVariantName(),
+                            transform.getScopes(),
+                            transform.getReferencedScopes(),
+                            transform.getInputTypes()));
             return Optional.empty();
         }
 
@@ -464,21 +462,18 @@ public class TransformManager extends FilterableStreamCollection {
         if (scopes.contains(Scope.PROVIDED_ONLY)) {
             issueReporter.reportError(
                     Type.GENERIC,
-                    new EvalIssueException(
-                            String.format(
-                                    "PROVIDED_ONLY scope cannot be consumed by Transform '%1$s'",
-                                    transform.getName())));
+                    String.format(
+                            "PROVIDED_ONLY scope cannot be consumed by Transform '%1$s'",
+                            transform.getName()));
             return false;
         }
         if (scopes.contains(Scope.TESTED_CODE)) {
             issueReporter.reportError(
                     Type.GENERIC,
-                    new EvalIssueException(
-                            String.format(
-                                    "TESTED_CODE scope cannot be consumed by Transform '%1$s'",
-                                    transform.getName())));
+                    String.format(
+                            "TESTED_CODE scope cannot be consumed by Transform '%1$s'",
+                            transform.getName()));
             return false;
-
         }
 
         if (!transform
@@ -503,7 +498,7 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.PROJECT_LOCAL_DEPS.name(),
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
-                issueReporter.reportError(Type.GENERIC, new EvalIssueException(message));
+                issueReporter.reportError(Type.GENERIC, message);
             }
         }
 
@@ -515,7 +510,7 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.SUB_PROJECTS_LOCAL_DEPS.name(),
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
-                issueReporter.reportError(Type.GENERIC, new EvalIssueException(message));
+                issueReporter.reportError(Type.GENERIC, message);
             }
         }
     }
@@ -528,10 +523,9 @@ public class TransformManager extends FilterableStreamCollection {
                     || contentType instanceof ExtendedContentType)) {
                 issueReporter.reportError(
                         Type.GENERIC,
-                        new EvalIssueException(
-                                String.format(
-                                        "Custom content types (%1$s) are not supported in transforms (%2$s)",
-                                        contentType.getClass().getName(), transform.getName())));
+                        String.format(
+                                "Custom content types (%1$s) are not supported in transforms (%2$s)",
+                                contentType.getClass().getName(), transform.getName()));
                 return false;
             }
         }

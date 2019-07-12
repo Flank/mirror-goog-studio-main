@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl
+package com.android.builder.core
 
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 
-class NoOpIssueReporter: EvalIssueReporter() {
+/** a Fake EvalIssueReporter that throws on all error/warnings.  */
+class ThrowingIssueReporter : EvalIssueReporter() {
     override fun reportIssue(
         type: Type,
         severity: Severity,
         exception: EvalIssueException
-    ) { }
+    ) = throw EvalIssueException("fake")
 }

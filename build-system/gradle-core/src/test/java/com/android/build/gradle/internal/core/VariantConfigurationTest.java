@@ -18,21 +18,17 @@ package com.android.build.gradle.internal.core;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.FakeEvalIssueReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.sdklib.AndroidVersion;
-import com.google.common.collect.Iterables;
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

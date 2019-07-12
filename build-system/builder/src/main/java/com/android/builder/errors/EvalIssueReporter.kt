@@ -25,7 +25,7 @@ import com.android.builder.model.SyncIssue
  * This handles dealing with errors differently if the project is being run from the command line
  * or from the IDE, in particular during Sync when we don't want to throw any exception
  */
-interface EvalIssueReporter {
+abstract class EvalIssueReporter {
 
     enum class Severity constructor(val severity: Int) {
         WARNING(SyncIssue.SEVERITY_WARNING),
@@ -77,64 +77,44 @@ interface EvalIssueReporter {
         COMPILE_SDK_VERSION_NOT_SET(SyncIssue.TYPE_COMPILE_SDK_VERSION_NOT_SET),
     }
 
+    protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)
+
     /**
-     * Reports an issue.
+     * Reports an error.
      *
-     * The behavior of this method depends on whether the project is being evaluated by an IDE
-     * (during sync) or from the command line. If it's the former, the issue will simply be recorded
-     * and displayed after the sync properly finishes. If it's the latter, then the evaluation might
-     * abort depending on the severity.
+     * When running outside of IDE sync, this will throw an exception and abort execution.
      *
-     * @param type the type of the issue.
-     * @param severity the severity of the issue
-     * @param msg a human readable issue (for command line output, or if an older IDE doesn't know
+     * @param type the type of the error.
+     * @param msg a human readable error (for command line output, or if an older IDE doesn't know
      * this particular issue type.)
-     * @return a SyncIssue if the issue.
-     * @param data a data representing the source of the issue. This goes hand in hand with the
+     * @param data a data representing the source of the error. This goes hand in hand with the
      * <var>type</var>, and is not meant to be readable. Instead a (possibly translated) message
-     * is created from this data and type. Default value is null
-     * @see SyncIssue
+     * is created from this data and type.
+     * @param multilineMsg a human readable error that spans through multiple lines (might require
+     * special IDE treatment.)
      */
-    fun reportIssue(type: Type, severity: Severity, msg: String, data: String?): SyncIssue {
-        return reportIssue(type, severity, EvalIssueException(msg, data))
-    }
-
-
-
-    fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException) : SyncIssue
-
-    /**
-     * Reports an issue.
-     *
-     * The behavior of this method depends on whether the project is being evaluated by an IDE
-     * (during sync) or from the command line. If it's the former, the issue will simply be recorded
-     * and displayed after the sync properly finishes. If it's the latter, then the evaluation might
-     * abort depending on the severity.
-     *
-     * @param type the type of the issue.
-     * @param severity the severity of the issue
-     * @param msg a human readable issue (for command line output, or if an older IDE doesn't know
-     * this particular issue type.)
-     * @return a SyncIssue if the issue.
-     * @see SyncIssue
-     */
-    fun reportIssue(type: Type, severity: Severity, msg: String): SyncIssue {
-      return reportIssue(type, severity, msg, null)
+    @JvmOverloads
+    fun reportError(type: Type, msg: String, data: String? = null, multilineMsg: List<String>? = null) {
+        reportIssue(
+            type,
+            Severity.ERROR,
+            EvalIssueException(msg, data, multilineMsg))
     }
 
     /**
      * Reports an error.
      *
-     * When running outside of IDE sync, this will throw and exception and abort execution.
+     * When running outside of IDE sync, this will throw an exception and abort execution.
      *
      * @param type the type of the error.
-     * @param exception exception (with optional cause) containing all relevant information about
-     * the error.
-     * @return a [SyncIssue] if the error is only recorded.
+     * @param cause exception containing all relevant information about the error.
      */
-    fun reportError(type: Type, exception: EvalIssueException) = reportIssue(type,
+    fun reportError(type: Type, cause: Exception) {
+        reportIssue(
+            type,
             Severity.ERROR,
-            exception)
+            EvalIssueException(cause))
+    }
 
     /**
      * Reports a warning.
@@ -147,12 +127,16 @@ interface EvalIssueReporter {
      * @param data a data representing the source of the error. This goes hand in hand with the
      * <var>type</var>, and is not meant to be readable. Instead a (possibly translated) message
      * is created from this data and type.
-     * @return a [SyncIssue] if the warning is only recorded.
+     * @param multilineMsg a human readable error that spans through multiple lines (might require
+     * special IDE treatment.)
      */
-    fun reportWarning(type: Type, msg: String, data: String?) = reportIssue(type,
+    @JvmOverloads
+    fun reportWarning(type: Type, msg: String, data: String? = null, multilineMsg: List<String>? = null) {
+        reportIssue(
+            type,
             Severity.WARNING,
-            msg,
-            data)
+            EvalIssueException(msg, data, multilineMsg))
+    }
 
     /**
      * Reports a warning.
@@ -160,12 +144,12 @@ interface EvalIssueReporter {
      * Behaves similar to [reportError] but does not abort the build.
      *
      * @param type the type of the error.
-     * @param msg a human readable error (for command line output, or if an older IDE doesn't know
-     * this particular issue type.)
-     * @return a [SyncIssue] if the warning is only recorded.
+     * @param cause exception containing all relevant information about the error.
      */
-    fun reportWarning(type: Type, msg: String) = reportIssue(type,
+    fun reportWarning(type: Type, cause: Exception) {
+        reportIssue(
+            type,
             Severity.WARNING,
-            msg,
-            null)
+            EvalIssueException(cause))
+    }
 }

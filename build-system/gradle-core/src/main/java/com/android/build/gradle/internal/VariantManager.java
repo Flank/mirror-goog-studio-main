@@ -92,7 +92,6 @@ import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
@@ -995,10 +994,9 @@ public class VariantManager implements VariantModel {
                         .getErrorHandler()
                         .reportError(
                                 EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
-                                new EvalIssueException(
-                                        "All flavors must now belong to a named flavor dimension."
-                                                + " Learn more at "
-                                                + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html"));
+                                "All flavors must now belong to a named flavor dimension."
+                                        + " Learn more at "
+                                        + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");
             } else if (flavorDimensionList.size() == 1) {
                 // if there's only one dimension, auto-assign the dimension to all the flavors.
                 String dimensionName = flavorDimensionList.get(0);
@@ -1708,9 +1706,8 @@ public class VariantManager implements VariantModel {
         Collections.sort(buildTypesMarkedAsDefault);
 
         if (buildTypesMarkedAsDefault.size() > 1) {
-            syncIssueHandler.reportIssue(
+            syncIssueHandler.reportWarning(
                     EvalIssueReporter.Type.AMBIGUOUS_BUILD_TYPE_DEFAULT,
-                    EvalIssueReporter.Severity.WARNING,
                     "Ambiguous default build type: '"
                             + Joiner.on("', '").join(buildTypesMarkedAsDefault)
                             + "'.\n"
@@ -1761,9 +1758,8 @@ public class VariantManager implements VariantModel {
             }
             if (userDefault.size() > 1) {
                 // Report the ambiguous default setting.
-                syncIssueHandler.reportIssue(
+                syncIssueHandler.reportWarning(
                         EvalIssueReporter.Type.AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT,
-                        EvalIssueReporter.Severity.WARNING,
                         "Ambiguous default product flavors for flavor dimension '"
                                 + dimension
                                 + "': '"

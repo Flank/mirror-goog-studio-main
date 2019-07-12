@@ -58,8 +58,8 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                     isDynamicFeature,
                     hasFeaturePlugin,
                     consumerProguardFiles,
-                    exception -> {
-                        throw exception;
+                    errorMessage -> {
+                        throw new EvalIssueException(errorMessage);
                     });
         }
         super.doTaskAction();
@@ -70,7 +70,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             boolean isDynamicFeature,
             boolean hasFeaturePlugin,
             List<File> consumerProguardFiles,
-            Consumer<EvalIssueException> exceptionHandler) {
+            Consumer<String> errorHandler) {
         Map<File, String> defaultFiles = new HashMap<>();
         for (String knownFileName : ProguardFiles.KNOWN_FILE_NAMES) {
             defaultFiles.put(
@@ -94,7 +94,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                                     + " should not be used as a consumer configuration file.";
                 }
 
-                exceptionHandler.accept(new EvalIssueException(errorMessage));
+                errorHandler.accept(errorMessage);
             }
         }
     }

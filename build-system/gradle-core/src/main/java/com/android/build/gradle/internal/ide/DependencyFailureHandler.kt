@@ -49,20 +49,16 @@ class DependencyFailureHandler {
                 { message -> checkForData(message) },
                 { data, messages ->
                     if (data != null) {
-                        syncIssueHandler.reportIssue(
+                        syncIssueHandler.reportError(
                             Type.UNRESOLVED_DEPENDENCY,
-                            Severity.ERROR,
                             "Unable to resolve dependency $data",
                             data)
                     } else {
-                        val messageList = mutableListOf<String>()
-                        messageList += "Unable to resolve dependency for '$key': ${messages[0]}"
-                        messageList += messages
-
-                        syncIssueHandler.reportIssue(
+                        syncIssueHandler.reportError(
                             Type.UNRESOLVED_DEPENDENCY,
-                            Severity.ERROR,
-                            messageList.joinToString("\n"))
+                            "Unable to resolve dependency for '$key': ${messages[0]}",
+                            null,
+                            messages)
                     }
                 }
             )

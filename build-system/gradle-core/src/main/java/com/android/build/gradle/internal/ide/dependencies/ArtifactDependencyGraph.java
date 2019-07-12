@@ -38,13 +38,11 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.utils.ImmutableCollectors;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -349,16 +347,12 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     t,
                     s -> null,
                     (data, messages) -> {
-                        List<String> multilineMsg = new ArrayList<>(messages.size() + 1);
-                        multilineMsg.add(
-                                String.format(
-                                        "Unable to download sources/javadoc: %s", messages.get(0)));
-                        multilineMsg.addAll(messages);
-
-                        syncIssueHandler.reportIssue(
+                        syncIssueHandler.reportWarning(
                                 EvalIssueReporter.Type.GENERIC,
-                                EvalIssueReporter.Severity.WARNING,
-                                Joiner.on("\n").join(multilineMsg));
+                                String.format(
+                                        "Unable to download sources/javadoc: %s", messages.get(0)),
+                                null,
+                                messages);
                     });
 
         }

@@ -160,8 +160,8 @@ object BootClasspathBuilder {
         for (library in libraryRequests) {
             issueReporter.reportError(
                 EvalIssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
-                EvalIssueException("Unable to find optional library: $library", library)
-            )
+                "Unable to find optional library: $library",
+                library)
         }
         return files.build()
     }

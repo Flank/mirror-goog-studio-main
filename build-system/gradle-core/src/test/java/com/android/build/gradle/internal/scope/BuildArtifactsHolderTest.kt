@@ -20,10 +20,10 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType
 import com.android.build.gradle.internal.variant2.DslScopeImpl
+import com.android.builder.errors.FakeEvalIssueReporter
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -39,7 +39,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

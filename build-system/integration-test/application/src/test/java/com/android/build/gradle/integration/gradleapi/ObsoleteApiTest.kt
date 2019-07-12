@@ -78,15 +78,13 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
             }
             "Java" -> {
                 Truth.assertThat(syncIssues).hasSize(1)
-                val expectedFullMsg =
-                    ("API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
+                val warningMsg = syncIssues.first().message
+                Truth.assertThat(warningMsg).isEqualTo(
+                    "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
                             "It will be removed at the end of 2019.\n" +
                             "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
                             "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:23\n" +
-                            "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.").split("\n")
-                Truth.assertThat(syncIssues.first().message).isEqualTo(expectedFullMsg.first())
-                Truth.assertThat(syncIssues.first().multiLineMessage).containsExactlyElementsIn(expectedFullMsg).inOrder()
-
+                            "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
             }
             else -> throw RuntimeException("Unsupported type")
         }

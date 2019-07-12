@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.List;
@@ -45,15 +45,27 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
     public SyncIssueImpl(
             @NonNull EvalIssueReporter.Type type,
             @NonNull EvalIssueReporter.Severity severity,
+            @NonNull EvalIssueException exception) {
+        this(
+                type,
+                severity,
+                exception.getData(),
+                exception.getMessage(),
+                exception.getMultlineMessage());
+    }
+
+    public SyncIssueImpl(
+            @NonNull EvalIssueReporter.Type type,
+            @NonNull EvalIssueReporter.Severity severity,
             @Nullable String data,
-            @NonNull String message) {
+            @NonNull String message,
+            List<String> multiLineMessage) {
         this.type = type.getType();
         this.severity = severity.getSeverity();
         this.data = data;
-
-        ImmutableList<String> messages = ImmutableList.copyOf(Splitter.on("\n").split(message));
-        this.message = messages.get(0);
-        this.multiLineMessage = messages;
+        this.message = message;
+        this.multiLineMessage =
+                multiLineMessage != null ? ImmutableList.copyOf(multiLineMessage) : null;
     }
 
     @Override
