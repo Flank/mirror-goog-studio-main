@@ -174,7 +174,7 @@ coverage_report(
         "//tools/base/build-system/integration-test/native:RsEnabledAnnotationTest",
         "//tools/base/build-system/integration-test/native:RsSupportModeTest",
         "//tools/base/build-system/integration-test/native:VulkanTest",
-        "//tools/base/build-system/profile:tests",
+        "//tools/base/build-system/profile:tests.test",
         "//tools/base/common:studio.android.sdktools.common.tests_tests",
         "//tools/base/common:tools.tests.test",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib_tests",
