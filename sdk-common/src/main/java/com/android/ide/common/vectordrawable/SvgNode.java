@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_CLIP_RULE;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_RULE;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_COLOR;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_WIDTH;
 
@@ -188,12 +190,19 @@ abstract class SvgNode {
      * Writes content of the node into the VectorDrawable's XML file.
      *
      * @param writer the writer to write the group XML element to
-     * @param inClipPath boolean to flag whether the pathData should be apart of clip-path or not
      * @param indent whitespace used for indenting output XML
      */
-    public abstract void writeXml(
-            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+    public abstract void writeXml(@NonNull OutputStreamWriter writer, @NonNull String indent)
             throws IOException;
+
+    /**
+     * Calls the {@linkplain Visitor#visit(SvgNode)} method for this node and its descendants.
+     *
+     * @param visitor the visitor to accept
+     */
+    public VisitResult accept(@NonNull Visitor visitor) {
+        return visitor.visit(this);
+    }
 
     /** Returns true the node is a group node. */
     public abstract boolean isGroupNode();
@@ -201,8 +210,8 @@ abstract class SvgNode {
     /** Transforms the current Node with the transformation matrix. */
     public abstract void transformIfNeeded(@NonNull AffineTransform finalTransform);
 
-    private void fillPresentationAttributesInternal(String name, String value) {
-        if (name.equals("fill-rule")) {
+    private void fillPresentationAttributesInternal(@NonNull String name, @NonNull String value) {
+        if (name.equals(SVG_FILL_RULE) || name.equals(SVG_CLIP_RULE)) {
             if (value.equals("nonzero")) {
                 value = "nonZero";
             } else if (value.equals("evenodd")) {
@@ -222,11 +231,11 @@ abstract class SvgNode {
         mVdAttributesMap.put(name, value);
     }
 
-    protected void fillPresentationAttributes(String name, String value) {
+    protected void fillPresentationAttributes(@NonNull String name, @NonNull String value) {
         fillPresentationAttributesInternal(name, value);
     }
 
-    public void fillEmptyAttributes(Map<String, String> parentAttributesMap) {
+    public void fillEmptyAttributes(@NonNull Map<String, String> parentAttributesMap) {
         // Go through the parents' attributes, if the child misses any, then fill it.
         for (Map.Entry<String, String> entry : parentAttributesMap.entrySet()) {
             String key = entry.getKey();
@@ -285,5 +294,28 @@ abstract class SvgNode {
 
     protected void logWarning(@NonNull String s) {
         mSvgTree.logWarning(s, mDocumentElement);
+    }
+
+    protected interface Visitor {
+        /**
+         * Called by the {@link SvgNode#accept(Visitor)} method for every visited node.
+         *
+         * @param node the node being visited
+         * @return {@link VisitResult#CONTINUE} to continue visiting children,
+         *         {@link VisitResult#SKIP_CHILDREN} to skip children and continue visit with
+         *         the next sibling, {@link VisitResult#ABORT} to skip all remaining nodes
+         */
+        VisitResult visit(@NonNull SvgNode node);
+    }
+
+    protected enum VisitResult {
+        CONTINUE,
+        SKIP_CHILDREN,
+        ABORT
+    }
+
+    protected enum ClipRule {
+        NON_ZERO,
+        EVEN_ODD
     }
 }

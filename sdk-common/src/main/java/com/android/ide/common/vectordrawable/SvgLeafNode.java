@@ -197,24 +197,14 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public void writeXml(
-            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+    public void writeXml(@NonNull OutputStreamWriter writer, @NonNull String indent)
             throws IOException {
         // First, decide whether or not we can skip this path, since it has no visible effect.
         if (mPathData == null || mPathData.isEmpty()) {
             return; // No path to draw.
         }
 
-        if (inClipPath) {
-            // Write data that is part of the clip-path data.
-            writer.write(mPathData);
-            // Need to write M 0,0 after each path. Resets pen to the origin since subsequent
-            // paths might be relative.
-            writer.write(" M 0,0");
-            return;
-        }
-
-        String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
+        String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL);
         String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
         logger.log(Level.FINE, "fill color " + fillColor);
         boolean emptyFill = "none".equals(fillColor) || "#00000000".equals(fillColor);
@@ -256,10 +246,10 @@ class SvgLeafNode extends SvgNode {
         writer.write(System.lineSeparator());
 
         if (mFillGradientNode != null) {
-            mFillGradientNode.writeXml(writer, false, indent + INDENT_UNIT);
+            mFillGradientNode.writeXml(writer, indent + INDENT_UNIT);
         }
         if (mStrokeGradientNode != null) {
-            mStrokeGradientNode.writeXml(writer, false, indent + INDENT_UNIT);
+            mStrokeGradientNode.writeXml(writer, indent + INDENT_UNIT);
         }
         if (hasGradient()) {
             writer.write(indent);

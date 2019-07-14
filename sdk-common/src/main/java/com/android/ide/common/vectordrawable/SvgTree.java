@@ -462,7 +462,7 @@ class SvgTree {
         writer.write(System.lineSeparator());
 
         normalize();
-        mRoot.writeXml(writer, false, INDENT_UNIT);
+        mRoot.writeXml(writer, INDENT_UNIT);
         writer.write("</vector>");
         writer.write(System.lineSeparator());
 

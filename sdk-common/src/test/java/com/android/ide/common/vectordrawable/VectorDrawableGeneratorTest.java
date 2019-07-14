@@ -600,6 +600,14 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_clip_path_ordering");
     }
 
+    public void testSvgClipEvenOdd() throws Exception {
+        checkSvgConversion("test_clip_path_evenodd");
+    }
+
+    public void testSvgClipEvenOddAndNonZero() throws Exception {
+        checkSvgConversion("test_clip_path_evenodd_and_nonzero");
+    }
+
     public void testSvgMask() throws Exception {
         checkSvgConversion("test_mask");
     }

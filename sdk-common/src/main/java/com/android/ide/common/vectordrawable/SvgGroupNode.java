@@ -137,13 +137,26 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void writeXml(
-            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+    public void writeXml(@NonNull OutputStreamWriter writer, @NonNull String indent)
             throws IOException {
         for (SvgNode node : mChildren) {
-            node.writeXml(writer, inClipPath, indent);
+            node.writeXml(writer, indent);
         }
     }
+
+    @Override
+    public VisitResult accept(@NonNull Visitor visitor) {
+        VisitResult result = visitor.visit(this);
+        if (result == VisitResult.CONTINUE) {
+            for (SvgNode node : mChildren) {
+                if (node.accept(visitor) == VisitResult.ABORT) {
+                    return VisitResult.ABORT;
+                }
+            }
+        }
+        return result == VisitResult.SKIP_CHILDREN ? VisitResult.CONTINUE : result;
+    }
+
 
     @Override
     public void fillPresentationAttributes(@NonNull String name, @NonNull String value) {

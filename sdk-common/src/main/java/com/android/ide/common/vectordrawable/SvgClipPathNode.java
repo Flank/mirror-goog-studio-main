@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.SdkConstants.TAG_CLIP_PATH;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_MASK;
 
 import com.android.annotations.NonNull;
@@ -24,6 +25,9 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import org.w3c.dom.Element;
 
 /**
@@ -118,22 +122,66 @@ class SvgClipPathNode extends SvgGroupNode {
     }
 
     @Override
-    public void writeXml(
-            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+    public void writeXml(@NonNull OutputStreamWriter writer, @NonNull String indent)
             throws IOException {
         writer.write(indent);
         writer.write("<group>");
         writer.write(System.lineSeparator());
-        writer.write(indent);
-        writer.write(INDENT_UNIT);
-        writer.write("<clip-path android:pathData=\"");
+        String incrementedIndent = indent + INDENT_UNIT;
+
+        Map<ClipRule, List<String>> clipPaths = new EnumMap<>(ClipRule.class);
+        Visitor clipPathCollector = node -> {
+            if (node instanceof SvgLeafNode) {
+                String pathData = ((SvgLeafNode) node).getPathData();
+                if (pathData != null && !pathData.isEmpty()) {
+                    ClipRule clipRule =
+                            "evenOdd".equals(node.mVdAttributesMap.get("clip-rule"))
+                                    ? ClipRule.EVEN_ODD
+                                    : ClipRule.NON_ZERO;
+                    List<String> paths =
+                            clipPaths.computeIfAbsent(clipRule, key -> new ArrayList<>());
+                    paths.add(pathData);
+                }
+            }
+            return VisitResult.CONTINUE;
+        };
         for (SvgNode node : mChildren) {
-            node.writeXml(writer, true, indent + INDENT_UNIT);
+            node.accept(clipPathCollector);
         }
-        writer.write("\"/>");
-        writer.write(System.lineSeparator());
+
+        for (Map.Entry<ClipRule, List<String>> entry : clipPaths.entrySet()) {
+            ClipRule clipRule = entry.getKey();
+            List<String> pathData = entry.getValue();
+            writer.write(incrementedIndent);
+            writer.write('<');
+            writer.write(TAG_CLIP_PATH);
+            writer.write(System.lineSeparator());
+            writer.write(incrementedIndent);
+            writer.write(INDENT_UNIT);
+            writer.write(INDENT_UNIT);
+            writer.write("android:pathData=\"");
+            for (int i = 0; i < pathData.size(); i++) {
+                String path = pathData.get(i);
+                if (i > 0 && !path.startsWith("M")) {
+                    // Reset the current position to the origin of the coordinate system.
+                    writer.write("M 0,0");
+                }
+                writer.write(path);
+            }
+            writer.write('"');
+            if (clipRule == ClipRule.EVEN_ODD) {
+                writer.write(System.lineSeparator());
+                writer.write(incrementedIndent);
+                writer.write(INDENT_UNIT);
+                writer.write(INDENT_UNIT);
+                writer.write("android:fillType=\"evenOdd\"");
+            }
+            writer.write("/>");
+            writer.write(System.lineSeparator());
+        }
+
         for (SvgNode node : mAffectedNodes) {
-            node.writeXml(writer, false, indent + INDENT_UNIT);
+            node.writeXml(writer, incrementedIndent);
         }
         writer.write(indent);
         writer.write("</group>");

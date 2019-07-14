@@ -20,7 +20,6 @@ import static com.android.utils.DecimalUtils.trimInsignificantZeros;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.utils.DecimalUtils;
 import com.google.common.collect.ImmutableMap;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -548,7 +547,7 @@ class VdPath extends VdElement {
             Shape clip = g.getClip();
             if (clip != null) {
                 Area area = new Area(clip);
-                area.intersect(new Area(path2d));
+                area.add(new Area(path2d));
                 g.setClip(area);
             } else {
                 g.setClip(path2d);

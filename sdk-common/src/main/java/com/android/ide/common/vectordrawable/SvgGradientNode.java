@@ -21,7 +21,6 @@ import static com.android.utils.XmlUtils.formatFloatAttribute;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.DecimalUtils;
 import com.google.common.collect.ImmutableMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -159,8 +158,7 @@ class SvgGradientNode extends SvgNode {
     }
 
     @Override
-    public void writeXml(
-            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+    public void writeXml(@NonNull OutputStreamWriter writer, @NonNull String indent)
             throws IOException {
         if (myGradientStops.isEmpty()) {
             logError("Gradient has no stop info");
