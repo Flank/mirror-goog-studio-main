@@ -37,4 +37,5 @@ public enum ValueType {
     INT_ENUM,
     INT_FLAG,
     RESOURCE,
+    DRAWABLE,
 }

@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.layoutinspector;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
@@ -117,6 +118,9 @@ class Properties {
                         toInt(resource.getNamespace()),
                         toInt(resource.getType()),
                         toInt(resource.getName()));
+            case DRAWABLE:
+                Drawable drawable = (Drawable) value;
+                return addIntProperty(event, name, type, toInt(drawable.getClass().getName()));
             default:
                 return 0;
         }

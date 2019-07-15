@@ -109,6 +109,7 @@ message Property {
     INT_ENUM = 12;
     INT_FLAG = 13;
     RESOURCE = 14;
+    DRAWABLE = 15;
   }
 
   int32 namespace = 1;

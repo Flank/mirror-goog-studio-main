@@ -19,6 +19,7 @@ package com.android.tools.agent.layoutinspector.property;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.inspector.PropertyReader;
 import com.android.tools.agent.layoutinspector.common.Resource;
@@ -155,9 +156,12 @@ public class ViewNode<V extends View> {
                 ColorStateList cl = (ColorStateList) o;
                 readAny(id, cl.getColorForState(mView.getDrawableState(), cl.getDefaultColor()));
                 mProperties.get(id).setType(ValueType.COLOR);
-            } else if (o instanceof ColorDrawable && !((ColorDrawable) o).isStateful()) {
+            } else if (o instanceof ColorDrawable) {
                 readAny(id, ((ColorDrawable) o).getColor());
                 mProperties.get(id).setType(ValueType.COLOR);
+            } else if (o instanceof Drawable) {
+                readAny(id, o);
+                mProperties.get(id).setType(ValueType.DRAWABLE);
             }
         }
 
