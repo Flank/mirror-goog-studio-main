@@ -325,6 +325,7 @@ message Stream {
   enum Type {
     UNSPECIFIED_STREAM_TYPE = 0;
     DEVICE = 1;
+    FILE = 2;
   }
   int64 stream_id = 1;
   Type type = 2;
