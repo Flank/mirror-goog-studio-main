@@ -95,12 +95,12 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
 
-    abstract class CreationAction
+    abstract class CreationAction <T : ProguardConfigurableTask>
     @JvmOverloads
     internal constructor(
         variantScope: VariantScope,
         private val isTestApplication: Boolean = false
-    ) : VariantTaskCreationAction<ProguardConfigurableTask>(variantScope) {
+    ) : VariantTaskCreationAction<T>(variantScope) {
 
 
         private val includeFeaturesInScopes: Boolean = variantScope.consumesFeatureJars()
@@ -215,7 +215,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProguardConfigurableTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<out T>) {
             super.handleProvider(taskProvider)
 
             variantScope
@@ -229,17 +229,15 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
         }
 
-        override fun configure(task: ProguardConfigurableTask) {
+        override fun configure(task: T) {
             super.configure(task)
 
             if (testedVariantData?.scope?.artifacts?.hasFinalProduct(APK_MAPPING) == true) {
                 task.inputMappingFile.from(
-                    task.project.files(
-                        testedVariantData
-                            .scope
-                            .artifacts
-                            .getFinalProduct<FileSystemLocation>(APK_MAPPING)
-                    )
+                    testedVariantData
+                        .scope
+                        .artifacts
+                        .getFinalProduct<FileSystemLocation>(APK_MAPPING)
                 )
             } else if (isTestApplication) {
                 task.inputMappingFile.from(
