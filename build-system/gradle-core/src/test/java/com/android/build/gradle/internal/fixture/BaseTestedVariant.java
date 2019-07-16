@@ -43,6 +43,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.TaskProvider;
@@ -315,6 +316,12 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public File getMappingFile() {
             return variant.getMappingFile();
+        }
+
+        @NonNull
+        @Override
+        public Provider<FileCollection> getMappingFileProvider() {
+            return variant.getMappingFileProvider();
         }
 
         @NonNull

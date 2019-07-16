@@ -18,6 +18,9 @@ package com.android.build.gradle.integration.deployment
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.build.gradle.integration.common.truth.TruthHelper.*
+import com.android.testutils.truth.MoreTruth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -98,5 +101,20 @@ class MappingFileAccessTest {
             ScannerSubject.assertThat(it)
                 .contains("helloRelease task mapping file exists is true")
         }
+    }
+
+    @Test
+    fun useMappingFileSpecificApi() {
+        project.buildFile.appendText("""
+            
+            android.applicationVariants.all {
+                if (it.buildType.isMinifyEnabled()) {
+                    def mappingTask = tasks.create("mappingFile" + it.name.capitalize(), MappingFileUserTask, it.mappingFileProvider)
+                }
+            }
+        """.trimIndent())
+        val result = project.executor().run("mappingFileRelease")
+        TruthHelper.assertThat(result.getTask(":mappingFileRelease")).didWork()
+        TruthHelper.assertThat(result.getTask(":transformClassesAndResourcesWithR8ForRelease")).didWork()
     }
 }

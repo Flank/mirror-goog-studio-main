@@ -494,6 +494,17 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public File getMappingFile() {
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getMappingFileProvider()",
+                        "variant.getMappingFile()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
         if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
             //     bypass the configuration time resolution check as some calls this API during
@@ -501,6 +512,15 @@ public abstract class BaseVariantImpl implements BaseVariant {
             return artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING).get().getAsFile();
         }
         return null;
+    }
+
+    @NonNull
+    @Override
+    public Provider<FileCollection> getMappingFileProvider() {
+        return getVariantData()
+                .getScope()
+                .getArtifacts()
+                .getFinalProductAsFileCollection(InternalArtifactType.APK_MAPPING);
     }
 
     @Override

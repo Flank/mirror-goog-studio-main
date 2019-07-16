@@ -37,6 +37,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.TaskProvider;
@@ -376,9 +377,20 @@ public interface BaseVariant {
 
     /**
      * Returns the obfuscation mapping file. This can be null if obfuscation is not enabled.
+     *
+     * @deprecated Please use {@link #getMappingFileProvider()} instead in order to avoid task
+     *     configuration.
      */
     @Nullable
+    @Deprecated
     File getMappingFile();
+
+    /**
+     * Returns the provider of a file collection that contains an obfuscation mapping file. The file
+     * collection may be empty if obfuscation is not enabled.
+     */
+    @NonNull
+    Provider<FileCollection> getMappingFileProvider();
 
     /**
      * Returns the Java resource processing task.
