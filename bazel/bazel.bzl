@@ -493,8 +493,6 @@ def iml_module(
         lint_baseline = None,
         lint_timeout = None,
         back_deps = []):
-    if name == "intellij.groovy" or name == "intellij.gradle.java.tests":
-        test_srcs = []  # workaround for b/111900968
 
     prod_deps = []
     test_deps = []
