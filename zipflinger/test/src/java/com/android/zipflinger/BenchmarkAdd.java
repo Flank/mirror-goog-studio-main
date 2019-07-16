@@ -27,10 +27,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.zip.Deflater;
+import org.junit.Test;
 
-class BenchmarkAdd extends TestBase {
+public class BenchmarkAdd extends TestBase {
 
-    private static void createFile(Path path, int size) throws IOException {
+    private void createFile(Path path, int size) throws IOException {
         Random random = new Random(1);
         byte[] content = new byte[size];
         random.nextBytes(content);
@@ -39,7 +40,8 @@ class BenchmarkAdd extends TestBase {
         os.close();
     }
 
-    public static void run() throws IOException {
+    @Test
+    public void run() throws IOException {
         System.out.println();
         System.out.println("Adding speed:");
         System.out.println("-------------");
@@ -73,7 +75,7 @@ class BenchmarkAdd extends TestBase {
         runApkzlib(dst, dexes);
     }
 
-    public static void runZipFlinger(Path dst, Map<String, Path> dexes) throws IOException {
+    public void runZipFlinger(Path dst, Map<String, Path> dexes) throws IOException {
         StopWatch watch = new StopWatch();
         ZipArchive archive = new ZipArchive(dst.toFile());
         for (String name : dexes.keySet()) {
@@ -87,7 +89,7 @@ class BenchmarkAdd extends TestBase {
         System.out.println(String.format("Zipflinger:    %4d ms", runtime / 1_000_000));
     }
 
-    public static void runApkzlib(Path dst, Map<String, Path> dexes) throws IOException {
+    public void runApkzlib(Path dst, Map<String, Path> dexes) throws IOException {
         StopWatch watch = new StopWatch();
         ZFile zFile = ZFile.openReadWrite(dst.toFile());
         for (String name : dexes.keySet()) {

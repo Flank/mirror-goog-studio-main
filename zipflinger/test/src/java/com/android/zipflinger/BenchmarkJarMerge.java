@@ -23,10 +23,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
+import org.junit.Test;
 
-class BenchmarkJarMerge extends TestBase {
+public class BenchmarkJarMerge extends TestBase {
 
-    public static void BenchMarkWith(int numFiles, int fileSize) throws IOException {
+    public void BenchMarkWith(int numFiles, int fileSize) throws IOException {
         System.out.println(
                 String.format(
                         "With 2 jars of %s files each. Each file is %s bytes. "
@@ -70,9 +71,10 @@ class BenchmarkJarMerge extends TestBase {
         System.out.println(String.format("Zipflinger: %6d ms.", median(times)));
     }
 
-    public static void run() throws IOException {
+    @Test
+    public void run() throws IOException {
         System.out.println();
-        System.out.println("Merging speed:");
+        System.out.println("Jar Merging speed:");
         System.out.println("--------------");
         BenchMarkWith(1000, 1 << 10); // 1000 files of   1 KiB
         BenchMarkWith(1000, 1 << 11); // 1000 files of   2 KiB
@@ -82,10 +84,6 @@ class BenchmarkJarMerge extends TestBase {
         BenchMarkWith(1000, 1 << 15); // 1000 files of  32 KiB
         BenchMarkWith(1000, 1 << 16); // 1000 files of  64 KiB
         BenchMarkWith(1000, 1 << 17); // 1000 files of 128 KiB
-        //BenchMarkWith(1000, 1 << 18); // 1000 files of 256 KiB
-        //BenchMarkWith(1000, 1 << 19); // 1000 files of 512 KiB
-        //BenchMarkWith(1000, 1 << 20); // 1000 files of   1 MiB
-        //BenchMarkWith(1000, 1 << 21); // 1000 files of   2 MiB
 
     }
 }

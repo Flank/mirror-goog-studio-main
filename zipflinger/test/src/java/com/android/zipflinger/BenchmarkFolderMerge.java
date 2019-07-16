@@ -22,16 +22,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class BenchmarkFolderMerge {
 
-    public static void run() throws IOException {
+    @Test
+    public void run() throws IOException {
+        System.out.println();
+        System.out.println("Folder merging speed:");
+        System.out.println("-------------");
+
         FolderBenchMarkWith(2, 10, 1 << 21);
         FolderBenchMarkWith(3, 10, 1 << 21);
         FolderBenchMarkWith(4, 10, 1 << 21);
     }
 
-    private static void FolderBenchMarkWith(int numFolders, int numFiles, int fileSize)
+    private void FolderBenchMarkWith(int numFolders, int numFiles, int fileSize)
             throws IOException {
 
         Path tmpFolder = Files.createTempDirectory("jarFolderBench");

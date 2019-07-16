@@ -23,10 +23,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
+import org.junit.Test;
 
-class BenchmarkList extends TestBase {
+public class BenchmarkList extends TestBase {
 
-    public static void run() throws IOException {
+    @Test
+    public void run() throws IOException {
         runTest(2000, 1000);
         runTest(4000, 1000);
         runTest(10000, 1000);
@@ -37,7 +39,7 @@ class BenchmarkList extends TestBase {
         runTest(60000, 1000);
     }
 
-    private static void runTest(int numEntries, int entrySize) throws IOException {
+    private void runTest(int numEntries, int entrySize) throws IOException {
         String tmpFolder = Files.createTempDirectory("").toAbsolutePath().toString();
         Path zipPath = Paths.get(tmpFolder, "app" + numEntries + ".apk");
         ZipCreator.createZip(numEntries, entrySize, zipPath.toAbsolutePath().toString());
@@ -53,7 +55,7 @@ class BenchmarkList extends TestBase {
         runApkzlib(zipPath);
     }
 
-    private static void runZipFlinger(Path zipPath) throws IOException {
+    private void runZipFlinger(Path zipPath) throws IOException {
         long[] times = new long[BENCHMARK_SAMPLE_SIZE];
         for (int i = 0; i < times.length; i++) {
             StopWatch watch = new StopWatch();
@@ -69,7 +71,7 @@ class BenchmarkList extends TestBase {
         System.out.println(String.format("Zipflinger:    %4d ms", median(times) / 1000000));
     }
 
-    private static final void runApkzlib(Path zipPath) throws IOException {
+    private void runApkzlib(Path zipPath) throws IOException {
         long[] times = new long[BENCHMARK_SAMPLE_SIZE];
         for (int i = 0; i < times.length; i++) {
             StopWatch watch = new StopWatch();
