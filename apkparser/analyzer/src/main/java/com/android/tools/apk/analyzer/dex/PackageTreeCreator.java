@@ -283,6 +283,15 @@ public class PackageTreeCreator {
         }
     }
 
+    /**
+     * Takes a JVM-style class name (e.g."Lcom/example/MyClass;"), optionally reverses obfuscation
+     * using the supplied ProGuard mapping, and returns a fully qualified class name (dot-separated,
+     * e.g. "com.example.MyClass").
+     *
+     * @param className JVM signature class name
+     * @param proguardMap optional ProGuard mapping for deobfuscation
+     * @return fully qualified java class name
+     */
     public static String decodeClassName(
             @NonNull String className, @Nullable ProguardMap proguardMap) {
         className = SigUtils.signatureToName(className);

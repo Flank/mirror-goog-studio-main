@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-/*
- * Class DebuggerUtilsEx
- * @author Jeka
- */
 package com.android.tools.apk.analyzer.internal;
+
+import com.android.annotations.NonNull;
 
 public abstract class SigUtils {
     private static class SigReader {
@@ -126,5 +124,46 @@ public abstract class SigUtils {
 
     public static String signatureToName(String s) {
         return new SigReader(s).getSignature();
+    }
+
+    /**
+     * Takes a fully qualified class name (e.g."com.example.MyClass") and converts it into JVM-style
+     * signature (e.g. "Lcom/example/MyClass;").
+     *
+     * @param fqcn dot-separated fully qualified class name or simple type
+     * @return JVM type signature
+     */
+    @NonNull
+    public static String typeToSignature(@NonNull String fqcn) {
+        StringBuilder sb = new StringBuilder(fqcn.length() + 2);
+        while (fqcn.endsWith("[]")) {
+            fqcn = fqcn.substring(0, fqcn.length() - "[]".length());
+            sb.append('[');
+        }
+        if ("boolean".equals(fqcn)) {
+            sb.append('Z');
+        } else if ("byte".equals(fqcn)) {
+            sb.append('B');
+        } else if ("char".equals(fqcn)) {
+            sb.append('C');
+        } else if ("short".equals(fqcn)) {
+            sb.append('S');
+        } else if ("int".equals(fqcn)) {
+            sb.append('I');
+        } else if ("long".equals(fqcn)) {
+            sb.append('J');
+        } else if ("float".equals(fqcn)) {
+            sb.append('F');
+        } else if ("double".equals(fqcn)) {
+            sb.append('D');
+        } else if ("void".equals(fqcn)) {
+            sb.append('V');
+        } else {
+            sb.append('L');
+            sb.append(fqcn.replace('.', '/'));
+            sb.append(';');
+        }
+
+        return sb.toString();
     }
 }

@@ -126,7 +126,7 @@ public class ApkAnalyzerImplTest {
 
     @Test
     public void dexCodeTest() throws IOException {
-        impl.dexCode(apk, "com.example.helloworld.HelloWorld", null);
+        impl.dexCode(apk, "com.example.helloworld.HelloWorld", null, null, null);
         assertEquals(
                 ".class public Lcom/example/helloworld/HelloWorld;\n"
                         + ".super Landroid/app/Activity;\n"
@@ -200,7 +200,12 @@ public class ApkAnalyzerImplTest {
                         + "\n",
                 baos.toString());
         baos.reset();
-        impl.dexCode(apk, "com.example.helloworld.HelloWorld", "onCreate(Landroid/os/Bundle;)V");
+        impl.dexCode(
+                apk,
+                "com.example.helloworld.HelloWorld",
+                "onCreate(Landroid/os/Bundle;)V",
+                null,
+                null);
         assertEquals(
                 ".method public onCreate(Landroid/os/Bundle;)V\n"
                         + "    .registers 3\n"
@@ -214,6 +219,114 @@ public class ApkAnalyzerImplTest {
                         + "    const/high16 v0, 0x7f020000\n"
                         + "\n"
                         + "    invoke-virtual {p0, v0}, Lcom/example/helloworld/HelloWorld;->setContentView(I)V\n"
+                        + "\n"
+                        + "    .line 16\n"
+                        + "    return-void\n"
+                        + ".end method\n"
+                        + "\n",
+                baos.toString());
+    }
+
+    @Test
+    public void dexCodeTestWithProguard() throws IOException {
+        impl.dexCode(
+                apk,
+                "com.example.helloworld.HelloWorld",
+                null,
+                null,
+                TestResources.getFile("/mapping.txt").toPath());
+        assertEquals(
+                ".class public Loriginal/package/OriginalName;\n"
+                        + ".super Landroid/app/Activity;\n"
+                        + ".source \"HelloWorld.java\"\n"
+                        + "\n"
+                        + "\n"
+                        + "# static fields\n"
+                        + ".field private static originalField:Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;\n"
+                        + "    .annotation system Ldalvik/annotation/Signature;\n"
+                        + "        value = {\n"
+                        + "            \"Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater\",\n"
+                        + "            \"<\",\n"
+                        + "            \"Lcom/example/helloworld/HelloWorld;\",\n"
+                        + "            \">;\"\n"
+                        + "        }\n"
+                        + "    .end annotation\n"
+                        + ".end field\n"
+                        + "\n"
+                        + "\n"
+                        + "# instance fields\n"
+                        + ".field volatile volAtomicVarKept:I\n"
+                        + "\n"
+                        + "\n"
+                        + "# direct methods\n"
+                        + ".method static constructor <clinit>()V\n"
+                        + "    .registers 2\n"
+                        + "\n"
+                        + "    .prologue\n"
+                        + "    .line 8\n"
+                        + "    const-class v0, Loriginal/package/OriginalName;\n"
+                        + "\n"
+                        + "    const-string v1, \"volAtomicVarKept\"\n"
+                        + "\n"
+                        + "    invoke-static {v0, v1}, Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;->newUpdater(Ljava/lang/Class;Ljava/lang/String;)Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;\n"
+                        + "\n"
+                        + "    move-result-object v0\n"
+                        + "\n"
+                        + "    sput-object v0, Loriginal/package/OriginalName;->originalField:Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;\n"
+                        + "\n"
+                        + "    return-void\n"
+                        + ".end method\n"
+                        + "\n"
+                        + ".method public constructor <init>()V\n"
+                        + "    .registers 1\n"
+                        + "\n"
+                        + "    .prologue\n"
+                        + "    .line 6\n"
+                        + "    invoke-direct {p0}, Landroid/app/Activity;-><init>()V\n"
+                        + "\n"
+                        + "    return-void\n"
+                        + ".end method\n"
+                        + "\n"
+                        + "\n"
+                        + "# virtual methods\n"
+                        + ".method public originalMethod(Landroid/os/Bundle;)V\n"
+                        + "    .registers 3\n"
+                        + "    .param p1, \"savedInstanceState\"    # Landroid/os/Bundle;\n"
+                        + "\n"
+                        + "    .prologue\n"
+                        + "    .line 13\n"
+                        + "    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V\n"
+                        + "\n"
+                        + "    .line 14\n"
+                        + "    const/high16 v0, 0x7f020000\n"
+                        + "\n"
+                        + "    invoke-virtual {p0, v0}, Loriginal/package/OriginalName;->setContentView(I)V\n"
+                        + "\n"
+                        + "    .line 16\n"
+                        + "    return-void\n"
+                        + ".end method\n"
+                        + "\n",
+                baos.toString());
+        baos.reset();
+        impl.dexCode(
+                apk,
+                "com.example.helloworld.HelloWorld",
+                "originalMethod(Landroid/os/Bundle;)V",
+                null,
+                TestResources.getFile("/mapping.txt").toPath());
+        assertEquals(
+                ".method public originalMethod(Landroid/os/Bundle;)V\n"
+                        + "    .registers 3\n"
+                        + "    .param p1, \"savedInstanceState\"    # Landroid/os/Bundle;\n"
+                        + "\n"
+                        + "    .prologue\n"
+                        + "    .line 13\n"
+                        + "    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V\n"
+                        + "\n"
+                        + "    .line 14\n"
+                        + "    const/high16 v0, 0x7f020000\n"
+                        + "\n"
+                        + "    invoke-virtual {p0, v0}, Loriginal/package/OriginalName;->setContentView(I)V\n"
                         + "\n"
                         + "    .line 16\n"
                         + "    return-void\n"

@@ -698,6 +698,8 @@ public class ApkAnalyzerCli {
                 SUBJECT_DEX,
                 ACTION_CODE,
                 "Prints the bytecode of a class or method in smali format") {
+            public ArgumentAcceptingOptionSpec<File> pgMappingSpec;
+            public ArgumentAcceptingOptionSpec<File> pgFolderSpec;
             public ArgumentAcceptingOptionSpec<String> classSpec;
             public ArgumentAcceptingOptionSpec<String> methodSpec;
             @Nullable public OptionParser parser;
@@ -718,6 +720,16 @@ public class ApkAnalyzerCli {
                                             "Method to decompile. Format: name(params)returnType, e.g. someMethod(Ljava/lang/String;I)V")
                                     .withRequiredArg()
                                     .ofType(String.class);
+                    pgFolderSpec =
+                            parser.accepts(
+                                            FLAG_PROGUARD_FOLDER,
+                                            "The Proguard output folder to search for mappings.")
+                                    .withRequiredArg()
+                                    .ofType(File.class);
+                    pgMappingSpec =
+                            parser.accepts(FLAG_PROGUARD_MAPPINGS, "The Proguard mappings file.")
+                                    .withRequiredArg()
+                                    .ofType(File.class);
                 }
                 return parser;
             }
@@ -733,7 +745,9 @@ public class ApkAnalyzerCli {
                 impl.dexCode(
                         opts.valueOf(getFileSpec()).toPath(),
                         opts.valueOf(classSpec),
-                        opts.valueOf(methodSpec));
+                        opts.valueOf(methodSpec),
+                        opts.has(pgFolderSpec) ? opts.valueOf(pgFolderSpec).toPath() : null,
+                        opts.has(pgMappingSpec) ? opts.valueOf(pgMappingSpec).toPath() : null);
             }
         },
         RESOURCES_PACKAGES(

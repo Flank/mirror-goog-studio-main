@@ -74,7 +74,6 @@ import java.util.stream.Stream;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.xml.sax.SAXException;
 
@@ -292,15 +291,23 @@ public class ApkAnalyzerImpl {
         }
     }
 
-    public void dexCode(@NonNull Path apk, @NonNull String fqcn, @Nullable String method) {
+    public void dexCode(
+            @NonNull Path apk,
+            @NonNull String fqcn,
+            @Nullable String method,
+            @Nullable Path proguardFolderPath,
+            @Nullable Path proguardMapFilePath) {
+        ProguardMappings proguardMappings =
+                getProguardMappings(proguardFolderPath, proguardMapFilePath, null, null);
+
         try (ArchiveContext archiveContext = Archives.open(apk)) {
             Collection<Path> dexPaths =
                     getDexFilesFrom(archiveContext.getArchive().getContentRoot());
 
             boolean dexFound = false;
             for (Path dexPath : dexPaths) {
-                DexBackedDexFile dexBackedDexFile = DexFiles.getDexFile(dexPath);
-                DexDisassembler disassembler = new DexDisassembler(dexBackedDexFile);
+                DexDisassembler disassembler =
+                        new DexDisassembler(DexFiles.getDexFile(dexPath), proguardMappings.map);
                 if (method == null) {
                     try {
                         out.println(disassembler.disassembleClass(fqcn));
@@ -310,17 +317,14 @@ public class ApkAnalyzerImpl {
                         //continue searching
                     }
                 } else {
-                    Optional<? extends DexBackedClassDef> classDef =
-                            dexBackedDexFile
-                                    .getClasses()
-                                    .stream()
-                                    .filter(c -> fqcn.equals(SigUtils.signatureToName(c.getType())))
-                                    .findFirst();
-                    if (classDef.isPresent()) {
-                        method = classDef.get().getType() + "->" + method;
-                    }
                     try {
-                        out.println(disassembler.disassembleMethod(fqcn, method));
+                        String originalFqcn =
+                                PackageTreeCreator.decodeClassName(
+                                        SigUtils.typeToSignature(fqcn), proguardMappings.map);
+                        out.println(
+                                disassembler.disassembleMethod(
+                                        fqcn,
+                                        SigUtils.typeToSignature(originalFqcn) + "->" + method));
                         dexFound = true;
                     } catch (IllegalStateException e) {
                         //this dex file doesn't contain the given method.
@@ -352,6 +356,58 @@ public class ApkAnalyzerImpl {
             boolean showDefinedOnly,
             boolean showRemoved,
             @Nullable List<String> dexFilePaths) {
+        ProguardMappings proguardMappings =
+                getProguardMappings(
+                        proguardFolderPath,
+                        proguardMapFilePath,
+                        proguardSeedsFilePath,
+                        proguardUsagesFilePath);
+        boolean deobfuscateNames = proguardMappings.map != null;
+
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            Collection<Path> dexPaths;
+            if (dexFilePaths == null || dexFilePaths.isEmpty()) {
+                dexPaths = getDexFilesFrom(archiveContext.getArchive().getContentRoot());
+            } else {
+                dexPaths =
+                        dexFilePaths
+                                .stream()
+                                .map(
+                                        dexFile ->
+                                                archiveContext
+                                                        .getArchive()
+                                                        .getContentRoot()
+                                                        .resolve(dexFile))
+                                .collect(Collectors.toList());
+            }
+            Map<Path, DexBackedDexFile> dexFiles = Maps.newHashMapWithExpectedSize(dexPaths.size());
+            for (Path dexPath : dexPaths) {
+                dexFiles.put(dexPath, DexFiles.getDexFile(dexPath));
+            }
+
+            PackageTreeCreator treeCreator =
+                    new PackageTreeCreator(proguardMappings, deobfuscateNames);
+            DexPackageNode rootNode = treeCreator.constructPackageTree(dexFiles);
+
+            DexViewFilters filters = new DexViewFilters();
+            filters.setShowFields(true);
+            filters.setShowMethods(true);
+            filters.setShowReferencedNodes(!showDefinedOnly);
+            filters.setShowRemovedNodes(showRemoved);
+
+            FilteredTreeModel<DexElementNode> model = new FilteredTreeModel<>(rootNode, filters);
+            dumpTree(model, rootNode, proguardMappings.seeds, proguardMappings.map);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @NonNull
+    private static ProguardMappings getProguardMappings(
+            @Nullable Path proguardFolderPath,
+            @Nullable Path proguardMapFilePath,
+            @Nullable Path proguardSeedsFilePath,
+            @Nullable Path proguardUsagesFilePath) {
         ProguardMappingFiles pfm;
         if (proguardFolderPath != null) {
             try {
@@ -362,9 +418,7 @@ public class ApkAnalyzerImpl {
         } else {
             pfm =
                     new ProguardMappingFiles(
-                            proguardMapFilePath != null ? proguardMapFilePath : null,
-                            proguardSeedsFilePath != null ? proguardSeedsFilePath : null,
-                            proguardUsagesFilePath != null ? proguardUsagesFilePath : null);
+                            proguardMapFilePath, proguardSeedsFilePath, proguardUsagesFilePath);
         }
 
         List<String> loaded = new ArrayList<>(3);
@@ -424,45 +478,7 @@ public class ApkAnalyzerImpl {
                             + errors.stream().collect(Collectors.joining(", ")));
         }
 
-        ProguardMappings proguardMappings = new ProguardMappings(proguardMap, seeds, usage);
-        boolean deobfuscateNames = proguardMap != null;
-
-        try (ArchiveContext archiveContext = Archives.open(apk)) {
-            Collection<Path> dexPaths;
-            if (dexFilePaths == null || dexFilePaths.isEmpty()) {
-                dexPaths = getDexFilesFrom(archiveContext.getArchive().getContentRoot());
-            } else {
-                dexPaths =
-                        dexFilePaths
-                                .stream()
-                                .map(
-                                        dexFile ->
-                                                archiveContext
-                                                        .getArchive()
-                                                        .getContentRoot()
-                                                        .resolve(dexFile))
-                                .collect(Collectors.toList());
-            }
-            Map<Path, DexBackedDexFile> dexFiles = Maps.newHashMapWithExpectedSize(dexPaths.size());
-            for (Path dexPath : dexPaths) {
-                dexFiles.put(dexPath, DexFiles.getDexFile(dexPath));
-            }
-
-            PackageTreeCreator treeCreator =
-                    new PackageTreeCreator(proguardMappings, deobfuscateNames);
-            DexPackageNode rootNode = treeCreator.constructPackageTree(dexFiles);
-
-            DexViewFilters filters = new DexViewFilters();
-            filters.setShowFields(true);
-            filters.setShowMethods(true);
-            filters.setShowReferencedNodes(!showDefinedOnly);
-            filters.setShowRemovedNodes(showRemoved);
-
-            FilteredTreeModel<DexElementNode> model = new FilteredTreeModel<>(rootNode, filters);
-            dumpTree(model, rootNode, proguardMappings.seeds, proguardMappings.map);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return new ProguardMappings(proguardMap, seeds, usage);
     }
 
     private void dumpTree(
