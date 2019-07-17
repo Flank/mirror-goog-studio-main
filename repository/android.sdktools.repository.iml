@@ -16,5 +16,9 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="jaxb-runtime" level="project" />
+    <orderEntry type="library" name="jaxb-api-2.3.1" level="project" />
+    <orderEntry type="library" name="istack-commons-runtime-3.0.7" level="project" />
+    <orderEntry type="library" name="activation-1.1" level="project" />
   </component>
 </module>

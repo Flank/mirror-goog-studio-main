@@ -23,6 +23,7 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:mockito",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/idea/.idea/libraries:jaxb-runtime",
     ],
 )
 
@@ -56,6 +57,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:org.apache.commons_commons-compress",
+        "//tools/base/third_party:org.glassfish.jaxb_jaxb-runtime",
     ],
 )
 

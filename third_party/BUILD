@@ -387,7 +387,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.istack_istack-commons-runtime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/2.21:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/3.0.7:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -419,7 +419,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xml.fastinfoset_FastInfoset",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.13:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.15:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -681,6 +681,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "javax.activation_javax.activation-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/javax/activation/javax.activation-api/1.2.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "javax.inject_javax.inject",
     export_artifact = "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
     visibility = ["//visibility:public"],
@@ -690,9 +698,9 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "javax.xml.bind_jaxb-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/javax/xml/bind/jaxb-api/2.2.12-b140109.1041:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/javax/xml/bind/jaxb-api/2.3.1:jar",
     visibility = ["//visibility:public"],
-    exports = [],
+    exports = [":javax.activation_javax.activation-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1127,11 +1135,14 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_jaxb-runtime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.2.11:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.3.1:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":com.sun.istack_istack-commons-runtime",
         ":com.sun.xml.fastinfoset_FastInfoset",
-        ":org.glassfish.jaxb_jaxb-core",
+        ":javax.activation_javax.activation-api",
+        ":javax.xml.bind_jaxb-api",
+        ":org.glassfish.jaxb_txw2",
         ":org.jvnet.staxex_stax-ex",
     ],
 )
@@ -1154,7 +1165,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_txw2",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.2.11:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.3.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1536,7 +1547,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jvnet.staxex_stax-ex",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.7.7:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.8:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
