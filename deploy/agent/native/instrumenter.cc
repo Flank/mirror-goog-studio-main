@@ -28,6 +28,7 @@
 #include "tools/base/deploy/agent/native/instrumentation.jar.cc"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/native_callbacks.h"
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 
@@ -48,21 +49,10 @@ static unordered_map<string, Transform*> transforms;
 #define FILE_MODE (S_IRUSR | S_IWUSR)
 
 std::string GetInstrumentJarPath(const std::string& package_name) {
-#ifdef __ANDROID__
-  std::string target_jar_dir_ =
-      std::string("/data/data/") + package_name + "/code_cache/.studio/";
+  std::string target_jar_dir_ = Env::root() + std::string("/data/data/") +
+                                package_name + "/code_cache/.studio/";
   std::string target_jar = target_jar_dir_ + kInstrumentationJarName;
   return target_jar;
-#else
-  // For tests purposes.
-  char* tmp_dir = getenv("TEST_TMPDIR");
-  Log::E("GetInstrumentPath:%s", tmp_dir);
-  if (tmp_dir == nullptr) {
-    return kInstrumentationJarName;
-  } else {
-    return std::string(tmp_dir) + "/" + kInstrumentationJarName;
-  }
-#endif
 }
 
 // Check if the jar_path exists. If it doesn't, generate its content using the

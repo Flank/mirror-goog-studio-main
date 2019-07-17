@@ -41,7 +41,7 @@ public class JdiBasedClassRedefinerTest {
     @Before
     public void setUp() throws Exception {
         debuggerPort = findNextAvailablePort();
-        android = new FakeAndroidDriver(LOCAL_HOST, debuggerPort);
+        android = new FakeAndroidDriver(LOCAL_HOST, debuggerPort, new String[]{});
         android.start();
     }
 

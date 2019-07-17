@@ -15,6 +15,7 @@ public class ProcessRunner {
     public static final int LONG_TIMEOUT_MS = 100000;
     public static final int SHORT_TIMEOUT_MS = 10000;
     protected String[] myProcessArgs;
+    protected String[] myProcessEnv;
     private final List<String> myInput = new ArrayList<>();
     private final List<String> myError = new ArrayList<>();
     private Process myProcess;
@@ -23,7 +24,12 @@ public class ProcessRunner {
 
 
     protected ProcessRunner(String... processArgs) {
+        this(processArgs, null);
+    }
+
+    protected ProcessRunner(String[] processArgs, String[] processEnv) {
         myProcessArgs = processArgs;
+        myProcessEnv = processEnv;
     }
 
     public static String getProcessPath(String property) {
@@ -31,7 +37,7 @@ public class ProcessRunner {
     }
 
     public void start() throws IOException {
-        myProcess = Runtime.getRuntime().exec(myProcessArgs);
+        myProcess = Runtime.getRuntime().exec(myProcessArgs, myProcessEnv);
 
         // Thread to capture the process output.
         myInputListener =

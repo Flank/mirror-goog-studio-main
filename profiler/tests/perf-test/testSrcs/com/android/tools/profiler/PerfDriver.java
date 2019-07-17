@@ -149,7 +149,7 @@ public class PerfDriver extends ExternalResource {
 
         int perfdPort = myPerfdDriver.getPort();
 
-        myMockApp = new FakeAndroidDriver(LOCAL_HOST);
+        myMockApp = new FakeAndroidDriver(LOCAL_HOST, new String[]{});
         myMockApp.start();
 
         myGrpc = new GrpcUtils(LOCAL_HOST, perfdPort, myMockApp);

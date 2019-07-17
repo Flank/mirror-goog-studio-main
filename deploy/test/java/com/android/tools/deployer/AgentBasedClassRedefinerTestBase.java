@@ -20,11 +20,13 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.idea.protobuf.InvalidProtocolBufferException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.*;
@@ -41,7 +43,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     protected static final String SERVER_LOCATION =
             ProcessRunner.getProcessPath("swap.server.location");
 
-    protected static final String PACKAGE = "package.name.does.matter.in.this.test.";
+    protected static final String PACKAGE = "package.name";
 
     protected static final String LOCAL_HOST = "127.0.0.1";
     protected static final int RETURN_VALUE_TIMEOUT = 1000;
@@ -57,7 +59,13 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         dexLocation = new TemporaryFolder();
         dexLocation.create();
 
-        android = new FakeAndroidDriver(LOCAL_HOST);
+        File root = Files.createTempDirectory("root_dir").toFile();
+        String[] env = new String[] {
+            "FAKE_DEVICE_ROOT=" + root.getAbsolutePath()
+        };
+        File dotStudio = new File(root, "/data/data/" + PACKAGE + "/code_cache/.studio");
+        dotStudio.mkdirs();
+        android = new FakeAndroidDriver(LOCAL_HOST, env);
         android.start();
 
         redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation);
