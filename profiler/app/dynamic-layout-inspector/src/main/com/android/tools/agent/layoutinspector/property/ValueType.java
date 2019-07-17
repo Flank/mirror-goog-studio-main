@@ -38,4 +38,7 @@ public enum ValueType {
     INT_FLAG,
     RESOURCE,
     DRAWABLE,
+    ANIM,
+    ANIMATOR,
+    INTERPOLATOR,
 }

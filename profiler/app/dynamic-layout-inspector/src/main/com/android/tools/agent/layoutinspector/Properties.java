@@ -119,8 +119,10 @@ class Properties {
                         toInt(resource.getType()),
                         toInt(resource.getName()));
             case DRAWABLE:
-                Drawable drawable = (Drawable) value;
-                return addIntProperty(event, name, type, toInt(drawable.getClass().getName()));
+            case ANIM:
+            case ANIMATOR:
+            case INTERPOLATOR:
+                return addIntProperty(event, name, type, toInt(value.getClass().getName()));
             default:
                 return 0;
         }

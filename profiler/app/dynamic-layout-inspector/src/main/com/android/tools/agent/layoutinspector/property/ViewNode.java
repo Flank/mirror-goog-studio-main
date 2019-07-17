@@ -16,11 +16,14 @@
 
 package com.android.tools.agent.layoutinspector.property;
 
+import android.animation.StateListAnimator;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Interpolator;
 import android.view.inspector.PropertyReader;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import java.lang.reflect.InvocationTargetException;
@@ -162,6 +165,15 @@ public class ViewNode<V extends View> {
             } else if (o instanceof Drawable) {
                 readAny(id, o);
                 mProperties.get(id).setType(ValueType.DRAWABLE);
+            } else if (o instanceof Animation) {
+                readAny(id, o);
+                mProperties.get(id).setType(ValueType.ANIM);
+            } else if (o instanceof StateListAnimator) {
+                readAny(id, o);
+                mProperties.get(id).setType(ValueType.ANIMATOR);
+            } else if (o instanceof Interpolator) {
+                readAny(id, o);
+                mProperties.get(id).setType(ValueType.INTERPOLATOR);
             }
         }
 

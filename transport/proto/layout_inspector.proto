@@ -110,6 +110,9 @@ message Property {
     INT_FLAG = 13;
     RESOURCE = 14;
     DRAWABLE = 15;
+    ANIM = 16;
+    ANIMATOR = 17;
+    INTERPOLATOR = 18;
   }
 
   int32 namespace = 1;
