@@ -17,12 +17,34 @@
 #include "tools/base/deploy/common/socket.h"
 
 #include <poll.h>
+#include <unistd.h>
 #include <cerrno>
 #include <cstring>
 
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/log.h"
 
 namespace deploy {
+
+namespace {
+
+int InitAddr(const std::string& socket_name, struct sockaddr_un* addr) {
+  addr->sun_family = AF_UNIX;
+#ifdef __APPLE__
+  // Mac does not support abstract sockets, use a named one for testing
+  std::string name = Env::root() + "/.abstract_" + socket_name;
+  strncpy(addr->sun_path, name.c_str(), sizeof(addr->sun_path) - 1);
+  return SUN_LEN(addr);
+#else
+  // Abstract sockets start with a null terminator.
+  addr->sun_path[0] = '\0';
+  strncpy(addr->sun_path + 1, socket_name.c_str(), sizeof(addr->sun_path) - 2);
+  return sizeof(*addr);
+#endif  // __APPLE__
+}
+
+}  // namespace
 
 bool Socket::Open() {
   fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -35,13 +57,8 @@ bool Socket::BindAndListen(const std::string& socket_name) {
   }
 
   struct sockaddr_un addr = {0};
-  addr.sun_family = AF_UNIX;
-
-  // Abstract sockets start with a null terminator.
-  addr.sun_path[0] = '\0';
-
-  strncpy(addr.sun_path + 1, socket_name.c_str(), sizeof(addr.sun_path) - 2);
-  if (bind(fd_, (const struct sockaddr*)&addr, sizeof(addr)) == -1) {
+  socklen_t len = InitAddr(socket_name, &addr);
+  if (bind(fd_, (const struct sockaddr*)&addr, len) == -1) {
     return false;
   }
 
@@ -78,13 +95,9 @@ bool Socket::Connect(const std::string& socket_name) {
   }
 
   struct sockaddr_un addr = {0};
-  addr.sun_family = AF_UNIX;
-  addr.sun_path[0] = '\0';
-
-  strncpy(addr.sun_path + 1, socket_name.c_str(), sizeof(addr.sun_path) - 2);
-
+  socklen_t len = InitAddr(socket_name, &addr);
   size_t retries = 0;
-  while (connect(fd_, (const struct sockaddr*)&addr, sizeof(addr)) != 0) {
+  while (connect(fd_, (const struct sockaddr*)&addr, len) != 0) {
     // Connection refusal means the server might have been slow to start, so
     // allow for retries.
     if (errno != ECONNREFUSED) {
