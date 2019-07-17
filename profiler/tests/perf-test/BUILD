@@ -64,7 +64,10 @@ coverage_java_test(
         "//tools/base/transport/agent:android/x86_64/libjvmtiagent.so",
     ],
     jvm_flags = ["-Dtest.suite.jar=NativeBinarySizeTest.jar"],
-    tags = ["no_windows"],
+    tags = [
+        "no_windows",
+        "perfgate_multi_run",
+    ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
@@ -163,6 +166,9 @@ perf_test(
     size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java",
+    ],
+    tags = [
+        "perfgate_multi_run",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
