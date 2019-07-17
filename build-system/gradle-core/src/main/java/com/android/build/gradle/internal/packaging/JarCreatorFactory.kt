@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.packaging
 
-import zipflinger.JarCreator
+import com.android.zipflinger.JarCreator
 import com.android.builder.packaging.JarMerger
-import zipflinger.JarFlinger
+import com.android.zipflinger.JarFlinger
 import java.nio.file.Path
 import java.util.function.Predicate
 

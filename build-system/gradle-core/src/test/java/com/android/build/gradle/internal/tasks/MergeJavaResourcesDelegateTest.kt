@@ -48,8 +48,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import zipflinger.JarFlinger
-import zipflinger.ZipArchive
+import com.android.zipflinger.JarFlinger
+import com.android.zipflinger.ZipArchive
 import java.util.zip.Deflater
 
 /** Test cases for [MergeJavaResourcesDelegate].  */

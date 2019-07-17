@@ -23,9 +23,9 @@ import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.google.common.base.Function
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
-import zipflinger.FileSource
-import zipflinger.ZipArchive
-import zipflinger.ZipSource
+import com.android.zipflinger.FileSource
+import com.android.zipflinger.ZipArchive
+import com.android.zipflinger.ZipSource
 import java.io.File
 import java.io.IOException
 import java.lang.RuntimeException

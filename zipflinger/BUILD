@@ -3,7 +3,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 maven_java_library(
     name = "zipflinger",
     srcs = glob([
-        "src/zipflinger/**/*.java",
+        "src/com/android/zipflinger/**/*.java",
     ]),
     pom = ":pom",
     visibility = [
@@ -28,13 +28,13 @@ maven_pom(
 java_binary(
     name = "benchmarks",
     srcs = [
-        "test/src/java/zipflinger/Benchmark.java",
-        "test/src/java/zipflinger/BenchmarkAdd.java",
-        "test/src/java/zipflinger/BenchmarkFolderMerge.java",
-        "test/src/java/zipflinger/BenchmarkJarMerge.java",
-        "test/src/java/zipflinger/BenchmarkList.java",
+        "test/src/java/com/android/zipflinger/Benchmark.java",
+        "test/src/java/com/android/zipflinger/BenchmarkAdd.java",
+        "test/src/java/com/android/zipflinger/BenchmarkFolderMerge.java",
+        "test/src/java/com/android/zipflinger/BenchmarkJarMerge.java",
+        "test/src/java/com/android/zipflinger/BenchmarkList.java",
     ],
-    main_class = "zipflinger.Benchmark",
+    main_class = "com.android.zipflinger.Benchmark",
     deps = [
         ":test_utils",
         ":zipflinger",
@@ -49,10 +49,10 @@ java_binary(
 java_library(
     name = "test_utils",
     srcs = [
-        "test/src/java/zipflinger/StopWatch.java",
-        "test/src/java/zipflinger/TestBase.java",
-        "test/src/java/zipflinger/TreeCreator.java",
-        "test/src/java/zipflinger/ZipCreator.java",
+        "test/src/java/com/android/zipflinger/StopWatch.java",
+        "test/src/java/com/android/zipflinger/TestBase.java",
+        "test/src/java/com/android/zipflinger/TreeCreator.java",
+        "test/src/java/com/android/zipflinger/ZipCreator.java",
     ],
     deps = [
         ":zipflinger",
@@ -64,7 +64,7 @@ java_test(
     name = "testParsing",
     size = "small",
     srcs = [
-        "test/src/java/zipflinger/TestParsing.java",
+        "test/src/java/com/android/zipflinger/TestParsing.java",
     ],
     data = glob([
         "test/resource/zip_no_fd.zip",
@@ -85,7 +85,7 @@ java_test(
     name = "testsFreeStore",
     size = "small",
     srcs = [
-        "test/src/java/zipflinger/TestFreeStore.java",
+        "test/src/java/com/android/zipflinger/TestFreeStore.java",
     ],
     data = glob([
         "test/resource/zip_no_fd.zip",
@@ -105,7 +105,7 @@ java_test(
     name = "testsZipFlinger",
     size = "small",
     srcs = [
-        "test/src/java/zipflinger/TestZipFlinger.java",
+        "test/src/java/com/android/zipflinger/TestZipFlinger.java",
     ],
     data = glob([
         "test/resource/1-2-3files.zip",
@@ -132,7 +132,7 @@ java_test(
     name = "testsCompressor",
     size = "small",
     srcs = [
-        "test/src/java/zipflinger/TestCompressor.java",
+        "test/src/java/com/android/zipflinger/TestCompressor.java",
     ],
     data = glob([
         "test/resource/file4.txt",
@@ -151,7 +151,7 @@ java_test(
     name = "testsMerge",
     size = "small",
     srcs = [
-        "test/src/java/zipflinger/TestZipMerge.java",
+        "test/src/java/com/android/zipflinger/TestZipMerge.java",
     ],
     data = glob([
         "test/resource/1-2-3files.zip",
@@ -171,7 +171,7 @@ java_test(
     name = "testsJarFlinger",
     size = "small",
     srcs = [
-        "test/src/java/zipflinger/TestJarFlinger.java",
+        "test/src/java/com/android/zipflinger/TestJarFlinger.java",
     ],
     data = glob([
         "test/resource/1-2-3files.zip",

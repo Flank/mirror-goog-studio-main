@@ -17,7 +17,6 @@
 package com.android.builder.symbols
 
 import com.android.SdkConstants
-import com.android.builder.packaging.JarMerger
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.canonicalizeValueResourceName
@@ -40,8 +39,8 @@ import org.objectweb.asm.Opcodes.NEWARRAY
 import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
 import org.objectweb.asm.Opcodes.T_INT
-import zipflinger.JarCreator
-import zipflinger.JarFlinger
+import com.android.zipflinger.JarCreator
+import com.android.zipflinger.JarFlinger
 import java.io.IOException
 import java.nio.file.Path
 import java.util.EnumSet

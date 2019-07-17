@@ -27,6 +27,7 @@ import com.android.builder.files.RelativeFile;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zfile.ApkCreator;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
+import com.android.zipflinger.ZipArchive;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -93,7 +94,7 @@ public class IncrementalPackager implements Closeable {
 
     /**
      * APK creator type. We make calls differently depending on {@link ApkCreatorType} because
-     * {@link zipflinger.ZipArchive} requires that all delete() calls come before all add() calls.
+     * {@link ZipArchive} requires that all delete() calls come before all add() calls.
      */
     @NonNull private ApkCreatorType mApkCreatorType;
 

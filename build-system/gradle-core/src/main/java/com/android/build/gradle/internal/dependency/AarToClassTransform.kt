@@ -37,7 +37,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import zipflinger.JarCreator
+import com.android.zipflinger.JarCreator
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 

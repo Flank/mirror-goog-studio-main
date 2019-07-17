@@ -16,8 +16,8 @@
 
 package signflinger;
 
+import com.android.zipflinger.FileSource;
 import java.io.File;
-import zipflinger.FileSource;
 
 public abstract class TestBaseSigning {
 
