@@ -62,7 +62,7 @@ public class FakeDevice {
     private File bridge;
     @Nullable private DeviceState deviceState;
 
-    public FakeDevice(String version, int api) {
+    public FakeDevice(String version, int api) throws IOException {
         this.version = version;
         this.api = api;
         this.shell = new Shell();
@@ -79,9 +79,20 @@ public class FakeDevice {
         this.users = new ArrayList<>();
         this.pid = 10000;
         // Set up
-        this.storage = null;
         this.shellUser = addUser(2000, "shell");
+        this.storage = Files.createTempDirectory("storage").toFile();
         this.zygotepid = runProcess();
+
+        setUp();
+    }
+
+    private void setUp() throws IOException {
+        // Assume all devices have /data/local/tmp created, if this is not true ddmlib already fails to install
+        File file = new File(storage, "data/local/tmp");
+        file.mkdirs();
+
+        System.out.printf("Fake device: %s started up.\n", version);
+        System.out.printf("  sd-card at: %s\n", storage.getAbsolutePath());
     }
 
     public void connectTo(FakeAdbServer server) throws ExecutionException, InterruptedException {
@@ -355,13 +366,7 @@ public class FakeDevice {
         exe.setExecutable(true);
     }
 
-    public File getStorage() throws IOException {
-        if (storage == null) {
-            storage = Files.createTempDirectory("storage").toFile();
-            // Assume all devices have /data/local/tmp created, if this is not true ddmlib already fails to install
-            File file = new File(storage, "data/local/tmp");
-            file.mkdirs();
-        }
+    public File getStorage() {
         return storage;
     }
 

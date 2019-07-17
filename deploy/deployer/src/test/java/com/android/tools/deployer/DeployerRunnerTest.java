@@ -64,7 +64,7 @@ public class DeployerRunnerTest {
         return DeviceId.values();
     }
 
-    public DeployerRunnerTest(DeviceId id) {
+    public DeployerRunnerTest(DeviceId id) throws Exception {
         this.device = new FakeDeviceLibrary().build(id);
     }
 

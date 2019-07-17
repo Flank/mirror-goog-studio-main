@@ -25,6 +25,7 @@ import com.android.tools.deployer.devices.shell.Mkdir;
 import com.android.tools.deployer.devices.shell.Rm;
 import com.android.tools.deployer.devices.shell.RunAs;
 import com.android.tools.deployer.devices.shell.SessionPm;
+import java.io.IOException;
 
 public class FakeDeviceLibrary {
 
@@ -40,7 +41,7 @@ public class FakeDeviceLibrary {
         API_28,
     }
 
-    public FakeDevice build(DeviceId id) {
+    public FakeDevice build(DeviceId id) throws IOException {
         FakeDevice device = null;
         switch (id) {
             case API_19:
