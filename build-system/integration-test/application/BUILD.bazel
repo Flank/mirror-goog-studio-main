@@ -142,6 +142,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-common/1.0.0-rc01:aar",
         "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-fragment/1.0.0-rc01:aar",
         "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-runtime/1.0.0-rc01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/core/core/1.0.1:aar",
         "//prebuilts/tools/common/m2/repository/backport-util-concurrent/backport-util-concurrent/3.1:jar",
         "//prebuilts/tools/common/m2/repository/classworlds/classworlds/1.1-alpha-2:jar",
         "//prebuilts/tools/common/m2/repository/com/almworks/sqlite4java/sqlite4java/0.282:jar",

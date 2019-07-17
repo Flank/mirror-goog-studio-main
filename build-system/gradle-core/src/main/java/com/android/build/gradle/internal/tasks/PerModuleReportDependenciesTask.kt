@@ -28,11 +28,12 @@ import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.MavenLibrary
 import com.android.tools.build.libraries.metadata.ModuleDependencies
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ComponentSelectionCause
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.internal.artifacts.result.DefaultResolvedDependencyResult
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
@@ -65,13 +66,17 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
     val moduleName: String
         get() = moduleNameSupplier.get()
 
-    private fun convertDependencyToMavenLibrary(dependency: ModuleComponentSelector?, librariesToIndexMap: Dictionary<Library, Integer>, libraries: LinkedList<Library>): Integer? {
-        if (dependency != null) {
+    private fun convertDependencyToMavenLibrary(
+        moduleVersion: ModuleVersionIdentifier?,
+        librariesToIndexMap: Dictionary<Library, Integer>,
+        libraries: LinkedList<Library>
+    ): Integer? {
+        if (moduleVersion != null) {
             val lib = Library.newBuilder()
                 .setMavenLibrary(MavenLibrary.newBuilder()
-                    .setGroupId(dependency.group)
-                    .setArtifactId(dependency.module)
-                    .setVersion(dependency.version)
+                    .setGroupId(moduleVersion.group)
+                    .setArtifactId(moduleVersion.name)
+                    .setVersion(moduleVersion.version)
                     .build())
                 .build()
             var index = librariesToIndexMap.get(lib)
@@ -91,22 +96,29 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         val libraries = LinkedList<Library>()
         val libraryDependencies = LinkedList<LibraryDependencies>()
         val directDependenciesIndices: MutableSet<Integer> = HashSet()
-
         for (dependency in runtimeClasspath.incoming.resolutionResult.allDependencies) {
+            // ignore non maven repository dependencies for now.
+            if (dependency !is ResolvedDependencyResult
+                || dependency.requested !is ModuleComponentSelector) {
+                continue;
+            }
+            val resolvedComponent = dependency.selected
             val index = convertDependencyToMavenLibrary(
-                dependency.requested as? ModuleComponentSelector,
+                resolvedComponent.moduleVersion,
                 librariesToIndexMap,
                 libraries)
             if (index != null) {
-
                 // add library dependency if we haven't traversed it yet.
                 if (libraryDependencies.filter { it.libraryIndex == index.toInt() }.isEmpty()) {
                     val libraryDependency =
                         LibraryDependencies.newBuilder().setLibraryIndex(index.toInt())
-                    val dependencyResult = dependency as DefaultResolvedDependencyResult
-                    for (libDep in dependencyResult.selected.dependencies) {
+                    for (libDep in resolvedComponent.dependencies) {
+                        if (libDep !is ResolvedDependencyResult
+                            || libDep.requested !is ModuleComponentSelector) {
+                            continue;
+                        }
                         val depIndex = convertDependencyToMavenLibrary(
-                            libDep.requested as? ModuleComponentSelector,
+                            libDep.selected.moduleVersion,
                             librariesToIndexMap,
                             libraries
                         )
