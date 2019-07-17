@@ -15,6 +15,7 @@ FakeJNIEnv::FakeJNIEnv() : functions_{0} {
   functions_.ExceptionClear = &ExceptionClear;
   functions_.ExceptionDescribe = &ExceptionDescribe;
   functions_.FindClass = &FindClass;
+  functions_.GetObjectField = &GetObjectField;
   functions_.GetFieldID = &GetFieldID;
   functions_.GetMethodID = &GetMethodID;
   functions_.GetObjectClass = &GetObjectClass;
@@ -121,6 +122,11 @@ jobject FakeJNIEnv::CallObjectMethodA(JNIEnv* env, jobject obj,
 void FakeJNIEnv::CallVoidMethodA(JNIEnv* env, jobject obj, jmethodID methodID,
                                  const jvalue* args) {
   Log::I("JNI::CallVoidMethodA");
+}
+
+jobject FakeJNIEnv::GetObjectField(JNIEnv* env, jobject obj, jfieldID fid) {
+  Log::I("JNI::GetObjectField");
+  return nullptr;
 }
 
 jfieldID FakeJNIEnv::GetFieldID(JNIEnv* env, jclass clazz, const char* name,

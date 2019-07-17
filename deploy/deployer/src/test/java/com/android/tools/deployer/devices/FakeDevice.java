@@ -93,7 +93,7 @@ public class FakeDevice {
         // Set up
         this.shellUser = addUser(2000, "shell");
         this.storage = Files.createTempDirectory("storage").toFile();
-        this.zygotepid = runProcess(0, "zygote");
+        this.zygotepid = runProcess(0, "zygote64");
         this.logcat = File.createTempFile("logs", "txt");
         this.shellServer = ServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
         this.fakeShell = getFakeShell();
@@ -462,6 +462,13 @@ public class FakeDevice {
         File to = new File(getStorage(), dest);
         Files.copy(from.toPath(), to.toPath());
         return 0;
+    }
+
+    public void copyDirRecursively(String source, String dest) throws IOException {
+        File from = new File(getStorage(), source);
+        File to = new File(getStorage(), dest);
+        FileUtils.deleteRecursivelyIfExists(to);
+        FileUtils.copyDirectory(from, to);
     }
 
     public boolean isDirectory(String path) throws IOException {

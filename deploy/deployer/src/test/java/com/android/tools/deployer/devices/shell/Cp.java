@@ -20,31 +20,90 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Cp extends ShellCommand {
     @Override
     public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         if (args.length < 2) {
-            stdout.println("Unsupported arguments");
+            stdout.println("cp: Need 2 arguments (see \"cp --help\")");
             return 1;
         }
-        if (args.length == 2) {
-            context.getDevice().copyFile(args[0], args[1]);
-        }
-        String last = args[args.length - 1];
-        if (last.endsWith("/")) {
-            last = last.substring(0, last.length() - 1);
-        }
-        if (context.getDevice().isDirectory(last)) {
-            for (int i = 0; i < args.length - 1; i++) {
-                String name = new File(args[i]).getName();
-                context.getDevice().copyFile(args[i], last + "/" + name);
+        List<String> sources = new ArrayList<>();
+        String dest = null;
+        boolean recursive = false;
+        boolean deleteBefore = false;
+
+        int start = 0;
+        if (args[0].startsWith("-")) {
+            for (int j = 1; j < args[0].length(); j++) {
+                char flag = args[0].charAt(j);
+                switch (flag) {
+                  case 'r': recursive = true; break;
+                  case 'F': deleteBefore = true; break;
+                  default:
+                      stdout.println("cp: Unknown option " + flag + "(see \"cp --help\")");
+                      return 1;
+                }
             }
-            return 0;
+            start = 1;
         }
-        stdout.println("Unsupported arguments");
-        return 1;
+        for (int i = start; i < args.length - 1; i++) {
+            sources.add(clean(args[i]));
+        }
+        dest = clean(args[args.length - 1]);
+
+        if (sources.isEmpty()) {
+            stdout.println("cp: Need 2 arguments (see \"cp --help\")");
+            return 1;
+        }
+
+        boolean destDirectory = context.getDevice().isDirectory(dest);
+        if (sources.size() > 1 && !destDirectory) {
+            stdout.println("cp: '" + dest + "' not directory");
+            return 1;
+        }
+
+        for (String source : sources) {
+            String name = new File(source).getName();
+            if (context.getDevice().isDirectory(source)) {
+                if (recursive) {
+                    if (context.getDevice().hasFile(dest)) {
+                        if (destDirectory) {
+                            context.getDevice().copyDirRecursively(source, dest + "/" + name);
+                        } else {
+                            stdout.println("cp: dir at '" + source + "'");
+                            return 1;
+                        }
+                    } else {
+                        context.getDevice().copyDirRecursively(source, dest);
+                    }
+                }
+                else {
+                    if (!destDirectory) {
+                        stdout.println("cp: dir at '" + source + "'");
+                        return 1;
+                    }
+                    stdout.println("cp: Skipped dir '" + dest + "/" + source + "': No such file or directory");
+                }
+            } else {
+                if (destDirectory) {
+                    context.getDevice().copyFile(source, dest + "/" + name);
+                } else {
+                    context.getDevice().copyFile(source, dest);
+                }
+            }
+        }
+        return 0;
+    }
+
+    private String clean(String path) {
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
     }
 
     @Override
