@@ -100,9 +100,7 @@ public interface VariantScope extends TransformVariantScope {
 
     boolean useResourceShrinker();
 
-    boolean isPrecompileRemoteResourcesEnabled();
-
-    boolean isPrecompileLocalResourcesEnabled();
+    boolean isPrecompileDependenciesResourcesEnabled();
 
     boolean isCrunchPngs();
 

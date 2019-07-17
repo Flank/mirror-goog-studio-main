@@ -251,7 +251,7 @@ class PublishingSpecs {
                 runtime(LIBRARY_JNI, ArtifactType.JNI)
                 runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
-                runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_LOCAL_RESOURCES)
+                runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // unit test need ALL_CLASSES instead of RUNTIME_LIBRARY_CLASSES to get

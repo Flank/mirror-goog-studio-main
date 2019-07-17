@@ -429,7 +429,7 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void createCompileLibraryResourcesTask(@NonNull VariantScope variantScope) {
-        if (variantScope.isPrecompileLocalResourcesEnabled()) {
+        if (variantScope.isPrecompileDependenciesResourcesEnabled()) {
             taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variantScope));
         }
     }

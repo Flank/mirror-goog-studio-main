@@ -337,20 +337,11 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     @Override
-    public boolean isPrecompileRemoteResourcesEnabled() {
+    public boolean isPrecompileDependenciesResourcesEnabled() {
         // Resource shrinker expects MergeResources task to have all the resources merged and with
         // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
         // enabled, see b/134766811.
-        return globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)
-                && !useResourceShrinker();
-    }
-
-    @Override
-    public boolean isPrecompileLocalResourcesEnabled() {
-        // Resource shrinker expects MergeResources task to have all the resources merged and with
-        // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
-        // enabled, see b/134766811.
-        return globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_LOCAL_RESOURCES)
+        return globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES)
                 && !useResourceShrinker();
     }
 
@@ -882,7 +873,7 @@ public class VariantScopeImpl implements VariantScope {
                 && configType == RUNTIME_CLASSPATH
                 && getType().isApk()) {
             if (artifactType == ArtifactType.ANDROID_RES
-                    || artifactType == ArtifactType.COMPILED_REMOTE_RESOURCES) {
+                    || artifactType == ArtifactType.COMPILED_DEPENDENCIES_RESOURCES) {
                 artifacts =
                         new AndroidTestResourceArtifactCollection(
                                 artifacts,

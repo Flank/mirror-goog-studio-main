@@ -80,12 +80,11 @@ enum class BooleanOption(
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false),
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
-    PRECOMPILE_REMOTE_RESOURCES("android.precompileRemoteResources", true),
+    PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", false),
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
     USE_APK_FLINGER("android.useApkFlinger", false),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
-    PRECOMPILE_LOCAL_RESOURCES("android.precompileLocalResources", false),
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", false),
     ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false),
     // ---------------

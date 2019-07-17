@@ -139,9 +139,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     private boolean pseudoLocalesEnabled;
 
-    private boolean precompileRemoteResources;
-
-    private boolean precompileLocalResources;
+    private boolean precompileDependenciesResources;
 
     private ImmutableSet<Flag> flags;
 
@@ -292,7 +290,7 @@ public abstract class MergeResources extends ResourceAwareTask {
      * resources task, if it is then it should be ignored.
      */
     private boolean isFilteredOutLibraryResource(File changedFile) {
-        ArtifactCollection localLibraryResources = getResourcesComputer().getLocalLibraries();
+        ArtifactCollection localLibraryResources = getResourcesComputer().getLibraries();
         File parentFile = changedFile.getParentFile();
         if (localLibraryResources == null || parentFile.getName().startsWith(FD_RES_VALUES)) {
             return false;
@@ -318,7 +316,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 return;
             }
 
-            if (precompileLocalResources) {
+            if (precompileDependenciesResources) {
                 changedInputs =
                         changedInputs
                                 .entrySet()
@@ -487,9 +485,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         // back to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
         if (processedInputs == null) {
-            processedInputs =
-                    getResourcesComputer()
-                            .compute(precompileRemoteResources, precompileLocalResources);
+            processedInputs = getResourcesComputer().compute(precompileDependenciesResources);
             List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
 
             for (ResourceSet resourceSet : processedInputs) {
@@ -801,13 +797,10 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
 
-            task.precompileRemoteResources =
-                    mergeType.equals(MERGE) && variantScope.isPrecompileRemoteResourcesEnabled();
-
-            task.precompileLocalResources =
+            task.precompileDependenciesResources =
                     mergeType.equals(MERGE)
                             && !isLibrary
-                            && variantScope.isPrecompileLocalResourcesEnabled();
+                            && variantScope.isPrecompileDependenciesResourcesEnabled();
 
             task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 

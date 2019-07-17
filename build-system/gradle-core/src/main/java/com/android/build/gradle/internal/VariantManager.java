@@ -134,6 +134,7 @@ import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
@@ -700,7 +701,7 @@ public class VariantManager implements VariantModel {
                     });
         }
 
-        if (globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES)) {
             dependencies.registerTransform(
                     AarResourcesCompilerTransform.class,
                     reg -> {
@@ -708,12 +709,17 @@ public class VariantManager implements VariantModel {
                         reg.getTo()
                                 .attribute(
                                         ARTIFACT_FORMAT,
-                                        ArtifactType.COMPILED_REMOTE_RESOURCES.getType());
+                                        ArtifactType.COMPILED_DEPENDENCIES_RESOURCES.getType());
 
                         reg.parameters(
                                 params -> {
+                                    Pair<FileCollection, String> aapt2FromMavenAndVersion =
+                                            Aapt2MavenUtils.getAapt2FromMavenAndVersion(
+                                                    globalScope);
                                     params.getAapt2FromMaven()
-                                            .from(Aapt2MavenUtils.getAapt2FromMaven(globalScope));
+                                            .from(aapt2FromMavenAndVersion.getFirst());
+                                    params.getAapt2Version()
+                                            .set(aapt2FromMavenAndVersion.getSecond());
                                     params.getErrorFormatMode()
                                             .set(
                                                     SyncOptions.getErrorFormatMode(

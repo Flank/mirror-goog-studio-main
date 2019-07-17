@@ -93,7 +93,7 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
     lateinit var androidJar: Provider<File>
         private set
 
-    private var compiledRemoteResources: ArtifactCollection? = null
+    private var compiledDependenciesResources: ArtifactCollection? = null
 
     private lateinit var mergeBlameFolder: File
 
@@ -161,16 +161,14 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
     }
 
     private fun getAaptPackageConfig(resDir: File, manifestFile: File): AaptPackageConfig {
-        val compiledRemoteResourcesDirs =
-            if (getCompiledRemoteResources() == null) emptyList<File>() else {
-                // the order of the artifact is descending order, so we need to reverse it.
-                getCompiledRemoteResources()!!.reversed().toImmutableList()
-            }
+        val compiledDependenciesResourcesDirs =
+            getCompiledDependenciesResources()?.reversed()?.toImmutableList()
+                ?: emptyList<File>()
 
         // We're do not want to generate any files - only to make sure everything links properly.
         return AaptPackageConfig.Builder()
             .setManifestFile(manifestFile)
-            .addResourceDirectories(compiledRemoteResourcesDirs)
+            .addResourceDirectories(compiledDependenciesResourcesDirs)
             .addResourceDir(resDir)
             .setLibrarySymbolTableFiles(ImmutableSet.of())
             .setOptions(AaptOptions(failOnMissingConfigEntry = false))
@@ -226,26 +224,26 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
                 variantScope.globalScope.projectOptions
             )
 
-            if (variantScope.isPrecompileRemoteResourcesEnabled) {
-                task.compiledRemoteResources =
+            if (variantScope.isPrecompileDependenciesResourcesEnabled) {
+                task.compiledDependenciesResources =
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
+                        AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                     )
             }
         }
     }
 
     /**
-     * Returns a file collection of the directories containing the compiled remote libraries
-     * resource files.
+     * Returns a file collection of the directories containing the compiled dependencies resource
+     * files.
      */
     @Optional
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getCompiledRemoteResources(): FileCollection? {
-        return compiledRemoteResources?.artifactFiles
+    fun getCompiledDependenciesResources(): FileCollection? {
+        return compiledDependenciesResources?.artifactFiles
     }
 
     companion object {

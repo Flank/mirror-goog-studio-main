@@ -116,7 +116,7 @@ public class DependencyResourcesComputerTest {
         File file2 = temporaryFolder.newFolder("foo", "bar", "1.0");
         List<ResourceSet> librarySets = setupLibraryDependencies(file2, ":path");
 
-        assertThat(computer.getLocalLibraries().getArtifactFiles()).containsExactly(file2);
+        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(file2);
 
         List<ResourceSet> computedSets = computer.compute();
         assertThat(computedSets).containsExactly(librarySets.get(0), mainSet).inOrder();
@@ -221,16 +221,14 @@ public class DependencyResourcesComputerTest {
         setFileCollection(computer::setMicroApkResDirectory, microFile);
         mainSet.addSource(microFile);
 
-        assertThat(computer.getLocalLibraries().getArtifactFiles())
-                .containsExactly(libFile, libFile2);
+        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
         assertThat(computer.compute())
                 .containsExactly(librarySet2, librarySet, mainSet, debugSet)
                 .inOrder();
         // generated files should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles())
                 .containsExactly(file, file2, rsFile, genFile, extraFile, microFile);
-        assertThat(computer.getLocalLibraries().getArtifactFiles())
-                .containsExactly(libFile, libFile2);
+        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
     }
 
     @NonNull
@@ -301,7 +299,7 @@ public class DependencyResourcesComputerTest {
         when(libraries.getArtifacts()).thenReturn(artifacts);
         when(libraries.getArtifactFiles()).thenReturn(new FakeFileCollection(files));
 
-        computer.setLocalLibraries(libraries);
+        computer.setLibraries(libraries);
 
         return resourceSets;
     }

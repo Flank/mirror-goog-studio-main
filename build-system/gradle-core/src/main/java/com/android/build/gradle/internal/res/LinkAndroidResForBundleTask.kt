@@ -128,9 +128,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Internal
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
-    private var compiledRemoteResources: ArtifactCollection? = null
-
-    private var compiledLocalResources: ArtifactCollection? = null
+    private var compiledDependenciesResources: ArtifactCollection? = null
 
     override fun doTaskAction() {
 
@@ -153,11 +151,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             featurePackagesBuilder.add(buildElements.iterator().next().outputFile)
         }
 
-        val compiledRemoteResourcesDirs =
-            getCompiledRemoteResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
-
-        val compiledLocalResourcesDirs =
-            getCompiledLocalResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
+        val compiledDependenciesResourcesDirs =
+            getCompiledDependenciesResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
 
         val config = AaptPackageConfig(
             androidJarPath = androidJar.get().absolutePath,
@@ -170,9 +165,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             packageId = resOffset,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
-            resourceDirs = ImmutableList.Builder<File>().addAll(compiledRemoteResourcesDirs).addAll(
-                compiledLocalResourcesDirs
-            ).add(checkNotNull(getInputResourcesDir().orNull?.asFile)).build(),
+            resourceDirs = ImmutableList.Builder<File>().addAll(compiledDependenciesResourcesDirs)
+                .add(
+                    checkNotNull(getInputResourcesDir().orNull?.asFile)
+                ).build(),
             resourceConfigs = ImmutableSet.copyOf(resConfig)
         )
         if (logger.isInfoEnabled) {
@@ -221,15 +217,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @Optional
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getCompiledRemoteResources(): FileCollection? {
-        return compiledRemoteResources?.artifactFiles
-    }
-
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    fun getCompiledLocalResources(): FileCollection? {
-        return compiledLocalResources?.artifactFiles
+    fun getCompiledDependenciesResources(): FileCollection? {
+        return compiledDependenciesResources?.artifactFiles
     }
 
     @get:Input
@@ -319,20 +308,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
-            if (variantScope.isPrecompileRemoteResourcesEnabled) {
-                task.compiledRemoteResources =
-                    variantScope.getArtifactCollection(
-                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
-                    )
-            }
-
-            if (variantScope.isPrecompileLocalResourcesEnabled) {
-                task.compiledLocalResources = variantScope.getArtifactCollection(
+            if (variantScope.isPrecompileDependenciesResourcesEnabled) {
+                task.compiledDependenciesResources = variantScope.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.COMPILED_LOCAL_RESOURCES
+                    AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                 )
             }
         }

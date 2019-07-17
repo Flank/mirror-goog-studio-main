@@ -250,9 +250,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
-    private var compiledRemoteResources: ArtifactCollection? = null
-
-    private var compiledLocalResources: ArtifactCollection? = null
+    private var compiledDependenciesResources: ArtifactCollection? = null
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -286,11 +284,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             unprocessedManifest.remove(mainOutput)
 
-            val compiledRemoteResourcesDirs =
-                getCompiledRemoteResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
-
-            val compiledLocalResourcesDirs =
-                getCompiledLocalResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
+            val compiledDependenciesResourcesDirs =
+                getCompiledDependenciesResources()?.reversed()?.toImmutableList()
+                    ?: emptyList<File>()
 
             it.submit(
                 AaptSplitInvoker::class.java,
@@ -303,8 +299,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     mainOutput.apkData,
                     true,
                     aapt2ServiceKey,
-                    compiledRemoteResourcesDirs,
-                    compiledLocalResourcesDirs,
+                    compiledDependenciesResourcesDirs,
                     this,
                     rClassOutputJar.orNull?.asFile
                 )
@@ -329,8 +324,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                                 apkInfo,
                                 false,
                                 aapt2ServiceKey,
-                                compiledRemoteResourcesDirs,
-                                compiledLocalResourcesDirs,
+                                compiledDependenciesResourcesDirs,
                                 this
                             )
                         )
@@ -646,20 +640,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 task.inputResourcesDir
             )
 
-            if (variantScope.isPrecompileRemoteResourcesEnabled) {
-                task.compiledRemoteResources =
+            if (variantScope.isPrecompileDependenciesResourcesEnabled) {
+                task.compiledDependenciesResources =
                     variantScope.getArtifactCollection(
-                        RUNTIME_CLASSPATH, ALL,
-                        AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
+                        RUNTIME_CLASSPATH,
+                        ALL,
+                        AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                     )
-            }
-
-            if (variantScope.isPrecompileLocalResourcesEnabled) {
-                task.compiledLocalResources = variantScope.getArtifactCollection(
-                    RUNTIME_CLASSPATH,
-                    ALL,
-                    AndroidArtifacts.ArtifactType.COMPILED_LOCAL_RESOURCES
-                )
             }
         }
     }
@@ -839,8 +826,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setUseConditionalKeepRules(params.useConditionalKeepRules)
                         .setUseMinimalKeepRules(params.useMinimalKeepRules)
                         .setUseFinalIds(params.useFinalIds)
-                        .addResourceDirectories(params.compiledRemoteResourcesDirs)
-                        .addResourceDirectories(params.compiledLocalResourcesDirs)
+                        .addResourceDirectories(params.compiledDependenciesResourcesDirs)
 
                     if (params.isNamespaced) {
                         val packagedDependencies = ImmutableList.builder<File>()
@@ -922,8 +908,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val apkData: ApkData,
         val generateCode: Boolean,
         val aapt2ServiceKey: Aapt2ServiceKey?,
-        val compiledRemoteResourcesDirs: List<File>,
-        val compiledLocalResourcesDirs: List<File>,
+        val compiledDependenciesResourcesDirs: List<File>,
         task: LinkApplicationAndroidResourcesTask,
         val rClassOutputJar: File? = null
     ) : Serializable {
@@ -1006,21 +991,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     /**
-     * Returns a file collection of the directories containing the compiled remote libraries
-     * resource files.
+     * Returns a file collection of the directories containing the compiled dependencies resource
+     * files.
      */
     @Optional
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getCompiledRemoteResources(): FileCollection? {
-        return compiledRemoteResources?.artifactFiles
-    }
-
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    fun getCompiledLocalResources(): FileCollection? {
-        return compiledLocalResources?.artifactFiles
+    fun getCompiledDependenciesResources(): FileCollection? {
+        return compiledDependenciesResources?.artifactFiles
     }
 
     @Input

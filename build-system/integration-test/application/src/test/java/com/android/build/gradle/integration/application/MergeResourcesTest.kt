@@ -107,8 +107,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         )
 
         if (project.booleanOptions.getOrDefault(
-                BooleanOption.PRECOMPILE_LOCAL_RESOURCES,
-                BooleanOption.PRECOMPILE_LOCAL_RESOURCES.defaultValue
+                BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
+                BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES.defaultValue
             ) == true
         ) {
             assertThat(inIntermediate).doesNotExist()

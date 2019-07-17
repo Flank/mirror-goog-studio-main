@@ -167,9 +167,9 @@ class PrecompileRemoteResourcesTest {
 
     @Test
     fun checkAppBuild() {
-        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":publishedLib:assembleRelease")
-        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":app:assembleDebug")
 
         checkAarResourcesCompilerTransformOutput()
@@ -187,10 +187,10 @@ class PrecompileRemoteResourcesTest {
 
     @Test
     fun checkLocalLibBuild() {
-        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":publishedLib:assembleRelease")
 
-        val result = project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+        val result = project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":localLib:assembleRelease")
 
         assertThat(result.getTask(":localLib:verifyReleaseResources").didWork()).isTrue()
@@ -198,10 +198,10 @@ class PrecompileRemoteResourcesTest {
 
     @Test
     fun testIntegrationWithResourceShrinker() {
-        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":publishedLib:assembleRelease")
 
-        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .with(OptionalBooleanOption.ENABLE_R8, true)
             .run(":app:assembleRelease")
 
