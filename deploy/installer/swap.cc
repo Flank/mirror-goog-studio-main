@@ -396,6 +396,7 @@ bool SwapCommand::AttachAgents() const {
     }
 #endif
     LogEvent("Attaching agent: '"_s + agent + "'");
+    output = "";
     if (!cmd.AttachAgent(pid, target_dir_ + agent, {Socket::kDefaultAddress},
                          &output)) {
       ErrEvent("Could not attach agent to process: "_s + output);
