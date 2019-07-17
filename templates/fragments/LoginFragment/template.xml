@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<template
+    format="5"
+    revision="6"
+    name="Login Fragment"
+    description="Creates a new login fragment, allowing users to enter an email address and password to log in or to register with your application."
+    minApi="8"
+    minBuildApi="14">
+
+    <category value="Fragment" />
+    <formfactor value="Mobile" />
+
+    <parameter
+        id="fragmentClass"
+        name="Fragment Name"
+        type="string"
+        constraints="class|unique|nonempty"
+        default="LoginFragment"
+        help="The name of the fragment class to create" />
+
+    <parameter
+        id="layoutName"
+        name="Layout Name"
+        type="string"
+        constraints="layout|unique|nonempty"
+        suggest="${fragmentToLayout(fragmentClass)}"
+        default="fragment_login"
+        help="The name of the layout to create for the fragment" />
+
+    <parameter
+        id="packageName"
+        name="Package name"
+        type="string"
+        constraints="package"
+        default="com.mycompany.myapp" />
+
+    <thumbs>
+        <thumb>template_login_fragment.png</thumb>
+    </thumbs>
+
+    <globals file="globals.xml.ftl" />
+    <execute file="recipe.xml.ftl" />
+
+</template>
