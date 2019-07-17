@@ -433,6 +433,17 @@ public class FakeDevice {
         return apps.get(pkg);
     }
 
+    public int copyFile(String source, String dest) throws IOException {
+        File from = new File(getStorage(), source);
+        File to = new File(getStorage(), dest);
+        Files.copy(from.toPath(), to.toPath());
+        return 0;
+    }
+
+    public boolean isDirectory(String path) throws IOException {
+        return new File(getStorage(), path).isDirectory();
+    }
+
     public void shutdown() {
         shellServer.shutdown();
     }
