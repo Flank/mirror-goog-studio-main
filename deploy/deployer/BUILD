@@ -137,6 +137,7 @@ coverage_java_test(
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
+        "//tools/base/tracer:tools.tracer",
         "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
     ],

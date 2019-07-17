@@ -20,6 +20,7 @@ import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.shell.interpreter.Expression;
 import com.android.tools.deployer.devices.shell.interpreter.Parser;
 import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
+import com.android.tools.tracer.Trace;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,11 +59,13 @@ public class Shell {
             @NonNull InputStream input,
             @NonNull FakeDevice device)
             throws IOException {
-        history.add(script);
-        ShellContext env = new ShellContext(device, user, input, output);
-        Expression.ExecutionResult result = Parser.parse(script).execute(env);
-        output.write(env.readAllBytesFromPipe());
-        return result.code;
+        try (Trace ignore = Trace.begin("execute: " + script)) {
+            history.add(script);
+            ShellContext env = new ShellContext(device, user, input, output);
+            Expression.ExecutionResult result = Parser.parse(script).execute(env);
+            output.write(env.readAllBytesFromPipe());
+            return result.code;
+        }
     }
 
     @NonNull

@@ -65,3 +65,6 @@ Trace: org.gradle.launcher.daemon.server.exec.ExecuteBuild::*
 # IDEA
 Trace: com.intellij.util.messages.impl.MessageBusImpl::sendMessage
 Trace: com.intellij.execution.impl.ExecutionManagerImpl::*
+
+# For tests
+Start: com.intellij.rt.execution.junit.JUnitStarter::main
