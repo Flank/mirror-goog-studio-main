@@ -1072,14 +1072,14 @@ public class DeployerRunnerTest {
 
         String cmd = "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
         assertEquals(0, device.executeScript(cmd, new byte[]{}).value);
-        List<FakeDevice.Application> processes = device.getProcesses();
+        List<FakeDevice.AndroidProcess> processes = device.getProcesses();
         assertEquals(1, processes.size());
-        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+        assertEquals("com.example.simpleapp", processes.get(0).application.packageName);
 
         assertEquals(0, device.executeScript("am force-stop com.foo", new byte[] {}).value);
         processes = device.getProcesses();
         assertEquals(1, processes.size());
-        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+        assertEquals("com.example.simpleapp", processes.get(0).application.packageName);
 
         assertEquals(
                 0,
@@ -1087,19 +1087,18 @@ public class DeployerRunnerTest {
                         .value);
         processes = device.getProcesses();
         assertEquals(1, processes.size());
-        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+        assertEquals("com.example.simpleapp", processes.get(0).application.packageName);
 
         assertNotEquals(0, device.executeScript("am force-stop", new byte[] {}).value);
         processes = device.getProcesses();
         assertEquals(1, processes.size());
-        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+        assertEquals("com.example.simpleapp", processes.get(0).application.packageName);
 
         assertEquals(
                 0,
                 device.executeScript("am force-stop com.example.simpleapp", new byte[] {}).value);
         processes = device.getProcesses();
-        assertEquals(1, processes.size());
-        assertNull(processes.get(0));
+        assertEquals(0, processes.size());
     }
 
     @Test

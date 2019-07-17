@@ -22,7 +22,6 @@ import com.android.fakeadbserver.FakeAdbServer;
 import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -51,9 +50,11 @@ public class FakeDevice {
     private final Map<String, String> props;
     private final Map<String, String> env;
     private final Map<String, Application> apps;
-    private final List<Application> processes;
+    private final List<AndroidProcess> processes;
     private final User shellUser;
+    private final int zygotepid;
     private List<User> users;
+    private int pid;
 
     private final Map<Integer, Session> sessions;
 
@@ -76,8 +77,11 @@ public class FakeDevice {
         this.apps = new HashMap<>();
         this.processes = new ArrayList<>();
         this.users = new ArrayList<>();
+        this.pid = 10000;
+        // Set up
         this.storage = null;
         this.shellUser = addUser(2000, "shell");
+        this.zygotepid = runProcess();
     }
 
     public void connectTo(FakeAdbServer server) throws ExecutionException, InterruptedException {
@@ -94,9 +98,14 @@ public class FakeDevice {
 
         // Connect running apps to FakeADB.
         for (int i = 0; i < processes.size(); i++) {
-            Application app = processes.get(i);
+            AndroidProcess p = processes.get(i);
             // TODO: handle renamed processes
-            deviceState.startClient(i, app.user.uid, app.packageName, app.packageName, false);
+            deviceState.startClient(
+                    p.pid,
+                    p.application.user.uid,
+                    p.application.packageName,
+                    p.application.packageName,
+                    false);
         }
     }
 
@@ -182,12 +191,19 @@ public class FakeDevice {
 
     public boolean runApp(String pkgName) {
         Application app = apps.get(pkgName);
-        if (app != null && !processes.contains(app)) {
-            int index = processes.size();
-            processes.add(index, app);
+        boolean running = false;
+        for (AndroidProcess process : processes) {
+            if (process.application == app) {
+                running = true;
+                break;
+            }
+        }
+        if (app != null && !running) {
+            int pid = runProcess();
+            processes.add(new AndroidProcess(pid, app));
             // TODO: get proper user, and pass proper boolean for isWaiting (support wait-for-debugger)
             if (deviceState != null) {
-                deviceState.startClient(index, app.user.uid, pkgName, pkgName, false);
+                deviceState.startClient(pid, app.user.uid, pkgName, pkgName, false);
             }
             return true;
         }
@@ -195,16 +211,24 @@ public class FakeDevice {
     }
 
     public void stopApp(String pkgName) {
-        if (apps.containsKey(pkgName)) {
-            Application app = apps.get(pkgName);
-            if (processes.contains(app)) {
-                processes.set(processes.indexOf(app), null);
+        Application app = apps.get(pkgName);
+        List<AndroidProcess> toRemove = new ArrayList<>();
+        for (AndroidProcess process : processes) {
+            if (process.application == app) {
+                toRemove.add(process);
             }
         }
+        processes.removeAll(toRemove);
+        // TODO shutdown the processes
     }
 
-    public List<Application> getProcesses() {
-        return new ArrayList<>(processes);
+    public List<AndroidProcess> getProcesses() {
+        return processes;
+    }
+
+    private int runProcess() {
+        int pid = this.pid++;
+        return pid;
     }
 
     public int createSession(String inherit) {
@@ -438,6 +462,16 @@ public class FakeDevice {
         public RunResult(int value, byte[] output) {
             this.value = value;
             this.output = output;
+        }
+    }
+
+    public class AndroidProcess {
+        public final int pid;
+        public final Application application;
+
+        public AndroidProcess(int pid, Application application) {
+            this.pid = pid;
+            this.application = application;
         }
     }
 }
