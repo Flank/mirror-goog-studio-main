@@ -8,6 +8,7 @@ namespace {
 bool init_ = false;
 int port_;
 std::string root_;
+std::string logcat_;
 std::string shell_;
 int uid_;
 
@@ -20,6 +21,9 @@ void Init() {
 
   char* root = getenv("FAKE_DEVICE_ROOT");
   root_ = root == nullptr ? "" : root;
+
+  char* logcat = getenv("FAKE_DEVICE_LOGCAT");
+  logcat_ = logcat == nullptr ? "" : logcat;
 
   char* shell = getenv("FAKE_DEVICE_SHELL");
   shell_ = shell == nullptr ? "" : shell;
@@ -41,6 +45,11 @@ int Env::port() {
 std::string Env::root() {
   Init();
   return root_;
+}
+
+std::string Env::logcat() {
+  Init();
+  return logcat_;
 }
 
 std::string Env::shell() {

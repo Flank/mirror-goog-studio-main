@@ -16,7 +16,12 @@
 
 #include "tools/base/deploy/common/log.h"
 
+#include <stdlib.h>
+#include <sys/time.h>
+#include <unistd.h>
 #include <cstdio>
+
+#include "tools/base/deploy/common/env.h"
 
 namespace deploy {
 
@@ -56,9 +61,23 @@ void Log::E(const char* fmt, ...) {
 }
 
 void Log::Handle(const char level, const char* fmt, va_list args) {
-  printf("%s[%c]: ", kTag, level);
-  vprintf(fmt, args);
-  printf("\n");
-}
+  if (Env::IsValid() && !Env::logcat().empty()) {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int ms = tp.tv_usec / 1000;
 
+    struct tm* timeinfo;
+    char time[1024];
+    timeinfo = localtime(&tp.tv_sec);
+
+    strftime(time, 1024, "%m-%d %T", timeinfo);
+
+    static int pid = getpid();
+    FILE* file = fopen(Env::logcat().c_str(), "ab+");
+    fprintf(file, "%s.%03ld  %d %d  %c %s: ", time, ms, pid, pid, level, kTag);
+    vfprintf(file, fmt, args);
+    fprintf(file, "\n");
+    fclose(file);
+  }
+}
 }  // namespace deploy

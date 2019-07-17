@@ -56,6 +56,7 @@ public class FakeDevice {
     private final List<AndroidProcess> processes;
     private final User shellUser;
     private final int zygotepid;
+    private final File logcat;
     private final File fakeShell;
     private List<User> users;
     private int pid;
@@ -86,6 +87,7 @@ public class FakeDevice {
         this.shellUser = addUser(2000, "shell");
         this.storage = Files.createTempDirectory("storage").toFile();
         this.zygotepid = runProcess();
+        this.logcat = File.createTempFile("logs", "txt");
         this.shellServer = ServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
         this.fakeShell = getFakeShell();
 
@@ -101,6 +103,7 @@ public class FakeDevice {
 
         System.out.printf("Fake device: %s started up.\n", version);
         System.out.printf("  sd-card at: %s\n", storage.getAbsolutePath());
+        System.out.printf("  logcat at: %s\n", logcat.getAbsolutePath());
         System.out.printf("  External shell at port: %d\n", shellServer.getPort());
     }
 
@@ -423,9 +426,14 @@ public class FakeDevice {
         shellServer.shutdown();
     }
 
+    public File getLogcatFile() {
+        return logcat;
+    }
+
     public void putEnv(User user, Map<String, String> env) {
         env.put("FAKE_DEVICE_PORT", String.valueOf(shellServer.getPort()));
         env.put("FAKE_DEVICE_ROOT", storage.getAbsolutePath());
+        env.put("FAKE_DEVICE_LOGCAT", logcat.getAbsolutePath());
         env.put("FAKE_DEVICE_SHELL", fakeShell.getAbsolutePath());
         env.put("FAKE_DEVICE_UID", String.valueOf(user.uid));
     }

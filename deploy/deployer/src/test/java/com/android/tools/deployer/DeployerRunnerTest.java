@@ -34,6 +34,7 @@ import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
 import com.android.tools.perflogger.Benchmark;
 import com.android.utils.ILogger;
+import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -111,6 +112,8 @@ public class DeployerRunnerTest {
                     name.getMethodName().replace('[', '-').replace("]", "").replace(',', '_');
             benchmark.log(metricName + "_time", timeTaken);
         }
+        System.out.print(
+                new String(Files.readAllBytes(device.getLogcatFile().toPath()), Charsets.UTF_8));
         device.shutdown();
         Mockito.verifyNoMoreInteractions(service);
         AndroidDebugBridge.terminate();

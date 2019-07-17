@@ -18,6 +18,9 @@ class Env {
   // Where the root folder is located. Empty in production.
   static std::string root();
 
+  // The file where to save logcat to.
+  static std::string logcat();
+
   // The shell binary to use when invoking commands.
   static std::string shell();
 
