@@ -125,9 +125,38 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
 
     private boolean shell(FakeDevice device, String args, Socket socket) throws IOException {
         OutputStream output = socket.getOutputStream();
-        InputStream input = socket.getInputStream();
+        InputStream input = new ShutdownSocketInputStream(socket);
         CommandHandler.writeOkay(output);
         device.getShell().execute(args, device.getShellUser(), output, input, device);
         return true;
+    }
+
+    public static class ShutdownSocketInputStream extends InputStream {
+        private final InputStream stream;
+        private final Socket socket;
+
+        public ShutdownSocketInputStream(Socket socket) throws IOException {
+            this.socket = socket;
+            this.stream = socket.getInputStream();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return stream.read();
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            // The default implementation of read array will wait to fill up the array
+            // until a -1 is returned, the socket one however will return whatever it
+            // has available and wait only when there is nothing in the socket.
+            // This allows the running process to continue.
+            return stream.read(b, off, len);
+        }
+
+        @Override
+        public void close() throws IOException {
+            socket.shutdownInput();
+        }
     }
 }
