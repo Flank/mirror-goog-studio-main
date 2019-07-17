@@ -1060,6 +1060,7 @@ public class DeployerRunnerTest {
     @Test
     public void testStartApp() throws Exception {
         // Install the base apk:
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
         assertTrue(device.getApps().isEmpty());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
