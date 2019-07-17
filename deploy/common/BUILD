@@ -38,6 +38,22 @@ cc_library(
     ],
     tags = ["no_windows"],
     visibility = ["//tools/base/deploy:__subpackages__"],
+    deps = [
+        ":env",
+    ],
+)
+
+cc_library(
+    name = "env",
+    srcs = select_android(
+        ["env.android.cc"],
+        ["env.cc"],
+    ),
+    hdrs = [
+        "env.h",
+    ],
+    tags = ["no_windows"],
+    visibility = ["//tools/base/deploy:__subpackages__"],
 )
 
 cc_test(

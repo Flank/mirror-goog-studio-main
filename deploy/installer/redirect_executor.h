@@ -26,9 +26,8 @@ namespace deploy {
 
 class RedirectExecutor : public Executor {
  public:
-  RedirectExecutor(const std::string& executable,
-                   const std::vector<std::string>& args, Executor& executor)
-      : executor_(executor), executable_(executable), args_(args) {}
+  RedirectExecutor(const std::string& executable, Executor& executor)
+      : executor_(executor), executable_(executable) {}
 
   RedirectExecutor(const std::string& executable, const std::string& arg,
                    Executor& executor)

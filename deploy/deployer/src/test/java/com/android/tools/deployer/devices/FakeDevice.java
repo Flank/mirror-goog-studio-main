@@ -390,6 +390,12 @@ public class FakeDevice {
         return apps.get(pkg);
     }
 
+    public void putEnv(User user, Map<String, String> env) {
+        env.put("FAKE_DEVICE_ROOT", storage.getAbsolutePath());
+        env.put("FAKE_DEVICE_SHELL", getShellBridge().getAbsolutePath());
+        env.put("FAKE_DEVICE_UID", String.valueOf(user.uid));
+    }
+
     public static class Application {
         public final String packageName;
         public final String path;

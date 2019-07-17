@@ -50,9 +50,6 @@ public class ExternalCommand extends ShellCommand {
             List<String> command = new ArrayList<>();
             File exe = new File(device.getStorage(), executable);
             command.add(exe.getAbsolutePath());
-            command.add("-root=" + device.getStorage().getAbsolutePath());
-            command.add("-shell=" + device.getShellBridge().getAbsolutePath());
-            command.add("-shell-arg=" + serverSocket.getLocalPort());
             command.addAll(Arrays.asList(args));
             Thread executionThread = Thread.currentThread();
             BlockingQueue<Socket> commands = new LinkedBlockingQueue<>();
@@ -69,7 +66,10 @@ public class ExternalCommand extends ShellCommand {
                                 }
                             })
                     .start();
-            Process process = new ProcessBuilder(command).start();
+            ProcessBuilder pb = new ProcessBuilder(command);
+            device.putEnv(context.getUser(), pb.environment());
+            pb.environment().put("FAKE_DEVICE_PORT", String.valueOf(serverSocket.getLocalPort()));
+            Process process = pb.start();
             PipeConnector inToProcess = new PipeConnector(stdin, process.getOutputStream());
             inToProcess.start();
             PipeConnector processToOut = new PipeConnector(process.getInputStream(), stdout);

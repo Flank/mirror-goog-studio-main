@@ -29,6 +29,7 @@
 #endif
 
 #include "tools/base/bazel/native/matryoshka/doll.h"
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
@@ -48,9 +49,6 @@ struct Parameters {
   const char* cmd_path = nullptr;
   const char* pm_path = nullptr;
   const char* version = nullptr;
-  const char* shell = nullptr;
-  const char* shell_arg = nullptr;
-  const char* root_directory = nullptr;
   int consumed = 0;
 };
 
@@ -65,14 +63,6 @@ std::string GetStringUsage(const char* invoked_path) {
          << std::endl
          << "  -pm=X : Define path to package manager executable (to mock "
             "android)."
-         << std::endl
-         << "  -shell=X : Define path to a shell-like executable (to mock "
-            "android)."
-         << std::endl
-         << "  -shell-arg=X : An argument to the custom shell before the "
-            "command (to mock android)."
-         << std::endl
-         << "  -root=X : The root directory to use (to mock android)."
          << std::endl
          << "  -version=X : Program will fail if version != X." << std::endl
          << "Commands available:" << std::endl
@@ -94,14 +84,8 @@ bool ParseParameters(int argc, char** argv, Parameters* parameters) {
       parameters->cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
       parameters->pm_path = strtok(nullptr, "=");
-    } else if (!strncmp("-shell-arg", argv[index], 10)) {
-      parameters->shell_arg = strtok(nullptr, "=");
-    } else if (!strncmp("-shell", argv[index], 6)) {
-      parameters->shell = strtok(nullptr, "=");
     } else if (!strncmp("-version", argv[index], 8)) {
       parameters->version = strtok(nullptr, "=");
-    } else if (!strncmp("-root", argv[index], 5)) {
-      parameters->root_directory = strtok(nullptr, "=");
     } else {
       std::cerr << "environment parameter unknown:" << argv[index] << std::endl;
       return false;
@@ -184,18 +168,10 @@ int main(int argc, char** argv) {
   if (parameters.pm_path != nullptr) {
     PackageManager::SetPath(parameters.pm_path);
   }
-  std::string shell;
-  std::string shell_arg;
-  if (parameters.shell != nullptr && parameters.shell_arg != nullptr) {
-    shell = parameters.shell;
-    shell_arg = parameters.shell_arg;
-  }
-  RedirectExecutor redirect(shell, shell_arg, executor);
-  if (parameters.shell != nullptr && parameters.shell_arg != nullptr) {
+  RedirectExecutor redirect(Env::shell(), executor);
+  if (Env::IsValid()) {
     workspace.SetExecutor(&redirect);
-  }
-  if (parameters.root_directory != nullptr) {
-    workspace.SetRoot(parameters.root_directory);
+    workspace.SetRoot(Env::root());
   }
 
   // Verify that this program is the version the called expected.

@@ -100,6 +100,7 @@ cc_binary(
     srcs = ["tests/bash_bridge.cc"],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
+    deps = ["//tools/base/deploy/common:env"],
 )
 
 genrule(

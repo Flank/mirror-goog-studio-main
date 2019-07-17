@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <string>
 
+#include "tools/base/deploy/common/env.h"
+
 int writeInt(int fd, int value) {
   // Convert int to BigEndian so it can be read by a Java InputStream
   char buffer[4];
@@ -42,7 +44,7 @@ int main(int argc, char* argv[]) {
   // even when the other stream has been closed.
   signal(SIGPIPE, SIG_IGN);
 
-  portno = atoi(argv[1]);
+  portno = deploy::Env::port();
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
   struct sockaddr_in serv_addr;
@@ -56,8 +58,8 @@ int main(int argc, char* argv[]) {
   }
 
   std::string cmd;
-  for (int i = 2; i < argc; i++) {
-    if (i > 2) {
+  for (int i = 1; i < argc; i++) {
+    if (i > 1) {
       cmd += " ";
     }
     cmd += argv[i];
