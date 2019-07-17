@@ -14,7 +14,7 @@ iml_module(
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
             "//tools/base/deploy/installer:test-installer",
-            "//tools/base/deploy/installer:bash_bridge",
+            "//tools/base/deploy/installer/tests:fake_shell",
         ],
     }),
     test_resources = ["src/test/resource"],
@@ -43,6 +43,8 @@ iml_module(
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/idea/.idea/libraries:studio-proto",
         "//tools/base/perf-logger:studio.perf-logger[module, test]",
+        "//tools/base/deploy/installer/tests:fake_device_proto[test]",
+        "//tools/idea/.idea/libraries:studio-grpc[test]",
     ],
 )
 
@@ -107,7 +109,7 @@ coverage_java_test(
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
             "//tools/base/deploy/installer:test-installer",
-            "//tools/base/deploy/installer:bash_bridge",
+            "//tools/base/deploy/installer/tests:fake_shell",
         ],
     }),
     jvm_flags = [
@@ -128,12 +130,14 @@ coverage_java_test(
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/deploy/installer/tests:fake_device_proto",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
+        "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
     ],
 )

@@ -23,6 +23,8 @@ import com.android.testutils.TestUtils;
 import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -62,6 +64,7 @@ public class FakeDevice {
 
     private File storage;
     @Nullable private DeviceState deviceState;
+    public final Server shellServer;
 
     public FakeDevice(String version, int api) throws IOException {
         this.version = version;
@@ -83,6 +86,7 @@ public class FakeDevice {
         this.shellUser = addUser(2000, "shell");
         this.storage = Files.createTempDirectory("storage").toFile();
         this.zygotepid = runProcess();
+        this.shellServer = ServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
         this.fakeShell = getFakeShell();
 
         setUp();
@@ -93,12 +97,15 @@ public class FakeDevice {
         File file = new File(storage, "data/local/tmp");
         file.mkdirs();
 
+        shellServer.start();
+
         System.out.printf("Fake device: %s started up.\n", version);
         System.out.printf("  sd-card at: %s\n", storage.getAbsolutePath());
+        System.out.printf("  External shell at port: %d\n", shellServer.getPort());
     }
 
     private File getFakeShell() {
-        return getBin("tools/base/deploy/installer/bash_bridge");
+        return getBin("tools/base/deploy/installer/tests/fake_shell");
     }
 
     private File getBin(String path) {
@@ -356,6 +363,15 @@ public class FakeDevice {
         return user;
     }
 
+    User getUser(int uid) {
+        for (User user : users) {
+            if (user.uid == uid) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     public void abandonSession(int session) {
         sessions.put(session, null);
     }
@@ -403,7 +419,12 @@ public class FakeDevice {
         return apps.get(pkg);
     }
 
+    public void shutdown() {
+        shellServer.shutdown();
+    }
+
     public void putEnv(User user, Map<String, String> env) {
+        env.put("FAKE_DEVICE_PORT", String.valueOf(shellServer.getPort()));
         env.put("FAKE_DEVICE_ROOT", storage.getAbsolutePath());
         env.put("FAKE_DEVICE_SHELL", fakeShell.getAbsolutePath());
         env.put("FAKE_DEVICE_UID", String.valueOf(user.uid));

@@ -17,22 +17,14 @@ package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
-import com.google.common.base.Charsets;
-import com.google.common.io.ByteStreams;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class ExternalCommand extends ShellCommand {
     private final String executable;
@@ -45,64 +37,25 @@ public class ExternalCommand extends ShellCommand {
     public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         FakeDevice device = context.getDevice();
-        int code = 255;
-        try (ServerSocket serverSocket = new ServerSocket(0)) {
-            List<String> command = new ArrayList<>();
-            File exe = new File(device.getStorage(), executable);
-            command.add(exe.getAbsolutePath());
-            command.addAll(Arrays.asList(args));
-            Thread executionThread = Thread.currentThread();
-            BlockingQueue<Socket> commands = new LinkedBlockingQueue<>();
+        List<String> command = new ArrayList<>();
+        File exe = new File(device.getStorage(), executable);
+        command.add(exe.getAbsolutePath());
+        command.addAll(Arrays.asList(args));
 
-            new Thread(
-                            () -> {
-                                try {
-                                    while (true) {
-                                        commands.add(serverSocket.accept());
-                                        executionThread.interrupt();
-                                    }
-                                } catch (IOException e) {
-                                    // Socket closed, just exit
-                                }
-                            })
-                    .start();
-            ProcessBuilder pb = new ProcessBuilder(command);
-            device.putEnv(context.getUser(), pb.environment());
-            pb.environment().put("FAKE_DEVICE_PORT", String.valueOf(serverSocket.getLocalPort()));
-            Process process = pb.start();
-            PipeConnector inToProcess = new PipeConnector(stdin, process.getOutputStream());
-            inToProcess.start();
-            PipeConnector processToOut = new PipeConnector(process.getInputStream(), stdout);
-            processToOut.start();
-            while (process.isAlive()) {
-                if (!commands.isEmpty()) {
-                    try (Socket clientSocket = commands.poll()) {
-                        InputStream inp = clientSocket.getInputStream();
-                        ChunkedOutputStream out =
-                                new ChunkedOutputStream(clientSocket.getOutputStream());
-                        DataInputStream data = new DataInputStream(inp);
-                        int size = data.readInt();
-                        byte[] buffer = new byte[size];
-                        ByteStreams.readFully(data, buffer);
-                        String script = new String(buffer, Charsets.UTF_8);
-                        int subCode =
-                                device.getShell()
-                                        .execute(script, context.getUser(), out, inp, device);
-                        out.data.writeInt(0);
-                        out.data.writeInt(subCode);
-                        out.data.flush();
-                    }
-                }
-                try {
-                    code = process.waitFor();
-                } catch (InterruptedException e) {
-                }
-            }
-            try {
-                // Wait for all the output to be read and sent
-                processToOut.join();
-            } catch (InterruptedException e) {
-            }
+        ProcessBuilder pb = new ProcessBuilder(command);
+        device.putEnv(context.getUser(), pb.environment());
+        Process process = pb.start();
+        PipeConnector inToProcess = new PipeConnector(stdin, process.getOutputStream());
+        PipeConnector processToOut = new PipeConnector(process.getInputStream(), stdout);
+        inToProcess.start();
+        processToOut.start();
+        int code = 255;
+        try {
+            code = process.waitFor();
+            processToOut.join();
+            stdin.close();
+            inToProcess.join();
+        } catch (InterruptedException e) {
         }
         return code;
     }
@@ -127,29 +80,6 @@ public class ExternalCommand extends ShellCommand {
                 }
             } catch (IOException e) {
                 // Ignore and exit the thread
-            }
-        }
-    }
-
-    private static class ChunkedOutputStream extends OutputStream {
-
-        private final DataOutputStream data;
-
-        private ChunkedOutputStream(OutputStream data) {
-            this.data = new DataOutputStream(data);
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            data.writeInt(1);
-            data.write(b);
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            if (len > 0) {
-                data.writeInt(len);
-                data.write(b, off, len);
             }
         }
     }

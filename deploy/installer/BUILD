@@ -95,14 +95,6 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
-cc_binary(
-    name = "bash_bridge",
-    srcs = ["tests/bash_bridge.cc"],
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
-    deps = ["//tools/base/deploy/common:env"],
-)
-
 genrule(
     name = "test-installer",
     srcs = [
@@ -213,26 +205,6 @@ android_cc_binary(
     filename = "android-installer_raw",
     tags = ["no_windows"],
     visibility = ["//tools/base/deploy:__subpackages__"],
-)
-
-cc_test(
-    name = "integration_test",
-    size = "small",
-    srcs = [
-        "tests/tests.cc",
-    ],
-    data = [
-        "tests/data/app/my.fake.app/sample.apk",
-        "tests/data/patchTest.txt",
-    ],
-    linkstatic = 1,
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":installer_lib",
-        "//external:gmock_main",
-        "//tools/base/profiler/native/test:testutils",
-    ],
 )
 
 cc_test(

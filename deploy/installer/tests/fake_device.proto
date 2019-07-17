@@ -1,0 +1,19 @@
+syntax = "proto3";
+option java_package = "com.android.tools.deployer.devices";
+option java_outer_classname = "Proto";
+
+message ShellCommand {
+  string command = 1;
+  bytes stdin = 2;
+  int32 uid = 3;
+}
+
+message CommandResponse {
+  bytes stdout = 1;
+  int32 exit_code = 2;
+  bool terminate = 3;
+}
+
+service FakeDeviceService {
+  rpc ExecuteCommand(stream ShellCommand) returns (stream CommandResponse) {}
+}

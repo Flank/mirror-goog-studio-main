@@ -111,7 +111,7 @@ public class DeployerRunnerTest {
                     name.getMethodName().replace('[', '-').replace("]", "").replace(',', '_');
             benchmark.log(metricName + "_time", timeTaken);
         }
-
+        device.shutdown();
         Mockito.verifyNoMoreInteractions(service);
         AndroidDebugBridge.terminate();
         myAdbServer.close();

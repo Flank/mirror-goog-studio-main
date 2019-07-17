@@ -50,5 +50,15 @@
     <orderEntry type="module" module-name="android.sdktools.fakeadbserver" scope="TEST" />
     <orderEntry type="library" name="studio-proto" level="project" />
     <orderEntry type="module" module-name="perf-logger" scope="TEST" />
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../bazel-genfiles/tools/base/deploy/installer/tests/fake_device_proto.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
   </component>
 </module>
