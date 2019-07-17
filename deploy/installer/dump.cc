@@ -124,9 +124,10 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
     return false;
   }
 
-  DIR* proc_dir = opendir("/proc");
+  std::string proc_path = workspace_.GetRoot() + "/proc";
+  DIR* proc_dir = opendir(proc_path.c_str());
   if (proc_dir == nullptr) {
-    ErrEvent("Could not open system /proc directory");
+    ErrEvent("Could not open system proc directory: " + proc_path);
     return false;
   }
 
@@ -190,7 +191,7 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
 }
 
 bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
-  std::string proc_path("/proc/");
+  std::string proc_path = workspace_.GetRoot() + "/proc/";
   proc_path += proc_entry->d_name;
 
   struct stat proc_dir_stat;
@@ -198,7 +199,22 @@ bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
     return false;
   }
 
-  stats->uid = proc_dir_stat.st_uid;
+  // When testing the installer we do not use the real
+  // userid's on files, we mostly run all the same code
+  // but in this case, if the root file system is not the
+  // real one, we use a fake uid for the file.
+
+  if (workspace_.GetRoot().empty()) {
+    stats->uid = proc_dir_stat.st_uid;
+  } else {
+    FILE* uid = fopen((proc_path + "/.uid").c_str(), "r");
+    if (uid == nullptr) {
+      Log::E("Cannot fake-stat %s", proc_path.c_str());
+      return false;
+    }
+    fscanf(uid, "%d", &stats->uid);
+    fclose(uid);
+  }
 
   std::string cmdline_path = proc_path + "/cmdline";
   FILE* proc_cmdline = fopen(cmdline_path.c_str(), "r");
