@@ -31,6 +31,28 @@ class FakeDeviceService extends FakeDeviceServiceGrpc.FakeDeviceServiceImplBase 
     }
 
     @Override
+    public void getAppUid(
+            Proto.GetAppUidRequest request,
+            StreamObserver<Proto.GetAppUidResponse> responseObserver) {
+        Proto.GetAppUidResponse.Builder builder = Proto.GetAppUidResponse.newBuilder();
+        FakeDevice.Application app = device.getApplication(request.getPackage());
+        if (app != null) {
+            builder.setUid(app.user.uid);
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void recordCommand(
+            Proto.RecordCommandRequest request,
+            StreamObserver<Proto.RecordCommandResponse> responseObserver) {
+        device.getShell().getHistory().add(request.getCommand());
+        responseObserver.onNext(Proto.RecordCommandResponse.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public StreamObserver<Proto.ShellCommand> executeCommand(
             StreamObserver<Proto.CommandResponse> response) {
         return new ExecutorStreamObserver(response);

@@ -14,7 +14,7 @@ iml_module(
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
             "//tools/base/deploy/installer:test-installer",
-            "//tools/base/deploy/installer/tests:fake_shell",
+            "//tools/base/deploy/installer/tests:artifacts",
         ],
     }),
     test_resources = ["src/test/resource"],
@@ -109,7 +109,7 @@ coverage_java_test(
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
             "//tools/base/deploy/installer:test-installer",
-            "//tools/base/deploy/installer/tests:fake_shell",
+            "//tools/base/deploy/installer/tests:artifacts",
         ],
     }),
     jvm_flags = [

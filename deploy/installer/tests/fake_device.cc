@@ -20,6 +20,16 @@ FakeDevice::FakeDevice() {
   client_ = FakeDeviceService::NewStub(channel);
 }
 
+void FakeDevice::RecordCommand(const std::string& command) {
+  RecordCommandRequest request;
+  RecordCommandResponse response;
+
+  request.set_command(command);
+
+  grpc::ClientContext context;
+  client_->RecordCommand(&context, request, &response);
+}
+
 void write_to_device(grpc::ClientReaderWriterInterface<ShellCommand, CommandResponse>* writer, int exit_fd) {
   char buffer[8192];
 
@@ -83,6 +93,24 @@ int FakeDevice::ExecuteCommand(const std::string& cmd) {
   reader_writer->WritesDone();
   reader_writer->Finish();
   return ret;
+}
+
+bool FakeDevice::Exists(const std::string& path) {
+  struct stat dummy;
+  std::string to_exec = Env::root() + path;
+  return stat(to_exec.c_str(), &dummy) == 0;
+}
+
+int FakeDevice::GetAppUid(const std::string& package) {
+  GetAppUidRequest request;
+  GetAppUidResponse response;
+
+  request.set_package(package);
+
+  grpc::ClientContext context;
+  client_->GetAppUid(&context, request, &response);
+
+  return response.uid();
 }
 
 }  // namespace deploy

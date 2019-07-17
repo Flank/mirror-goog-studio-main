@@ -99,12 +99,23 @@ public class FakeDevice {
         File file = new File(storage, "data/local/tmp");
         file.mkdirs();
 
+        File runAsFrom = getRunas();
+        File runAs = new File(storage, "system/bin/run-as");
+        if (runAsFrom.exists()) {
+          runAs.getParentFile().mkdirs();
+          Files.copy(runAsFrom.toPath(), runAs.toPath());
+        }
+
         shellServer.start();
 
         System.out.printf("Fake device: %s started up.\n", version);
         System.out.printf("  sd-card at: %s\n", storage.getAbsolutePath());
         System.out.printf("  logcat at: %s\n", logcat.getAbsolutePath());
         System.out.printf("  External shell at port: %d\n", shellServer.getPort());
+    }
+
+    private File getRunas() {
+        return getBin("tools/base/deploy/installer/tests/fake_runas");
     }
 
     private File getFakeShell() {

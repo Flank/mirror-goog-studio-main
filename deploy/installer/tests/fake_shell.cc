@@ -26,5 +26,23 @@ int main(int argc, char* argv[]) {
     cmd += argv[i];
   }
 
-  return device.ExecuteCommand(cmd);
+  // If the file exists on the fake file system, we exec to it and notify the
+  // device we are doing so, otherwise we ask the device to execute it,
+  int ret_value = 0;
+  if (device.Exists(executable)) {
+    const char** new_argv = new const char*[argc];
+    std::string exe = Env::root() + executable;
+    new_argv[0] = exe.c_str();
+    for (int i = 2; i < argc; i++) {
+      new_argv[i - 1] = argv[i];
+    }
+    new_argv[argc - 1] = nullptr;
+    device.RecordCommand(cmd);
+    ret_value = execvp(exe.c_str(), (char* const*)new_argv);
+    delete[] new_argv;
+  } else {
+    ret_value = device.ExecuteCommand(cmd);
+  }
+
+  return ret_value;
 }

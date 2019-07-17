@@ -4,6 +4,7 @@ filegroup(
     name = "artifacts",
     srcs = [
         ":fake_device_proto",
+        ":fake_runas",
         ":fake_shell",
     ],
     tags = ["no_windows"],
@@ -27,6 +28,18 @@ android_java_proto_library(
 cc_binary(
     name = "fake_shell",
     srcs = ["fake_shell.cc"],
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fake_device",
+        ":proto",
+        "//tools/base/deploy/common:log",
+    ],
+)
+
+cc_binary(
+    name = "fake_runas",
+    srcs = ["fake_runas.cc"],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
