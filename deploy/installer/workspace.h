@@ -55,8 +55,10 @@ class Workspace {
 
   void SendResponse() noexcept;
 
+  void Init() noexcept;
+
  private:
-  static constexpr auto kBasename = ".studio";
+  static constexpr auto kBasedir = "/data/local/tmp/.studio/";
 
   static std::string RetrieveBase(const std::string& path) noexcept;
 

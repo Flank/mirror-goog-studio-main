@@ -28,11 +28,14 @@ constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
 
 Workspace::Workspace(const std::string& executable_path, Executor* executor)
     : executor_(executor), output_pipe_(dup(STDOUT_FILENO)) {
-  base_ = RetrieveBase(executable_path) + "/";
+  base_ = kBasedir;
+  tmp_ = base_ + "tmp/";
+}
 
+void Workspace::Init() noexcept {
   // Create all directory that may be used.
-  tmp_ = base_ + "/tmp/";
-  mkdir(tmp_.c_str(), kDirectoryMode);
+  std::string dir = GetRoot() + tmp_;
+  mkdir(dir.c_str(), kDirectoryMode);
 
   // Close all file descriptor which could potentially mess up with
   // our protobuffer output and install a data sink instead.
@@ -40,22 +43,6 @@ Workspace::Workspace(const std::string& executable_path, Executor* executor)
   close(STDOUT_FILENO);
   open("/dev/null", O_WRONLY);
   open("/dev/null", O_WRONLY);
-}
-
-std::string Workspace::RetrieveBase(const std::string& path) noexcept {
-  // Retrieves the base folder which is expected to be ".studio" somewhere in
-  // the path.e.g: /data/local/tmp/.studio/bin base is /data/local/tmp/.studio.
-  char* directory_cursor = const_cast<char*>(path.c_str());
-  // Search for ".studio" folder.
-  while (directory_cursor[0] != '/' || directory_cursor[1] != 0) {
-    directory_cursor = dirname(directory_cursor);
-    if (!strcmp(kBasename, basename(directory_cursor))) {
-      return directory_cursor;
-    }
-  }
-  std::cerr << "Unable to find '" << kBasename << "' base folder in '" << path
-            << "'" << std::endl;
-  return "";
 }
 
 void Workspace::SendResponse() noexcept {

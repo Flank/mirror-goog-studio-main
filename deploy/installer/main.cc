@@ -174,6 +174,7 @@ int main(int argc, char** argv) {
     workspace.SetRoot(Env::root());
   }
 
+  workspace.Init();
   // Verify that this program is the version the called expected.
   if (parameters.version != nullptr &&
       strcmp(parameters.version, GetVersion().c_str())) {
