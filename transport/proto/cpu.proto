@@ -32,10 +32,6 @@ service CpuService {
   rpc GetTraceInfo(GetTraceInfoRequest) returns (GetTraceInfoResponse) {
   }
 
-  // This RPC is implemented by perfd-host only.
-  rpc SaveTraceInfo(SaveTraceInfoRequest) returns (EmptyCpuReply) {
-  }
-
   // Starts collecting execution metrics of a running app, such as usage info
   // and thread states. Does nothing if the app is already being monitored.
   // TODO(b/29258733): Support configuring sampling details.
@@ -78,11 +74,6 @@ message GetTraceInfoRequest {
 
 message GetTraceInfoResponse {
   repeated CpuTraceInfo trace_info = 1;
-}
-
-message SaveTraceInfoRequest {
-  Session session = 1;
-  CpuTraceInfo trace_info = 2;
 }
 
 message Thread {
