@@ -237,7 +237,8 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
 bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
                                    uint64_t array_len,
                                    const std::string& dst_path) const noexcept {
-  int fd = open(dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
+  std::string real_path = workspace_.GetRoot() + dst_path;
+  int fd = open(real_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
     ErrEvent("WriteArrayToDisk, open: "_s + strerror(errno));
     return false;
@@ -254,7 +255,7 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
     return false;
   }
 
-  chmod(dst_path.c_str(), kRxFileMode);
+  chmod(real_path.c_str(), kRxFileMode);
   return true;
 }
 
@@ -264,7 +265,6 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
     LogEvent("No PIDs needs to be swapped");
     return proto::SwapResponse::OK;
   }
-
   // Start the server and wait for it to begin listening for connections.
   int read_fd, write_fd, agent_server_pid, status;
   if (!WaitForServer(request_.process_ids().size() + request_.extra_agents(),
@@ -315,7 +315,6 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
       *failed_agent = agent_response;
     }
   }
-
   // Cleanup zombie agent-server status from the kernel.
   waitpid(agent_server_pid, &status, 0);
 
