@@ -152,4 +152,9 @@ public class SessionPm extends ShellCommand {
     public String getExecutable() {
         return "pm";
     }
+
+    @Override
+    public String getLocation() {
+        return "/system/bin";
+    }
 }
