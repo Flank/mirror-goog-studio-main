@@ -21,6 +21,7 @@ import com.android.tools.deployer.devices.shell.Chmod;
 import com.android.tools.deployer.devices.shell.Cmd;
 import com.android.tools.deployer.devices.shell.GetProp;
 import com.android.tools.deployer.devices.shell.Id;
+import com.android.tools.deployer.devices.shell.Ls;
 import com.android.tools.deployer.devices.shell.Mkdir;
 import com.android.tools.deployer.devices.shell.Rm;
 import com.android.tools.deployer.devices.shell.SessionPm;
@@ -106,6 +107,7 @@ public class FakeDeviceLibrary {
             device.getShell().addCommand(new Chmod());
             device.getShell().addCommand(new Rm());
             device.getShell().addCommand(new Id());
+            device.getShell().addCommand(new Ls());
             device.getShell().addCommand(new Stat());
         }
 
