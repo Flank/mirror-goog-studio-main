@@ -144,7 +144,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
@@ -214,7 +213,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -275,7 +273,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -344,7 +341,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File v2 = TestUtils.getWorkspaceFile(BASE + "apks/simple+ver.apk");
@@ -432,7 +428,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -469,7 +464,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -503,7 +497,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -604,7 +597,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -706,7 +698,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -812,7 +803,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -916,7 +906,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -985,7 +974,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -1086,7 +1074,6 @@ public class DeployerRunnerTest {
     public void testStartApp() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         File installersPath = DeployerTestUtils.prepareInstaller();
 
         // Install the base apk:
@@ -1141,7 +1128,6 @@ public class DeployerRunnerTest {
 
         // Install the base apk:
         assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         File installersPath = DeployerTestUtils.prepareInstaller();
         DeployerRunner runner = new DeployerRunner(db, service);

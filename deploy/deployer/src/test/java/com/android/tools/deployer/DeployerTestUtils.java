@@ -62,15 +62,4 @@ public class DeployerTestUtils {
         FileUtils.deleteRecursivelyIfExists(
                 new File(TestUtils.getWorkspaceRoot(), "tools/idea/plugins/android"));
     }
-
-    public static File getShell() {
-        File root = TestUtils.getWorkspaceRoot();
-        String path = "tools/base/deploy/installer/bash_bridge";
-        File file = new File(root, path);
-        if (!file.exists()) {
-            // Running from IJ
-            file = new File(root, "bazel-bin/" + path);
-        }
-        return file;
-    }
 }

@@ -19,6 +19,7 @@ package com.android.tools.deployer.devices;
 import com.android.annotations.Nullable;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
+import com.android.testutils.TestUtils;
 import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
@@ -53,13 +54,13 @@ public class FakeDevice {
     private final List<AndroidProcess> processes;
     private final User shellUser;
     private final int zygotepid;
+    private final File fakeShell;
     private List<User> users;
     private int pid;
 
     private final Map<Integer, Session> sessions;
 
     private File storage;
-    private File bridge;
     @Nullable private DeviceState deviceState;
 
     public FakeDevice(String version, int api) throws IOException {
@@ -82,6 +83,7 @@ public class FakeDevice {
         this.shellUser = addUser(2000, "shell");
         this.storage = Files.createTempDirectory("storage").toFile();
         this.zygotepid = runProcess();
+        this.fakeShell = getFakeShell();
 
         setUp();
     }
@@ -93,6 +95,20 @@ public class FakeDevice {
 
         System.out.printf("Fake device: %s started up.\n", version);
         System.out.printf("  sd-card at: %s\n", storage.getAbsolutePath());
+    }
+
+    private File getFakeShell() {
+        return getBin("tools/base/deploy/installer/bash_bridge");
+    }
+
+    private File getBin(String path) {
+        File root = TestUtils.getWorkspaceRoot();
+        File file = new File(root, path);
+        if (!file.exists()) {
+            // Running from IJ
+            file = new File(root, "bazel-bin/" + path);
+        }
+        return file;
     }
 
     public void connectTo(FakeAdbServer server) throws ExecutionException, InterruptedException {
@@ -370,14 +386,6 @@ public class FakeDevice {
         return storage;
     }
 
-    public void setShellBridge(File bridge) {
-        this.bridge = bridge;
-    }
-
-    public File getShellBridge() {
-        return bridge;
-    }
-
     public User getShellUser() {
         return shellUser;
     }
@@ -397,7 +405,7 @@ public class FakeDevice {
 
     public void putEnv(User user, Map<String, String> env) {
         env.put("FAKE_DEVICE_ROOT", storage.getAbsolutePath());
-        env.put("FAKE_DEVICE_SHELL", getShellBridge().getAbsolutePath());
+        env.put("FAKE_DEVICE_SHELL", fakeShell.getAbsolutePath());
         env.put("FAKE_DEVICE_UID", String.valueOf(user.uid));
     }
 
