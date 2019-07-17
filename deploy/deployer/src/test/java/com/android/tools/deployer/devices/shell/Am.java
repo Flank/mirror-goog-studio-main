@@ -17,12 +17,14 @@ package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
 public class Am extends ShellCommand {
     @Override
-    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         try {
             return run(context.getDevice(), new Arguments(args), stdin, stdout);
         } catch (IllegalArgumentException e) {
@@ -31,7 +33,8 @@ public class Am extends ShellCommand {
         }
     }
 
-    public int run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout) {
+    public int run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         String action = args.nextArgument();
         if (action == null) {
             return processUsage(stdout);
@@ -78,7 +81,8 @@ public class Am extends ShellCommand {
         return "am";
     }
 
-    public int start(FakeDevice device, String name, String intent, PrintStream stdout) {
+    public int start(FakeDevice device, String name, String intent, PrintStream stdout)
+            throws IOException {
         if (intent == null && name == null) {
             stdout.println("\nException occurred while executing:\njava.lang.IllegalArgumentException: No intent supplied\n...message...");
             return 255;

@@ -23,12 +23,16 @@ import com.android.testutils.TestUtils;
 import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,6 +44,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FakeDevice {
 
@@ -57,6 +63,7 @@ public class FakeDevice {
     private final User shellUser;
     private final int zygotepid;
     private final File logcat;
+    private final File fakeApp;
     private final File fakeShell;
     private List<User> users;
     private int pid;
@@ -86,10 +93,11 @@ public class FakeDevice {
         // Set up
         this.shellUser = addUser(2000, "shell");
         this.storage = Files.createTempDirectory("storage").toFile();
-        this.zygotepid = runProcess();
+        this.zygotepid = runProcess(0, "zygote");
         this.logcat = File.createTempFile("logs", "txt");
         this.shellServer = ServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
         this.fakeShell = getFakeShell();
+        this.fakeApp = getFakeApp();
 
         setUp();
     }
@@ -120,6 +128,10 @@ public class FakeDevice {
 
     private File getFakeShell() {
         return getBin("tools/base/deploy/installer/tests/fake_shell");
+    }
+
+    private File getFakeApp() {
+        return getBin("tools/base/deploy/installer/tests/fake_app");
     }
 
     private File getBin(String path) {
@@ -237,7 +249,7 @@ public class FakeDevice {
         return paths;
     }
 
-    public boolean runApp(String pkgName) {
+    public boolean runApp(String pkgName) throws IOException {
         Application app = apps.get(pkgName);
         boolean running = false;
         for (AndroidProcess process : processes) {
@@ -247,7 +259,7 @@ public class FakeDevice {
             }
         }
         if (app != null && !running) {
-            int pid = runProcess();
+            int pid = runProcess(app.user.uid, app.packageName);
             processes.add(new AndroidProcess(pid, app));
             // TODO: get proper user, and pass proper boolean for isWaiting (support wait-for-debugger)
             if (deviceState != null) {
@@ -258,7 +270,8 @@ public class FakeDevice {
         return false;
     }
 
-    public void stopApp(String pkgName) {
+
+    public void stopApp(String pkgName) throws IOException {
         Application app = apps.get(pkgName);
         List<AndroidProcess> toRemove = new ArrayList<>();
         for (AndroidProcess process : processes) {
@@ -267,15 +280,26 @@ public class FakeDevice {
             }
         }
         processes.removeAll(toRemove);
-        // TODO shutdown the processes
+        for (AndroidProcess process : toRemove) {
+            final Path proc = getStorage().toPath().resolve("proc/" + process.pid);
+            FileUtils.deleteRecursivelyIfExists(proc.toFile());
+            process.shutdown();
+        }
     }
 
     public List<AndroidProcess> getProcesses() {
         return processes;
     }
 
-    private int runProcess() {
+    private int runProcess(int uid, String cmdline) throws IOException {
         int pid = this.pid++;
+        final Path proc = getStorage().toPath().resolve("proc/" + pid);
+        Files.createDirectories(proc);
+        Files.write(proc.resolve("cmdline"), cmdline.getBytes(Charsets.UTF_8));
+        Files.write(
+                proc.resolve("stat"),
+                String.format("%d name R %d", pid, zygotepid).getBytes(Charsets.UTF_8));
+        Files.write(proc.resolve(".uid"), String.format("%d", uid).getBytes(Charsets.UTF_8));
         return pid;
     }
 
@@ -444,7 +468,20 @@ public class FakeDevice {
         return new File(getStorage(), path).isDirectory();
     }
 
+    public boolean attachAgent(int pid, String agent) {
+        for (AndroidProcess process : processes) {
+            if (process.pid == pid) {
+                process.attachAgent(agent);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void shutdown() {
+        for (AndroidProcess process : processes) {
+            process.shutdown();
+        }
         shellServer.shutdown();
     }
 
@@ -537,12 +574,47 @@ public class FakeDevice {
     }
 
     public class AndroidProcess {
+        private final Process process;
+        private final FakeAppGrpc.FakeAppBlockingStub stub;
         public final int pid;
         public final Application application;
 
-        public AndroidProcess(int pid, Application application) {
+        public AndroidProcess(int pid, Application application) throws IOException {
             this.pid = pid;
             this.application = application;
+            final ProcessBuilder pb = new ProcessBuilder(fakeApp.getAbsolutePath());
+            putEnv(application.user, pb.environment());
+            this.process = pb.start();
+            final BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(this.process.getInputStream()));
+            final Matcher matcher =
+                    Pattern.compile("Fake-Device-Port: (\\d+)").matcher(reader.readLine());
+            if (!matcher.matches()) {
+                throw new IllegalStateException("Invalid first server line");
+            }
+            int port = Integer.valueOf(matcher.group(1));
+            this.stub =
+                    FakeAppGrpc.newBlockingStub(
+                            ManagedChannelBuilder.forAddress("localhost", port)
+                                    .usePlaintext(true)
+                                    .build());
+        }
+
+        public boolean attachAgent(String agent) {
+            final Proto.AttachAgentRequest.Builder req = Proto.AttachAgentRequest.newBuilder();
+            final int i = agent.indexOf('=');
+            if (i >= 0) {
+                req.setPath(agent.substring(0, i));
+                req.setOptions(agent.substring(i + 1));
+            } else {
+                req.setPath(agent);
+            }
+            stub.attachAgent(req.build());
+            return true;
+        }
+
+        public void shutdown() {
+            process.destroyForcibly();
         }
     }
 }

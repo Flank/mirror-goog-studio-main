@@ -3,6 +3,7 @@ load("//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "android_java_prot
 filegroup(
     name = "artifacts",
     srcs = [
+        ":fake_app",
         ":fake_device_proto",
         ":fake_runas",
         ":fake_shell",
@@ -23,6 +24,28 @@ android_java_proto_library(
     srcs = ["fake_device.proto"],
     grpc_support = 1,
     visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "fake_app",
+    srcs = [
+        "fake_app.cc",
+        "fake_jni.cc",
+        "fake_jni.h",
+        "fake_jvmti.cc",
+        "fake_jvmti.h",
+        "fake_vm.cc",
+        "fake_vm.h",
+    ],
+    linkopts = ["-ldl"],
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":proto",
+        "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/deploy/common:common_lib",
+        "//tools/base/deploy/common:log",
+    ],
 )
 
 cc_binary(

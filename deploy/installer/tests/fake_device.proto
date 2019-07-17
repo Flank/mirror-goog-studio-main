@@ -2,6 +2,18 @@ syntax = "proto3";
 option java_package = "com.android.tools.deployer.devices";
 option java_outer_classname = "Proto";
 
+message AttachAgentRequest {
+  string path = 1;
+  string options = 2;
+}
+message AttachAgentResponse {
+  string status = 1;
+}
+
+service FakeApp {
+  rpc AttachAgent(AttachAgentRequest) returns (AttachAgentResponse) {}
+}
+
 message ShellCommand {
   string command = 1;
   bytes stdin = 2;
