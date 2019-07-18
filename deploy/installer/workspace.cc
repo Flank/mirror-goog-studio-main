@@ -38,8 +38,8 @@ Workspace::Workspace(const std::string& executable_path, Executor* executor)
   // our protobuffer output and install a data sink instead.
   close(STDERR_FILENO);
   close(STDOUT_FILENO);
-  open("/dev/null", 0);
-  open("/dev/null", 0);
+  open("/dev/null", O_WRONLY);
+  open("/dev/null", O_WRONLY);
 }
 
 std::string Workspace::RetrieveBase(const std::string& path) noexcept {
