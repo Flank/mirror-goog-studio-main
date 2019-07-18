@@ -33,8 +33,8 @@ public final class IdeSyncIssue extends IdeModel implements SyncIssue {
     private final int myType;
     private final int myHashCode;
 
-    public IdeSyncIssue(@NonNull SyncIssue issue, @NonNull ModelCache modelCache) {
-        super(issue, modelCache);
+    public IdeSyncIssue(@NonNull SyncIssue issue) {
+        super();
         myMessage = issue.getMessage();
         myMultiLineMessage = IdeModel.copyNewProperty(issue::getMultiLineMessage, null);
         myData = issue.getData();

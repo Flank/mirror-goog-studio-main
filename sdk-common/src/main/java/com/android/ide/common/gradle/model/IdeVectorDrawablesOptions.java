@@ -30,9 +30,8 @@ public final class IdeVectorDrawablesOptions extends IdeModel implements VectorD
     @Nullable private final Boolean myUseSupportLibrary;
     private final int myHashCode;
 
-    public IdeVectorDrawablesOptions(
-            @NonNull VectorDrawablesOptions options, @NonNull ModelCache modelCache) {
-        super(options, modelCache);
+    public IdeVectorDrawablesOptions(@NonNull VectorDrawablesOptions options) {
+        super();
         myGeneratedDensities = copy(options.getGeneratedDensities());
         myUseSupportLibrary = options.getUseSupportLibrary();
 

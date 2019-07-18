@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.function.Function;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -101,9 +102,13 @@ public class IdeModelTest {
     // https://code.google.com/p/android/issues/detail?id=360245
     @Test
     public void withRecursiveModel() {
-        RecursiveModel original = new OriginalRecursiveModel();
-        IdeRecursiveModel copy = new IdeRecursiveModel(original, myModelCache);
-        assertSame(copy, copy.getRecursiveModel());
+        try {
+            RecursiveModel original = new OriginalRecursiveModel();
+            IdeRecursiveModel copy = new IdeRecursiveModel(original, myModelCache);
+            assertSame(copy, copy.getRecursiveModel());
+            Assert.fail();
+        } catch (IllegalStateException T) {
+        }
     }
 
     private interface RecursiveModel {
@@ -123,7 +128,7 @@ public class IdeModelTest {
         @NonNull private final RecursiveModel myRecursiveModel;
 
         IdeRecursiveModel(@NonNull RecursiveModel recursiveModel, @NonNull ModelCache modelCache) {
-            super(recursiveModel, modelCache);
+            super();
             //noinspection Convert2Lambda
             myRecursiveModel =
                     modelCache.computeIfAbsent(

@@ -30,8 +30,8 @@ public final class IdeInstantRun extends IdeModel implements InstantRun {
     private final int mySupportStatus;
     private final int myHashCode;
 
-    public IdeInstantRun(@NonNull InstantRun run, @NonNull ModelCache modelCache) {
-        super(run, modelCache);
+    public IdeInstantRun(@NonNull InstantRun run) {
+        super();
         myInfoFile = run.getInfoFile();
         mySupportedByArtifact = run.isSupportedByArtifact();
         mySupportStatus = run.getSupportStatus();

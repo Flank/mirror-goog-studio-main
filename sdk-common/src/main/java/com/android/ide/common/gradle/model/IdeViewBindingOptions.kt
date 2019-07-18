@@ -18,7 +18,7 @@ package com.android.ide.common.gradle.model
 import com.android.builder.model.ViewBindingOptions
 import java.util.Objects
 
-class IdeViewBindingOptions(model: ViewBindingOptions, modelCache: ModelCache) : IdeModel(model, modelCache), ViewBindingOptions {
+class IdeViewBindingOptions(model: ViewBindingOptions) : IdeModel(), ViewBindingOptions {
   val enabled = model.isEnabled
   val hashCode = calculateHashCode()
 

@@ -29,7 +29,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.level2.Library;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -40,16 +39,13 @@ import java.util.stream.Collectors;
 class IdeLibraryFactory {
     /**
      * @param library Instance of level 2 library returned by android plugin.
-     * @param modelCache Cache that stores previously copied entries.
      * @return Deep copy of {@link Library} based on library type.
      */
     @NonNull
-    Library create(@NonNull Library library, @NonNull ModelCache modelCache) {
+    Library create(@NonNull Library library) {
         if (library.getType() == LIBRARY_ANDROID) {
             File folder = library.getFolder();
             return new IdeAndroidLibrary(
-                    library,
-                    modelCache,
                     library.getArtifactAddress(),
                     library.getFolder(),
                     getFullPath(folder, library.getManifest()),
@@ -74,11 +70,10 @@ class IdeLibraryFactory {
                     library.getSymbolFile());
         }
         if (library.getType() == LIBRARY_JAVA) {
-            return new IdeJavaLibrary(
-                    library.getArtifactAddress(), library.getArtifact(), modelCache, library);
+            return new IdeJavaLibrary(library.getArtifactAddress(), library.getArtifact());
         }
         if (library.getType() == LIBRARY_MODULE) {
-            return new IdeModuleLibrary(library, library.getArtifactAddress(), modelCache);
+            return new IdeModuleLibrary(library, library.getArtifactAddress());
         }
         throw new UnsupportedOperationException("Unknown library type " + library.getType());
     }
@@ -96,25 +91,20 @@ class IdeLibraryFactory {
      * @param androidLibrary Instance of {@link AndroidLibrary} returned by android plugin.
      * @param moduleBuildDirs Instance of {@link BuildFolderPaths} that contains map from project
      *     path to build directory for all modules.
-     * @param modelCache Cache that stores previously copied entries.
      * @return Instance of {@link Library} based on dependency type.
      */
     @NonNull
     Library create(
-            @NonNull AndroidLibrary androidLibrary,
-            @NonNull BuildFolderPaths moduleBuildDirs,
-            @NonNull ModelCache modelCache) {
+            @NonNull AndroidLibrary androidLibrary, @NonNull BuildFolderPaths moduleBuildDirs) {
         // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
         // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
         // Identify such case with the location of aar bundle.
         // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
         if (androidLibrary.getProject() != null
                 && !isLocalAarModule(androidLibrary, moduleBuildDirs)) {
-            return new IdeModuleLibrary(androidLibrary, computeAddress(androidLibrary), modelCache);
+            return new IdeModuleLibrary(androidLibrary, computeAddress(androidLibrary));
         } else {
             return new IdeAndroidLibrary(
-                    androidLibrary,
-                    modelCache,
                     computeAddress(androidLibrary),
                     androidLibrary.getFolder(),
                     androidLibrary.getManifest().getPath(),
@@ -170,18 +160,16 @@ class IdeLibraryFactory {
 
     /**
      * @param javaLibrary Instance of {@link JavaLibrary} returned by android plugin.
-     * @param modelCache Cache that stores previously copied entries.
      * @return Instance of {@link Library} based on dependency type.
      */
     @NonNull
-    Library create(@NonNull JavaLibrary javaLibrary, @NonNull ModelCache modelCache) {
+    Library create(@NonNull JavaLibrary javaLibrary) {
         String project = getProject(javaLibrary);
         if (project != null) {
             // Java modules don't have variant.
-            return new IdeModuleLibrary(javaLibrary, computeAddress(javaLibrary), modelCache);
+            return new IdeModuleLibrary(javaLibrary, computeAddress(javaLibrary));
         } else {
-            return new IdeJavaLibrary(
-                    computeAddress(javaLibrary), javaLibrary.getJarFile(), modelCache, javaLibrary);
+            return new IdeJavaLibrary(computeAddress(javaLibrary), javaLibrary.getJarFile());
         }
     }
 
@@ -196,15 +184,13 @@ class IdeLibraryFactory {
 
     /**
      * @param projectPath Name of module dependencies.
-     * @param modelCache Cache that stores previously copied entries.
      * @return An instance of {@link Library} of type LIBRARY_MODULE.
      */
     @NonNull
     static Library create(
             @NonNull String projectPath,
             @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache,
             @Nullable String buildId) {
-        return new IdeModuleLibrary(projectPath, artifactAddress, modelCache, buildId);
+        return new IdeModuleLibrary(projectPath, artifactAddress, buildId);
     }
 }

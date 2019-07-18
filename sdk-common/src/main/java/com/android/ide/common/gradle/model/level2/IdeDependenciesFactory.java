@@ -78,14 +78,14 @@ public class IdeDependenciesFactory {
     public IdeDependencies create(
             @NonNull BaseArtifact artifact, @Nullable GradleVersion modelVersion) {
         // Create a fresh model cache for this class, since current instance is based on dependencyGraphs or dependencies, which
-        // have been copied in the constructor of IdeBaseArtifact.
+        // ha1ve been copied in the constructor of IdeBaseArtifact.
         ModelCache modelCache = new ModelCache();
         if (modelVersion != null
                 && modelVersion.getMajor() >= 3
                 && !artifact.getDependencyGraphs().getCompileDependencies().isEmpty()) {
             return createFromDependencyGraphs(artifact.getDependencyGraphs());
         }
-        return createFromDependencies(artifact.getDependencies(), modelCache);
+        return createFromDependencies(artifact.getDependencies());
     }
 
     /** Call this method on level 4 DependencyGraphs. */
@@ -102,12 +102,11 @@ public class IdeDependenciesFactory {
 
     /** Call this method on level 1 Dependencies model. */
     @NonNull
-    private IdeDependencies createFromDependencies(
-            @NonNull Dependencies dependencies, @NonNull ModelCache modelCache) {
+    private IdeDependencies createFromDependencies(@NonNull Dependencies dependencies) {
         Set<String> visited = new LinkedHashSet<>();
-        populateAndroidLibraries(dependencies.getLibraries(), visited, modelCache);
-        populateJavaLibraries(dependencies.getJavaLibraries(), visited, modelCache);
-        populateModuleDependencies(dependencies, visited, modelCache);
+        populateAndroidLibraries(dependencies.getLibraries(), visited);
+        populateJavaLibraries(dependencies.getJavaLibraries(), visited);
+        populateModuleDependencies(dependencies, visited);
         Collection<File> jars;
         try {
             jars = dependencies.getRuntimeOnlyClasses();
@@ -119,23 +118,20 @@ public class IdeDependenciesFactory {
     }
 
     private void populateModuleDependencies(
-            @NonNull Dependencies dependencies,
-            @NonNull Set<String> visited,
-            @NonNull ModelCache modelCache) {
+            @NonNull Dependencies dependencies, @NonNull Set<String> visited) {
         try {
             for (Dependencies.ProjectIdentifier identifier : dependencies.getJavaModules()) {
                 createModuleLibrary(
                         visited,
                         identifier.getProjectPath(),
                         computeAddress(identifier),
-                        modelCache,
                         identifier.getBuildId());
             }
         } catch (UnsupportedOperationException ignored) {
             // Dependencies::getJavaModules is available for AGP 3.1+. Use Dependencies::getProjects for the old plugins.
             //noinspection deprecation
             for (String projectPath : dependencies.getProjects()) {
-                createModuleLibrary(visited, projectPath, projectPath, modelCache, null);
+                createModuleLibrary(visited, projectPath, projectPath, null);
             }
         }
     }
@@ -144,34 +140,26 @@ public class IdeDependenciesFactory {
             @NonNull Set<String> visited,
             @NonNull String projectPath,
             @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache,
             @Nullable String buildId) {
         if (!visited.contains(artifactAddress)) {
             visited.add(artifactAddress);
             myLibrariesById.computeIfAbsent(
                     artifactAddress,
-                    id ->
-                            IdeLibraryFactory.create(
-                                    projectPath, artifactAddress, modelCache, buildId));
+                    id -> IdeLibraryFactory.create(projectPath, artifactAddress, buildId));
         }
     }
 
     private void populateAndroidLibraries(
             @NonNull Collection<? extends AndroidLibrary> androidLibraries,
-            @NonNull Set<String> visited,
-            @NonNull ModelCache modelCache) {
+            @NonNull Set<String> visited) {
         for (AndroidLibrary androidLibrary : androidLibraries) {
             String address = computeAddress(androidLibrary);
             if (!visited.contains(address)) {
                 visited.add(address);
                 myLibrariesById.computeIfAbsent(
-                        address,
-                        id ->
-                                myLibraryFactory.create(
-                                        androidLibrary, myBuildFolderPaths, modelCache));
-                populateAndroidLibraries(
-                        androidLibrary.getLibraryDependencies(), visited, modelCache);
-                populateJavaLibraries(getJavaDependencies(androidLibrary), visited, modelCache);
+                        address, id -> myLibraryFactory.create(androidLibrary, myBuildFolderPaths));
+                populateAndroidLibraries(androidLibrary.getLibraryDependencies(), visited);
+                populateJavaLibraries(getJavaDependencies(androidLibrary), visited);
             }
         }
     }
@@ -188,15 +176,13 @@ public class IdeDependenciesFactory {
 
     private void populateJavaLibraries(
             @NonNull Collection<? extends JavaLibrary> javaLibraries,
-            @NonNull Set<String> visited,
-            @NonNull ModelCache modelCache) {
+            @NonNull Set<String> visited) {
         for (JavaLibrary javaLibrary : javaLibraries) {
             String address = computeAddress(javaLibrary);
             if (!visited.contains(address)) {
                 visited.add(address);
-                myLibrariesById.computeIfAbsent(
-                        address, k -> myLibraryFactory.create(javaLibrary, modelCache));
-                populateJavaLibraries(javaLibrary.getDependencies(), visited, modelCache);
+                myLibrariesById.computeIfAbsent(address, k -> myLibraryFactory.create(javaLibrary));
+                populateJavaLibraries(javaLibrary.getDependencies(), visited);
             }
         }
     }
@@ -241,12 +227,10 @@ public class IdeDependenciesFactory {
      * @param globalLibraryMaps List of GlobalLibraryMap model returned from Android Plugin.
      */
     public void setUpGlobalLibraryMap(@NonNull List<GlobalLibraryMap> globalLibraryMaps) {
-        ModelCache modelCache = new ModelCache();
         for (GlobalLibraryMap globalLibraryMap : globalLibraryMaps) {
             for (Library library : globalLibraryMap.getLibraries().values()) {
                 myLibrariesById.computeIfAbsent(
-                        library.getArtifactAddress(),
-                        k -> myLibraryFactory.create(library, modelCache));
+                        library.getArtifactAddress(), k -> myLibraryFactory.create(library));
             }
         }
     }

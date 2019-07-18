@@ -29,9 +29,8 @@ public final class IdeJavaCompileOptions extends IdeModel implements JavaCompile
     @NonNull private final String myTargetCompatibility;
     private final int myHashCode;
 
-    public IdeJavaCompileOptions(
-            @NonNull JavaCompileOptions options, @NonNull ModelCache modelCache) {
-        super(options, modelCache);
+    public IdeJavaCompileOptions(@NonNull JavaCompileOptions options) {
+        super();
         myEncoding = options.getEncoding();
         mySourceCompatibility = options.getSourceCompatibility();
         myTargetCompatibility = options.getTargetCompatibility();

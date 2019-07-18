@@ -63,17 +63,17 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 copy(
                         artifact.getBuildConfigFields(),
                         modelCache,
-                        classField -> new IdeClassField(classField, modelCache));
+                        classField -> new IdeClassField(classField));
         myResValues =
                 copy(
                         artifact.getResValues(),
                         modelCache,
-                        classField -> new IdeClassField(classField, modelCache));
+                        classField -> new IdeClassField(classField));
         myInstantRun =
                 copyNewProperty(
                         modelCache,
                         artifact::getInstantRun,
-                        instantRun -> new IdeInstantRun(instantRun, modelCache),
+                        instantRun -> new IdeInstantRun(instantRun),
                         null);
         mySigningConfigName = artifact.getSigningConfigName();
         myAbiFilters = copy(artifact.getAbiFilters());
@@ -85,7 +85,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 copyNewProperty(
                         modelCache,
                         artifact::getTestOptions,
-                        testOptions -> new IdeTestOptions(testOptions, modelCache),
+                        testOptions -> new IdeTestOptions(testOptions),
                         null);
         myInstrumentedTestTaskName =
                 copyNewProperty(
@@ -113,6 +113,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                     modelCache,
                     output -> new IdeAndroidArtifactOutput(output, modelCache));
         } catch (RuntimeException e) {
+            System.err.println("Caught exception: " + e);
             // See http://b/64305584
             return Collections.emptyList();
         }
@@ -122,7 +123,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     private static Collection<NativeLibrary> copy(
             @NonNull ModelCache modelCache, @Nullable Collection<NativeLibrary> original) {
         return original != null
-                ? copy(original, modelCache, library -> new IdeNativeLibrary(library, modelCache))
+                ? copy(original, modelCache, library -> new IdeNativeLibrary(library))
                 : null;
     }
 

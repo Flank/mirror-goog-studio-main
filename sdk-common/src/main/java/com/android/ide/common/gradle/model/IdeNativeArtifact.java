@@ -36,15 +36,12 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
     private final int myHashCode;
 
     public IdeNativeArtifact(@NonNull NativeArtifact artifact, @NonNull ModelCache modelCache) {
-        super(artifact, modelCache);
+        super();
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
         mySourceFiles =
-                copy(
-                        artifact.getSourceFiles(),
-                        modelCache,
-                        file -> new IdeNativeFile(file, modelCache));
+                copy(artifact.getSourceFiles(), modelCache, file -> new IdeNativeFile(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
         myAbi = copyNewProperty(artifact::getAbi, null);
         myTargetName = copyNewProperty(artifact::getTargetName, null);

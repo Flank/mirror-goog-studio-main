@@ -30,8 +30,8 @@ public final class IdeApiVersion extends IdeModel implements ApiVersion {
     private final int myApiLevel;
     private final int myHashCode;
 
-    public IdeApiVersion(@NonNull ApiVersion version, @NonNull ModelCache modelCache) {
-        super(version, modelCache);
+    public IdeApiVersion(@NonNull ApiVersion version) {
+        super();
         myApiString = version.getApiString();
         myCodename = version.getCodename();
         myApiLevel = version.getApiLevel();

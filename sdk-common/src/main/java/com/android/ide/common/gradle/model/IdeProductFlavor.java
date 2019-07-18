@@ -82,15 +82,14 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
             return null;
         }
         return modelCache.computeIfAbsent(
-                vectorDrawables, options -> new IdeVectorDrawablesOptions(options, modelCache));
+                vectorDrawables, options -> new IdeVectorDrawablesOptions(options));
     }
 
     @Nullable
     private static IdeApiVersion copy(
             @NonNull ModelCache modelCache, @Nullable ApiVersion apiVersion) {
         if (apiVersion != null) {
-            return modelCache.computeIfAbsent(
-                    apiVersion, version -> new IdeApiVersion(version, modelCache));
+            return modelCache.computeIfAbsent(apiVersion, version -> new IdeApiVersion(version));
         }
         return null;
     }
@@ -100,7 +99,7 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
             @NonNull ModelCache modelCache, @Nullable SigningConfig signingConfig) {
         if (signingConfig != null) {
             return modelCache.computeIfAbsent(
-                    signingConfig, config -> new IdeSigningConfig(config, modelCache));
+                    signingConfig, config -> new IdeSigningConfig(config));
         }
         return null;
     }

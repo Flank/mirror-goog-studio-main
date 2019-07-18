@@ -28,9 +28,8 @@ public final class IdeTestedTargetVariant extends IdeModel implements TestedTarg
     @NonNull private final String myTargetVariant;
     private final int myHashCode;
 
-    public IdeTestedTargetVariant(
-            @NonNull TestedTargetVariant variant, @NonNull ModelCache modelCache) {
-        super(variant, modelCache);
+    public IdeTestedTargetVariant(@NonNull TestedTargetVariant variant) {
+        super();
         myTargetProjectPath = variant.getTargetProjectPath();
         myTargetVariant = variant.getTargetVariant();
 

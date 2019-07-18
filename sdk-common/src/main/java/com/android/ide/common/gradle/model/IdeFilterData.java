@@ -28,8 +28,8 @@ public final class IdeFilterData extends IdeModel implements FilterData {
     @NonNull private final String myFilterType;
     private final int myHashCode;
 
-    public IdeFilterData(@NonNull FilterData data, @NonNull ModelCache modelCache) {
-        super(data, modelCache);
+    public IdeFilterData(@NonNull FilterData data) {
+        super();
         myIdentifier = data.getIdentifier();
         myFilterType = data.getFilterType();
 

@@ -46,7 +46,7 @@ public class IdeDependenciesTest {
     @Test
     public void serialization() throws Exception {
         IdeDependencies dependencies =
-                new IdeDependenciesImpl(new DependenciesStub(), myModelCache, myModelVersion);
+                new IdeDependenciesImpl(new DependenciesStub(), myModelCache);
         byte[] bytes = Serialization.serialize(dependencies);
         Object o = Serialization.deserialize(bytes);
         assertEquals(dependencies, o);
@@ -55,7 +55,7 @@ public class IdeDependenciesTest {
     @Test
     public void constructor() throws Throwable {
         Dependencies original = new DependenciesStub();
-        IdeDependencies copy = new IdeDependenciesImpl(original, myModelCache, myModelVersion);
+        IdeDependencies copy = new IdeDependenciesImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

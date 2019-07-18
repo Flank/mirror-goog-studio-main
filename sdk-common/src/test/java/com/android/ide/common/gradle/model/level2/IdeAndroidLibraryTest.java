@@ -47,7 +47,7 @@ public class IdeAndroidLibraryTest {
 
     @Test
     public void serialization() throws Exception {
-        Library androidLibrary = myLibraryFactory.create(new AndroidLibraryStub(), myModelCache);
+        Library androidLibrary = myLibraryFactory.create(new AndroidLibraryStub());
         byte[] bytes = Serialization.serialize(androidLibrary);
         Object o = Serialization.deserialize(bytes);
         assertEquals(androidLibrary, o);
@@ -56,7 +56,7 @@ public class IdeAndroidLibraryTest {
     @Test
     public void constructor() throws Throwable {
         Library original = new AndroidLibraryStub();
-        Library copy = myLibraryFactory.create(original, myModelCache);
+        Library copy = myLibraryFactory.create(original);
         assertThat(copy.getAidlFolder())
                 .isEqualTo(join(original.getFolder(), original.getAidlFolder()).getPath());
         assertThat(copy.getRenderscriptFolder())

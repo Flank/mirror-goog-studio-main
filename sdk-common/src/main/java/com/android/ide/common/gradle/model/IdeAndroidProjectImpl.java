@@ -96,7 +96,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
             @Nullable ProjectSyncIssues syncIssues) {
-        super(project, modelCache);
+        super();
         myModelVersion = project.getModelVersion();
         // Old plugin versions do not return model version.
         myParsedModelVersion = GradleVersion.tryParse(myModelVersion);
@@ -122,9 +122,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         // ProjectSyncIssues model.
         Collection<SyncIssue> issues =
                 (syncIssues == null) ? project.getSyncIssues() : syncIssues.getSyncIssues();
-        mySyncIssues =
-                new ArrayList<>(
-                        copy(issues, modelCache, issue -> new IdeSyncIssue(issue, modelCache)));
+        mySyncIssues = new ArrayList<>(copy(issues, modelCache, issue -> new IdeSyncIssue(issue)));
         Collection<Variant> variantsToCopy = variants != null ? variants : project.getVariants();
         myVariants =
                 new ArrayList<>(
@@ -157,25 +155,24 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 copy(
                         project.getNativeToolchains(),
                         modelCache,
-                        toolchain -> new IdeNativeToolchain(toolchain, modelCache));
+                        toolchain -> new IdeNativeToolchain(toolchain));
         mySigningConfigs =
                 copy(
                         project.getSigningConfigs(),
                         modelCache,
-                        config -> new IdeSigningConfig(config, modelCache));
+                        config -> new IdeSigningConfig(config));
         myLintOptions =
                 modelCache.computeIfAbsent(
                         project.getLintOptions(),
-                        options -> new IdeLintOptions(options, modelCache, myParsedModelVersion));
+                        options -> new IdeLintOptions(options, myParsedModelVersion));
         myUnresolvedDependencies = ImmutableSet.copyOf(project.getUnresolvedDependencies());
         myJavaCompileOptions =
                 modelCache.computeIfAbsent(
                         project.getJavaCompileOptions(),
-                        options -> new IdeJavaCompileOptions(options, modelCache));
+                        options -> new IdeJavaCompileOptions(options));
         myAaptOptions =
                 modelCache.computeIfAbsent(
-                        project.getAaptOptions(),
-                        options -> new IdeAaptOptions(options, modelCache));
+                        project.getAaptOptions(), options -> new IdeAaptOptions(options));
         myBuildFolder = project.getBuildFolder();
         myResourcePrefix = project.getResourcePrefix();
         myApiVersion = project.getApiVersion();
@@ -189,10 +186,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                         copyNewProperty(project::getDynamicFeatures, ImmutableList.of()));
         myViewBindingOptions =
                 copyNewProperty(
-                        () ->
-                                new IdeViewBindingOptions(
-                                        project.getViewBindingOptions(), modelCache),
-                        null);
+                        () -> new IdeViewBindingOptions(project.getViewBindingOptions()), null);
 
         if (myParsedModelVersion != null
                 && myParsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) {
@@ -423,11 +417,10 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
 
     @Override
     public void addSyncIssues(@NonNull Collection<SyncIssue> syncIssues) {
-        ModelCache modelCache = new ModelCache();
         Set<SyncIssue> currentSyncIssues = new HashSet<>(mySyncIssues);
         for (SyncIssue issue : syncIssues) {
             // Only add the sync issues that are not seen from previous sync.
-            IdeSyncIssue newSyncIssue = new IdeSyncIssue(issue, modelCache);
+            IdeSyncIssue newSyncIssue = new IdeSyncIssue(issue);
             if (!currentSyncIssues.contains(newSyncIssue)) {
                 mySyncIssues.add(newSyncIssue);
             }

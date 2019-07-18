@@ -32,7 +32,7 @@ public final class IdeGraphItem extends IdeModel implements GraphItem {
     private final int myHashCode;
 
     public IdeGraphItem(@NonNull GraphItem item, @NonNull ModelCache modelCache) {
-        super(item, modelCache);
+        super();
         myArtifactAddress = item.getArtifactAddress();
         myDependencies =
                 copy(

@@ -28,8 +28,8 @@ public class IdeTestOptions extends IdeModel implements TestOptions {
     @Nullable private final Execution myExecutionEnum;
     private final int myHashCode;
 
-    public IdeTestOptions(@NonNull TestOptions testOptions, @NonNull ModelCache modelCache) {
-        super(testOptions, modelCache);
+    public IdeTestOptions(@NonNull TestOptions testOptions) {
+        super();
         myAnimationsDisabled = testOptions.getAnimationsDisabled();
         myExecutionEnum = testOptions.getExecution();
         myHashCode = calculateHashCode();

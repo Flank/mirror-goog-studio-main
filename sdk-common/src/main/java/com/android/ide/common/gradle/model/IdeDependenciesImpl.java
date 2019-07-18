@@ -18,11 +18,9 @@ package com.android.ide.common.gradle.model;
 import static java.util.Objects.requireNonNull;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -42,11 +40,8 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
     @NonNull private final Collection<File> myRuntimeOnlyClasses;
     private final int myHashCode;
 
-    public IdeDependenciesImpl(
-            @NonNull Dependencies dependencies,
-            @NonNull ModelCache modelCache,
-            @Nullable GradleVersion modelVersion) {
-        super(dependencies, modelCache);
+    public IdeDependenciesImpl(@NonNull Dependencies dependencies, @NonNull ModelCache modelCache) {
+        super();
 
         myLibraries =
                 copy(
@@ -64,7 +59,7 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
                 copy(
                         dependencies::getJavaModules,
                         modelCache,
-                        projectId -> new IdeProjectIdentifierImpl(projectId, modelCache));
+                        projectId -> new IdeProjectIdentifierImpl(projectId));
         myRuntimeOnlyClasses =
                 ImmutableList.copyOf(
                         requireNonNull(

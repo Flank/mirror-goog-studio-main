@@ -45,7 +45,7 @@ public class IdeJavaLibraryTest {
 
     @Test
     public void serialization() throws Exception {
-        Library javaLibrary = myLibraryFactory.create(new JavaLibraryStub(), myModelCache);
+        Library javaLibrary = myLibraryFactory.create(new JavaLibraryStub());
         byte[] bytes = Serialization.serialize(javaLibrary);
         Object o = Serialization.deserialize(bytes);
         assertEquals(javaLibrary, o);
@@ -54,7 +54,7 @@ public class IdeJavaLibraryTest {
     @Test
     public void constructor() throws Throwable {
         Library original = new JavaLibraryStub();
-        Library copy = myLibraryFactory.create(new JavaLibraryStub(), myModelCache);
+        Library copy = myLibraryFactory.create(new JavaLibraryStub());
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

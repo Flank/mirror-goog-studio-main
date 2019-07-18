@@ -41,8 +41,8 @@ public final class IdeNativeLibrary extends IdeModel implements NativeLibrary {
     @NonNull private final List<File> myDebuggableLibraryFolders;
     private final int myHashCode;
 
-    public IdeNativeLibrary(@NonNull NativeLibrary library, @NonNull ModelCache modelCache) {
-        super(library, modelCache);
+    public IdeNativeLibrary(@NonNull NativeLibrary library) {
+        super();
         myName = library.getName();
         myAbi = library.getAbi();
         myToolchainName = library.getToolchainName();

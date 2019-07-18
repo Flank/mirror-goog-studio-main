@@ -33,8 +33,8 @@ public final class IdeSigningConfig extends IdeModel implements SigningConfig {
     @Nullable private final Boolean myV1SigningEnabled;
     private final int myHashCode;
 
-    public IdeSigningConfig(@NonNull SigningConfig config, @NonNull ModelCache modelCache) {
-        super(config, modelCache);
+    public IdeSigningConfig(@NonNull SigningConfig config) {
+        super();
         myName = config.getName();
         myStoreFile = config.getStoreFile();
         myStorePassword = config.getStorePassword();

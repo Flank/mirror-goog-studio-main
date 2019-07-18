@@ -30,8 +30,8 @@ public final class IdeClassField extends IdeModel implements ClassField {
     @NonNull private final String myValue;
     private final int myHashCode;
 
-    public IdeClassField(@NonNull ClassField classField, @NonNull ModelCache modelCache) {
-        super(classField, modelCache);
+    public IdeClassField(@NonNull ClassField classField) {
+        super();
         myName = classField.getName();
         myType = classField.getType();
         myValue = classField.getValue();

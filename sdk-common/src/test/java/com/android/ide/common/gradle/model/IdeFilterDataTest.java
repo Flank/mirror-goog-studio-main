@@ -41,7 +41,7 @@ public class IdeFilterDataTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeFilterData filterData = new IdeFilterData(new FilterDataStub(), myModelCache);
+        IdeFilterData filterData = new IdeFilterData(new FilterDataStub());
         byte[] bytes = Serialization.serialize(filterData);
         Object o = Serialization.deserialize(bytes);
         assertEquals(filterData, o);
@@ -50,7 +50,7 @@ public class IdeFilterDataTest {
     @Test
     public void constructor() throws Throwable {
         FilterDataStub original = new FilterDataStub();
-        IdeFilterData copy = new IdeFilterData(original, myModelCache);
+        IdeFilterData copy = new IdeFilterData(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

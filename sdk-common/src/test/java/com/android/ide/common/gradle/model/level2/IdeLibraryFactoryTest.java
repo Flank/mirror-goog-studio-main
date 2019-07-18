@@ -39,18 +39,16 @@ public class IdeLibraryFactoryTest {
     @Test
     public void createFromL2Library() {
         com.android.builder.model.level2.Library androidLibrary =
-                myLibraryFactory.create(new AndroidLibraryStub(), myModelCache);
+                myLibraryFactory.create(new AndroidLibraryStub());
         assertThat(androidLibrary).isInstanceOf(IdeAndroidLibrary.class);
 
         com.android.builder.model.level2.Library javaLibrary =
                 myLibraryFactory.create(
-                        new com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub(),
-                        myModelCache);
+                        new com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub());
         assertThat(javaLibrary).isInstanceOf(IdeJavaLibrary.class);
 
         ModuleLibraryStub moduleLibrary = new ModuleLibraryStub();
-        assertThat(myLibraryFactory.create(moduleLibrary, myModelCache))
-                .isInstanceOf(IdeModuleLibrary.class);
+        assertThat(myLibraryFactory.create(moduleLibrary)).isInstanceOf(IdeModuleLibrary.class);
     }
 
     @Test
@@ -58,8 +56,7 @@ public class IdeLibraryFactoryTest {
         // Verify JavaLibrary of module dependency returns instance of IdeModuleLibrary.
         com.android.builder.model.level2.Library moduleLibrary =
                 myLibraryFactory.create(
-                        new com.android.ide.common.gradle.model.stubs.JavaLibraryStub(),
-                        myModelCache);
+                        new com.android.ide.common.gradle.model.stubs.JavaLibraryStub());
         assertThat(moduleLibrary).isInstanceOf(IdeModuleLibrary.class);
 
         // Verify JavaLibrary of jar dependency returns instance of IdeJavaLibrary.
@@ -71,13 +68,12 @@ public class IdeLibraryFactoryTest {
                         return null;
                     }
                 };
-        assertThat(myLibraryFactory.create(javaLibrary, myModelCache))
-                .isInstanceOf(IdeJavaLibrary.class);
+        assertThat(myLibraryFactory.create(javaLibrary)).isInstanceOf(IdeJavaLibrary.class);
     }
 
     @Test
     public void createFromString() {
-        assertThat(IdeLibraryFactory.create("lib", ":lib@@:", myModelCache, "/rootDir/lib"))
+        assertThat(IdeLibraryFactory.create("lib", ":lib@@:", "/rootDir/lib"))
                 .isInstanceOf(IdeModuleLibrary.class);
     }
 }

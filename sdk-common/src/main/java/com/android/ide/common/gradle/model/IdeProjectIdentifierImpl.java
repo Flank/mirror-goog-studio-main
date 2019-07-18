@@ -25,10 +25,8 @@ public class IdeProjectIdentifierImpl extends IdeModel implements IdeProjectIden
     @NonNull private final String buildId;
     @NonNull private final String projectPath;
 
-    public IdeProjectIdentifierImpl(
-            @NonNull Dependencies.ProjectIdentifier projectIdentifier,
-            @NonNull ModelCache modelCache) {
-        super(projectIdentifier, modelCache);
+    public IdeProjectIdentifierImpl(@NonNull Dependencies.ProjectIdentifier projectIdentifier) {
+        super();
         this.buildId = projectIdentifier.getBuildId();
         this.projectPath = projectIdentifier.getProjectPath();
     }

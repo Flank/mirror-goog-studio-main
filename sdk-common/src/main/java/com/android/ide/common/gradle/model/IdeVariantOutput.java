@@ -39,7 +39,7 @@ public abstract class IdeVariantOutput extends IdeModel implements VariantOutput
     private final int myHashCode;
 
     public IdeVariantOutput(@NonNull VariantOutput output, @NonNull ModelCache modelCache) {
-        super(output, modelCache);
+        super();
         //noinspection deprecation
         myOutputs =
                 copy(
@@ -67,8 +67,7 @@ public abstract class IdeVariantOutput extends IdeModel implements VariantOutput
     private static Collection<FilterData> copyFilters(
             @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         try {
-            return copy(
-                    output.getFilters(), modelCache, data -> new IdeFilterData(data, modelCache));
+            return copy(output.getFilters(), modelCache, data -> new IdeFilterData(data));
         } catch (UnsupportedOperationException ignored) {
             return null;
         }

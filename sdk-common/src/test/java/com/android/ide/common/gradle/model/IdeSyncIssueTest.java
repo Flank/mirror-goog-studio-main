@@ -42,7 +42,7 @@ public class IdeSyncIssueTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeSyncIssue syncIssue = new IdeSyncIssue(new SyncIssueStub(), myModelCache);
+        IdeSyncIssue syncIssue = new IdeSyncIssue(new SyncIssueStub());
         byte[] bytes = Serialization.serialize(syncIssue);
         Object o = Serialization.deserialize(bytes);
         assertEquals(syncIssue, o);
@@ -51,7 +51,7 @@ public class IdeSyncIssueTest {
     @Test
     public void constructor() throws Throwable {
         SyncIssue original = new SyncIssueStub();
-        IdeSyncIssue copy = new IdeSyncIssue(original, myModelCache);
+        IdeSyncIssue copy = new IdeSyncIssue(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

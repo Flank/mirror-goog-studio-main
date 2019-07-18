@@ -27,8 +27,8 @@ public final class IdeNativeSettings extends IdeModel implements NativeSettings 
     private final List<String> myCompilerFlags;
     private final int myHashCode;
 
-    public IdeNativeSettings(@NonNull NativeSettings settings, @NonNull ModelCache modelCache) {
-        super(settings, modelCache);
+    public IdeNativeSettings(@NonNull NativeSettings settings) {
+        super();
         myName = settings.getName();
 
         List<String> compilerFlags = settings.getCompilerFlags();

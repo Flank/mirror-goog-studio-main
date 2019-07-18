@@ -56,7 +56,7 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
     @VisibleForTesting
     IdeNativeAndroidProjectImpl(
             @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
-        super(project, modelCache);
+        super();
         myModelVersion = project.getModelVersion();
         myApiVersion = project.getApiVersion();
         myName = project.getName();
@@ -71,12 +71,12 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
                 copy(
                         project.getToolChains(),
                         modelCache,
-                        toolchain -> new IdeNativeToolchain(toolchain, modelCache));
+                        toolchain -> new IdeNativeToolchain(toolchain));
         mySettings =
                 copy(
                         project.getSettings(),
                         modelCache,
-                        settings -> new IdeNativeSettings(settings, modelCache));
+                        settings -> new IdeNativeSettings(settings));
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
         myBuildSystems = copyBuildSystems(project);
         myHashCode = calculateHashCode();

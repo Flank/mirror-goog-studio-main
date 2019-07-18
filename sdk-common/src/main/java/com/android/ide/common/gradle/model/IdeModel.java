@@ -29,9 +29,7 @@ public abstract class IdeModel implements Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
-    protected IdeModel(@NonNull Object original, @NonNull ModelCache modelCache) {
-        modelCache.putDisallowingReplacement(original, this);
-    }
+    protected IdeModel() {}
 
     @Nullable
     protected static <K, V> V copyNewProperty(

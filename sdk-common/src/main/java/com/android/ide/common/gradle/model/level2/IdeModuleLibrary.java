@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.ModelCache;
 import java.io.File;
 import java.util.Collection;
 import java.util.Objects;
@@ -36,11 +35,8 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
     private final int myType;
     private final int myHashCode;
 
-    IdeModuleLibrary(
-            @NonNull Library library,
-            @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache) {
-        super(library, modelCache);
+    IdeModuleLibrary(@NonNull Library library, @NonNull String artifactAddress) {
+        super();
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
         myBuildId = copyNewProperty(library::getBuildId, null);
@@ -51,9 +47,8 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
 
     IdeModuleLibrary(
             @NonNull com.android.builder.model.AndroidLibrary library,
-            @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache) {
-        super(library, modelCache);
+            @NonNull String artifactAddress) {
+        super();
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
         myBuildId = copyNewProperty(library::getBuildId, null);
@@ -64,9 +59,8 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
 
     IdeModuleLibrary(
             @NonNull com.android.builder.model.JavaLibrary library,
-            @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache) {
-        super(library, modelCache);
+            @NonNull String artifactAddress) {
+        super();
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
         myBuildId = copyNewProperty(library::getBuildId, null);
@@ -78,9 +72,8 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
     IdeModuleLibrary(
             @NonNull String projectPath,
             @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache,
             @Nullable String buildId) {
-        super(artifactAddress, modelCache);
+        super();
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
         myBuildId = buildId;

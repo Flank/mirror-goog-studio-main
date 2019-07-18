@@ -46,8 +46,7 @@ public class IdeSourceProviderTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeSourceProvider sourceProvider =
-                new IdeSourceProvider(new SourceProviderStub(), myModelCache);
+        IdeSourceProvider sourceProvider = new IdeSourceProvider(new SourceProviderStub());
         byte[] bytes = Serialization.serialize(sourceProvider);
         Object o = Serialization.deserialize(bytes);
         assertEquals(sourceProvider, o);
@@ -79,14 +78,14 @@ public class IdeSourceProviderTest {
                                 getJniLibsDirectories());
                     }
                 };
-        IdeSourceProvider sourceProvider = new IdeSourceProvider(original, myModelCache);
+        IdeSourceProvider sourceProvider = new IdeSourceProvider(original);
         assertThat(sourceProvider.getShadersDirectories()).isEmpty();
     }
 
     @Test
     public void constructor() throws Throwable {
         SourceProvider original = new SourceProviderStub();
-        IdeSourceProvider copy = new IdeSourceProvider(original, myModelCache);
+        IdeSourceProvider copy = new IdeSourceProvider(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

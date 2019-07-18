@@ -46,8 +46,7 @@ public class IdeLintOptionsTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeLintOptions lintOptions =
-                new IdeLintOptions(new LintOptionsStub(), myModelCache, myModelVersion);
+        IdeLintOptions lintOptions = new IdeLintOptions(new LintOptionsStub(), myModelVersion);
         byte[] bytes = serialize(lintOptions);
         Object o = deserialize(bytes);
         assertEquals(lintOptions, o);
@@ -56,7 +55,7 @@ public class IdeLintOptionsTest {
     @Test
     public void constructor() throws Throwable {
         LintOptions original = new LintOptionsStub();
-        IdeLintOptions copy = new IdeLintOptions(original, myModelCache, myModelVersion);
+        IdeLintOptions copy = new IdeLintOptions(original, myModelVersion);
         assertThat(copy.getBaselineFile()).isEqualTo(original.getBaselineFile());
         assertThat(copy.getLintConfig()).isEqualTo(original.getLintConfig());
         assertThat(copy.getSeverityOverrides()).isEqualTo(original.getSeverityOverrides());

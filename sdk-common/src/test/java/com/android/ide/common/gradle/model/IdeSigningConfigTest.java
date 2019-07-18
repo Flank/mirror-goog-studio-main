@@ -42,8 +42,7 @@ public class IdeSigningConfigTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeSigningConfig signingConfig =
-                new IdeSigningConfig(new SigningConfigStub(), myModelCache);
+        IdeSigningConfig signingConfig = new IdeSigningConfig(new SigningConfigStub());
         byte[] bytes = Serialization.serialize(signingConfig);
         Object o = Serialization.deserialize(bytes);
         assertEquals(signingConfig, o);
@@ -52,7 +51,7 @@ public class IdeSigningConfigTest {
     @Test
     public void constructor() throws Throwable {
         SigningConfig original = new SigningConfigStub();
-        IdeSigningConfig copy = new IdeSigningConfig(original, myModelCache);
+        IdeSigningConfig copy = new IdeSigningConfig(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

@@ -47,7 +47,7 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
 
     public IdeNativeVariantAbi(
             @NonNull NativeVariantAbi variantAbi, @NonNull ModelCache modelCache) {
-        super(variantAbi, modelCache);
+        super();
         myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
         myArtifacts =
                 copy(
@@ -58,12 +58,12 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
                 copy(
                         variantAbi.getToolChains(),
                         modelCache,
-                        toolchain -> new IdeNativeToolchain(toolchain, modelCache));
+                        toolchain -> new IdeNativeToolchain(toolchain));
         mySettings =
                 copy(
                         variantAbi.getSettings(),
                         modelCache,
-                        settings -> new IdeNativeSettings(settings, modelCache));
+                        settings -> new IdeNativeSettings(settings));
         myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
         myVariantName = variantAbi.getVariantName();
         myAbi = variantAbi.getAbi();

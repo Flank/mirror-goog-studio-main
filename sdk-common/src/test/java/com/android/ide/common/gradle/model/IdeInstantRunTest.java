@@ -43,7 +43,7 @@ public class IdeInstantRunTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeInstantRun instantRun = new IdeInstantRun(new InstantRunStub(), myModelCache);
+        IdeInstantRun instantRun = new IdeInstantRun(new InstantRunStub());
         byte[] bytes = serialize(instantRun);
         Object o = deserialize(bytes);
         assertEquals(instantRun, o);
@@ -52,7 +52,7 @@ public class IdeInstantRunTest {
     @Test
     public void constructor() throws Throwable {
         InstantRun original = new InstantRunStub();
-        IdeInstantRun copy = new IdeInstantRun(original, myModelCache);
+        IdeInstantRun copy = new IdeInstantRun(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

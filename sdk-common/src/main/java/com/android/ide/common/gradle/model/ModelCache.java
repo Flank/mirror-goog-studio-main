@@ -20,8 +20,16 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ModelCache {
+    private static final Object BAD_BAD =
+            new Object() {
+                @Override
+                public String toString() {
+                    return "<REFEREENCE-TO-SELF>";
+                }
+            };
     @NonNull private final Map<Object, Object> myData = new HashMap<>();
 
     /**
@@ -33,38 +41,24 @@ public class ModelCache {
     public synchronized <K, V> V computeIfAbsent(
             @NonNull K key, @NonNull Function<K, V> mappingFunction) {
         if (myData.containsKey(key)) {
-            return (V) myData.get(key);
+            Object existing = myData.get(key);
+            if (existing == BAD_BAD) {
+                throw new IllegalStateException(
+                        "Self reference detected while constructing an instance for: "
+                                + key
+                                + "\n while constructing:\n"
+                                + myData.entrySet()
+                                        .stream()
+                                        .filter(it -> it.getValue() == BAD_BAD)
+                                        .map(it -> it.getKey().toString())
+                                        .collect(Collectors.joining(",\n ")));
+            }
+            return (V) existing;
         } else {
+            myData.put(key, BAD_BAD);
             V result = mappingFunction.apply(key);
             myData.put(key, result);
             return result;
-        }
-    }
-
-    /**
-     * Adds a mapping to the model cache, throwing if the value is already present and is a
-     * different object.
-     *
-     * <p>Used in Ide* model copy constructors to validate that those objects should have been
-     * constructed rather than got from the cache.
-     *
-     * @throws IllegalStateException if the given key exists in the map with a different value.
-     */
-    synchronized void putDisallowingReplacement(@NonNull Object key, @NonNull Object value) {
-        Object cacheValue = myData.get(value);
-        if (cacheValue == null) {
-            myData.put(key, value);
-            return;
-        }
-        if (cacheValue != value) {
-            throw new IllegalStateException(
-                    "Model cache unexpectedly already contains object!"
-                            + "\n key = "
-                            + key
-                            + "\n cache value = "
-                            + cacheValue
-                            + "\n new value = "
-                            + value);
         }
     }
 

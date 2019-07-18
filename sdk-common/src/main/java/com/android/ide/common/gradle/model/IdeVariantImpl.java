@@ -51,7 +51,7 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable GradleVersion modelVersion) {
-        super(variant, modelCache);
+        super();
         myName = variant.getName();
         myDisplayName = variant.getDisplayName();
         myMainArtifact =
@@ -100,7 +100,7 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
             return copy(
                     variant.getTestedTargetVariants(),
                     modelCache,
-                    targetVariant -> new IdeTestedTargetVariant(targetVariant, modelCache));
+                    targetVariant -> new IdeTestedTargetVariant(targetVariant));
         } catch (UnsupportedOperationException e) {
             return Collections.emptyList();
         }

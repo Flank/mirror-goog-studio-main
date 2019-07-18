@@ -30,12 +30,11 @@ public final class IdeSourceProviderContainer extends IdeModel implements Source
 
     public IdeSourceProviderContainer(
             @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
-        super(container, modelCache);
+        super();
         myArtifactName = container.getArtifactName();
         mySourceProvider =
                 modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider -> new IdeSourceProvider(provider, modelCache));
+                        container.getSourceProvider(), provider -> new IdeSourceProvider(provider));
 
         myHashCode = calculateHashCode();
     }

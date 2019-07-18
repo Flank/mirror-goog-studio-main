@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.ModelCache;
 import java.io.File;
 import java.util.Collection;
 import java.util.Objects;
@@ -51,8 +50,6 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
     private final int myHashCode;
 
     IdeAndroidLibrary(
-            @NonNull Object original,
-            @NonNull ModelCache modelCache,
             @NonNull String artifactAddress,
             @NonNull File folder,
             @NonNull String manifest,
@@ -71,7 +68,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
             @NonNull String publicResources,
             @NonNull File artifactFile,
             @NonNull String symbolFile) {
-        super(original, modelCache);
+        super();
         myType = LIBRARY_ANDROID;
         myArtifactAddress = artifactAddress;
         myFolder = folder;

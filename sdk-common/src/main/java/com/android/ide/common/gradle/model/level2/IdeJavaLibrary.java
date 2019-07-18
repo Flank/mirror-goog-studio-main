@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.ModelCache;
 import java.io.File;
 import java.util.Collection;
 import java.util.Objects;
@@ -34,12 +33,8 @@ public final class IdeJavaLibrary extends IdeModel implements Library {
     private final int myType;
     private final int myHashCode;
 
-    IdeJavaLibrary(
-            @NonNull String artifactAddress,
-            @NonNull File artifactFile,
-            @NonNull ModelCache modelCache,
-            @NonNull Object sourceObject) {
-        super(sourceObject, modelCache);
+    IdeJavaLibrary(@NonNull String artifactAddress, @NonNull File artifactFile) {
+        super();
         myType = LIBRARY_JAVA;
         myArtifactAddress = artifactAddress;
         myArtifactFile = artifactFile;

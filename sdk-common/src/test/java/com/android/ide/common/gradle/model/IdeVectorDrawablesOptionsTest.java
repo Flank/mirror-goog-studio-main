@@ -43,7 +43,7 @@ public class IdeVectorDrawablesOptionsTest {
     @Test
     public void serialization() throws Exception {
         IdeVectorDrawablesOptions options =
-                new IdeVectorDrawablesOptions(new VectorDrawablesOptionsStub(), myModelCache);
+                new IdeVectorDrawablesOptions(new VectorDrawablesOptionsStub());
         byte[] bytes = Serialization.serialize(options);
         Object o = Serialization.deserialize(bytes);
         assertEquals(options, o);
@@ -52,7 +52,7 @@ public class IdeVectorDrawablesOptionsTest {
     @Test
     public void constructor() throws Throwable {
         VectorDrawablesOptions original = new VectorDrawablesOptionsStub();
-        IdeVectorDrawablesOptions copy = new IdeVectorDrawablesOptions(original, myModelCache);
+        IdeVectorDrawablesOptions copy = new IdeVectorDrawablesOptions(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

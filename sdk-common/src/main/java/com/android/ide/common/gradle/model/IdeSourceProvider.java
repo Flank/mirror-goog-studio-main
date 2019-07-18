@@ -42,8 +42,8 @@ public final class IdeSourceProvider extends IdeModel implements SourceProvider 
     @NonNull private final Collection<File> myShadersDirectories;
     private final int myHashCode;
 
-    public IdeSourceProvider(@NonNull SourceProvider provider, @NonNull ModelCache modelCache) {
-        super(provider, modelCache);
+    public IdeSourceProvider(@NonNull SourceProvider provider) {
+        super();
         myName = provider.getName();
         myManifestFile = provider.getManifestFile();
         myJavaDirectories = ImmutableList.copyOf(provider.getJavaDirectories());

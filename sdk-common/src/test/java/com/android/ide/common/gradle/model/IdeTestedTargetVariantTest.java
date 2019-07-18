@@ -43,7 +43,7 @@ public class IdeTestedTargetVariantTest {
     @Test
     public void serialization() throws Exception {
         IdeTestedTargetVariant targetVariant =
-                new IdeTestedTargetVariant(new TestedTargetVariantStub(), myModelCache);
+                new IdeTestedTargetVariant(new TestedTargetVariantStub());
         byte[] bytes = Serialization.serialize(targetVariant);
         Object o = Serialization.deserialize(bytes);
         assertEquals(targetVariant, o);
@@ -52,7 +52,7 @@ public class IdeTestedTargetVariantTest {
     @Test
     public void constructor() throws Throwable {
         TestedTargetVariant original = new TestedTargetVariantStub();
-        IdeTestedTargetVariant copy = new IdeTestedTargetVariant(original, myModelCache);
+        IdeTestedTargetVariant copy = new IdeTestedTargetVariant(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

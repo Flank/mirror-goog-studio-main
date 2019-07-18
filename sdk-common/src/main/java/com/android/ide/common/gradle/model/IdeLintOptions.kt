@@ -32,7 +32,6 @@ data class IdeLintOptions(
     /** Creates a deep copy of the Gradle tooling API [LintOptions].  */
     constructor(
         options: LintOptions,
-        modelCache: ModelCache,
         modelVersion: GradleVersion?
     ) : this(
         baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
@@ -47,9 +46,7 @@ data class IdeLintOptions(
         isCheckDependencies =
         IdeModel.copyNewProperty({ options.isCheckDependencies }, false)!!
 
-    ) {
-        modelCache.putDisallowingReplacement(options, this)
-    }
+    )
 
     companion object {
         private const val serialVersionUID = -3962121770706550687L // From serialver

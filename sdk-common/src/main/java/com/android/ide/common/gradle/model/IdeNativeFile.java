@@ -26,8 +26,8 @@ public final class IdeNativeFile extends IdeModel implements NativeFile {
     private final File myWorkingDirectory;
     private final int myHashCode;
 
-    public IdeNativeFile(@NonNull NativeFile file, @NonNull ModelCache modelCache) {
-        super(file, modelCache);
+    public IdeNativeFile(@NonNull NativeFile file) {
+        super();
         myFilePath = file.getFilePath();
         mySettingsName = file.getSettingsName();
         myWorkingDirectory = file.getWorkingDirectory();

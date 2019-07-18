@@ -36,7 +36,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     private final int myHashCode;
 
     protected IdeLibrary(@NonNull Library library, @NonNull ModelCache modelCache) {
-        super(library, modelCache);
+        super();
         myResolvedCoordinates = computeResolvedCoordinate(library, modelCache);
         myBuildId = copyNewProperty(library::getBuildId, null);
         myProject = copyNewProperty(library::getProject, null);

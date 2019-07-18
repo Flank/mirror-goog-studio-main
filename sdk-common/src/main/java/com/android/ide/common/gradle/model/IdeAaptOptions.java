@@ -33,8 +33,8 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
 
     // copyNewProperty won't return null for a non-null getter with a non-null default value.
     @SuppressWarnings("ConstantConditions")
-    protected IdeAaptOptions(@NonNull AaptOptions original, @NonNull ModelCache modelCache) {
-        super(original, modelCache);
+    protected IdeAaptOptions(@NonNull AaptOptions original) {
+        super();
 
         ignoreAssets = copyNewProperty(original::getIgnoreAssets, null);
         noCompress = copyNewProperty(original::getNoCompress, null);

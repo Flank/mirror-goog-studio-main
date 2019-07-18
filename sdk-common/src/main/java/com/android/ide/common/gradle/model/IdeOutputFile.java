@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.android.utils.ImmutableCollectors.toImmutableList;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -41,18 +43,19 @@ public final class IdeOutputFile extends IdeModel implements OutputFile {
     private final int myHashCode;
 
     public IdeOutputFile(@NonNull OutputFile file, @NonNull ModelCache modelCache) {
-        super(file, modelCache);
+        super();
         myOutputType = file.getOutputType();
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
-        myFilters =
-                copy(file.getFilters(), modelCache, data -> new IdeFilterData(data, modelCache));
+        myFilters = copy(file.getFilters(), modelCache, data -> new IdeFilterData(data));
         myOutputFile = file.getOutputFile();
         myMainOutputFile =
-                copyNewProperty(
-                        modelCache,
-                        file::getMainOutputFile,
-                        outputFile -> new IdeOutputFile(outputFile, modelCache),
-                        null);
+                file == file.getMainOutputFile()
+                        ? this
+                        : copyNewProperty(
+                                modelCache,
+                                file::getMainOutputFile,
+                                outputFile -> new IdeOutputFile(outputFile, modelCache),
+                                null);
         //noinspection deprecation
         myOutputs = copyOutputs(file, modelCache);
         myVersionCode = copyNewProperty(file::getVersionCode, null);
@@ -61,12 +64,18 @@ public final class IdeOutputFile extends IdeModel implements OutputFile {
     }
 
     @NonNull
-    private static Collection<? extends OutputFile> copyOutputs(
+    private Collection<? extends OutputFile> copyOutputs(
             @NonNull OutputFile file, @NonNull ModelCache modelCache) {
         try {
             //noinspection deprecation
-            Collection<? extends OutputFile> key = file.getOutputs();
-            return copy(key, modelCache, outputFile -> new IdeOutputFile(outputFile, modelCache));
+            return file.getOutputs()
+                    .stream()
+                    .map(
+                            outputFile ->
+                                    outputFile == file
+                                            ? this
+                                            : new IdeOutputFile(outputFile, modelCache))
+                    .collect(toImmutableList());
         } catch (UnsupportedOperationException ignored) {
             return Collections.emptyList();
         }

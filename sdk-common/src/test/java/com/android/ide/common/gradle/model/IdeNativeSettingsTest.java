@@ -42,8 +42,7 @@ public class IdeNativeSettingsTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeSettings nativeSettings =
-                new IdeNativeSettings(new NativeSettingsStub(), myModelCache);
+        IdeNativeSettings nativeSettings = new IdeNativeSettings(new NativeSettingsStub());
         byte[] bytes = Serialization.serialize(nativeSettings);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeSettings, o);
@@ -52,7 +51,7 @@ public class IdeNativeSettingsTest {
     @Test
     public void constructor() throws Throwable {
         NativeSettings original = new NativeSettingsStub();
-        IdeNativeSettings copy = new IdeNativeSettings(original, myModelCache);
+        IdeNativeSettings copy = new IdeNativeSettings(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

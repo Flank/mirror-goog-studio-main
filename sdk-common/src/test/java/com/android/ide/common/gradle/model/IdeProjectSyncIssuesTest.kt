@@ -35,7 +35,7 @@ class IdeProjectSyncIssuesTest {
 
     @Test
     fun serialization() {
-        val expectedSyncIssue = IdeSyncIssue(SyncIssueStub(), modelCache)
+        val expectedSyncIssue = IdeSyncIssue(SyncIssueStub())
 
         val projectSyncIssues = IdeProjectSyncIssues(ProjectSyncIssuesStub(), modelCache)
         assertThat(projectSyncIssues.syncIssues).containsExactly(expectedSyncIssue)
@@ -49,7 +49,7 @@ class IdeProjectSyncIssuesTest {
     fun constructor() {
         val original = ProjectSyncIssuesStub()
         val copy = IdeProjectSyncIssues(ProjectSyncIssuesStub(), modelCache)
-        val expectedIssues = original.syncIssues.map { issue -> IdeSyncIssue(issue, modelCache) }
+        val expectedIssues = original.syncIssues.map { issue -> IdeSyncIssue(issue) }
 
         assertThat(copy.syncIssues).isEqualTo(expectedIssues)
         IdeModelTestUtils.verifyUsageOfImmutableCollections(copy)

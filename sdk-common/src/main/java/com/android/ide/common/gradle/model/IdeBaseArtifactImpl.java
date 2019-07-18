@@ -63,19 +63,18 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable GradleVersion modelVersion) {
-        super(artifact, modelCache);
+        super();
         myName = artifact.getName();
         myCompileTaskName = artifact.getCompileTaskName();
         myAssembleTaskName = artifact.getAssembleTaskName();
         myClassesFolder = artifact.getClassesFolder();
         myJavaResourcesFolder = copyNewProperty(artifact::getJavaResourcesFolder, null);
-        myDependencies = copy(artifact.getDependencies(), modelCache, modelVersion);
+        myDependencies = copy(artifact.getDependencies(), modelCache);
         myCompileDependencies =
                 copyNewProperty(
                         modelCache,
                         artifact::getCompileDependencies,
-                        dependencies ->
-                                new IdeDependenciesImpl(dependencies, modelCache, modelVersion),
+                        dependencies -> new IdeDependenciesImpl(dependencies, modelCache),
                         null);
 
         if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
@@ -101,12 +100,9 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
 
     @NonNull
     private static IdeDependencies copy(
-            @NonNull Dependencies original,
-            @NonNull ModelCache modelCache,
-            @Nullable GradleVersion modelVersion) {
+            @NonNull Dependencies original, @NonNull ModelCache modelCache) {
         return modelCache.computeIfAbsent(
-                original,
-                dependencies -> new IdeDependenciesImpl(dependencies, modelCache, modelVersion));
+                original, dependencies -> new IdeDependenciesImpl(dependencies, modelCache));
     }
 
     @NonNull
@@ -140,8 +136,7 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
     private static IdeSourceProvider createSourceProvider(
             @NonNull ModelCache modelCache, @Nullable SourceProvider original) {
         return original != null
-                ? modelCache.computeIfAbsent(
-                        original, provider -> new IdeSourceProvider(provider, modelCache))
+                ? modelCache.computeIfAbsent(original, provider -> new IdeSourceProvider(provider))
                 : null;
     }
 

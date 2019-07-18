@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,13 +42,13 @@ public abstract class IdeBaseConfig extends IdeModel implements BaseConfig {
     private final int myHashCode;
 
     protected IdeBaseConfig(@NonNull BaseConfig config, @NonNull ModelCache modelCache) {
-        super(config, modelCache);
+        super();
         myName = config.getName();
         myResValues =
                 copy(
                         config.getResValues(),
                         modelCache,
-                        classField -> new IdeClassField(classField, modelCache));
+                        classField -> new IdeClassField(classField));
         myProguardFiles = ImmutableList.copyOf(config.getProguardFiles());
         myConsumerProguardFiles = ImmutableList.copyOf(config.getConsumerProguardFiles());
         myManifestPlaceholders = ImmutableMap.copyOf(config.getManifestPlaceholders());

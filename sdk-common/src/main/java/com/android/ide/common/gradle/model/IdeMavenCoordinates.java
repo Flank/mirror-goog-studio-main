@@ -33,9 +33,8 @@ public final class IdeMavenCoordinates extends IdeModel implements MavenCoordina
     @Nullable private final String myClassifier;
     private final int myHashCode;
 
-    public IdeMavenCoordinates(
-            @NonNull MavenCoordinates coordinates, @NonNull ModelCache modelCache) {
-        super(coordinates, modelCache);
+    public IdeMavenCoordinates(@NonNull MavenCoordinates coordinates) {
+        super();
         myGroupId = coordinates.getGroupId();
         myArtifactId = coordinates.getArtifactId();
         myVersion = coordinates.getVersion();
@@ -45,8 +44,8 @@ public final class IdeMavenCoordinates extends IdeModel implements MavenCoordina
         myHashCode = calculateHashCode();
     }
 
-    public IdeMavenCoordinates(@NonNull File localJar, @NonNull ModelCache modelCache) {
-        super(localJar, modelCache);
+    public IdeMavenCoordinates(@NonNull File localJar) {
+        super();
         myGroupId = "__local_aars__";
         myArtifactId = localJar.getPath();
         myVersion = "unspecified";

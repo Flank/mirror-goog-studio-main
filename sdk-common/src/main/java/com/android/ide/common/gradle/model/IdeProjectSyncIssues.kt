@@ -18,15 +18,12 @@ package com.android.ide.common.gradle.model
 
 import com.android.builder.model.ProjectSyncIssues
 import com.android.builder.model.SyncIssue
-import com.google.common.base.MoreObjects
 import java.io.Serializable
-import java.util.Objects
 
 /** Creates a deep copy of a {@link ProjectSyncIssues}. */
 data class IdeProjectSyncIssues(val syncIssues: Collection<SyncIssue>) : Serializable {
 
     constructor(project: ProjectSyncIssues, modelCache: ModelCache) : this(copySyncIssues(project, modelCache)) {
-        modelCache.putDisallowingReplacement(project, this)
     }
 
     companion object {
@@ -34,7 +31,7 @@ data class IdeProjectSyncIssues(val syncIssues: Collection<SyncIssue>) : Seriali
 
         fun copySyncIssues(project: ProjectSyncIssues, modelCache: ModelCache): Collection<SyncIssue> {
             return IdeModel.copy(
-                project.syncIssues, modelCache) { issue -> IdeSyncIssue(issue, modelCache) }
+                project.syncIssues, modelCache) { issue -> IdeSyncIssue(issue) }
         }
     }
 }

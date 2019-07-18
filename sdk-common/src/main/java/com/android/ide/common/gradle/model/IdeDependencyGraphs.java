@@ -34,7 +34,7 @@ public final class IdeDependencyGraphs extends IdeModel implements DependencyGra
     private final int myHashCode;
 
     public IdeDependencyGraphs(@NonNull DependencyGraphs graphs, @NonNull ModelCache modelCache) {
-        super(graphs, modelCache);
+        super();
         myCompileDependencies =
                 copy(
                         graphs.getCompileDependencies(),

@@ -35,15 +35,14 @@ public final class IdeProductFlavorContainer extends IdeModel implements Product
 
     public IdeProductFlavorContainer(
             @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
-        super(container, modelCache);
+        super();
         myProductFlavor =
                 modelCache.computeIfAbsent(
                         container.getProductFlavor(),
                         flavor -> new IdeProductFlavor(flavor, modelCache));
         mySourceProvider =
                 modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider -> new IdeSourceProvider(provider, modelCache));
+                        container.getSourceProvider(), provider -> new IdeSourceProvider(provider));
         myExtraSourceProviders =
                 copy(
                         container.getExtraSourceProviders(),

@@ -43,8 +43,7 @@ public class IdeNativeLibraryTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeLibrary nativeLibrary =
-                new IdeNativeLibrary(new NativeLibraryStub(), myModelCache);
+        IdeNativeLibrary nativeLibrary = new IdeNativeLibrary(new NativeLibraryStub());
         byte[] bytes = serialize(nativeLibrary);
         Object o = deserialize(bytes);
         assertEquals(nativeLibrary, o);
@@ -53,7 +52,7 @@ public class IdeNativeLibraryTest {
     @Test
     public void constructor() throws Throwable {
         NativeLibrary original = new NativeLibraryStub();
-        IdeNativeLibrary copy = new IdeNativeLibrary(original, myModelCache);
+        IdeNativeLibrary copy = new IdeNativeLibrary(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

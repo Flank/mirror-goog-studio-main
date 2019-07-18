@@ -42,8 +42,7 @@ public class IdeMavenCoordinatesTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeMavenCoordinates coordinates =
-                new IdeMavenCoordinates(new MavenCoordinatesStub(), myModelCache);
+        IdeMavenCoordinates coordinates = new IdeMavenCoordinates(new MavenCoordinatesStub());
         byte[] bytes = Serialization.serialize(coordinates);
         Object o = Serialization.deserialize(bytes);
         assertEquals(coordinates, o);
@@ -52,7 +51,7 @@ public class IdeMavenCoordinatesTest {
     @Test
     public void constructor() throws Throwable {
         MavenCoordinates original = new MavenCoordinatesStub();
-        IdeMavenCoordinates copy = new IdeMavenCoordinates(original, myModelCache);
+        IdeMavenCoordinates copy = new IdeMavenCoordinates(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

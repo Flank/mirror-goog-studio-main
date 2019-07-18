@@ -42,7 +42,7 @@ public class IdeNativeFileTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeFile nativeFile = new IdeNativeFile(new NativeFileStub(), myModelCache);
+        IdeNativeFile nativeFile = new IdeNativeFile(new NativeFileStub());
         byte[] bytes = Serialization.serialize(nativeFile);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeFile, o);
@@ -51,7 +51,7 @@ public class IdeNativeFileTest {
     @Test
     public void constructor() throws Throwable {
         NativeFile original = new NativeFileStub();
-        IdeNativeFile copy = new IdeNativeFile(original, myModelCache);
+        IdeNativeFile copy = new IdeNativeFile(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
