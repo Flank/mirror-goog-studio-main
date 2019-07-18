@@ -18,11 +18,9 @@ package com.android.ddmlib.allocations;
 import com.android.ddmlib.AllocationInfo;
 import com.android.ddmlib.AllocationsParser;
 import com.google.common.base.Charsets;
-import junit.framework.TestCase;
-
 import java.io.IOException;
-import java.net.URL;
 import java.nio.ByteBuffer;
+import junit.framework.TestCase;
 
 public class AllocationsParserTest extends TestCase {
 
@@ -121,8 +119,12 @@ public class AllocationsParserTest extends TestCase {
     assertEquals(lineNumber, elem.getLineNumber());
   }
 
-  public static ByteBuffer putAllocationInfo(String[] classNames, String[] methodNames, String[] fileNames, int[][] entries,
-                                                short[][][] stackFrames) throws IOException {
+    public static ByteBuffer putAllocationInfo(
+            String[] classNames,
+            String[] methodNames,
+            String[] fileNames,
+            int[][] entries,
+            short[][][] stackFrames) {
     byte msgHdrLen = 15, entryHdrLen = 9, stackFrameLen = 8;
 
     // Number of bytes from start of message to string tables

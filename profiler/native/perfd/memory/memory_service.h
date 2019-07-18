@@ -83,22 +83,6 @@ class MemoryServiceImpl final
                           "Not implemented on device");
   }
 
-  ::grpc::Status GetLegacyAllocationEvents(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::LegacyAllocationEventsRequest* request,
-      ::profiler::proto::LegacyAllocationEventsResponse* response) override {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                          "Not implemented on device");
-  }
-
-  ::grpc::Status GetLegacyAllocationContexts(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::LegacyAllocationContextsRequest* request,
-      ::profiler::proto::LegacyAllocationContextsResponse* response) override {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                          "Not implemented on device");
-  }
-
   ::grpc::Status ForceGarbageCollection(
       ::grpc::ServerContext* context,
       const ::profiler::proto::ForceGarbageCollectionRequest* request,

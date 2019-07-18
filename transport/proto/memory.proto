@@ -55,20 +55,12 @@ service MemoryService {
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
 
-  // Pre-O only: Returns all allocation data associated with a tracking session.
-  rpc GetLegacyAllocationEvents(LegacyAllocationEventsRequest)
-      returns (LegacyAllocationEventsResponse) {}
-  // Pre-O only: Returns class names and callstacks info associated with the
-  // ids provided in the request.
-  rpc GetLegacyAllocationContexts(LegacyAllocationContextsRequest)
-      returns (LegacyAllocationContextsResponse) {}
-
   // Pre-O only: Import saved allocation records.
   rpc ImportLegacyAllocations(ImportLegacyAllocationsRequest)
       returns (ImportLegacyAllocationsResponse) {}
 
-  // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
-  // This returns all allocation deallocation events that happened
+  // O+ studio-side only:
+  // This returns all allocation + deallocation events that happened
   // within the request's start and end times.
   rpc GetAllocationEvents(AllocationSnapshotRequest)
       returns (AllocationEventsResponse) {}
@@ -229,11 +221,7 @@ message TrackAllocationsRequest {
 message ImportLegacyAllocationsRequest {
   Session session = 1;
   AllocationsInfo info = 2;
-  // The allocation events that should be returned when
-  // GetLegacyAllocationEvents is called.
-  LegacyAllocationEventsResponse allocations = 3;
-  repeated AllocatedClass classes = 4;
-  repeated AllocationStack stacks = 5;
+  bytes data = 3;
 }
 
 message ImportLegacyAllocationsResponse {
@@ -243,45 +231,6 @@ message ImportLegacyAllocationsResponse {
     FAILURE = 2;
   }
   Status status = 1;
-}
-
-message LegacyAllocationEventsRequest {
-  Session session = 1;
-  int64 start_time = 2; // exclusive
-  int64 end_time = 3;   // inclusive
-}
-
-message LegacyAllocationEventsResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    NOT_READY = 2;
-    NOT_FOUND = 3;
-    FAILURE_UNKNOWN = 4;
-  }
-  Status status = 1;
-  repeated LegacyAllocationEvent events = 2;
-}
-
-message LegacyAllocationEvent {
-  // capture_time associates with a particular tracking session.
-  int64 capture_time = 1;
-  int64 timestamp = 2;
-  int32 size = 3;
-  int32 thread_id = 4;
-  int32 class_id = 5;
-  int32 stack_id = 6;
-}
-
-message LegacyAllocationContextsRequest {
-  Session session = 1;
-  repeated int32 class_ids = 2;
-  repeated int32 stack_ids = 3;
-}
-
-message LegacyAllocationContextsResponse {
-  repeated AllocatedClass classes = 4;
-  repeated AllocationStack stacks = 5;
 }
 
 message AllocationContextsRequest {
