@@ -19,11 +19,12 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.NativeLibrary;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link NativeLibrary}. */
-public final class IdeNativeLibrary extends IdeModel implements NativeLibrary {
+public final class IdeNativeLibrary implements NativeLibrary, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -42,7 +43,6 @@ public final class IdeNativeLibrary extends IdeModel implements NativeLibrary {
     private final int myHashCode;
 
     public IdeNativeLibrary(@NonNull NativeLibrary library) {
-        super();
         myName = library.getName();
         myAbi = library.getAbi();
         myToolchainName = library.getToolchainName();

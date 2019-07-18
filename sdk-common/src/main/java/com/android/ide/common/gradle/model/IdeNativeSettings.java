@@ -18,17 +18,17 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeSettings;
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public final class IdeNativeSettings extends IdeModel implements NativeSettings {
+public final class IdeNativeSettings implements NativeSettings, Serializable {
     private final String myName;
     private final List<String> myCompilerFlags;
     private final int myHashCode;
 
     public IdeNativeSettings(@NonNull NativeSettings settings) {
-        super();
         myName = settings.getName();
 
         List<String> compilerFlags = settings.getCompilerFlags();

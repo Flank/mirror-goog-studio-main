@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModel.copyNewProperty;
 import static com.android.utils.FileUtils.isFileInDirectory;
 import static com.google.common.base.Strings.nullToEmpty;
 
@@ -42,7 +41,7 @@ public final class IdeLibraries {
         // in the same MavenCoordinates for different variants of the same module.
         try {
             if (library.getProject() != null && library instanceof AndroidLibrary) {
-                return nullToEmpty(copyNewProperty(library::getBuildId, ""))
+                return nullToEmpty(IdeModel.copyNewProperty(library::getBuildId, ""))
                         + library.getProject()
                         + "::"
                         + ((AndroidLibrary) library).getProjectVariant();
@@ -86,7 +85,7 @@ public final class IdeLibraries {
         }
         File buildFolderPath =
                 buildFolderPaths.findBuildFolderPath(
-                        projectPath, copyNewProperty(androidLibrary::getBuildId, null));
+                        projectPath, IdeModel.copyNewProperty(androidLibrary::getBuildId, null));
         // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
         return buildFolderPath != null
                 && !isFileInDirectory(androidLibrary.getBundle(), buildFolderPath);

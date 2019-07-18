@@ -20,11 +20,12 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link ProductFlavorContainer}. */
-public final class IdeProductFlavorContainer extends IdeModel implements ProductFlavorContainer {
+public final class IdeProductFlavorContainer implements ProductFlavorContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -35,7 +36,6 @@ public final class IdeProductFlavorContainer extends IdeModel implements Product
 
     public IdeProductFlavorContainer(
             @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
-        super();
         myProductFlavor =
                 modelCache.computeIfAbsent(
                         container.getProductFlavor(),
@@ -44,7 +44,7 @@ public final class IdeProductFlavorContainer extends IdeModel implements Product
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(), provider -> new IdeSourceProvider(provider));
         myExtraSourceProviders =
-                copy(
+                IdeModel.copy(
                         container.getExtraSourceProviders(),
                         modelCache,
                         sourceProviderContainer ->

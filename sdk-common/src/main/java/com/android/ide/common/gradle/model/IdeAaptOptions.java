@@ -18,12 +18,13 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class IdeAaptOptions extends IdeModel implements AaptOptions {
+public class IdeAaptOptions implements AaptOptions, Serializable {
 
     @Nullable private final String ignoreAssets;
     @Nullable private final Collection<String> noCompress;
@@ -34,14 +35,15 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
     // copyNewProperty won't return null for a non-null getter with a non-null default value.
     @SuppressWarnings("ConstantConditions")
     protected IdeAaptOptions(@NonNull AaptOptions original) {
-        super();
 
-        ignoreAssets = copyNewProperty(original::getIgnoreAssets, null);
-        noCompress = copyNewProperty(original::getNoCompress, null);
-        namespacing = copyNewProperty(original::getNamespacing, Namespacing.DISABLED);
+        ignoreAssets = IdeModel.copyNewProperty(original::getIgnoreAssets, null);
+        noCompress = IdeModel.copyNewProperty(original::getNoCompress, null);
+        namespacing = IdeModel.copyNewProperty(original::getNamespacing, Namespacing.DISABLED);
         additionalParameters =
-                copyNewProperty(original::getAdditionalParameters, Collections.emptyList());
-        failOnMissingConfigEntry = copyNewProperty(original::getFailOnMissingConfigEntry, false);
+                IdeModel.copyNewProperty(
+                        original::getAdditionalParameters, Collections.emptyList());
+        failOnMissingConfigEntry =
+                IdeModel.copyNewProperty(original::getFailOnMissingConfigEntry, false);
     }
 
     @Override

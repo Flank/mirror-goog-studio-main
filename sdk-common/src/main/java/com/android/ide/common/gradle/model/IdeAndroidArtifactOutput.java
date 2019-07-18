@@ -47,7 +47,8 @@ public final class IdeAndroidArtifactOutput extends IdeVariantOutput
         // When using the plugin v2.4 or older, we fall back to calling getMainOutputFile().getOutputFile(), which is the older plugins
         // do.
         myOutputFile =
-                copyNewProperty(output::getOutputFile, output.getMainOutputFile().getOutputFile());
+                IdeModel.copyNewProperty(
+                        output::getOutputFile, output.getMainOutputFile().getOutputFile());
 
         myHashCode = calculateHashCode();
     }

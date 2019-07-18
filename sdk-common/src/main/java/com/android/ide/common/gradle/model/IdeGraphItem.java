@@ -18,11 +18,12 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.GraphItem;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link GraphItem}. */
-public final class IdeGraphItem extends IdeModel implements GraphItem {
+public final class IdeGraphItem implements GraphItem, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -32,10 +33,9 @@ public final class IdeGraphItem extends IdeModel implements GraphItem {
     private final int myHashCode;
 
     public IdeGraphItem(@NonNull GraphItem item, @NonNull ModelCache modelCache) {
-        super();
         myArtifactAddress = item.getArtifactAddress();
         myDependencies =
-                copy(
+                IdeModel.copy(
                         item.getDependencies(),
                         modelCache,
                         item1 -> new IdeGraphItem(item1, modelCache));

@@ -24,6 +24,7 @@ import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -133,7 +134,7 @@ public final class IdeModelTestUtils {
     }
 
     @NonNull
-    public static <T extends IdeModel> EqualsVerifier<T> createEqualsVerifier(
+    public static <T extends Serializable> EqualsVerifier<T> createEqualsVerifier(
             @NonNull Class<T> type) {
         EqualsVerifier<T> equalsVerifier = EqualsVerifier.forClass(type);
         equalsVerifier

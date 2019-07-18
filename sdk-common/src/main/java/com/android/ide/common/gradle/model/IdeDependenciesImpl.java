@@ -23,13 +23,14 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 /** Creates a deep copy of a {@link Dependencies}. */
-public final class IdeDependenciesImpl extends IdeModel implements IdeDependencies {
+public final class IdeDependenciesImpl implements IdeDependencies, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
 
@@ -41,29 +42,28 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
     private final int myHashCode;
 
     public IdeDependenciesImpl(@NonNull Dependencies dependencies, @NonNull ModelCache modelCache) {
-        super();
 
         myLibraries =
-                copy(
+                IdeModel.copy(
                         dependencies.getLibraries(),
                         modelCache,
                         library -> new IdeAndroidLibrary(library, modelCache));
         myJavaLibraries =
-                copy(
+                IdeModel.copy(
                         dependencies.getJavaLibraries(),
                         modelCache,
                         library -> new IdeJavaLibrary(library, modelCache));
 
         myProjects = ImmutableList.copyOf(dependencies.getProjects());
         myJavaModules =
-                copy(
+                IdeModel.copy(
                         dependencies::getJavaModules,
                         modelCache,
                         projectId -> new IdeProjectIdentifierImpl(projectId));
         myRuntimeOnlyClasses =
                 ImmutableList.copyOf(
                         requireNonNull(
-                                copyNewProperty(
+                                IdeModel.copyNewProperty(
                                         dependencies::getRuntimeOnlyClasses,
                                         Collections.emptyList())));
 

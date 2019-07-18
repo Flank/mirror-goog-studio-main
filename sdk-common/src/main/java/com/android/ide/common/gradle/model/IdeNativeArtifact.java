@@ -21,10 +21,11 @@ import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
-public final class IdeNativeArtifact extends IdeModel implements NativeArtifact {
+public final class IdeNativeArtifact implements NativeArtifact, Serializable {
     @NonNull private final String myName;
     @NonNull private final String myToolChain;
     @NonNull private final String myGroupName;
@@ -36,15 +37,15 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
     private final int myHashCode;
 
     public IdeNativeArtifact(@NonNull NativeArtifact artifact, @NonNull ModelCache modelCache) {
-        super();
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
         mySourceFiles =
-                copy(artifact.getSourceFiles(), modelCache, file -> new IdeNativeFile(file));
+                IdeModel.copy(
+                        artifact.getSourceFiles(), modelCache, file -> new IdeNativeFile(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
-        myAbi = copyNewProperty(artifact::getAbi, null);
-        myTargetName = copyNewProperty(artifact::getTargetName, null);
+        myAbi = IdeModel.copyNewProperty(artifact::getAbi, null);
+        myTargetName = IdeModel.copyNewProperty(artifact::getTargetName, null);
         myOutputFile = artifact.getOutputFile();
         myHashCode = calculateHashCode();
     }

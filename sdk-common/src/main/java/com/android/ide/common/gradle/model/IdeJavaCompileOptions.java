@@ -17,10 +17,11 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.JavaCompileOptions;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link JavaCompileOptions}. */
-public final class IdeJavaCompileOptions extends IdeModel implements JavaCompileOptions {
+public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -30,7 +31,6 @@ public final class IdeJavaCompileOptions extends IdeModel implements JavaCompile
     private final int myHashCode;
 
     public IdeJavaCompileOptions(@NonNull JavaCompileOptions options) {
-        super();
         myEncoding = options.getEncoding();
         mySourceCompatibility = options.getSourceCompatibility();
         myTargetCompatibility = options.getTargetCompatibility();

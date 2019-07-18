@@ -18,10 +18,11 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.builder.model.InstantRun;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of an {@link InstantRun}. */
-public final class IdeInstantRun extends IdeModel implements InstantRun {
+public final class IdeInstantRun implements InstantRun, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -31,7 +32,6 @@ public final class IdeInstantRun extends IdeModel implements InstantRun {
     private final int myHashCode;
 
     public IdeInstantRun(@NonNull InstantRun run) {
-        super();
         myInfoFile = run.getInfoFile();
         mySupportedByArtifact = run.isSupportedByArtifact();
         mySupportStatus = run.getSupportStatus();

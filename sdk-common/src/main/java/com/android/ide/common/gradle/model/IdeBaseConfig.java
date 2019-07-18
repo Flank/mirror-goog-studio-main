@@ -22,12 +22,13 @@ import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link BaseConfig}. */
-public abstract class IdeBaseConfig extends IdeModel implements BaseConfig {
+public abstract class IdeBaseConfig implements BaseConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -42,10 +43,9 @@ public abstract class IdeBaseConfig extends IdeModel implements BaseConfig {
     private final int myHashCode;
 
     protected IdeBaseConfig(@NonNull BaseConfig config, @NonNull ModelCache modelCache) {
-        super();
         myName = config.getName();
         myResValues =
-                copy(
+                IdeModel.copy(
                         config.getResValues(),
                         modelCache,
                         classField -> new IdeClassField(classField));
@@ -53,8 +53,8 @@ public abstract class IdeBaseConfig extends IdeModel implements BaseConfig {
         myConsumerProguardFiles = ImmutableList.copyOf(config.getConsumerProguardFiles());
         myManifestPlaceholders = ImmutableMap.copyOf(config.getManifestPlaceholders());
         myApplicationIdSuffix = config.getApplicationIdSuffix();
-        myVersionNameSuffix = copyNewProperty(config::getVersionNameSuffix, null);
-        myMultiDexEnabled = copyNewProperty(config::getMultiDexEnabled, null);
+        myVersionNameSuffix = IdeModel.copyNewProperty(config::getVersionNameSuffix, null);
+        myMultiDexEnabled = IdeModel.copyNewProperty(config::getMultiDexEnabled, null);
 
         myHashCode = calculateHashCode();
     }

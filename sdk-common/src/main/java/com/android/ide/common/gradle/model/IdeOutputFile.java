@@ -23,13 +23,14 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Objects;
 
 /** Creates a deep copy of an {@link OutputFile}. */
-public final class IdeOutputFile extends IdeModel implements OutputFile {
+public final class IdeOutputFile implements OutputFile, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -43,22 +44,21 @@ public final class IdeOutputFile extends IdeModel implements OutputFile {
     private final int myHashCode;
 
     public IdeOutputFile(@NonNull OutputFile file, @NonNull ModelCache modelCache) {
-        super();
         myOutputType = file.getOutputType();
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
-        myFilters = copy(file.getFilters(), modelCache, data -> new IdeFilterData(data));
+        myFilters = IdeModel.copy(file.getFilters(), modelCache, data -> new IdeFilterData(data));
         myOutputFile = file.getOutputFile();
         myMainOutputFile =
                 file == file.getMainOutputFile()
                         ? this
-                        : copyNewProperty(
+                        : IdeModel.copyNewProperty(
                                 modelCache,
                                 file::getMainOutputFile,
                                 outputFile -> new IdeOutputFile(outputFile, modelCache),
                                 null);
         //noinspection deprecation
         myOutputs = copyOutputs(file, modelCache);
-        myVersionCode = copyNewProperty(file::getVersionCode, null);
+        myVersionCode = IdeModel.copyNewProperty(file::getVersionCode, null);
 
         myHashCode = calculateHashCode();
     }

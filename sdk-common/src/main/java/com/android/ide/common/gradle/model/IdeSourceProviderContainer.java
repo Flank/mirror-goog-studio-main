@@ -17,10 +17,11 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProviderContainer;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link SourceProviderContainer}. */
-public final class IdeSourceProviderContainer extends IdeModel implements SourceProviderContainer {
+public final class IdeSourceProviderContainer implements SourceProviderContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -30,7 +31,6 @@ public final class IdeSourceProviderContainer extends IdeModel implements Source
 
     public IdeSourceProviderContainer(
             @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
-        super();
         myArtifactName = container.getArtifactName();
         mySourceProvider =
                 modelCache.computeIfAbsent(

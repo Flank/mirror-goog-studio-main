@@ -34,7 +34,7 @@ public final class IdeJavaLibrary extends IdeLibrary implements JavaLibrary {
         super(library, modelCache);
         myJarFile = library.getJarFile();
         myDependencies =
-                copy(
+                IdeModel.copy(
                         library.getDependencies(),
                         modelCache,
                         dependency -> new IdeJavaLibrary(dependency, modelCache));

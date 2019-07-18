@@ -19,10 +19,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.SigningConfig;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link SigningConfig}. */
-public final class IdeSigningConfig extends IdeModel implements SigningConfig {
+public final class IdeSigningConfig implements SigningConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -34,12 +35,11 @@ public final class IdeSigningConfig extends IdeModel implements SigningConfig {
     private final int myHashCode;
 
     public IdeSigningConfig(@NonNull SigningConfig config) {
-        super();
         myName = config.getName();
         myStoreFile = config.getStoreFile();
         myStorePassword = config.getStorePassword();
         myKeyAlias = config.getKeyAlias();
-        myV1SigningEnabled = copyNewProperty(config::isV1SigningEnabled, null);
+        myV1SigningEnabled = IdeModel.copyNewProperty(config::isV1SigningEnabled, null);
 
         myHashCode = calculateHashCode();
     }

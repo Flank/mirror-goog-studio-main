@@ -30,10 +30,11 @@ import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.Serializable;
 import java.util.*;
 
 /** Creates a deep copy of a {@link BaseArtifact}. */
-public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArtifact {
+public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializable {
     private static final String[] TEST_ARTIFACT_NAMES = {ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST};
 
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
@@ -63,15 +64,14 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable GradleVersion modelVersion) {
-        super();
         myName = artifact.getName();
         myCompileTaskName = artifact.getCompileTaskName();
         myAssembleTaskName = artifact.getAssembleTaskName();
         myClassesFolder = artifact.getClassesFolder();
-        myJavaResourcesFolder = copyNewProperty(artifact::getJavaResourcesFolder, null);
+        myJavaResourcesFolder = IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null);
         myDependencies = copy(artifact.getDependencies(), modelCache);
         myCompileDependencies =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         modelCache,
                         artifact::getCompileDependencies,
                         dependencies -> new IdeDependenciesImpl(dependencies, modelCache),
@@ -93,7 +93,8 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
         myMultiFlavorSourceProvider =
                 createSourceProvider(modelCache, artifact.getMultiFlavorSourceProvider());
         myAdditionalClassFolders =
-                copyNewProperty(artifact::getAdditionalClassesFolders, Collections.emptySet());
+                IdeModel.copyNewProperty(
+                        artifact::getAdditionalClassesFolders, Collections.emptySet());
         myLevel2Dependencies = dependenciesFactory.create(artifact, modelVersion);
         myHashCode = calculateHashCode();
     }

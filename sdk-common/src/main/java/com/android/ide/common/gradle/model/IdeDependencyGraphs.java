@@ -19,11 +19,12 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link DependencyGraphs}. */
-public final class IdeDependencyGraphs extends IdeModel implements DependencyGraphs {
+public final class IdeDependencyGraphs implements DependencyGraphs, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -34,14 +35,13 @@ public final class IdeDependencyGraphs extends IdeModel implements DependencyGra
     private final int myHashCode;
 
     public IdeDependencyGraphs(@NonNull DependencyGraphs graphs, @NonNull ModelCache modelCache) {
-        super();
         myCompileDependencies =
-                copy(
+                IdeModel.copy(
                         graphs.getCompileDependencies(),
                         modelCache,
                         item -> new IdeGraphItem(item, modelCache));
         myPackageDependencies =
-                copy(
+                IdeModel.copy(
                         graphs.getPackageDependencies(),
                         modelCache,
                         item -> new IdeGraphItem(item, modelCache));

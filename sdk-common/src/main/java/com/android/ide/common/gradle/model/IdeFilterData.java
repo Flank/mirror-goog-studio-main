@@ -17,10 +17,11 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link FilterData}. */
-public final class IdeFilterData extends IdeModel implements FilterData {
+public final class IdeFilterData implements FilterData, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -29,7 +30,6 @@ public final class IdeFilterData extends IdeModel implements FilterData {
     private final int myHashCode;
 
     public IdeFilterData(@NonNull FilterData data) {
-        super();
         myIdentifier = data.getIdentifier();
         myFilterType = data.getFilterType();
 

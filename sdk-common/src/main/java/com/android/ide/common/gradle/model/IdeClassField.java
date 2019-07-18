@@ -17,11 +17,12 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.ClassField;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
 
 /** Creates a deep copy of a {@link ClassField}. */
-public final class IdeClassField extends IdeModel implements ClassField {
+public final class IdeClassField implements ClassField, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -31,7 +32,6 @@ public final class IdeClassField extends IdeModel implements ClassField {
     private final int myHashCode;
 
     public IdeClassField(@NonNull ClassField classField) {
-        super();
         myName = classField.getName();
         myType = classField.getType();
         myValue = classField.getValue();

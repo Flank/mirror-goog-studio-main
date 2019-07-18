@@ -23,12 +23,13 @@ import com.android.builder.model.NativeVariantAbi;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class IdeNativeVariantAbi extends IdeModel implements NativeVariantAbi {
+public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -47,20 +48,19 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
 
     public IdeNativeVariantAbi(
             @NonNull NativeVariantAbi variantAbi, @NonNull ModelCache modelCache) {
-        super();
         myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
         myArtifacts =
-                copy(
+                IdeModel.copy(
                         variantAbi.getArtifacts(),
                         modelCache,
                         artifact -> new IdeNativeArtifact(artifact, modelCache));
         myToolChains =
-                copy(
+                IdeModel.copy(
                         variantAbi.getToolChains(),
                         modelCache,
                         toolchain -> new IdeNativeToolchain(toolchain));
         mySettings =
-                copy(
+                IdeModel.copy(
                         variantAbi.getSettings(),
                         modelCache,
                         settings -> new IdeNativeSettings(settings));

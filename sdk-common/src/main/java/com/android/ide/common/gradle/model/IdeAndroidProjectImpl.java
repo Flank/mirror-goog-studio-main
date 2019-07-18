@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,7 +46,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /** Creates a deep copy of an {@link AndroidProject}. */
-public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidProject {
+public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
     private static final long serialVersionUID = 7L;
@@ -96,7 +97,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
             @Nullable ProjectSyncIssues syncIssues) {
-        super();
         myModelVersion = project.getModelVersion();
         // Old plugin versions do not return model version.
         myParsedModelVersion = GradleVersion.tryParse(myModelVersion);
@@ -107,26 +107,28 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                         project.getDefaultConfig(),
                         container -> new IdeProductFlavorContainer(container, modelCache));
         myBuildTypes =
-                copy(
+                IdeModel.copy(
                         project.getBuildTypes(),
                         modelCache,
                         container -> new IdeBuildTypeContainer(container, modelCache));
         myProductFlavors =
-                copy(
+                IdeModel.copy(
                         project.getProductFlavors(),
                         modelCache,
                         container -> new IdeProductFlavorContainer(container, modelCache));
-        myBuildToolsVersion = copyNewProperty(project::getBuildToolsVersion, null);
+        myBuildToolsVersion = IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
         // If we have a ProjectSyncIssues model then use the sync issues contained in that, otherwise fallback to the
         // SyncIssues that are stored within the AndroidProject. This is needed to support plugins < 3.6 which do not produce a
         // ProjectSyncIssues model.
         Collection<SyncIssue> issues =
                 (syncIssues == null) ? project.getSyncIssues() : syncIssues.getSyncIssues();
-        mySyncIssues = new ArrayList<>(copy(issues, modelCache, issue -> new IdeSyncIssue(issue)));
+        mySyncIssues =
+                new ArrayList<>(
+                        IdeModel.copy(issues, modelCache, issue -> new IdeSyncIssue(issue)));
         Collection<Variant> variantsToCopy = variants != null ? variants : project.getVariants();
         myVariants =
                 new ArrayList<>(
-                        copy(
+                        IdeModel.copy(
                                 variantsToCopy,
                                 modelCache,
                                 variant ->
@@ -137,27 +139,27 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                                                 myParsedModelVersion)));
         myVariantNames =
                 Objects.requireNonNull(
-                        copyNewPropertyWithDefault(
+                        IdeModel.copyNewPropertyWithDefault(
                                 () -> ImmutableList.copyOf(project.getVariantNames()),
                                 () -> computeVariantNames(myVariants)));
 
         myDefaultVariant =
-                copyNewPropertyWithDefault(
+                IdeModel.copyNewPropertyWithDefault(
                         project::getDefaultVariant, () -> getDefaultVariant(myVariantNames));
 
         myFlavorDimensions =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         () -> ImmutableList.copyOf(project.getFlavorDimensions()),
                         Collections.emptyList());
         myCompileTarget = project.getCompileTarget();
         myBootClassPath = ImmutableList.copyOf(project.getBootClasspath());
         myNativeToolchains =
-                copy(
+                IdeModel.copy(
                         project.getNativeToolchains(),
                         modelCache,
                         toolchain -> new IdeNativeToolchain(toolchain));
         mySigningConfigs =
-                copy(
+                IdeModel.copy(
                         project.getSigningConfigs(),
                         modelCache,
                         config -> new IdeSigningConfig(config));
@@ -177,15 +179,16 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         myResourcePrefix = project.getResourcePrefix();
         myApiVersion = project.getApiVersion();
         myProjectType = getProjectType(project, myParsedModelVersion);
-        mySupportsPluginGeneration = copyNewProperty(project::getPluginGeneration, null) != null;
+        mySupportsPluginGeneration =
+                IdeModel.copyNewProperty(project::getPluginGeneration, null) != null;
         //noinspection ConstantConditions
-        myBaseSplit = copyNewProperty(project::isBaseSplit, false);
+        myBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
         //noinspection ConstantConditions
         myDynamicFeatures =
                 ImmutableList.copyOf(
-                        copyNewProperty(project::getDynamicFeatures, ImmutableList.of()));
+                        IdeModel.copyNewProperty(project::getDynamicFeatures, ImmutableList.of()));
         myViewBindingOptions =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         () -> new IdeViewBindingOptions(project.getViewBindingOptions()), null);
 
         if (myParsedModelVersion != null

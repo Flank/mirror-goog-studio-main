@@ -53,7 +53,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         myFolder = bundle.getFolder();
 
         myLibraryDependencies =
-                copy(
+                IdeModel.copy(
                         bundle.getLibraryDependencies(),
                         modelCache,
                         library -> new IdeAndroidLibrary(library, modelCache));
@@ -63,9 +63,10 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         myJarFile = bundle.getJarFile();
         // Older plugins may not have the getCompileJarFile() method; in that case, fall back
         // to use the regular jar file for compile.
-        myCompileJarFile = checkNotNull(copyNewProperty(bundle::getCompileJarFile, myJarFile));
+        myCompileJarFile =
+                checkNotNull(IdeModel.copyNewProperty(bundle::getCompileJarFile, myJarFile));
         myResFolder = bundle.getResFolder();
-        myResStaticLibrary = copyNewProperty(bundle::getResStaticLibrary, null);
+        myResStaticLibrary = IdeModel.copyNewProperty(bundle::getResStaticLibrary, null);
         myAssetsFolder = bundle.getAssetsFolder();
         myProjectVariant = bundle.getProjectVariant();
         myHashCode = calculateHashCode();
@@ -80,7 +81,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         } catch (UnsupportedOperationException ignored) {
             return Collections.emptyList();
         }
-        return copy(
+        return IdeModel.copy(
                 javaDependencies, modelCache, library -> new IdeJavaLibrary(library, modelCache));
     }
 

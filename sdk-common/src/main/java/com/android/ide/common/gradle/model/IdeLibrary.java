@@ -20,10 +20,11 @@ import static com.android.ide.common.gradle.model.IdeLibraries.computeResolvedCo
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.Library;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link Library}. */
-public abstract class IdeLibrary extends IdeModel implements Library {
+public abstract class IdeLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -36,13 +37,14 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     private final int myHashCode;
 
     protected IdeLibrary(@NonNull Library library, @NonNull ModelCache modelCache) {
-        super();
         myResolvedCoordinates = computeResolvedCoordinate(library, modelCache);
-        myBuildId = copyNewProperty(library::getBuildId, null);
-        myProject = copyNewProperty(library::getProject, null);
-        myName = copyNewProperty(library::getName, null); // Library.getName() was added in 2.2
-        myProvided = copyNewProperty(library::isProvided, null);
-        myIsSkipped = copyNewProperty(library::isSkipped, null);
+        myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
+        myProject = IdeModel.copyNewProperty(library::getProject, null);
+        myName =
+                IdeModel.copyNewProperty(
+                        library::getName, null); // Library.getName() was added in 2.2
+        myProvided = IdeModel.copyNewProperty(library::isProvided, null);
+        myIsSkipped = IdeModel.copyNewProperty(library::isSkipped, null);
         myHashCode = calculateHashCode();
     }
 

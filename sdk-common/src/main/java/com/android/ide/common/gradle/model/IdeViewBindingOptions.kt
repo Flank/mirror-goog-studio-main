@@ -16,9 +16,10 @@
 package com.android.ide.common.gradle.model
 
 import com.android.builder.model.ViewBindingOptions
+import java.io.Serializable
 import java.util.Objects
 
-class IdeViewBindingOptions(model: ViewBindingOptions) : IdeModel(), ViewBindingOptions {
+class IdeViewBindingOptions(model: ViewBindingOptions) : ViewBindingOptions, Serializable {
   val enabled = model.isEnabled
   val hashCode = calculateHashCode()
 

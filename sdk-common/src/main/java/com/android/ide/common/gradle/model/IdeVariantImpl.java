@@ -22,6 +22,7 @@ import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /** Creates a deep copy of a {@link Variant}. */
-public final class IdeVariantImpl extends IdeModel implements IdeVariant {
+public final class IdeVariantImpl implements IdeVariant, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -51,7 +52,6 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable GradleVersion modelVersion) {
-        super();
         myName = variant.getName();
         myDisplayName = variant.getDisplayName();
         myMainArtifact =
@@ -61,14 +61,14 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
                                 new IdeAndroidArtifactImpl(
                                         artifact, modelCache, dependenciesFactory, modelVersion));
         myExtraAndroidArtifacts =
-                copy(
+                IdeModel.copy(
                         variant.getExtraAndroidArtifacts(),
                         modelCache,
                         artifact ->
                                 new IdeAndroidArtifactImpl(
                                         artifact, modelCache, dependenciesFactory, modelVersion));
         myExtraJavaArtifacts =
-                copy(
+                IdeModel.copy(
                         variant.getExtraJavaArtifacts(),
                         modelCache,
                         (Function<JavaArtifact, JavaArtifact>)
@@ -97,7 +97,7 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
     private static Collection<TestedTargetVariant> getTestedTargetVariants(
             @NonNull Variant variant, @NonNull ModelCache modelCache) {
         try {
-            return copy(
+            return IdeModel.copy(
                     variant.getTestedTargetVariants(),
                     modelCache,
                     targetVariant -> new IdeTestedTargetVariant(targetVariant));

@@ -18,11 +18,12 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.VectorDrawablesOptions;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
 
 /** Creates a deep copy of a {@link VectorDrawablesOptions}. */
-public final class IdeVectorDrawablesOptions extends IdeModel implements VectorDrawablesOptions {
+public final class IdeVectorDrawablesOptions implements VectorDrawablesOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 1L;
 
@@ -31,8 +32,7 @@ public final class IdeVectorDrawablesOptions extends IdeModel implements VectorD
     private final int myHashCode;
 
     public IdeVectorDrawablesOptions(@NonNull VectorDrawablesOptions options) {
-        super();
-        myGeneratedDensities = copy(options.getGeneratedDensities());
+        myGeneratedDensities = IdeModel.copy(options.getGeneratedDensities());
         myUseSupportLibrary = options.getUseSupportLibrary();
 
         myHashCode = calculateHashCode();

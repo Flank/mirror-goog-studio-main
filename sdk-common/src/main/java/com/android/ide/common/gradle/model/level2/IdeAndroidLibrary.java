@@ -18,13 +18,13 @@ package com.android.ide.common.gradle.model.level2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
-import com.android.ide.common.gradle.model.IdeModel;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_ANDROID. */
-public final class IdeAndroidLibrary extends IdeModel implements Library {
+public final class IdeAndroidLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
 
@@ -68,7 +68,6 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
             @NonNull String publicResources,
             @NonNull File artifactFile,
             @NonNull String symbolFile) {
-        super();
         myType = LIBRARY_ANDROID;
         myArtifactAddress = artifactAddress;
         myFolder = folder;

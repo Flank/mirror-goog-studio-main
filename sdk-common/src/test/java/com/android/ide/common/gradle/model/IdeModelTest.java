@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
 import org.junit.Assert;
@@ -124,11 +125,10 @@ public class IdeModelTest {
         }
     }
 
-    private static class IdeRecursiveModel extends IdeModel implements RecursiveModel {
+    private static class IdeRecursiveModel implements RecursiveModel, Serializable {
         @NonNull private final RecursiveModel myRecursiveModel;
 
         IdeRecursiveModel(@NonNull RecursiveModel recursiveModel, @NonNull ModelCache modelCache) {
-            super();
             //noinspection Convert2Lambda
             myRecursiveModel =
                     modelCache.computeIfAbsent(

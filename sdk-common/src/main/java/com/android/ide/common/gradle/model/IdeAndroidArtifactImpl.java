@@ -60,44 +60,45 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         mySourceGenTaskName = artifact.getSourceGenTaskName();
         myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
         myBuildConfigFields =
-                copy(
+                IdeModel.copy(
                         artifact.getBuildConfigFields(),
                         modelCache,
                         classField -> new IdeClassField(classField));
         myResValues =
-                copy(
+                IdeModel.copy(
                         artifact.getResValues(),
                         modelCache,
                         classField -> new IdeClassField(classField));
         myInstantRun =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         modelCache,
                         artifact::getInstantRun,
                         instantRun -> new IdeInstantRun(instantRun),
                         null);
         mySigningConfigName = artifact.getSigningConfigName();
-        myAbiFilters = copy(artifact.getAbiFilters());
+        myAbiFilters = IdeModel.copy(artifact.getAbiFilters());
         myNativeLibraries = copy(modelCache, artifact.getNativeLibraries());
         mySigned = artifact.isSigned();
         myAdditionalRuntimeApks =
-                copyNewProperty(artifact::getAdditionalRuntimeApks, Collections.emptySet());
+                IdeModel.copyNewProperty(
+                        artifact::getAdditionalRuntimeApks, Collections.emptySet());
         myTestOptions =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         modelCache,
                         artifact::getTestOptions,
                         testOptions -> new IdeTestOptions(testOptions),
                         null);
         myInstrumentedTestTaskName =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         modelCache,
                         artifact::getInstrumentedTestTaskName,
                         taskName -> taskName,
                         null);
         myBundleTaskName =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         modelCache, artifact::getBundleTaskName, taskName -> taskName, null);
         myApkFromBundleTaskName =
-                copyNewProperty(
+                IdeModel.copyNewProperty(
                         modelCache, artifact::getApkFromBundleTaskName, taskName -> taskName, null);
         myHashCode = calculateHashCode();
     }
@@ -108,7 +109,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         Collection<AndroidArtifactOutput> outputs;
         try {
             outputs = artifact.getOutputs();
-            return copy(
+            return IdeModel.copy(
                     outputs,
                     modelCache,
                     output -> new IdeAndroidArtifactOutput(output, modelCache));
@@ -123,7 +124,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     private static Collection<NativeLibrary> copy(
             @NonNull ModelCache modelCache, @Nullable Collection<NativeLibrary> original) {
         return original != null
-                ? copy(original, modelCache, library -> new IdeNativeLibrary(library))
+                ? IdeModel.copy(original, modelCache, library -> new IdeNativeLibrary(library))
                 : null;
     }
 

@@ -37,7 +37,7 @@ public final class IdeJavaArtifact extends IdeBaseArtifactImpl implements JavaAr
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable GradleVersion gradleVersion) {
         super(artifact, seen, dependenciesFactory, gradleVersion);
-        myMockablePlatformJar = copyNewProperty(artifact::getMockablePlatformJar, null);
+        myMockablePlatformJar = IdeModel.copyNewProperty(artifact::getMockablePlatformJar, null);
 
         myHashCode = calculateHashCode();
     }
