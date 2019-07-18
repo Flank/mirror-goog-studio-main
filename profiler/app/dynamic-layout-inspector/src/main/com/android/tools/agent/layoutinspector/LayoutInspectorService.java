@@ -54,72 +54,60 @@ public class LayoutInspectorService {
     /** This method is called when a layout inspector command is recieved by the agent. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStartLayoutInspectorCommand() {
-        try {
-            Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
-            Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
-            final View root = ((List<View>) getViewsMethod.invoke(null)).get(0);
+        View root = getRootView();
 
-            Class viewDebug = ViewDebug.class;
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final Callable<OutputStream> callable =
+                new Callable<OutputStream>() {
+                    @Override
+                    public OutputStream call() {
+                        return os;
+                    }
+                };
 
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            final Callable<OutputStream> callable =
-                    new Callable<OutputStream>() {
-                        @Override
-                        public OutputStream call() {
-                            return os;
-                        }
-                    };
+        final Executor realExecutor = Executors.newSingleThreadExecutor();
 
-            final Executor realExecutor = Executors.newSingleThreadExecutor();
+        final Executor executor =
+                new Executor() {
+                    @Override
+                    public void execute(final Runnable command) {
+                        realExecutor.execute(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        command.run();
+                                        byte[] arr = os.toByteArray();
+                                        os.reset();
+                                        captureAndSendComponentTree(arr);
+                                    }
+                                });
+                    }
+                };
 
-            final Executor executor =
-                    new Executor() {
-                        @Override
-                        public void execute(final Runnable command) {
-                            realExecutor.execute(
-                                    new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            command.run();
-                                            byte[] arr = os.toByteArray();
-                                            os.reset();
-                                            captureAndSendComponentTree(arr);
-                                        }
-                                    });
-                        }
-                    };
+        final Method startCaptureMethod = getStartCaptureMethod();
 
-            final Method startCaptureMethod =
-                    viewDebug.getMethod(
-                            "startRenderingCommandsCapture",
-                            View.class,
-                            Executor.class,
-                            Callable.class);
+        // Stop a running capture:
+        onStopLayoutInspectorCommand();
 
-            // Stop a running capture:
-            onStopLayoutInspectorCommand();
-
-            root.post(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                synchronized (lock) {
-                                    captureClosable =
-                                            (AutoCloseable)
-                                                    startCaptureMethod.invoke(
-                                                            null, root, executor, callable);
-                                }
-                                root.invalidate();
-                            } catch (Throwable e) {
-                                sendErrorMessage(e);
+        root.post(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            synchronized (lock) {
+                                captureClosable =
+                                        (AutoCloseable)
+                                                startCaptureMethod.invoke(
+                                                        null, root, executor, callable);
                             }
+                            root.invalidate();
+                            root.getViewTreeObserver()
+                                    .addOnWindowAttachListener(new DetectDetach(sInstance, root));
+                        } catch (Throwable e) {
+                            sendErrorMessage(e);
                         }
-                    });
-
-        } catch (Throwable e) {
-            sendErrorMessage(e);
-        }
+                    }
+                });
     }
 
     /** Stops the capture from sending more messages. */
@@ -134,6 +122,28 @@ public class LayoutInspectorService {
                 }
                 captureClosable = null;
             }
+        }
+    }
+
+    public View getRootView() {
+        try {
+            Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
+            Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
+            List<View> views = (List<View>) getViewsMethod.invoke(null);
+            return views.isEmpty() ? null : views.get(0);
+        } catch (Throwable e) {
+            sendErrorMessage(e);
+            return null;
+        }
+    }
+
+    private Method getStartCaptureMethod() {
+        try {
+            return ViewDebug.class.getMethod(
+                    "startRenderingCommandsCapture", View.class, Executor.class, Callable.class);
+        } catch (Throwable e) {
+            sendErrorMessage(e);
+            return null;
         }
     }
 
