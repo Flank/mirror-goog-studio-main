@@ -36,6 +36,14 @@ class ExecutorImpl : public Executor {
                     const std::vector<std::string>& args, std::string* output,
                     std::string* error, const std::string& input_file) const;
 
+  // Returns open file descriptors for the child's stdin, stdout, and stderr.
+  // It is the caller's responsibility to call waitpid(2) on fork_pid in order
+  // to avoid zombie process.
+  //
+  // It is also the caller's responsibility to close(2) these fds. If the caller
+  // is not interested in the child outputs, nullptr can be passed in place of
+  // child_stdout_fd and child_stderr_fd in which case fork will establish sinks
+  // for the child process outputs.
   bool ForkAndExec(const std::string& executable_path,
                    const std::vector<std::string>& parameters,
                    int* child_stdin_fd, int* child_stdout_fd,
