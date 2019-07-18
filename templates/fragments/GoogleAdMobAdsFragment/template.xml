@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<template
+    format="5"
+    revision="5"
+    name="Google AdMob Ads Fragment"
+    minApi="14"
+    minBuildApi="14"
+    description="Creates an fragment with AdMob Ad fragment.">
+
+    <category value="Fragment" />
+    <formfactor value="Mobile" />
+
+    <parameter
+        id="fragmentClass"
+        name="Fragment Name"
+        type="string"
+        constraints="class|unique|nonempty"
+        suggest="${layoutToFragment(layoutName)}"
+        default="AdMobFragment"
+        help="The name of the AdMob fragment class to create" />
+
+    <parameter
+        id="layoutName"
+        name="Layout Name"
+        type="string"
+        constraints="layout|unique|nonempty"
+        suggest="${fragmentToLayout(fragmentClass)}"
+        default="fragment_admob"
+        help="The name of the layout to create for the fragment" />
+
+    <parameter
+        id="adFormat"
+        name="Ad Format"
+        type="enum"
+        default="interstitial"
+        help="Select Interstitial Ad or Banner Ad." >
+        <option id="interstitial">Interstitial</option>
+        <option id="banner">Banner</option>
+    </parameter>
+
+    <parameter
+        id="packageName"
+        name="Package name"
+        type="string"
+        constraints="package"
+        default="com.mycompany.myapp" />
+
+    <!-- 128x128 thumbnails relative to template.xml -->
+    <thumbs>
+        <!-- default thumbnail is required -->
+        <thumb>template_admob_fragment.png</thumb>
+        <!-- attributes act as selectors based on chosen parameters -->
+        <thumb adFormat="interstitial">template_admob_fragment_interstitial.png</thumb>
+        <thumb adFormat="banner">template_admob_fragment_banner.png</thumb>
+    </thumbs>
+
+    <globals file="globals.xml.ftl" />
+    <execute file="recipe.xml.ftl" />
+
+</template>
