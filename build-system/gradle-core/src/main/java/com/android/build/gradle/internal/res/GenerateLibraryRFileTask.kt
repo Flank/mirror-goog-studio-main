@@ -199,7 +199,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             )
 
             variantScope.artifacts.producesFile(
-                InternalArtifactType.SYMBOL_LIST,
+                InternalArtifactType.COMPILE_SYMBOL_LIST,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 GenerateLibraryRFileTask::textSymbolOutputFileProperty,

@@ -607,22 +607,24 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
 
             variantScope.artifacts.producesFile(
-                InternalArtifactType.SYMBOL_LIST,
+                InternalArtifactType.RUNTIME_SYMBOL_LIST,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::textSymbolOutputFileProperty,
                 SdkConstants.FN_RESOURCE_TEXT
             )
 
-            // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
-            // process resources for local subprojects.
-            variantScope.artifacts.producesFile(
-                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
-                BuildArtifactsHolder.OperationType.INITIAL,
-                taskProvider,
-                LinkApplicationAndroidResourcesTask::symbolsWithPackageNameOutputFile,
-                "package-aware-r.txt"
-            )
+            if (!variantScope.globalScope.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
+                // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created
+                // in process resources for local subprojects.
+                variantScope.artifacts.producesFile(
+                    InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    LinkApplicationAndroidResourcesTask::symbolsWithPackageNameOutputFile,
+                    "package-aware-r.txt"
+                )
+            }
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {

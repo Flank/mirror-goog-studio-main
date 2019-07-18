@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
@@ -67,6 +68,7 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.List;
@@ -140,10 +142,7 @@ public class ApplicationTaskManager extends TaskManager {
         createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(
-                variantScope,
-                true,
-                Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
+        createMergeResourcesTasks(variantScope);
 
         // Add tasks to compile shader
         createShaderTask(variantScope);
@@ -400,6 +399,30 @@ public class ApplicationTaskManager extends TaskManager {
             taskFactory.register(new BundleToStandaloneApkTask.CreationAction(scope));
 
             taskFactory.register(new ExtractApksTask.CreationAction(scope));
+        }
+    }
+
+    private void createMergeResourcesTasks(@NonNull VariantScope variantScope) {
+        // The "big merge" of all resources, will merge and compile resources that will later
+        // be used for linking.
+        createMergeResourcesTask(
+                variantScope,
+                true,
+                Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
+
+        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)) {
+            // The "small merge" of only the app's local resources (can be multiple source-sets, but
+            // most of the time it's just one). This is used by the Process for generating the local
+            // R-def.txt file containing a list of resources defined in this module.
+            basicCreateMergeResourcesTask(
+                    variantScope,
+                    MergeType.PACKAGE,
+                    variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES),
+                    false,
+                    false,
+                    false,
+                    ImmutableSet.of(),
+                    null);
         }
     }
 }

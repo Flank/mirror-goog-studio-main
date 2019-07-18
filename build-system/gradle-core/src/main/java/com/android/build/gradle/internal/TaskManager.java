@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
@@ -790,9 +789,7 @@ public abstract class TaskManager {
 
     /** Defines the merge type for {@link #basicCreateMergeResourcesTask} */
     public enum MergeType {
-        /**
-         * Merge all resources with all the dependencies resources.
-         */
+        /** Merge all resources with all the dependencies resources (i.e. "big merge"). */
         MERGE {
             @Override
             public InternalArtifactType getOutputType() {
@@ -800,7 +797,7 @@ public abstract class TaskManager {
             }
         },
         /**
-         * Merge all resources without the dependencies resources for an aar.
+         * Merge all resources without the dependencies resources for an aar (i.e. "small merge").
          */
         PACKAGE {
             @Override
@@ -922,14 +919,26 @@ public abstract class TaskManager {
         }
     }
 
-    private void createApkProcessResTask(@NonNull VariantScope scope,
-            InternalArtifactType packageOutputType) {
+    private void createApkProcessResTask(
+            @NonNull VariantScope scope, @Nullable InternalArtifactType packageOutputType) {
+
+        // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(
                 scope,
-                scope.getSymbolTableFile(),
                 packageOutputType,
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
+
+        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)) {
+            // Generate the COMPILE TIME only R class using the local resources instead of waiting
+            // for the above full link to finish. Linking will still output the RUN TIME R class.
+            // Since we're gonna use AAPT2 to generate the keep rules, do not generate them here.
+            createProcessResTask(
+                    scope,
+                    packageOutputType,
+                    MergeType.PACKAGE,
+                    scope.getGlobalScope().getProjectBaseName());
+        }
     }
 
     protected boolean isLibrary() {
@@ -938,7 +947,6 @@ public abstract class TaskManager {
 
     public void createProcessResTask(
             @NonNull VariantScope scope,
-            @NonNull File symbolLocation,
             @Nullable InternalArtifactType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
@@ -951,6 +959,7 @@ public abstract class TaskManager {
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
 
         if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+            // TODO: make sure we generate the proguard rules in the namespaced case.
             new NamespacedResourcesTaskManager(globalScope, taskFactory, scope)
                     .createNamespacedResourceTasks(
                             packageOutputType,
@@ -976,7 +985,6 @@ public abstract class TaskManager {
         }
         createNonNamespacedResourceTasks(
                 scope,
-                symbolLocation,
                 packageOutputType,
                 mergeType,
                 baseName,
@@ -985,13 +993,11 @@ public abstract class TaskManager {
 
     private void createNonNamespacedResourceTasks(
             @NonNull VariantScope scope,
-            @NonNull File symbolDirectory,
             InternalArtifactType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
 
-        File symbolFile = new File(symbolDirectory, FN_RESOURCE_TEXT);
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         if (mergeType == MergeType.PACKAGE) {
             // MergeType.PACKAGE means we will only merged the resources from our current module
@@ -1003,8 +1009,9 @@ public abstract class TaskManager {
             // First collect symbols from this module.
             taskFactory.register(new ParseLibraryResourcesTask.CreateAction(scope));
 
-            // Only generate the keep rules when we need them.
-            if (generatesProguardOutputFile(scope)) {
+            // Only generate the keep rules when we need them. We don't need to generate them here
+            // for non-library modules since AAPT2 will generate them from MergeType.MERGE.
+            if (generatesProguardOutputFile(scope) && isLibrary()) {
                 taskFactory.register(new GenerateLibraryProguardRulesTask.CreationAction(scope));
             }
 

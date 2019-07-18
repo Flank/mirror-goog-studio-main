@@ -144,7 +144,6 @@ public class LibraryTaskManager extends TaskManager {
         // of the r.txt file to be directly in the bundle.
         createProcessResTask(
                 variantScope,
-                variantScope.getSymbolTableFile(),
                 null,
                 // Switch to package where possible so we stop merging resources in
                 // libraries
@@ -425,6 +424,7 @@ public class LibraryTaskManager extends TaskManager {
 
         // This task merges all the resources, including the dependencies of this library.
         // This should be unused, except that external libraries might consume it.
+        // Also used by the VerifyLibraryResourcesTask (only ran in release builds).
         createMergeResourcesTask(variantScope, false /*processResources*/, ImmutableSet.of());
     }
 

@@ -121,8 +121,10 @@ public enum InternalArtifactType implements ArtifactType {
     PROCESSED_RES,
     // package resources for aar publishing.
     PACKAGED_RES,
-    // R.txt output
-    SYMBOL_LIST(Kind.FILE),
+    // R.txt output for libraries - contains mock resource IDs used only at compile time.
+    COMPILE_SYMBOL_LIST(Kind.FILE),
+    // R.txt output for applications and android tests - contains real resource IDs used at runtime.
+    RUNTIME_SYMBOL_LIST(Kind.FILE),
     // Synthetic artifacts
     SYMBOL_LIST_WITH_PACKAGE_NAME(Kind.FILE),
     // Resources defined within the AAR.

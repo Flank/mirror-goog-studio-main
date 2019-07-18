@@ -91,7 +91,7 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.LINT,
             ArtifactType.ANNOTATIONS,
             ArtifactType.PUBLIC_RES,
-            ArtifactType.SYMBOL_LIST,
+            ArtifactType.COMPILE_SYMBOL_LIST,
             ArtifactType.DATA_BINDING_ARTIFACT,
             ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
             ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
@@ -165,7 +165,7 @@ public class AarTransform extends ArtifactTransform {
                 return listIfExists(new File(input, FN_ANNOTATIONS_ZIP));
             case PUBLIC_RES:
                 return listIfExists(new File(input, FN_PUBLIC_TXT));
-            case SYMBOL_LIST:
+            case COMPILE_SYMBOL_LIST:
                 return listIfExists(new File(input, FN_RESOURCE_TEXT));
             case RES_STATIC_LIBRARY:
                 return isShared(input)

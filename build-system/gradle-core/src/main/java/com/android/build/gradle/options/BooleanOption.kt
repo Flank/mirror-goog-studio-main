@@ -86,7 +86,7 @@ enum class BooleanOption(
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     PRECOMPILE_LOCAL_RESOURCES("android.precompileLocalResources", false),
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", false),
-
+    ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false),
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true),

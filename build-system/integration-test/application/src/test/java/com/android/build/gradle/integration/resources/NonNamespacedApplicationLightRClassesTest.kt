@@ -173,15 +173,15 @@ class NonNamespacedApplicationLightRClassesTest {
 
         assertThat(
             appFiles.getIntermediateFile(
-                "symbol_list_with_package_name",
+                "runtime_symbol_list",
                 "debug",
-                "package-aware-r.txt")).exists()
+                "R.txt")).exists()
 
         assertThat(
             appFiles.getIntermediateFile(
-                    "symbol_list_with_package_name",
+                    "runtime_symbol_list",
                     "debug",
-                    "package-aware-r.txt")).containsAllOf("lib_string", "app_string")
+                    "R.txt")).containsAllOf("lib_string", "app_string")
 
         assertThat(
             FileUtils.join(

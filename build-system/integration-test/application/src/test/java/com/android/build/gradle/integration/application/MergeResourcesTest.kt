@@ -423,5 +423,57 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             appProject.getApk(GradleTestProject.ApkType.DEBUG).contentsSize
         assertThat(sameApkSizeShrinkResources).isEqualTo(apkSizeWithShrinkResources)
     }
+
+    @Test
+    fun checkSmallMergeInApp() {
+        /*
+         * Set app to depend on library.
+         */
+        TestFileUtils.appendToFile(
+            project.getSubproject("app").buildFile,
+            "dependencies { compile project(':library') }${System.lineSeparator()}"
+        )
+
+        val libraryValues = FileUtils.join(project.testDir, "library", "src", "main", "res", "values")
+        FileUtils.mkdirs(libraryValues)
+        FileUtils.createFile(
+            File(libraryValues, "lib_values.xml"),
+            "<resources><string name=\"my_library_string\">lib string</string></resources>")
+
+        project.executor()
+            .with(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS, false)
+            .run("clean", ":app:assembleDebug")
+
+        val inMergedDir = FileUtils.join(
+            project.getSubproject("app").testDir,
+            "build",
+            "intermediates",
+            "incremental",
+            "mergeDebugResources",
+            "merged.dir",
+            "values",
+            "values.xml"
+        )
+
+        val smallMerge = FileUtils.join(
+            project.getSubproject("app").testDir,
+            "build",
+            "intermediates",
+            "packaged_res",
+            "debug",
+            "values",
+            "values.xml"
+        )
+
+        assertThat(inMergedDir).contains("my_library_string")
+        assertThat(smallMerge).doesNotExist()
+
+        project.executor()
+            .with(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS, true)
+            .run("clean", ":app:generateDebugRFile")
+
+        assertThat(inMergedDir).doesNotExist()
+        assertThat(smallMerge).doesNotContain("my_library_string")
+    }
 }
 

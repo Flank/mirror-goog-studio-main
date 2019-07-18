@@ -106,7 +106,9 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             if (!variantScope.globalScope.extension.aaptOptions.namespaced) {
                 // TODO: this should be unconditional b/69358522
-                task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.SYMBOL_LIST))
+                task.from(
+                    artifacts.getFinalProduct<RegularFile>(
+                        InternalArtifactType.COMPILE_SYMBOL_LIST))
                 task.from(
                     artifacts.getFinalProduct<Directory>(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
