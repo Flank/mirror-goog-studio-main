@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.lang.RuntimeException
 
 class MacroDefinitionsTest {
     @Test
@@ -110,7 +109,7 @@ class MacroDefinitionsTest {
                     val resolved = abi.resolveMacroValue(macro)
 
                     // Every macro must be resolvable
-                    Truth.assertThat(resolved).isNotEmpty()
+                    Truth.assertThat(resolved).named(macro.ref).isNotEmpty()
 
                     // Example string, when expanded, must equal the true value from the model
                     val example = StringBuilder()

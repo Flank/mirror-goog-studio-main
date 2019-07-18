@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.File
 
 class CMakeSettingsFactoryKtTest {
 
@@ -29,8 +30,27 @@ class CMakeSettingsFactoryKtTest {
             val settings = abi.gatherCMakeSettingsFromAllLocations()
             val resolver = CMakeSettingsNameResolver(settings.environments)
             assertThat(
+                resolver.resolve("ndk.cmakeExecutable", listOf("ndk"))!!.get()
+            ).contains("cmake")
+        }
+    }
+
+    @Test
+    fun `ninjaExecutable is only set if it exists`() {
+        BasicCmakeMock().apply {
+            val settings = abi.gatherCMakeSettingsFromAllLocations()
+            val resolver = CMakeSettingsNameResolver(settings.environments)
+            val cmakeExecutable = resolver.resolve("ndk.cmakeExecutable", listOf("ndk"))!!.get()
+            assertThat(
                 resolver.resolve("ndk.ninjaExecutable", listOf("ndk"))!!.get()
             ).contains("ninja")
+            File(cmakeExecutable).parentFile.apply { mkdirs() }.apply {
+                resolve("ninja").apply { if (exists()) delete() }
+                resolve("ninja.exe").apply { if (exists()) delete() }
+            }
+            assertThat(
+                resolver.resolve("ndk.ninjaExecutable", listOf("ndk"))!!.get()
+            ).isEmpty()
         }
     }
 
@@ -41,8 +61,8 @@ class CMakeSettingsFactoryKtTest {
                 .expandInheritEnvironmentMacros(abi)
             val resolver = CMakeSettingsNameResolver(settings.environments)
             assertThat(
-                resolver.resolve("ndk.ninjaExecutable", listOf("ndk"))!!.get()
-            ).contains("ninja")
+                resolver.resolve("ndk.cmakeExecutable", listOf("ndk"))!!.get()
+            ).contains("cmake")
             assertThat(
                 resolver.resolve("ndk.abiBitness", listOf("ndk"))!!.get()
             ).contains("32")

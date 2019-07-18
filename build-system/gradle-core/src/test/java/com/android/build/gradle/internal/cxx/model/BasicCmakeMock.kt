@@ -48,7 +48,10 @@ open class BasicCmakeMock : BasicModuleModelMock() {
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
+        // Create the ninja executable files so that the macro expansion can succeed
+        module.cmake!!.cmakeExe.parentFile.apply { mkdirs() }.apply {
+            resolve("ninja").writeText("whatever")
+            resolve("ninja.exe").writeText("whatever")
+        }
     }
-
-
 }

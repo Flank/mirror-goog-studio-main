@@ -32,8 +32,8 @@ interface CxxCmakeModuleModel {
     val minimumCmakeVersion: Revision
 
     /**
-     * Path to ninja.exe
+     * Path to ninja.exe, Null means the we will let CMake find the ninja executable
      *   ex, /path/to/ninja/ninja.exe
      */
-    val ninjaExe: File
+    val ninjaExe: File?
 }

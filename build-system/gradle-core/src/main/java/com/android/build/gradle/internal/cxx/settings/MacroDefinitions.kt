@@ -117,7 +117,8 @@ enum class Macro(
         tag = "cmakeExecutable",
         example = "${NDK_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/cmake"),
     NDK_NINJA_EXECUTABLE(
-        description = "Path to Ninja executable if one was found by Gradle.",
+        description = "Path to Ninja executable if one was found by Gradle. Otherwise, it expands" +
+                " to empty string and it's up to CMake to find the ninja executable.",
         environment = NDK,
         tag = "ninjaExecutable",
         example = "${NDK_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja"),

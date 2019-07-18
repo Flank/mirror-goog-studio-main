@@ -45,7 +45,6 @@ import com.android.utils.FileUtils.join
 import org.gradle.api.InvalidUserDataException
 import java.io.File
 import java.io.FileReader
-import java.lang.NumberFormatException
 import java.util.function.Consumer
 
 /**
@@ -196,7 +195,7 @@ fun tryCreateCxxModuleModel(
                             join(cmakeFolder, "bin", "cmake$exe")
                         }
                         override val ninjaExe by lazy {
-                            join(cmakeFolder, "bin", "ninja$exe")
+                            join(cmakeFolder, "bin", "ninja$exe").takeIf { it.exists() }
                         }
                     }
 

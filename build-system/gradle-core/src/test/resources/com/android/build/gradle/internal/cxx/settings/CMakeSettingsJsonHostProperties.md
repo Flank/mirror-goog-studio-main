@@ -121,7 +121,7 @@ Name of the gradle module.
 - environment: android-gradle
 
 ## ${ndk.ninjaExecutable}
-Path to Ninja executable if one was found by Gradle.
+Path to Ninja executable if one was found by Gradle. Otherwise, it expands to empty string and it's up to CMake to find the ninja executable.
 - example: ${ndk.sdkDir}/cmake/3.10.2/bin/ninja
 - environment: android-ndk
 

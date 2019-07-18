@@ -63,6 +63,11 @@ class LookupSettingFromModelKtTest {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
             val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
+            // Create the ninja executable files so that the macro expansion can succeed
+            module.cmake!!.cmakeExe.parentFile.apply { mkdirs() }.apply {
+                resolve("ninja").writeText("whatever")
+                resolve("ninja.exe").writeText("whatever")
+            }
             val variant = createCxxVariantModel(
                 module,
                 it.baseVariantData)
