@@ -55,8 +55,6 @@ public class AdbInstaller implements Installer {
         DO_NO_RETRY
     };
 
-    private static final int HEX_LINE_SIZE = 10;
-
     public AdbInstaller(
             String installersFolder,
             AdbClient adb,
