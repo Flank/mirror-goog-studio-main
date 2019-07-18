@@ -184,8 +184,19 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
     // parent-read pipe to stdout. This lets us communicate between the
     // swap_server and the installer.
     dup2(stdin_pipe[0], STDIN_FILENO);
-    dup2(stdout_pipe[1], STDOUT_FILENO);
-    dup2(stderr_pipe[1], STDERR_FILENO);
+    if (child_stdout_fd == nullptr) {
+      close(STDOUT_FILENO);
+      open("/dev/null", O_WRONLY);
+    } else {
+      dup2(stdout_pipe[1], STDOUT_FILENO);
+    }
+
+    if (child_stderr_fd == nullptr) {
+      close(STDERR_FILENO);
+      open("/dev/null", O_WRONLY);
+    } else {
+      dup2(stderr_pipe[1], STDERR_FILENO);
+    }
 
     close(stdin_pipe[0]);
     close(stdout_pipe[1]);
@@ -210,8 +221,13 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
   close(stderr_pipe[1]);
 
   *child_stdin_fd = stdin_pipe[1];
-  *child_stdout_fd = stdout_pipe[0];
-  *child_stderr_fd = stderr_pipe[0];
+  if (child_stdout_fd != nullptr) {
+    *child_stdout_fd = stdout_pipe[0];
+  }
+  if (child_stderr_fd != nullptr) {
+    *child_stderr_fd = stderr_pipe[0];
+  }
+
   return true;
 }
 }  // namespace deploy

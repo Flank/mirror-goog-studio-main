@@ -70,17 +70,15 @@ bool BaseInstallCommand::SendApkToPackageManager(
     LogEvent(parameter);
   }
 
-  int pm_stdout, pm_stderr, pm_stdin, pid;
-  workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout,
-                                       &pm_stderr, &pid);
+  int pm_stdin, pid;
+  workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, nullptr,
+                                       nullptr, &pid);
 
   PatchApplier patchApplier(workspace_.GetRoot());
   patchApplier.ApplyPatchToFD(patch, pm_stdin);
 
   // Clean up
   close(pm_stdin);
-  close(pm_stdout);
-  close(pm_stderr);
   int status;
   waitpid(pid, &status, 0);
 
