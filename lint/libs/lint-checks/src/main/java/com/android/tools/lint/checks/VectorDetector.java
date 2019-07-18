@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_HEIGHT;
 import static com.android.SdkConstants.ATTR_WIDTH;
 import static com.android.SdkConstants.TAG_CLIP_PATH;
 import static com.android.SdkConstants.TAG_VECTOR;
@@ -184,7 +185,7 @@ public class VectorDetector extends ResourceXmlDetector {
         }
 
         Attr widthAttribute = root.getAttributeNodeNS(ANDROID_URI, ATTR_WIDTH);
-        Attr heightAttribute = root.getAttributeNodeNS(ANDROID_URI, ATTR_WIDTH);
+        Attr heightAttribute = root.getAttributeNodeNS(ANDROID_URI, ATTR_HEIGHT);
         if (widthAttribute == null || heightAttribute == null) {
             return;
         }
