@@ -57,8 +57,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private final Project project;
-    @NonNull private final GradleProcessExecutor processExecutor;
-    @NonNull private final GradleJavaProcessExecutor javaProcessExecutor;
     @NonNull private BaseExtension extension;
     @NonNull private final SdkComponents sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
@@ -103,10 +101,6 @@ public class GlobalScope implements TransformGlobalScope {
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();
-
-        processExecutor = new GradleProcessExecutor(project);
-        javaProcessExecutor = new GradleJavaProcessExecutor(project);
-
     }
 
     public void setExtension(@NonNull BaseExtension extension) {
@@ -127,16 +121,6 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public BaseExtension getExtension() {
         return extension;
-    }
-
-    @NonNull
-    public ProcessExecutor getProcessExecutor() {
-        return processExecutor;
-    }
-
-    @NonNull
-    public GradleJavaProcessExecutor getJavaProcessExecutor() {
-        return javaProcessExecutor;
     }
 
     @NonNull

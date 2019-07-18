@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.services
 
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.process.ProcessOutputJunction
+import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessInfoBuilder
@@ -69,7 +70,7 @@ internal fun createProcessJunctionService(
                     logPrefix,
                     { message -> Logging.getLogger(CxxProcessService::class.java).lifecycle(message) },
                     { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler ->
-                        global.processExecutor.execute(processInfo, outputHandler)
+                        GradleProcessExecutor(global.project).execute(processInfo, outputHandler)
                     })
             }
         }

@@ -35,7 +35,6 @@ import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.incremental.DependencyData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -85,8 +84,6 @@ public abstract class AidlCompile extends NonIncrementalTask {
 
     private Provider<File> aidlExecutableProvider;
     private Provider<File> aidlFrameworkProvider;
-
-    private ProcessExecutor processExecutor;
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
@@ -144,7 +141,7 @@ public abstract class AidlCompile extends NonIncrementalTask {
                             parcelableDir != null ? parcelableDir.getAsFile() : null,
                             packageWhitelist,
                             new DepFileProcessor(),
-                            processExecutor,
+                            new GradleProcessExecutor(getProject()),
                             new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())));
 
             for (File dir : sourceFolders) {
@@ -236,7 +233,6 @@ public abstract class AidlCompile extends NonIncrementalTask {
                     scope.getGlobalScope().getSdkComponents().getAidlExecutableProvider();
             compileTask.aidlFrameworkProvider =
                     scope.getGlobalScope().getSdkComponents().getAidlFrameworkProvider();
-            compileTask.processExecutor = scope.getGlobalScope().getProcessExecutor();
 
             compileTask.sourceDirs = variantConfiguration::getAidlSourceList;
             compileTask.importDirs = scope.getArtifactFileCollection(

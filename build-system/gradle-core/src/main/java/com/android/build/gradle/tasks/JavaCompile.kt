@@ -208,14 +208,12 @@ class JavaCompileCreationAction(
         task.inputs.property("__processAnnotationsTaskCreated", processAnnotationsTaskCreated)
         task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
 
-        task.doFirst {
-            (it as JavaCompile).handleAnnotationProcessors(
-                apList,
-                separateAnnotationProcessingFlag,
-                processAnnotationsTaskCreated,
-                variantScope.fullVariantName
-            )
-        }
+        task.handleAnnotationProcessors(
+            apList,
+            separateAnnotationProcessingFlag,
+            processAnnotationsTaskCreated,
+            variantScope.fullVariantName
+        )
 
         task.destinationDir = classesOutputDirectory.asFile.get()
         // Manually declare our output directory as a Task output since it's not annotated as
@@ -237,73 +235,75 @@ private fun JavaCompile.handleAnnotationProcessors(
     processAnnotationsTaskCreated: Boolean,
     variantName: String
 ) {
-    var procNoneOptionSetByAGP = false
-    if (processAnnotationsTaskCreated) {
-        if (!options.compilerArgs.contains(PROC_NONE)) {
-            options.compilerArgs.add(PROC_NONE)
-            procNoneOptionSetByAGP = true
+    doFirst {
+        var procNoneOptionSetByAGP = false
+        if (processAnnotationsTaskCreated) {
+            if (!options.compilerArgs.contains(PROC_NONE)) {
+                options.compilerArgs.add(PROC_NONE)
+                procNoneOptionSetByAGP = true
+            }
         }
-    }
 
-    val hasKapt = this.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
+        val hasKapt = this.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
 
-    val annotationProcessors =
-        readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
-    val nonIncrementalAPs =
-        annotationProcessors.filter { it.value == java.lang.Boolean.FALSE }
-    val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
+        val annotationProcessors =
+            readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
+        val nonIncrementalAPs =
+            annotationProcessors.filter { it.value == java.lang.Boolean.FALSE }
+        val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
 
-    // If incremental compilation is requested and annotation processing is performed by this
-    // task, but not all of the annotation processors are incremental, then compilation will not
-    // be incremental. We warn users about non-incremental annotation processors and tell them
-    // to enable the separateAnnotationProcessing flag to make compilation incremental.
-    if (options.isIncremental
-        && !hasKapt
-        && !separateAnnotationProcessingFlag
-        && !allAPsAreIncremental
-    ) {
-        logger
-            .warn(
-                "Gradle may disable incremental compilation" +
-                        " as the following annotation processors are not incremental:" +
-                        " ${Joiner.on(", ").join(nonIncrementalAPs.keys)}.\n" +
-                        "Consider setting the experimental feature flag" +
-                        " ${BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.propertyName}" +
-                        "=true in the gradle.properties file to run annotation processing" +
-                        " in a separate task and make compilation incremental."
-            )
-    }
+        // If incremental compilation is requested and annotation processing is performed by this
+        // task, but not all of the annotation processors are incremental, then compilation will not
+        // be incremental. We warn users about non-incremental annotation processors and tell them
+        // to enable the separateAnnotationProcessing flag to make compilation incremental.
+        if (options.isIncremental
+            && !hasKapt
+            && !separateAnnotationProcessingFlag
+            && !allAPsAreIncremental
+        ) {
+            logger
+                .warn(
+                    "Gradle may disable incremental compilation" +
+                            " as the following annotation processors are not incremental:" +
+                            " ${Joiner.on(", ").join(nonIncrementalAPs.keys)}.\n" +
+                            "Consider setting the experimental feature flag" +
+                            " ${BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.propertyName}" +
+                            "=true in the gradle.properties file to run annotation processing" +
+                            " in a separate task and make compilation incremental."
+                )
+        }
 
-    /*
+        /*
      * Support Lombok (https://issuetracker.google.com/130531986). Note that we can't support
      * Lombok with Kapt (https://youtrack.jetbrains.com/issue/KT-7112) correctly yet, as we
      * can't tell if -proc:none is requested by Kapt or by the user.
      */
-    if (procNoneOptionSetByAGP) {
-        val lomboks = annotationProcessors.filter { it.key.contains(LOMBOK) }
-        if (lomboks.isNotEmpty()) {
-            configureCompilerArgumentsForLombok(this.options.compilerArgs)
+        if (procNoneOptionSetByAGP) {
+            val lomboks = annotationProcessors.filter { it.key.contains(LOMBOK) }
+            if (lomboks.isNotEmpty()) {
+                configureCompilerArgumentsForLombok(this.options.compilerArgs)
 
-            // In case the version of Lombok being used is not incremental, print out a warning.
-            val nonIncrementalLomboks =
-                lomboks.filter { it.value == java.lang.Boolean.FALSE }
-            if (nonIncrementalLomboks.isNotEmpty()) {
-                logger.warn(
-                    "Gradle may disable incremental compilation" +
-                            " as the following annotation processors are not incremental:" +
-                            " ${Joiner.on(", ").join(nonIncrementalLomboks.keys)}."
-                )
+                // In case the version of Lombok being used is not incremental, print out a warning.
+                val nonIncrementalLomboks =
+                    lomboks.filter { it.value == java.lang.Boolean.FALSE }
+                if (nonIncrementalLomboks.isNotEmpty()) {
+                    logger.warn(
+                        "Gradle may disable incremental compilation" +
+                                " as the following annotation processors are not incremental:" +
+                                " ${Joiner.on(", ").join(nonIncrementalLomboks.keys)}."
+                    )
+                }
             }
         }
-    }
 
-    // Record annotation processors that has been executed by another task or will be executed
-    // by this task for analytics purposes. This recording needs to happen here instead of
-    // JavaPreCompileTask as it needs to be done even in incremental builds where
-    // JavaPreCompileTask may be UP-TO-DATE.
-    recordAnnotationProcessorsForAnalytics(
-        annotationProcessors, project.path, variantName
-    )
+        // Record annotation processors that has been executed by another task or will be executed
+        // by this task for analytics purposes. This recording needs to happen here instead of
+        // JavaPreCompileTask as it needs to be done even in incremental builds where
+        // JavaPreCompileTask may be UP-TO-DATE.
+        recordAnnotationProcessorsForAnalytics(
+            annotationProcessors, project.path, variantName
+        )
+    }
 }
 
 private fun isPostN(compileSdkVersion: String): Boolean {

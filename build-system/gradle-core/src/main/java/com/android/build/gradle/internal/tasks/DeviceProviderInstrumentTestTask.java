@@ -28,6 +28,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -182,12 +183,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
+            GradleProcessExecutor gradleProcessExecutor = new GradleProcessExecutor(getProject());
             success =
                     deviceProvider.use(
                             () -> {
                                 TestRunner testRunner =
                                         testRunnerFactory.build(
-                                                getSplitSelectExec().get(), getProcessExecutor());
+                                                getSplitSelectExec().get(), gradleProcessExecutor);
                                 Collection<String> extraArgs =
                                         installOptions == null || installOptions.isEmpty()
                                                 ? ImmutableList.of()
@@ -346,15 +348,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @PathSensitive(PathSensitivity.NONE)
     public Provider<File> getSplitSelectExec() {
         return splitSelectExecProvider;
-    }
-
-    @Internal
-    public ProcessExecutor getProcessExecutor() {
-        return processExecutor;
-    }
-
-    public void setProcessExecutor(ProcessExecutor processExecutor) {
-        this.processExecutor = processExecutor;
     }
 
     @Override
@@ -547,7 +540,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.testTargetManifests = testTargetManifests;
             task.setInstallOptions(
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
-            task.setProcessExecutor(scope.getGlobalScope().getProcessExecutor());
 
             boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
 
