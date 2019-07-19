@@ -71,7 +71,9 @@ public class DexComparator {
             }
             List<DexClass> klasses = splitter.split(diff.oldFile, null);
             for (DexClass clz : klasses) {
-                oldChecksums.put(clz.name, clz.checksum);
+                // split() can return multiple entries but with the most recent ones first. Duplicated entries with
+                // We are going to assume the classes are actually the most recent one.
+                oldChecksums.putIfAbsent(clz.name, clz.checksum);
             }
         }
 
@@ -90,11 +92,16 @@ public class DexComparator {
             List<DexClass> klasses = splitter.split(diff.newFile, keepCode);
             for (DexClass klass : klasses) {
                 if (klass.code == null) {
+                    // If we already decided this is unchanged, make it in the oldChecksums map as null. From now on we are going to
+                    // treat this class as unchanged.
+                    oldChecksums.put(klass.name, null);
                     continue;
                 }
 
                 if (oldChecksums.containsKey(klass.name)) {
-                    modifiedClasses.add(klass);
+                    if (oldChecksums.get(klass.name) != null) {
+                        modifiedClasses.add(klass);
+                    }
                 } else {
                     newClasses.add(klass);
                 }

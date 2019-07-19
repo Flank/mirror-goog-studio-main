@@ -21,6 +21,7 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -92,6 +93,36 @@ public class DexComparatorTest {
 
         DexComparator.ChangedClasses classes = comparator.compare(diffs, new FakeDexSplitter());
         assertEquals(1, classes.newClasses.size());
+    }
+
+    @Test
+    public void testOneClassChangeWithMultipleCopies() throws DeployerException {
+        DexComparator comparator = new DexComparator();
+        List<FileDiff> diffs = new ArrayList<>();
+
+        Apk oldApk = makeApk("abcd");
+        ApkEntry oldFile = new ApkEntry("a.dex", 1, oldApk);
+
+        Apk newApk = makeApk("efgh");
+        ApkEntry newFile = new ApkEntry("a.dex", 1, newApk);
+
+        diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
+
+        DexComparator.ChangedClasses classes =
+                comparator.compare(
+                        diffs,
+                        new FakeDexSplitter() {
+                            @Override
+                            public List<DexClass> split(
+                                    ApkEntry dex, Predicate<DexClass> keepCode) {
+                                List result = Lists.newArrayList(super.split(dex, keepCode));
+                                result.add(new DexClass("A", 0x9999, new byte[0], dex));
+                                return result;
+                            }
+                        });
+
+        assertTrue(classes.newClasses.isEmpty());
+        assertEquals(0, classes.modifiedClasses.size());
     }
 
     static class FakeDexSplitter implements DexSplitter {

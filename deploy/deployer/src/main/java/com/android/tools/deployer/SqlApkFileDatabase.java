@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import com.android.tools.r8.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -44,8 +45,11 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
 
     // Purely a value-based check. No plans to make the cache database forward / backward compatible.
     //  IE: All tables will be dropped if version number on the file does not match this number.
-    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "0.2";
-    private final String schemaVersion;
+    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "0.3";
+    private static final String CURRENT_CHECKSUM_TOOL_VERSION = Version.getVersionString();
+    private static final String CURRENT_DATABASE_VERSION_STRING =
+            CURRENT_SCHEMA_VERSION_NUMBER + "|" + CURRENT_CHECKSUM_TOOL_VERSION;
+    private final String databaseVersion;
     private final int maxDexFilesEntries;
     private Connection connection;
 
@@ -56,15 +60,12 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
      *     it will continue to use the OS's temp dir.
      */
     public SqlApkFileDatabase(File file, String nativeLibraryTmpDir) {
-        this(file, nativeLibraryTmpDir, CURRENT_SCHEMA_VERSION_NUMBER, MAX_DEXFILES_ENTRY);
+        this(file, nativeLibraryTmpDir, CURRENT_DATABASE_VERSION_STRING, MAX_DEXFILES_ENTRY);
     }
 
     public SqlApkFileDatabase(
-            File file,
-            String nativeLibraryTmpDir,
-            String schemaVersionNumber,
-            int maxDexFileEntries) {
-        this.schemaVersion = schemaVersionNumber;
+            File file, String nativeLibraryTmpDir, String databaseVersion, int maxDexFileEntries) {
+        this.databaseVersion = databaseVersion;
         this.maxDexFilesEntries = maxDexFileEntries;
 
         // Save the property incase someone needs to do something else with it.
@@ -120,7 +121,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
 
             if (result.next()) {
                 String version = result.getString("value");
-                if (version.equals(schemaVersion)) {
+                if (version.equals(databaseVersion)) {
                     return;
                 }
             }
@@ -140,9 +141,9 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
 
     private void fillTables() throws SQLException {
         executeStatements(
-                "CREATE TABLE metadata (name VARCHAR(255) UNIQUE NOT NULL, value VARCHAR(255) NOT NULL, PRIMARY KEY (name));",
+                "CREATE TABLE metadata (name VARCHAR(255) UNIQUE NOT NULL, value TEXT NOT NULL, PRIMARY KEY (name));",
                 "INSERT INTO metadata (name, value) values (\"schema-version\", \""
-                        + schemaVersion
+                        + databaseVersion
                         + "\");",
                 "CREATE TABLE dexfiles (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(255) NOT NULL, checksum LONG NOT NULL);",
                 "CREATE INDEX dexfiles_checksum_index ON dexfiles(checksum);",
