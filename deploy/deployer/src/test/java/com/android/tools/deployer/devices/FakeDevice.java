@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -236,6 +237,16 @@ public class FakeDevice {
 
     public Set<String> getApps() {
         return apps.keySet();
+    }
+
+    public Set<String> getApps(int uid) {
+        Set<String> results = new HashSet<>();
+        for (Map.Entry<String, Application> entry : apps.entrySet()) {
+            if (entry.getValue().user.uid == uid) {
+                results.add(entry.getKey());
+            }
+        }
+        return results;
     }
 
     @Nullable
