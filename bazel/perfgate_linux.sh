@@ -39,6 +39,11 @@ if [[ -d "${dist_dir}" ]]; then
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
 
+  # Upload all test logs
+  find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/bazel_test_logs.zip" {} \;
+
+  # Filter test logs for performance metrics upload.
+  find "${testlogs_dir}" -type f -name outputs.zip -exec zip -d {} \*.gz \;
   # Upload perfgate performance files
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/perfgate_data.zip" {} \;
 
