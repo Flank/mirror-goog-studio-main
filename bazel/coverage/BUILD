@@ -85,7 +85,7 @@ coverage_report(
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
-        "//tools/adt/idea/layoutlib:intellij.android.layoutlib-loader.tests_tests",
+        "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
         "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
         "//tools/adt/idea/observable:intellij.android.observable_tests",
