@@ -6,4 +6,6 @@
     <global id="kotlinEscapedPackageName" value="${escapeKotlinIdentifiers(packageName!"")}" />
     <!-- Indicates whether the extension of the file is kt or java -->
     <global id="ktOrJavaExt" type="string" value="${generateKotlin?string('kt','java')}" />
+
+    <global id="kotlinEapRepoUrl" type="string" value="https://dl.bintray.com/kotlin/kotlin-eap" />
 </globals>
