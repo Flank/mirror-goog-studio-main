@@ -33,7 +33,10 @@ java_library(
     # the actual test files.
     srcs = glob(
         ["**/*.java"],
-        exclude = ["**/*Test.java"],
+        exclude = [
+            "**/*Test.java",
+            "testAppInspectorSrcs/**",
+        ],
     ),
     deps = [
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
@@ -180,11 +183,36 @@ perf_test(
     ],
 )
 
+# testAppInspectorSrcs is compiled into dex, that is injected by AppInspectionTest onto "device"
+# This dex is similar to libraries inspectors code.
+java_library(
+    name = "test_inspector_java",
+    srcs = glob([
+        "testAppInspectorSrcs/**/*.java",
+    ]),
+    resource_strip_prefix = "tools/base/profiler/tests/perf-test/testAppInspectorSrcs/",
+    resources = glob(["testAppInspectorSrcs/META-INF/**"]),
+    deps = [
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+    ],
+)
+
+dex_library(
+    name = "test_inspector_dex",
+    jars = [":test_inspector_java"],
+)
+
 perf_test(
     name = "AppInspectionTest",
     size = "small",
     srcs = [
         "testSrcs/com/android/tools/profiler/app/inspection/AppInspectionTest.java",
+    ],
+    data = [
+        "//tools/base/profiler/tests/perf-test:test_inspector_dex",
+    ],
+    jvm_flags = [
+        "-Dtest.inspector.dex.location=$(location //tools/base/profiler/tests/perf-test:test_inspector_dex)",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [

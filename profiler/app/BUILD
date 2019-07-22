@@ -24,6 +24,7 @@ java_library(
     deps = [
         ":temporary_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
     ],
 )
 
@@ -42,6 +43,7 @@ java_library(
         "//prebuilts/studio/sdk:platforms/latest_jar",
         # TODO(b/77923456): Track version changes and revisit.
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
     ],
 )
 
@@ -57,7 +59,10 @@ java_library(
 
 dex_library(
     name = "perfa",
-    jars = [":perfa_java"],
+    jars = [
+        ":perfa_java",
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+    ],
 )
 
 java_library(

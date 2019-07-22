@@ -16,9 +16,20 @@
 
 package com.android.tools.agent.app.inspection;
 
+import androidx.inspection.Inspector;
+import androidx.inspection.InspectorFactory;
+import dalvik.system.DexClassLoader;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.ServiceLoader;
+
 /** This service controlls all app inspectors */
 @SuppressWarnings("unused") // invoked via jni
 public class AppInspectionService {
+    private static final String MAIN_THREAD_NAME = "main";
+
     private static AppInspectionService sInstance;
 
     public static AppInspectionService instance() {
@@ -30,10 +41,100 @@ public class AppInspectionService {
 
     private AppInspectionService() {}
 
+    private Map<String, Inspector> mInspectors = new HashMap<String, Inspector>();
+
     @SuppressWarnings("unused") // invoked via jni
-    public void onCommandStub() {
-        sendServiceResponseStub();
+    public void createInspector(String inspectorId, String dexPath, int commandId) {
+        if (failNull("inspectorId", inspectorId, commandId)) {
+            return;
+        }
+        if (mInspectors.containsKey(inspectorId)) {
+            replyError(commandId, "Inspector with the given id " + inspectorId + " already exists");
+            return;
+        }
+        ClassLoader mainClassLoader = mainThreadClassLoader();
+        if (mainClassLoader == null) {
+            replyError(commandId, "Failed to find a main thread");
+            return;
+        }
+        if (!new File(dexPath).exists()) {
+            replyError(commandId, "Failed to find a file with path: " + dexPath);
+            return;
+        }
+
+        String optimizedDir = System.getProperty("java.io.tmpdir");
+
+        try {
+            ClassLoader classLoader =
+                    new DexClassLoader(dexPath, optimizedDir, null, mainClassLoader);
+            ServiceLoader<InspectorFactory> loader =
+                    ServiceLoader.load(InspectorFactory.class, classLoader);
+            Iterator<InspectorFactory> iterator = loader.iterator();
+            Inspector inspector = null;
+            while (iterator.hasNext()) {
+                InspectorFactory inspectorFactory = iterator.next();
+                if (inspectorId.equals(inspectorFactory.getInspectorId())) {
+                    inspector = inspectorFactory.createInspector();
+                    break;
+                }
+            }
+            if (inspector == null) {
+                replyError(commandId, "Failed to find InspectorFactory with id " + inspectorId);
+                return;
+            }
+            mInspectors.put(inspectorId, inspector);
+            replySuccess(commandId);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            replyError(commandId, "Failed during instantiating inspector with id " + inspectorId);
+        }
     }
 
-    private native void sendServiceResponseStub();
+    @SuppressWarnings("unused") // invoked via jni
+    public void disposeInspector(String inspectorId, int commandId) {
+        if (failNull("inspectorId", inspectorId, commandId)) {
+            return;
+        }
+        Inspector inspector = mInspectors.remove(inspectorId);
+        if (inspector == null) {
+            replyError(
+                    commandId, "Inspector with id " + inspectorId + " wasn't previously created");
+            return;
+        }
+        inspector.onDispose();
+        replySuccess(commandId);
+    }
+
+    private boolean failNull(String name, Object value, int commandId) {
+        boolean result = value == null;
+        if (result) {
+            replyError(commandId, "Argument " + name + " must not be null");
+        }
+        return result;
+    }
+
+    native void replyError(int commandId, String errorMessage);
+
+    native void replySuccess(int commandId);
+
+    /**
+     * Iterates through threads presented in the app and looks for a thread with name "main". It can
+     * return {@code null} in case if thread with a name "main" is missing.
+     */
+    private static ClassLoader mainThreadClassLoader() {
+        ThreadGroup group = Thread.currentThread().getThreadGroup();
+
+        while (group.getParent() != null) {
+            group = group.getParent();
+        }
+
+        Thread[] threads = new Thread[100];
+        group.enumerate(threads);
+        for (int i = 0; i < threads.length; i++) {
+            if (threads[i] != null && threads[i].getName().equals(MAIN_THREAD_NAME)) {
+                return threads[i].getContextClassLoader();
+            }
+        }
+        return null;
+    }
 }

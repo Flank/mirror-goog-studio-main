@@ -103,10 +103,10 @@ def select_android(android, default):
 
 def dex_library(name, jars = [], output = None, visibility = None, tags = [], flags = [], dexer = "DX"):
     if dexer != "D8":
-        cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<"
+        cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$(SRCS)"
         tools = ["//prebuilts/studio/sdk:dx-preview"]
     else:
-        cmd = "$(location //prebuilts/r8:d8) --output ./$@ " + " ".join(flags) + " ./$<"
+        cmd = "$(location //prebuilts/r8:d8) --output ./$@ " + " ".join(flags) + " ./$(SRCS)"
         tools = ["//prebuilts/r8:d8"]
 
     if output == None:

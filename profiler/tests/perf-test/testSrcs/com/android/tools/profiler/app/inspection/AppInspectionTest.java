@@ -16,19 +16,26 @@
 
 package com.android.tools.profiler.app.inspection;
 
+import static com.android.tools.app.inspection.AppInspection.ServiceResponse.Status.SUCCESS;
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand;
 import com.android.tools.app.inspection.AppInspection.DisposeInspectorCommand;
 import com.android.tools.app.inspection.AppInspection.ServiceResponse.Status;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
+import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.Commands;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Transport.ExecuteRequest;
 import com.android.tools.profiler.proto.Transport.GetEventsRequest;
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,32 +48,90 @@ import org.junit.Test;
 public class AppInspectionTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.MyActivity";
+    private static final String EXPECTED_INSPECTOR_CREATED = "TEST INSPECTOR CREATED";
+    private static final String EXPECTED_INSPECTOR_DISPOSED = "TEST INSPECTOR DISPOSED";
 
     @Rule public final PerfDriver perfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
     private ServiceLayer serviceLayer;
+    private FakeAndroidDriver myAndroidDriver;
 
     @Before
     public void setUp() throws Exception {
+        myAndroidDriver = perfDriver.getFakeAndroidDriver();
         serviceLayer = ServiceLayer.create(perfDriver);
     }
 
     @Test
-    public void testStub() throws Exception {
-        AppInspectionCommand enableCommand =
-                AppInspectionCommand.newBuilder()
-                        .setCreateInspectorCommand(CreateInspectorCommand.getDefaultInstance())
-                        .build();
-        AppInspectionEvent enableEvent = serviceLayer.sendCommand(enableCommand);
-        assertThat(enableEvent.hasResponse()).isTrue();
-        assertThat(enableEvent.getResponse().getStatus()).isEqualTo(Status.ERROR);
+    public void createThenDispose() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
+        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_CREATED);
+        assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
+        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_DISPOSED);
+    }
 
-        AppInspectionCommand disableCommand =
-                AppInspectionCommand.newBuilder()
-                        .setDisposeInspectorCommand(DisposeInspectorCommand.getDefaultInstance())
-                        .build();
-        AppInspectionEvent disableResponse = serviceLayer.sendCommand(disableCommand);
-        assertThat(disableResponse.hasResponse()).isTrue();
-        assertThat(disableResponse.getResponse().getStatus()).isEqualTo(Status.ERROR);
+    @Test
+    public void doubleInspectorCreation() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
+        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_CREATED);
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)),
+                Status.ERROR);
+        assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
+        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_DISPOSED);
+    }
+
+    @Test
+    public void disposeNonexistent() throws Exception {
+        assertResponseStatus(
+                serviceLayer.sendCommand(disposeInspector("test.inspector")), Status.ERROR);
+    }
+
+    @Test
+    public void createFailsWithUnknownInspectorId() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector("foo", onDevicePath)), Status.ERROR);
+    }
+
+    @Test
+    public void createFailsIfInspectorDexIsNonexistent() throws Exception {
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector("test.inspector", "random_file")),
+                Status.ERROR);
+    }
+
+    private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
+        return AppInspectionCommand.newBuilder()
+                .setCreateInspectorCommand(
+                        CreateInspectorCommand.newBuilder()
+                                .setInspectorId(inspectorId)
+                                .setDexPath(dexPath)
+                                .build())
+                .build();
+    }
+
+    private static AppInspectionCommand disposeInspector(String inspectorId) {
+        return AppInspectionCommand.newBuilder()
+                .setDisposeInspectorCommand(
+                        DisposeInspectorCommand.newBuilder().setInspectorId(inspectorId).build())
+                .build();
+    }
+
+    private static void assertResponseStatus(AppInspectionEvent event, Status expected) {
+        assertThat(event.hasResponse()).isTrue();
+        assertThat(event.getResponse().getStatus()).isEqualTo(expected);
+    }
+
+    private static String injectInspectorDex() throws IOException {
+        File inspectorDex = new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
+        assertThat(inspectorDex.exists()).isTrue();
+        String onDevicePath = "test_inspector.jar";
+        Files.copy(inspectorDex.toPath(), new File(onDevicePath).toPath(), REPLACE_EXISTING);
+        return onDevicePath;
     }
 
     static class ServiceLayer {
@@ -76,6 +141,7 @@ public class AppInspectionTest {
         private final TransportServiceBlockingStub transportStub;
         private final Iterator<Common.Event> eventsIterator;
         private final int pid;
+        private int nextCommandId = 1;
 
         private ServiceLayer(
                 ExecutorService executor,
@@ -99,6 +165,7 @@ public class AppInspectionTest {
                     executor, transportStub, eventsIterator, driver.getSession().getPid());
         }
 
+        int commandId = nextCommandId++;
         AppInspectionEvent sendCommand(AppInspectionCommand appInspectionCommand) throws Exception {
             Commands.Command command =
                     Commands.Command.newBuilder()
@@ -106,6 +173,7 @@ public class AppInspectionTest {
                             .setAndroidxInspectionCommand(appInspectionCommand)
                             .setStreamId(1234)
                             .setPid(pid)
+                            .setCommandId(commandId)
                             .build();
 
             ExecuteRequest executeRequest = ExecuteRequest.newBuilder().setCommand(command).build();
@@ -115,7 +183,8 @@ public class AppInspectionTest {
                                         transportStub.execute(executeRequest);
                                         while (eventsIterator.hasNext()) {
                                             Common.Event event = eventsIterator.next();
-                                            if (event.hasAppInspectionEvent()) {
+                                            if (event.hasAppInspectionEvent()
+                                                    && event.getCommandId() == commandId) {
                                                 return event.getAppInspectionEvent();
                                             }
                                         }

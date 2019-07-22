@@ -1,7 +1,7 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/fakeandroid:fakeandroid.bzl", "fake_android_test")
 
-def perf_test(name, srcs, test_app, deps = [], tags = [], size = "small"):
+def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags = [], size = "small"):
     native.genrule(
         name = name + "_transform-app_java",
         srcs = [test_app + "_java_deploy.jar"],
@@ -56,7 +56,7 @@ def perf_test(name, srcs, test_app, deps = [], tags = [], size = "small"):
         }),
         tags = tags,
         size = size,
-        jvm_flags = [
+        jvm_flags = jvm_flags + [
             "-Dperfd.location=$(location //tools/base/transport:transport_main)",
             "-Dagent.location=/tools/base/profiler/native/agent",
             "-Dprofiler.service.location=$(location //tools/base/profiler/tests/perf-test:profiler-service)",
@@ -69,7 +69,7 @@ def perf_test(name, srcs, test_app, deps = [], tags = [], size = "small"):
             # Transformed app should be used here. This way we can test our support for both O+ and pre-O devices.
             "-Dinstrumented.app.dex.location=$(location :" + name + "_transform-app)",
         ],
-        data = select({
+        data = data + select({
             "//tools/base/bazel:darwin": [],
             "//tools/base/bazel:windows": [],
             "//conditions:default": [
