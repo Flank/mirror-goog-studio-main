@@ -557,6 +557,7 @@ public class IncrementalPackagerBuilder {
                     creationDataBuilder.build(),
                     intermediateDir,
                     apkFormat.factory(keepTimestampsInApk, debuggableBuild),
+                    ApkFormat.FILE.equals(apkFormat),
                     abiFilters,
                     jniDebuggableBuild,
                     debuggableBuild,

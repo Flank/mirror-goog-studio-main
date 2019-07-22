@@ -17,22 +17,36 @@
 package com.android.build.gradle.integration.deployment
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.internal.incremental.ApkChangeList
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.internal.packaging.ApkCreatorType
+import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
+import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.io.FileReader
 import java.util.zip.ZipFile
 
-class FileOrFolderOutputTest {
+@RunWith(FilterableParameterized::class)
+class FileOrFolderOutputTest(apkCreatorType: ApkCreatorType) {
+
+    companion object {
+        @Parameterized.Parameters(name = "apkCreatorType_{0}")
+        @JvmStatic
+        fun params() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
+    }
 
     @JvmField @Rule
     var project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("basic")
+        .setApkCreatorType(apkCreatorType)
         .withoutNdk()
         .create()
 

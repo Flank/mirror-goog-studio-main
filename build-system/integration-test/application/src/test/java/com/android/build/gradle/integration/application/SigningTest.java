@@ -18,7 +18,11 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.RELEASE;
-import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -30,24 +34,27 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SigningConfig;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.android.tools.build.apkzlib.sign.DigestAlgorithm;
-import com.android.tools.build.apkzlib.sign.SignatureAlgorithm;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,30 +82,30 @@ public class SigningTest {
     @Parameterized.Parameter(2)
     public int minSdkVersion;
 
+    @Parameterized.Parameter(3)
+    public ApkCreatorType apkCreatorType;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
     private File keystore;
 
-    @Parameterized.Parameters(name = "{0}")
+    @Parameterized.Parameters(name = "{0}, {3}")
     public static Collection<Object[]> data() {
-        List<Object[]> parameters = new ArrayList<>();
-
-        parameters.add(
+        return Arrays.asList(
+                new Object[] {"rsa_keystore.jks", "CERT.RSA", RSA.minSdkVersion, APK_FLINGER},
                 new Object[] {
-                    "rsa_keystore.jks", "CERT.RSA", SignatureAlgorithm.RSA.minSdkVersion
-                });
-        parameters.add(
+                    "rsa_keystore.jks", "CERT.RSA", RSA.minSdkVersion, APK_Z_FILE_CREATOR
+                },
+                new Object[] {"dsa_keystore.jks", "CERT.DSA", DSA.minSdkVersion, APK_FLINGER},
                 new Object[] {
-                    "dsa_keystore.jks", "CERT.DSA", SignatureAlgorithm.DSA.minSdkVersion
-                });
-        parameters.add(
+                    "dsa_keystore.jks", "CERT.DSA", DSA.minSdkVersion, APK_Z_FILE_CREATOR
+                },
+                new Object[] {"ec_keystore.jks", "CERT.EC", ECDSA.minSdkVersion, APK_FLINGER},
                 new Object[] {
-                    "ec_keystore.jks", "CERT.EC", SignatureAlgorithm.ECDSA.minSdkVersion
+                    "ec_keystore.jks", "CERT.EC", ECDSA.minSdkVersion, APK_Z_FILE_CREATOR
                 });
-
-        return parameters;
     }
 
     private static void createKeystoreFile(@NonNull String resourceName, @NonNull File keystore)
@@ -149,6 +156,8 @@ public class SigningTest {
         keystore = project.file("the.keystore");
 
         createKeystoreFile(keystoreName, keystore);
+
+        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -237,7 +246,11 @@ public class SigningTest {
     @Test
     public void checkCustomSigning() throws Exception {
         Collection<Variant> variants =
-                project.model().fetchAndroidProjects().getOnlyModel().getVariants();
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchAndroidProjects()
+                        .getOnlyModel()
+                        .getVariants();
 
         for (Variant variant : variants) {
             // Release variant doesn't specify the signing config, so it should not be considered
@@ -255,7 +268,11 @@ public class SigningTest {
 
     @Test
     public void signingConfigsModel() throws Exception {
-        AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
+        AndroidProject androidProject =
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchAndroidProjects()
+                        .getOnlyModel();
 
         Collection<SigningConfig> signingConfigs = androidProject.getSigningConfigs();
         assertThat(signingConfigs.stream().map(SigningConfig::getName).collect(Collectors.toList()))
@@ -316,8 +333,8 @@ public class SigningTest {
         TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
-        if ((certEntryName.endsWith(SignatureAlgorithm.RSA.keyAlgorithm))
-                || (certEntryName.endsWith(SignatureAlgorithm.ECDSA.keyAlgorithm))) {
+        if ((certEntryName.endsWith(RSA.keyAlgorithm))
+                || (certEntryName.endsWith(ECDSA.keyAlgorithm))) {
             assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
             assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
             assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");

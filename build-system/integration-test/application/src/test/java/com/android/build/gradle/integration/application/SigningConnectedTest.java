@@ -16,6 +16,11 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
 import static java.lang.Math.max;
 
 import com.android.annotations.NonNull;
@@ -25,17 +30,17 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
+import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.ddmlib.IDevice;
 import com.android.tools.build.apkzlib.sign.DigestAlgorithm;
-import com.android.tools.build.apkzlib.sign.SignatureAlgorithm;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -58,35 +63,43 @@ public class SigningConnectedTest {
     @Parameterized.Parameter(2)
     public int minSdkVersion;
 
+    @Parameterized.Parameter(3)
+    public ApkCreatorType apkCreatorType;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
     @Rule public Adb adb = new Adb();
 
-    @Parameterized.Parameters(name = "{0}")
+    @Parameterized.Parameters(name = "{0}, {3}")
     public static Collection<Object[]> data() {
-        List<Object[]> parameters = new ArrayList<>();
-
-        parameters.add(
+        return Arrays.asList(
                 new Object[] {
-                    "rsa_keystore.jks", "CERT.RSA", max(SignatureAlgorithm.RSA.minSdkVersion, 9)
-                });
-        parameters.add(
+                    "rsa_keystore.jks", "CERT.RSA", max(RSA.minSdkVersion, 9), APK_FLINGER
+                },
                 new Object[] {
-                    "dsa_keystore.jks", "CERT.DSA", max(SignatureAlgorithm.DSA.minSdkVersion, 9)
-                });
-        parameters.add(
+                    "rsa_keystore.jks", "CERT.RSA", max(RSA.minSdkVersion, 9), APK_Z_FILE_CREATOR
+                },
                 new Object[] {
-                    "ec_keystore.jks", "CERT.EC", max(SignatureAlgorithm.ECDSA.minSdkVersion, 9)
+                    "dsa_keystore.jks", "CERT.DSA", max(DSA.minSdkVersion, 9), APK_FLINGER
+                },
+                new Object[] {
+                    "dsa_keystore.jks", "CERT.DSA", max(DSA.minSdkVersion, 9), APK_Z_FILE_CREATOR
+                },
+                new Object[] {
+                    "ec_keystore.jks", "CERT.EC", max(ECDSA.minSdkVersion, 9), APK_FLINGER
+                },
+                new Object[] {
+                    "ec_keystore.jks", "CERT.EC", max(ECDSA.minSdkVersion, 9), APK_Z_FILE_CREATOR
                 });
-
-        return parameters;
     }
 
     @Before
     public void setUp() throws Exception {
         createKeystoreFile(keystoreName, project.file("the.keystore"));
+
+        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

@@ -62,7 +62,7 @@ public class TestV1Signing extends TestBaseSigning {
                 new SignedApkOptions.Builder()
                         .setV2Enabled(false)
                         .setV1Enabled(true)
-                        .v1TrustManifest(trustManifest)
+                        .setV1TrustManifest(trustManifest)
                         .setMinSdkVersion(21)
                         .setPrivateKey(signerConfig.privateKey)
                         .setCertificates(signerConfig.certificates)

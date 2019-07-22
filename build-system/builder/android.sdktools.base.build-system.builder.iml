@@ -48,5 +48,7 @@
     </orderEntry>
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="module" module-name="android.sdktools.zipflinger" />
+    <orderEntry type="module" module-name="android.sdktools.signflinger" exported="" />
+    <orderEntry type="module" module-name="android.sdktools.apksig" scope="TEST" />
   </component>
 </module>

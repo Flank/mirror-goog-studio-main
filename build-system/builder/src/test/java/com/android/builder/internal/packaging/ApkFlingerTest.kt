@@ -16,12 +16,17 @@
 
 package com.android.builder.internal.packaging
 
+import com.android.apksig.ApkVerifier
+import com.android.testutils.TestResources
 import com.android.testutils.truth.ZipFileSubject.assertThatZip
+import com.android.tools.build.apkzlib.sign.SigningOptions
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode.COMPRESSED
+import com.android.utils.FileUtils
+import com.google.common.base.Optional
 import com.google.common.base.Predicate
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
-
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,7 +35,14 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import com.android.builder.packaging.JarFlinger
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.nio.file.Files
+import java.security.KeyFactory
+import java.security.PrivateKey
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.security.spec.PKCS8EncodedKeySpec
 import java.util.zip.Deflater
 
 class ApkFlingerTest {
@@ -50,6 +62,7 @@ class ApkFlingerTest {
         Mockito.`when`(creationData.apkPath).thenReturn(apkFile)
         Mockito.`when`(creationData.nativeLibrariesPackagingMode).thenReturn(COMPRESSED)
         Mockito.`when`(creationData.noCompressPredicate).thenReturn(Predicate<String> { false })
+        Mockito.`when`(creationData.signingOptions).thenReturn(Optional.absent())
     }
 
     @Test
@@ -131,5 +144,56 @@ class ApkFlingerTest {
 
         // check that the compressed file is smaller than the uncompressed file
         assertThat(compressedSize).isLessThan(uncompressedSize)
+    }
+
+    @Test
+    fun signApk() {
+        // First copy existing test apk
+        FileUtils.copyFile(TestResources.getFile("/testData/packaging/test.apk"), apkFile)
+        // Then delete META-INF files with signing disabled
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use {
+            it.deleteFile("META-INF/MANIFEST.MF")
+            it.deleteFile("META-INF/CERT.RSA")
+            it.deleteFile("META-INF/CERT.SF")
+        }
+        assertThatZip(apkFile).doesNotContain("META-INF/MANIFEST.MF")
+        assertThatZip(apkFile).doesNotContain("META-INF/CERT.RSA")
+        assertThatZip(apkFile).doesNotContain("META-INF/CERT.SF")
+        // Then sign and verify apk
+        val signingOptions =
+            SigningOptions.builder()
+                .setV1SigningEnabled(true)
+                .setV2SigningEnabled(true)
+                .setMinSdkVersion(21)
+                .setKey(getPrivateKey())
+                .setCertificates(ImmutableList.copyOf(getCertificates()))
+                .build()
+        Mockito.`when`(creationData.signingOptions).thenReturn(Optional.of(signingOptions))
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use {}
+        assertThatZip(apkFile).contains("META-INF/MANIFEST.MF")
+        assertThatZip(apkFile).contains("META-INF/CERT.RSA")
+        assertThatZip(apkFile).contains("META-INF/CERT.SF")
+        verifyApk(apkFile)
+    }
+
+    private fun getPrivateKey(): PrivateKey {
+        val bytes =
+            Files.readAllBytes(TestResources.getFile("/testData/packaging/rsa-2048.pk8").toPath())
+        return KeyFactory.getInstance("rsa").generatePrivate(PKCS8EncodedKeySpec(bytes))
+    }
+
+    private fun getCertificates(): List<X509Certificate> {
+        val bytes =
+            Files.readAllBytes(
+                TestResources.getFile("/testData/packaging/rsa-2048.x509.pem").toPath()
+            )
+        return CertificateFactory.getInstance("X.509")
+            .generateCertificates(ByteArrayInputStream(bytes))
+            .map { it as X509Certificate }
+    }
+
+    private fun verifyApk(apk: File) {
+        val apkVerifier = ApkVerifier.Builder(apk).setMinCheckedPlatformVersion(18).build()
+        assertThat(apkVerifier.verify().isVerified).isTrue()
     }
 }

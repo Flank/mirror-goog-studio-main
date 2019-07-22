@@ -116,7 +116,7 @@ public class SignedApkOptions {
             return this;
         }
 
-        public Builder v1TrustManifest(boolean trust) {
+        public Builder setV1TrustManifest(boolean trust) {
             v1TrustManifest = trust;
             return this;
         }
@@ -127,7 +127,7 @@ public class SignedApkOptions {
         }
 
         @NonNull
-        SignedApkOptions build() {
+        public SignedApkOptions build() {
             return new SignedApkOptions(
                     privateKey,
                     certificates,

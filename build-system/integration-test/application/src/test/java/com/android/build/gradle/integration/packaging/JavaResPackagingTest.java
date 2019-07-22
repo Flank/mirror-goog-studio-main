@@ -28,8 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -106,7 +105,7 @@ public class JavaResPackagingTest {
 
         appendToFile(testProject.getBuildFile(), "android { targetProjectPath ':app' }\n");
 
-        TestFileUtils.appendToFile(project.getGradlePropertiesFile(), getGradleProperties());
+        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
@@ -150,16 +149,6 @@ public class JavaResPackagingTest {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "resources", "com", "foo");
         FileUtils.mkdirs(assetFolder);
         Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
-    }
-
-    private String getGradleProperties() {
-        switch (apkCreatorType) {
-            case APK_Z_FILE_CREATOR:
-                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=false";
-            case APK_FLINGER:
-                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=true";
-        }
-        throw new IllegalStateException();
     }
 
     private void execute(String... tasks) throws IOException, InterruptedException {

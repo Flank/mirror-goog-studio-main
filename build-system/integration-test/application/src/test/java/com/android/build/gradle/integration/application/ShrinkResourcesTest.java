@@ -29,9 +29,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.internal.packaging.ApkCreatorType;
@@ -190,24 +190,13 @@ public class ShrinkResourcesTest {
         throw new IllegalStateException();
     }
 
-    private String getGradleProperties() {
-        switch (apkCreatorType) {
-            case APK_Z_FILE_CREATOR:
-                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=false";
-            case APK_FLINGER:
-                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=true";
-        }
-        throw new IllegalStateException();
-    }
-
-
     @Test
     public void checkShrinkResources() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.buildTypes.release.useProguard = " + (shrinker == CodeShrinker.PROGUARD));
 
-        TestFileUtils.appendToFile(project.getGradlePropertiesFile(), getGradleProperties());
+        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         project.executor()
                 .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)

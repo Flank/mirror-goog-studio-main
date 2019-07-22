@@ -54,7 +54,7 @@ public class SignedApk implements Archive {
     static final String MANIFEST_CREATED_BY = "Created-By";
     static final String MANIFEST_BUILT_BY = "Built-By";
     static final String MANIFEST_VERSION = "Manifest-Version";
-
+    private static final Long DEFAULT_ALIGNMENT = 4L;
 
     public SignedApk(@NonNull File file, @NonNull SignedApkOptions options)
             throws InvalidKeyException, IOException {
@@ -244,6 +244,7 @@ public class SignedApk implements Archive {
             archive.delete(entry.getName());
             BytesSource source =
                     new BytesSource(entry.getData(), entry.getName(), Deflater.NO_COMPRESSION);
+            source.align(DEFAULT_ALIGNMENT);
             archive.add(source);
             ApkSignerEngine.InspectJarEntryRequest request = signer.outputJarEntry(entry.getName());
             processRequest(request);

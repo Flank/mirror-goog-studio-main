@@ -16,16 +16,11 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
-import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
-import com.android.testutils.truth.FileSubject.assertThat
-import com.android.testutils.truth.MoreTruth.assertThatZip
-import com.google.common.truth.Truth.assertThat
-import org.junit.Assert.assertTrue
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
@@ -35,13 +30,17 @@ import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Zip
+import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.MoreTruth.assertThatZip
 import com.android.utils.FileUtils
-import java.io.File
-import java.nio.file.Files
+import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
+import java.nio.file.Files
 
 @RunWith(FilterableParameterized::class)
 class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
@@ -55,13 +54,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("projectWithModules")
-        .addGradleProperties(getGradleProperties())
+        .setApkCreatorType(apkCreatorType)
         .create()
-
-    private fun getGradleProperties() = when (apkCreatorType) {
-        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
-        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
-    }
 
     @Test
     fun mergesRawWithLibraryWithOverride() {
