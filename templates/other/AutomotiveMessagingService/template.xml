@@ -6,8 +6,8 @@
     description="Create a service that sends notifications compatible with Android Auto"
     minApi="21">
 
-    <category value="Android Auto" />
-    <formfactor value="Car" />
+    <category value="Automotive" />
+    <formfactor value="Automotive" />
 
     <parameter
         id="serviceName"
