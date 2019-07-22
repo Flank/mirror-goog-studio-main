@@ -75,6 +75,7 @@ enum class BooleanOption(
     ENABLE_SEPARATE_ANNOTATION_PROCESSING("android.enableSeparateAnnotationProcessing", false),
     FULL_R8("android.enableR8.fullMode", false),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false),
+    MINIMAL_KEEP_RULES("android.useMinimalKeepRules", false),
     ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, status = Option.Status.STABLE),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false),

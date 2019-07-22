@@ -191,6 +191,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var useConditionalKeepRules: Boolean = false
         private set
 
+    @get:Input
+    var useMinimalKeepRules: Boolean = false
+        private set
+
     @get:OutputDirectory
     abstract val resPackageOutputFolder: DirectoryProperty
 
@@ -524,6 +528,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
             task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
+            task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(variantScope.type.canHaveSplits)
             task.isFeatureVariantType.set(variantScope.type == VariantTypeImpl.FEATURE)
 
@@ -832,6 +837,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setIntermediateDir(params.incrementalFolder)
                         .setAndroidJarPath(params.androidJarPath)
                         .setUseConditionalKeepRules(params.useConditionalKeepRules)
+                        .setUseMinimalKeepRules(params.useMinimalKeepRules)
                         .setUseFinalIds(params.useFinalIds)
                         .addResourceDirectories(params.compiledRemoteResourcesDirs)
                         .addResourceDirectories(params.compiledLocalResourcesDirs)
@@ -946,6 +952,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val isLibrary: Boolean = task.isLibrary
         val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile.orNull?.asFile
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
+        val useMinimalKeepRules: Boolean = task.useMinimalKeepRules
         val useFinalIds: Boolean = task.useFinalIds
         val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
         val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile

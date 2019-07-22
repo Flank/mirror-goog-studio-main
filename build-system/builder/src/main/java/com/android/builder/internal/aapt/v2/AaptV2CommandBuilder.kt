@@ -307,6 +307,10 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         builder.add("--proguard-conditional-keep-rules")
     }
 
+    if (config.useMinimalKeepRules) {
+        builder.add("--proguard-minimal-keep-rules")
+    }
+
     if (config.isStaticLibrary()) {
         builder.add("--static-lib")
         if (!config.staticLibraryDependencies.isEmpty()) {
