@@ -23,14 +23,14 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.truth.FileSubject
 import com.android.tools.build.libraries.metadata.AppDependencies
+import com.google.common.collect.ImmutableList.toImmutableList
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import com.google.common.collect.ImmutableList.toImmutableList
 import org.junit.runners.JUnit4
 import java.util.zip.ZipFile
 import kotlin.test.fail
-import com.google.common.truth.Truth.assertThat
 
 /**
  * Tests that the resolved version of the dependencies are added to the bundle.
@@ -53,6 +53,7 @@ class DependenciesReportTest {
 
     @Test
     fun testDependenciesFile() {
+        project.addUseAndroidXProperty()
         // test that androidx.core.core is only using 1.0.1 which will be the resolved version.
         project.executor().run(":app:bundleDebug")
         val bundle = getApkFolderOutput("debug").bundleFile
