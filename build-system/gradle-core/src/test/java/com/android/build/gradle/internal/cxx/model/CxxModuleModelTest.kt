@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
@@ -51,7 +51,7 @@ private val ALLOWED_MODEL_INTERFACES = setOf(
 
 private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
     AbiInfo::class.java,
-    BuildSettingsModel::class.java,
+    BuildSettingsConfiguration::class.java,
     CMakeSettingsConfiguration::class.java,
     CxxServiceRegistry::class.java,
     File::class.java,

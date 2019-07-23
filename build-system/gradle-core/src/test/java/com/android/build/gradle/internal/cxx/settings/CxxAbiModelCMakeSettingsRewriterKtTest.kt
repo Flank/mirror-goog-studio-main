@@ -205,6 +205,45 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
         assertThat(File(buildRoot1).parentFile).isNotEqualTo(File(buildRoot2).parentFile)
     }
 
+    @Test
+    fun `build settings macros are expanded`() {
+        CmakeSettingsMock().apply {
+            val buildSettingsJson = FileUtils.join(allPlatformsProjectRootDir, "BuildSettings.json")
+            buildSettingsJson.writeText(
+                """
+                {
+                    "environmentVariables": [
+                        {
+                            "name": "NDK_ABI",
+                            "value": "${'$'}{ndk.abi}"
+                        },
+                        {
+                            "name": "NDK_DIR",
+                            "value": "${'$'}{ndk.dir}"
+                        }
+                    ]
+                }
+                """.trimIndent()
+            )
+
+            val rewritten = abi.rewriteCxxAbiModelWithCMakeSettings()
+
+            assertThat(abi.buildSettings.environmentVariables).isEqualTo(
+                listOf(
+                    EnvironmentVariable("NDK_ABI", "\${ndk.abi}"),
+                    EnvironmentVariable("NDK_DIR", "\${ndk.dir}")
+                )
+            )
+
+            assertThat(rewritten.buildSettings.environmentVariables).isEqualTo(
+                listOf(
+                    EnvironmentVariable("NDK_ABI", abi.abi.tag),
+                    EnvironmentVariable("NDK_DIR", abi.variant.module.ndkFolder.path)
+                )
+            )
+        }
+    }
+
     private fun abisOf(
         abi1 : Abi = Abi.X86,
         abi2 : Abi = Abi.X86,

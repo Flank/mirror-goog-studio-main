@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnviron
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -424,7 +424,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
         }
     }
 
-    private fun applyBuildSettings(buildSettings: BuildSettingsModel, processBuilder: ProcessInfoBuilder){
+    private fun applyBuildSettings(buildSettings: BuildSettingsConfiguration, processBuilder: ProcessInfoBuilder){
         processBuilder.addEnvironments(buildSettings.getEnvironmentVariableMap())
     }
 

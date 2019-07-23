@@ -41,11 +41,17 @@ import java.security.MessageDigest
  * If there is a CMakeSettings.json then replace relevant model values with settings from it.
  */
 fun CxxAbiModel.rewriteCxxAbiModelWithCMakeSettings() : CxxAbiModel {
+
+    val original = this
     if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
-        val original = this
-        val configuration by lazy {
-            getEffectCmakeSettingsConfiguration()
+        val rewriteConfig by lazy {
+            getCxxAbiRewriteModel()
         }
+
+        val configuration by lazy {
+            rewriteConfig.configuration
+        }
+
         val cmakeModule = original.variant.module.cmake!!.replaceWith(
             cmakeExe = { configuration.cmakeExecutable.toFile()!! }
         )
@@ -65,10 +71,19 @@ fun CxxAbiModel.rewriteCxxAbiModelWithCMakeSettings() : CxxAbiModel {
         return original.replaceWith(
             cmake = { cmakeAbi },
             variant = { variant },
-            cxxBuildFolder = { configuration.buildRoot.toFile()!! }
+            cxxBuildFolder = { configuration.buildRoot.toFile()!! },
+            buildSettings = { rewriteConfig.buildSettings }
         )
+    } else {
+//        TODO(jomof) separate CMake-ness from macro expansion and add it to NDK build
+//        return original.replaceWith(
+//            cmake = { cmake },
+//            variant = { variant },
+//            cxxBuildFolder = { cxxBuildFolder },
+//            buildSettings = { rewriteModel.buildSettings }
+//        )
+        return this
     }
-    return this
 }
 
 /**
@@ -77,9 +92,10 @@ fun CxxAbiModel.rewriteCxxAbiModelWithCMakeSettings() : CxxAbiModel {
 private fun String?.toFile() = if (this != null) File(this) else null
 
 /**
- * Build the CMake command line arguments from [CxxAbiModel].
+ * Build the CMake command line arguments from [CxxAbiModel] and resolve macros in
+ * CMakeSettings.json and BuildSettings.json
  */
-fun CxxAbiModel.getEffectCmakeSettingsConfiguration() : CMakeSettingsConfiguration {
+private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
     val allSettings = gatherCMakeSettingsFromAllLocations()
         .expandInheritEnvironmentMacros(this)
     val resolver = CMakeSettingsNameResolver(allSettings.environments)
@@ -173,28 +189,40 @@ fun CxxAbiModel.getEffectCmakeSettingsConfiguration() : CMakeSettingsConfigurati
         argument.sourceArgument.reify().toCmakeArgument()
     }.removeSubsumedArguments().removeBlankProperties()
 
-    return CMakeSettingsConfiguration(
-        name = configuration.name,
-        description = "Composite reified CMakeSettings configuration",
-        generator = arguments.getGenerator(),
-        configurationType = configuration.configurationType,
-        inheritEnvironments = configuration.inheritEnvironments,
-        buildRoot = configuration.buildRoot?.reify(),
-        installRoot = configuration.installRoot?.reify(),
-        cmakeToolchain = arguments.getCmakeProperty(CMAKE_TOOLCHAIN_FILE),
-        cmakeCommandArgs = configuration.cmakeCommandArgs?.reify(),
-        cmakeExecutable = configuration.cmakeExecutable?.reify(),
-        buildCommandArgs = configuration.buildCommandArgs?.reify(),
-        ctestCommandArgs = configuration.ctestCommandArgs?.reify(),
-        variables = arguments.mapNotNull {
-            when (it) {
-                is CommandLineArgument.DefineProperty -> CMakeSettingsVariable(
-                    it.propertyName,
-                    it.propertyValue
-                )
-                else -> null
-            }
+    val expandedBuildSettings = BuildSettingsConfiguration(
+        environmentVariables = buildSettings.environmentVariables.map {
+            EnvironmentVariable(
+                name = it.name.reify(),
+                value = it.value?.reify()
+            )
         }
+    )
+
+    return RewriteConfiguration(
+        buildSettings = expandedBuildSettings,
+        configuration = CMakeSettingsConfiguration(
+            name = configuration.name,
+            description = "Composite reified CMakeSettings configuration",
+            generator = arguments.getGenerator(),
+            configurationType = configuration.configurationType,
+            inheritEnvironments = configuration.inheritEnvironments,
+            buildRoot = configuration.buildRoot?.reify(),
+            installRoot = configuration.installRoot?.reify(),
+            cmakeToolchain = arguments.getCmakeProperty(CMAKE_TOOLCHAIN_FILE),
+            cmakeCommandArgs = configuration.cmakeCommandArgs?.reify(),
+            cmakeExecutable = configuration.cmakeExecutable?.reify(),
+            buildCommandArgs = configuration.buildCommandArgs?.reify(),
+            ctestCommandArgs = configuration.ctestCommandArgs?.reify(),
+            variables = arguments.mapNotNull {
+                when (it) {
+                    is CommandLineArgument.DefineProperty -> CMakeSettingsVariable(
+                        it.propertyName,
+                        it.propertyValue
+                    )
+                    else -> null
+                }
+            }
+        )
     )
 }
 
@@ -249,3 +277,12 @@ fun CxxAbiModel.getFinalCmakeCommandLineArguments() : List<CommandLineArgument> 
 fun CxxAbiModel.getBuildCommandArguments() : String {
     return cmake?.effectiveConfiguration?.buildCommandArgs ?: ""
 }
+
+/**
+ * This model contains the inner models of [CxxAbiModel] that are rewritten during
+ * clean/build for CMake builds.
+ */
+private class RewriteConfiguration(
+    val buildSettings: BuildSettingsConfiguration,
+    val configuration: CMakeSettingsConfiguration
+)

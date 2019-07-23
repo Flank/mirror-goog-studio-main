@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import java.io.File
 
@@ -27,13 +28,15 @@ import java.io.File
 fun CxxAbiModel.replaceWith(
     cmake: () -> CxxCmakeAbiModel?,
     variant: () -> CxxVariantModel,
-    cxxBuildFolder: () -> File
+    cxxBuildFolder: () -> File,
+    buildSettings: () -> BuildSettingsConfiguration
 ) : CxxAbiModel {
     val original = this
     return object : CxxAbiModel by original {
         override val variant get() = variant()
         override val cmake get() = cmake()
         override val cxxBuildFolder get() = cxxBuildFolder()
+        override val buildSettings get() = buildSettings()
     }
 }
 

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils
@@ -77,7 +77,7 @@ interface CxxAbiModel {
      * Ninja/gnu make build settings specified by BuildSettings.json. Returns an empty
      * model if the file is absent.
      */
-    val buildSettings: BuildSettingsModel
+    val buildSettings: BuildSettingsConfiguration
 }
 
 /**

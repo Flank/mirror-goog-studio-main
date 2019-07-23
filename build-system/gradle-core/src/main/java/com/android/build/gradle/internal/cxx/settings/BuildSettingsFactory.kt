@@ -22,47 +22,47 @@ import com.google.gson.Gson
 import java.io.File
 
 /**
- * Given a json string construct a [BuildSettingsModel].
+ * Given a json string construct a [BuildSettingsConfiguration].
  */
-fun createBuildSettingsFromJson(json: String): BuildSettingsModel {
+fun createBuildSettingsFromJson(json: String): BuildSettingsConfiguration {
     return try {
-        val settings = Gson().fromJson(json, BuildSettingsModel::class.java)
+        val settings = Gson().fromJson(json, BuildSettingsConfiguration::class.java)
 
         // Null checks are required here because Gson deserialization may return null
         if (settings != null) {
-            BuildSettingsModel(environmentVariables = settings.environmentVariables
+            BuildSettingsConfiguration(environmentVariables = settings.environmentVariables
                 ?.filterNotNull()
                 ?.filter { !it.name.isNullOrBlank() }
                 ?: emptyList()
             )
         } else {
             errorln("Json is empty")
-            BuildSettingsModel()
+            BuildSettingsConfiguration()
         }
 
     } catch (e: Throwable) {
         errorln(e.message ?: e.cause?.message ?: e.javaClass.name)
-        BuildSettingsModel()
+        BuildSettingsConfiguration()
     }
 }
 
 /**
- * Given a file with json construct [BuildSettingsModel].
+ * Given a file with json construct [BuildSettingsConfiguration].
  */
-fun createBuildSettingsFromFile(jsonFile: File): BuildSettingsModel {
+fun createBuildSettingsFromFile(jsonFile: File): BuildSettingsConfiguration {
     return if (jsonFile.exists()) {
         PassThroughPrefixingLoggingEnvironment(file = jsonFile).use {
             return createBuildSettingsFromJson(jsonFile.readText())
         }
     } else {
-        BuildSettingsModel()
+        BuildSettingsConfiguration()
     }
 }
 
 /**
- * Converts [BuildSettingsModel] into a name:value Map.
+ * Converts [BuildSettingsConfiguration] into a name:value Map.
  * Omits environment variables with no name provided.
  */
-fun BuildSettingsModel.getEnvironmentVariableMap(): Map<String, String> {
+fun BuildSettingsConfiguration.getEnvironmentVariableMap(): Map<String, String> {
     return environmentVariables.associateBy({ it.name }, { it.value ?: "" })
 }

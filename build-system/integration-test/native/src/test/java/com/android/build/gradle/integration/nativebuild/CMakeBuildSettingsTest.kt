@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.testutils.truth.PathSubject
 import com.android.utils.FileUtils
@@ -138,14 +138,14 @@ class CMakeBuildSettingsTest(private val cmakeVersionInDsl: String) {
     }
 
     @Test
-    fun `uses empty BuildSettingsModel if JSON file does not exist`() {
+    fun `uses empty BuildSettingsConfiguration if JSON file does not exist`() {
         project.execute("clean", "assembleDebug")
 
-        // No BuildSettings.json, should have empty BuildSettingsModel
+        // No BuildSettings.json, should have empty BuildSettingsConfiguration
         debugBuildModelFiles()
             .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
             .forEach {
-                assertThat(it).isEqualTo(BuildSettingsModel())
+                assertThat(it).isEqualTo(BuildSettingsConfiguration())
             }
     }
 
@@ -159,6 +159,10 @@ class CMakeBuildSettingsTest(private val cmakeVersionInDsl: String) {
                     {
                       "name": "TEST_ENV",
                       "value": "value for TEST_ENV"
+                    },
+                    {
+                      "name": "abi",
+                      "value": "${'$'}{ndk.abi}"
                     }
                 ]
             }""".trimIndent()
@@ -169,12 +173,13 @@ class CMakeBuildSettingsTest(private val cmakeVersionInDsl: String) {
 
         // Verify that environment variables is set in BuildSettings
         debugBuildModelFiles()
-            .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
+            .map { createCxxAbiModelFromJson(it.readText()) }
             .forEach {
-                assertThat(it).isEqualTo(
-                    BuildSettingsModel(
+                assertThat(it.buildSettings).isEqualTo(
+                    BuildSettingsConfiguration(
                         environmentVariables = listOf(
-                            EnvironmentVariable(name = "TEST_ENV", value = "value for TEST_ENV")
+                            EnvironmentVariable(name = "TEST_ENV", value = "value for TEST_ENV"),
+                            EnvironmentVariable(name = "abi", value = it.abi.tag)
                         )
                     )
                 )

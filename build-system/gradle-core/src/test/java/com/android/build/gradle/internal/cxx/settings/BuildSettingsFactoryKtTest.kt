@@ -56,7 +56,7 @@ class BuildSettingsFactoryKtTest {
             val model = createBuildSettingsFromJson(invalidJson)
 
             assertThat(errors.single()).isEqualTo("Json is empty")
-            assertThat(model).isEqualTo(BuildSettingsModel())
+            assertThat(model).isEqualTo(BuildSettingsConfiguration())
             assertThat(model.environmentVariables?.size).isEqualTo(0)
         }
     }
@@ -64,7 +64,7 @@ class BuildSettingsFactoryKtTest {
     @Test
     fun `missing BuildSettings file returns empty model`() {
         val model = createBuildSettingsFromFile(File("invalid/path"))
-        assertThat(model).isEqualTo(BuildSettingsModel())
+        assertThat(model).isEqualTo(BuildSettingsConfiguration())
     }
 
     @Test

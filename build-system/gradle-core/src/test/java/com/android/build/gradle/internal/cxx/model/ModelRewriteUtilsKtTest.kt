@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
+import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
@@ -40,15 +42,26 @@ class ModelRewriteUtilsKtTest {
                 cmakeArtifactsBaseFolder = { File("my/build-root") },
                 effectiveConfiguration = { CMakeSettingsConfiguration() }
             )
+            val buildSettings = BuildSettingsConfiguration(
+                listOf(EnvironmentVariable(
+                    name = "env",
+                    value = "val"
+                ))
+            )
             val abiPrime = abi.replaceWith(
                 cmake = { cmakeAbiPrime },
                 variant = { variantPrime },
-                cxxBuildFolder = { File("my/build-root") }
+                cxxBuildFolder = { File("my/build-root") },
+                buildSettings = { buildSettings }
             )
             assertThat(cmakeModulePrime.cmakeExe.path.replace('\\', '/')).contains("my/cmake")
             assertThat(modulePrime.cmakeToolchainFile.path.replace('\\', '/')).contains("my/toolchain")
             assertThat(cmakeAbiPrime.cmakeArtifactsBaseFolder.path.replace('\\', '/')).contains("my/build-root")
             assertThat(abiPrime.cxxBuildFolder.path.replace('\\', '/')).contains("my/build-root")
+            assertThat(abiPrime.buildSettings.environmentVariables).isEqualTo(listOf(EnvironmentVariable(
+                name = "env",
+                value = "val"
+            )))
         }
     }
 }

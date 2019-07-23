@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.testutils.AssumeUtil
 import com.android.utils.FileUtils
@@ -83,14 +83,14 @@ class NdkBuildBuildSettingsTest {
     }
 
     @Test
-    fun `uses empty BuildSettingsModel if JSON file does not exist`() {
+    fun `uses empty BuildSettingsConfiguration if JSON file does not exist`() {
         project.execute("clean", "assembleDebug")
 
-        // No BuildSettings.json, should have empty BuildSettingsModel
+        // No BuildSettings.json, should have empty BuildSettingsConfiguration
         debugBuildModelFiles()
             .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
             .forEach {
-                assertThat(it).isEqualTo(BuildSettingsModel())
+                assertThat(it).isEqualTo(BuildSettingsConfiguration())
             }
     }
 
