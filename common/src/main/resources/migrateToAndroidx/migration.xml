@@ -467,10 +467,10 @@
   <migrate-dependency old-group-name="com.android.support.constraint" old-artifact-name="constraint-layout" new-group-name="androidx.constraintlayout" new-artifact-name="constraintlayout" base-version="1.1.3"/>
   <migrate-dependency old-group-name="com.android.support.constraint" old-artifact-name="constraint-layout-solver" new-group-name="androidx.constraintlayout" new-artifact-name="constraintlayout-solver" base-version="1.1.3"/>
   <!-- Testing Support Library -->
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="monitor" new-group-name="androidx.test" new-artifact-name="monitor" base-version="1.1.0"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="orchestrator" new-group-name="androidx.test" new-artifact-name="orchestrator" base-version="1.1.0"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="rules" new-group-name="androidx.test" new-artifact-name="rules" base-version="1.1.0"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="runner" new-group-name="androidx.test" new-artifact-name="runner" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="monitor" new-group-name="androidx.test" new-artifact-name="monitor" base-version="1.1.1"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="orchestrator" new-group-name="androidx.test" new-artifact-name="orchestrator" base-version="1.1.1"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="rules" new-group-name="androidx.test" new-artifact-name="rules" base-version="1.1.1"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="runner" new-group-name="androidx.test.ext" new-artifact-name="junit" base-version="1.1.1"/>
   <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-accessibility" new-group-name="androidx.test.espresso" new-artifact-name="espresso-accessibility" base-version="3.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-contrib" new-group-name="androidx.test.espresso" new-artifact-name="espresso-contrib" base-version="3.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-core" new-group-name="androidx.test.espresso" new-artifact-name="espresso-core" base-version="3.1.0"/>
@@ -482,7 +482,7 @@
   <migrate-dependency old-group-name="com.android.support.test.espresso.idling" old-artifact-name="idling-net" new-group-name="androidx.test.espresso.idling" new-artifact-name="idling-net" base-version="3.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test.janktesthelper" old-artifact-name="janktesthelper" new-group-name="androidx.test.jank" new-artifact-name="janktesthelper" base-version="1.0.1"/>
   <migrate-dependency old-group-name="com.android.support.test.janktesthelper" old-artifact-name="janktesthelper-v23" new-group-name="androidx.test.jank" new-artifact-name="janktesthelper-v23" base-version="1.0.1"/>
-  <migrate-dependency old-group-name="com.android.support.test.services" old-artifact-name="test-services" new-group-name="androidx.test" new-artifact-name="test-services" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.services" old-artifact-name="test-services" new-group-name="androidx.test.services" new-artifact-name="test-services" base-version="1.1.1"/>
   <migrate-dependency old-group-name="com.android.support.test.uiautomator" old-artifact-name="uiautomator" new-group-name="androidx.test.uiautomator" new-artifact-name="uiautomator" base-version="2.2.0"/>
   <migrate-dependency old-group-name="com.android.support.test.uiautomator" old-artifact-name="uiautomator-v18" new-group-name="androidx.test.uiautomator" new-artifact-name="uiautomator" base-version="2.2.0"/>
   <!-- Material Design Gradle Artifacts -->
