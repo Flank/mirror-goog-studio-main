@@ -313,7 +313,7 @@ public class SimpleTestRunnable implements Runnable {
                     IOException, InstallException {
         if (device.getApiLevel() < 16) {
             throw new InstallException(
-                    "additionTestOutput is not supported on devices running API level < 16");
+                    "additionalTestOutput is not supported on devices running API level < 16");
         }
 
         final String[] result = new String[1];
