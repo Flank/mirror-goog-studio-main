@@ -82,121 +82,227 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     private final boolean myBaseSplit;
     private final int myHashCode;
 
-    public IdeAndroidProjectImpl(
+    public static IdeAndroidProjectImpl create(
             @NonNull AndroidProject project,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
             @Nullable ProjectSyncIssues syncIssues) {
-        this(project, new ModelCache(), dependenciesFactory, variants, syncIssues);
+        return create(project, new ModelCache(), dependenciesFactory, variants, syncIssues);
     }
 
     @VisibleForTesting
-    IdeAndroidProjectImpl(
+    public static IdeAndroidProjectImpl create(
             @NonNull AndroidProject project,
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
             @Nullable ProjectSyncIssues syncIssues) {
-        myModelVersion = project.getModelVersion();
         // Old plugin versions do not return model version.
-        myParsedModelVersion = GradleVersion.tryParse(myModelVersion);
+        GradleVersion parsedModelVersion = GradleVersion.tryParse(project.getModelVersion());
 
-        myName = project.getName();
-        myDefaultConfig =
+        ProductFlavorContainer defaultConfigCopy =
                 modelCache.computeIfAbsent(
                         project.getDefaultConfig(),
                         container -> new IdeProductFlavorContainer(container, modelCache));
-        myBuildTypes =
+
+        Collection<BuildTypeContainer> buildTypesCopy =
                 IdeModel.copy(
                         project.getBuildTypes(),
                         modelCache,
                         container -> new IdeBuildTypeContainer(container, modelCache));
-        myProductFlavors =
+
+        Collection<ProductFlavorContainer> productFlavorCopy =
                 IdeModel.copy(
                         project.getProductFlavors(),
                         modelCache,
                         container -> new IdeProductFlavorContainer(container, modelCache));
-        myBuildToolsVersion = IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
+
         // If we have a ProjectSyncIssues model then use the sync issues contained in that, otherwise fallback to the
         // SyncIssues that are stored within the AndroidProject. This is needed to support plugins < 3.6 which do not produce a
         // ProjectSyncIssues model.
-        Collection<SyncIssue> issues =
-                (syncIssues == null) ? project.getSyncIssues() : syncIssues.getSyncIssues();
-        mySyncIssues =
-                new ArrayList<>(
-                        IdeModel.copy(issues, modelCache, issue -> new IdeSyncIssue(issue)));
-        Collection<Variant> variantsToCopy = variants != null ? variants : project.getVariants();
-        myVariants =
+        //noinspection deprecation
+        Collection<SyncIssue> syncIssuesCopy =
                 new ArrayList<>(
                         IdeModel.copy(
-                                variantsToCopy,
+                                (syncIssues == null)
+                                        ? project.getSyncIssues()
+                                        : syncIssues.getSyncIssues(),
+                                modelCache,
+                                issue -> new IdeSyncIssue(issue)));
+
+        Collection<Variant> variantsCopy =
+                new ArrayList<>(
+                        IdeModel.copy(
+                                (variants == null) ? project.getVariants() : variants,
                                 modelCache,
                                 variant ->
                                         new IdeVariantImpl(
                                                 variant,
                                                 modelCache,
                                                 dependenciesFactory,
-                                                myParsedModelVersion)));
-        myVariantNames =
+                                                parsedModelVersion)));
+
+        Collection<String> variantNamesCopy =
                 Objects.requireNonNull(
                         IdeModel.copyNewPropertyWithDefault(
                                 () -> ImmutableList.copyOf(project.getVariantNames()),
-                                () -> computeVariantNames(myVariants)));
+                                () -> computeVariantNames(variantsCopy)));
 
-        myDefaultVariant =
+        String defaultVariantCopy =
                 IdeModel.copyNewPropertyWithDefault(
-                        project::getDefaultVariant, () -> getDefaultVariant(myVariantNames));
+                        project::getDefaultVariant, () -> getDefaultVariant(variantNamesCopy));
 
-        myFlavorDimensions =
-                IdeModel.copyNewProperty(
+        Collection<String> flavorDimensionCopy =
+                IdeModel.copyNewPropertyNonNull(
                         () -> ImmutableList.copyOf(project.getFlavorDimensions()),
                         Collections.emptyList());
-        myCompileTarget = project.getCompileTarget();
-        myBootClassPath = ImmutableList.copyOf(project.getBootClasspath());
-        myNativeToolchains =
+
+        Collection<String> bootClasspathCopy = ImmutableList.copyOf(project.getBootClasspath());
+
+        Collection<NativeToolchain> nativeToolchainsCopy =
                 IdeModel.copy(
                         project.getNativeToolchains(),
                         modelCache,
-                        toolchain -> new IdeNativeToolchain(toolchain));
-        mySigningConfigs =
+                        toolChain -> new IdeNativeToolchain(toolChain));
+
+        Collection<SigningConfig> signingConfigsCopy =
                 IdeModel.copy(
                         project.getSigningConfigs(),
                         modelCache,
                         config -> new IdeSigningConfig(config));
-        myLintOptions =
+
+        IdeLintOptions lintOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getLintOptions(),
-                        options -> new IdeLintOptions(options, myParsedModelVersion));
-        myUnresolvedDependencies = ImmutableSet.copyOf(project.getUnresolvedDependencies());
-        myJavaCompileOptions =
+                        options -> new IdeLintOptions(options, parsedModelVersion));
+
+        // We need to use the unresolved dependencies to support older versions of the Android Gradle Plugin.
+        //noinspection deprecation
+        Collection<String> unresolvedDependenciesCopy =
+                ImmutableSet.copyOf(project.getUnresolvedDependencies());
+
+        IdeJavaCompileOptions javaCompileOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getJavaCompileOptions(),
                         options -> new IdeJavaCompileOptions(options));
-        myAaptOptions =
+
+        IdeAaptOptions aaptOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getAaptOptions(), options -> new IdeAaptOptions(options));
-        myBuildFolder = project.getBuildFolder();
-        myResourcePrefix = project.getResourcePrefix();
-        myApiVersion = project.getApiVersion();
-        myProjectType = getProjectType(project, myParsedModelVersion);
-        mySupportsPluginGeneration =
-                IdeModel.copyNewProperty(project::getPluginGeneration, null) != null;
-        //noinspection ConstantConditions
-        myBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
-        //noinspection ConstantConditions
-        myDynamicFeatures =
+
+        Collection<String> dynamicFeaturesCopy =
                 ImmutableList.copyOf(
-                        IdeModel.copyNewProperty(project::getDynamicFeatures, ImmutableList.of()));
-        myViewBindingOptions =
+                        IdeModel.copyNewPropertyNonNull(
+                                project::getDynamicFeatures, ImmutableList.of()));
+
+        IdeViewBindingOptions viewBindingOptionsCopy =
                 IdeModel.copyNewProperty(
                         () -> new IdeViewBindingOptions(project.getViewBindingOptions()), null);
 
-        if (myParsedModelVersion != null
-                && myParsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) {
-            myGroupId = project.getGroupId();
-        } else {
-            myGroupId = null;
+        String buildToolsVersionCopy =
+                IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
+
+        String groupId = null;
+        if (parsedModelVersion != null
+                && parsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) {
+            groupId = project.getGroupId();
         }
+
+        // AndroidProject#isBaseSplit is always non null.
+        //noinspection ConstantConditions
+        boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
+
+        return new IdeAndroidProjectImpl(
+                project.getModelVersion(),
+                parsedModelVersion,
+                project.getName(),
+                defaultConfigCopy,
+                buildTypesCopy,
+                productFlavorCopy,
+                syncIssuesCopy,
+                variantsCopy,
+                variantNamesCopy,
+                defaultVariantCopy,
+                flavorDimensionCopy,
+                project.getCompileTarget(),
+                bootClasspathCopy,
+                nativeToolchainsCopy,
+                signingConfigsCopy,
+                lintOptionsCopy,
+                unresolvedDependenciesCopy,
+                javaCompileOptionsCopy,
+                aaptOptionsCopy,
+                project.getBuildFolder(),
+                dynamicFeaturesCopy,
+                viewBindingOptionsCopy,
+                buildToolsVersionCopy,
+                project.getResourcePrefix(),
+                groupId,
+                IdeModel.copyNewProperty(project::getPluginGeneration, null) != null,
+                project.getApiVersion(),
+                getProjectType(project, parsedModelVersion),
+                isBaseSplit);
+    }
+
+    private IdeAndroidProjectImpl(
+            @NonNull String modelVersion,
+            @Nullable GradleVersion parsedModelVersion,
+            @NonNull String name,
+            @NonNull ProductFlavorContainer defaultConfig,
+            @NonNull Collection<BuildTypeContainer> buildTypes,
+            @NonNull Collection<ProductFlavorContainer> productFlavors,
+            @NonNull Collection<SyncIssue> syncIssues,
+            @NonNull Collection<Variant> variants,
+            @NonNull Collection<String> variantNames,
+            @Nullable String defaultVariant,
+            @NonNull Collection<String> flavorDimensions,
+            @NonNull String compileTarget,
+            @NonNull Collection<String> bootClassPath,
+            @NonNull Collection<NativeToolchain> nativeToolchains,
+            @NonNull Collection<SigningConfig> signingConfigs,
+            @NonNull IdeLintOptions lintOptions,
+            @NonNull Collection<String> unresolvedDependencies,
+            @NonNull JavaCompileOptions javaCompileOptions,
+            @NonNull AaptOptions aaptOptions,
+            @NonNull File buildFolder,
+            @NonNull Collection<String> dynamicFeatures,
+            @Nullable ViewBindingOptions viewBindingOptions,
+            @Nullable String buildToolsVersion,
+            @Nullable String resourcePrefix,
+            @Nullable String groupId,
+            boolean supportsPluginGeneration,
+            int apiVersion,
+            int projectType,
+            boolean baseSplit) {
+        myModelVersion = modelVersion;
+        myParsedModelVersion = parsedModelVersion;
+        myName = name;
+        myDefaultConfig = defaultConfig;
+        myBuildTypes = buildTypes;
+        myProductFlavors = productFlavors;
+        mySyncIssues = syncIssues;
+        myVariants = variants;
+        myVariantNames = variantNames;
+        myDefaultVariant = defaultVariant;
+        myFlavorDimensions = flavorDimensions;
+        myCompileTarget = compileTarget;
+        myBootClassPath = bootClassPath;
+        myNativeToolchains = nativeToolchains;
+        mySigningConfigs = signingConfigs;
+        myLintOptions = lintOptions;
+        myUnresolvedDependencies = unresolvedDependencies;
+        myJavaCompileOptions = javaCompileOptions;
+        myAaptOptions = aaptOptions;
+        myBuildFolder = buildFolder;
+        myDynamicFeatures = dynamicFeatures;
+        myViewBindingOptions = viewBindingOptions;
+        myBuildToolsVersion = buildToolsVersion;
+        myResourcePrefix = resourcePrefix;
+        myGroupId = groupId;
+        mySupportsPluginGeneration = supportsPluginGeneration;
+        myApiVersion = apiVersion;
+        myProjectType = projectType;
+        myBaseSplit = baseSplit;
 
         myHashCode = calculateHashCode();
     }
@@ -211,6 +317,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
             return project.getProjectType();
         }
+        // Support for old Android Gradle Plugins must be maintained.
+        //noinspection deprecation
         return project.isLibrary() ? PROJECT_TYPE_LIBRARY : PROJECT_TYPE_APP;
     }
 

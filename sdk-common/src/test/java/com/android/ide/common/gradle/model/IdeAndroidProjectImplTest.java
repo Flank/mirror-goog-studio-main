@@ -60,7 +60,7 @@ public class IdeAndroidProjectImplTest {
     @Test
     public void serialization() throws Exception {
         IdeAndroidProject androidProject =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         new AndroidProjectStub("2.4.0"),
                         myModelCache,
                         myDependenciesFactory,
@@ -118,7 +118,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original, myModelCache, myDependenciesFactory, null, null);
         expectUnsupportedOperationException(androidProject::getBuildToolsVersion);
     }
@@ -127,7 +127,7 @@ public class IdeAndroidProjectImplTest {
     public void constructor() throws Throwable {
         AndroidProject original = new AndroidProjectStub("2.4.0");
         IdeAndroidProjectImpl copy =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original, myModelCache, myDependenciesFactory, null, null);
         verifyUsageOfImmutableCollections(copy);
     }
@@ -138,7 +138,7 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -155,7 +155,7 @@ public class IdeAndroidProjectImplTest {
         SyncIssue defaultIssue = new SyncIssueStub();
 
         IdeAndroidProjectImpl copy =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -186,7 +186,7 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -255,7 +255,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original, myModelCache, myDependenciesFactory, null, null);
         assertThat(androidProject.getDefaultVariant()).isEqualTo("betaDebug");
     }
@@ -270,7 +270,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                new IdeAndroidProjectImpl(
+                IdeAndroidProjectImpl.create(
                         original, myModelCache, myDependenciesFactory, null, null);
         assertThat(androidProject.getDefaultVariant()).isEqualTo("release");
     }

@@ -369,7 +369,7 @@ public class LintGradleExecution {
                         (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
 
                 // Sync issues are not used in lint.
-                return new IdeAndroidProjectImpl(
+                return IdeAndroidProjectImpl.create(
                         project, new IdeDependenciesFactory(), project.getVariants(), null);
             } finally {
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
