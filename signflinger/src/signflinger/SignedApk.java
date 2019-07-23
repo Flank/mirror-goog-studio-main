@@ -121,8 +121,9 @@ public class SignedApk implements Archive {
     public void add(@NonNull ZipSource sources) throws IOException {
         archive.add(sources);
         if (options.v1Enabled) {
-            for (String name : sources.entries().keySet()) {
-                ApkSignerEngine.InspectJarEntryRequest req = signer.outputJarEntry(name);
+            for (Source source : sources.getSelectedEntries()) {
+                ApkSignerEngine.InspectJarEntryRequest req =
+                        signer.outputJarEntry(source.getName());
                 processRequest(req);
             }
         }
@@ -191,7 +192,12 @@ public class SignedApk implements Archive {
         if (req == null) {
             return;
         }
-        ByteBuffer content = archive.getContent(req.getEntryName());
+        String name = req.getEntryName();
+        ByteBuffer content = archive.getContent(name);
+        if (content == null) {
+            String err = String.format("Cannot find and therefore inspect entry %s.", name);
+            throw new IllegalStateException(err);
+        }
         req.getDataSink().consume(content);
         req.done();
     }

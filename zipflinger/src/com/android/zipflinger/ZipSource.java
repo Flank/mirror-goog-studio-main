@@ -96,7 +96,7 @@ public class ZipSource {
         return channel;
     }
 
-    List<? extends Source> getSelectedEntries() {
+    public List<? extends Source> getSelectedEntries() {
         return selectedEntries;
     }
 

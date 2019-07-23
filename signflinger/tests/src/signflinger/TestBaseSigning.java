@@ -17,6 +17,7 @@
 package signflinger;
 
 import com.android.zipflinger.FileSource;
+import com.android.zipflinger.ZipSource;
 import java.io.File;
 
 public abstract class TestBaseSigning {
@@ -56,10 +57,18 @@ public abstract class TestBaseSigning {
         signedApk.close();
         Utils.verify(file);
 
-        // Incremental signing
+        // Incremental signing with file
         signedApk = new SignedApk(file, options);
         signedApk.add(new FileSource(Utils.getFile("test1.txt"), "test1.txt", 1));
         signedApk.close();
+
+        // Incremental signing with zip
+        signedApk = new SignedApk(file, options);
+        ZipSource zipSource = new ZipSource(Utils.getFile("1-2-3files.zip"));
+        zipSource.select("file2.txt", "file2.txt");
+        signedApk.add(zipSource);
+        signedApk.close();
+
         Utils.verify(file);
     }
 

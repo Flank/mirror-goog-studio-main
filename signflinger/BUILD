@@ -60,6 +60,7 @@ java_test(
     ]) + [
         "tests/resources/AndroidManifest.xml",
         "tests/resources/test1.txt",
+        "tests/resources/1-2-3files.zip",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV1Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -112,6 +113,7 @@ java_test(
     ]) + [
         "tests/resources/AndroidManifest.xml",
         "tests/resources/test1.txt",
+        "tests/resources/1-2-3files.zip",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV1andV2Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
