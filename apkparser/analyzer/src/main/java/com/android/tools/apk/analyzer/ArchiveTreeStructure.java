@@ -27,12 +27,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.zip.ZipError;
 import javax.swing.tree.MutableTreeNode;
 
 public class ArchiveTreeStructure {
 
     @NonNull
-    public static ArchiveNode create(@NonNull ArchiveContext archiveContext) throws IOException {
+    public static ArchiveNode create(@NonNull ArchiveContext archiveContext) {
         return createWorker(archiveContext.getArchiveManager(), archiveContext.getArchive(), "");
     }
 
@@ -40,11 +41,10 @@ public class ArchiveTreeStructure {
     private static ArchiveNode createWorker(
             @NonNull ArchiveManager archiveManager,
             @NonNull Archive archive,
-            @NonNull String pathPrefix)
-            throws IOException {
+            @NonNull String pathPrefix) {
         Path contentRoot = archive.getContentRoot();
         ArchiveTreeNode rootNode =
-                new ArchiveTreeNode(new ArchiveEntry(archive, contentRoot, pathPrefix));
+                new ArchiveTreeNode(new ArchivePathEntry(archive, contentRoot, pathPrefix));
 
         Stack<ArchiveTreeNode> stack = new Stack<>();
         stack.push(rootNode);
@@ -52,11 +52,17 @@ public class ArchiveTreeStructure {
         while (!stack.isEmpty()) {
             ArchiveTreeNode node = stack.pop();
             Path path = node.getData().getPath();
-
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
                 for (Path childPath : stream) {
                     ArchiveTreeNode childNode;
-                    Archive innerArchive = archiveManager.openInnerArchive(archive, childPath);
+                    Archive innerArchive;
+                    try {
+                        innerArchive = archiveManager.openInnerArchive(archive, childPath);
+                    } catch (IOException | ZipError e) {
+                        node.add(createErrorNode(archive, childPath, pathPrefix, e));
+                        continue;
+                    }
+
                     if (innerArchive != null) {
 
                         // Create inner tree for temp archive file
@@ -79,7 +85,7 @@ public class ArchiveTreeStructure {
                     } else {
                         childNode =
                                 new ArchiveTreeNode(
-                                        new ArchiveEntry(archive, childPath, pathPrefix));
+                                        new ArchivePathEntry(archive, childPath, pathPrefix));
                         if (Files.isDirectory(childPath)) {
                             stack.push(childNode);
                         }
@@ -87,10 +93,25 @@ public class ArchiveTreeStructure {
 
                     node.add(childNode);
                 }
+            } catch (IOException e) {
+                node.add(new ArchiveTreeNode(new ArchiveErrorEntry(archive, path, pathPrefix, e)));
             }
         }
 
         return rootNode;
+    }
+
+    @NonNull
+    private static ArchiveTreeNode createErrorNode(
+            @NonNull Archive archive,
+            @NonNull Path childPath,
+            @NonNull String pathPrefix,
+            @NonNull Throwable error) {
+        ArchiveTreeNode childNode =
+                new ArchiveTreeNode(new ArchivePathEntry(archive, childPath, pathPrefix));
+        childNode.add(
+                new ArchiveTreeNode(new ArchiveErrorEntry(archive, childPath, pathPrefix, error)));
+        return childNode;
     }
 
     public static void updateRawFileSizes(

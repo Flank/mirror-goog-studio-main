@@ -826,17 +826,17 @@ public class ApkAnalyzerImpl {
             ArchiveTreeStream.preOrderStream(node)
                     .map(
                             n -> {
-                                String path = n.getData().getFullPathString();
+                                String entrySummary = n.getData().getSummaryDisplayString();
                                 long rawSize = n.getData().getRawFileSize();
                                 long downloadSize = n.getData().getDownloadFileSize();
 
                                 if (showDownloadSize) {
-                                    path = getSize(downloadSize) + "\t" + path;
+                                    entrySummary = getSize(downloadSize) + "\t" + entrySummary;
                                 }
                                 if (showRawSize) {
-                                    path = getSize(rawSize) + "\t" + path;
+                                    entrySummary = getSize(rawSize) + "\t" + entrySummary;
                                 }
-                                return path;
+                                return entrySummary;
                             })
                     .filter(path -> !showFilesOnly || !path.endsWith("/"))
                     .forEachOrdered(out::println);

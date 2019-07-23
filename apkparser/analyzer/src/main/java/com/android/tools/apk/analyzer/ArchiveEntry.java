@@ -19,7 +19,7 @@ package com.android.tools.apk.analyzer;
 import com.android.annotations.NonNull;
 import java.nio.file.Path;
 
-public class ArchiveEntry {
+public abstract class ArchiveEntry {
     /** The archive containing this entry. */
     @NonNull private final Archive archive;
     /**
@@ -30,13 +30,11 @@ public class ArchiveEntry {
     @NonNull private final Path path;
     /**
      * This is an arbitrary path prefix string used to build the display path returned by the {@link
-     * #getFullPathString()} method. The string can be empty, in which case {@link
-     * #getFullPathString()} returns the same string as <code>{@link #getPath()}.toString()</code>.
+     * #getSummaryDisplayString()} method. The string can be empty, in which case {@link
+     * #getSummaryDisplayString()} returns the same string as <code>{@link #getPath()}.toString()
+     * </code>.
      */
     @NonNull private final String pathPrefix;
-
-    private long rawFileSize = -1;
-    private long downloadFileSize = -1;
 
     public ArchiveEntry(@NonNull Archive archive, @NonNull Path path, @NonNull String pathPrefix) {
         assert archive.getContentRoot().getFileSystem() == path.getFileSystem();
@@ -44,6 +42,18 @@ public class ArchiveEntry {
         this.archive = archive;
         this.path = path;
         this.pathPrefix = pathPrefix;
+    }
+
+    public void setRawFileSize(long rawFileSize) {}
+
+    public long getRawFileSize() {
+        return 0;
+    }
+
+    public void setDownloadFileSize(long downloadFileSize) {}
+
+    public long getDownloadFileSize() {
+        return 0;
     }
 
     @NonNull
@@ -56,31 +66,25 @@ public class ArchiveEntry {
         return pathPrefix;
     }
 
-    public void setRawFileSize(long rawFileSize) {
-        this.rawFileSize = rawFileSize;
-    }
-
-    public long getRawFileSize() {
-        return rawFileSize;
-    }
-
-    public void setDownloadFileSize(long downloadFileSize) {
-        this.downloadFileSize = downloadFileSize;
-    }
-
-    public long getDownloadFileSize() {
-        return downloadFileSize;
-    }
-
     @NonNull
     public Archive getArchive() {
         return archive;
     }
 
+    /**
+     * Returns a short description string that can be used when displaying this entry in the context
+     * of its parent entry, for example the filename, without the parent path, for an entry
+     * corresponding to a file.
+     */
     @NonNull
-    public String getFullPathString() {
-        return pathPrefix + path.toString();
-    }
+    public abstract String getNodeDisplayString();
+
+    /**
+     * Returns a description string that summarizes the content of this entry and its parent(s), for
+     * example a full path if the entry corresponding to a file.
+     */
+    @NonNull
+    public abstract String getSummaryDisplayString();
 
     @Override
     public String toString() {
