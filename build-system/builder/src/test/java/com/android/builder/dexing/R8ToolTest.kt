@@ -253,11 +253,25 @@ class R8ToolTest {
                 r8OutputType = R8OutputType.DEX
         )
 
-        val classes = tmp.newFolder().toPath().resolve("classes.jar")
-        TestInputsGenerator.dirWithEmptyClasses(classes, listOf("test/A", "test/B"))
+        val testClasses = tmp.newFolder().toPath().resolve("testClasses.jar")
+        TestInputsGenerator.pathWithClasses(
+                testClasses,
+                listOf(ExampleClasses.TestClass::class.java))
+
+        val programClasses = tmp.newFolder().toPath().resolve("programClasses.jar")
+        TestInputsGenerator.pathWithClasses(
+                programClasses,
+                listOf(ExampleClasses::class.java, ExampleClasses.ProgramClass::class.java))
+
+        val libraries = mutableListOf(programClasses)
+        libraries.addAll(bootClasspath)
 
         val proguardInputMapping = tmp.newFile("space in name.txt").toPath()
-        Files.write(proguardInputMapping, listOf("test.A -> a.Changed:"))
+        Files.write(
+                proguardInputMapping,
+                listOf(
+                        "com.android.builder.dexing.ExampleClasses\$ProgramClass -> foo.Bar:",
+                        "  1:1:void method():42:42 -> baz"))
         val proguardConfig =
                 ProguardConfig(
                         listOf(),
@@ -272,9 +286,12 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(listOf(testClasses), output, listOf(), javaRes, libraries, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
         assertThat(getDexFileCount(output)).isEqualTo(1)
-        assertThatDex(output.resolve("classes.dex").toFile()).containsClass("La/Changed;")
+        assertThatDex(output.resolve("classes.dex").toFile())
+            .containsClass("Lcom/android/builder/dexing/ExampleClasses\$TestClass;")
+            .that()
+            .hasMethodThatInvokes("test", "Lfoo/Bar;->baz()V")
         assertThat(Files.exists(proguardConfig.proguardOutputFiles?.proguardMapOutput)).isTrue()
     }
 

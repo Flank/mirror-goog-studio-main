@@ -17,6 +17,16 @@
 package com.android.testutils.truth;
 
 import static com.google.common.truth.Truth.assertAbout;
+import static org.jf.dexlib2.Opcode.INVOKE_DIRECT;
+import static org.jf.dexlib2.Opcode.INVOKE_DIRECT_RANGE;
+import static org.jf.dexlib2.Opcode.INVOKE_INTERFACE;
+import static org.jf.dexlib2.Opcode.INVOKE_INTERFACE_RANGE;
+import static org.jf.dexlib2.Opcode.INVOKE_STATIC;
+import static org.jf.dexlib2.Opcode.INVOKE_STATIC_RANGE;
+import static org.jf.dexlib2.Opcode.INVOKE_SUPER;
+import static org.jf.dexlib2.Opcode.INVOKE_SUPER_RANGE;
+import static org.jf.dexlib2.Opcode.INVOKE_VIRTUAL;
+import static org.jf.dexlib2.Opcode.INVOKE_VIRTUAL_RANGE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -26,10 +36,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.jf.dexlib2.DebugItemType;
+import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedField;
 import org.jf.dexlib2.dexbacked.DexBackedMethod;
 import org.jf.dexlib2.iface.debug.DebugItem;
+import org.jf.dexlib2.iface.instruction.Instruction;
+import org.jf.dexlib2.iface.instruction.formats.Instruction35c;
+import org.jf.dexlib2.iface.instruction.formats.Instruction3rc;
+import org.jf.dexlib2.iface.reference.MethodReference;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef> {
@@ -93,6 +108,51 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
             }
         }
         fail("contains method", name);
+    }
+
+    public void hasMethodThatInvokes(@NonNull String name, String descriptor) {
+        assertSubjectIsNonNull();
+        for (DexBackedMethod method : actual().getMethods()) {
+            if (method.getName().equals(name)) {
+                if (method.getImplementation() == null) {
+                    fail("contains an implementation for a method named `" + name + "`");
+                    return;
+                }
+                for (Instruction instruction : method.getImplementation().getInstructions()) {
+                    Opcode opcode = instruction.getOpcode();
+                    boolean isInvoke =
+                            opcode == INVOKE_VIRTUAL
+                                    || opcode == INVOKE_SUPER
+                                    || opcode == INVOKE_DIRECT
+                                    || opcode == INVOKE_STATIC
+                                    || opcode == INVOKE_INTERFACE;
+                    boolean isInvokeRange =
+                            opcode == INVOKE_VIRTUAL_RANGE
+                                    || opcode == INVOKE_SUPER_RANGE
+                                    || opcode == INVOKE_DIRECT_RANGE
+                                    || opcode == INVOKE_STATIC_RANGE
+                                    || opcode == INVOKE_INTERFACE_RANGE;
+                    if (isInvoke || isInvokeRange) {
+                        MethodReference reference =
+                                isInvoke
+                                        ? ((MethodReference)
+                                                ((Instruction35c) instruction).getReference())
+                                        : ((MethodReference)
+                                                ((Instruction3rc) instruction).getReference());
+                        if (reference.toString().equals(descriptor)) {
+                            return;
+                        }
+                    }
+                }
+                fail(
+                        "invokes a method with the descriptor `"
+                                + descriptor
+                                + "` from `"
+                                + name
+                                + "`");
+            }
+        }
+        fail("contains a method named `" + name + "`");
     }
 
     public void hasExactFields(@NonNull Set<String> names) {

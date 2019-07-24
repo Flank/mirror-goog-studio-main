@@ -90,4 +90,16 @@ class ExampleClasses {
         @RuntimeAnnotation
         RuntimeAnnotatedConstructor() {}
     }
+
+    static class ProgramClass {
+
+        static void method() {}
+    }
+
+    static class TestClass {
+
+        static void test() {
+            ProgramClass.method();
+        }
+    }
 }
