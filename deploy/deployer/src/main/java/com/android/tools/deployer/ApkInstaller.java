@@ -16,8 +16,8 @@
 package com.android.tools.deployer;
 
 
-import static com.android.tools.deployer.AdbClient.InstallStatus.OK;
-import static com.android.tools.deployer.AdbClient.InstallStatus.SKIPPED_INSTALL;
+import static com.android.tools.deployer.InstallStatus.OK;
+import static com.android.tools.deployer.InstallStatus.SKIPPED_INSTALL;
 
 import com.android.ddmlib.InstallReceiver;
 import com.android.sdklib.AndroidVersion;
@@ -300,10 +300,9 @@ public class ApkInstaller {
 
     public static AdbClient.InstallResult parseInstallerResultErrorCode(String errorCode) {
         try {
-            return new AdbClient.InstallResult(AdbClient.InstallStatus.valueOf(errorCode));
+            return new AdbClient.InstallResult(InstallStatus.valueOf(errorCode));
         } catch (Exception e) {
-            return new AdbClient.InstallResult(
-                    AdbClient.InstallStatus.UNKNOWN_ERROR, errorCode, null);
+            return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
         }
     }
 

@@ -361,8 +361,8 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.PREINSTALL_FAILED, NO_ARGS, reason);
     }
 
-    public static DeployerException installFailed(AdbClient.InstallStatus code, String reason) {
-        String suffix = code != AdbClient.InstallStatus.UNKNOWN_ERROR ? ": " + code.name() : ".";
+    public static DeployerException installFailed(InstallStatus code, String reason) {
+        String suffix = code != InstallStatus.UNKNOWN_ERROR ? ": " + code.name() : ".";
         return new DeployerException(Error.INSTALL_FAILED, code, new String[] {suffix}, reason);
     }
 
