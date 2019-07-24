@@ -27,7 +27,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link SourceProvider}. */
 public final class IdeSourceProvider implements SourceProvider, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myName;
     @NonNull private final File myManifestFile;
@@ -42,6 +42,25 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
     @NonNull private final Collection<File> myJniLibsDirectories;
     @NonNull private final Collection<File> myShadersDirectories;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeSourceProvider() {
+        myName = "";
+        //noinspection ConstantConditions
+        myManifestFile = null;
+        myJavaDirectories = Collections.emptyList();
+        myResourcesDirectories = Collections.emptyList();
+        myAidlDirectories = Collections.emptyList();
+        myRenderscriptDirectories = Collections.emptyList();
+        myCDirectories = Collections.emptyList();
+        myCppDirectories = Collections.emptyList();
+        myResDirectories = Collections.emptyList();
+        myAssetsDirectories = Collections.emptyList();
+        myJniLibsDirectories = Collections.emptyList();
+        myShadersDirectories = Collections.emptyList();
+
+        myHashCode = 0;
+    }
 
     public IdeSourceProvider(@NonNull SourceProvider provider) {
         myName = provider.getName();

@@ -28,7 +28,7 @@ import java.util.*;
 public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         implements IdeAndroidArtifact {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     @NonNull private final Collection<AndroidArtifactOutput> myOutputs;
     @NonNull private final String myApplicationId;
@@ -48,6 +48,29 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     private final boolean mySigned;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeAndroidArtifactImpl() {
+        super();
+        myOutputs = Collections.emptyList();
+        myApplicationId = "";
+        mySourceGenTaskName = "";
+        myGeneratedResourceFolders = Collections.emptyList();
+        myAdditionalRuntimeApks = Collections.emptyList();
+        myBuildConfigFields = Collections.emptyMap();
+        myResValues = Collections.emptyMap();
+        myInstantRun = null;
+        mySigningConfigName = null;
+        myAbiFilters = null;
+        myNativeLibraries = null;
+        myTestOptions = null;
+        myInstrumentedTestTaskName = null;
+        myBundleTaskName = null;
+        myApkFromBundleTaskName = null;
+        mySigned = false;
+
+        myHashCode = 0;
+    }
 
     public IdeAndroidArtifactImpl(
             @NonNull AndroidArtifact artifact,

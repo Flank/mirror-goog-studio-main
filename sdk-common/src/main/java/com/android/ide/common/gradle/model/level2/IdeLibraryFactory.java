@@ -36,13 +36,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Creates instance of {@link Library}. */
-class IdeLibraryFactory {
+public class IdeLibraryFactory {
     /**
      * @param library Instance of level 2 library returned by android plugin.
      * @return Deep copy of {@link Library} based on library type.
      */
     @NonNull
-    Library create(@NonNull Library library) {
+    public Library create(@NonNull Library library) {
         if (library.getType() == LIBRARY_ANDROID) {
             File folder = library.getFolder();
             return new IdeAndroidLibrary(

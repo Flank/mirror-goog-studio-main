@@ -19,9 +19,20 @@ import com.android.builder.model.ViewBindingOptions
 import java.io.Serializable
 import java.util.Objects
 
-class IdeViewBindingOptions(model: ViewBindingOptions) : ViewBindingOptions, Serializable {
-  val enabled = model.isEnabled
-  val hashCode = calculateHashCode()
+class IdeViewBindingOptions : ViewBindingOptions, Serializable {
+  val enabled : Boolean
+  val hashCode : Int
+
+  constructor(model: ViewBindingOptions) {
+    enabled = model.isEnabled
+    hashCode = calculateHashCode()
+  }
+
+  // Used for serialization by the IDE.
+  constructor() {
+    enabled = false
+    hashCode = 0
+  }
 
   override fun isEnabled(): Boolean = enabled
 

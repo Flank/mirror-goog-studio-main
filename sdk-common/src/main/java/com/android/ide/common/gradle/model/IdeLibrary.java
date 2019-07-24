@@ -26,7 +26,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link Library}. */
 public abstract class IdeLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final IdeMavenCoordinates myResolvedCoordinates;
     @Nullable private final String myBuildId;
@@ -34,7 +34,19 @@ public abstract class IdeLibrary implements Library, Serializable {
     @Nullable private final String myName;
     @Nullable private final Boolean myIsSkipped;
     @Nullable private final Boolean myProvided;
-    private final int myHashCode;
+    private final int hashCode;
+
+    // Used for serialization by the IDE.
+    IdeLibrary() {
+        myResolvedCoordinates = new IdeMavenCoordinates();
+        myBuildId = null;
+        myProject = null;
+        myName = null;
+        myIsSkipped = null;
+        myProvided = null;
+
+        hashCode = 0;
+    }
 
     protected IdeLibrary(@NonNull Library library, @NonNull ModelCache modelCache) {
         myResolvedCoordinates = computeResolvedCoordinate(library, modelCache);
@@ -45,7 +57,7 @@ public abstract class IdeLibrary implements Library, Serializable {
                         library::getName, null); // Library.getName() was added in 2.2
         myProvided = IdeModel.copyNewProperty(library::isProvided, null);
         myIsSkipped = IdeModel.copyNewProperty(library::isSkipped, null);
-        myHashCode = calculateHashCode();
+        hashCode = calculateHashCode();
     }
 
     @Override
@@ -119,7 +131,7 @@ public abstract class IdeLibrary implements Library, Serializable {
 
     @Override
     public int hashCode() {
-        return myHashCode;
+        return hashCode;
     }
 
     protected int calculateHashCode() {

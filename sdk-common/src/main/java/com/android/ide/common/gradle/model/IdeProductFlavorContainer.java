@@ -22,17 +22,27 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link ProductFlavorContainer}. */
 public final class IdeProductFlavorContainer implements ProductFlavorContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final ProductFlavor myProductFlavor;
     @NonNull private final SourceProvider mySourceProvider;
     @NonNull private final Collection<SourceProviderContainer> myExtraSourceProviders;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeProductFlavorContainer() {
+        myProductFlavor = new IdeProductFlavor();
+        mySourceProvider = new IdeSourceProvider();
+        myExtraSourceProviders = Collections.emptyList();
+
+        myHashCode = 0;
+    }
 
     public IdeProductFlavorContainer(
             @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {

@@ -70,6 +70,9 @@ public class IdeJavaArtifactTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeJavaArtifact.class).withRedefinedSuperclass().verify();
+        createEqualsVerifier(IdeJavaArtifact.class)
+                .withRedefinedSuperclass()
+                .withIgnoredFields("hashCode")
+                .verify();
     }
 }

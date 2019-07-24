@@ -19,15 +19,16 @@ package com.android.ide.common.gradle.model
 import com.android.builder.model.ProjectSyncIssues
 import com.android.builder.model.SyncIssue
 import java.io.Serializable
+import java.util.Collections
 
 /** Creates a deep copy of a {@link ProjectSyncIssues}. */
-data class IdeProjectSyncIssues(val syncIssues: Collection<SyncIssue>) : Serializable {
+data class IdeProjectSyncIssues(val syncIssues: Collection<SyncIssue> = Collections.emptyList()) :
+    Serializable {
 
-    constructor(project: ProjectSyncIssues, modelCache: ModelCache) : this(copySyncIssues(project, modelCache)) {
-    }
+    constructor(project: ProjectSyncIssues, modelCache: ModelCache) : this(copySyncIssues(project, modelCache))
 
     companion object {
-        private const val serialVersionUID: Long = -664815043457105643L // from serialver
+        private const val serialVersionUID: Long = 2L
 
         fun copySyncIssues(project: ProjectSyncIssues, modelCache: ModelCache): Collection<SyncIssue> {
             return IdeModel.copy(

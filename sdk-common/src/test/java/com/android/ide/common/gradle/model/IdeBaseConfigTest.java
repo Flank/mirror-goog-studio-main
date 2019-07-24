@@ -33,10 +33,10 @@ public class IdeBaseConfigTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBaseConfig.class)
+        createEqualsVerifier(IdeBaseConfig.class, "hashCode")
                 .withRedefinedSubclass(IdeBuildType.class)
                 .verify();
-        createEqualsVerifier(IdeBaseConfig.class)
+        createEqualsVerifier(IdeBaseConfig.class, "hashCode")
                 .withRedefinedSubclass(IdeProductFlavor.class)
                 .verify();
     }

@@ -29,7 +29,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link VariantOutput}. */
 public abstract class IdeVariantOutput implements VariantOutput, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final Collection<? extends OutputFile> myOutputs;
     @NonNull private final Collection<String> myFilterTypes;
@@ -37,7 +37,19 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
     @Nullable private final OutputFile myMainOutputFile;
     @Nullable private final String myOutputType;
     private final int myVersionCode;
-    private final int myHashCode;
+    private final int hashCode;
+
+    // Used for serialization by the IDE.
+    IdeVariantOutput() {
+        myOutputs = Collections.emptyList();
+        myFilterTypes = Collections.emptyList();
+        myFilters = null;
+        myMainOutputFile = null;
+        myOutputType = null;
+        myVersionCode = 0;
+
+        hashCode = 0;
+    }
 
     public IdeVariantOutput(@NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         //noinspection deprecation
@@ -60,7 +72,7 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
         myOutputType = IdeModel.copyNewProperty(output::getOutputType, null);
         myVersionCode = output.getVersionCode();
 
-        myHashCode = calculateHashCode();
+        hashCode = calculateHashCode();
     }
 
     @Nullable
@@ -141,7 +153,7 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
 
     @Override
     public int hashCode() {
-        return myHashCode;
+        return hashCode;
     }
 
     protected int calculateHashCode() {

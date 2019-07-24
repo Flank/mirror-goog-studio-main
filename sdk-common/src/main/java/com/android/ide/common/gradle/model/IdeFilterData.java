@@ -17,17 +17,28 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link FilterData}. */
 public final class IdeFilterData implements FilterData, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myIdentifier;
     @NonNull private final String myFilterType;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @VisibleForTesting
+    @SuppressWarnings("unused")
+    public IdeFilterData() {
+        myIdentifier = "";
+        myFilterType = "";
+
+        myHashCode = 0;
+    }
 
     public IdeFilterData(@NonNull FilterData data) {
         myIdentifier = data.getIdentifier();

@@ -59,6 +59,9 @@ public class IdeAndroidArtifactOutputTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactOutput.class).withRedefinedSuperclass().verify();
+        createEqualsVerifier(IdeAndroidArtifactOutput.class)
+                .withRedefinedSuperclass()
+                .withIgnoredFields("hashCode")
+                .verify();
     }
 }

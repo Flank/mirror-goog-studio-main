@@ -58,6 +58,9 @@ public class IdeBuildTypeTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBuildType.class).withRedefinedSuperclass().verify();
+        createEqualsVerifier(IdeBuildType.class)
+                .withIgnoredFields("hashCode")
+                .withRedefinedSuperclass()
+                .verify();
     }
 }

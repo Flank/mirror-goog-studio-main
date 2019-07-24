@@ -15,9 +15,12 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.android.builder.model.AaptOptions.Namespacing.DISABLED;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,13 +35,23 @@ public class IdeAaptOptions implements AaptOptions, Serializable {
     @NonNull private final List<String> additionalParameters;
     @NonNull private final Namespacing namespacing;
 
+    // Used for serialization by the IDE.
+    IdeAaptOptions() {
+        ignoreAssets = null;
+        noCompress = null;
+        failOnMissingConfigEntry = false;
+        additionalParameters = Collections.emptyList();
+        namespacing = DISABLED;
+    }
+
     // copyNewProperty won't return null for a non-null getter with a non-null default value.
     @SuppressWarnings("ConstantConditions")
-    protected IdeAaptOptions(@NonNull AaptOptions original) {
+    @VisibleForTesting
+    public IdeAaptOptions(@NonNull AaptOptions original) {
 
         ignoreAssets = IdeModel.copyNewProperty(original::getIgnoreAssets, null);
         noCompress = IdeModel.copyNewProperty(original::getNoCompress, null);
-        namespacing = IdeModel.copyNewProperty(original::getNamespacing, Namespacing.DISABLED);
+        namespacing = IdeModel.copyNewProperty(original::getNamespacing, DISABLED);
         additionalParameters =
                 IdeModel.copyNewProperty(
                         original::getAdditionalParameters, Collections.emptyList());

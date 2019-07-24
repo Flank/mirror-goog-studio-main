@@ -32,7 +32,7 @@ import java.util.Objects;
 public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBundle {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     @NonNull private final File myBundle;
     @NonNull private final File myFolder;
@@ -45,7 +45,32 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
     @Nullable private final File myResStaticLibrary;
     @NonNull private final File myAssetsFolder;
     @Nullable private final String myProjectVariant;
-    private final int myHashCode;
+    private final int hashCodeBundle;
+
+    // Used for serialization by the IDE.
+    IdeAndroidBundle() {
+        super();
+        //noinspection ConstantConditions
+        myBundle = null;
+        //noinspection ConstantConditions
+        myFolder = null;
+        myLibraryDependencies = Collections.emptyList();
+        myJavaDependencies = Collections.emptyList();
+        //noinspection ConstantConditions
+        myManifest = null;
+        //noinspection ConstantConditions
+        myJarFile = null;
+        //noinspection ConstantConditions
+        myCompileJarFile = null;
+        //noinspection ConstantConditions
+        myResFolder = null;
+        myResStaticLibrary = null;
+        //noinspection ConstantConditions
+        myAssetsFolder = null;
+        myProjectVariant = null;
+
+        hashCodeBundle = 0;
+    }
 
     protected IdeAndroidBundle(@NonNull AndroidBundle bundle, @NonNull ModelCache modelCache) {
         super(bundle, modelCache);
@@ -69,7 +94,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         myResStaticLibrary = IdeModel.copyNewProperty(bundle::getResStaticLibrary, null);
         myAssetsFolder = bundle.getAssetsFolder();
         myProjectVariant = bundle.getProjectVariant();
-        myHashCode = calculateHashCode();
+        hashCodeBundle = calculateHashCode();
     }
 
     @NonNull
@@ -184,7 +209,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
 
     @Override
     public int hashCode() {
-        return myHashCode;
+        return hashCodeBundle;
     }
 
     @Override

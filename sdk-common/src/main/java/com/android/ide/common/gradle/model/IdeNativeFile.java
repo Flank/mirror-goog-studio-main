@@ -27,6 +27,16 @@ public final class IdeNativeFile implements NativeFile, Serializable {
     private final File myWorkingDirectory;
     private final int myHashCode;
 
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeNativeFile() {
+        myFilePath = null;
+        mySettingsName = "";
+        myWorkingDirectory = null;
+
+        myHashCode = 0;
+    }
+
     public IdeNativeFile(@NonNull NativeFile file) {
         myFilePath = file.getFilePath();
         mySettingsName = file.getSettingsName();

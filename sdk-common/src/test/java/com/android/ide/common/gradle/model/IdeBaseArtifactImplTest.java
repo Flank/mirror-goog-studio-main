@@ -106,10 +106,10 @@ public class IdeBaseArtifactImplTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBaseArtifactImpl.class)
+        createEqualsVerifier(IdeBaseArtifactImpl.class, "hashCode")
                 .withRedefinedSubclass(IdeAndroidArtifactImpl.class)
                 .verify();
-        createEqualsVerifier(IdeBaseArtifactImpl.class)
+        createEqualsVerifier(IdeBaseArtifactImpl.class, "hashCode")
                 .withRedefinedSubclass(IdeJavaArtifact.class)
                 .verify();
     }

@@ -23,11 +23,20 @@ import java.util.Objects;
 
 /** Creates a deep copy of a {@link TestOptions}. */
 public class IdeTestOptions implements TestOptions, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final boolean myAnimationsDisabled;
     @Nullable private final Execution myExecutionEnum;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeTestOptions() {
+        myAnimationsDisabled = false;
+        myExecutionEnum = null;
+
+        myHashCode = 0;
+    }
 
     public IdeTestOptions(@NonNull TestOptions testOptions) {
         myAnimationsDisabled = testOptions.getAnimationsDisabled();

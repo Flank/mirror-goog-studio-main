@@ -24,12 +24,22 @@ import java.util.Objects;
 /** Creates a deep copy of an {@link ApiVersion}. */
 public final class IdeApiVersion implements ApiVersion, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myApiString;
     @Nullable private final String myCodename;
     private final int myApiLevel;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeApiVersion() {
+        myApiString = "";
+        myCodename = null;
+        myApiLevel = 0;
+
+        myHashCode = 0;
+    }
 
     public IdeApiVersion(@NonNull ApiVersion version) {
         myApiString = version.getApiString();

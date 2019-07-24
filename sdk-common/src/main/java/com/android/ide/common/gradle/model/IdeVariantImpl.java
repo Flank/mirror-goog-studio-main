@@ -33,7 +33,7 @@ import java.util.function.Function;
 /** Creates a deep copy of a {@link Variant}. */
 public final class IdeVariantImpl implements IdeVariant, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myName;
     @NonNull private final String myDisplayName;
@@ -46,6 +46,23 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
     private final int myHashCode;
     private final boolean myInstantAppCompatible;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeVariantImpl() {
+        myName = "";
+        myDisplayName = "";
+        myMainArtifact = new IdeAndroidArtifactImpl();
+        myExtraAndroidArtifacts = Collections.emptyList();
+        myExtraJavaArtifacts = Collections.emptyList();
+        myBuildType = "";
+        myProductFlavors = Collections.emptyList();
+        myMergedFlavor = new IdeProductFlavor();
+        myTestedTargetVariants = Collections.emptyList();
+        myInstantAppCompatible = false;
+
+        myHashCode = 0;
+    }
 
     public IdeVariantImpl(
             @NonNull Variant variant,

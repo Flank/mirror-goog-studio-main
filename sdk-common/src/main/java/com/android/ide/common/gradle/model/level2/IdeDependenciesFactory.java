@@ -91,7 +91,7 @@ public class IdeDependenciesFactory {
     /** Call this method on level 4 DependencyGraphs. */
     @VisibleForTesting
     @NonNull
-    IdeDependencies createFromDependencyGraphs(@NonNull DependencyGraphs graphs) {
+    public IdeDependencies createFromDependencyGraphs(@NonNull DependencyGraphs graphs) {
         return createInstance(
                 graphs.getCompileDependencies()
                         .stream()

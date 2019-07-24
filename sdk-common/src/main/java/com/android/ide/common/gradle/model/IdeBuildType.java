@@ -24,7 +24,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link BuildType}. */
 public final class IdeBuildType extends IdeBaseConfig implements BuildType {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final boolean myDebuggable;
     private final boolean myJniDebuggable;
@@ -34,13 +34,24 @@ public final class IdeBuildType extends IdeBaseConfig implements BuildType {
     private final boolean myZipAlignEnabled;
     private final int myHashCode;
 
+    // Used for serialization by the IDE.
+    IdeBuildType() {
+        myDebuggable = false;
+        myJniDebuggable = false;
+        myRenderscriptDebuggable = false;
+        myRenderscriptOptimLevel = 0;
+        myMinifyEnabled = false;
+        myZipAlignEnabled = false;
+
+        myHashCode = 0;
+    }
+
     public IdeBuildType(@NonNull BuildType buildType, @NonNull ModelCache modelCache) {
         super(buildType, modelCache);
         myDebuggable = buildType.isDebuggable();
         myJniDebuggable = buildType.isJniDebuggable();
         myRenderscriptDebuggable = buildType.isRenderscriptDebuggable();
         myRenderscriptOptimLevel = buildType.getRenderscriptOptimLevel();
-        //noinspection deprecation
         myMinifyEnabled = buildType.isMinifyEnabled();
         myZipAlignEnabled = buildType.isZipAlignEnabled();
 

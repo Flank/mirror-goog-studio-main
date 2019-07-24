@@ -33,7 +33,7 @@ public class IdeVariantOutputTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVariantOutput.class)
+        createEqualsVerifier(IdeVariantOutput.class, "hashCode")
                 .withRedefinedSubclass(IdeAndroidArtifactOutput.class)
                 .verify();
     }

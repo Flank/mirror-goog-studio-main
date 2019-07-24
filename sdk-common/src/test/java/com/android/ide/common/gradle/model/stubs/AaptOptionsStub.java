@@ -18,8 +18,8 @@ package com.android.ide.common.gradle.model.stubs;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,7 +31,12 @@ public class AaptOptionsStub extends BaseStub implements AaptOptions {
     @NonNull private final Namespacing namespacing;
 
     public AaptOptionsStub() {
-        this(null, null, false, Collections.emptyList(), Namespacing.DISABLED);
+        this(
+                "ignore",
+                ImmutableList.<String>builder().add("a").add("b").build(),
+                false,
+                ImmutableList.<String>builder().add("a1").add("b1").build(),
+                Namespacing.DISABLED);
     }
 
     public AaptOptionsStub(

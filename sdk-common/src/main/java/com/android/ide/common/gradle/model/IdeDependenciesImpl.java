@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 /** Creates a deep copy of a {@link Dependencies}. */
 public final class IdeDependenciesImpl implements IdeDependencies, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final Collection<AndroidLibrary> myLibraries;
     @NonNull private final Collection<JavaLibrary> myJavaLibraries;
@@ -40,6 +40,17 @@ public final class IdeDependenciesImpl implements IdeDependencies, Serializable 
     @NonNull private final Collection<ProjectIdentifier> myJavaModules;
     @NonNull private final Collection<File> myRuntimeOnlyClasses;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeDependenciesImpl() {
+        myLibraries = Collections.emptyList();
+        myJavaLibraries = Collections.emptyList();
+        myProjects = Collections.emptyList();
+        myJavaModules = Collections.emptyList();
+        myRuntimeOnlyClasses = Collections.emptyList();
+
+        myHashCode = 0;
+    }
 
     public IdeDependenciesImpl(@NonNull Dependencies dependencies, @NonNull ModelCache modelCache) {
 

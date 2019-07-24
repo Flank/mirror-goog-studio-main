@@ -36,7 +36,7 @@ import java.util.Objects;
 
 public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProject, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
@@ -49,6 +49,23 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     @Nullable private final Collection<String> myBuildSystems;
     private final int myApiVersion;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeNativeAndroidProjectImpl() {
+        myModelVersion = "";
+        myName = "";
+        myBuildFiles = Collections.emptyList();
+        myVariantInfos = Collections.emptyMap();
+        myArtifacts = Collections.emptyList();
+        myToolChains = Collections.emptyList();
+        mySettings = Collections.emptyList();
+        myFileExtensions = Collections.emptyMap();
+        myBuildSystems = Collections.emptyList();
+        myApiVersion = 0;
+
+        myHashCode = 0;
+    }
 
     public IdeNativeAndroidProjectImpl(@NonNull NativeAndroidProject project) {
         this(project, new ModelCache());

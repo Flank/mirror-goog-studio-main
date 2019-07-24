@@ -25,12 +25,22 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link NativeToolchain}. */
 public final class IdeNativeToolchain implements NativeToolchain, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myName;
     @Nullable private final File myCCompilerExecutable;
     @Nullable private final File myCppCompilerExecutable;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeNativeToolchain() {
+        myName = "";
+        myCCompilerExecutable = null;
+        myCppCompilerExecutable = null;
+
+        myHashCode = 0;
+    }
 
     public IdeNativeToolchain(@NonNull NativeToolchain toolchain) {
         myName = toolchain.getName();

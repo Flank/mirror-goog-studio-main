@@ -167,6 +167,9 @@ public class IdeAndroidArtifactImplTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactImpl.class).withRedefinedSuperclass().verify();
+        createEqualsVerifier(IdeAndroidArtifactImpl.class)
+                .withRedefinedSuperclass()
+                .withIgnoredFields("hashCode")
+                .verify();
     }
 }

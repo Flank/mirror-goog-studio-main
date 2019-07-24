@@ -23,11 +23,19 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link SourceProviderContainer}. */
 public final class IdeSourceProviderContainer implements SourceProviderContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myArtifactName;
     @NonNull private final IdeSourceProvider mySourceProvider;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeSourceProviderContainer() {
+        myArtifactName = "";
+        mySourceProvider = new IdeSourceProvider();
+
+        myHashCode = 0;
+    }
 
     public IdeSourceProviderContainer(
             @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {

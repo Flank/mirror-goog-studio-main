@@ -25,7 +25,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link MavenCoordinates}. */
 public final class IdeMavenCoordinates implements MavenCoordinates, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myGroupId;
     @NonNull private final String myArtifactId;
@@ -33,6 +33,17 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
     @NonNull private final String myPacking;
     @Nullable private final String myClassifier;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeMavenCoordinates() {
+        myGroupId = "";
+        myArtifactId = "";
+        myVersion = "";
+        myPacking = "";
+        myClassifier = null;
+
+        myHashCode = 0;
+    }
 
     public IdeMavenCoordinates(@NonNull MavenCoordinates coordinates) {
         myGroupId = coordinates.getGroupId();

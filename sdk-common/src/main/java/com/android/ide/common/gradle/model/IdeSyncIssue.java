@@ -25,7 +25,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link SyncIssue}. */
 public final class IdeSyncIssue implements SyncIssue, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myMessage;
     @Nullable private final String myData;
@@ -33,6 +33,18 @@ public final class IdeSyncIssue implements SyncIssue, Serializable {
     private final int mySeverity;
     private final int myType;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeSyncIssue() {
+        myMessage = "";
+        myData = "";
+        myMultiLineMessage = null;
+        mySeverity = 0;
+        myType = 0;
+
+        myHashCode = 0;
+    }
 
     public IdeSyncIssue(@NonNull SyncIssue issue) {
         myMessage = issue.getMessage();

@@ -25,13 +25,14 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final List<File> myBuildFiles;
     @NonNull private final Collection<NativeArtifact> myArtifacts;
@@ -41,6 +42,20 @@ public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable
     @NonNull private final String myVariantName;
     @NonNull private final String myAbi;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeNativeVariantAbi() {
+        myBuildFiles = Collections.emptyList();
+        myArtifacts = Collections.emptyList();
+        myToolChains = Collections.emptyList();
+        mySettings = Collections.emptyList();
+        myFileExtensions = Collections.emptyMap();
+        myVariantName = "";
+        myAbi = "";
+
+        myHashCode = 0;
+    }
 
     public IdeNativeVariantAbi(@NonNull NativeVariantAbi variantAbi) {
         this(variantAbi, new ModelCache());

@@ -21,12 +21,13 @@ import com.android.builder.model.level2.Library;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_ANDROID. */
 public final class IdeAndroidLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myFolder;
@@ -48,6 +49,34 @@ public final class IdeAndroidLibrary implements Library, Serializable {
     @NonNull private final String mySymbolFile;
     private final int myType;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeAndroidLibrary() {
+        myArtifactAddress = "";
+        //noinspection ConstantConditions
+        myFolder = null;
+        myManifest = "";
+        myJarFile = "";
+        myCompileJarFile = "";
+        myResFolder = "";
+        resStaticLibrary = null;
+        myAssetsFolder = "";
+        myLocalJars = Collections.emptyList();
+        myJniFolder = "";
+        myAidlFolder = "";
+        myRenderscriptFolder = "";
+        myProguardRules = "";
+        myLintJar = "";
+        myExternalAnnotations = "";
+        myPublicResources = "";
+        //noinspection ConstantConditions
+        myArtifactFile = null;
+        mySymbolFile = "";
+        myType = 0;
+
+        myHashCode = 0;
+    }
 
     IdeAndroidLibrary(
             @NonNull String artifactAddress,

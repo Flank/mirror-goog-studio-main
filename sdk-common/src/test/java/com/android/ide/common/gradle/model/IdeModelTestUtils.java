@@ -133,12 +133,19 @@ public final class IdeModelTestUtils {
                 || e instanceof UnsupportedOperationException;
     }
 
+
     @NonNull
     public static <T extends Serializable> EqualsVerifier<T> createEqualsVerifier(
             @NonNull Class<T> type) {
+        return createEqualsVerifier(type, "myHashCode");
+    }
+
+    @NonNull
+    public static <T extends Serializable> EqualsVerifier<T> createEqualsVerifier(
+            @NonNull Class<T> type, @NonNull String hashCodeField) {
         EqualsVerifier<T> equalsVerifier = EqualsVerifier.forClass(type);
         equalsVerifier
-                .withCachedHashCode("myHashCode", "calculateHashCode", null)
+                .withCachedHashCode(hashCodeField, "calculateHashCode", null)
                 .suppress(Warning.NO_EXAMPLE_FOR_CACHED_HASHCODE);
         return equalsVerifier;
     }

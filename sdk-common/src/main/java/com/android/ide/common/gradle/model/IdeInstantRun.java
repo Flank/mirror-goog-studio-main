@@ -24,12 +24,23 @@ import java.util.Objects;
 /** Creates a deep copy of an {@link InstantRun}. */
 public final class IdeInstantRun implements InstantRun, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final File myInfoFile;
     private final boolean mySupportedByArtifact;
     private final int mySupportStatus;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeInstantRun() {
+        //noinspection ConstantConditions
+        myInfoFile = null;
+        mySupportedByArtifact = false;
+        mySupportStatus = 0;
+
+        myHashCode = 0;
+    }
 
     public IdeInstantRun(@NonNull InstantRun run) {
         myInfoFile = run.getInfoFile();

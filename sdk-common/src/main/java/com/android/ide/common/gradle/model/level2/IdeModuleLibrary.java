@@ -27,7 +27,7 @@ import java.util.Objects;
 /** Creates a deep copy of {@link Library} of type LIBRARY_MODULE. */
 public final class IdeModuleLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     @NonNull private final String myArtifactAddress;
     @Nullable private final String myBuildId;
@@ -35,6 +35,18 @@ public final class IdeModuleLibrary implements Library, Serializable {
     @Nullable private final String myVariant;
     private final int myType;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeModuleLibrary() {
+        myArtifactAddress = "";
+        myBuildId = null;
+        myProjectPath = null;
+        myVariant = null;
+        myType = 0;
+
+        myHashCode = 0;
+    }
 
     IdeModuleLibrary(@NonNull Library library, @NonNull String artifactAddress) {
         myType = LIBRARY_MODULE;

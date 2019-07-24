@@ -19,18 +19,29 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.GraphItem;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link GraphItem}. */
 public final class IdeGraphItem implements GraphItem, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myArtifactAddress;
     @NonNull private final List<GraphItem> myDependencies;
     @Nullable private final String myRequestedCoordinates;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeGraphItem() {
+        myArtifactAddress = "";
+        myDependencies = Collections.emptyList();
+        myRequestedCoordinates = null;
+
+        myHashCode = 0;
+    }
 
     public IdeGraphItem(@NonNull GraphItem item, @NonNull ModelCache modelCache) {
         myArtifactAddress = item.getArtifactAddress();

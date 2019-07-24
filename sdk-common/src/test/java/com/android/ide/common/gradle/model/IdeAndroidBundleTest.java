@@ -51,9 +51,10 @@ public class IdeAndroidBundleTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidBundle.class)
+        createEqualsVerifier(IdeAndroidBundle.class, "hashCodeBundle")
                 .withRedefinedSuperclass()
                 .withRedefinedSubclass(IdeAndroidLibrary.class)
+                .withIgnoredFields("hashCode")
                 .verify();
     }
 }

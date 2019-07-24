@@ -24,13 +24,14 @@ import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link ProductFlavor}. */
 public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlavor {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final Map<String, String> myTestInstrumentationRunnerArguments;
     @NonNull private final Collection<String> myResourceConfigurations;
@@ -48,6 +49,29 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
     @Nullable private final Boolean myTestHandleProfiling;
     @Nullable private final SigningConfig mySigningConfig;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeProductFlavor() {
+        super();
+
+        myTestInstrumentationRunnerArguments = Collections.emptyMap();
+        myResourceConfigurations = Collections.emptyList();
+        myVectorDrawables = new IdeVectorDrawablesOptions();
+        myDimension = null;
+        myApplicationId = null;
+        myVersionCode = null;
+        myVersionName = null;
+        myMinSdkVersion = null;
+        myTargetSdkVersion = null;
+        myMaxSdkVersion = null;
+        myTestApplicationId = null;
+        myTestInstrumentationRunner = null;
+        myTestFunctionalTest = null;
+        myTestHandleProfiling = null;
+        mySigningConfig = null;
+
+        myHashCode = 0;
+    }
 
     public IdeProductFlavor(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
         super(flavor, modelCache);

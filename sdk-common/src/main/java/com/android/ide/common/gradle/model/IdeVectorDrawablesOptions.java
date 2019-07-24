@@ -25,11 +25,19 @@ import java.util.Set;
 /** Creates a deep copy of a {@link VectorDrawablesOptions}. */
 public final class IdeVectorDrawablesOptions implements VectorDrawablesOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @Nullable private final Set<String> myGeneratedDensities;
     @Nullable private final Boolean myUseSupportLibrary;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeVectorDrawablesOptions() {
+        myGeneratedDensities = null;
+        myUseSupportLibrary = null;
+
+        myHashCode = 0;
+    }
 
     public IdeVectorDrawablesOptions(@NonNull VectorDrawablesOptions options) {
         myGeneratedDensities = IdeModel.copy(options.getGeneratedDensities());

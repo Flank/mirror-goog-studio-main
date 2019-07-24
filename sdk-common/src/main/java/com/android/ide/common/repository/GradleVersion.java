@@ -209,6 +209,20 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                 cause);
     }
 
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    GradleVersion() {
+        mRawValue = "";
+        mMajorSegment = new VersionSegment();
+        mMinorSegment = new VersionSegment();
+        mMicroSegment = new VersionSegment();
+        mPreview = 0;
+        mPreviewType = null;
+        mSnapshot = false;
+        mAdditionalSegments = Collections.emptyList();
+        mQualifiers = null;
+    }
+
     public GradleVersion(int major, int minor) {
         this((major + "." + minor), new VersionSegment(major),
                 new VersionSegment(minor), null,
@@ -442,6 +456,12 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
         private final String mText;
 
         private final int mValue;
+
+        // Used for serialization by the IDE.
+        @SuppressWarnings("unused")
+        VersionSegment() {
+            this(0);
+        }
 
         VersionSegment(int value) {
             mText = String.valueOf(value);

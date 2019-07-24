@@ -26,6 +26,13 @@ public class IdeProjectIdentifierImpl implements IdeProjectIdentifier, Serializa
     @NonNull private final String buildId;
     @NonNull private final String projectPath;
 
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeProjectIdentifierImpl() {
+        buildId = "";
+        projectPath = "";
+    }
+
     public IdeProjectIdentifierImpl(@NonNull Dependencies.ProjectIdentifier projectIdentifier) {
         this.buildId = projectIdentifier.getBuildId();
         this.projectPath = projectIdentifier.getProjectPath();

@@ -26,10 +26,18 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link JavaArtifact}. */
 public final class IdeJavaArtifact extends IdeBaseArtifactImpl implements JavaArtifact {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @Nullable private final File myMockablePlatformJar;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeJavaArtifact() {
+        myMockablePlatformJar = null;
+
+        myHashCode = 0;
+    }
 
     public IdeJavaArtifact(
             @NonNull JavaArtifact artifact,

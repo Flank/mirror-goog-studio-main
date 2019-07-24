@@ -25,7 +25,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link SigningConfig}. */
 public final class IdeSigningConfig implements SigningConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myName;
     @Nullable private final File myStoreFile;
@@ -33,6 +33,18 @@ public final class IdeSigningConfig implements SigningConfig, Serializable {
     @Nullable private final String myKeyAlias;
     @Nullable private final Boolean myV1SigningEnabled;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeSigningConfig() {
+        myName = "";
+        myStoreFile = null;
+        myStorePassword = null;
+        myKeyAlias = null;
+        myV1SigningEnabled = null;
+
+        myHashCode = 0;
+    }
 
     public IdeSigningConfig(@NonNull SigningConfig config) {
         myName = config.getName();

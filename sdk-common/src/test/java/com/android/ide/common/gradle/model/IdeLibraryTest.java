@@ -66,9 +66,11 @@ public class IdeLibraryTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeLibrary.class)
+        createEqualsVerifier(IdeLibrary.class, "hashCode")
                 .withRedefinedSubclass(IdeAndroidLibrary.class)
                 .verify();
-        createEqualsVerifier(IdeLibrary.class).withRedefinedSubclass(IdeJavaLibrary.class).verify();
+        createEqualsVerifier(IdeLibrary.class, "hashCode")
+                .withRedefinedSubclass(IdeJavaLibrary.class)
+                .verify();
     }
 }

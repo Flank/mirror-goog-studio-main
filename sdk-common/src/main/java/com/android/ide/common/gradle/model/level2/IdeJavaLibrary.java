@@ -26,12 +26,23 @@ import java.util.Objects;
 /** Creates a deep copy of {@link Library} of type LIBRARY_JAVA. */
 public final class IdeJavaLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myArtifactFile;
     private final int myType;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeJavaLibrary() {
+        myArtifactAddress = "";
+        //noinspection ConstantConditions
+        myArtifactFile = null;
+        myType = 0;
+
+        myHashCode = 0;
+    }
 
     IdeJavaLibrary(@NonNull String artifactAddress, @NonNull File artifactFile) {
         myType = LIBRARY_JAVA;

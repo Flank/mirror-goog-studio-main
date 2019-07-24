@@ -23,12 +23,21 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link JavaCompileOptions}. */
 public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myEncoding;
     @NonNull private final String mySourceCompatibility;
     @NonNull private final String myTargetCompatibility;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    IdeJavaCompileOptions() {
+        myEncoding = "";
+        mySourceCompatibility = "";
+        myTargetCompatibility = "";
+
+        myHashCode = 0;
+    }
 
     public IdeJavaCompileOptions(@NonNull JavaCompileOptions options) {
         myEncoding = options.getEncoding();

@@ -28,6 +28,15 @@ public final class IdeNativeSettings implements NativeSettings, Serializable {
     private final List<String> myCompilerFlags;
     private final int myHashCode;
 
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeNativeSettings() {
+        myName = "";
+        myCompilerFlags = Collections.emptyList();
+
+        myHashCode = 0;
+    }
+
     public IdeNativeSettings(@NonNull NativeSettings settings) {
         myName = settings.getName();
 

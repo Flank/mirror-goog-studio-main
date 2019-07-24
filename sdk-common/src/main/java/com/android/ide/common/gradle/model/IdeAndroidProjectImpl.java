@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 7L;
+    private static final long serialVersionUID = 8L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
@@ -66,7 +66,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final Collection<NativeToolchain> myNativeToolchains;
     @NonNull private final Collection<SigningConfig> mySigningConfigs;
     @NonNull private final IdeLintOptions myLintOptions;
-    @NonNull private final Collection<String> myUnresolvedDependencies;
+    @NonNull private final Set<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
@@ -178,7 +178,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
         // We need to use the unresolved dependencies to support older versions of the Android Gradle Plugin.
         //noinspection deprecation
-        Collection<String> unresolvedDependenciesCopy =
+        Set<String> unresolvedDependenciesCopy =
                 ImmutableSet.copyOf(project.getUnresolvedDependencies());
 
         IdeJavaCompileOptions javaCompileOptionsCopy =
@@ -244,6 +244,43 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 isBaseSplit);
     }
 
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    private IdeAndroidProjectImpl() {
+        myModelVersion = "";
+        myParsedModelVersion = null;
+        myName = "";
+        myDefaultConfig = new IdeProductFlavorContainer();
+        myBuildTypes = Collections.emptyList();
+        myProductFlavors = Collections.emptyList();
+        mySyncIssues = Collections.emptyList();
+        myVariants = Collections.emptyList();
+        myVariantNames = Collections.emptyList();
+        myDefaultVariant = null;
+        myFlavorDimensions = Collections.emptyList();
+        myCompileTarget = "";
+        myBootClassPath = Collections.emptyList();
+        myNativeToolchains = Collections.emptyList();
+        mySigningConfigs = Collections.emptyList();
+        myLintOptions = new IdeLintOptions();
+        myUnresolvedDependencies = Collections.emptySet();
+        myJavaCompileOptions = new IdeJavaCompileOptions();
+        myAaptOptions = new IdeAaptOptions();
+        //noinspection ConstantConditions
+        myBuildFolder = null;
+        myDynamicFeatures = Collections.emptyList();
+        myViewBindingOptions = new IdeViewBindingOptions();
+        myBuildToolsVersion = null;
+        myResourcePrefix = null;
+        myGroupId = null;
+        mySupportsPluginGeneration = false;
+        myApiVersion = 0;
+        myProjectType = 0;
+        myBaseSplit = false;
+
+        myHashCode = 0;
+    }
+
     private IdeAndroidProjectImpl(
             @NonNull String modelVersion,
             @Nullable GradleVersion parsedModelVersion,
@@ -261,7 +298,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull Collection<SigningConfig> signingConfigs,
             @NonNull IdeLintOptions lintOptions,
-            @NonNull Collection<String> unresolvedDependencies,
+            @NonNull Set<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
             @NonNull AaptOptions aaptOptions,
             @NonNull File buildFolder,

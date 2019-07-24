@@ -24,13 +24,14 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link BaseConfig}. */
 public abstract class IdeBaseConfig implements BaseConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myName;
     @NonNull private final Map<String, ClassField> myResValues;
@@ -40,7 +41,21 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
     @Nullable private final String myApplicationIdSuffix;
     @Nullable private final String myVersionNameSuffix;
     @Nullable private final Boolean myMultiDexEnabled;
-    private final int myHashCode;
+    private final int hashCode;
+
+    // Used for serialization by the IDE.
+    IdeBaseConfig() {
+        myName = "";
+        myResValues = Collections.emptyMap();
+        myProguardFiles = Collections.emptyList();
+        myConsumerProguardFiles = Collections.emptyList();
+        myManifestPlaceholders = Collections.emptyMap();
+        myApplicationIdSuffix = null;
+        myVersionNameSuffix = null;
+        myMultiDexEnabled = null;
+
+        hashCode = 0;
+    }
 
     protected IdeBaseConfig(@NonNull BaseConfig config, @NonNull ModelCache modelCache) {
         myName = config.getName();
@@ -56,7 +71,7 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
         myVersionNameSuffix = IdeModel.copyNewProperty(config::getVersionNameSuffix, null);
         myMultiDexEnabled = IdeModel.copyNewProperty(config::getMultiDexEnabled, null);
 
-        myHashCode = calculateHashCode();
+        hashCode = calculateHashCode();
     }
 
     @Override
@@ -158,7 +173,7 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
 
     @Override
     public int hashCode() {
-        return myHashCode;
+        return hashCode;
     }
 
     protected int calculateHashCode() {

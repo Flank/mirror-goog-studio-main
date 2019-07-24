@@ -38,7 +38,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     private static final String[] TEST_ARTIFACT_NAMES = {ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST};
 
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 6L;
 
     @NonNull private final String myName;
     @NonNull private final String myCompileTaskName;
@@ -46,7 +46,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull private final File myClassesFolder;
     @NonNull private final IdeDependencies myDependencies;
     @NonNull private final Set<String> myIdeSetupTaskNames;
-    @NonNull private final Collection<File> myGeneratedSourceFolders;
+    @NonNull private final Set<File> myGeneratedSourceFolders;
     @NonNull private final Set<File> myAdditionalClassFolders;
 
     @NonNull
@@ -57,7 +57,30 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @Nullable private final DependencyGraphs myDependencyGraphs;
     @Nullable private final IdeSourceProvider myVariantSourceProvider;
     @Nullable private final IdeSourceProvider myMultiFlavorSourceProvider;
-    private final int myHashCode;
+    private final int hashCode;
+
+    // Used for serialization by the IDE.
+    IdeBaseArtifactImpl() {
+        myName = "";
+        myCompileTaskName = "";
+        myAssembleTaskName = "";
+        //noinspection ConstantConditions
+        myClassesFolder = null;
+        myDependencies = new IdeDependenciesImpl();
+        myIdeSetupTaskNames = Collections.emptySet();
+        myGeneratedSourceFolders = Collections.emptySet();
+        myAdditionalClassFolders = Collections.emptySet();
+
+        myLevel2Dependencies = new com.android.ide.common.gradle.model.level2.IdeDependenciesImpl();
+
+        myCompileDependencies = null;
+        myJavaResourcesFolder = null;
+        myDependencyGraphs = null;
+        myVariantSourceProvider = null;
+        myMultiFlavorSourceProvider = null;
+
+        hashCode = 0;
+    }
 
     protected IdeBaseArtifactImpl(
             @NonNull BaseArtifact artifact,
@@ -96,7 +119,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 IdeModel.copyNewProperty(
                         artifact::getAdditionalClassesFolders, Collections.emptySet());
         myLevel2Dependencies = dependenciesFactory.create(artifact, modelVersion);
-        myHashCode = calculateHashCode();
+        hashCode = calculateHashCode();
     }
 
     @NonNull
@@ -281,7 +304,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @Override
     public int hashCode() {
-        return myHashCode;
+        return hashCode;
     }
 
     protected int calculateHashCode() {

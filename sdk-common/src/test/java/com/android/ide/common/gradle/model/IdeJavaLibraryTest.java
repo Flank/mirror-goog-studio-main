@@ -66,6 +66,9 @@ public class IdeJavaLibraryTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeJavaLibrary.class).withRedefinedSuperclass().verify();
+        createEqualsVerifier(IdeJavaLibrary.class)
+                .withRedefinedSuperclass()
+                .withIgnoredFields("hashCode")
+                .verify();
     }
 }

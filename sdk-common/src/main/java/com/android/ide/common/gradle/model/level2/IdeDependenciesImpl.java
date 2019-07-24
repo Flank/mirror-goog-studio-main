@@ -21,17 +21,29 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 public class IdeDependenciesImpl implements IdeDependencies, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final Collection<Library> myAndroidLibraries;
     @NonNull private final Collection<Library> myJavaLibraries;
     @NonNull private final Collection<Library> myModuleDependencies;
     @NonNull private final Collection<File> myRuntimeOnlyClasses;
     private final int myHashCode;
+
+    // Used for serialization by the IDE. DO NOT USE ELSEWHERE.
+    @SuppressWarnings("unused")
+    public IdeDependenciesImpl() {
+        myAndroidLibraries = Collections.emptyList();
+        myJavaLibraries = Collections.emptyList();
+        myModuleDependencies = Collections.emptyList();
+        myRuntimeOnlyClasses = Collections.emptyList();
+
+        myHashCode = 0;
+    }
 
     IdeDependenciesImpl(
             @NonNull ImmutableList<Library> androidLibraries,

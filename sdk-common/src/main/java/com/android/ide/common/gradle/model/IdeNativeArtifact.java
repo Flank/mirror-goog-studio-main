@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 public final class IdeNativeArtifact implements NativeArtifact, Serializable {
@@ -35,6 +36,22 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
     @Nullable private final String myAbi;
     @Nullable private final String myTargetName;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    public IdeNativeArtifact() {
+        myName = "";
+        myToolChain = "";
+        myGroupName = "";
+        mySourceFiles = Collections.emptyList();
+        myExportedHeaders = Collections.emptyList();
+        //noinspection ConstantConditions
+        myOutputFile = null;
+        myAbi = "";
+        myTargetName = "";
+
+        myHashCode = 0;
+    }
 
     public IdeNativeArtifact(@NonNull NativeArtifact artifact, @NonNull ModelCache modelCache) {
         myName = artifact.getName();

@@ -20,19 +20,31 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link DependencyGraphs}. */
 public final class IdeDependencyGraphs implements DependencyGraphs, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final List<GraphItem> myCompileDependencies;
     @NonNull private final List<GraphItem> myPackageDependencies;
     @NonNull private final List<String> myProvidedLibraries;
     @NonNull private final List<String> mySkippedLibraries;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeDependencyGraphs() {
+        myCompileDependencies = Collections.emptyList();
+        myPackageDependencies = Collections.emptyList();
+        myProvidedLibraries = Collections.emptyList();
+        mySkippedLibraries = Collections.emptyList();
+
+        myHashCode = 0;
+    }
 
     public IdeDependencyGraphs(@NonNull DependencyGraphs graphs, @NonNull ModelCache modelCache) {
         myCompileDependencies =

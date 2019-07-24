@@ -20,18 +20,34 @@ import com.android.builder.model.AndroidLibrary;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of an {@link AndroidLibrary}. */
 public final class IdeAndroidLibrary extends IdeAndroidBundle implements AndroidLibrary {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final Collection<File> myLocalJars;
     @NonNull private final File myProguardRules;
     @NonNull private final File myLintJar;
     @NonNull private final File myPublicResources;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeAndroidLibrary() {
+        super();
+        myLocalJars = Collections.emptyList();
+        //noinspection ConstantConditions
+        myProguardRules = null;
+        //noinspection ConstantConditions
+        myLintJar = null;
+        //noinspection ConstantConditions
+        myPublicResources = null;
+
+        myHashCode = 0;
+    }
 
     public IdeAndroidLibrary(@NonNull AndroidLibrary library, @NonNull ModelCache modelCache) {
         super(library, modelCache);

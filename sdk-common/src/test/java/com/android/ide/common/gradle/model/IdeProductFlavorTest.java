@@ -106,6 +106,9 @@ public class IdeProductFlavorTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeProductFlavor.class).withRedefinedSuperclass().verify();
+        createEqualsVerifier(IdeProductFlavor.class)
+                .withRedefinedSuperclass()
+                .withIgnoredFields("hashCode")
+                .verify();
     }
 }

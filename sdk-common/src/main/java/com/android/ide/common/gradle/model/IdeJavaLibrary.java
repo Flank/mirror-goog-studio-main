@@ -18,17 +18,28 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.builder.model.JavaLibrary;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link JavaLibrary}. */
 public final class IdeJavaLibrary extends IdeLibrary implements JavaLibrary {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final File myJarFile;
     @NonNull private final List<? extends JavaLibrary> myDependencies;
     private final int myHashCode;
+
+    // Used for serialization by the IDE.
+    @SuppressWarnings("unused")
+    IdeJavaLibrary() {
+        //noinspection ConstantConditions
+        myJarFile = null;
+        myDependencies = Collections.emptyList();
+
+        myHashCode = 0;
+    }
 
     public IdeJavaLibrary(@NonNull JavaLibrary library, @NonNull ModelCache modelCache) {
         super(library, modelCache);
