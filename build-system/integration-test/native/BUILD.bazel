@@ -109,6 +109,15 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
+    name = "CMakeBuildSettingsTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    tags = MAC_DISABLED_TAG,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "CmakeGradleTargetsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
@@ -254,6 +263,15 @@ single_gradle_integration_test(
 
 single_gradle_integration_test(
     name = "NdkBuildAndroidMkLibraryTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + NDK,
+    maven_repos = MAVEN_REPOS,
+    tags = MAC_DISABLED_TAG,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "NdkBuildBuildSettingsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
