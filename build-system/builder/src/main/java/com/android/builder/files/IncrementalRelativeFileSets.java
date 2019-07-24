@@ -149,7 +149,7 @@ public final class IncrementalRelativeFileSets {
     @NonNull
     public static Map<RelativeFile, FileStatus> fromZip(
             @NonNull ZipCentralDirectory zipCentralDirectory,
-            @NonNull FileCacheByPath cache,
+            @NonNull KeyedFileCache cache,
             @NonNull Set<Runnable> cacheUpdates)
             throws IOException {
         File zipFile = zipCentralDirectory.getFile();
@@ -317,7 +317,7 @@ public final class IncrementalRelativeFileSets {
     public static ImmutableMap<RelativeFile, FileStatus> makeFromBaseFiles(
             @NonNull Collection<File> baseFiles,
             @NonNull Map<File, FileStatus> updates,
-            @NonNull FileCacheByPath cache,
+            @NonNull KeyedFileCache cache,
             @NonNull Set<Runnable> cacheUpdates,
             @NonNull FileDeletionPolicy fileDeletionPolicy)
             throws IOException {

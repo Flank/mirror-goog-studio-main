@@ -25,8 +25,8 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
+import com.android.builder.files.KeyedFileCache;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.ZFile;
@@ -402,7 +402,8 @@ public class LazyIncrementalFileMergerInputTest {
 
     @Test
     public void incrementalInputs() throws Exception {
-        FileCacheByPath cache = new FileCacheByPath(temporaryFolder.newFolder());
+        KeyedFileCache cache =
+                new KeyedFileCache(temporaryFolder.newFolder(), KeyedFileCache::fileNameKey);
         Set<File> inputs = makeInputs(50);
 
         for (File f : inputs) {

@@ -26,7 +26,11 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.builder.internal.packaging.ApkCreatorType
+import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
+import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
@@ -40,6 +44,7 @@ import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.truth.Truth
 import org.junit.Assume
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -70,8 +75,9 @@ import kotlin.test.fail
  */
 @RunWith(FilterableParameterized::class)
 class MinifyFeaturesTest(
-        val codeShrinker: CodeShrinker,
-        val multiApkMode: MultiApkMode) {
+    val codeShrinker: CodeShrinker,
+    val multiApkMode: MultiApkMode,
+    val apkCreatorType: ApkCreatorType) {
 
     enum class MultiApkMode {
         DYNAMIC_APP, INSTANT_APP
@@ -80,13 +86,17 @@ class MinifyFeaturesTest(
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters(name = "codeShrinker {0}, {1}")
+        @Parameterized.Parameters(name = "{0}, {1}, {2}")
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP),
-                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP)
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, APK_Z_FILE_CREATOR),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, APK_Z_FILE_CREATOR),
+                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, APK_Z_FILE_CREATOR),
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, APK_Z_FILE_CREATOR),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, APK_FLINGER),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, APK_FLINGER),
+                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, APK_FLINGER),
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, APK_FLINGER)
             )
     }
 
@@ -518,7 +528,7 @@ class MinifyFeaturesTest(
             MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.otherFeature2")
         }.let {
             it
-            .appendToBuild("""
+                .appendToBuild("""
                 android {
                     buildTypes {
                         minified.initWith(buildTypes.debug)
@@ -674,14 +684,19 @@ class MinifyFeaturesTest(
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
+    @Before
+    fun updateGradleProperties() {
+        TestFileUtils.appendToFile(project.gradlePropertiesFile, getGradleProperties())
+    }
+
     @Test
     fun testApksAreMinified() {
 
-         val apkType = object : GradleTestProject.ApkType {
-                override fun getBuildType() = "minified"
-                override fun getTestName(): String? = null
-                override fun isSigned() = true
-         }
+        val apkType = object : GradleTestProject.ApkType {
+            override fun getBuildType() = "minified"
+            override fun getTestName(): String? = null
+            override fun isSigned() = true
+        }
 
         val executor = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
@@ -1004,5 +1019,9 @@ class MinifyFeaturesTest(
         return outputAppModel.getOutputByName(variantName)
     }
 
+    private fun getGradleProperties() = when (apkCreatorType) {
+        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
+        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
+    }
 }
 

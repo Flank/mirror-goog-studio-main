@@ -56,16 +56,16 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
-import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalChanges;
 import com.android.builder.files.IncrementalRelativeFileSets;
+import com.android.builder.files.KeyedFileCache;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.SerializableChange;
+import com.android.builder.files.SerializableInputChanges;
 import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
-import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.sdklib.AndroidVersion;
@@ -217,7 +217,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return projectBaseName;
     }
 
-    protected FileCache fileCache;
+    protected com.android.builder.utils.FileCache fileCache;
 
     protected boolean keepTimestampsInApk;
 
@@ -482,10 +482,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         protected final boolean androidResourcesChanged;
         @NonNull protected final File outputFile;
         @NonNull protected final File incrementalFolder;
-        @NonNull protected final Collection<SerializableChange> dexFiles;
-        @NonNull protected final Collection<SerializableChange> assetsFiles;
-        @NonNull protected final Collection<SerializableChange> jniFiles;
-        @NonNull protected final Collection<SerializableChange> javaResourceFiles;
+        @NonNull protected final SerializableInputChanges dexFiles;
+        @NonNull protected final SerializableInputChanges assetsFiles;
+        @NonNull protected final SerializableInputChanges jniFiles;
+        @NonNull protected final SerializableInputChanges javaResourceFiles;
         @NonNull protected final InternalArtifactType manifestType;
         @NonNull protected final IncrementalPackagerBuilder.ApkFormat apkFormat;
         @Nullable protected final File signingConfig;
@@ -537,7 +537,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 dexFiles =
                         IncrementalChangesUtils.getChangesInSerializableForm(
                                 changes, task.getFeatureDexFolder());
-                javaResourceFiles = Collections.emptySet();
+                javaResourceFiles =
+                        new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of());
             }
             assetsFiles =
                     IncrementalChangesUtils.getChangesInSerializableForm(changes, task.getAssets());
@@ -625,7 +626,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     private static void doTask(
             @NonNull File incrementalDirForSplit,
             @NonNull File outputFile,
-            @NonNull FileCacheByPath cacheByPath,
+            @NonNull KeyedFileCache cache,
             @NonNull BuildElements manifestOutputs,
             @NonNull Map<RelativeFile, FileStatus> changedDex,
             @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
@@ -710,7 +711,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 .forEach(
                         (File f) -> {
                             try {
-                                cacheByPath.add(f);
+                                cache.add(f);
                             } catch (IOException e) {
                                 throw new IOExceptionWrapper(e);
                             }
@@ -732,31 +733,44 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 File incrementalDirForSplit =
                         new File(params.incrementalFolder, params.apkInfo.getFullName());
 
-                File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
-                if (!cacheByPathDir.exists()) {
-                    FileUtils.mkdirs(cacheByPathDir);
+                File cacheDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
+                if (!cacheDir.exists()) {
+                    FileUtils.mkdirs(cacheDir);
                 }
-                FileCacheByPath cacheByPath = new FileCacheByPath(cacheByPathDir);
+
+                // Build a file cache that uses the indexes in the roots.
+                // This is to work nicely with classpath sensitivity
+                // Mutable as we need to add to it for the zip64 workaround in getChangedJavaResources
+                Map<File, String> cacheKeyMap = new HashMap<>();
+                addCacheKeys(cacheKeyMap, "dex", params.dexFiles);
+                addCacheKeys(cacheKeyMap, "javaResources", params.javaResourceFiles);
+                addCacheKeys(cacheKeyMap, "assets", params.assetsFiles);
+                cacheKeyMap.put(params.androidResourcesFile, "androidResources");
+                addCacheKeys(cacheKeyMap, "jniLibs", params.jniFiles);
+
+                KeyedFileCache cache =
+                        new KeyedFileCache(
+                                cacheDir, file -> Objects.requireNonNull(cacheKeyMap.get(file)));
 
                 Set<Runnable> cacheUpdates = new HashSet<>();
 
                 Map<RelativeFile, FileStatus> changedDexFiles =
                         IncrementalChanges.classpathToRelativeFileSet(
-                                params.dexFiles, cacheByPath, cacheUpdates);
+                                params.dexFiles, cache, cacheUpdates);
 
                 Map<RelativeFile, FileStatus> changedJavaResources =
-                        getChangedJavaResources(params, cacheByPath, cacheUpdates);
+                        getChangedJavaResources(params, cacheKeyMap, cache, cacheUpdates);
 
                 Map<RelativeFile, FileStatus> changedAssets =
                         IncrementalChanges.classpathToRelativeFileSet(
-                                params.assetsFiles, cacheByPath, cacheUpdates);
+                                params.assetsFiles, cache, cacheUpdates);
 
                 final Map<RelativeFile, FileStatus> changedAndroidResources;
                 if (params.androidResourcesChanged) {
                     changedAndroidResources =
                             IncrementalRelativeFileSets.fromZip(
                                     new ZipCentralDirectory(params.androidResourcesFile),
-                                    cacheByPath,
+                                    cache,
                                     cacheUpdates);
                 } else {
                     changedAndroidResources = ImmutableMap.of();
@@ -764,7 +778,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
                 Map<RelativeFile, FileStatus> changedJniLibs =
                         IncrementalChanges.classpathToRelativeFileSet(
-                                params.jniFiles, cacheByPath, cacheUpdates);
+                                params.jniFiles, cache, cacheUpdates);
 
 
                 BuildElements manifestOutputs =
@@ -773,7 +787,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 doTask(
                         incrementalDirForSplit,
                         params.getOutput(),
-                        cacheByPath,
+                        cache,
                         manifestOutputs,
                         changedDexFiles,
                         changedJavaResources,
@@ -797,26 +811,39 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
         }
 
+        private static void addCacheKeys(
+                Map<File, String> builder, String prefix, SerializableInputChanges changes) {
+            List<File> roots = changes.getRoots();
+            for (int i = 0; i < roots.size(); i++) {
+                builder.put(roots.get(i), prefix + i);
+            }
+        }
+
         /**
-         * An adapted version of {@link IncrementalChanges#classpathToRelativeFileSet(Collection,
-         * FileCacheByPath, Set)} that handles zip64 support within this task.
+         * An adapted version of {@link
+         * IncrementalChanges#classpathToRelativeFileSet(SerializableInputChanges, KeyedFileCache,
+         * Set)} that handles zip64 support within this task.
          */
         @NonNull
         private static Map<RelativeFile, FileStatus> getChangedJavaResources(
-                SplitterParams params, FileCacheByPath cacheByPath, Set<Runnable> cacheUpdates)
+                SplitterParams params,
+                Map<File, String> cacheKeyMap,
+                KeyedFileCache cache,
+                Set<Runnable> cacheUpdates)
                 throws IOException {
             Map<RelativeFile, FileStatus> changedJavaResources = new HashMap<>();
-
-            for (SerializableChange change : params.javaResourceFiles) {
+            for (SerializableChange change : params.javaResourceFiles.getChanges()) {
                 if (change.getNormalizedPath().isEmpty()) {
                     try {
                         IncrementalChanges.addZipChanges(
-                                changedJavaResources, change.getFile(), cacheByPath, cacheUpdates);
+                                changedJavaResources, change.getFile(), cache, cacheUpdates);
                     } catch (Zip64NotSupportedException e) {
                         File nonZip64 =
                                 copyJavaResourcesOnly(params.incrementalFolder, change.getFile());
+                        // Map the copied file to the same cache key.
+                        cacheKeyMap.put(nonZip64, cacheKeyMap.get(change.getFile()));
                         IncrementalChanges.addZipChanges(
-                                changedJavaResources, nonZip64, cacheByPath, cacheUpdates);
+                                changedJavaResources, nonZip64, cache, cacheUpdates);
                     }
                 } else {
                     IncrementalChanges.addFileChange(changedJavaResources, change);
@@ -835,7 +862,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull protected final Provider<Directory> manifests;
         @NonNull protected final InternalArtifactType inputResourceFilesType;
         @NonNull protected final OutputScope outputScope;
-        @Nullable private final FileCache fileCache;
+        @Nullable private final com.android.builder.utils.FileCache fileCache;
         @NonNull private final InternalArtifactType manifestType;
         private final boolean packageCustomClassDependencies;
 
@@ -844,7 +871,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull InternalArtifactType inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull InternalArtifactType manifestType,
-                @Nullable FileCache fileCache,
+                @Nullable com.android.builder.utils.FileCache fileCache,
                 @NonNull OutputScope outputScope,
                 boolean packageCustomClassDependencies) {
             super(variantScope);

@@ -30,6 +30,11 @@ data class SerializableChange(
     val normalizedPath: String
 ) : Serializable
 
+data class SerializableInputChanges(
+    val roots: List<File>,
+    val changes: Collection<SerializableChange>
+) : Serializable
+
 /**
  * Convert a set of serializable changes to incremental changes.
  *
@@ -41,12 +46,12 @@ data class SerializableChange(
  * jar cache.
  */
 fun classpathToRelativeFileSet(
-    changes: Collection<SerializableChange>,
-    cache: FileCacheByPath,
+    changes: SerializableInputChanges,
+    cache: KeyedFileCache,
     cacheUpdates: MutableSet<Runnable>
 ) : Map<RelativeFile, FileStatus> {
     return Collections.unmodifiableMap(HashMap<RelativeFile, FileStatus>().apply {
-        for (change in changes) {
+        for (change in changes.changes) {
             if (change.normalizedPath.isEmpty()) {
                 check(change.file.path.endsWith(".zip") || change.file.path.endsWith(".jar")) {
                     "Incremental input root file ${change.file.path} must end with '.zip' or '.jar'."
@@ -62,7 +67,7 @@ fun classpathToRelativeFileSet(
 @Throws(Zip64NotSupportedException::class)
 fun MutableMap<RelativeFile, FileStatus>.addZipChanges(
     change: File,
-    cache: FileCacheByPath,
+    cache: KeyedFileCache,
     cacheUpdates: MutableSet<Runnable>
 ) {
     putAll(fromZip(ZipCentralDirectory(change), cache, cacheUpdates))

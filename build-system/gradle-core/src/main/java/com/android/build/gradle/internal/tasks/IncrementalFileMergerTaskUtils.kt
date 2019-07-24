@@ -22,7 +22,7 @@ import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope
-import com.android.builder.files.FileCacheByPath
+import com.android.builder.files.KeyedFileCache
 import com.android.builder.files.IncrementalRelativeFileSets
 import com.android.builder.files.RelativeFile
 import com.android.builder.files.RelativeFiles
@@ -57,7 +57,7 @@ import java.util.HashSet
 fun toIncrementalInput(
     input: File,
     changedInputs: Map<File, FileStatus>,
-    zipCache: FileCacheByPath,
+    zipCache: KeyedFileCache,
     cacheUpdates: MutableList<Runnable>
 ): IncrementalFileMergerInput {
     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
@@ -98,7 +98,7 @@ fun toIncrementalInput(
  */
 fun toNonIncrementalInput(
     input: File,
-    zipCache: FileCacheByPath,
+    zipCache: KeyedFileCache,
     cacheUpdates: MutableList<Runnable>
 ): IncrementalFileMergerInput? {
     if (!input.isFile && !input.isDirectory) {
@@ -123,7 +123,7 @@ fun toNonIncrementalInput(
 private fun computeUpdatesFromJar(
     jar: ZipCentralDirectory,
     changedInputs: Map<File, FileStatus>,
-    zipCache: FileCacheByPath
+    zipCache: KeyedFileCache
 ): Map<RelativeFile, FileStatus> {
     if (jar.file in changedInputs) {
         val fileStatus = changedInputs[jar.file]
@@ -221,7 +221,7 @@ private fun computeFilesFromDir(dir: File): Set<RelativeFile> {
 fun toInputs(
     inputMap: MutableMap<File, in Scope>,
     changedInputs: Map<File, FileStatus>?,
-    zipCache: FileCacheByPath,
+    zipCache: KeyedFileCache,
     cacheUpdates: MutableList<Runnable>,
     full: Boolean,
     contentType: ContentType,

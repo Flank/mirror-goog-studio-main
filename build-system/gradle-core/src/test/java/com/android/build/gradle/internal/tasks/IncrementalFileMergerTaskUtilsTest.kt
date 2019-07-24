@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.builder.files.FileCacheByPath
+import com.android.builder.files.KeyedFileCache
 import com.android.ide.common.resources.FileStatus
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -38,7 +38,7 @@ class IncrementalFileMergerTaskUtilsTest {
     private lateinit var dirFileFoo: File
     private lateinit var dirFileBar: File
     private lateinit var changedInputs: MutableMap<File, FileStatus>
-    private lateinit var zipCache: FileCacheByPath
+    private lateinit var zipCache: KeyedFileCache
     private lateinit var cacheUpdates: MutableList<Runnable>
 
     @Before
@@ -48,7 +48,7 @@ class IncrementalFileMergerTaskUtilsTest {
         dirFileFoo = File(dirInput, "foo.txt")
         dirFileBar = File(dirInput, "bar.txt")
         changedInputs = mutableMapOf()
-        zipCache = FileCacheByPath(tmpDir.newFolder("cache"))
+        zipCache = KeyedFileCache(tmpDir.newFolder("cache"), KeyedFileCache::fileNameKey)
         cacheUpdates = mutableListOf()
 
         ZipOutputStream(FileOutputStream(jarInput)).use { zip ->

@@ -214,7 +214,8 @@ public class IncrementalRelativeFileSetsTest {
         RelativeFile expectedF0 = new RelativeFile(temporaryFolder.getRoot(), f0);
         RelativeFile expectedF1 = new RelativeFile(temporaryFolder.getRoot(), f1);
 
-        FileCacheByPath cache = new FileCacheByPath(temporaryFolder.newFolder());
+        KeyedFileCache cache =
+                new KeyedFileCache(temporaryFolder.newFolder(), KeyedFileCache::fileNameKey);
         ImmutableMap<RelativeFile, FileStatus> set =
                 IncrementalRelativeFileSets.makeFromBaseFiles(
                         Collections.singleton(temporaryFolder.getRoot()),
@@ -239,7 +240,8 @@ public class IncrementalRelativeFileSetsTest {
         File foo = temporaryFolder.newFolder("foo");
         File bar = new File(foo, "bar");
 
-        FileCacheByPath cache = new FileCacheByPath(temporaryFolder.newFolder());
+        KeyedFileCache cache =
+                new KeyedFileCache(temporaryFolder.newFolder(), KeyedFileCache::fileNameKey);
         try {
             IncrementalRelativeFileSets.makeFromBaseFiles(
                     Collections.singleton(temporaryFolder.getRoot()),
@@ -284,7 +286,7 @@ public class IncrementalRelativeFileSetsTest {
     @Test
     public void makingFromCacheNewZip() throws Exception {
         File cacheDir = temporaryFolder.newFolder();
-        FileCacheByPath cache = new FileCacheByPath(cacheDir);
+        KeyedFileCache cache = new KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey);
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
         try (ZFile zffooz = ZFile.openReadWrite(foo)) {
@@ -313,7 +315,7 @@ public class IncrementalRelativeFileSetsTest {
     @Test
     public void makingFromCacheDeletedZip() throws Exception {
         File cacheDir = temporaryFolder.newFolder();
-        FileCacheByPath cache = new FileCacheByPath(cacheDir);
+        KeyedFileCache cache = new KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey);
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
         try (ZFile zffooz = ZFile.openReadWrite(foo)) {
@@ -345,7 +347,7 @@ public class IncrementalRelativeFileSetsTest {
     @Test
     public void makingFromCacheUpdatedZip() throws Exception {
         File cacheDir = temporaryFolder.newFolder();
-        FileCacheByPath cache = new FileCacheByPath(cacheDir);
+        KeyedFileCache cache = new KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey);
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
         try (ZFile zffooz = ZFile.openReadWrite(foo)) {
@@ -372,4 +374,7 @@ public class IncrementalRelativeFileSetsTest {
         m = IncrementalRelativeFileSets.fromZip(new ZipCentralDirectory(foo), cache, updates);
         Truth.assertThat(m).hasSize(0);
     }
+
+
+
 }

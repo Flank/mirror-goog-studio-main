@@ -17,8 +17,8 @@
 package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
-import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
+import com.android.builder.files.KeyedFileCache;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
 import com.android.builder.files.ZipCentralDirectory;
@@ -115,8 +115,8 @@ public final class LazyIncrementalFileMergerInputs {
      * Creates an input from a set of directories or zips with incremental information. Because
      * updates to the zips do not tell which files inside the zips are updated, a cache to compare
      * the zips is used. See {@link IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map,
-     * FileCacheByPath, Set, IncrementalRelativeFileSets.FileDeletionPolicy)} for more information
-     * on the use of the cache.
+     * KeyedFileCache, Set, IncrementalRelativeFileSets.FileDeletionPolicy)} for more information on
+     * the use of the cache.
      *
      * @param name the input set name
      * @param base the directories and zips; no files with the same OS-independent paths may exist
@@ -126,12 +126,14 @@ public final class LazyIncrementalFileMergerInputs {
      * @param cache a cache for the zips
      * @param fileDeletionPolicy the policy for file deletions
      * @return the input
+     * @deprecated Use the new gradle incremental APIs
      */
+    @Deprecated
     public static LazyIncrementalFileMergerInput fromUpdates(
             @NonNull String name,
             @NonNull Set<File> base,
             @NonNull Map<File, FileStatus> updates,
-            @NonNull FileCacheByPath cache,
+            @NonNull KeyedFileCache cache,
             @NonNull IncrementalRelativeFileSets.FileDeletionPolicy fileDeletionPolicy) {
 
         CachedSupplier<Set<RelativeFile>> all = new CachedSupplier<>(() -> load(base));

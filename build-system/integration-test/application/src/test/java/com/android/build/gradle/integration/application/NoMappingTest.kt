@@ -17,18 +17,38 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.builder.internal.packaging.ApkCreatorType
+import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
+import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.truth.FileSubject.assertThat
-import com.android.utils.FileUtils
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class NoMappingTest {
+@RunWith(FilterableParameterized::class)
+class NoMappingTest(val apkCreatorType: ApkCreatorType) {
+
     @Rule
     @JvmField
     val project = GradleTestProject.builder().fromTestProject("minify").create()
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "{0}")
+        fun data() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
+    }
+
+    @Before
+    fun updateGradleProperties() {
+        TestFileUtils.appendToFile(project.gradlePropertiesFile, getGradleProperties())
+    }
 
     @Test
     fun checkEmptyMapping() {
@@ -40,5 +60,10 @@ class NoMappingTest {
 
         project.executor().with(OptionalBooleanOption.ENABLE_R8, false).run("assembleMinified")
         assertThat(mappingFile).hasContents("")
+    }
+
+    private fun getGradleProperties() = when (apkCreatorType) {
+        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
+        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
     }
 }

@@ -32,17 +32,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/**
- * Tests for {@link FileCacheByPath}.
- */
-public class FileCacheByPathTest {
+/** Tests for {@link KeyedFileCache}. */
+public class KeyedFileCacheTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private File cacheDir;
 
-    private FileCacheByPath cache;
+    private KeyedFileCache cache;
 
     private File randomFilesDir;
 
@@ -52,7 +50,7 @@ public class FileCacheByPathTest {
     public void before() throws Exception {
         randomFilesDir = temporaryFolder.newFolder("random-generated");
         cacheDir = temporaryFolder.newFolder("cache");
-        cache = new FileCacheByPath(cacheDir);
+        cache = new KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey);
     }
 
     private File makeRandomFile() throws Exception {

@@ -18,8 +18,11 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.files.SerializableChange
+import com.android.builder.files.SerializableInputChanges
 import com.android.ide.common.resources.FileStatus
+import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileType
@@ -34,16 +37,24 @@ import java.util.Collections
  *
  * This method ignores directory changes.
  */
-fun InputChanges.getChangesInSerializableForm(input: Provider<out FileSystemLocation>) =
-    convert(getFileChanges(input))
+fun InputChanges.getChangesInSerializableForm(input: Provider<out FileSystemLocation>): SerializableInputChanges {
+    return SerializableInputChanges(
+        roots = ImmutableList.of(input.get().asFile),
+        changes = convert(getFileChanges(input))
+    )
+}
 
 /**
  * Convert Gradle incremental changes to a serializable form for the worker API.
  *
  * This method ignores directory changes.
  */
-fun InputChanges.getChangesInSerializableForm(input: FileCollection) =
-    convert(getFileChanges(input))
+fun InputChanges.getChangesInSerializableForm(input: FileCollection): SerializableInputChanges {
+    return SerializableInputChanges(
+        roots = input.files.toImmutableList(),
+        changes = convert(getFileChanges(input))
+    )
+}
 
 private fun convert(changes: Iterable<FileChange>): Collection<SerializableChange> {
     return Collections.unmodifiableCollection(ArrayList<SerializableChange>().also { collection ->

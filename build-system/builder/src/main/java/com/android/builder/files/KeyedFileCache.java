@@ -25,16 +25,17 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Function;
 import org.apache.commons.codec.binary.Base64;
 
 /**
- * File cache that stored files based on their origin path. The general contract of the {@code
- * FileCacheByPath} is that files are stored and can be later retrieved from their original path.
- * For example:
+ * File cache that stored files based on the given key function. The general contract of the {@code
+ * KeyedFileCache} is that files are stored and can be later retrieved using the file to derive a
+ * unique key using the given key function. For example:
  *
  * <pre>
  * File cacheDir = ... // some directory.
- * FileCacheByPath cache = new FileCacheByPath(cacheDir);
+ * KeyedFileCache cache = new KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey);
  *
  * File a = new File(...); // some file in the filesystem.
  * cache.add(a);
@@ -48,7 +49,7 @@ import org.apache.commons.codec.binary.Base64;
  * A custom API for zip files ({@link #add(ZipCentralDirectory)} allows to only store a zip file's
  * Central Directory Record as this is generally only what is needed from the cache.
  */
-public class FileCacheByPath {
+public class KeyedFileCache {
 
     /**
      * The directory where the cache exists.
@@ -57,14 +58,22 @@ public class FileCacheByPath {
     private final File directory;
 
     /**
+     * The function that maps a file to its location in the cache. See {@link #fileNameKey(File)}
+     * for one example.
+     */
+    @NonNull private final Function<File, String> keyFunction;
+
+    /**
      * Creates a new cache.
      *
      * @param directory the directory where the cache is stored
+     * @param keyFunction a function that maps a file to its location in the cache. See {@link
+     *     #fileNameKey(File)} for one example.
      */
-    public FileCacheByPath(@NonNull File directory) {
+    public KeyedFileCache(@NonNull File directory, @NonNull Function<File, String> keyFunction) {
         Preconditions.checkArgument(directory.isDirectory(), "!File.isDirectory(): %s", directory);
-
         this.directory = directory;
+        this.keyFunction = keyFunction;
     }
 
     /**
@@ -131,14 +140,25 @@ public class FileCacheByPath {
         }
     }
 
+    private String key(@NonNull File f) {
+        String key = keyFunction.apply(f);
+        if (key != null) {
+            return key;
+        }
+        throw new IllegalStateException("No key found for file " + f);
+    }
+
     /**
      * Computes a unique key identifying the path of the file.
+     *
+     * <p>WARNING: this is dangerous to use with normalized gradle inputs that discard the absolute
+     * path of files.
      *
      * @param f the path
      * @return the unique key
      */
     @NonNull
-    private static String key(@NonNull File f) {
+    public static String fileNameKey(@NonNull File f) {
         String absolutePath = f.getAbsolutePath();
         byte[] sha1Sum = Hashing.sha1().hashString(absolutePath, Charsets.UTF_8).asBytes();
         return new String(Base64.encodeBase64(sha1Sum), Charsets.US_ASCII).replaceAll("/", "_");
