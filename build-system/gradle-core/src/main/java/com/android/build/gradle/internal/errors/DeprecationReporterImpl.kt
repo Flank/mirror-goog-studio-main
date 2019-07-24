@@ -153,7 +153,7 @@ class DeprecationReporterImpl(
                     "It will be removed ${deprecationTarget.removalTime}."
 
         issueReporter.reportWarning(
-                Type.DEPRECATED_CONFIGURATION,
+                Type.USING_DEPRECATED_CONFIGURATION,
                 if (url != null) "$msg For more information see: $url" else msg,
                 "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")
     }
@@ -164,7 +164,7 @@ class DeprecationReporterImpl(
         deprecationTarget: DeprecationTarget
     ) {
         issueReporter.reportWarning(
-            Type.DEPRECATED_CONFIGURATION,
+            Type.USING_DEPRECATED_CONFIGURATION,
             "Configuration '$oldConfiguration' is obsolete and has been replaced with DSL element '$newDslElement'.\n" +
                     "It will be removed ${deprecationTarget.removalTime}.",
             "$oldConfiguration::$newDslElement::${deprecationTarget.name}")
@@ -175,7 +175,7 @@ class DeprecationReporterImpl(
             newValue: String?,
             url: String?,
             deprecationTarget: DeprecationTarget) {
-        issueReporter.reportWarning(Type.DEPRECATED_DSL_VALUE,
+        issueReporter.reportWarning(Type.USING_DEPRECATED_DSL_VALUE,
                 "DSL element '$dslElement' has a value '$oldValue' which is obsolete " +
                         if (newValue != null)
                             "and has been replaced with '$newValue'.\n"

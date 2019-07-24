@@ -143,12 +143,25 @@ public interface SyncIssue {
      */
     int TYPE_DEPRECATED_DSL = 28;
 
+    /**
+     * Indicates that the project uses a deprecated configuration.
+     *
+     * <p>This type is now replaced with TYPE_USING_DEPRECATED_CONFIGURATION (see
+     * http://issuetracker.google.com/138278313).
+     */
+    @SuppressWarnings("unused")
+    @Deprecated
     int TYPE_DEPRECATED_CONFIGURATION = 29;
 
     /**
      * Indicates that the project uses a deprecated DSL, the Data payload is a URL giving context to
      * the user on how to remove the deprecated element or value.
+     *
+     * <p>This type is now replaced with TYPE_USING_DEPRECATED_DSL_VALUE (see
+     * http://issuetracker.google.com/138278313).
      */
+    @SuppressWarnings("unused")
+    @Deprecated
     int TYPE_DEPRECATED_DSL_VALUE = 29;
 
     /** Indicates that the project contains the min sdk in the android manifest file. */
@@ -199,16 +212,18 @@ public interface SyncIssue {
      */
     int TYPE_ANDROID_X_PROPERTY_NOT_ENABLED = 40;
 
-    // ATTENTION: When adding a new type here, increment the index by 1 and also increment TYPE_MAX
-    // below.
+    /** Indicates that the project uses a deprecated configuration. */
+    int TYPE_USING_DEPRECATED_CONFIGURATION = 41;
 
     /**
-     * Number of {@link SyncIssue} types, counting the generic type with index 0. (This value should
-     * equal the highest type index plus 1.)
-     *
-     * <p>This variable is not used in tools/base but is currently used in tools/adt/idea.
+     * Indicates that the project uses a deprecated DSL, the Data payload is a URL giving context to
+     * the user on how to remove the deprecated element or value.
      */
-    int TYPE_MAX = 41; // increment by 1 when adding a new type
+    int TYPE_USING_DEPRECATED_DSL_VALUE = 42;
+
+    // NOTE: When adding a new type here, increment the index by 1. This index may not be consistent
+    // with the corresponding value in studio_stats.proto (e.g., it could be lower by 1), because of
+    // an indexing issue in the past (see http://issuetracker.google.com/138278313).
 
     /** Returns the severity of the issue. */
     int getSeverity();

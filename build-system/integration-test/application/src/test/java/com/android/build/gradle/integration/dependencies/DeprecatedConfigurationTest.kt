@@ -42,7 +42,7 @@ class DeprecatedConfigurationTest {
         assertThat(container).rootBuild().project(":app")
                 .hasSingleIssue(
                         SyncIssue.SEVERITY_WARNING,
-                        SyncIssue.TYPE_DEPRECATED_CONFIGURATION,
+                        SyncIssue.TYPE_USING_DEPRECATED_CONFIGURATION,
                         "testCompile::testImplementation::CONFIG_NAME")
     }
 }
