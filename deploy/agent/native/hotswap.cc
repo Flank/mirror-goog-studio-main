@@ -108,10 +108,21 @@ jclass HotSwap::FindInLoadedClasses(const std::string& name) const {
 }
 
 jclass HotSwap::FindClass(const std::string& name) const {
-  Log::V("Searching for class '%s' in the current thread context classloader.",
+  Log::V("Searching for class '%s' in the thread context classloader.",
          name.c_str());
 
   jclass klass = FindInClassLoader(GetThreadClassLoader(jni_), name);
+  if (klass != nullptr) {
+    return klass;
+  }
+
+  jni_->ExceptionDescribe();
+  jni_->ExceptionClear();
+
+  Log::V("Searching for class '%s' in the application classloader.",
+         name.c_str());
+
+  klass = FindInClassLoader(GetApplicationClassLoader(jni_), name);
   if (klass != nullptr) {
     return klass;
   }
@@ -129,6 +140,9 @@ jclass HotSwap::FindClass(const std::string& name) const {
   jni_->ExceptionDescribe();
   jni_->ExceptionClear();
 
+  // Note that this search is for all *loaded* classes; it will not find a class
+  // that has not yet been loaded by the VM. Classes are typically loaded when
+  // they are first used by the application.
   Log::V("Searching for class '%s' in all loaded classes.", name.c_str());
 
   klass = FindInLoadedClasses(name);

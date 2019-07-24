@@ -26,6 +26,7 @@ public class AgentBasedClassRedefinerRClassTest extends AgentBasedClassRedefiner
     @Test
     public void testRClassRedefine() throws Exception {
         android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
 
         Deploy.SwapRequest request = createRequest("app.R$Strings", "app/R$Strings.dex", false);
         redefiner.redefine(request);
