@@ -248,17 +248,17 @@ void EnqueueJNIGlobalRefEvents(const proto::BatchAllocationContexts& contexts,
            EmptyResponse response;
            return stub.SendEvent(&ctx, request, &response);
          }});
+  } else {
+    JNIRefEventsRequest request;
+    request.set_pid(getpid());
+    request.mutable_contexts()->CopyFrom(contexts);
+    request.mutable_events()->CopyFrom(events);
+    Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
+        {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
+          EmptyMemoryReply reply;
+          return stub.RecordJNIRefEvents(&ctx, request, &reply);
+        }});
   }
-
-  JNIRefEventsRequest request;
-  request.set_pid(getpid());
-  request.mutable_contexts()->CopyFrom(contexts);
-  request.mutable_events()->CopyFrom(events);
-  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
-      {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
-        EmptyMemoryReply reply;
-        return stub.RecordJNIRefEvents(&ctx, request, &reply);
-      }});
 }
 
 void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
