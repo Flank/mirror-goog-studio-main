@@ -40,6 +40,7 @@ class LocalFileHeader {
     // This is the extra marker value as what apkzlib uses.
     private static final short ALIGN_SIGNATURE = (short) 0xd935;
 
+    static final long VIRTUAL_ENTRY_MAX_SIZE = LOCAL_FILE_HEADER_SIZE + Ints.USHRT_MAX;
     static final long OFFSET_TO_NAME = 26;
 
     private final byte[] nameBytes;

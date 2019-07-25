@@ -225,8 +225,14 @@ public class ZipArchive implements Archive {
         }
 
         while (spaceToFill > 0) {
-            long entrySize =
-                    Math.min(Ints.USHRT_MAX - LocalFileHeader.VIRTUAL_HEADER_SIZE, spaceToFill);
+            long entrySize;
+            if (spaceToFill <= LocalFileHeader.VIRTUAL_ENTRY_MAX_SIZE) {
+                // Consume all the remaining space.
+                entrySize = spaceToFill;
+            } else {
+                // Consume as much as possible while leaving enough for the next LFH entry.
+                entrySize = Ints.USHRT_MAX;
+            }
             ByteBuffer virtualEntry =
                     ByteBuffer.allocate((int) (entrySize)).order(ByteOrder.LITTLE_ENDIAN);
             LocalFileHeader.fillVirtualEntry(virtualEntry);
