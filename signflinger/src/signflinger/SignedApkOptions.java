@@ -44,6 +44,7 @@ public class SignedApkOptions {
     final boolean v2Enabled;
 
     final String v1CreatedBy;
+    final String v1BuiltBy;
     final boolean v1TrustManifest;
 
     final int minSdkVersion;
@@ -55,6 +56,7 @@ public class SignedApkOptions {
             boolean v1Enabled,
             boolean v2Enabled,
             String v1CreatedBy,
+            String v1BuiltBy,
             boolean v1TrustManifest,
             int minSdkVersion) {
         this.privateKey = privateKey;
@@ -63,6 +65,7 @@ public class SignedApkOptions {
         this.v1Enabled = v1Enabled;
         this.v2Enabled = v2Enabled;
         this.v1CreatedBy = v1CreatedBy;
+        this.v1BuiltBy = v1BuiltBy;
         this.v1TrustManifest = v1TrustManifest;
         this.minSdkVersion = minSdkVersion;
     }
@@ -74,6 +77,7 @@ public class SignedApkOptions {
         boolean v1Enabled = false;
         boolean v2Enabled = true;
         String v1CreatedBy = "Signflinger";
+        String v1BuiltBy = "Signflinger";
         boolean v1TrustManifest;
         int minSdkVersion;
 
@@ -102,8 +106,13 @@ public class SignedApkOptions {
             return this;
         }
 
-        public Builder v1CreatedBy(@NonNull String creator) {
+        public Builder setV1CreatedBy(@NonNull String creator) {
             v1CreatedBy = creator;
+            return this;
+        }
+
+        public Builder setV1BuiltBy(@NonNull String builder) {
+            v1BuiltBy = builder;
             return this;
         }
 
@@ -126,6 +135,7 @@ public class SignedApkOptions {
                     v1Enabled,
                     v2Enabled,
                     v1CreatedBy,
+                    v1BuiltBy,
                     v1TrustManifest,
                     minSdkVersion);
         }
