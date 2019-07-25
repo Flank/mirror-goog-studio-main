@@ -673,6 +673,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             ProcessProfileWriter.getProject(project.getPath())
                     .setKotlinPluginVersion(kotlinPluginVersion);
         }
+        AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
         List<VariantScope> variantScopes = variantManager.createAndroidTasks();
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dsl.Splits;
@@ -31,6 +32,7 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.model.TestOptions;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.analytics.CommonMetricsData;
@@ -48,8 +50,10 @@ import com.google.wireless.android.sdk.stats.GradleIntegerOptionEntry;
 import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import com.google.wireless.android.sdk.stats.ProductDetails;
 import com.google.wireless.android.sdk.stats.TestRun;
+import java.lang.reflect.Method;
 import java.util.Locale;
 import org.gradle.api.Plugin;
+import org.gradle.api.Project;
 import org.gradle.api.logging.Logging;
 
 /**
@@ -389,4 +393,32 @@ public class AnalyticsUtil {
         return pluginClassName.replace(".", "_").toUpperCase(Locale.US);
     }
 
+
+    public static void recordFirebasePerformancePluginVersion(Project project) {
+        String version = getFirebasePerformancePluginVersion(project);
+        if (version == null) {
+            return;
+        }
+        ProcessProfileWriter.getProject(project.getPath())
+                .setFirebasePerformancePluginVersion(version);
+    }
+
+    /**
+     * Get the version of the firebase performance plugin if applied
+     *
+     * <p>Returns null if the plugin is not applied and "unknown" if something goes wrong.
+     */
+    @Nullable
+    private static String getFirebasePerformancePluginVersion(Project project) {
+        Plugin plugin = project.getPlugins().findPlugin("com.google.firebase.firebase-perf");
+        if (plugin == null) {
+            return null;
+        }
+        try {
+            Method getPluginVersion = plugin.getClass().getMethod("getPluginVersion");
+            return getPluginVersion.invoke(null).toString();
+        } catch (Throwable e) {
+            return "unknown";
+        }
+    }
 }
