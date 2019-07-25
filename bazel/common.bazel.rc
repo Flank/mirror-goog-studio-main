@@ -105,13 +105,7 @@ build:remote --host_javabase=//prebuilts/studio/jdk:jdk_runtime
 build:remote --javabase=//prebuilts/studio/jdk:jdk_runtime
 build:remote --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
-# Set various strategies so that all actions execute remotely. Mixing remote
-# and local execution will lead to errors unless the toolchain and remote
-# machine exactly match the host machine.
-build:remote --spawn_strategy=remote
-build:remote --strategy=Javac=remote
-build:remote --strategy=Closure=remote
-build:remote --genrule_strategy=remote
+# Needed for remote execution (see https://github.com/bazelbuild/bazel/issues/7254)
 build:remote --define=EXECUTOR=remote
 
 # Compute MD5 digests of files with multiple threads. Testing to see if this
