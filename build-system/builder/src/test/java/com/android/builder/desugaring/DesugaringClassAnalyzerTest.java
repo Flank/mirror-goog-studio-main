@@ -30,6 +30,8 @@ import com.android.builder.desugaring.samples.LambdaOfSubtype;
 import com.android.builder.desugaring.samples.OuterClass;
 import com.android.builder.desugaring.samples.SampleClass;
 import com.android.builder.desugaring.samples.SampleInterface;
+import com.android.testutils.TestInputsGenerator;
+import com.android.utils.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -251,6 +253,17 @@ public class DesugaringClassAnalyzerTest {
                     Sets.difference(allClasses, Collections.singleton(clazz));
             assertFullDependentGraph(clazz, allOtherClasses, graph);
         }
+    }
+
+    /** Regression test for b/137488460, the analyzer should ignore invalid entries in jars. */
+    @Test
+    public void testIgnoreInvalidZipEntry() throws Exception {
+        Path jarWithInvalidEntry = tmp.newFolder().toPath().resolve("invalidEntry.jar");
+        //noinspection unchecked: Generics in vararg are unchecked.
+        TestInputsGenerator.writeJarWithTextEntries(
+                jarWithInvalidEntry, Pair.of("../invalid", "ignore"));
+        List<DesugaringData> result = DesugaringClassAnalyzer.analyze(jarWithInvalidEntry);
+        assertThat(result).isEmpty();
     }
 
     @NonNull
