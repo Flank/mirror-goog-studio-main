@@ -50,7 +50,7 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
   --jobs 1 \
-  --remote_local_fallback_strategy=sandboxed \
+  --strategy=remote,sandbox \
   --define external_emulator=true \
   -- \
   //tools/adt/idea/android-uitests/...
