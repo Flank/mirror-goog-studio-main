@@ -8,8 +8,6 @@
         minBuildApi="9"
         category="Activity">
 
-    <dependency name="android-support-v4" revision="8"/>
-
     <category value="Activity"/>
     <formfactor value="Mobile"/>
 

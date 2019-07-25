@@ -10,8 +10,6 @@
     <category value="Fragment" />
     <formfactor value="Mobile" />
 
-    <dependency name="android-support-v4" revision="8" />
-
     <parameter
         id="packageName"
         name="Package name"
