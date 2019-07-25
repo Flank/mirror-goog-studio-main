@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.Deflater;
 import org.junit.Assert;
@@ -629,5 +630,36 @@ public class TestZipFlinger extends TestBase {
             archive.add(new BytesSource(new byte[10], "b", 0));
             archive.delete("a");
         }
+    }
+
+    @Test
+    public void testBigZipParsing() throws Exception {
+        File archive = getFile("testBigkZipParsing.zip");
+        int numFiles = 3;
+        int sizePerFile = 1_000_000_000;
+        createZip(numFiles, sizePerFile, archive);
+        Assert.assertTrue(archive.length() > numFiles * sizePerFile);
+
+        try (ZipArchive zipArchive = new ZipArchive(archive)) {
+            List<String> list = zipArchive.listEntries();
+            Assert.assertEquals("Num entries differ", list.size(), 3);
+        }
+        archive.delete();
+    }
+
+    @Test
+    public void testBigZipGeneration() throws Exception {
+        File archive = getFile("testBigZipGeneration.zip");
+        try (ZipArchive zipArchive = new ZipArchive(archive)) {
+            for (int i = 0; i < 3; i++) {
+                byte[] bytes = new byte[1_000_000_000];
+                BytesSource source = new BytesSource(bytes, "file" + i, Deflater.NO_COMPRESSION);
+                zipArchive.add(source);
+            }
+        }
+        Assert.assertTrue(
+                "Zip file below expected size", Files.size(archive.toPath()) > 3_000_000_000L);
+        verifyArchive(archive);
+        archive.delete();
     }
 }

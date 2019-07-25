@@ -174,7 +174,7 @@ java_test(
 
 java_test(
     name = "testsZipFlinger",
-    size = "small",
+    size = "medium",
     srcs = [
         "test/src/java/com/android/zipflinger/TestZipFlinger.java",
     ],

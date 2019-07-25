@@ -130,4 +130,25 @@ public class TestBase {
             }
         }
     }
+
+    static void createZip(long numFiles, int sizePerFile, File file) throws IOException {
+        if (file.exists()) {
+            file.delete();
+        }
+
+        long fileId = 0;
+        try (FileOutputStream f = new FileOutputStream(file);
+                ZipOutputStream s = new ZipOutputStream(f)) {
+            s.setLevel(ZipOutputStream.STORED);
+            for (int i = 0; i < numFiles; i++) {
+                long id = fileId++;
+                String name = String.format("file%06d", id);
+                ZipEntry entry = new ZipEntry(name);
+                byte[] bytes = new byte[sizePerFile];
+                s.putNextEntry(entry);
+                s.write(bytes);
+                s.closeEntry();
+            }
+        }
+    }
 }
