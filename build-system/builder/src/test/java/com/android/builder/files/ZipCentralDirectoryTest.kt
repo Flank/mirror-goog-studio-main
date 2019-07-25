@@ -83,6 +83,20 @@ class ZipCentralDirectoryTest {
             ZipCentralDirectory(zip64).entries }
     }
 
+    @Test
+    fun testLargeZipFileParsing() {
+        // Create 3GiB zip file.
+        var file = temporaryFolder.newFile()
+        val numFiles = 3
+        val sizePerFile = 1_000_000_000
+        createFakeZip(file, numFiles, sizePerFile)
+        Truth.assertThat(file.length() > numFiles * sizePerFile.toLong()).isTrue()
+
+        // Parse big zip.
+        var cd = ZipCentralDirectory(file)
+        Truth.assertThat(cd.entries.size == numFiles).isTrue()
+    }
+
     data class Entry(
         val name: String,
         val content: String? = null
@@ -103,6 +117,20 @@ class ZipCentralDirectoryTest {
         })
     }
 
+    private fun createFakeZip(path: File, numFiles: Int, sizePerFile: Int) {
+        ZipOutputStream(FileOutputStream(path)).use {
+            it.setLevel(ZipOutputStream.STORED)
+           for (i in 1..numFiles) {
+               val name = String.format("file%06d", i)
+               val entry = ZipEntry(name)
+               it.putNextEntry(entry)
+               val bytes = ByteArray(sizePerFile)
+               it.write(bytes)
+               it.closeEntry()
+            }
+        }
+    }
+
     private fun createZip64File(numClasses: Int, numResources: Int): File {
         val zip64 = temporaryFolder.newFile()
         ZipOutputStream(BufferedOutputStream(FileOutputStream(zip64))).use { zipOut ->
@@ -119,6 +147,5 @@ class ZipCentralDirectoryTest {
         }
         return zip64
     }
-
 
 }

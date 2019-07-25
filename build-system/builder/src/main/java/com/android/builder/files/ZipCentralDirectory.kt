@@ -199,8 +199,8 @@ class ZipCentralDirectory(
         //short cdStartDisk = bytes.getShort();
         //short numCDRonDisk = bytes.getShort();
         //short numCDRecords = buffer.getShort();
-        info.cdSize = buffer.int.toLong()
-        info.cdOffset = buffer.int.toLong()
+        info.cdSize = uintToLong(buffer.int)
+        info.cdOffset = uintToLong(buffer.int)
         //short sizeComment = bytes.getShort();
 
         return info
@@ -221,22 +221,22 @@ class ZipCentralDirectory(
             val modDate = buf.short*/
             buffer.position(buffer.position() + 12)
 
-            val crc: Long = buffer.int.toLong() and 0xFFFFFFFFL
-            /*val compressedSize =*/ buffer.int
-            val decompressedSize = buffer.int
-            val pathLength = buffer.short
-            val extraLength = buffer.short.toInt()
-            val commentLength = buffer.short
+            val crc: Long = uintToLong(buffer.int)
+            /*val compressedSize =*/ uintToLong(buffer.int)
+            val decompressedSize = uintToLong(buffer.int)
+            val pathLength = ushortToInt(buffer.short)
+            val extraLength = ushortToInt(buffer.short)
+            val commentLength = ushortToInt(buffer.short)
             // Skip 2 (disk number) + 2 (internal attributes)+ 4 (external attributes)
             buffer.position(buffer.position() + 8)
-            /*val start =*/ buffer.int.toLong() // offset to local file entry header
+            /*val start =*/ uintToLong(buffer.int) // offset to local file entry header
 
             // Read the filename
-            val pathBytes = ByteArray(pathLength.toInt())
+            val pathBytes = ByteArray(pathLength)
             buffer.get(pathBytes)
             val name = String(pathBytes, Charset.forName("UTF-8"))
 
-            buffer.position(buffer.position() + extraLength + commentLength.toInt())
+            buffer.position(buffer.position() + extraLength + commentLength)
 
             // only add files, not directories
             if (decompressedSize > 0 || !name.endsWith("/")) {
@@ -248,12 +248,19 @@ class ZipCentralDirectory(
         return Collections.unmodifiableMap(entries)
     }
 
+    private fun uintToLong(i: Int) : Long {
+        return (0xFF_FF_FF_FFL) and i.toLong()
+    }
+
+    private fun ushortToInt(i: Short) : Int{
+        return (0xFF_FF) and i.toInt()
+    }
 }
 
 data class DirectoryEntry(
     val name: String,
     val crc32: Long,
-    val size: Int
+    val size: Long
 )
 
 private const val EOCD_SIGNATURE: Int = 0x06054b50
