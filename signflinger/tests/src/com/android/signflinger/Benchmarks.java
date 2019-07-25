@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package signflinger;
+package com.android.signflinger;
 
 import java.io.File;
 import java.nio.file.Files;

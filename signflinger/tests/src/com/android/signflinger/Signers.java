@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package signflinger;
+package com.android.signflinger;
 
 public class Signers {
     static SignerConfig getDefaultRSA() throws Exception {

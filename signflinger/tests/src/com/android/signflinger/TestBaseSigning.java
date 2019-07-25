@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package signflinger;
+package com.android.signflinger;
 
 import com.android.zipflinger.FileSource;
 import com.android.zipflinger.ZipSource;

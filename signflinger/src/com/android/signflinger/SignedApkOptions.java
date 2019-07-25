@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package signflinger;
+package com.android.signflinger;
 
 import com.android.annotations.NonNull;
 import com.android.apksig.util.RunnablesExecutor;

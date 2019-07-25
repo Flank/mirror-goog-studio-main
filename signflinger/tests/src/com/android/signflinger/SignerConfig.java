@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package signflinger;
+package com.android.signflinger;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
