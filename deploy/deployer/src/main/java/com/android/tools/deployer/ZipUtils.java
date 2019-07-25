@@ -77,15 +77,15 @@ public class ZipUtils {
             short compression = buf.getShort();
             short modTime = buf.getShort();
             short modDate = buf.getShort();
-            long crc = buf.getInt() & 0xFFFFFFFFL;
-            int compressedSize = buf.getInt();
-            int decompressedSize = buf.getInt();
-            short pathLength = buf.getShort();
-            int extraLength = buf.getShort();
-            short commentLength = buf.getShort();
+            long crc = uintToLong(buf.getInt());
+            long compressedSize = uintToLong(buf.getInt());
+            long decompressedSize = uintToLong(buf.getInt());
+            int pathLength = ushortToInt(buf.getShort());
+            int extraLength = ushortToInt(buf.getShort());
+            int commentLength = ushortToInt(buf.getShort());
             // Skip 2 (disk number) + 2 (internal attributes)+ 4 (external attributes)
             buf.position(buf.position() + 8);
-            long start = buf.getInt(); // offset to local file entry header
+            long start = uintToLong(buf.getInt()); // offset to local file entry header
 
             // Read the filename
             byte[] pathBytes = new byte[pathLength];
@@ -102,10 +102,10 @@ public class ZipUtils {
             fakeEntry.putShort(modTime);
             fakeEntry.putShort(modDate);
             fakeEntry.putInt((int) crc);
-            fakeEntry.putInt(compression);
-            fakeEntry.putInt(decompressedSize);
-            fakeEntry.putShort((short) name.length());
-            fakeEntry.putShort((short) extraLength);
+            fakeEntry.putInt(longToUint(compressedSize));
+            fakeEntry.putInt(longToUint(decompressedSize));
+            fakeEntry.putShort(intToUShort(pathLength));
+            fakeEntry.putShort(intToUShort(extraLength));
             fakeEntry.put(pathBytes);
 
             // Keep track of boundaries of the entry in the zip archive since those are used while
@@ -132,5 +132,27 @@ public class ZipUtils {
         messageDigest.update(buffer);
         byte[] digestBytes = messageDigest.digest();
         return BaseEncoding.base16().lowerCase().encode(digestBytes);
+    }
+
+    public static short intToUShort(int integer) {
+        if ((integer & 0xFF_FF_00_00) != 0) {
+            throw new IllegalStateException("Cannot cast int to uint16 (does not fit)");
+        }
+        return (short) integer;
+    }
+
+    public static long uintToLong(int integer) {
+        return integer & 0xFF_FF_FF_FFL;
+    }
+
+    public static int longToUint(long integer) {
+        if ((integer & 0xFF_FF_FF_FF_00_00_00_00L) != 0) {
+            throw new IllegalStateException("Cannot cast long to uint32 (does not fit)");
+        }
+        return (int) integer;
+    }
+
+    public static int ushortToInt(short integer) {
+        return integer & 0xFF_FF;
     }
 }

@@ -168,10 +168,7 @@ public class ApkParser {
         ByteBuffer eocdBuffer = ByteBuffer.allocate(EOCD_SIZE).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(eocdBuffer, fileSize - EOCD_SIZE);
         eocdBuffer.rewind();
-        if (eocdBuffer.getInt() == EOCD_SIGNATURE) {
-            eocdBuffer.position(eocdBuffer.position() + Short.BYTES * 4);
-            map.cdSize = eocdBuffer.getInt();
-            map.cdOffset = eocdBuffer.getInt();
+        if (readEOCD(map, eocdBuffer)) {
             return;
         }
 
@@ -182,17 +179,25 @@ public class ApkParser {
         channel.read(endofFileBuffer, fileSize - endofFileBuffer.capacity());
         endofFileBuffer.position(endofFileBuffer.capacity() - EOCD_SIZE);
         while (true) {
-            if (endofFileBuffer.getInt() == EOCD_SIGNATURE) {
-                eocdBuffer.position(eocdBuffer.position() + Short.BYTES * 4);
-                map.cdSize = eocdBuffer.getInt();
-                map.cdOffset = eocdBuffer.getInt();
+            if (readEOCD(map, endofFileBuffer)) {
                 return;
             }
+
             if (endofFileBuffer.position() - 5 < 0) {
                 throw DeployerException.parseFailed("Unable to find apk's ECOD signature");
             }
             endofFileBuffer.position(endofFileBuffer.position() - 5);
         }
+    }
+
+    private static boolean readEOCD(ApkArchiveMap map, ByteBuffer buffer) {
+        if (buffer.getInt() != EOCD_SIGNATURE) {
+            return false;
+        }
+        buffer.position(buffer.position() + Short.BYTES * 4);
+        map.cdSize = ZipUtils.uintToLong(buffer.getInt());
+        map.cdOffset = ZipUtils.uintToLong(buffer.getInt());
+        return true;
     }
 
     private HashMap<String, ZipUtils.ZipEntry> readZipEntries(

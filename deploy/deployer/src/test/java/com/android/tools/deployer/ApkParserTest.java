@@ -24,12 +24,18 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ApkParserTest {
@@ -164,5 +170,89 @@ public class ApkParserTest {
                     true,
                     map.signatureBlockOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
         }
+    }
+
+    static void createZip(long numFiles, int sizePerFile, File file) throws IOException {
+        if (file.exists()) {
+            file.delete();
+        }
+
+        long fileId = 0;
+        Random random = new Random(1);
+        try (FileOutputStream f = new FileOutputStream(file);
+                ZipOutputStream s = new ZipOutputStream(f)) {
+            for (int i = 0; i < numFiles; i++) {
+                long id = fileId++;
+                String name = String.format("file%06d", id);
+                ZipEntry entry = new ZipEntry(name);
+                byte[] bytes = new byte[sizePerFile];
+                random.nextBytes(bytes);
+                s.putNextEntry(entry);
+                s.write(bytes);
+                s.closeEntry();
+            }
+        }
+    }
+
+    @Test
+    public void testParsingBigZip() throws Exception {
+        Path zipArchive = Paths.get(TestUtils.getTestOutputDir().getAbsolutePath() + "big.zip");
+        createZip(3, 1_000_000_000, zipArchive.toFile());
+        ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
+        try (RandomAccessFile file = new RandomAccessFile(zipArchive.toFile(), "r")) {
+            ApkParser.findCDLocation(file.getChannel(), map);
+            assertEquals(
+                    "Central directory offset found",
+                    true,
+                    map.cdOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
+        }
+    }
+
+    @Test
+    public void testUIntOverflow() {
+        long doesNotFitInUint32 = 0x1_FF_FF_FF_FFL;
+        boolean exceptionCaught = false;
+        try {
+            ZipUtils.longToUint(doesNotFitInUint32);
+        } catch (IllegalStateException e) {
+            exceptionCaught = true;
+        }
+        Assert.assertTrue("Integer overflow not detected", exceptionCaught);
+    }
+
+    @Test
+    public void testUIntNoOverflow() {
+        long doesFitInUint32 = 0xFF_FF_FF_FFL;
+        boolean exceptionCaught = false;
+        try {
+            ZipUtils.longToUint(doesFitInUint32);
+        } catch (IllegalStateException e) {
+            exceptionCaught = true;
+        }
+        Assert.assertFalse("Integer overflow thrown", exceptionCaught);
+    }
+
+    @Test
+    public void testUShortOverflow() {
+        int doesNotFitInUint16 = 0x1_FF_FF;
+        boolean exceptionCaught = false;
+        try {
+            ZipUtils.intToUShort(doesNotFitInUint16);
+        } catch (IllegalStateException e) {
+            exceptionCaught = true;
+        }
+        Assert.assertTrue("Short overflow not detected", exceptionCaught);
+    }
+
+    @Test
+    public void testUShortNoOverflow() {
+        int doesFitInUint16 = 0xFF_FF;
+        boolean exceptionCaught = false;
+        try {
+            ZipUtils.intToUShort(doesFitInUint16);
+        } catch (IllegalStateException e) {
+            exceptionCaught = true;
+        }
+        Assert.assertFalse("Short overflow thrown", exceptionCaught);
     }
 }
