@@ -59,7 +59,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.UastLintUtils;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -88,6 +87,7 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import kotlin.collections.CollectionsKt;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
@@ -95,6 +95,7 @@ import org.jetbrains.uast.UDeclaration;
 import org.jetbrains.uast.UDeclarationsExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.ULocalVariable;
@@ -109,6 +110,7 @@ import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.java.JavaUAnnotation;
 import org.jetbrains.uast.java.JavaUTypeCastExpression;
+import org.jetbrains.uast.kotlin.KotlinUSwitchExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
@@ -927,7 +929,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                         // Keep error message in sync with {@link #getMissingCases}
                         String message =
                                 "Don't use a constant here; expected one of: "
-                                        + Joiner.on(", ").join(list);
+                                        + displayConstants(list);
                         mContext.report(
                                 SWITCH_TYPE_DEF,
                                 caseValue,
@@ -984,7 +986,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                 // Keep error message in sync with {@link #getMissingCases}
                                 String message =
                                         "Unexpected constant; expected one of: "
-                                                + Joiner.on(", ").join(list);
+                                                + displayConstants(list);
                                 LintFix fix = fix().data(list);
                                 Location location = mContext.getNameLocation(caseValue);
                                 mContext.report(SWITCH_TYPE_DEF, caseValue, location, message, fix);
@@ -1028,17 +1030,49 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 if (!mFields.isEmpty()) {
                     List<String> list = computeFieldNames(mSwitchExpression, mFields);
                     // Keep error message in sync with {@link #getMissingCases}
+                    LintFix fix = fix().data(list);
+                    UIdentifier identifier = mSwitchExpression.getSwitchIdentifier();
+                    Location location = mContext.getLocation(identifier);
+                    // Workaround Kotlin UAST passing <error> instead of PsiKeyword as in Java
+                    if (mSwitchExpression instanceof KotlinUSwitchExpression
+                            && !"when".equals(identifier.getName())) {
+                        PsiElement sourcePsi = mSwitchExpression.getSourcePsi();
+                        if (sourcePsi != null) {
+                            PsiElement keyword = sourcePsi.getFirstChild();
+                            if (keyword != null) {
+                                location = mContext.getLocation(keyword);
+                            }
+                        }
+                    }
                     String message =
                             "Switch statement on an `int` with known associated constant "
                                     + "missing case "
-                                    + Joiner.on(", ").join(list);
-                    LintFix fix = fix().data(list);
-                    Location location =
-                            mContext.getLocation(mSwitchExpression.getSwitchIdentifier());
+                                    + displayConstants(list);
                     mContext.report(SWITCH_TYPE_DEF, mSwitchExpression, location, message, fix);
                 }
             }
         }
+    }
+
+    @NonNull
+    private static String displayConstants(List<String> list) {
+        return CollectionsKt.joinToString(
+                list,
+                ", ", // separator
+                "", // prefix
+                "", // postfix
+                -1, // limited
+                "", // truncated
+                s -> {
+                    int index = s.lastIndexOf('.');
+                    if (index != -1) {
+                        int classIndex = s.lastIndexOf('.', index - 1);
+                        if (classIndex != -1) {
+                            return "`" + s.substring(classIndex + 1) + "`";
+                        }
+                    }
+                    return "`" + s + "`";
+                });
     }
 
     private static List<String> computeFieldNames(
@@ -1060,12 +1094,12 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 } else {
                     String referenceName = ref.getReferenceName();
                     if (referenceName != null) {
-                        list.add('`' + referenceName + '`');
+                        list.add(referenceName);
                     }
                     continue;
                 }
             } else if (o instanceof PsiLiteral) {
-                list.add("`" + ((PsiLiteral) o).getValue() + '`');
+                list.add((String) ((PsiLiteral) o).getValue());
                 continue;
             } else if (o instanceof UReferenceExpression) {
                 UReferenceExpression ref = (UReferenceExpression) o;
@@ -1073,7 +1107,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 if (resolved == null) {
                     String resolvedName = ref.getResolvedName();
                     if (resolvedName != null) {
-                        list.add('`' + resolvedName + '`');
+                        list.add(resolvedName);
                     }
                     continue;
                 }
@@ -1088,10 +1122,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 if (clz != null) {
                     PsiClass containingClass = field.getContainingClass();
                     if (containingClass != null && !containingClass.equals(clz.getPsi())) {
-                        name = containingClass.getName() + '.' + field.getName();
+                        name = containingClass.getQualifiedName() + '.' + field.getName();
                     }
                 }
-                list.add('`' + name + '`');
+                list.add(name);
             }
         }
         Collections.sort(list);

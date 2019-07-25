@@ -127,6 +127,8 @@ kotlin_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
     ],

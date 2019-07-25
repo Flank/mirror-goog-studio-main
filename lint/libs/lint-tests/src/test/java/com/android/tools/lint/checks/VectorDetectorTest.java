@@ -376,18 +376,18 @@ public class VectorDetectorTest extends AbstractCheckTest {
 
         //noinspection all // Sample code
         lint().files(
-                manifest().minSdk(23),
-                xml(
-                        "res/drawable/foo.xml",
-                        ""
-                                + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "        xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
-                                + "        android:width=\"176dp\"\n"
-                                + "        android:height=\"276dp\"\n"
-                                + "        android:viewportHeight=\"48\"\n"
-                                + "        android:viewportWidth=\"48\"\n"
-                                + "        android:autoMirrored=\"true\"\n"
-                                + "        android:tint=\"?attr/colorControlActivated\"/>\n"))
+                        manifest().minSdk(23),
+                        xml(
+                                "res/drawable/foo.xml",
+                                ""
+                                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "        xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+                                        + "        android:width=\"176dp\"\n"
+                                        + "        android:height=\"276dp\"\n"
+                                        + "        android:viewportHeight=\"48\"\n"
+                                        + "        android:viewportWidth=\"48\"\n"
+                                        + "        android:autoMirrored=\"true\"\n"
+                                        + "        android:tint=\"?attr/colorControlActivated\"/>\n"))
                 .run()
                 .expect(expected);
     }

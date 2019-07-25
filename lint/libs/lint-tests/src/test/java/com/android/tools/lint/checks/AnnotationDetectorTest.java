@@ -445,6 +445,32 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                         + "}\n")));
     }
 
+    public void testMissingSwitchFailingIntDefKotlin() throws Exception {
+        assertEquals(
+                ""
+                        + "src/test/pkg/X.kt:8: Warning: Switch statement on an int with known associated constant missing case MeasureSpec.EXACTLY, MeasureSpec.UNSPECIFIED [SwitchIntDef]\n"
+                        + "        when (`val`) {\n"
+                        + "        ~~~~\n"
+                        + "0 errors, 1 warnings\n",
+                lintProject(
+                        kotlin(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.View\n"
+                                        + "\n"
+                                        + "class X {\n"
+                                        + "    fun measure(mode: Int) {\n"
+                                        + "        val `val` = View.MeasureSpec.getMode(mode)\n"
+                                        + "        when (`val`) {\n"
+                                        + "            View.MeasureSpec.AT_MOST -> {\n"
+                                        + "                // something\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n")));
+    }
+
     public void testUnexpectedSwitchConstant() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=204326
         // 	The switch check should look for unexpected constants in case statements
