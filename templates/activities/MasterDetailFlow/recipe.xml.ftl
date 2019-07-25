@@ -12,11 +12,6 @@
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 
-    <#if minApiLevel lt 13>
-      <merge from="root/res/values-w900dp/refs.xml.ftl"
-               to="${escapeXmlAttribute(resOut)}/values-w900dp/refs.xml" />
-    </#if>
-
     <#if isDynamicFeature!false>
       <merge from="root/res/values/strings.xml.ftl"
                to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
@@ -33,13 +28,8 @@
                    to="${escapeXmlAttribute(resOut)}/layout/activity_${detail_name}.xml" />
     <instantiate from="root/res/layout/fragment_item_list.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${item_list_layout}.xml" />
-    <#if minApiLevel lt 13>
-      <instantiate from="root/res/layout/fragment_item_list_twopane.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/layout/${item_list_layout}_twopane.xml" />
-    <#else>
-      <instantiate from="root/res/layout/fragment_item_list_twopane.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/layout-w900dp/${item_list_layout}.xml" />
-    </#if>
+    <instantiate from="root/res/layout/fragment_item_list_twopane.xml.ftl"
+                   to="${escapeXmlAttribute(resOut)}/layout-w900dp/${item_list_layout}.xml" />
     <instantiate from="root/res/layout/item_list_content.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${item_list_content_layout}.xml" />
     <instantiate from="root/res/layout/fragment_item_detail.xml.ftl"

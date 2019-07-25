@@ -12,15 +12,7 @@
     tools:context="${packageName}.${CollectionName}Activity">
 
     <!--
-    This layout is a two-pane layout for the ${objectKindPlural}
-    master/detail flow.
-    <#if minApiLevel lt 13>See res/values-large/refs.xml and
-    res/values-w900dp/refs.xml for an example of layout aliases
-    that replace the single-pane version of the layout with
-    this two-pane version.
-
-    For more on layout aliases, see:
-    http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters</#if>
+    This layout is a two-pane layout for the ${objectKindPlural} master/detail flow.
     -->
 
     <${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
