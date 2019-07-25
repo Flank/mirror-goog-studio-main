@@ -1,0 +1,23 @@
+# A trick to allow invoking this script in multiple contexts.
+MY_LOCATION="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT=$(dirname $(dirname ${MY_LOCATION}) )
+CLANG_LOC=$1
+shift
+
+ARCHIVE_NAME=""
+for arg in "$@"; do
+  [[ "$ARCHIVE_NAME" = "" ]] && [[ "$arg" = *.* ]] && ARCHIVE_NAME="$arg"
+done
+
+# Prevents timestamp metadata being present in the archive contents.
+export ZERO_AR_DATE=1
+
+"${ROOT}/${CLANG_LOC}"/bin/llvm-ar "$@"
+
+# To silence the "has no symbols" warnings when generating the symbol table,
+# call ar with the -S flag and then call ranlib explicitly.
+"${ROOT}/${CLANG_LOC}"/bin/llvm-ranlib "$ARCHIVE_NAME"
+
+# Setting ZERO_AR_DATE for the above invocations may mean the output will have
+# zero timestamp, which, as an input, would break ld. Thus, update timestamp.
+touch "$ARCHIVE_NAME"

@@ -34,8 +34,11 @@ test:ignored --jvmopt=-Dignored.tests.only=true
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
+# TODO (b/141269926): this generates a warning on windows when building for host,
+# but is required when building for android.
 build --cxxopt=-std=c++11
 build --copt=-fvisibility=hidden
+
 build --define=grpc_no_ares=true
 
 # Forwards the system $SHELL environment variable so remote execution of bazel
@@ -64,12 +67,6 @@ build:remote_common --remote_timeout=3600
 # account credential instead.
 build:remote_common --auth_enabled=true
 
-build:release --copt=-fdata-sections
-build:release --cxxopt=-fdata-sections
-build:release --copt=-fno-exceptions
-build:release --cxxopt=-fno-exceptions
-build:release --copt=-ffunction-sections
-build:release --cxxopt=-ffunction-sections
 build:release -c opt
 build:release --strip=always
 
@@ -81,6 +78,9 @@ build --host_javabase=//prebuilts/studio/jdk:jdk_runtime
 build --javabase=//prebuilts/studio/jdk:jdk_runtime
 build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+
+# Use prebuilt native toolchain
+build --crosstool_top=@native_toolchain//:toolchain
 
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone

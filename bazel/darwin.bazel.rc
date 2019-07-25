@@ -2,3 +2,10 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 
 build:remote --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 build:remote --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+
+build:release --copt=-fdata-sections
+build:release --cxxopt=-fdata-sections
+build:release --copt=-fno-exceptions
+build:release --cxxopt=-fno-exceptions
+build:release --copt=-ffunction-sections
+build:release --cxxopt=-ffunction-sections

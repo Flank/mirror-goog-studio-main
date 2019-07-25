@@ -1,5 +1,10 @@
 _repositories = [
     {
+        "name": "native_toolchain",
+        "build_file": "tools/base/bazel/toolchains/clang.BUILD",
+        "path": "prebuilts/clang",
+    },
+    {
         "name": "freetype_repo",
         "build_file": "tools/base/dynamic-layout-inspector/external/freetype.BUILD",
         "path": "external/freetype",

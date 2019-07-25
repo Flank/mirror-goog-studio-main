@@ -1,4 +1,0 @@
-local_repository(
-    name = "windows_toolchains",
-    path = "windows_toolchains",
-)

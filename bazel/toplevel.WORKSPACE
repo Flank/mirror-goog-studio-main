@@ -18,7 +18,7 @@ local_repository(
 
 local_repository(
       name = "windows_toolchains",
-      path = "tools/base/bazel/windows_toolchains",
+      path = "tools/base/bazel/toolchains/windows",
 )
 
 http_archive(
