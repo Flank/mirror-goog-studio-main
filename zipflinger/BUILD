@@ -21,7 +21,7 @@ maven_java_library(
 maven_pom(
     name = "pom",
     artifact = "zipflinger",
-    group = "zipflinger",
+    group = "com.android",
     source = "//tools/buildSrc/base:base_version",
 )
 

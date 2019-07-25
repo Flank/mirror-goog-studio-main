@@ -32,7 +32,7 @@ sourceSets {
     test.resources.srcDir 'test/resource'
 }
 
-group = 'zipflinger'
+group = 'com.android'
 archivesBaseName = 'zipflinger'
 version = rootProject.ext.buildVersion
 
