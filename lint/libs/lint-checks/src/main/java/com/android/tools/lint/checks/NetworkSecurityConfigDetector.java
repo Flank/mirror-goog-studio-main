@@ -117,6 +117,23 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     .addMoreInfo(
                             "https://developer.android.com/preview/features/security-config.html");
 
+    /** Allows user-provided certificates to validate of secure connections. */
+    public static final Issue ACCEPTS_USER_CERTIFICATES =
+            Issue.create(
+                            "AcceptsUserCertificates",
+                            "The Network Security Configuration allows the use of user certificates in the release "
+                                    + "version of your app",
+                            "Allowing user certificates could allow eavesdroppers to intercept data sent by your app, '"
+                                    + "which could impact the privacy of your users. Consider nesting your app's "
+                                    + "`trust-anchors` inside a `<debug-overrides>` element to make sure they are only "
+                                    + "available when `android:debuggable` is set to `\"true\"`.",
+                            Category.SECURITY,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/articles/security-config#TrustingDebugCa");
+
     public static final String ATTR_DIGEST = "digest";
 
     private static final String TAG_NETWORK_SECURITY_CONFIG = "network-security-config";
@@ -190,7 +207,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 } else {
                     baseConfigHandle = context.createLocationHandle(child);
                     handleConfigElement(context, child, seenDomains2Nodes);
-                    handleBaseContextElement(context, child);
+                    handleBaseConfigElement(context, child);
                 }
             } else if (TAG_DEBUG_OVERRIDES.equals(tagName)) {
                 if (mDebugOverridesHandle != null) {
@@ -322,7 +339,11 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         }
     }
 
-    private void handleBaseContextElement(XmlContext context, Element node) {
+    /**
+     * The following checks happen in addition to the {@link handleConfigElement()} checks, but are
+     * specific to the {@code <base-config>} element.
+     */
+    private void handleBaseConfigElement(XmlContext context, Element node) {
         if (node.hasAttribute(ATTR_CLEARTEXT_TRAFFIC_PERMITTED)) {
             Attr cleartextTrafficAttribute =
                     node.getAttributeNode(ATTR_CLEARTEXT_TRAFFIC_PERMITTED);
@@ -335,6 +356,23 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                         attributeLocation,
                         INSECURE_CONFIGURATION.getBriefDescription(TextFormat.RAW),
                         fix);
+            }
+        }
+
+        for (Element child : XmlUtils.getSubTags(node)) {
+            if (TAG_TRUST_ANCHORS.equals(child.getTagName())) {
+                for (Element grandchild : XmlUtils.getSubTags(child)) {
+                    if (TAG_CERTIFICATES.equals(grandchild.getTagName())) {
+                        Attr sourceIdAttr = grandchild.getAttributeNode(ATTR_SRC);
+                        if (sourceIdAttr != null && "user".equals(sourceIdAttr.getValue())) {
+                            context.report(
+                                    ACCEPTS_USER_CERTIFICATES,
+                                    grandchild,
+                                    context.getLocation(grandchild),
+                                    ACCEPTS_USER_CERTIFICATES.getBriefDescription(TextFormat.RAW));
+                        }
+                    }
+                }
             }
         }
     }

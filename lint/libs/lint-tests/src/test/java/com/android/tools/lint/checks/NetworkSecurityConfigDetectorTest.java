@@ -124,6 +124,56 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                                 + "+     <base-config cleartextTrafficPermitted=\"false\">");
     }
 
+    // Test a config file that allows user certificates in non-debug environments
+    public void testAllowsUserCertificates() {
+        String expected =
+                ""
+                        + "res/xml/network_config.xml:6: Warning: The Network Security Configuration allows the use of user certificates in the release version of your app [AcceptsUserCertificates]\n"
+                        + "            <certificates src=\"user\"/>\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                        xml(
+                                "res/xml/network_config.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<network-security-config>\n"
+                                        + "    <base-config>\n"
+                                        + "        <trust-anchors>\n"
+                                        + "            <certificates src=\"system\"/>\n"
+                                        + "            <certificates src=\"user\"/>\n"
+                                        + "        </trust-anchors>\n"
+                                        + "    </base-config>\n"
+                                        + "</network-security-config>"))
+                .run()
+                .expect(expected);
+    }
+
+    // Test a config file that only allows user certificates in debug environments
+    // This should not trigger the warning about user certificates
+    public void testAllowsUserCertificatesOnlyWhenDebuggable() {
+        String expected = "No warnings.";
+        //noinspection all // Sample code
+        lint().files(
+                        xml(
+                                "res/xml/network_config.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<network-security-config>\n"
+                                        + "    <base-config>\n"
+                                        + "        <debug-overriodes>\n"
+                                        + "            <trust-anchors>\n"
+                                        + "                <certificates src=\"system\"/>\n"
+                                        + "                <certificates src=\"user\"/>\n"
+                                        + "            </trust-anchors>\n"
+                                        + "        </debug-overriodes>\n"
+                                        + "    </base-config>\n"
+                                        + "</network-security-config>"))
+                .run()
+                .expect(expected);
+    }
+
     // Test expiration, invalid digest algorithm and invalid digest length for sha-256
     public void testPinSetElement() {
         String fiveDaysFromNow =

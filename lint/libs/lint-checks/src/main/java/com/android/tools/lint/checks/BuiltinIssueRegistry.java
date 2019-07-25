@@ -254,6 +254,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(NegativeMarginDetector.ISSUE);
         issues.add(NestedScrollingWidgetDetector.ISSUE);
         issues.add(NetworkSecurityConfigDetector.ISSUE);
+        issues.add(NetworkSecurityConfigDetector.ACCEPTS_USER_CERTIFICATES);
         issues.add(NetworkSecurityConfigDetector.INSECURE_CONFIGURATION);
         issues.add(NetworkSecurityConfigDetector.MISSING_BACKUP_PIN);
         issues.add(NetworkSecurityConfigDetector.PIN_SET_EXPIRY);
@@ -430,7 +431,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 104;
+                initialSize += 105;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
