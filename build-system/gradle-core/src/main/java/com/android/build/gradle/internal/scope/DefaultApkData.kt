@@ -44,7 +44,7 @@ data class DefaultApkData(
     override fun getVersionName(): String? = _versionName
     override fun isEnabled(): Boolean = _enabled
     override fun getOutputFileName(): String? = _outputFileName
-    override fun requiresAapt(): Boolean = _type != VariantOutput.OutputType.SPLIT
+    override fun requiresAapt(): Boolean = true
     override fun getFilterName(): String? = _filterName
     override fun getFullName(): String = _fullName
     override fun getBaseName(): String = _baseName

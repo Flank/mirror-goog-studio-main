@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -37,12 +38,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Test drive for the CombinedAbiDensityPureSplits samples test. */
-public class CombinedAbiDensityPureSplits {
+public class CombinedAbiDensitySplits {
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestProject("combinedAbiDensityPureSplits")
+                    .fromTestProject("combinedAbiDensitySplits")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 
@@ -61,47 +62,38 @@ public class CombinedAbiDensityPureSplits {
         Collection<OutputFile> debugOutputs = debugBuildOutput.getOutputs();
         assertNotNull(debugOutputs);
 
-        // build a set of expected outputs
-        Set<String> expected = Sets.newHashSetWithExpectedSize(5);
-        expected.add("mdpi");
-        expected.add("hdpi");
-        expected.add("xhdpi");
-        expected.add("xxhdpi");
-        expected.add("x86");
-        expected.add("armeabi-v7a");
+        // build a set of expectedDensities outputs
+        Set<String> expectedDensities = Sets.newHashSetWithExpectedSize(5);
+        expectedDensities.add("mdpi");
+        expectedDensities.add("hdpi");
+        expectedDensities.add("xhdpi");
+        expectedDensities.add("xxhdpi");
 
-        assertEquals(7, debugOutputs.size());
+        assertEquals(10, debugOutputs.size());
         for (OutputFile outputFile : debugOutputs) {
-            String filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.DENSITY);
-            if (filter == null) {
-                filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.ABI);
+            String densityFilter = VariantOutputUtils.getFilter(outputFile, VariantOutput.DENSITY);
+            if (densityFilter == null) {
+                assertThat(VariantOutputUtils.getFilter(outputFile, VariantOutput.ABI)).isNotNull();
             }
 
-            assertEquals(
-                    filter == null ? VariantOutput.MAIN : VariantOutput.SPLIT,
-                    outputFile.getOutputType());
+            assertEquals(VariantOutput.FULL_SPLIT, outputFile.getOutputType());
 
-            // with pure splits, all split have the same version code.
             assertEquals(123, outputFile.getVersionCode());
-            if (filter != null) {
-                expected.remove(filter);
+            assertThatZip(outputFile.getOutputFile()).entries("/lib/.*").hasSize(1);
+            if (densityFilter != null) {
+                expectedDensities.remove(densityFilter);
 
-                if (outputFile.getFilterTypes().contains(VariantOutput.ABI)) {
-                    // if this is an ABI split, ensure the .so file presence (and only one)
-                    assertThatZip(outputFile.getOutputFile()).entries("/lib/.*").hasSize(1);
-                    assertThatZip(outputFile.getOutputFile())
-                            .contains("lib/" + filter + "/libhello-jni.so");
-                }
-
-
-            } else {
-                // main file should not have any lib/ entries.
-                assertThatZip(outputFile.getOutputFile()).entries("/lib/.*").isEmpty();
+                // ensure the .so file presence (and only one)
+                assertThatZip(outputFile.getOutputFile())
+                        .contains(
+                                "lib/"
+                                        + VariantOutputUtils.getFilter(
+                                                outputFile, VariantOutput.ABI)
+                                        + "/libhello-jni.so");
             }
-
         }
 
-        // this checks we didn't miss any expected output.
-        assertTrue(expected.isEmpty());
+        // this checks we didn't miss any expectedDensities output.
+        assertTrue(expectedDensities.isEmpty());
     }
 }

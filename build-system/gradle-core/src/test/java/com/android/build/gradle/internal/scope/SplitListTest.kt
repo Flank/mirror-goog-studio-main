@@ -58,7 +58,5 @@ class SplitListTest {
             ImmutableSet.of("resConfigFilter"))
 
         assertThat(splitList.getSplits(MultiOutputPolicy.MULTI_APK)).isEmpty()
-        assertThat(splitList.getSplits(MultiOutputPolicy.SPLITS))
-            .containsExactly("mdpi", "xxhdpi", "en", "pt")
     }
 }

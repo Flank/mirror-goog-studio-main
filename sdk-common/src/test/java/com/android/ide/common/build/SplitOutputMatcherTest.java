@@ -21,8 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -39,14 +37,11 @@ public class SplitOutputMatcherTest extends TestCase {
 
     /** Helper to run InstallHelper.computeMatchingOutput with variable ABI list. */
     private static List<File> computeBestOutput(
-            @NonNull List<OutputFile> outputs, int deviceDensity, @NonNull String... deviceAbis)
-            throws ProcessException {
+            @NonNull List<OutputFile> outputs, int deviceDensity, @NonNull String... deviceAbis) {
         DeviceConfigProvider deviceConfigProvider = Mockito.mock(DeviceConfigProvider.class);
         when(deviceConfigProvider.getDensity()).thenReturn(deviceDensity);
         when(deviceConfigProvider.getAbis()).thenReturn(Arrays.asList(deviceAbis));
         return SplitOutputMatcher.computeBestOutput(
-                Mockito.mock(ProcessExecutor.class),
-                null /* splitSelectExe */,
                 deviceConfigProvider,
                 outputs,
                 null /* variantAbiFilters */);
@@ -56,14 +51,11 @@ public class SplitOutputMatcherTest extends TestCase {
             @NonNull List<OutputFile> outputs,
             @NonNull Set<String> deviceAbis,
             int deviceDensity,
-            @NonNull String... variantAbiFilters)
-            throws ProcessException {
+            @NonNull String... variantAbiFilters) {
         DeviceConfigProvider deviceConfigProvider = Mockito.mock(DeviceConfigProvider.class);
         when(deviceConfigProvider.getDensity()).thenReturn(deviceDensity);
         when(deviceConfigProvider.getAbis()).thenReturn(new ArrayList<String>(deviceAbis));
         return SplitOutputMatcher.computeBestOutput(
-                Mockito.mock(ProcessExecutor.class),
-                null /* splitSelectExec */,
                 deviceConfigProvider,
                 outputs,
                 Arrays.asList(variantAbiFilters));
@@ -181,7 +173,7 @@ public class SplitOutputMatcherTest extends TestCase {
         }
     }
 
-    public void testSingleOutput() throws ProcessException {
+    public void testSingleOutput() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -193,7 +185,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testDensityOnlyWithMatch() throws ProcessException {
+    public void testDensityOnlyWithMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -207,7 +199,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testDensityOnlyWithUniversalMatch() throws ProcessException {
+    public void testDensityOnlyWithUniversalMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -221,7 +213,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testDensityOnlyWithNoMatch() throws ProcessException {
+    public void testDensityOnlyWithNoMatch() {
         List<OutputFile> list = new ArrayList<>();
 
         list.add(getDensityOutput(320, 1));
@@ -232,7 +224,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(0, result.size());
     }
 
-    public void testDensityOnlyWithCustomDeviceDensity() throws ProcessException {
+    public void testDensityOnlyWithCustomDeviceDensity() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -246,7 +238,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testDensityWithAnydpi() throws ProcessException {
+    public void testDensityWithAnydpi() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -261,7 +253,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
 
-    public void testAbiOnlyWithMatch() throws ProcessException {
+    public void testAbiOnlyWithMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -275,7 +267,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testAbiOnlyWithMultiMatch() throws ProcessException {
+    public void testAbiOnlyWithMultiMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -291,7 +283,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testAbiPreference() throws ProcessException {
+    public void testAbiPreference() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -308,7 +300,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testAbiPreferenceForUniveralApk() throws ProcessException {
+    public void testAbiPreferenceForUniveralApk() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -325,7 +317,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testAbiOnlyWithMultiMatch2() throws ProcessException {
+    public void testAbiOnlyWithMultiMatch2() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -341,7 +333,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testAbiOnlyWithUniversalMatch() throws ProcessException {
+    public void testAbiOnlyWithUniversalMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -355,7 +347,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testAbiOnlyWithNoMatch() throws ProcessException {
+    public void testAbiOnlyWithNoMatch() {
         List<OutputFile> list = new ArrayList<>();
 
         list.add(getAbiOutput("foo", 1));
@@ -366,7 +358,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(0, result.size());
     }
 
-    public void testMultiFilterWithMatch() throws ProcessException {
+    public void testMultiFilterWithMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -381,7 +373,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testMultiFilterWithUniversalMatch() throws ProcessException {
+    public void testMultiFilterWithUniversalMatch() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -396,7 +388,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testMultiFilterWithNoMatch() throws ProcessException {
+    public void testMultiFilterWithNoMatch() {
         List<OutputFile> list = new ArrayList<>();
 
         list.add(getOutput(320, "zzz", 1));
@@ -408,7 +400,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(0, result.size());
     }
 
-    public void testVariantLevelAbiFilter() throws ProcessException {
+    public void testVariantLevelAbiFilter() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -420,7 +412,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
-    public void testWrongVariantLevelAbiFilter() throws ProcessException {
+    public void testWrongVariantLevelAbiFilter() {
         List<OutputFile> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
@@ -430,7 +422,7 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(0, result.size());
     }
 
-    public void testDensitySplitPlugVariantLevelAbiFilter() throws ProcessException {
+    public void testDensitySplitPlugVariantLevelAbiFilter() {
         OutputFile match;
         List<OutputFile> list = new ArrayList<>();
 
@@ -444,35 +436,6 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(1, result.size());
     }
 
-    public void testConfigFormatFixed() {
-        String mccMnc =
-                "310mcc-260mnc-en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                        + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        String expectedMccMnc = "mcc310-mnc260-en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        assertEquals(expectedMccMnc, SplitOutputMatcher.prepareConfigFormatMccMnc(mccMnc));
-
-        String mnc =
-                "260mnc-en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                        + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        String expectedMnc = "mnc260-en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        assertEquals(expectedMnc, SplitOutputMatcher.prepareConfigFormatMccMnc(mnc));
-
-        String mcc =
-                "310mcc-en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                        + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        String expectedMcc = "mcc310-en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        assertEquals(expectedMcc, SplitOutputMatcher.prepareConfigFormatMccMnc(mcc));
-
-        String noMccMnc =
-                "en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                        + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        String expectedNoMccMnc = "en-rUS-ldltr-sw320dp-w320dp-h508dp-normal-long-port-"
-                + "notnight-hdpi-finger-keysexposed-nokeys-navexposed-trackball-v21:x86";
-        assertEquals(expectedNoMccMnc, SplitOutputMatcher.prepareConfigFormatMccMnc(noMccMnc));
-    }
 
     private static OutputFile getUniversalOutput(int versionCode) {
         return new FakeSplitOutput(null, null, versionCode);

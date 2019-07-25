@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -135,21 +134,12 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     ExistingBuildElements.from(
                             MERGED_MANIFESTS.INSTANCE, testTargetMetadata.getSingleFile());
 
-            java.util.Optional<BuildOutput> mainSplit =
-                    manifestOutputs
-                            .stream()
-                            .filter(
-                                    output ->
-                                            output.getApkData().getType()
-                                                    != VariantOutput.OutputType.SPLIT)
-                            .findFirst();
-
-            if (mainSplit.isPresent()) {
-                testedApplicationId =
-                        mainSplit.get().getProperties().get(BuildOutputProperty.PACKAGE_ID);
-            } else {
-                throw new RuntimeException("cannot find main APK");
+            if (manifestOutputs.isEmpty()) {
+                throw new RuntimeException("Cannot find merged manifest, please file a bug.");
             }
+
+            BuildOutput mainSplit = manifestOutputs.iterator().next();
+            testedApplicationId = mainSplit.getProperties().get(BuildOutputProperty.PACKAGE_ID);
         }
         // TODO : LOAD FROM APK_LIST...
         List<ApkData> apkDatas = outputScope.getApkDatas();

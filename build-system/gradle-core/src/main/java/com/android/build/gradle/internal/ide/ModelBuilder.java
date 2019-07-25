@@ -994,10 +994,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             case FEATURE:
             case TEST_APK:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(
-                                InternalArtifactType.APK.INSTANCE,
-                                InternalArtifactType.ABI_PACKAGED_SPLIT.INSTANCE,
-                                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE),
+                        ImmutableList.of(InternalArtifactType.APK.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 ApkData mainApkInfo =

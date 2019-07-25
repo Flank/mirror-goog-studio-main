@@ -58,8 +58,6 @@ public class Pre21SplitTest {
                         + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "\"\n"
                         + "\n"
-                        + "    generatePureSplits false\n"
-                        + "\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion 21\n"
                         + "        ndk {\n"

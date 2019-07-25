@@ -40,17 +40,7 @@ data class SplitList(
         action.apply(FilterType.ABI, abiFilters)
     }
 
-    private fun getResourcesSplit(): Set<String> {
-        val splits = mutableSetOf<String>()
-        splits.addAll(densityFilters)
-        splits.addAll(languageFilters)
-        return splits.toSet()
-    }
-
     fun getSplits(multiOutputPolicy: MultiOutputPolicy): Set<String> {
-        return when(multiOutputPolicy) {
-            MultiOutputPolicy.SPLITS -> getResourcesSplit()
-            else -> emptySet()
-        }
+        return emptySet()
     }
 }

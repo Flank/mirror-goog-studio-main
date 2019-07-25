@@ -43,9 +43,6 @@ Warning: Type 'com.android.build.gradle.internal.transforms.ShrinkBundleResource
 Warning: Type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'mergedManifests' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'uncompressedResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.CheckTestedAppObfuscation': property 'mappingFile' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.CopyOutputs': property 'abiSplits' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.CopyOutputs': property 'fullApks' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.CopyOutputs': property 'resourcesSplits' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.makefile' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.nativeBuildSystem' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.stlSharedObjectFiles' is not annotated with an input or output annotation.
@@ -53,7 +50,6 @@ Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': prop
 Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.variantName' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildTask': property 'objFolder' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.ExternalNativeBuildTask': property 'soFolder' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.tasks.GenerateSplitAbiRes': property 'applicationIdOverride' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.InvokeManifestMerger': property 'mainManifestFile' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.InvokeManifestMerger': property 'secondaryManifestFiles' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.LintBaseTask': property 'lintClassPath' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
@@ -67,8 +63,5 @@ Warning: Type 'com.android.build.gradle.tasks.LintGlobalTask': property 'lintOpt
 Warning: Type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'allInputs' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintClassPath' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintOptions' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'jniFolders' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'processedAbiResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.PackageSplitRes': property 'processedResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'outputScope' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.RenderscriptCompile': property 'ndkConfig' is not annotated with an input or output annotation.

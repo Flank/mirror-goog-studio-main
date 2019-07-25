@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.BaseExtension;
@@ -52,6 +51,7 @@ import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.utils.FileUtils;
+import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
@@ -224,21 +224,17 @@ public class ModelBuilderTest {
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
 
-        File apkOutput = createApk(variantOutputFolder, "main.apk");
-
         ImmutableList.Builder<BuildOutput> buildOutputBuilder = ImmutableList.builder();
-        buildOutputBuilder.add(
-                new BuildOutput(
-                        InternalArtifactType.APK.INSTANCE, outputFactory.addMainApk(), apkOutput));
 
         for (int i = 0; i < 5; i++) {
-            apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
+            File apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
             buildOutputBuilder.add(
                     new BuildOutput(
-                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE,
-                            outputFactory.addConfigurationSplit(
-                                    VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
+                            InternalArtifactType.APK.INSTANCE,
+                            outputFactory.addFullSplit(
+                                    ImmutableList.of(
+                                            Pair.of(VariantOutput.FilterType.DENSITY, "hdpi"))),
                             apkOutput));
         }
 
@@ -255,21 +251,10 @@ public class ModelBuilderTest {
         assertThat(variantBuildOutput.getName()).isEqualTo("variantName");
         Collection<OutputFile> variantOutputs = variantBuildOutput.getOutputs();
         assertThat(variantOutputs).isNotNull();
-        assertThat(variantOutputs).hasSize(6);
+        assertThat(variantOutputs).hasSize(5);
 
         for (OutputFile buildOutput : variantOutputs) {
-            assertThat(buildOutput.getOutputType()).isAnyOf("MAIN", "SPLIT");
-            if (buildOutput.getOutputType().equals("MAIN")) {
-                assertThat(buildOutput.getFilters()).isEmpty();
-                assertThat(buildOutput.getFilterTypes()).isEmpty();
-            } else {
-                assertThat(buildOutput.getFilters()).hasSize(1);
-                FilterData filterData =
-                        Iterators.getOnlyElement(buildOutput.getFilters().iterator());
-                assertThat(filterData.getFilterType()).isEqualTo("DENSITY");
-                assertThat(filterData.getIdentifier()).isEqualTo("hdpi");
-                assertThat(buildOutput.getFilterTypes()).containsExactly("DENSITY");
-            }
+            assertThat(buildOutput.getOutputType()).isEqualTo("FULL_SPLIT");
             assertThat(buildOutput.getMainOutputFile()).isEqualTo(buildOutput);
             assertThat(buildOutput.getOutputFile().exists()).isTrue();
             assertThat(Files.readFirstLine(buildOutput.getOutputFile(), Charsets.UTF_8))

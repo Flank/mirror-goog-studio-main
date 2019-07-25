@@ -219,8 +219,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     private lateinit var applicationId: Supplier<String?>
 
-    private lateinit var supportDirectory: File
-
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -335,58 +333,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
             it
         }
-
-        if (multiOutputPolicy === MultiOutputPolicy.SPLITS) {
-            // The output of the worker runnables submitted before is used in this code block, so
-            // we have to make sure that all work is finished.
-            workers.await()
-
-            for (manifestBuildOutput in manifestBuildElements.toList()) {
-                val apkInfo = manifestBuildOutput.apkData
-                if (apkInfo.filters
-                        .stream()
-                        .anyMatch { f -> f.filterType == VariantOutput.FilterType.ABI.name }
-                ) {
-                    // NOTE: This if exists because ABI splits are produced by
-                    // GenerateSplitAbiRes, so for ABI splits we're not supposed to find them
-                    // here anyway.
-                    continue
-                }
-
-                // In case we generated pure splits, we may have more than one
-                // resource AP_ in the output directory. reconcile with the
-                // splits list and save it for downstream tasks.
-                val packagedResForSplit = findPackagedResForSplit(
-                    outputDirectory, apkInfo)
-
-                if (packagedResForSplit != null) {
-                    AaptSplitInvoker.appendOutput(
-                        BuildOutput(
-                            InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
-                            apkInfo,
-                            packagedResForSplit
-                        ),
-                        outputDirectory
-                    )
-                } else {
-                    logger.warn("Cannot find output for $apkInfo")
-                }
-            }
-        }
     }
 
     private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
         when (multiOutputPolicy) {
-            MultiOutputPolicy.SPLITS -> {
-                val main = manifestBuildElements
-                    .stream()
-                    .filter { output -> output.apkData.type == VariantOutput.OutputType.MAIN }
-                    .findFirst()
-                if (!main.isPresent) {
-                    throw RuntimeException("No main apk found")
-                }
-                return main.get()
-            }
             MultiOutputPolicy.MULTI_APK -> {
                 val nonDensity = manifestBuildElements
                     .stream()
@@ -549,7 +499,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.projectBaseName = baseName!!
             task.isLibrary = isLibrary
-            task.supportDirectory = File(variantScope.splitApkOutputFolder, "resources")
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 

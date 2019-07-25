@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
@@ -25,13 +24,11 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.utils.Pair
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterators
 import com.google.common.io.FileWriteMode
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
-import org.gradle.workers.WorkerExecutor
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -45,8 +42,6 @@ import org.mockito.MockitoAnnotations
 import java.io.File
 import java.io.IOException
 import java.io.StringReader
-import java.util.HashMap
-import javax.inject.Inject
 
 /**
  * Tests for the {@link KBuildOutputs} class
@@ -54,7 +49,6 @@ import javax.inject.Inject
 class BuildElementsTest {
 
     @Mock private val variantConfiguration: GradleVariantConfiguration? = null
-    @Mock lateinit var workerExecutor: WorkerExecutor
 
     @get:Rule
     var temporaryFolder = TemporaryFolder()
@@ -125,28 +119,7 @@ class BuildElementsTest {
                         + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
-                        + "\"split\":\"\"}},"
-                        + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                        + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
-                        + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
-                        + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                        + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
-                        + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
-                        + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                        + "\"value\":\"hdpi\"}],\"versionCode\":13},"
-                        + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
-                        + ":{}}]")
-
-        val densityOrLanguageSplits =
-                ExistingBuildElements.from(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, folder)
-        assertThat(densityOrLanguageSplits
-                .asSequence()
-                .filter { it.type.name() == DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.name() }
-                .count())
-                .isEqualTo(3)
+                        + "\"split\":\"\"}}]")
         val mergedManifests = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         assertThat(mergedManifests
                 .asSequence()
@@ -166,20 +139,7 @@ class BuildElementsTest {
                     + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                     + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                     + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
-                    + "\"split\":\"\"}},"
-                    + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                    + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
-                    + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
-                    + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                    + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
-                    + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
-                    + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                    + "\"value\":\"hdpi\"}],\"versionCode\":13},"
-                    + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
-                    + ":{}}]")
+                    + "\"split\":\"\"}}]")
 
         val buildElements = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         val elementByType = buildElements.elementByType(VariantOutput.OutputType.MAIN)
@@ -235,49 +195,6 @@ class BuildElementsTest {
 
     @Test
     @Throws(IOException::class)
-    fun testSplitLoading() {
-        val folder = temporaryFolder.newFolder()
-        val outputFile = File(folder, "output.json")
-        FileUtils.write(
-                outputFile,
-                ("[{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                        + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
-                        + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
-                        + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                        + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
-                        + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
-                        + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                        + "\"value\":\"hdpi\"}],\"versionCode\":13},"
-                        + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
-                        + ":{}}]"))
-
-        val buildOutputs = ExistingBuildElements.from(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                folder)
-        assertThat(buildOutputs).hasSize(3)
-
-        val expectedDensitiesAndVersions = HashMap<String, Int>(3)
-        expectedDensitiesAndVersions.put("mdpi", 12)
-        expectedDensitiesAndVersions.put("hdpi", 13)
-        expectedDensitiesAndVersions.put("xhdpi", 14)
-
-        buildOutputs.forEach { buildOutput ->
-            assertThat(buildOutput.type).isEqualTo(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
-            assertThat(buildOutput.outputType).isEqualTo(OutputFile.SPLIT)
-            assertThat(buildOutput.filters).hasSize(1)
-            val filterData = Iterators.getOnlyElement(buildOutput.filters.iterator())
-            assertThat(filterData.filterType).isEqualTo(OutputFile.DENSITY)
-            assertThat(buildOutput.outputFile.name).contains(filterData.identifier)
-            assertThat(expectedDensitiesAndVersions[filterData.identifier]).isNotNull()
-            val expectedVersion = expectedDensitiesAndVersions[filterData.identifier]
-            assertThat(buildOutput.versionCode).isEqualTo(expectedVersion)
-        }
-    }
-
-    @Test
-    @Throws(IOException::class)
     fun testRelativePath() {
         val apkInfo = Mockito.mock(ApkData::class.java)
         `when`<VariantOutput.OutputType>(apkInfo.type).thenReturn(VariantOutput.OutputType.MAIN)
@@ -310,83 +227,4 @@ class BuildElementsTest {
                     .startsWith(newProjectLocation.absolutePath)
         }
     }
-
-    @Test
-    fun testTransformBuildElements() {
-        val folder = temporaryFolder.newFolder()
-        val splitOutputFolder = temporaryFolder.newFolder()
-        val manifestOutputFolder = temporaryFolder.newFolder()
-        val outputFile = File(folder, "output.json")
-        FileUtils.write(
-            outputFile,
-            "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
-                    + "\"path\":\"/foo/bar/AndroidManifest.xml\","
-                    + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
-                    + "\"split\":\"\"}},"
-                    + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                    + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
-                    + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
-                    + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                    + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
-                    + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
-                    + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
-                    + "\"value\":\"hdpi\"}],\"versionCode\":13},"
-                    + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
-                    + ":{}}]"
-        )
-
-        val workers = Workers.preferWorkers("test", ":test", workerExecutor)
-
-        ExistingBuildElements.from(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, folder).transform(
-            workers,
-            TransformTestRunnable::class.java
-        ) { _, input -> TransformTestParams(input, splitOutputFolder) }
-            .into(APK, splitOutputFolder)
-
-        ExistingBuildElements.from(MERGED_MANIFESTS, folder).transform(
-            workers,
-            TransformTestRunnable::class.java
-        ) { _, input -> TransformTestParams(input, manifestOutputFolder) }
-            .into(FULL_APK, manifestOutputFolder)
-
-        assertThat(
-            HashSet<String>(
-                ExistingBuildElements.from(
-                    APK,
-                    splitOutputFolder
-                ).elements.map { it.outputFile.name })
-        ).containsExactlyElementsIn(
-            ImmutableSet.of(
-                "SplitAware-mdpi-debug-unsigned.apk",
-                "SplitAware-xhdpi-debug-unsigned.apk",
-                "SplitAware-hdpi-debug-unsigned.apk"
-            )
-        )
-
-        assertThat(
-            HashSet<String>(
-                ExistingBuildElements.from(
-                    FULL_APK,
-                    manifestOutputFolder
-                ).elements.map { it.outputFile.name })
-        ).containsExactlyElementsIn(ImmutableSet.of("AndroidManifest.xml"))
-    }
-
-    private class TransformTestRunnable @Inject constructor(params: TransformTestParams) :
-        BuildElementsTransformRunnable(params) {
-        override fun run() {
-            val params = super.params as TransformTestParams
-            params.output!!.createNewFile()
-        }
-    }
-
-    private class TransformTestParams(
-        val input: File,
-        outputFolder: File,
-        override val output: File? = File(outputFolder, input.name)
-    ) : BuildElementsTransformParams()
 }

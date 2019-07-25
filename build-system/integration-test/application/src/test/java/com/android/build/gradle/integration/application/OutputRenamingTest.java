@@ -19,25 +19,24 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.common.utils.VariantBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
-import com.google.common.collect.Iterables;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Locale;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -51,7 +50,7 @@ public class OutputRenamingTest {
 
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("densitySplitInL").create();
+            GradleTestProject.builder().fromTestProject("densitySplit").create();
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException {
@@ -62,8 +61,8 @@ public class OutputRenamingTest {
                         + "    // Custom APK names (do not do this for 'dev' build type)\n"
                         + "    println variant.buildType.name\n"
                         + "    def baseFileName = \"project-${variant.flavorName}-${variant.versionCode}-${variant.buildType.name}\"\n"
-                        + "    variant.outputs.all { output ->\n"
-                        + "      output.outputFileName = \"${baseFileName}-signed.apk\"\n"
+                        + "    variant.outputs.all { output -> \n"
+                        + "      output.outputFileName = \"${baseFileName}-${output.getFilter(com.android.build.VariantOutput.FilterType.DENSITY)}-signed.apk\"\n"
                         + "    }\n"
                         + "  }\n"
                         + "}");
@@ -78,10 +77,7 @@ public class OutputRenamingTest {
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModelSyncIssues();
-        assertThat(syncIssues).hasSize(1);
-        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
-                .contains(
-                        "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
+        assertThat(syncIssues).hasSize(0);
     }
 
     @AfterClass
@@ -91,7 +87,7 @@ public class OutputRenamingTest {
     }
 
     @Test
-    public void checkSplitOutputs() throws Exception {
+    public void checkSplitOutputs() {
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2, variants.size());
 
@@ -99,7 +95,7 @@ public class OutputRenamingTest {
         assertFileRenaming(RELEASE);
     }
 
-    private static void assertFileRenaming(String buildType) throws IOException {
+    private static void assertFileRenaming(String buildType) {
         Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
         assertThat(variantBuildOutputs).hasSize(2);
         VariantBuildOutput buildOutput =
@@ -110,10 +106,31 @@ public class OutputRenamingTest {
         assertNotNull(outputs);
         assertThat(outputs).hasSize(5);
 
-        String expectedFileName = "project--12-" + buildType.toLowerCase() + "-signed.apk";
-        File mainOutputFile =
-                VariantBuildOutputUtils.getMainOutputFile(buildOutput).getOutputFile();
-        assertEquals(expectedFileName, mainOutputFile.getName());
-        assertTrue(mainOutputFile.exists());
+        for (OutputFile fileOutput : buildOutput.getOutputs()) {
+            String filterValue =
+                    fileOutput
+                            .getFilters()
+                            .stream()
+                            .filter(
+                                    filterData ->
+                                            filterData
+                                                    .getFilterType()
+                                                    .equals(
+                                                            VariantOutput.FilterType.DENSITY
+                                                                    .name()))
+                            .map(FilterData::getIdentifier)
+                            .findFirst()
+                            .orElse(VariantOutput.NO_FILTER);
+
+            String expectedFileName =
+                    "project--12-"
+                            + buildType.toLowerCase(Locale.ENGLISH)
+                            + "-"
+                            + filterValue
+                            + "-signed.apk";
+
+            assertEquals(expectedFileName, fileOutput.getOutputFile().getName());
+            assertTrue(fileOutput.getOutputFile().exists());
+        }
     }
 }

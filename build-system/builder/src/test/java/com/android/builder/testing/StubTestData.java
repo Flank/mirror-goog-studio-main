@@ -17,10 +17,8 @@
 package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
@@ -166,8 +164,6 @@ public class StubTestData implements TestData {
     @NonNull
     @Override
     public ImmutableList<File> getTestedApks(
-            @NonNull ProcessExecutor processExecutor,
-            @Nullable File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
             ILogger logger)
             throws ProcessException {

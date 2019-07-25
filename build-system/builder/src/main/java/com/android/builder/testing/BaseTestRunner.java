@@ -148,13 +148,11 @@ public abstract class BaseTestRunner implements TestRunner {
                     }
 
                     // now look for a matching output file
-                    ImmutableList<File> testedApks = ImmutableList.of();
+                    List<File> testedApks = ImmutableList.of();
                     if (!testData.isLibrary()) {
                         try {
                             testedApks =
                                     testData.getTestedApks(
-                                            processExecutor,
-                                            splitSelectExec,
                                             deviceConfigProvider,
                                             logger);
                         } catch (ProcessException e) {
@@ -168,7 +166,7 @@ public abstract class BaseTestRunner implements TestRunner {
                             continue;
                         }
                     }
-                    apksForDevice.put(device, testedApks);
+                    apksForDevice.put(device, ImmutableList.copyOf(testedApks));
                 }
             } else {
                 unauthorizedDevices++;

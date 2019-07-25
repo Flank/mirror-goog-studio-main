@@ -355,7 +355,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return outputScope
                 .getApkDatas()
                 .stream()
-                .filter(apkData -> apkData.getType() != VariantOutput.OutputType.SPLIT)
                 .map(ApkData::getOutputFileName)
                 .collect(Collectors.toList());
     }

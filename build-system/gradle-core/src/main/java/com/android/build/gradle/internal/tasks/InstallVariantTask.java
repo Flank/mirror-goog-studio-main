@@ -137,8 +137,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
                 final List<File> apkFiles =
                         SplitOutputMatcher.computeBestOutput(
-                                processExecutor,
-                                splitSelectExe,
                                 new DeviceConfigProviderImpl(device),
                                 outputs,
                                 supportedAbis);

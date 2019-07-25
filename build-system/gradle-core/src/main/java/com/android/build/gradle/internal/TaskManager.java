@@ -47,14 +47,12 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTI
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
@@ -71,7 +69,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
-import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
@@ -87,7 +84,6 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -154,7 +150,6 @@ import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
@@ -165,14 +160,12 @@ import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
-import com.android.build.gradle.tasks.CopyOutputs;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
-import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.JavaCompileCreationAction;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
@@ -184,8 +177,6 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
-import com.android.build.gradle.tasks.PackageSplitAbi;
-import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAnnotationsTask;
 import com.android.build.gradle.tasks.ProcessAnnotationsTaskCreationAction;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
@@ -207,7 +198,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -1061,58 +1051,6 @@ public abstract class TaskManager {
                 sourceArtifactType,
                 baseName,
                 isLibrary());
-    }
-
-    /**
-     * Creates the split resources packages task if necessary. AAPT will produce split packages for
-     * all --split provided parameters. These split packages should be signed and moved unchanged to
-     * the FULL_APK build output directory.
-     */
-    public void createSplitResourcesTasks(@NonNull VariantScope scope) {
-        BaseVariantData variantData = scope.getVariantData();
-
-        checkState(
-                variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
-                "Can only create split resources tasks for pure splits.");
-
-        taskFactory.register(new PackageSplitRes.CreationAction(scope));
-    }
-
-    public void createSplitAbiTasks(@NonNull VariantScope scope) {
-        BaseVariantData variantData = scope.getVariantData();
-
-        checkState(
-                variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
-                "split ABI tasks are only compatible with pure splits.");
-
-        Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
-        if (filters.isEmpty()) {
-            return;
-        }
-
-        List<ApkData> fullApkDatas =
-                variantData.getOutputScope().getSplitsByType(OutputFile.OutputType.FULL_SPLIT);
-        if (!fullApkDatas.isEmpty()) {
-            throw new RuntimeException(
-                    "In release 21 and later, there cannot be full splits and pure splits, "
-                            + "found "
-                            + Joiner.on(",").join(fullApkDatas)
-                            + " and abi filters "
-                            + Joiner.on(",").join(filters));
-        }
-
-        // first create the ABI specific split FULL_APK resources.
-        taskFactory.register(new GenerateSplitAbiRes.CreationAction(scope));
-
-        // then package those resources with the appropriate JNI libraries.
-        taskFactory.register(
-                new PackageSplitAbi.CreationAction(
-                        scope, packagesCustomClassDependencies(scope, projectOptions)));
-    }
-
-    public void createSplitTasks(@NonNull VariantScope variantScope) {
-        createSplitResourcesTasks(variantScope);
-        createSplitAbiTasks(variantScope);
     }
 
     /**
@@ -2417,26 +2355,9 @@ public abstract class TaskManager {
          */
         ArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
 
-        final boolean splitsArePossible =
-                variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
-
         Provider<Directory> manifests = variantScope.getArtifacts().getFinalProduct(manifestType);
 
-        // this is where the final APKs will be located.
-        File finalApkLocation = variantScope.getApkLocation();
-        // if we are not dealing with possible splits, we can generate in the final folder
-        // directly.
-        File outputDirectory =
-                splitsArePossible
-                        ? variantScope.getFullApkPackagesOutputDirectory()
-                        : finalApkLocation;
-
-        ArtifactType<Directory> taskOutputType =
-                splitsArePossible
-                        ? InternalArtifactType.FULL_APK.INSTANCE
-                        : InternalArtifactType.APK.INSTANCE;
-
-        ArtifactType<Directory> resourceFilesInputType =
+        InternalArtifactType resourceFilesInputType =
                 variantScope.useResourceShrinker()
                         ? InternalArtifactType.SHRUNK_PROCESSED_RES.INSTANCE
                         : InternalArtifactType.PROCESSED_RES.INSTANCE;
@@ -2454,13 +2375,12 @@ public abstract class TaskManager {
                 taskFactory.register(
                         new PackageApplication.CreationAction(
                                 variantScope,
-                                outputDirectory,
+                                variantScope.getApkLocation(),
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,
                                 variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
-                                taskOutputType,
                                 packagesCustomClassDependencies(variantScope, projectOptions)),
                         null,
                         task -> {
@@ -2478,14 +2398,6 @@ public abstract class TaskManager {
                         null);
 
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
-
-        if (splitsArePossible) {
-
-            TaskProvider<CopyOutputs> copyOutputsTask =
-                    taskFactory.register(
-                            new CopyOutputs.CreationAction(variantScope, finalApkLocation));
-            TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), copyOutputsTask);
-        }
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.

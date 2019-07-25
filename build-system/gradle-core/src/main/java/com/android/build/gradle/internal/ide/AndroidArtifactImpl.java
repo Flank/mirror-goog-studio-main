@@ -159,45 +159,17 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                     : guessOutputsBaseOnManifests();
         }
 
-        List<EarlySyncBuildOutput> splitApksOutput =
-                outputs.stream()
-                        .filter(
-                                splitOutput ->
-                                        splitOutput.getApkType() == OutputFile.OutputType.SPLIT)
-                        .collect(Collectors.toList());
-        if (splitApksOutput.isEmpty()) {
-            // we don't have split APKs so each output is mapped to a different
-            // AndroidArtifactOutput
-            return outputs.stream()
-                    .map(
-                            splitOutput ->
-                                    new AndroidArtifactOutputImpl(
-                                            splitOutput,
-                                            getOutputFor(
-                                                    manifests,
-                                                    splitOutput.getApkType(),
-                                                    splitOutput.getFiltersData())))
-                    .collect(Collectors.toList());
-        } else {
-            List<EarlySyncBuildOutput> mainApks =
-                    outputs.stream()
-                            .filter(
-                                    splitOutput ->
-                                            splitOutput.getApkType() == OutputFile.OutputType.MAIN)
-                            .collect(Collectors.toList());
-            if (mainApks.size() != 1) {
-                throw new RuntimeException(
-                        "Invalid main APK outputs : " + Joiner.on(",").join(mainApks));
-            }
-            return ImmutableList.of(
-                    new AndroidArtifactOutputImpl(
-                            mainApks.get(0),
-                            getOutputFor(
-                                    manifests,
-                                    mainApks.get(0).getApkType(),
-                                    mainApks.get(0).getFiltersData()),
-                            splitApksOutput));
-        }
+        return outputs.stream()
+                .map(
+                        splitOutput ->
+                                new AndroidArtifactOutputImpl(
+                                        splitOutput,
+                                        getOutputFor(
+                                                manifests,
+                                                splitOutput.getApkType(),
+                                                splitOutput.getFiltersData())))
+                .collect(Collectors.toList());
+
     }
 
     private Collection<AndroidArtifactOutput> guessOutputsBasedOnNothing() {

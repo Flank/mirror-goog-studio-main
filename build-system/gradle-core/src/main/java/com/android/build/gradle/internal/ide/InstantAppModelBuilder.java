@@ -257,13 +257,7 @@ public class InstantAppModelBuilder
                                                 0),
                                         instantAppOutputScope.getInstantAppBundle()),
                                 new BuildOutputsSupplier(
-                                                ImmutableList.of(
-                                                        InternalArtifactType.APK.INSTANCE,
-                                                        InternalArtifactType.ABI_PACKAGED_SPLIT
-                                                                .INSTANCE,
-                                                        InternalArtifactType
-                                                                .DENSITY_OR_LANGUAGE_PACKAGED_SPLIT
-                                                                .INSTANCE),
+                                                ImmutableList.of(),
                                                 instantAppOutputScope.getApkDirectories())
                                         .get()));
             }

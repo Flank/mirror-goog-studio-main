@@ -222,15 +222,6 @@ public class ApplicationTaskManager extends TaskManager {
 
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(variantScope));
 
-        if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
-            if (extension.getBuildToolsRevision().getMajor() < 21) {
-                throw new RuntimeException(
-                        "Pure splits can only be used with buildtools 21 and later");
-            }
-
-            createSplitTasks(variantScope);
-        }
-
         createPackagingTask(variantScope);
 
         maybeCreateLintVitalTask(

@@ -20,10 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -85,17 +83,13 @@ public interface TestData {
 
     /**
      * Returns an APK file to install based on given density and abis.
-     * @param processExecutor an executor for slave processes.
-     * @param splitSelectExe path to the split-select native tool.
+     *
      * @param deviceConfigProvider provider for the test device characteristics.
      * @return the file to install or null if non is compatible.
      */
     @NonNull
-    ImmutableList<File> getTestedApks(
-            @NonNull ProcessExecutor processExecutor,
-            @Nullable File splitSelectExe,
-            @NonNull DeviceConfigProvider deviceConfigProvider,
-            ILogger logger) throws ProcessException;
+    List<File> getTestedApks(@NonNull DeviceConfigProvider deviceConfigProvider, ILogger logger)
+            throws ProcessException;
     /**
      * Returns the flavor name being test.
      * @return the tested flavor name.

@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.builder.testing.TestData
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.ide.common.process.ProcessExecutor
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
@@ -55,8 +54,6 @@ class BundleTestDataImpl(
         testVariantData.testedVariantData.variantConfiguration.type.isAar
 
     override fun getTestedApks(
-        processExecutor: ProcessExecutor,
-        splitSelectExe: File?,
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger
     ): ImmutableList<File> {
