@@ -1,7 +1,12 @@
 #!/bin/bash -x
-# Invoked by Android Build Launchcontrol for continuous builds.
+#
+# Build and test a set of targets via bazel using RBE.
+# This script is invoked by Android Build Launchcontrol, e.g:
+#  $ tools/base/bazel/test_studio.sh \
+#        out \
+#        /buildbot/dist_dirs/git_studio-master-dev-linux-studio_rbe/P9370467/0 \
+#        P9370467
 
-# Expected arguments:
 readonly out_dir="$1"
 readonly dist_dir="$2"
 readonly build_number="$3"
@@ -31,6 +36,8 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
 
 readonly bazel_status=$?
 
+# The dist_dir always exists on builds triggered by go/ab, but may not
+# exist during local testing
 if [[ -d "${dist_dir}" ]]; then
 
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
@@ -45,7 +52,7 @@ if [[ -d "${dist_dir}" ]]; then
   (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")
 
   # Create profile html in ${dist_dir} so it ends up in Artifacts.
-${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
+  ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
 
 fi
 
