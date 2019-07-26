@@ -15,12 +15,10 @@
     <#--
         This block is equivalent to recipe_simple.xml.ftl except for the fragment contains NavHostFragment.
     -->
-    <#if !(hasDependency('com.android.support:appcompat-v7'))>
-        <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
-    </#if>
-        <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
-        <instantiate from="root/res/layout/fragment_simple.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
+    <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
+    <instantiate from="root/res/layout/fragment_simple.xml.ftl"
+                 to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
     <#if (isNewProject!false) && !(excludeMenu!false)>
         <#include "../common/recipe_simple_menu.xml.ftl" />
     </#if>
