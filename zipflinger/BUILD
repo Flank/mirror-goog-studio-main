@@ -257,3 +257,18 @@ java_test(
         "//tools/base/third_party:junit_junit",
     ],
 )
+
+java_test(
+    name = "testsInt",
+    size = "small",
+    srcs = [
+        "test/src/java/com/android/zipflinger/TestInts.java",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=testsInts.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":zipflinger",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:junit_junit",
+    ],
+)

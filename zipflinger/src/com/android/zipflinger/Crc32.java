@@ -28,6 +28,6 @@ class Crc32 {
     public static int crc32(@NonNull byte[] bytes, int offset, int size) {
         CRC32 crc = new CRC32();
         crc.update(bytes, offset, size);
-        return (int) crc.getValue();
+        return Ints.longToUint(crc.getValue());
     }
 }

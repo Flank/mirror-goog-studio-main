@@ -50,7 +50,7 @@ public class BytesSource extends Source {
     void prepare() {}
 
     @Override
-    int writeTo(@NonNull ZipWriter writer) throws IOException {
+    long writeTo(@NonNull ZipWriter writer) throws IOException {
         return writer.write(buffer);
     }
 }

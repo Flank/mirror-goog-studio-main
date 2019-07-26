@@ -37,7 +37,7 @@ public class ZipSourceEntryDeflater extends Source {
 
     @Override
     void prepare() throws IOException {
-        ByteBuffer uncompressedBytes = ByteBuffer.allocate((int) loc.size());
+        ByteBuffer uncompressedBytes = ByteBuffer.allocate(Math.toIntExact(loc.size()));
         zipSource.getChannel().read(uncompressedBytes, loc.first);
 
         compressedByteBuffer = Compressor.deflate(uncompressedBytes.array(), compressionLevel);
@@ -48,7 +48,7 @@ public class ZipSourceEntryDeflater extends Source {
     }
 
     @Override
-    int writeTo(@NonNull ZipWriter writer) throws IOException {
+    long writeTo(@NonNull ZipWriter writer) throws IOException {
         return writer.write(compressedByteBuffer);
     }
 }

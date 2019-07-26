@@ -77,5 +77,5 @@ public abstract class Source {
     abstract void prepare() throws IOException;
 
     // Return the number of bytes written.
-    abstract int writeTo(@NonNull ZipWriter writer) throws IOException;
+    abstract long writeTo(@NonNull ZipWriter writer) throws IOException;
 }

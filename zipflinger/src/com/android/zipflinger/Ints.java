@@ -17,4 +17,33 @@ package com.android.zipflinger;
 
 class Ints {
     public static final long USHRT_MAX = 65_535L;
+
+    static long uintToLong(int i) {
+        return i & 0xFF_FF_FF_FFL;
+    }
+
+    static int ushortToInt(short i) {
+        return i & 0xFF_FF;
+    }
+
+    static int longToUint(long i) {
+        if ((i & 0xFF_FF_FF_FF_00_00_00_00L) != 0) {
+            throw new IllegalStateException("Long cannot fit in uint");
+        }
+        return (int) i;
+    }
+
+    static short intToUshort(int i) {
+        if ((i & 0xFF_FF_00_00) != 0) {
+            throw new IllegalStateException("Int cannot fit in ushort");
+        }
+        return (short) i;
+    }
+
+    static short longToUshort(long i) {
+        if ((i & 0xFF_FF_FF_FF_FF_FF_00_00L) != 0) {
+            throw new IllegalStateException("long cannot fit in ushort");
+        }
+        return (short) i;
+    }
 }

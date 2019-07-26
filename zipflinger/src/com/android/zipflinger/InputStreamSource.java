@@ -66,7 +66,7 @@ public class InputStreamSource extends Source {
     }
 
     @Override
-    int writeTo(@NonNull ZipWriter writer) throws IOException {
+    long writeTo(@NonNull ZipWriter writer) throws IOException {
         return writer.write(buffer);
     }
 }

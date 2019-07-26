@@ -58,6 +58,6 @@ public class Location implements Comparable<Location> {
 
     @Override
     public int compareTo(Location o) {
-        return (int) (this.first - o.first);
+        return Math.toIntExact(this.first - o.first);
     }
 }

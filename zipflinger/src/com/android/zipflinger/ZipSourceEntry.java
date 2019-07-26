@@ -38,8 +38,8 @@ public class ZipSourceEntry extends Source {
     void prepare() {}
 
     @Override
-    int writeTo(@NonNull ZipWriter writer) throws IOException {
+    long writeTo(@NonNull ZipWriter writer) throws IOException {
         writer.transferFrom(zipSource.getChannel(), payloadLoc.first, payloadLoc.size());
-        return (int) payloadLoc.size();
+        return payloadLoc.size();
     }
 }

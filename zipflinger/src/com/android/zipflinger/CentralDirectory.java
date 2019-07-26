@@ -91,9 +91,11 @@ class CentralDirectory {
         }
 
         // Step 3: write clean CD chunks
+        // These cast to (int) are fine since we are dealing with an array in RAM which size
+        // is limited to 2GiB by the language.
         for (Location toWrite : cleanCDLocations) {
-            buf.limit((int) (toWrite.first + toWrite.size()));
-            buf.position((int) toWrite.first);
+            buf.limit(Math.toIntExact(toWrite.first + toWrite.size()));
+            buf.position(Math.toIntExact(toWrite.first));
             ByteBuffer view = buf.slice();
             writer.write(view);
         }
@@ -106,7 +108,8 @@ class CentralDirectory {
             totalSize += record.getSize();
         }
         // Generate the CD portion of new entries
-        ByteBuffer cdBuffer = ByteBuffer.allocate((int) totalSize).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer cdBuffer =
+                ByteBuffer.allocate(Math.toIntExact(totalSize)).order(ByteOrder.LITTLE_ENDIAN);
         for (CentralDirectoryRecord record : addedEntries.values()) {
             record.write(cdBuffer);
         }

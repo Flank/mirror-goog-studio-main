@@ -621,7 +621,8 @@ public class TestZipFlinger extends TestBase {
         // max uint16_t and (max uint16_t - LHF size - name size (=1)).
         // This is a edge case where the virtual entry filling algorithm has to account
         // for not consuming as much as possible but leave enough space for the next LFH.
-        int entrySize = (int) (Ints.USHRT_MAX - LocalFileHeader.LOCAL_FILE_HEADER_SIZE - 2);
+        int entrySize =
+                Math.toIntExact(Ints.USHRT_MAX - LocalFileHeader.LOCAL_FILE_HEADER_SIZE - 2);
         Path dst = getPath("testVirtualSpecialEntry.zip");
         try (ZipArchive archive = new ZipArchive(dst.toFile())) {
             archive.add(new BytesSource(new byte[entrySize], "a", 0));

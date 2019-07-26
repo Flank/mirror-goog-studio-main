@@ -65,16 +65,16 @@ class CentralDirectoryRecord {
         buf.putShort((short) 0); // time
         buf.putShort((short) 0); // date
         buf.putInt(crc);
-        buf.putInt((int) compressedSize);
-        buf.putInt((int) uncompressedSize);
-        buf.putShort((short) nameBytes.length);
+        buf.putInt(Ints.longToUint(compressedSize));
+        buf.putInt(Ints.longToUint(uncompressedSize));
+        buf.putShort(Ints.intToUshort(nameBytes.length));
         //TODO Zip64 -> Write extra zip64 field
         buf.putShort((short) 0); // Extra size
         buf.putShort((short) 0); // comment size
         buf.putShort((short) 0); // disk # start
         buf.putShort((short) 0); // internal att
         buf.putInt(0); // external att
-        buf.putInt((int) location.first);
+        buf.putInt(Ints.longToUint(location.first));
         buf.put(nameBytes);
     }
 

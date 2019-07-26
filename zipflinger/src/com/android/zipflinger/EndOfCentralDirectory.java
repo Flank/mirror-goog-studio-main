@@ -28,9 +28,9 @@ class EndOfCentralDirectory {
     @NonNull
     public static Location parse(@NonNull ByteBuffer buffer, @NonNull Location cdLocation) {
         // Skip signature (4) + diskNumber (2) + cdDiskNumber (2) + #entries (2) + #cdEntries (2)
-        buffer.position((int) cdLocation.first + 12);
-        long cdSize = buffer.getInt() & 0xFFFFFFFFL;
-        long cdOffset = buffer.getInt() & 0xFFFFFFFFL;
+        buffer.position(Math.toIntExact(cdLocation.first + 12));
+        long cdSize = Ints.uintToLong(buffer.getInt());
+        long cdOffset = Ints.uintToLong(buffer.getInt());
         return new Location(cdOffset, cdSize);
     }
 
@@ -41,10 +41,10 @@ class EndOfCentralDirectory {
         eocd.putInt(SIGNATURE);
         eocd.putShort((short) 0);
         eocd.putShort((short) 0);
-        eocd.putShort((short) numEntries);
-        eocd.putShort((short) numEntries);
-        eocd.putInt((int) cdLocation.size());
-        eocd.putInt((int) cdLocation.first);
+        eocd.putShort(Ints.longToUshort(numEntries));
+        eocd.putShort(Ints.longToUshort(numEntries));
+        eocd.putInt(Ints.longToUint(cdLocation.size()));
+        eocd.putInt(Ints.longToUint(cdLocation.first));
         eocd.putShort((short) 0);
 
         eocd.rewind();

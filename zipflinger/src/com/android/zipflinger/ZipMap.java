@@ -59,7 +59,7 @@ class ZipMap {
             fileSize = channel.size();
 
             // TODO: Zip64 -> Retrieve more to get the "zip64 end of central directory locator"
-            int sizeToRead = (int) Math.min(fileSize, EOCD_MAX_SIZE);
+            int sizeToRead = Math.toIntExact(Math.min(fileSize, EOCD_MAX_SIZE));
 
             // Bring metadata to memory and parseRecord it.
             ByteBuffer buffer = ByteBuffer.allocate(sizeToRead).order(ByteOrder.LITTLE_ENDIAN);
@@ -75,7 +75,8 @@ class ZipMap {
 
     private void parseCentralDirectory(@NonNull FileChannel channel, @NonNull Location location)
             throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate((int) location.size()).order(ByteOrder.LITTLE_ENDIAN);
+        int size = Math.toIntExact(location.size());
+        ByteBuffer buf = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(buf, location.first);
         buf.rewind();
 
@@ -171,15 +172,15 @@ class ZipMap {
         int crc = buf.getInt();
         entry.setCrc(crc);
 
-        long compressedSize = buf.getInt() & 0xFFFFFFFFL;
+        long compressedSize = Ints.uintToLong(buf.getInt());
         entry.setCompressedSize(compressedSize);
 
-        long uncompressedSize = buf.getInt() & 0xFFFFFFFFL;
+        long uncompressedSize = Ints.uintToLong(buf.getInt());
         entry.setUncompressedSize(uncompressedSize);
 
-        int pathLength = buf.getShort() & 0xFFFF;
-        int extraLength = buf.getShort() & 0xFFFF;
-        int commentLength = buf.getShort() & 0xFFFF;
+        int pathLength = Ints.ushortToInt(buf.getShort());
+        int extraLength = Ints.ushortToInt(buf.getShort());
+        int commentLength = Ints.ushortToInt(buf.getShort());
         buf.position(buf.position() + 8);
         //short diskNumber = buf.getShort();
         //short intAttributes = buf.getShort();
@@ -193,8 +194,8 @@ class ZipMap {
         // Semi-paranoid mode: Also check that the local name size is the same as the cd name size.
         ByteBuffer localFieldBuffer =
                 readLocalFields(start + LocalFileHeader.OFFSET_TO_NAME, entry, channel);
-        int localPathLength = localFieldBuffer.getShort() & 0xFFFF;
-        int localExtraLength = localFieldBuffer.getShort() & 0xFFFF;
+        int localPathLength = Ints.ushortToInt(localFieldBuffer.getShort());
+        int localExtraLength = Ints.ushortToInt(localFieldBuffer.getShort());
         if (pathLength != localPathLength) {
             String message =
                     String.format(
@@ -296,7 +297,7 @@ class ZipMap {
         while (length >= 4) { // Only parse if this is a value ID-size-payload pair.
             buf.getShort(); // id
             // TODO: Zip64 -> id==1 is where offset, size and usize and specified.
-            int size = buf.getShort() & 0xFFFF;
+            int size = Ints.ushortToInt(buf.getShort());
             if (buf.remaining() < size) {
                 throw new IllegalStateException("Invalid zip entry, extra size > remaining data");
             }
