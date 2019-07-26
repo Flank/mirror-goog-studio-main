@@ -43,13 +43,10 @@ public class ProfilerService {
     }
 
     /**
-     * @param serviceType weather perfa should use abstract sockets, or ip address when connecting
-     *     to perfd. The values for service type come from the agent service proto. The possible
-     *     values are abstract_socket, or unspecified_value. However for non-jvmti based
-     *     instrumentation we hardcode this value to 0 (unspecified_value).
      * @param serviceAddress the IP address used to connect to perfd.
+     * @param unifiedPipeline whether the profiler should use the new pipeline.
      */
-    private native void initializeNative(String serviceAddress);
+    private native void initializeNative(String serviceAddress, boolean unifiedPipeline);
 
     /**
      * Initialization method called multiple times from many entry points in the application. Not
@@ -59,19 +56,20 @@ public class ProfilerService {
      *     This adds an additional property to the property namespace because the service address is
      *     required to be configurable for test to run in parallel.
      */
-    public static void initialize(String serviceAddressProperty) {
+    public static void initialize(String serviceAddressProperty, boolean unifiedPipeline) {
         if (sInstance != null) {
             return;
         }
         sInstance =
                 new ProfilerService(
-                        System.getProperty(serviceAddressProperty, DEFAULT_SERVICE_ADDRESS));
+                        System.getProperty(serviceAddressProperty, DEFAULT_SERVICE_ADDRESS),
+                        unifiedPipeline);
     }
 
-    public ProfilerService(String serviceAddress) {
+    public ProfilerService(String serviceAddress, boolean unifiedPipeline) {
         // Use 0 to indicate that the service address is of type ip address and not
         // an abstract socket.
-        initializeNative(serviceAddress);
+        initializeNative(serviceAddress, unifiedPipeline);
         mComponents = new ArrayList<ProfilerComponent>();
         mComponents.add(new EventProfiler());
         mComponents.add(new MemoryProfiler(true));

@@ -33,10 +33,12 @@ extern "C" {
 // only the service address is used.
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_ProfilerService_initializeNative(
-    JNIEnv* env, jobject thiz, jstring jtext) {
+    JNIEnv* env, jobject thiz, jstring jtext, jboolean unified_pipeline) {
   JStringWrapper text(env, jtext);
   AgentConfig agent_config;
   agent_config.mutable_common()->set_service_address(text.get());
+  agent_config.mutable_common()->set_profiler_unified_pipeline(
+      unified_pipeline);
   Agent::Instance(agent_config);
 }
 }

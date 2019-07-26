@@ -36,9 +36,11 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
             = "com/android/tools/profiler/support/ProfilerService";
     private static final String SERVICE_ADDRESS_PROPERTY = "profiler.service.address";
     private String superName;
+    private final boolean myUnifiedPipeline;
 
-    public InitializerAdapter(ClassVisitor classVisitor) {
+    public InitializerAdapter(ClassVisitor classVisitor, boolean unifiedPipeline) {
         super(ASM5, classVisitor);
+        myUnifiedPipeline = unifiedPipeline;
     }
 
     @Override
@@ -56,16 +58,18 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
         if (superName.equals(ANDROID_ACTIVITY) ||
             superName.equals(ANDROID_APPLICATION)) {
             if (name.equals("<init>")) {
-                return new MethodAdapter(mv);
+                return new MethodAdapter(mv, myUnifiedPipeline);
             }
         }
         return mv;
     }
 
     private static final class MethodAdapter extends MethodVisitor implements Opcodes {
+        private final boolean myUnifiedPipeline;
 
-        public MethodAdapter(MethodVisitor mv) {
+        public MethodAdapter(MethodVisitor mv, boolean unifiedPipeline) {
             super(ASM5, mv);
+            myUnifiedPipeline = unifiedPipeline;
         }
 
         @Override
@@ -78,11 +82,12 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
                 case ARETURN:
                 case RETURN:
                     super.visitLdcInsn(SERVICE_ADDRESS_PROPERTY);
+                    super.visitLdcInsn(myUnifiedPipeline ? 1 : 0);
                     super.visitMethodInsn(
                             INVOKESTATIC,
                             PROFILER_APPLICATION_CLASSNAME,
                             "initialize",
-                            "(Ljava/lang/String;)V",
+                            "(Ljava/lang/String;Z)V",
                             false);
             }
             super.visitInsn(opcode);

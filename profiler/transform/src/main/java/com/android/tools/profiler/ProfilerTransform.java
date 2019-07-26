@@ -39,6 +39,8 @@ import org.objectweb.asm.ClassWriter;
 public final class ProfilerTransform implements BiConsumer<InputStream, OutputStream> {
 
     private static final Properties PROPERTIES = loadTransformProperties();
+    private static final boolean PROFILING_UNIFIED_PIPELINE_ENABLED =
+            "true".equals(PROPERTIES.getProperty("android.profiler.unifiedpipeline.enabled"));
     private static final boolean OKHTTP_PROFILING_ENABLED =
         "true".equals(PROPERTIES.getProperty("android.profiler.okhttp.enabled"));
 
@@ -50,7 +52,7 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
     public void accept(InputStream in, OutputStream out) {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         ClassVisitor visitor = writer;
-        visitor = new InitializerAdapter(visitor);
+        visitor = new InitializerAdapter(visitor, PROFILING_UNIFIED_PIPELINE_ENABLED);
         visitor = new HttpURLAdapter(visitor);
         if (OKHTTP_PROFILING_ENABLED) {
             visitor = new OkHttpAdapter(visitor);
