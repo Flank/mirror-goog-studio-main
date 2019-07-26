@@ -92,7 +92,7 @@ public class SdkVersionInfo {
         if (codeName == null) {
             return versionString;
         } else {
-            return String.format("API %1$d: Android %2$s (%3$s)", api, versionString, codeName);
+            return String.format(Locale.US, "API %1$d: Android %2$s (%3$s)", api, versionString, codeName);
         }
     }
 
@@ -102,7 +102,7 @@ public class SdkVersionInfo {
         if (retStr != null) {
             return retStr;
         }
-        return String.format("API %1$d", api);
+        return String.format(Locale.US, "API %1$d", api);
     }
 
     @Nullable
@@ -383,7 +383,7 @@ public class SdkVersionInfo {
      * @param targets          an optional array of installed targets, if available. If the version
      *                         string corresponds to a code name, this is used to search for a
      *                         corresponding API level.
-     * @return an {@link com.android.sdklib.AndroidVersion}, or null if the version could not be
+     * @return an {@link AndroidVersion}, or null if the version could not be
      * determined (e.g. an empty or invalid API number or an unknown code name)
      */
     @Nullable
