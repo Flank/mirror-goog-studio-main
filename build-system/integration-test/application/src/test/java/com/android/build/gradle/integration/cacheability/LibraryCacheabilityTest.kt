@@ -76,7 +76,7 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseResources",
                     ":lib:packageReleaseAssets",
                     ":lib:packageReleaseResources",
-                    ":lib:parseReleaseLibraryResources",
+                    ":lib:parseReleaseLocalResources",
                     ":lib:processReleaseManifest",
                     ":lib:stripReleaseDebugSymbols",
                     ":lib:syncReleaseLibJars",

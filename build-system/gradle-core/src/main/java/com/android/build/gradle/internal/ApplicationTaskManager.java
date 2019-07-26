@@ -410,7 +410,10 @@ public class ApplicationTaskManager extends TaskManager {
                 true,
                 Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
-        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)) {
+        // TODO(b/138780301): Also use it in android tests.
+        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+                && !variantScope.getType().isForTesting()
+                && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // The "small merge" of only the app's local resources (can be multiple source-sets, but
             // most of the time it's just one). This is used by the Process for generating the local
             // R-def.txt file containing a list of resources defined in this module.

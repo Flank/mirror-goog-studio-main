@@ -234,6 +234,34 @@ class ResourceDirectoryParserTest {
     }
 
     @Test
+    fun shouldParseNonValuesXmlFile() {
+        val directory = temporaryFolder.newFolder()
+
+        // Format not allowed.
+        val xml = """
+<LinearLayout>
+    <TextView android:id="@+id/toolbar"/>
+</LinearLayout>
+        """.trimIndent()
+
+        make(xml.toByteArray(), directory, "layout/mylayout.xml")
+
+        val platformTable = SymbolTable.builder().tablePackage("android").build()
+
+        val parsed =
+            parseResourceSourceSetDirectory(
+                directory, IdProvider.sequential(), platformTable)
+
+        val expected =
+            SymbolTable.builder()
+                .add(SymbolTestUtils.createSymbol("layout", "mylayout", "int", 0x7f0e0001))
+                .add(SymbolTestUtils.createSymbol("id", "toolbar", "int", 0x7f0b0001))
+                .build()
+
+        assertEquals(expected, parsed)
+    }
+
+    @Test
     fun testSkippableConfigurations() {
         // Default configurations should not be skipped (and the types shouldn't be checked at this
         // point).

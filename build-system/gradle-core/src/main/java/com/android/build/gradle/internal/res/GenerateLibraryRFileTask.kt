@@ -16,16 +16,20 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
+import com.android.build.VariantOutput
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildElements
+import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
@@ -33,7 +37,6 @@ import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.google.common.base.Strings
-import com.google.common.collect.Iterables
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -99,11 +102,18 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     @get:Input
     abstract val compileClasspathLibraryRClasses: Property<Boolean>
 
+    @get:Input
+    abstract val useConstantIds: Property<Boolean>
+
+    @get:Input
+    lateinit var multiOutputPolicy: MultiOutputPolicy
+        private set
+
     @Throws(IOException::class)
     override fun doFullTaskAction() {
-        val manifest = Iterables.getOnlyElement(
-                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
-                .outputFile
+        val manifest = chooseOutput(
+            ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
+            .outputFile
 
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -119,8 +129,43 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     textSymbolOutputFileProperty.get().asFile,
                     namespacedRClass,
                     compileClasspathLibraryRClasses.get(),
-                    symbolsWithPackageNameOutputFile.get().asFile
+                    symbolsWithPackageNameOutputFile.get().asFile,
+                    useConstantIds.get()
                 )
+            )
+        }
+    }
+
+    private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
+        when (multiOutputPolicy) {
+            MultiOutputPolicy.SPLITS -> {
+                val main = manifestBuildElements
+                    .stream()
+                    .filter { output -> output.apkData.type == VariantOutput.OutputType.MAIN }
+                    .findFirst()
+                if (!main.isPresent) {
+                    throw RuntimeException("No main apk found")
+                }
+                return main.get()
+            }
+            MultiOutputPolicy.MULTI_APK -> {
+                val nonDensity = manifestBuildElements
+                    .stream()
+                    .filter { output ->
+                        output.apkData
+                            .getFilter(
+                                VariantOutput.FilterType
+                                    .DENSITY
+                            ) == null
+                    }
+                    .findFirst()
+                if (!nonDensity.isPresent) {
+                    throw RuntimeException("No non-density apk found")
+                }
+                return nonDensity.get()
+            }
+            else -> throw RuntimeException(
+                "Unexpected MultiOutputPolicy type: $multiOutputPolicy"
             )
         }
     }
@@ -136,7 +181,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         val textSymbolOutputFile: File,
         val namespacedRClass: Boolean,
         val compileClasspathLibraryRClasses: Boolean,
-        val symbolsWithPackageNameOutputFile: File
+        val symbolsWithPackageNameOutputFile: File,
+        val useConstantIds: Boolean
     ) : Serializable
 
     class GenerateLibRFileRunnable @Inject constructor(private val params: GenerateLibRFileParams) : Runnable {
@@ -145,11 +191,12 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             val symbolTable = SymbolIo.readRDef(params.localResourcesFile.toPath())
 
-            val idProvider = if (params.compileClasspathLibraryRClasses) {
-                IdProvider.constant()
-            } else {
-                IdProvider.sequential()
-            }
+            val idProvider =
+                if (params.useConstantIds) {
+                    IdProvider.constant()
+                } else {
+                    IdProvider.sequential()
+                }
             processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
                 libraries = params.dependencies,
@@ -178,7 +225,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     }
 
 
-    class CreationAction(variantScope: VariantScope)
+    class CreationAction(variantScope: VariantScope, val isLibrary: Boolean)
         : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantScope) {
 
         override val name: String
@@ -229,7 +276,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 variantScope.variantData.variantConfiguration.applicationId
             }
 
-
             if (!projectOptions[BooleanOption.NAMESPACED_R_CLASS]) {
                 // Only include the dependency symbol tables when not using namespaced R classes.
                 val consumedConfigType =
@@ -252,11 +298,22 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
-            task.namespacedRClass = variantScope.globalScope.projectOptions[BooleanOption.NAMESPACED_R_CLASS]
+            task.namespacedRClass = projectOptions[BooleanOption.NAMESPACED_R_CLASS]
 
             task.compileClasspathLibraryRClasses.set(projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
             task.outputScope = variantScope.outputScope
+
+            // This task can produce R classes with either constant IDs ("0") or sequential IDs
+            // mimicking the way AAPT2 numbers IDs. If we're generating a compile time only R class
+            // (either for the small merge in app or when using compile classpath resources in libs)
+            // we want to use the constant IDs; otherwise, we will use sequential IDs.
+            // In either case, the IDs are fake, and therefore are non-final.
+            task.useConstantIds.set(
+                (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
+                        || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
+
+            task.multiOutputPolicy = variantScope.variantData.multiOutputPolicy
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,

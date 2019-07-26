@@ -111,7 +111,7 @@ abstract class ParseLibraryResourcesTask : NonIncrementalTask() {
     ): VariantTaskCreationAction<ParseLibraryResourcesTask>(variantScope) {
 
         override val name: String
-            get() = variantScope.getTaskName("parse", "LibraryResources")
+            get() = variantScope.getTaskName("parse", "LocalResources")
         override val type: Class<ParseLibraryResourcesTask>
             get() = ParseLibraryResourcesTask::class.java
 

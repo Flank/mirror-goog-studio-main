@@ -935,7 +935,10 @@ public abstract class TaskManager {
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
 
-        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)) {
+        // TODO(b/138780301): Also use it in android tests.
+        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+                && !scope.getType().isForTesting()
+                && !scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // Generate the COMPILE TIME only R class using the local resources instead of waiting
             // for the above full link to finish. Linking will still output the RUN TIME R class.
             // Since we're gonna use AAPT2 to generate the keep rules, do not generate them here.
@@ -1023,7 +1026,7 @@ public abstract class TaskManager {
 
             // Generate the R class for a library using both local symbols and symbols
             // from dependencies.
-            taskFactory.register(new GenerateLibraryRFileTask.CreationAction(scope));
+            taskFactory.register(new GenerateLibraryRFileTask.CreationAction(scope, isLibrary()));
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(

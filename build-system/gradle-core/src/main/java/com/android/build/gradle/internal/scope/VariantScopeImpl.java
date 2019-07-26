@@ -680,7 +680,14 @@ public class VariantScopeImpl implements VariantScope {
         } else {
             //noinspection VariableNotUsedInsideIf
             if (tested == null) {
-                if (getType().isAar()) {
+                // TODO(b/138780301): Also use it in android tests.
+                boolean useCompileRClassInApp =
+                        globalScope
+                                        .getProjectOptions()
+                                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+                                && !getType().isForTesting();
+
+                if (getType().isAar() || useCompileRClassInApp) {
                     Provider<FileSystemLocation> rJar =
                             artifacts.getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                     mainCollection = getProject().files(mainCollection, rJar);
