@@ -181,6 +181,7 @@ public class ApkParserTest {
         Random random = new Random(1);
         try (FileOutputStream f = new FileOutputStream(file);
                 ZipOutputStream s = new ZipOutputStream(f)) {
+            s.setLevel(ZipOutputStream.STORED);
             for (int i = 0; i < numFiles; i++) {
                 long id = fileId++;
                 String name = String.format("file%06d", id);
@@ -197,7 +198,11 @@ public class ApkParserTest {
     @Test
     public void testParsingBigZip() throws Exception {
         Path zipArchive = Paths.get(TestUtils.getTestOutputDir().getAbsolutePath() + "big.zip");
-        createZip(3, 1_000_000_000, zipArchive.toFile());
+        int numFiles = 3;
+        int sizePerFile = 1_000_000_000;
+        createZip(numFiles, sizePerFile, zipArchive.toFile());
+        Assert.assertTrue(
+                "Zip is less than 3GiB", zipArchive.toFile().length() > numFiles * sizePerFile);
         ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
         try (RandomAccessFile file = new RandomAccessFile(zipArchive.toFile(), "r")) {
             ApkParser.findCDLocation(file.getChannel(), map);
