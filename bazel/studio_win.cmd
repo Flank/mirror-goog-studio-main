@@ -31,7 +31,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test --keep_going --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof --discard_analysis_cache -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test --keep_going --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\winprof%BUILDNUMBER%.json --discard_analysis_cache -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
@@ -51,10 +51,8 @@ FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zi
 @rem until bazel clean is fixed on windows, remove perfgate data amanually.
 CALL del /s /q outputs.zip
 
-@rem Create profile html in %DISTDIR% so it ends up in Artifacts.
 @rem We must cd back into %BASEDIR% so bazel config files are properly located.
 cd %BASEDIR%
-CALL %SCRIPTDIR%bazel.cmd analyze-profile --html %DISTDIR%\prof
 
 :ENDSCRIPT
 @rem We will explicitly clear the Bazel cache between runs to keep data hermetic.

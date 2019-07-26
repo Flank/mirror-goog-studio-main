@@ -21,7 +21,7 @@ readonly invocation_id="$(uuidgen)"
         --invocation_id=${invocation_id} \
         --build_tag_filters=-no_mac \
         --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only \
-        --profile=${dist_dir}/prof \
+        --profile=${dist_dir}/mac-profile-${build_number}.json \
         -- \
         $(< "${script_dir}/targets")
 
@@ -29,9 +29,6 @@ readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
-
-  # Create profile html in ${dist_dir} so it ends up in Artifacts.
-  ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
 fi
 
 exit $bazel_status

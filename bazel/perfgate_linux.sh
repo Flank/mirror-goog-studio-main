@@ -25,7 +25,7 @@ readonly invocation_id="$(uuidgen)"
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
-  --profile=${dist_dir}/prof \
+  --profile=${dist_dir}/perfgate-profile-${build_number}.json \
   --runs_per_test=5 \
   -- \
   $(< "${script_dir}/targets")
@@ -46,9 +46,6 @@ if [[ -d "${dist_dir}" ]]; then
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -d {} \*.gz \;
   # Upload perfgate performance files
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/perfgate_data.zip" {} \;
-
-  # Create profile html in ${dist_dir} so it ends up in Artifacts.
-  ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
 
 fi
 
