@@ -10,8 +10,8 @@ readonly script_dir="$(dirname "$0")"
 
 config_options="--config=remote"
 
-# Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
+# Generate a UUID for use as the bazel invocation id
+readonly invocation_id="$(uuidgen)"
 
 # The sanity tests are ran in 2 groups.
 # The first group is all the tests that do not use an Android emulator.
@@ -26,6 +26,7 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   test \
   --keep_going \
   ${config_options} \
+  --invocation_id=${invocation_id} \
   --jobs 4 \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
@@ -35,10 +36,11 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
 readonly bazel_status_no_emu=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-  readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
+
+# Generate a UUID for use as the bazel invocation id
+readonly invocation_id_emu="$(uuidgen)"
 
 # Run Bazel tests - only emulator tests should run here
 target_filters=qa_sanity_emu,-qa_unreliable,-no_linux,-no_test_linux
@@ -47,6 +49,7 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   test \
   --keep_going \
   ${config_options} \
+  --invocation_id=${invocation_id_emu} \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
   --jobs 1 \
@@ -58,9 +61,7 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
 readonly bazel_status_emu=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-  readonly upsalite_id_emu="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id_emu}'\" />" > "${dist_dir}"/upsalite_emu_test_results.html
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_emu}'\" />" > "${dist_dir}"/upsalite_emu_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs

@@ -13,8 +13,8 @@ test_tag_filters=perfgate_multi_run,perfgate_only,-no_perfgate,-no_linux,-no_tes
 
 config_options="--config=remote"
 
-# Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
+# Generate a UUID for use as the bazel invocation id
+readonly invocation_id="$(uuidgen)"
 
 # Run Bazel
 "${script_dir}/bazel" \
@@ -22,6 +22,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   test \
   --keep_going \
   ${config_options} \
+  --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
   --profile=${dist_dir}/prof \
@@ -33,9 +34,8 @@ readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
 
-  # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-  readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  # Generate a simple html page that redirects to the test results page.
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
 

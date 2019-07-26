@@ -6,8 +6,8 @@ readonly build_number="$2"
 
 readonly script_dir="$(dirname "$0")"
 
-# Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$("${script_dir}"/bazel info command_log)"
+# Generate a UUID for use as the bazel invocation id
+readonly invocation_id="$(uuidgen)"
 
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
@@ -15,6 +15,7 @@ readonly command_log="$("${script_dir}"/bazel info command_log)"
   test \
   --keep_going \
   --config=remote \
+  --invocation_id=${invocation_id} \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate_only \
   --define agent_coverage=true \
@@ -24,12 +25,9 @@ readonly command_log="$("${script_dir}"/bazel info command_log)"
 # We want to still attach the upsalite link if tests fail so we can't abort now
 readonly bazel_test_status=$?
 
-# Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
-
 if [[ -d "${dist_dir}" ]]; then
   # Link to test results
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
 # Abort if necessary now that the upsalite link is handled
