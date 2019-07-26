@@ -42,6 +42,7 @@ iml_module(
         "//tools/base/tracer:studio.android.sdktools.tracer[module]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/idea/.idea/libraries:studio-proto",
+        "//tools/base/perf-logger:studio.perf-logger[module, test]",
     ],
 )
 
@@ -109,7 +110,10 @@ coverage_java_test(
             "//tools/base/deploy/installer:bash_bridge",
         ],
     }),
-    jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
+    jvm_flags = [
+        "-Dtest.suite.jar=deployer.tests.jar",
+        "-Ddashboards.enabled=true",
+    ],
     tags = [
         "no_rbe_windows",
         "no_test_windows",
@@ -125,6 +129,7 @@ coverage_java_test(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
+        "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",

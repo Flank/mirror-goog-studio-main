@@ -49,5 +49,6 @@
     <orderEntry type="module" module-name="android.sdktools.tracer" />
     <orderEntry type="module" module-name="android.sdktools.fakeadbserver" scope="TEST" />
     <orderEntry type="library" name="studio-proto" level="project" />
+    <orderEntry type="module" module-name="perf-logger" scope="TEST" />
   </component>
 </module>

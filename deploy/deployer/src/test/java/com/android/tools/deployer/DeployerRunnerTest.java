@@ -19,7 +19,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
@@ -33,6 +32,7 @@ import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
+import com.android.tools.perflogger.Benchmark;
 import com.android.utils.ILogger;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentMatchers;
@@ -51,6 +53,7 @@ import org.mockito.Mockito;
 
 @RunWith(Parameterized.class)
 public class DeployerRunnerTest {
+    @Rule public TestName name = new TestName();
 
     private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
@@ -58,6 +61,9 @@ public class DeployerRunnerTest {
     private final FakeDevice device;
     private FakeAdbServer myAdbServer;
     private ILogger logger;
+
+    private Benchmark benchmark;
+    private long startTime;
 
     @Parameterized.Parameters(name = "{0}")
     public static DeviceId[] getDevices() {
@@ -82,10 +88,30 @@ public class DeployerRunnerTest {
         this.service = Mockito.mock(UIService.class);
         logger = new TestLogger();
         AndroidDebugBridge.enableFakeAdbServerMode(myAdbServer.getPort());
+
+        if ("true".equals(System.getProperty("dashboards.enabled"))) {
+            // Put all APIs (parameters) of a particular test into one benchmark.
+            String benchmarkName = name.getMethodName().replaceAll("\\[.*", "");
+            benchmark =
+                    new Benchmark.Builder(benchmarkName)
+                            .setProject("Android Studio Deployment")
+                            .build();
+            startTime = System.currentTimeMillis();
+        }
     }
 
     @After
     public void tearDown() throws Exception {
+        long currentTime = System.currentTimeMillis();
+        if (benchmark != null) {
+            long timeTaken = currentTime - startTime;
+
+            // Benchmark names can only include [a-zA-Z0-9_-] characters in them.
+            String metricName =
+                    name.getMethodName().replace('[', '-').replace("]", "").replace(',', '_');
+            benchmark.log(metricName + "_time", timeTaken);
+        }
+
         Mockito.verifyNoMoreInteractions(service);
         AndroidDebugBridge.terminate();
         myAdbServer.close();
