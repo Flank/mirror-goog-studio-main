@@ -965,7 +965,9 @@ class MinifyFeaturesTest(
             project.getSubproject(":foo:otherFeature1").buildFile,
             ""
                     + "dependencies {\n"
-                    + "    implementation files ('" + jarFile.absolutePath + "')\n"
+                    + "    implementation files ('"
+                    + FileUtils.escapeSystemDependentCharsIfNecessary(jarFile.absolutePath)
+                    + "')\n"
                     + "}"
         )
 

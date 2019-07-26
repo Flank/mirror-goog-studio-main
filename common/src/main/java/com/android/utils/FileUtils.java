@@ -364,6 +364,20 @@ public final class FileUtils {
     }
 
     /**
+     * Escapes all OS dependent chars if necessary.
+     *
+     * @param path the file path to escape.
+     * @return the escaped file path or itself if it is not necessary.
+     */
+    @NonNull
+    public static String escapeSystemDependentCharsIfNecessary(@NonNull String path) {
+        if (File.separatorChar == '\\') {
+            return path.replace("\\", "\\\\");
+        }
+        return path;
+    }
+
+    /**
      * Converts a system-dependent path into a /-based path.
      *
      * @param path the system dependent path

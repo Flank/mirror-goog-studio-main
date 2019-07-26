@@ -33,6 +33,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -182,7 +183,7 @@ public class MinifyTest {
                 ""
                         + "dependencies {\n"
                         + "    implementation files ('"
-                        + jarFile.getAbsolutePath()
+                        + FileUtils.escapeSystemDependentCharsIfNecessary(jarFile.getAbsolutePath())
                         + "')\n"
                         + "}");
 
@@ -218,7 +219,7 @@ public class MinifyTest {
                 ""
                         + "dependencies {\n"
                         + "   implementation files ('"
-                        + jarFile.getAbsolutePath()
+                        + FileUtils.escapeSystemDependentCharsIfNecessary(jarFile.getAbsolutePath())
                         + "')\n"
                         + "}");
 
