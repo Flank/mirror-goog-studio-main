@@ -4,13 +4,17 @@
     <#include "../common/recipe_manifest.xml.ftl" />
     <@kt.addAllKotlinDependencies />
 
-<#if generateLayout>
+<#if generateLayout || (includeCppSupport!false)>
     <#include "../common/recipe_simple.xml.ftl" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 </#if>
 
+<#if includeCppSupport!false>
+    <instantiate from="root/src/app_package/EmptyActivityWithCppSupport.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
+<#else>
     <instantiate from="root/src/app_package/EmptyActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
+</#if>
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
-
 </recipe>
