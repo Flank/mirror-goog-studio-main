@@ -17,5 +17,4 @@ package com.android.zipflinger;
 
 class Ints {
     public static final long USHRT_MAX = 65_535L;
-    public static final long UINT_MAX = 4_294_967_295L;
 }

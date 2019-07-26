@@ -78,11 +78,6 @@ class CentralDirectoryRecord {
         buf.put(nameBytes);
     }
 
-    @NonNull
-    byte[] getNameBytes() {
-        return nameBytes;
-    }
-
     int getCrc() {
         return crc;
     }
