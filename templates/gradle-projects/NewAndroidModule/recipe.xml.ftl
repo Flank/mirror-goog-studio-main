@@ -88,8 +88,6 @@
 
     <instantiate from="root/CMakeLists.txt.ftl"
                    to="${escapeXmlAttribute(nativeSrcOut)}/CMakeLists.txt" />
-    <instantiate from="root/native-lib.cpp.ftl"
-                   to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
 </#if>
 
 <#if (Mobileincluded!false) && (Wearincluded!false)>

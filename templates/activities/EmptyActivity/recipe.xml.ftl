@@ -11,7 +11,12 @@
 
 <#if includeCppSupport!false>
     <instantiate from="root/src/app_package/EmptyActivityWithCppSupport.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
+                 to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
+
+    <mkdir at="${escapeXmlAttribute(nativeSrcOut)}" />
+
+    <instantiate from="root/src/app_package/native-lib.cpp.ftl"
+                   to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
 <#else>
     <instantiate from="root/src/app_package/EmptyActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
