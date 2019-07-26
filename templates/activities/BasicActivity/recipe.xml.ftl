@@ -26,7 +26,7 @@
     </#if>
     <#--------->
 
-    <instantiate from="root/src/app_package/SimpleActivity.${ktOrJavaExt}.ftl"
+    <instantiate from="root/src/app_package/BasicActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
     <instantiate from="../common/navigation/src/ui/FirstFragment.${ktOrJavaExt}.ftl"
