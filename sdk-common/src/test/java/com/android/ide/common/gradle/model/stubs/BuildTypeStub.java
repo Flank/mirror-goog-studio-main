@@ -15,10 +15,15 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.BuildType;
+import com.android.builder.model.ClassField;
 import com.android.builder.model.SigningConfig;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
+import java.io.File;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 public final class BuildTypeStub extends BaseConfigStub implements BuildType {
@@ -30,16 +35,49 @@ public final class BuildTypeStub extends BaseConfigStub implements BuildType {
     private final boolean myZipAlignEnabled;
 
     public BuildTypeStub() {
-        this(true, true, true, 1, true, true);
+        super();
+        myDebuggable = true;
+        myJniDebuggable = true;
+        myRenderscriptDebuggable = true;
+        myRenderscriptOptimLevel = 1;
+        myMinifyEnabled = true;
+        myZipAlignEnabled = true;
     }
 
     public BuildTypeStub(
+            @NonNull String name,
+            @NonNull Map<String, ClassField> buildConfigFields,
+            @NonNull Map<String, ClassField> resValues,
+            @NonNull Map<String, String> flavorSelections,
+            @NonNull Collection<File> proguardFiles,
+            @NonNull Collection<File> consumerProguardFiles,
+            @NonNull Collection<File> testProguardFiles,
+            @NonNull Map<String, Object> manifestPlaceholders,
+            @Nullable String applicationIdSuffix,
+            @Nullable String versionNameSuffix,
+            @Nullable Boolean multiDexEnabled,
+            @Nullable File multiDexKeepFile,
+            @Nullable File multiDexKeepProguard,
             boolean debuggable,
             boolean jniDebuggable,
             boolean renderscriptDebuggable,
             int level,
             boolean minifyEnabled,
             boolean zipAlignEnabled) {
+        super(
+                name,
+                buildConfigFields,
+                resValues,
+                flavorSelections,
+                proguardFiles,
+                consumerProguardFiles,
+                testProguardFiles,
+                manifestPlaceholders,
+                applicationIdSuffix,
+                versionNameSuffix,
+                multiDexEnabled,
+                multiDexKeepFile,
+                multiDexKeepProguard);
         myDebuggable = debuggable;
         myJniDebuggable = jniDebuggable;
         myRenderscriptDebuggable = renderscriptDebuggable;
