@@ -57,7 +57,6 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
   --jobs 1 \
-  --strategy=remote,sandbox \
   --define external_emulator=true \
   --define=meta_android_build_number=${build_number} \
   -- \
