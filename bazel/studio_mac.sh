@@ -8,10 +8,9 @@ readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
 
-# Generate a UUID for use as the bazel invocation id
-readonly invocation_id="$(uuidgen)"
+# Invocation ID must be lower case in Upsalite URL
+readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-# Run Bazel
 "${script_dir}/bazel" \
         --max_idle_secs=60 \
         test \
