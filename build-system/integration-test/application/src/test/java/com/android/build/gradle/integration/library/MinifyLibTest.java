@@ -113,8 +113,7 @@ public class MinifyLibTest {
         if (codeShrinker == CodeShrinker.R8) {
             assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
         } else {
-            assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
-                    .didWork();
+            assertThat(result.getTask(":app:minifyDebugWithProguard")).didWork();
         }
 
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
@@ -147,12 +146,8 @@ public class MinifyLibTest {
             assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
             assertThat(result.getTask(":app:minifyDebugAndroidTestWithR8")).didWork();
         } else {
-            assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
-                    .didWork();
-            assertThat(
-                            result.getTask(
-                                    ":app:transformClassesAndResourcesWithProguardForDebugAndroidTest"))
-                    .didWork();
+            assertThat(result.getTask(":app:minifyDebugWithProguard")).didWork();
+            assertThat(result.getTask(":app:minifyDebugAndroidTestWithProguard")).didWork();
         }
 
 

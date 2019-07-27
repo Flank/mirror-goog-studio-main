@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -49,13 +51,11 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.io.File
-import java.util.Collections
 import java.util.concurrent.Callable
 
 /**
@@ -98,21 +98,19 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
 
-    abstract class CreationAction <T : ProguardConfigurableTask>
+    abstract class CreationAction<T : ProguardConfigurableTask>
     @JvmOverloads
     internal constructor(
         variantScope: VariantScope,
         private val isTestApplication: Boolean = false
     ) : VariantTaskCreationAction<T>(variantScope) {
 
-
         private val includeFeaturesInScopes: Boolean = variantScope.consumesFeatureJars()
         protected val variantType: VariantType = variantScope.variantData.type
         private val testedVariantData: BaseVariantData? = variantScope.testedVariantData
 
-
         // Override to make this true in proguard
-        protected val defaultObfuscate: Boolean = false
+        protected open val defaultObfuscate: Boolean = false
 
         // These filters assume a file can't be class and resources at the same time.
         private val referencedClasses: FileCollection
@@ -123,23 +121,26 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
         private val resources: FileCollection
 
-        init {
-            val inputScopes: MutableSet<in QualifiedContent.ScopeType> =
-                when {
-                    variantType.isAar -> mutableSetOf(Scope.PROJECT, InternalScope.LOCAL_DEPS)
-                    includeFeaturesInScopes -> mutableSetOf(
-                        Scope.PROJECT,
-                        Scope.SUB_PROJECTS,
-                        Scope.EXTERNAL_LIBRARIES,
-                        InternalScope.FEATURES
-                    )
-                    else -> mutableSetOf(
-                        Scope.PROJECT,
-                        Scope.SUB_PROJECTS,
-                        Scope.EXTERNAL_LIBRARIES
-                    )
-                }
+        protected val inputScopes: MutableSet<QualifiedContent.ScopeType> =
+            when {
+                variantType.isAar -> mutableSetOf(
+                    Scope.PROJECT,
+                    InternalScope.LOCAL_DEPS
+                )
+                includeFeaturesInScopes -> mutableSetOf(
+                    Scope.PROJECT,
+                    Scope.SUB_PROJECTS,
+                    Scope.EXTERNAL_LIBRARIES,
+                    InternalScope.FEATURES
+                )
+                else -> mutableSetOf(
+                    Scope.PROJECT,
+                    Scope.SUB_PROJECTS,
+                    Scope.EXTERNAL_LIBRARIES
+                )
+            }
 
+        init {
             val referencedScopes: Set<Scope> = run {
                 val set = Sets.newHashSetWithExpectedSize<Scope>(5)
                 if (variantType.isAar) {
@@ -156,28 +157,6 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 Sets.immutableEnumSet(set)
             }
 
-            val inputContentTypes: Set<QualifiedContent.ContentType> =
-                setOf(
-                    QualifiedContent.DefaultContentType.CLASSES,
-                    QualifiedContent.DefaultContentType.RESOURCES
-                )
-
-            val classesFilter = StreamFilter { contentTypes, _ ->
-                QualifiedContent.DefaultContentType.CLASSES in contentTypes
-            }
-
-            val resourcesFilter = StreamFilter { contentTypes, _ ->
-                QualifiedContent.DefaultContentType.RESOURCES in contentTypes
-            }
-
-            val referencedFilter = StreamFilter { _, scopes ->
-                scopes.intersect(referencedScopes).isNotEmpty()
-            }
-
-            val nonReferencedFilter = StreamFilter { _, scopes ->
-                scopes.intersect(inputScopes).isNotEmpty()
-            }
-
             // Check for overlap in scopes
             Preconditions.checkState(
                 referencedScopes.intersect(inputScopes).isEmpty(),
@@ -189,32 +168,30 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             )
 
             classes = variantScope.transformManager
-                .getPipelineOutputAsFileCollection(
-                    nonReferencedFilter,
-                    classesFilter
-                )
+                .getPipelineOutputAsFileCollection(createStreamFilter(CLASSES, inputScopes))
 
             resources = variantScope.transformManager
-                .getPipelineOutputAsFileCollection(
-                    nonReferencedFilter,
-                    resourcesFilter
-                )
+                .getPipelineOutputAsFileCollection(createStreamFilter(RESOURCES, inputScopes))
 
             // Consume non referenced inputs
-            variantScope.transformManager
-                .consumeStreams(inputScopes, inputContentTypes)
+            variantScope.transformManager.consumeStreams(inputScopes, setOf(CLASSES, RESOURCES))
 
 
             referencedClasses = variantScope.transformManager
                 .getPipelineOutputAsFileCollection(
-                    referencedFilter,
-                    classesFilter
+                    createStreamFilter(
+                        CLASSES,
+                        referencedScopes.toMutableSet()
+                    )
                 )
+
 
             referencedResources = variantScope.transformManager
                 .getPipelineOutputAsFileCollection(
-                    referencedFilter,
-                    resourcesFilter
+                    createStreamFilter(
+                        RESOURCES,
+                        referencedScopes.toMutableSet()
+                    )
                 )
         }
 
@@ -286,7 +263,8 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                             ALL,
                             FILTERED_PROGUARD_RULES,
                             maybeGetCodeShrinkerAttrMap(variantScope)
-                        ))
+                        )
+                    )
                     task.configurationFiles.from(configurationFiles)
                 }
                 variantScope.type.isForTesting && !variantScope.type.isTestComponent -> {
@@ -301,7 +279,8 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                             ALL,
                             FILTERED_PROGUARD_RULES,
                             maybeGetCodeShrinkerAttrMap(variantScope)
-                        ))
+                        )
+                    )
                     task.configurationFiles.from(configurationFiles)
                 }
                 else -> // This is a "normal" variant in an app/library.
@@ -331,9 +310,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             val variantConfig = variantScope.variantConfiguration
 
             val postprocessingFeatures = variantScope.postprocessingFeatures
-            if (postprocessingFeatures != null) {
-                setActions(postprocessingFeatures)
-            }
+            postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
             val proguardConfigFiles = Callable<Collection<File>> { variantScope.proguardFiles }
 
@@ -410,5 +387,19 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         protected abstract fun dontWarn(dontWarn: String)
 
         protected abstract fun setActions(actions: PostprocessingFeatures)
+
+        /**
+         *  Convenience function. Returns a StreamFilter that checks for the given contentType and a
+         *  nonempty intersection with the given set of Scopes .
+         */
+        private fun createStreamFilter(
+            desiredType: QualifiedContent.ContentType,
+            desiredScopes: MutableSet<in QualifiedContent.ScopeType>
+        ): StreamFilter {
+            return StreamFilter { contentTypes, scopes ->
+                desiredType in contentTypes && desiredScopes.intersect(scopes).isNotEmpty()
+            }
+        }
     }
+
 }

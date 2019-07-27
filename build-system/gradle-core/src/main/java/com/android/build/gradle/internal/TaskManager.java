@@ -27,7 +27,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
@@ -35,10 +34,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
@@ -81,7 +78,6 @@ import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
@@ -127,6 +123,7 @@ import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
+import com.android.build.gradle.internal.tasks.ProguardTask;
 import com.android.build.gradle.internal.tasks.R8Task;
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
 import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
@@ -153,8 +150,6 @@ import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
-import com.android.build.gradle.internal.transforms.ProGuardTransform;
-import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
@@ -224,12 +219,10 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
@@ -2789,8 +2782,7 @@ public abstract class TaskManager {
             return doCreateJavaCodeShrinkerTransform(
                     variantScope,
                     // No mapping in non-test modules.
-                    codeShrinker,
-                    null);
+                    codeShrinker);
         } else {
             return null;
         }
@@ -2803,40 +2795,34 @@ public abstract class TaskManager {
      */
     @NonNull
     protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
-            @NonNull final VariantScope variantScope,
-            @NonNull CodeShrinker codeShrinker,
-            @Nullable FileCollection mappingFileCollection) {
-        return doCreateJavaCodeShrinkerTransform(
-                variantScope, codeShrinker, mappingFileCollection, false);
+            @NonNull final VariantScope variantScope, @NonNull CodeShrinker codeShrinker) {
+        return doCreateJavaCodeShrinkerTransform(variantScope, codeShrinker, false);
     }
 
     @NonNull
     protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
-            @Nullable FileCollection mappingFileCollection,
             Boolean isTestApplication) {
-        @Nullable TaskProvider<? extends Task> task;
+        @NonNull TaskProvider<? extends Task> task;
         CodeShrinker createdShrinker = codeShrinker;
         switch (codeShrinker) {
             case PROGUARD:
-                task = createProguardTransform(variantScope, mappingFileCollection).orElse(null);
+                task = createProguardTask(variantScope, isTestApplication);
                 break;
             case R8:
                 if (variantScope.getVariantConfiguration().getType().isAar()
                         && !projectOptions.get(BooleanOption.ENABLE_R8_LIBRARIES)) {
-                    task =
-                            createProguardTransform(variantScope, mappingFileCollection)
-                                    .orElse(null);
+                    task = createProguardTask(variantScope, isTestApplication);
                     createdShrinker = CodeShrinker.PROGUARD;
                 } else {
-                    task = createR8Task(variantScope, mappingFileCollection != null);
+                    task = createR8Task(variantScope, isTestApplication);
                 }
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
         }
-        if (variantScope.getPostprocessingFeatures() != null && task != null) {
+        if (variantScope.getPostprocessingFeatures() != null) {
             TaskProvider<CheckProguardFiles> checkFilesTask =
                     taskFactory.register(new CheckProguardFiles.CreationAction(variantScope));
 
@@ -2847,206 +2833,10 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    private Optional<TaskProvider<TransformTask>> createProguardTransform(
-            @NonNull VariantScope variantScope, @Nullable FileCollection mappingFileCollection) {
-        final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
-
-        ProGuardTransform transform = new ProGuardTransform(variantScope);
-
-        FileCollection inputProguardMapping;
-        if (testedVariantData != null
-                && testedVariantData.getScope().getArtifacts().hasFinalProduct(APK_MAPPING)) {
-            inputProguardMapping =
-                    project.files(
-                            testedVariantData
-                                    .getScope()
-                                    .getArtifacts()
-                                    .getFinalProduct(APK_MAPPING));
-        } else {
-            inputProguardMapping = mappingFileCollection;
-        }
-        transform.applyTestedMapping(inputProguardMapping);
-
-        return applyProguardRules(
-                variantScope,
-                inputProguardMapping,
-                testedVariantData,
-                transform,
-                null);
-    }
-
-    private interface ProGuardTransformCallback {
-        void execute(@NonNull ProguardConfigurable transform, @NonNull String taskName);
-    }
-
-    @NonNull
-    private Optional<TaskProvider<TransformTask>> applyProguardRules(
-            @NonNull VariantScope variantScope,
-            @Nullable FileCollection inputProguardMapping,
-            BaseVariantData testedVariantData,
-            @NonNull ProguardConfigurable transform,
-            @Nullable ProGuardTransformCallback callback) {
-
-        if (testedVariantData != null) {
-            final VariantScope testedScope = testedVariantData.getScope();
-            // This is an androidTest variant inside an app/library.
-            applyProguardDefaultsForTest(transform);
-
-            // All -dontwarn rules for test dependencies should go in here:
-            final ConfigurableFileCollection configurationFiles =
-                    project.files(
-                            (Callable<Collection<File>>) testedScope::getTestProguardFiles,
-                            variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH,
-                                    ALL,
-                                    FILTERED_PROGUARD_RULES,
-                                    maybeGetCodeShrinkerAttrMap(variantScope)));
-            maybeAddFeatureProguardRules(variantScope, configurationFiles);
-            transform.setConfigurationFiles(configurationFiles);
-        } else if (variantScope.getType().isForTesting()
-                && !variantScope.getType().isTestComponent()) {
-            // This is a test-only module and the app being tested was obfuscated with ProGuard.
-            applyProguardDefaultsForTest(transform);
-
-            // All -dontwarn rules for test dependencies should go in here:
-            final ConfigurableFileCollection configurationFiles =
-                    project.files(
-                            (Callable<Collection<File>>) variantScope::getTestProguardFiles,
-                            variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH,
-                                    ALL,
-                                    FILTERED_PROGUARD_RULES,
-                                    maybeGetCodeShrinkerAttrMap(variantScope)));
-            maybeAddFeatureProguardRules(variantScope, configurationFiles);
-            transform.setConfigurationFiles(configurationFiles);
-        } else {
-            // This is a "normal" variant in an app/library.
-            applyProguardConfigForNonTest(transform, variantScope);
-        }
-
-        Optional<TaskProvider<TransformTask>> transformTaskTaskProvider =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(
-                                taskFactory,
-                                variantScope,
-                                transform,
-                                taskName -> {
-                                    if (callback != null) {
-                                        callback.execute(transform, taskName);
-                                    }
-                                },
-                                t -> {
-                                    if (inputProguardMapping != null) {
-                                        t.dependsOn(inputProguardMapping);
-                                    }
-
-                                    if (testedVariantData != null) {
-                                        // We need the mapping file for the app code to exist by the time we run.
-                                        // FIXME consume the BA!
-                                        t.dependsOn(
-                                                testedVariantData
-                                                        .getTaskContainer()
-                                                        .getAssembleTask());
-                                    }
-                                },
-                                null);
-
-        transformTaskTaskProvider.ifPresent(
-                taskTaskProvider ->
-                        variantScope
-                                .getArtifacts()
-                                .producesFile(
-                                        APK_MAPPING,
-                                        BuildArtifactsHolder.OperationType.INITIAL,
-                                        taskTaskProvider,
-                                        TransformTask::getOutputFile,
-                                        "mapping.txt"));
-
-        return transformTaskTaskProvider;
-    }
-
-    private static void applyProguardDefaultsForTest(ProguardConfigurable transform) {
-        // Don't remove any code in tested app.
-        // We can't call dontobfuscate for Proguard, since that makes it ignore the mapping file.
-        // R8 does not have that issue, so we disable obfuscation when running R8.
-        boolean obfuscate = transform instanceof ProGuardTransform;
-        transform.setActions(new PostprocessingFeatures(false, obfuscate, false));
-
-        transform.keep("class * {*;}");
-        transform.keep("interface * {*;}");
-        transform.keep("enum * {*;}");
-        transform.keepattributes();
-    }
-
-    private void applyProguardConfigForNonTest(ProguardConfigurable transform, VariantScope scope) {
-        GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
-
-        PostprocessingFeatures postprocessingFeatures = scope.getPostprocessingFeatures();
-        if (postprocessingFeatures != null) {
-            transform.setActions(postprocessingFeatures);
-        }
-
-        Callable<Collection<File>> proguardConfigFiles = scope::getProguardFiles;
-
-        final InternalArtifactType aaptProguardFileType =
-                scope.consumesFeatureJars()
-                        ? InternalArtifactType.MERGED_AAPT_PROGUARD_FILE
-                        : InternalArtifactType.AAPT_PROGUARD_FILE;
-
-        final ConfigurableFileCollection configurationFiles =
-                project.files(
-                        proguardConfigFiles,
-                        scope.getArtifacts().getFinalProduct(aaptProguardFileType),
-                        scope.getArtifacts().getFinalProduct(GENERATED_PROGUARD_FILE),
-                        scope.getArtifactFileCollection(
-                                RUNTIME_CLASSPATH,
-                                ALL,
-                                FILTERED_PROGUARD_RULES,
-                                maybeGetCodeShrinkerAttrMap(scope)));
-
-        if (scope.getType().isHybrid() && scope.getType().isBaseModule()) {
-            Callable<Collection<File>> consumerProguardFiles = scope::getConsumerProguardFiles;
-            configurationFiles.from(consumerProguardFiles);
-        }
-
-        maybeAddFeatureProguardRules(scope, configurationFiles);
-        transform.setConfigurationFiles(configurationFiles);
-
-        if (scope.getVariantData().getType().isAar()) {
-            transform.keep("class **.R");
-            transform.keep("class **.R$*");
-        }
-
-        if (variantConfig.isTestCoverageEnabled()) {
-            // when collecting coverage, don't remove the JaCoCo runtime
-            transform.keep("class com.vladium.** {*;}");
-            transform.keep("class org.jacoco.** {*;}");
-            transform.keep("interface org.jacoco.** {*;}");
-            transform.dontwarn("org.jacoco.**");
-        }
-    }
-
-    private static void maybeAddFeatureProguardRules(
-            @NonNull VariantScope variantScope,
-            @NonNull ConfigurableFileCollection configurationFiles) {
-        if (variantScope.consumesFeatureJars()) {
-            configurationFiles.from(
-                    variantScope.getArtifactFileCollection(
-                            METADATA_VALUES,
-                            PROJECT,
-                            FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttrMap(variantScope)));
-        }
-    }
-
-    @Nullable
-    private static Map<Attribute<String>, String> maybeGetCodeShrinkerAttrMap(
-            @NonNull VariantScope variantScope) {
-        return variantScope.getCodeShrinker() != null
-                ? Collections.singletonMap(
-                        VariantManager.SHRINKER_ATTR, variantScope.getCodeShrinker().toString())
-                : null;
+    private TaskProvider<ProguardTask> createProguardTask(
+            @NonNull VariantScope variantScope, boolean isTestApplication) {
+        return taskFactory.register(
+                new ProguardTask.CreationAction(variantScope, isTestApplication));
     }
 
     @NonNull

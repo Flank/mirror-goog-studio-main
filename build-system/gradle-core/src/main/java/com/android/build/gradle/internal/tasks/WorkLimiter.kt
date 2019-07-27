@@ -23,7 +23,7 @@ import java.util.concurrent.Semaphore
 /**
  * Class to limit concurrent heavyweight tasks.
  */
-class WorkLimiter @VisibleForTesting internal constructor(concurrencyLimit: Int) {
+class WorkLimiter internal constructor(concurrencyLimit: Int) {
 
     private val semaphore: Semaphore = Semaphore(concurrencyLimit, true)
 

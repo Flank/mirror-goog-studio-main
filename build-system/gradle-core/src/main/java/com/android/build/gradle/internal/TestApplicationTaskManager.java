@@ -25,7 +25,6 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -189,10 +188,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             return doCreateJavaCodeShrinkerTransform(
                     variantScope,
                     Objects.requireNonNull(variantScope.getCodeShrinker()),
-                    variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.APK_MAPPING),
                     true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =

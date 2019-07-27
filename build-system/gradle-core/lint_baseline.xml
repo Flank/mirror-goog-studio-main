@@ -66,22 +66,6 @@
     </issue>
 
     <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/transforms/ProGuardTransform.java"
-            line="120"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/transforms/ProGuardTransform.java"
-            line="120"/>
-    </issue>
-
-    <issue
         id="UseValueOf"
         message="Use `Integer.valueOf(index)` instead">
         <location
