@@ -7,6 +7,7 @@ readonly dist_dir="$2"
 readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
+readonly script_name="$(basename "$0")"
 
 build_tag_filters=-no_linux
 test_tag_filters=perfgate_multi_run,perfgate_only,-no_perfgate,-no_linux,-no_test_linux
@@ -24,7 +25,9 @@ readonly invocation_id="$(uuidgen)"
   ${config_options} \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
+  --define=meta_android_build_number=${build_number} \
   --test_tag_filters=${test_tag_filters} \
+  --tool_tag=${script_name} \
   --profile=${dist_dir}/perfgate-profile-${build_number}.json \
   --runs_per_test=5 \
   -- \
