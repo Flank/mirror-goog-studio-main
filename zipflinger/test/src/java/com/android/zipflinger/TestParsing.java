@@ -56,7 +56,7 @@ public class TestParsing extends TestBase {
 
     @Test
     public void testZipWithLargeEntriesAndDataDescriptors() throws Exception {
-        File target = getFile("largeEntriesDD.zip");
+        File target = getTestFile("largeEntriesDD.zip");
         ZipCreator.createZip(42, 1_000_000, target.toString());
         ZipMap map = ZipMap.from(target, true);
         map.getEntries();

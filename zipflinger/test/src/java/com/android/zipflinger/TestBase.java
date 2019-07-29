@@ -16,6 +16,7 @@
 
 package com.android.zipflinger;
 
+import com.android.testutils.TestUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,14 +39,29 @@ public class TestBase {
 
     protected static final int BENCHMARK_SAMPLE_SIZE = 3;
 
-    protected static final String RESOURCES_PATH = "tools/base/zipflinger/test/resource/";
-
-    protected static Path getPath(String path) {
-        return Paths.get(RESOURCES_PATH + path);
-    }
+    protected static final String BASE = "tools/base/zipflinger/test/resource/";
 
     protected static File getFile(String path) {
-        return new File(RESOURCES_PATH + path);
+        String fullPath = BASE + path;
+        File prospect = new File(fullPath);
+        if (prospect.exists()) {
+            return prospect;
+        }
+        return TestUtils.getWorkspaceFile(fullPath);
+    }
+
+    protected static Path getPath(String path) {
+        return getFile(path).toPath();
+    }
+
+    protected static File getTestFile(String path) throws IOException {
+        String directories = TestUtils.getTestOutputDir().getAbsolutePath() + File.separator + BASE;
+        Files.createDirectories(Paths.get(directories));
+        return new File(directories + path);
+    }
+
+    protected static Path getTestPath(String path) throws IOException {
+        return getTestFile(path).toPath();
     }
 
     protected static Map<String, Entry> verifyArchive(File archiveFile) throws IOException {

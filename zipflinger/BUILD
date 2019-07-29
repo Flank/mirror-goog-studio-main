@@ -127,6 +127,7 @@ java_library(
     ],
     deps = [
         ":zipflinger",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],
 )

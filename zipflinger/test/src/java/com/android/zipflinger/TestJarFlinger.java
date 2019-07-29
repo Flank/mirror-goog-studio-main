@@ -27,7 +27,7 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testBasicFilterClassesOnly() throws IOException {
-        Path path = getPath("testBasicFilterIncludeClasses.zip");
+        Path path = getTestPath("testBasicFilterIncludeClasses.zip");
 
         Predicate<String> predicate = archivePath -> archivePath.endsWith(".class");
         try (JarFlinger flinger = new JarFlinger(path, predicate)) {
@@ -43,7 +43,7 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testBasicFilterExcludeClasses() throws IOException {
-        Path path = getPath("testBasicFilterExcludeClasses.zip");
+        Path path = getTestPath("testBasicFilterExcludeClasses.zip");
 
         Predicate<String> predicate = archivePath -> !archivePath.endsWith(".class");
         try (JarFlinger flinger = new JarFlinger(path, predicate)) {
@@ -59,7 +59,7 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testJarMerging() throws IOException {
-        Path path = getPath("testJarMerging.zip");
+        Path path = getTestPath("testJarMerging.zip");
 
         try (JarFlinger flinger = new JarFlinger(path)) {
             flinger.addJar(getPath("1-2-3files.zip"));
@@ -73,7 +73,7 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testFilesMerging() throws IOException {
-        Path path = getPath("testFilesMerging.zip");
+        Path path = getTestPath("testFilesMerging.zip");
 
         try (JarFlinger flinger = new JarFlinger(path)) {
             flinger.addFile("file1", getPath("1-2-3files.zip"));

@@ -28,7 +28,7 @@ public class TestZipMerge extends TestBase {
     // Test relocator
     @Test
     public void testMergeZips() throws Exception {
-        Path dst = getPath("newArchive.zip");
+        Path dst = getTestPath("newArchive.zip");
 
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
 
