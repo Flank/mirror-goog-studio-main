@@ -3,6 +3,7 @@
     format="5"
     revision="5"
     name="Blank Wear Activity"
+    requireAndroidX="true"
     minApi="23"
     minBuildApi="23"
     description="Creates a blank activity for Wear OS">

@@ -3,6 +3,7 @@
     format="5"
     revision="5"
     name="Google AdMob Ads Fragment"
+    requireAndroidX="true"
     minApi="14"
     minBuildApi="14"
     description="Creates an fragment with AdMob Ad fragment.">

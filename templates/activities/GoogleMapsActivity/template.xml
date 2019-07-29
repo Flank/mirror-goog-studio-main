@@ -4,6 +4,7 @@
     revision="2"
     name="Google Maps Activity"
     description="Creates a new activity with a Google Map"
+    requireAndroidX="true"
     minApi="14"
     minBuildApi="14">
 

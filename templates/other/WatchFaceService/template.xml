@@ -3,6 +3,7 @@
     format="5"
     revision="6"
     name="Watch Face"
+    requireAndroidX="true"
     minApi="23"
     minBuildApi="25"
     description="Creates a watch face for Wear OS">

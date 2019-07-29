@@ -2,6 +2,7 @@
 <template
     format="5"
     revision="1"
+    requireAndroidX="true"
     name="Google Maps Fragment"
     description="Creates a new fragment with a Google Map"
     minApi="14"
