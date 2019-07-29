@@ -26,6 +26,11 @@ class CompileResourceRequest @JvmOverloads constructor(
     val inputFile: File,
     val outputDirectory: File,
     val inputDirectoryName: String = inputFile.parentFile.name,
+    /**
+     * Whether the resource comes from a dependency or from the current subproject, or `null` if
+     * this information is not available.
+     */
+    val inputFileIsFromDependency: Boolean? = null,
     val isPseudoLocalize: Boolean = false,
     val isPngCrunching: Boolean = true,
     /** The map of where values came from, so errors are reported correctly. */

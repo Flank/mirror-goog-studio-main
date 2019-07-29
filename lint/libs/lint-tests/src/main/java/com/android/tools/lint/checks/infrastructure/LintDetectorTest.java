@@ -1068,7 +1068,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                                 for (String id : ids) {
                                     ResourceMergerItem idItem =
                                             new ResourceMergerItem(
-                                                    id, RES_AUTO, ResourceType.ID, null, null);
+                                                    id,
+                                                    RES_AUTO,
+                                                    ResourceType.ID,
+                                                    null,
+                                                    null,
+                                                    null);
                                     String qualifiers = source.getParentFileName();
                                     if (qualifiers.startsWith("layout-")) {
                                         qualifiers = qualifiers.substring("layout-".length());

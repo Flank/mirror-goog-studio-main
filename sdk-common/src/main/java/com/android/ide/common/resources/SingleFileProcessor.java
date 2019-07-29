@@ -16,13 +16,28 @@
 
 package com.android.ide.common.resources;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.File;
 import javax.xml.bind.JAXBException;
 
 /** An interface for a single file processor. */
 public interface SingleFileProcessor {
 
-    boolean processSingleFile(File file, File out) throws Exception;
+    /**
+     * Processes a single layout file.
+     *
+     * @param inputFile the input layout file
+     * @param outputFile the output layout file after processing
+     * @param inputFileIsFromDependency whether the resource comes from a dependency or from the
+     *     current subproject, or `null` if this information is not available
+     * @return `true` if the input file was processed
+     */
+    boolean processSingleFile(
+            @NonNull File inputFile,
+            @NonNull File outputFile,
+            @Nullable Boolean inputFileIsFromDependency)
+            throws Exception;
 
     void processRemovedFile(File file);
 

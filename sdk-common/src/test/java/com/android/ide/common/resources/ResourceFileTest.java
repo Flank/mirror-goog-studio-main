@@ -25,7 +25,7 @@ public class ResourceFileTest extends TestCase {
 
     public void testKeyWithQualifier() {
         ResourceMergerItem item =
-                new ResourceMergerItem("foo", null, ResourceType.LAYOUT, null, null);
+                new ResourceMergerItem("foo", null, ResourceType.LAYOUT, null, null, null);
         ResourceFile file = ResourceFile.createSingle(new File("res/layout-land/foo.xml"), item, "land");
 
         Map<String, ResourceMergerItem> itemMap = file.getItemMap();

@@ -102,6 +102,12 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
     @Nullable private Node mValue;
 
+    /**
+     * Whether the resource comes from a dependency or from the current subproject, or `null` if
+     * this information is not available.
+     */
+    @Nullable Boolean mIsFromDependency;
+
     @Nullable private String mLibraryName;
 
     @Nullable protected ResourceValue mResourceValue;
@@ -115,6 +121,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
      * @param namespace the namespace of the resource
      * @param type the type of the resource
      * @param value an optional Node that represents the resource value.
+     * @param isFromDependency whether the resource comes from a dependency or from the current
+     *     subproject, or `null` if this information is not available
      * @param libraryName the name of the library the resource belongs to, or null if the resource
      *     does not belong to a library
      */
@@ -123,6 +131,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
             @Nullable Node value,
+            @Nullable Boolean isFromDependency,
             @Nullable String libraryName) {
         super(name);
 
@@ -134,6 +143,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
         mNamespace = namespace;
         mType = type;
         mValue = value;
+        mIsFromDependency = isFromDependency;
         mLibraryName = libraryName;
     }
 

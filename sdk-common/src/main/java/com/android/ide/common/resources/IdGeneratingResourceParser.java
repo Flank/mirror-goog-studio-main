@@ -205,7 +205,7 @@ class IdGeneratingResourceParser {
             //     <LinearLayout ... id="@+id/xxx">...</LinearLayout>
             // which is large and inefficient for encoding the resource item, and inefficient to
             // hold on to. Instead synthesize <item name=x type={id/layout/menu} /> as needed.
-            super(name, namespace, type, null, libraryName);
+            super(name, namespace, type, null, null, libraryName);
         }
 
         @Override

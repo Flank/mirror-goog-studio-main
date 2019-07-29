@@ -64,7 +64,10 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     @NonNull private final ResourceNamespace mNamespace;
     private ResourceSet mGeneratedSet;
     private ResourcePreprocessor mPreprocessor;
+
+    /** Whether the resources come from a dependency or from the current subproject. */
     private boolean mIsFromDependency;
+
     private boolean mShouldParseResourceIds;
     private boolean mDontNormalizeQualifiers;
     private boolean mTrackSourcePositions = true;
@@ -261,7 +264,8 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                         file, ResourceFolderType.getFolderType(file.getParentFile().getName()));
             }
             ResourceMergerItem item =
-                    new ResourceMergerItem(nameAttr, mNamespace, type, null, mLibraryName);
+                    new ResourceMergerItem(
+                            nameAttr, mNamespace, type, null, mIsFromDependency, mLibraryName);
             return new ResourceFile(file, item, folderConfiguration);
         }
     }
@@ -541,6 +545,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                                 mNamespace,
                                 folderData.type,
                                 null,
+                                mIsFromDependency,
                                 mLibraryName),
                         folderData.folderConfiguration);
             }

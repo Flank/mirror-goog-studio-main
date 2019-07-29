@@ -274,7 +274,9 @@ public class MergedResourceWriter
 
                         boolean removedDataBinding =
                                 dataBindingExpressionRemover.processSingleFile(
-                                        request.getInputFile(), strippedLayout);
+                                        request.getInputFile(),
+                                        strippedLayout,
+                                        request.getInputFileIsFromDependency());
 
                         if (removedDataBinding) {
                             // Remember in case AAPT compile or link fails.
@@ -301,6 +303,7 @@ public class MergedResourceWriter
                                     fileToCompile,
                                     request.getOutputDirectory(),
                                     request.getInputDirectoryName(),
+                                    request.getInputFileIsFromDependency(),
                                     pseudoLocalesEnabled,
                                     crunchPng,
                                     ImmutableMap.of(),
@@ -377,7 +380,8 @@ public class MergedResourceWriter
 
                 // enlist a new crunching request.
                 mCompileResourceRequests.add(
-                        new CompileResourceRequest(file, getRootFolder(), folderName));
+                        new CompileResourceRequest(
+                                file, getRootFolder(), folderName, item.mIsFromDependency));
             }
         }
     }
@@ -566,6 +570,7 @@ public class MergedResourceWriter
                                     outFile,
                                     getRootFolder(),
                                     folderName,
+                                    null,
                                     pseudoLocalesEnabled,
                                     crunchPng,
                                     blame != null ? blame : ImmutableMap.of());
@@ -655,7 +660,11 @@ public class MergedResourceWriter
             return new File(compiledFilePath);
         } else {
             return mResourceCompiler.compileOutputFor(
-                    new CompileResourceRequest(file, getRootFolder(), getFolderName(resourceItem)));
+                    new CompileResourceRequest(
+                            file,
+                            getRootFolder(),
+                            getFolderName(resourceItem),
+                            resourceItem.mIsFromDependency));
         }
     }
 

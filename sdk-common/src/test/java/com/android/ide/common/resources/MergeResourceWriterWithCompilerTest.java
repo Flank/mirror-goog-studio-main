@@ -102,7 +102,7 @@ public class MergeResourceWriterWithCompilerTest {
         Files.asCharSink(f1, Charsets.UTF_8).write("foo");
 
         ResourceMergerItem f1Item =
-                new ResourceMergerItem("f1.txt", null, ResourceType.RAW, null, null);
+                new ResourceMergerItem("f1.txt", null, ResourceType.RAW, null, null, null);
         ResourceFile f1File = new ResourceFile(f1, f1Item, new FolderConfiguration());
         f1Item.setSourceFile(f1File);
 
@@ -110,7 +110,7 @@ public class MergeResourceWriterWithCompilerTest {
         Files.asCharSink(f2, Charsets.UTF_8).write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
         ResourceMergerItem f2Item =
-                new ResourceMergerItem("f2.xml", null, ResourceType.RAW, null, null);
+                new ResourceMergerItem("f2.xml", null, ResourceType.RAW, null, null, null);
         ResourceFile f2File = new ResourceFile(f2, f2Item, new FolderConfiguration());
         f2Item.setSourceFile(f2File);
 

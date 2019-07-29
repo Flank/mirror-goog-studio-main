@@ -147,11 +147,11 @@ class ValueResourceParser2 {
         if (name != null) {
             if (type != null) {
                 ValueResourceNameValidator.validate(name, type, from);
-                return new ResourceMergerItem(name, namespace, type, node, libraryName);
+                return new ResourceMergerItem(name, namespace, type, node, null, libraryName);
             }
         } else if (type == ResourceType.PUBLIC) {
             // Allow a <public /> node with no name: this means all resources are private
-            return new ResourceMergerItem("", namespace, type, node, libraryName);
+            return new ResourceMergerItem("", namespace, type, node, null, libraryName);
         }
 
         return null;

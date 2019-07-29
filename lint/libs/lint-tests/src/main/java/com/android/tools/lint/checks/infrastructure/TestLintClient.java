@@ -1020,6 +1020,7 @@ public class TestLintClient extends LintCliClient {
                                                 ResourceNamespace.TODO(),
                                                 ResourceType.ID,
                                                 null,
+                                                null,
                                                 null);
                                 String qualifiers = source.getParentFileName();
                                 if (qualifiers.startsWith("layout-")) {

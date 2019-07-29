@@ -535,7 +535,7 @@ public class FolderConfigurationTest {
     @Test
     public void findMatchingConfigurables() {
         ResourceMergerItem itemBlank =
-                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null, null) {
                     @Override
                     public String toString() {
                         return "itemBlank";
@@ -546,7 +546,7 @@ public class FolderConfigurationTest {
         FolderConfiguration configBlank = itemBlank.getConfiguration();
 
         ResourceMergerItem itemEn =
-                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null, null) {
                     @Override
                     public String toString() {
                         return "itemEn";
@@ -557,7 +557,7 @@ public class FolderConfigurationTest {
         FolderConfiguration configEn = itemEn.getConfiguration();
 
         ResourceMergerItem itemBcpEn =
-                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null, null) {
                     @Override
                     public String toString() {
                         return "itemBcpEn";
@@ -568,7 +568,7 @@ public class FolderConfigurationTest {
         FolderConfiguration configBcpEn = itemBcpEn.getConfiguration();
 
         ResourceMergerItem itemDe =
-                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null, null) {
                     @Override
                     public String toString() {
                         return "itemDe";

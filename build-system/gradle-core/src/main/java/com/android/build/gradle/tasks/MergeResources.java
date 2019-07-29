@@ -752,14 +752,24 @@ public abstract class MergeResources extends ResourceAwareTask {
                             }
 
                             @Override
-                            public boolean processSingleFile(File file, File out) throws Exception {
+                            public boolean processSingleFile(
+                                    @NonNull File inputFile,
+                                    @NonNull File outputFile,
+                                    @Nullable Boolean inputFileIsFromDependency)
+                                    throws Exception {
+                                // Data binding doesn't need/want to process layout files that come
+                                // from dependencies (see bug 132637061).
+                                if (inputFileIsFromDependency == Boolean.TRUE) {
+                                    return false;
+                                }
+
                                 // For cache relocatability, we want to pass relative paths here
                                 // instead of absolute paths. However, it is currently not possible
                                 // due to bug 128579779.
                                 return getProcessor()
                                         .processSingleFile(
-                                                RelativizableFile.fromAbsoluteFile(file, null),
-                                                out,
+                                                RelativizableFile.fromAbsoluteFile(inputFile, null),
+                                                outputFile,
                                                 isViewBindingEnabled);
                             }
 

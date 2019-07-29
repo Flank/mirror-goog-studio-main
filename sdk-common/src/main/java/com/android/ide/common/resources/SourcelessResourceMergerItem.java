@@ -34,7 +34,7 @@ public abstract class SourcelessResourceMergerItem extends ResourceMergerItem {
             @NonNull ResourceType type,
             @Nullable Node value,
             @Nullable String libraryName) {
-        super(name, namespace, type, value, libraryName);
+        super(name, namespace, type, value, null, libraryName);
     }
 
     /**
