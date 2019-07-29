@@ -43,7 +43,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import com.android.zipflinger.JarCreator
+import com.android.builder.packaging.JarCreator
 import java.io.File
 import java.util.function.Predicate
 import java.util.function.Supplier

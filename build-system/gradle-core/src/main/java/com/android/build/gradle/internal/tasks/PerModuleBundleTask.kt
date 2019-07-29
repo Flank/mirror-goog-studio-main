@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
-import com.android.zipflinger.JarCreator
+import com.android.builder.packaging.JarCreator
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty

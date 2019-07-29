@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.PathUtils;
-import com.android.zipflinger.JarCreator;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

@@ -39,8 +39,8 @@ import org.objectweb.asm.Opcodes.NEWARRAY
 import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
 import org.objectweb.asm.Opcodes.T_INT
-import com.android.zipflinger.JarCreator
-import com.android.zipflinger.JarFlinger
+import com.android.builder.packaging.JarCreator
+import com.android.builder.packaging.JarFlinger
 import java.io.IOException
 import java.nio.file.Path
 import java.util.EnumSet

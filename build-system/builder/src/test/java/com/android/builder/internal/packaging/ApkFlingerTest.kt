@@ -29,7 +29,7 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import com.android.zipflinger.JarFlinger
+import com.android.builder.packaging.JarFlinger
 import java.io.File
 import java.util.zip.Deflater
 

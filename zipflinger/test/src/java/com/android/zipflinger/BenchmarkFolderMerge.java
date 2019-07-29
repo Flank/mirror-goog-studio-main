@@ -16,6 +16,7 @@
 
 package com.android.zipflinger;
 
+import com.android.builder.packaging.JarFlinger;
 import com.android.builder.packaging.JarMerger;
 import java.io.File;
 import java.io.IOException;

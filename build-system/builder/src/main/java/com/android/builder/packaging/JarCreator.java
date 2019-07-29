@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.zipflinger;
+package com.android.builder.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

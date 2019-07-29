@@ -14,25 +14,56 @@
  * limitations under the License.
  */
 
-package com.android.zipflinger;
+package com.android.builder.packaging;
 
+import com.android.zipflinger.Entry;
+import com.android.zipflinger.ZipArchive;
+import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.jar.JarOutputStream;
+import java.util.zip.ZipEntry;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-public class TestJarFlinger extends TestBase {
+public class TestJarFlinger {
+    private static final byte[] CLASS_MAGIC_NUMBER =
+            new byte[] {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE, 0x0};
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    private Path getOutPath(String filename) throws IOException {
+        return new File(temporaryFolder.newFolder(), filename).toPath();
+    }
+
+    private Path createJar(String name, int numFiles) throws IOException {
+        Path path = getOutPath(name);
+        Files.createDirectories(path.getParent());
+        try (JarOutputStream jos =
+                new JarOutputStream(new BufferedOutputStream(Files.newOutputStream(path)))) {
+            for (int i = 0; i < numFiles; i++) {
+                ZipEntry entry = new ZipEntry(name + "/com/example/Class-" + i + ".class");
+                jos.putNextEntry(entry);
+                jos.write(CLASS_MAGIC_NUMBER);
+                jos.closeEntry();
+            }
+        }
+        return path;
+    }
 
     @Test
     public void testBasicFilterClassesOnly() throws IOException {
-        Path path = getTestPath("testBasicFilterIncludeClasses.zip");
+        Path path = getOutPath("testBasicFilterIncludeClasses");
 
         Predicate<String> predicate = archivePath -> archivePath.endsWith(".class");
         try (JarFlinger flinger = new JarFlinger(path, predicate)) {
-            flinger.addJar(getPath("1-2-3files.zip"));
-            flinger.addJar(getPath("fake.apk"));
+            flinger.addJar(createJar("j.jar", 1));
         }
 
         Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
@@ -43,12 +74,11 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testBasicFilterExcludeClasses() throws IOException {
-        Path path = getTestPath("testBasicFilterExcludeClasses.zip");
+        Path path = getOutPath("testBasicFilterExcludeClasses.zip");
 
         Predicate<String> predicate = archivePath -> !archivePath.endsWith(".class");
         try (JarFlinger flinger = new JarFlinger(path, predicate)) {
-            flinger.addJar(getPath("1-2-3files.zip"));
-            flinger.addJar(getPath("fake.apk"));
+            flinger.addJar(createJar("j.jar", 1));
         }
 
         Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
@@ -59,13 +89,14 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testJarMerging() throws IOException {
-        Path path = getTestPath("testJarMerging.zip");
+        Path path = getOutPath("testJarMerging.zip");
 
+        Path jar1Path = createJar("j.jar", 4);
+        Path jar2Path = createJar("k.jar", 3);
         try (JarFlinger flinger = new JarFlinger(path)) {
-            flinger.addJar(getPath("1-2-3files.zip"));
-            flinger.addJar(getPath("fake.apk"));
+            flinger.addJar(jar1Path);
+            flinger.addJar(jar2Path);
         }
-        verifyArchive(path.toFile());
 
         Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
         Assert.assertEquals("Archive should have seven entries", 7, entries.size());
@@ -73,13 +104,13 @@ public class TestJarFlinger extends TestBase {
 
     @Test
     public void testFilesMerging() throws IOException {
-        Path path = getTestPath("testFilesMerging.zip");
+        Path path = getOutPath("testFilesMerging.zip");
 
+        Path contentJar = createJar("j.jar", 1);
         try (JarFlinger flinger = new JarFlinger(path)) {
-            flinger.addFile("file1", getPath("1-2-3files.zip"));
-            flinger.addFile("file2", getPath("fake.apk"));
+            flinger.addFile("file1", contentJar);
+            flinger.addFile("file2", contentJar);
         }
-        verifyArchive(path.toFile());
 
         Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
         Assert.assertEquals("Archive should have two entries", 2, entries.size());

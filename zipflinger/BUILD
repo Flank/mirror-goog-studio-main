@@ -240,26 +240,6 @@ java_test(
 )
 
 java_test(
-    name = "testsJarFlinger",
-    size = "small",
-    srcs = [
-        "test/src/java/com/android/zipflinger/TestJarFlinger.java",
-    ],
-    data = glob([
-        "test/resource/1-2-3files.zip",
-        "test/resource/fake.apk",
-    ]),
-    jvm_flags = ["-Dtest.suite.jar=testsJarFlinger.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
-    deps = [
-        ":test_utils",
-        ":zipflinger",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-    ],
-)
-
-java_test(
     name = "testsInt",
     size = "small",
     srcs = [

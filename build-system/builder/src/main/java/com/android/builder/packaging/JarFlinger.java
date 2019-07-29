@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.zipflinger;
+package com.android.builder.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.PathUtils;
+import com.android.zipflinger.Entry;
+import com.android.zipflinger.FileSource;
+import com.android.zipflinger.InputStreamSource;
+import com.android.zipflinger.NoCopyByteArrayOutputStream;
+import com.android.zipflinger.ZipArchive;
+import com.android.zipflinger.ZipSource;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
