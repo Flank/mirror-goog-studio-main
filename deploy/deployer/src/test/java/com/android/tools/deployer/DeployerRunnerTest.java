@@ -39,6 +39,7 @@ import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
 import com.android.tools.perflogger.Benchmark;
+import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -106,11 +107,13 @@ public class DeployerRunnerTest {
                             .build();
             startTime = System.currentTimeMillis();
         }
+        Trace.begin(name.getMethodName());
     }
 
     @After
     public void tearDown() throws Exception {
         long currentTime = System.currentTimeMillis();
+        Trace.end();
         if (benchmark != null) {
             long timeTaken = currentTime - startTime;
 
