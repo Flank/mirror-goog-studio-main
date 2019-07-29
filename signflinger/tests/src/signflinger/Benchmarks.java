@@ -23,11 +23,11 @@ import java.util.Arrays;
 public class Benchmarks {
 
     public static void main(String[] args) throws Exception {
-        File file = Utils.getTestOuputFile("apk-12MiB.apk");
+        File file = Utils.getTestOutputFile("apk-12MiB.apk");
         Utils.createZip(21, 1 << 20, file);
         test(file);
 
-        file = Utils.getTestOuputFile("apk-42MiB.apk");
+        file = Utils.getTestOutputFile("apk-42MiB.apk");
         Utils.createZip(41, 1 << 20, file);
         test(file);
     }

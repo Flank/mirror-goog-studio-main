@@ -69,14 +69,14 @@ public class Utils {
         return getFile(path).toPath();
     }
 
-    static File getTestOuputFile(String path) throws IOException {
+    static File getTestOutputFile(String path) throws IOException {
         String directories = TestUtils.getTestOutputDir().getAbsolutePath() + File.separator + BASE;
         Files.createDirectories(Paths.get(directories));
         return new File(directories + path);
     }
 
-    static Path getTestOuputPath(String path) throws IOException {
-        return getTestOuputFile(path).toPath();
+    static Path getTestOutputPath(String path) throws IOException {
+        return getTestOutputFile(path).toPath();
     }
 
     private static long fileId = 0;

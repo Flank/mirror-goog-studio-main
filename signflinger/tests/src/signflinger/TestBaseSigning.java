@@ -24,7 +24,7 @@ public abstract class TestBaseSigning {
 
     public void testSimpleZipWithOneFile() throws Exception {
         for (Signer signer : Signers.signers) {
-            File file = Utils.getTestOuputFile("emptyApk.apk");
+            File file = Utils.getTestOutputFile("emptyApk.apk");
             Utils.createZip(800, 20000, file);
             SignerConfig signerConfig = Utils.getSignerConfig(signer.type, signer.subtype);
             SignedApkOptions options = getOptions(signerConfig, false);
@@ -46,7 +46,7 @@ public abstract class TestBaseSigning {
     }
 
     private void signTwice(boolean trustManifest) throws Exception {
-        File file = Utils.getTestOuputFile("void.apk");
+        File file = Utils.getTestOutputFile("void.apk");
         Utils.createZip(800, 20000, file);
 
         SignerConfig signerConfig = Signers.getDefaultRSA();

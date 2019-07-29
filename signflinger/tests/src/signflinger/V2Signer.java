@@ -24,7 +24,7 @@ public class V2Signer {
     public static SignResult sign(File fileToSign, Signer signer) throws Exception {
         SignerConfig signerConfig = Utils.getSignerConfig(signer.type, signer.subtype);
 
-        Path dst = Utils.getTestOuputPath("signed.apk");
+        Path dst = Utils.getTestOutputPath("signed.apk");
         Utils.copy(fileToSign.toPath(), dst);
 
         SignedApkOptions.Builder builder =

@@ -24,14 +24,14 @@ public class TestV2Signing {
 
     @Test
     public void testV2SignNormalApk() throws Exception {
-        File file = Utils.getTestOuputFile("apk-22MiB.apk");
+        File file = Utils.getTestOutputFile("apk-22MiB.apk");
         Utils.createZip(1, 12_000_000, file);
         v2Sign(file);
     }
 
     @Test
     public void testV2SignBigApk() throws Exception {
-        File file = Utils.getTestOuputFile("apk-42MiB.apk");
+        File file = Utils.getTestOutputFile("apk-42MiB.apk");
         Utils.createZip(1, 42_000_000, file);
         v2Sign(file);
     }
@@ -45,7 +45,7 @@ public class TestV2Signing {
 
     @Test
     public void testBenchmarkAddAndV2sign() throws Exception {
-        File file = Utils.getTestOuputFile("apk-42MiB-400files.apk");
+        File file = Utils.getTestOutputFile("apk-42MiB-400files.apk");
         Utils.createZip(400, 120_000, file);
 
         SignerConfig signerConfig = Signers.getDefaultRSA();
