@@ -20,18 +20,22 @@ import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_THEME_PREFIX
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
+import com.android.SdkConstants.ATTR_AUTOFILL_HINTS
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_FOREGROUND
 import com.android.SdkConstants.ATTR_FULL_BACKUP_CONTENT
 import com.android.SdkConstants.ATTR_HEIGHT
 import com.android.SdkConstants.ATTR_ID
+import com.android.SdkConstants.ATTR_IMPORTANT_FOR_AUTOFILL
 import com.android.SdkConstants.ATTR_LABEL_FOR
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PADDING_START
 import com.android.SdkConstants.ATTR_PARENT
+import com.android.SdkConstants.ATTR_ROUND_ICON
 import com.android.SdkConstants.ATTR_TARGET_API
+import com.android.SdkConstants.ATTR_TEXT_ALIGNMENT
 import com.android.SdkConstants.ATTR_TEXT_IS_SELECTABLE
 import com.android.SdkConstants.ATTR_THEME
 import com.android.SdkConstants.ATTR_VALUE
@@ -2256,12 +2260,18 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          * typically need to be aware of to try to implement workarounds on older platforms.
          */
         fun isBenignUnusedAttribute(name: String): Boolean {
-            return (ATTR_LABEL_FOR == name ||
-                    ATTR_TEXT_IS_SELECTABLE == name ||
-                    "textAlignment" == name ||
-                    "roundIcon" == name ||
-                    "importantForAutofill" == name ||
-                    ATTR_FULL_BACKUP_CONTENT == name)
+            return when (name) {
+                ATTR_LABEL_FOR,
+                ATTR_TEXT_IS_SELECTABLE,
+                ATTR_FULL_BACKUP_CONTENT,
+                ATTR_TEXT_ALIGNMENT,
+                ATTR_ROUND_ICON,
+                ATTR_IMPORTANT_FOR_AUTOFILL,
+                ATTR_AUTOFILL_HINTS,
+                "foregroundServiceType",
+                "autofilledHighlight" -> true
+                else -> false
+            }
         }
 
         private fun checkSimpleDateFormat(

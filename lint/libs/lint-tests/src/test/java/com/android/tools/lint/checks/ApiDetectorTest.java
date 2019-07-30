@@ -213,6 +213,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        android:targetSdkVersion=\"25\" />\n"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:fullBackupContent=\"true\"\n"
                                         + "        android:allowBackup=\"true\"\n"
                                         + "        android:icon=\"@mipmap/ic_launcher\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
@@ -226,6 +227,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
                                         + "            </intent-filter>\n"
                                         + "        </activity>\n"
+                                        + "        <service\n"
+                                        + "            android:name=\"MyNavigationService\"\n"
+                                        + "            android:foregroundServiceType=\"location\" />\n"
+                                        + "\n"
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>"),
@@ -411,6 +416,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_width=\"wrap_content\"\n"
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:importantForAutofill=\"no\"\n"
+                                        + "        android:autofillHints=\"auto\"\n"
+                                        + "        android:autofilledHighlight=\"@drawable/exo_controls_pause\"\n"
                                         + "        android:textIsSelectable=\"true\" />\n"
                                         + "\n"
                                         + "</LinearLayout>\n"),

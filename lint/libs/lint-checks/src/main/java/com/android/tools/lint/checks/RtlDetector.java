@@ -49,6 +49,7 @@ import static com.android.SdkConstants.ATTR_PADDING_END;
 import static com.android.SdkConstants.ATTR_PADDING_LEFT;
 import static com.android.SdkConstants.ATTR_PADDING_RIGHT;
 import static com.android.SdkConstants.ATTR_PADDING_START;
+import static com.android.SdkConstants.ATTR_TEXT_ALIGNMENT;
 import static com.android.SdkConstants.GRAVITY_VALUE_END;
 import static com.android.SdkConstants.GRAVITY_VALUE_LEFT;
 import static com.android.SdkConstants.GRAVITY_VALUE_RIGHT;
@@ -192,7 +193,6 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
     private static final String RIGHT_FIELD = "RIGHT";
     private static final String LEFT_FIELD = "LEFT";
     private static final String FQCN_GRAVITY = "android.view.Gravity";
-    private static final String ATTR_TEXT_ALIGNMENT = "textAlignment";
     static final String ATTR_SUPPORTS_RTL = "supportsRtl";
 
     /** API version in which RTL support was added */
