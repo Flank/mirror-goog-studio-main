@@ -68,6 +68,7 @@ public class BenchmarkTest {
     private List<String> buildProperties = new ArrayList<>();
     private List<BenchmarkListener> listeners = new ArrayList<>();
     private boolean fromStudio = false;
+    @Nullable private String agpVersion = null;
 
     @Before
     public void setUp() throws Exception {
@@ -144,6 +145,10 @@ public class BenchmarkTest {
                 post_mutate_assertions.add(instantiateAssertion(assertion));
             }
         }
+        value = System.getProperty("agp_version");
+        if (value != null && !value.isEmpty()) {
+            agpVersion = value;
+        }
     }
 
     @Nullable
@@ -218,7 +223,10 @@ public class BenchmarkTest {
 
     }
 
-    private static String getLocalGradleVersion() throws IOException {
+    private String getLocalGradleVersion() throws IOException {
+        if (agpVersion != null) {
+            return agpVersion;
+        }
         try (FileInputStream fis = new FileInputStream("tools/buildSrc/base/version.properties")) {
             Properties properties = new Properties();
             properties.load(fis);
