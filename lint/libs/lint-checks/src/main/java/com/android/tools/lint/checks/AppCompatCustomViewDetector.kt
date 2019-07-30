@@ -52,36 +52,59 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         val project = context.mainProject
-        if (project.dependsOn(APPCOMPAT_LIB_ARTIFACT) !== true) {
+        val dependsOnAppCompat = project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
+        if (dependsOnAppCompat != null && dependsOnAppCompat != true) {
             return
         }
 
-        val superClass = declaration.superClass ?: return
+        val superClass = declaration.javaPsi.superClass ?: return
         if (!hasAppCompatDelegate(context, superClass)) {
             return
         }
 
-        var locationNode: PsiElement = declaration
-        val extendsList = declaration.extendsList
-        if (extendsList != null) {
-            val elements = extendsList.referenceElements
-            if (elements.isNotEmpty()) {
-                locationNode = elements[0]
+        var superTypeNode: PsiElement? = null
+        val superTypes = declaration.uastSuperTypes
+        if (superTypes.size == 1) {
+            superTypeNode = superTypes[0].sourcePsi
+        } else {
+            for (reference in superTypes) {
+                val superType = context.evaluator.getTypeClass(reference.type)
+                if (context.evaluator.extendsClass(superType, CLASS_VIEW, false)) {
+                    superTypeNode = reference.sourcePsi
+                    break
+                }
             }
         }
-        val location = context.getNameLocation(locationNode)
+        if (superTypeNode == null) { // Fallback for Java, normally not necessary
+            val extendsList = declaration.extendsList
+            if (extendsList != null) {
+                val elements = extendsList.referenceElements
+                if (elements.isNotEmpty()) {
+                    superTypeNode = elements[0]
+                }
+            }
+        }
+        val location = if (superTypeNode != null)
+            context.getNameLocation(superTypeNode)
+        else
+            context.getNameLocation(declaration)
         val widgetName = superClass.name ?: return
         val suggested = findAppCompatDelegate(context, widgetName)?.qualifiedName
             ?: getAppCompatDelegate(widgetName, false)
         val message = "This custom view should extend `$suggested` instead"
         val actionLabel = "Extend AppCompat widget instead"
-        val fix = fix().name(actionLabel)
-            .sharedName(actionLabel)
-            .replace()
-            .all()
-            .with(suggested)
-            .autoFix()
-            .build()
+        val fix =
+            if (superTypeNode != null) { // Can't quickfix without accurate node location
+                fix().name(actionLabel)
+                    .sharedName(actionLabel)
+                    .replace()
+                    .all()
+                    .with(suggested)
+                    .autoFix()
+                    .build()
+            } else {
+                null
+            }
         context.report(ISSUE, declaration, location, message, fix)
     }
 

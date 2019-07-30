@@ -488,25 +488,6 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         private const val THINGS_LIBRARY = "com.google.android.things"
 
-        /** Failing to enforce security by just calling check permission  */
-        @JvmField
-        val CHECK_PERMISSION = Issue.create(
-            id = "UseCheckPermission",
-            briefDescription = "Using the result of check permission calls",
-            explanation = """
-                You normally want to use the result of checking a permission; these methods \
-                return whether the permission is held; they do not throw an error if the \
-                permission is not granted. Code which does not do anything with the return \
-                value probably meant to be calling the enforce methods instead, e.g. rather \
-                than `Context#checkCallingPermission` it should call \
-                `Context#enforceCallingPermission`.""",
-            category = Category.SECURITY,
-            priority = 6,
-            severity = Severity.WARNING,
-            androidSpecific = true,
-            implementation = IMPLEMENTATION
-        )
-
         /** Method result should be used  */
         @JvmField
         val MISSING_PERMISSION = Issue.create(

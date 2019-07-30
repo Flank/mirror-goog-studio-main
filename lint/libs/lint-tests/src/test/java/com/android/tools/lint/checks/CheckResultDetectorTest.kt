@@ -94,7 +94,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(expected)
     }
@@ -145,7 +145,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
                 "src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]\n" +
@@ -199,7 +199,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expectClean()
     }
@@ -224,7 +224,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expectClean()
     }
@@ -276,7 +276,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expectClean()
     }
@@ -345,7 +345,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
                 """
@@ -398,7 +398,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expectClean()
     }
@@ -435,7 +435,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
                 """
@@ -503,7 +503,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
-            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
                 """

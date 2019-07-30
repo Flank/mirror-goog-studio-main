@@ -841,6 +841,21 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                             "The `%1$s` icon has identical contents in the following configuration folders: %2$s",
                                             lastName, sb.toString());
                             if (location != null) {
+                                Location curr = location;
+                                while (curr != null) {
+                                    // Suppressed? Check all alias paths
+                                    if (context.getConfiguration()
+                                            .isIgnored(
+                                                    context,
+                                                    DUPLICATES_CONFIGURATIONS,
+                                                    curr,
+                                                    message)) {
+                                        return;
+                                    }
+
+                                    curr = curr.getSecondary();
+                                }
+
                                 context.report(DUPLICATES_CONFIGURATIONS, location, message);
                             }
                         } else {
@@ -855,6 +870,18 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                     String.format(
                                             "The following unrelated icon files have identical contents: %1$s",
                                             sb.toString());
+
+                            Location curr = location;
+                            while (curr != null) {
+                                // Suppressed? Check all alias paths
+                                if (context.getConfiguration()
+                                        .isIgnored(context, DUPLICATES_NAMES, curr, message)) {
+                                    return;
+                                }
+
+                                curr = curr.getSecondary();
+                            }
+
                             context.report(DUPLICATES_NAMES, location, message);
                         }
                     }

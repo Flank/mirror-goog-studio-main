@@ -207,7 +207,12 @@ open class DefaultUastParser(
         var file = context.file
         var contents: CharSequence = context.getContents() ?: ""
 
-        if (containingFile != null && containingFile != context.psiFile) {
+        if (containingFile != null && !containingFile.isEquivalentTo(context.psiFile) &&
+            containingFile.name == context.psiFile?.name &&
+            // createJavaFileStub$fakeFile$1
+            containingFile.javaClass.simpleName.contains("fakeFile")) {
+            // Consider these equal
+        } else if (containingFile != null && containingFile != context.psiFile) {
             // Reporting an error in a different file.
             if (context.driver.scope.size == 1) {
                 // Don't bother with this error if it's in a different file during single-file analysis

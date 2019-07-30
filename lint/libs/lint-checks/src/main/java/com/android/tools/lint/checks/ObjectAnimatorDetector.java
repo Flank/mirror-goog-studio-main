@@ -424,7 +424,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
                             + "This method is accessed from an ObjectAnimator so it should be "
                             + "annotated with `@Keep` to ensure that it is not discarded or "
                             + "renamed in release builds",
-                    fix().data(bestMethod));
+                    fix().map().put(PsiMethod.class, bestMethod).build());
         }
     }
 

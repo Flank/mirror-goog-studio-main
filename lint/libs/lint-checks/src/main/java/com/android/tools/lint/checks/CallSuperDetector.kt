@@ -75,7 +75,8 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 if (!callsSuper(node, superMethod)) {
                     val message = "Overriding method should call `super.${node.name}`"
                     val location = context.getNameLocation(node)
-                    context.report(ISSUE, node, location, message)
+                    val fix = fix().map().put(PsiMethod::class.java, superMethod).build()
+                    context.report(ISSUE, node, location, message, fix)
                 }
             }
         }

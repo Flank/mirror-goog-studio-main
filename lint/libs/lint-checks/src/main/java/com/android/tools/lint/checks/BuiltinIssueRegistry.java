@@ -87,6 +87,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CallSuperDetector.ISSUE);
         issues.add(C2dmDetector.ISSUE);
         issues.add(CanvasSizeDetector.ISSUE);
+        issues.add(CheckResultDetector.CHECK_PERMISSION);
         issues.add(CheckResultDetector.CHECK_RESULT);
         issues.add(ChildCountDetector.ADAPTER_VIEW_ISSUE);
         issues.add(ChildCountDetector.SCROLLVIEW_ISSUE);
@@ -266,7 +267,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(OverrideConcreteDetector.ISSUE);
         issues.add(OverrideDetector.ISSUE);
         issues.add(ParcelDetector.ISSUE);
-        issues.add(PermissionDetector.CHECK_PERMISSION);
         issues.add(PermissionDetector.MISSING_PERMISSION);
         issues.add(PluralsDetector.EXTRA);
         issues.add(PluralsDetector.IMPLIED_QUANTITY);

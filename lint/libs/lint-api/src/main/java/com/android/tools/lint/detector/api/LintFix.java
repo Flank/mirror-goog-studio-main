@@ -1013,6 +1013,15 @@ public class LintFix {
             return this;
         }
 
+        public <T> FixMapBuilder put(@NonNull Class<? extends T> key, @Nullable T value) {
+            if (value == null) {
+                return this;
+            }
+            assert !map.containsKey(key);
+            map.put(key, value);
+            return this;
+        }
+
         /** Puts the given value into the map using the given key */
         public FixMapBuilder put(@NonNull String key, @Nullable Object value) {
             if (value == null) {

@@ -2279,7 +2279,6 @@ public final class SdkConstants {
     // Class Names
     public static final String CONSTRUCTOR_NAME = "<init>"; //$NON-NLS-1$
     public static final String CLASS_CONSTRUCTOR = "<clinit>"; //$NON-NLS-1$
-    public static final String ANDROID_VIEW_VIEW = "android/view/View"; //$NON-NLS-1$
 
     // Method Names
     public static final String FORMAT_METHOD = "format"; //$NON-NLS-1$

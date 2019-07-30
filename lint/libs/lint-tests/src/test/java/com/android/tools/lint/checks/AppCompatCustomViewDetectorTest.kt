@@ -275,4 +275,31 @@ class AppCompatCustomViewDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(expected)
     }
+
+    fun testKotlin() {
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package p1.p2
+
+                import android.content.Context
+                import android.util.AttributeSet
+                import android.widget.Button
+
+                class MyCustomView(context: Context, attrs: AttributeSet, def: Int) : Button(context, attrs, def) {
+                }
+                """
+            ).indented(),
+            appCompatJar,
+            manifest().minSdk(20)
+        ).run().expect("""
+            src/p1/p2/MyCustomView.kt:9: Error: This custom view should extend android.support.v7.widget.AppCompatButton instead [AppCompatCustomView]
+            class MyCustomView(context: Context, attrs: AttributeSet, def: Int) : Button(context, attrs, def) {
+                                                                                  ~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

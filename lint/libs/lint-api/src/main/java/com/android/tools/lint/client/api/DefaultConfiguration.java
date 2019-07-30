@@ -729,14 +729,19 @@ public class DefaultConfiguration extends Configuration {
 
     @Override
     public void ignore(@NonNull Issue issue, @NonNull File file) {
+        ignore(issue.getId(), file);
+    }
+
+    @Override
+    public void ignore(@NonNull String id, @NonNull File file) {
         ensureInitialized();
 
         String path = project != null ? project.getRelativePath(file) : file.getPath();
 
-        List<String> paths = suppressed.get(issue.getId());
+        List<String> paths = suppressed.get(id);
         if (paths == null) {
             paths = new ArrayList<>();
-            suppressed.put(issue.getId(), paths);
+            suppressed.put(id, paths);
         }
         paths.add(path);
 

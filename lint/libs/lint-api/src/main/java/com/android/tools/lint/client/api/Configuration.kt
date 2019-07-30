@@ -117,6 +117,11 @@ abstract class Configuration {
     abstract fun ignore(issue: Issue, file: File)
 
     /**
+     * Like [ignore(Issue,file)] but with just the string id
+     */
+    abstract fun ignore(issueId: String, file: File)
+
+    /**
      * Sets the severity to be used for this issue.
      *
      * @param issue the issue to set the severity for
