@@ -152,6 +152,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 .splitBy(Config.SplitDimension.Value.ABI, params.bundleOptions.enableAbi)
                 .splitBy(Config.SplitDimension.Value.SCREEN_DENSITY, params.bundleOptions.enableDensity)
                 .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
+                .splitBy(Config.SplitDimension.Value.TEXTURE_COMPRESSION_FORMAT, params.bundleOptions.enableTexture)
 
             val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
                 .setEnabled(params.bundleFlags.enableUncompressedNativeLibs)
@@ -207,7 +208,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val enableDensity: Boolean?,
         @get:Input
         @get:Optional
-        val enableLanguage: Boolean?) : Serializable
+        val enableLanguage: Boolean?,
+        @get:Input
+        @get:Optional
+        val enableTexture: Boolean?) : Serializable
 
     data class BundleFlags(
         @get:Input
@@ -295,7 +299,8 @@ private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
     PackageBundleTask.BundleOptions(
         enableAbi = abi.enableSplit,
         enableDensity = density.enableSplit,
-        enableLanguage = language.enableSplit
+        enableLanguage = language.enableSplit,
+        enableTexture = texture.enableSplit
     )
 
 /**

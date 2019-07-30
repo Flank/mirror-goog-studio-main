@@ -30,6 +30,7 @@ open class BundleOptions @Inject constructor(
     val abi: BundleOptionsAbi = objectFactory.newInstance(BundleOptionsAbi::class.java)
     val density: BundleOptionsDensity = objectFactory.newInstance(BundleOptionsDensity::class.java)
     val language: BundleOptionsLanguage = objectFactory.newInstance(BundleOptionsLanguage::class.java)
+    val texture: BundleOptionsTexture = objectFactory.newInstance(BundleOptionsTexture::class.java)
 
     fun abi(action: Action<BundleOptionsAbi>) {
         action.execute(abi)
@@ -41,5 +42,9 @@ open class BundleOptions @Inject constructor(
 
     fun language(action: Action<BundleOptionsLanguage>) {
         action.execute(language)
+    }
+
+    fun texture(action: Action<BundleOptionsTexture>) {
+        action.execute(texture)
     }
 }

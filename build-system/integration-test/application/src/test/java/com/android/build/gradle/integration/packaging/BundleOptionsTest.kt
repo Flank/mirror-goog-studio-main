@@ -38,6 +38,8 @@ class BundleOptionsTest {
         .fromTestApp(
             MinimalSubProject.app("com.example.test")
                 .appendToBuild("android.defaultConfig.versionCode 1")
+                .withFile("src/main/assets/textures#tcf_atc/texture.dat", byteArrayOf(0x3))
+                .withFile("src/main/assets/textures#tcf_etc1/texture.dat", byteArrayOf(0x4))
                 .withFile("src/main/jniLibs/armeabi/abi.so", byteArrayOf(0xA))
                 .withFile("src/main/jniLibs/x86/abi.so", byteArrayOf(0x8, 0x6))
                 .withFile("src/main/res/raw-hdpi/density", byteArrayOf(0x1))
@@ -49,7 +51,7 @@ class BundleOptionsTest {
     @Test
     fun bundleSplitOptionsTest() {
         val apks = generateApks()
-        assertThat(apks).containsAllOf("base-x86.apk", "base-hdpi.apk")
+        assertThat(apks).containsAllOf("base-x86.apk", "base-hdpi.apk", "base-atc.apk")
 
         project.buildFile.appendText("\nandroid.bundle.abi.enableSplit=false", StandardCharsets.UTF_8)
         val apksNoAbiSplit = generateApks()
@@ -61,6 +63,12 @@ class BundleOptionsTest {
         val apksNoDensitySplit = generateApks()
         assertThat(apksNoDensitySplit).doesNotContain("base-x86.apk")
         assertThat(apksNoDensitySplit).doesNotContain("base-hdpi.apk")
+
+
+        project.buildFile.appendText("\nandroid.bundle.texture.enableSplit=false", StandardCharsets.UTF_8)
+        val apksNoTextureSplit = generateApks()
+        assertThat(apksNoTextureSplit).doesNotContain("base-etc1_rgb8.apk")
+        assertThat(apksNoTextureSplit).doesNotContain("base-atc.apk")
 
 
         // TODO: Support support for language splits?
