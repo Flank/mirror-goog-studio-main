@@ -5,8 +5,32 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
+            file="src/main/java/com/android/builder/dependency/level2/AndroidDependency.java"
+            line="205"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
             file="src/main/java/com/android/builder/signing/DefaultSigningConfig.java"
             line="174"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/builder/dependency/level2/Dependency.java"
+            line="120"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/builder/dependency/level2/ExtractedDependency.java"
+            line="135"/>
     </issue>
 
     <issue

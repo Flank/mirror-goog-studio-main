@@ -29,6 +29,7 @@ class FileComparisonDetectorTest {
                     """
                     package test.pkg;
                     import java.io.File;
+                    import java.util.Objects;
 
                     public class Test {
                         public void test(File file1, File file2, Object object1, Object object2) {
@@ -38,6 +39,7 @@ class FileComparisonDetectorTest {
                             boolean b4 = file1.equals(file2); // WARN
                             boolean b5 = file1 == file2; // WARN
                             boolean b6 = file1 != file2; // WARN
+                            boolean b7 = Objects.equals(file1, file2); // WARN
                         }
                     }
                     """
@@ -47,16 +49,19 @@ class FileComparisonDetectorTest {
             .run()
             .expect(
                 """
-                src/test/pkg/Test.java:9: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
+                src/test/pkg/Test.java:10: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
                         boolean b4 = file1.equals(file2); // WARN
                                      ~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:10: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
+                src/test/pkg/Test.java:11: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
                         boolean b5 = file1 == file2; // WARN
                                      ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:11: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
+                src/test/pkg/Test.java:12: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
                         boolean b6 = file1 != file2; // WARN
                                      ~~~~~~~~~~~~~~
-                3 errors, 0 warnings
+                src/test/pkg/Test.java:13: Error: Do not compare java.io.File with equals or ==: will not work correctly on case insensitive file systems! See go/files-howto. [FileComparisons]
+                        boolean b7 = Objects.equals(file1, file2); // WARN
+                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                4 errors, 0 warnings
                 """
             )
     }

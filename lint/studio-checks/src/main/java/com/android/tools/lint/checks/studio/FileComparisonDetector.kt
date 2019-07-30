@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.CommonClassNames.JAVA_IO_FILE
+import com.intellij.psi.CommonClassNames.JAVA_UTIL_OBJECTS
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
@@ -71,11 +72,17 @@ class FileComparisonDetector : Detector(), SourceCodeScanner {
     override fun createUastHandler(context: JavaContext): UElementHandler? {
         return object : UElementHandler() {
             override fun visitCallExpression(node: UCallExpression) {
-                if (node.methodName == "equals" && node.valueArgumentCount == 1) {
-                    val lhs = node.receiver ?: return
-                    check(context, node, lhs, node.valueArguments.first())
+                if (node.methodName == "equals")
+                    if (node.valueArgumentCount == 1) {
+                        val lhs = node.receiver ?: return
+                        check(context, node, lhs, node.valueArguments.first())
+                    } else if (node.valueArgumentCount == 2) {
+                        if (!context.evaluator.isMemberInClass(node.resolve(), JAVA_UTIL_OBJECTS)) {
+                            return
+                        }
+                        check(context, node, node.valueArguments[0], node.valueArguments[1])
+                    }
                 }
-            }
 
             override fun visitBinaryExpression(node: UBinaryExpression) {
                 val operator = node.operator
