@@ -1084,13 +1084,21 @@ public class DeployerRunnerTest {
 
     @Test
     public void testStartApp() throws Exception {
-        // Install the base apk:
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
         assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(DeployerTestUtils.getShell());
+        File installersPath = DeployerTestUtils.prepareInstaller();
+
+        // Install the base apk:
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        String[] args = {"install", "com.example.simpleapp", file.getAbsolutePath()};
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            file.getAbsolutePath(),
+            "--installers-path=" + installersPath.getAbsolutePath()
+        };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
