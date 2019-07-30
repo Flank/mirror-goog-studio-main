@@ -44,7 +44,7 @@ public class TestV1andV2Signing extends TestBaseSigning {
                 new SignedApkOptions.Builder()
                         .setV2Enabled(true)
                         .setV1Enabled(true)
-                        .setV1CreatedBy("Signflinger")
+                        .v1CreatedBy("Signflinger")
                         .v1TrustManifest(trustManifest)
                         .setMinSdkVersion(21)
                         .setPrivateKey(signerConfig.privateKey)

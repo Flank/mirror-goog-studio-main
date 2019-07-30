@@ -29,7 +29,6 @@ import com.android.zipflinger.Source;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipInfo;
 import com.android.zipflinger.ZipSource;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -41,8 +40,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 import java.util.zip.Deflater;
 
 public class SignedApk implements Archive {
@@ -50,11 +47,7 @@ public class SignedApk implements Archive {
     private final ZipArchive archive;
     private final ApkSignerEngine signer;
     private final SignedApkOptions options;
-    static final String MANIFEST_ENTRY_NAME = "META-INF/MANIFEST.MF";
-    static final String MANIFEST_CREATED_BY = "Created-By";
-    static final String MANIFEST_BUILT_BY = "Built-By";
-    static final String MANIFEST_VERSION = "Manifest-Version";
-
+    private static final String MANIFEST_ENTRY_NAME = "META-INF/MANIFEST.MF";
 
     public SignedApk(@NonNull File file, @NonNull SignedApkOptions options)
             throws InvalidKeyException, IOException {
@@ -90,28 +83,26 @@ public class SignedApk implements Archive {
             return;
         }
 
-        if (!options.v1TrustManifest) {
-            archive.delete(MANIFEST_ENTRY_NAME);
-        }
-
-        ByteBuffer manifestByteBuffer = archive.getContent(MANIFEST_ENTRY_NAME);
-        byte[] manifestBytes;
-        if (manifestByteBuffer != null) {
-            manifestBytes = new byte[manifestByteBuffer.remaining()];
-            manifestByteBuffer.get(manifestBytes);
+        if (options.v1TrustManifest) {
+            ByteBuffer manifestByteBuffer = archive.getContent(MANIFEST_ENTRY_NAME);
+            if (manifestByteBuffer != null) {
+                byte[] manifestBytes = new byte[manifestByteBuffer.remaining()];
+                manifestByteBuffer.get(manifestBytes);
+                Set<String> files = new HashSet<>(archive.listEntries());
+                signer.initWith(manifestBytes, files);
+            } else {
+                for (String entryName : archive.listEntries()) {
+                    ApkSignerEngine.InspectJarEntryRequest req = signer.outputJarEntry(entryName);
+                    processRequest(req);
+                }
+            }
         } else {
-            manifestBytes = createDefaultManifest();
-            BytesSource bytesSource =
-                    new BytesSource(manifestBytes, MANIFEST_ENTRY_NAME, Deflater.NO_COMPRESSION);
-            archive.add(bytesSource);
-        }
-
-        Set<String> filesToSign = new HashSet<>(archive.listEntries());
-        Set<String> signedEntries = signer.initWith(manifestBytes, filesToSign);
-        filesToSign.removeAll(signedEntries);
-        for (String entryName : filesToSign) {
-            ApkSignerEngine.InspectJarEntryRequest req = signer.outputJarEntry(entryName);
-            processRequest(req);
+            archive.delete(MANIFEST_ENTRY_NAME);
+            for (String entryName : archive.listEntries()) {
+                ApkSignerEngine.InputJarEntryInstructions instructions =
+                        signer.inputJarEntry(entryName);
+                processInstructions(instructions, entryName);
+            }
         }
     }
 
@@ -158,18 +149,6 @@ public class SignedApk implements Archive {
                 archive.close();
             }
         }
-    }
-
-    private byte[] createDefaultManifest() throws IOException {
-        Manifest manifest = new Manifest();
-        Attributes mainAttributes = manifest.getMainAttributes();
-        mainAttributes.putValue(MANIFEST_CREATED_BY, options.v1CreatedBy);
-        mainAttributes.putValue(MANIFEST_BUILT_BY, options.v1BuiltBy);
-        mainAttributes.putValue(MANIFEST_VERSION, "1.0");
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        manifest.write(os);
-        return os.toByteArray();
     }
 
     private void finishV2() throws IOException {
