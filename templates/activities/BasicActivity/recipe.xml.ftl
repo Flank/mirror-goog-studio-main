@@ -42,8 +42,14 @@
     <merge from="../common/navigation/src/res/values/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 
-    <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+"/>
-    <dependency mavenUrl="android.arch.navigation:navigation-ui-ktx:+"/>
+
+    <#if generateKotlin>
+        <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+"/>
+        <dependency mavenUrl="android.arch.navigation:navigation-ui-ktx:+"/>
+    <#else>
+        <dependency mavenUrl="android.arch.navigation:navigation-fragment:+"/>
+        <dependency mavenUrl="android.arch.navigation:navigation-ui:+"/>
+    </#if>
     <@navigation.addSafeArgsPlugin />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
