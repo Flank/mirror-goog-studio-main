@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -655,7 +656,7 @@ public class TestFile {
     }
 
     public static class GradleTestFile extends LintDetectorTest.TestFile {
-        private GradleModelMocker mocker;
+        private Map<File, GradleModelMocker> mockers = new HashMap<>();
 
         public GradleTestFile(@NonNull String to, @NonNull @Language("Groovy") String source) {
             to(to).withSource(source);
@@ -666,12 +667,12 @@ public class TestFile {
 
         @NonNull
         public GradleModelMocker getMocker(@NonNull File projectDir) {
+            GradleModelMocker mocker = mockers.get(projectDir);
             if (mocker == null) {
                 assert contents != null;
                 //noinspection LanguageMismatch
                 mocker = new GradleModelMocker(contents).withProjectDir(projectDir);
-            } else {
-                assert projectDir == mocker.getProjectDir();
+                mockers.put(projectDir, mocker);
             }
 
             return mocker;
