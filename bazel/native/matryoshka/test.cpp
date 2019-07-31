@@ -17,6 +17,7 @@ onioj * Copyright (C) 2016 The Android Open Source Project
 
 #include <fstream>
 #include <iostream>
+#include <string.h>
 
 using namespace std;
 using namespace matryoshka;
@@ -33,7 +34,34 @@ int main(int argc, char* argv[]) {
   cout << "Writing a.out to " << argv[1] << endl;
   ofstream outfile;
   outfile.open(argv[1], ios::out | ios::app | ios::binary);
+
   Doll* doll = matryoshka::FindByName(dolls, "a.out");
+  Doll* dollOpenByName = matryoshka::OpenByName("a.out");
+
+  if (!dollOpenByName) {
+    cout << "OpenByName failed." << endl;
+    return 1;
+  }
+
+  if (doll->name.compare(dollOpenByName->name) != 0) {
+    cout << "OpenByName name not matched." << endl;
+    return 2;
+  }
+
+  if (doll->name.compare(dollOpenByName->name) != 0) {
+    cout << "OpenByName name not matched." << endl;
+    return 3;
+  }
+
+  if (doll->content_len != dollOpenByName->content_len) {
+    cout << "OpenByName content_len not matched." << endl;
+    return 4;
+  }
+
+  if (memcmp(doll->content, dollOpenByName->content, doll->content_len) != 0) {
+    cout << "OpenByName content not matched." << endl;
+    return 5;
+  }
 
   outfile.write((char*) doll->content, doll->content_len);
   return 0;

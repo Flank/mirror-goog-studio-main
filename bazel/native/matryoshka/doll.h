@@ -34,7 +34,13 @@ class Doll {
   ~Doll() { delete content; }
 };
 
+// Extract all the embedded BLOB within the given binary.
+// Caller responsible for deallocation.
 bool Open(std::vector<std::unique_ptr<Doll> >& dolls);
+
+// Extract a specific embedded BLOB within the given binary.
+// Caller responsible for deallocation.
+Doll* OpenByName(std::string name);
 
 Doll* FindByName(std::vector<std::unique_ptr<Doll> >& dolls, std::string name);
 

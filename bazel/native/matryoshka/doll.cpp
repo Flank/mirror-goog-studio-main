@@ -34,7 +34,8 @@ static inline void ReadBack(ifstream& self, unsigned char* content, int size) {
   self.seekg(-size, ios::cur);
 }
 
-bool Open(std::vector<std::unique_ptr<Doll> >& dolls) {
+namespace {
+bool Open(std::vector<std::unique_ptr<Doll> >& dolls, std::string* target) {
 
 #ifdef __APPLE__
   char path[1024];
@@ -72,18 +73,36 @@ bool Open(std::vector<std::unique_ptr<Doll> >& dolls) {
     ReadBack(self, (unsigned char*)&file_size, 4);
 
     // Then read the content of the file.
-    unsigned char* file = new unsigned char[file_size];
-    ReadBack(self, file, file_size);
-
-    Doll* doll = new Doll(name, file, file_size);
-    dolls.emplace_back(doll);
+    if (target && target->compare(name) != 0) {
+      // Skips over the content that isn't the name of the target.
+      self.seekg(-file_size, ios::cur);
+    } else {
+      unsigned char* file = new unsigned char[file_size];
+      ReadBack(self, file, file_size);
+      Doll* doll = new Doll(name, file, file_size);
+      dolls.emplace_back(doll);
+    }
   }
   return true;
 }
+} // namespace
+
+bool Open(std::vector<std::unique_ptr<Doll> >& dolls) {
+  return Open(dolls, nullptr);
+}
+
+Doll* OpenByName(std::string name) {
+  std::vector<std::unique_ptr<Doll>> dolls;
+  if (Open(dolls, &name) && !dolls.empty()) {
+    return dolls.front().release();
+  } else {
+    return nullptr;
+  }
+}
 
 Doll* FindByName(vector<unique_ptr<Doll> >& dolls, std::string name) {
-  for(auto const& doll: dolls) {
-    if(doll->name.compare(name) == 0) {
+  for (auto const& doll: dolls) {
+    if (doll->name.compare(name) == 0) {
       return doll.get();
     }
   }

@@ -130,18 +130,14 @@ std::string GetVersion() {
     return version;
   }
 
-  std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
-  if (!matryoshka::Open(dolls)) {
-    return "UNMATRYOSHKAED";
+  matryoshka::Doll* doll = matryoshka::OpenByName("version");
+  if (doll) {
+    version = std::string((char*)doll->content, doll->content_len);
+    delete doll;
+    return version;
+  } else {
+    return "UNVERSIONED";
   }
-
-  for (auto& doll : dolls) {
-    if (doll->name == "version") {
-      return std::string((char*)doll->content, doll->content_len);
-    }
-  }
-
-  return "UNVERSIONED";
 }
 
 int main(int argc, char** argv) {
