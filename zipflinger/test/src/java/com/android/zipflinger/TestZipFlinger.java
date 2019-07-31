@@ -341,7 +341,11 @@ public class TestZipFlinger extends TestBase {
 
     @Test
     public void testExistantDoubleDelete() throws IOException {
-        try (ZipArchive zipArchive = new ZipArchive(new File("1-2-3files.zip"))) {
+        Path src = getPath("1-2-3files.zip");
+        Path archive = getTestPath("testExistantDoubleDelete.zip");
+        Files.copy(src, archive, StandardCopyOption.REPLACE_EXISTING);
+
+        try (ZipArchive zipArchive = new ZipArchive(archive.toFile())) {
             zipArchive.delete("file4.txt");
             zipArchive.delete("file4.txt");
         }
@@ -349,7 +353,11 @@ public class TestZipFlinger extends TestBase {
 
     @Test
     public void testNonExistantDelete() throws IOException {
-        try (ZipArchive zipArchive = new ZipArchive(new File("1-2-3files.zip"))) {
+        Path src = getPath("1-2-3files.zip");
+        Path archive = getTestPath("testNonExistantDelete.zip");
+        Files.copy(src, archive, StandardCopyOption.REPLACE_EXISTING);
+
+        try (ZipArchive zipArchive = new ZipArchive(archive.toFile())) {
             zipArchive.delete("non-existant.txt");
         }
     }
