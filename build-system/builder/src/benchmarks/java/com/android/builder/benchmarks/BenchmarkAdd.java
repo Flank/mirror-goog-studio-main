@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.zipflinger;
+package com.android.builder.benchmarks;
 
 import com.android.tools.build.apkzlib.zip.ZFile;
+import com.android.zipflinger.FileSource;
+import com.android.zipflinger.ZipArchive;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,9 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.zip.Deflater;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-public class BenchmarkAdd extends TestBase {
+public class BenchmarkAdd {
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private void createFile(Path path, int size) throws IOException {
         Random random = new Random(1);
@@ -46,7 +52,7 @@ public class BenchmarkAdd extends TestBase {
         System.out.println("Adding speed:");
         System.out.println("-------------");
 
-        Path tmpFolder = Files.createTempDirectory("");
+        Path tmpFolder = temporaryFolder.newFolder().toPath();
         Path src = Paths.get(tmpFolder.toString(), "app.ap_");
         Path dst = Paths.get(tmpFolder.toString(), "aapt2_output.ap_");
 
@@ -75,7 +81,7 @@ public class BenchmarkAdd extends TestBase {
         runApkzlib(dst, dexes);
     }
 
-    public void runZipFlinger(Path dst, Map<String, Path> dexes) throws IOException {
+    private void runZipFlinger(Path dst, Map<String, Path> dexes) throws IOException {
         StopWatch watch = new StopWatch();
         ZipArchive archive = new ZipArchive(dst.toFile());
         for (String name : dexes.keySet()) {
@@ -89,7 +95,7 @@ public class BenchmarkAdd extends TestBase {
         System.out.println(String.format("Zipflinger:    %4d ms", runtime / 1_000_000));
     }
 
-    public void runApkzlib(Path dst, Map<String, Path> dexes) throws IOException {
+    private void runApkzlib(Path dst, Map<String, Path> dexes) throws IOException {
         StopWatch watch = new StopWatch();
         ZFile zFile = ZFile.openReadWrite(dst.toFile());
         for (String name : dexes.keySet()) {

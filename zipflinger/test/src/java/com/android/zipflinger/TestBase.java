@@ -38,7 +38,6 @@ import org.junit.rules.TemporaryFolder;
 public class TestBase {
     protected static long[] ALIGNMENTS = {FreeStore.DEFAULT_ALIGNMENT, FreeStore.PAGE_ALIGNMENT};
 
-    protected static final int BENCHMARK_SAMPLE_SIZE = 3;
 
     protected static final String BASE = "tools/base/zipflinger/test/resource/";
 
@@ -117,11 +116,6 @@ public class TestBase {
         }
 
         return bottomUpEntries;
-    }
-
-    protected static long median(long[] values) {
-        Arrays.sort(values);
-        return values[values.length / 2];
     }
 
     protected byte[] toByteArray(ByteBuffer byteBuffer) {

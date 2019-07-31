@@ -13,16 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.zipflinger;
 
-public class StopWatch {
-    long start;
+package com.android.builder.benchmarks;
 
-    public StopWatch() {
-        start = System.nanoTime();
-    }
+import com.android.annotations.NonNull;
+import java.util.Arrays;
 
-    public long end() {
-        return System.nanoTime() - start;
+public class Utils {
+
+    static final int BENCHMARK_SAMPLE_SIZE = 3;
+
+    static long median(@NonNull long[] values) {
+        if (values.length == 0) {
+            throw new IllegalStateException("Empty array has no median");
+        }
+        Arrays.sort(values);
+
+        int index = values.length / 2;
+        boolean isOdd = values.length % 2 == 1;
+        if (isOdd) {
+            return values[index];
+        } else {
+            return (values[index] + values[index + 1]) / 2;
+        }
     }
 }

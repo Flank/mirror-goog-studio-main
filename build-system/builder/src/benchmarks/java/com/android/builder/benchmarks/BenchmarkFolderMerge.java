@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.zipflinger;
+package com.android.builder.benchmarks;
 
 import com.android.builder.packaging.JarFlinger;
 import com.android.builder.packaging.JarMerger;
@@ -23,9 +23,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class BenchmarkFolderMerge {
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void run() throws IOException {
@@ -41,7 +45,7 @@ public class BenchmarkFolderMerge {
     private void FolderBenchMarkWith(int numFolders, int numFiles, int fileSize)
             throws IOException {
 
-        Path tmpFolder = Files.createTempDirectory("jarFolderBench");
+        Path tmpFolder = temporaryFolder.newFolder().toPath();
 
         TreeCreator.createTree(numFolders, numFiles, fileSize, tmpFolder);
 

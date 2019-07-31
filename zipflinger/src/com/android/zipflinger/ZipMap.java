@@ -25,7 +25,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
-class ZipMap {
+public class ZipMap {
 
     private static final int EOCD_MIN_SIZE = 22;
     private static final long EOCD_MAX_SIZE = Ints.USHRT_MAX + EOCD_MIN_SIZE;
@@ -47,7 +47,8 @@ class ZipMap {
     }
 
     @NonNull
-    static ZipMap from(@NonNull File zipFile, boolean accountDataDescriptors) throws IOException {
+    public static ZipMap from(@NonNull File zipFile, boolean accountDataDescriptors)
+            throws IOException {
         ZipMap map = new ZipMap(zipFile, accountDataDescriptors);
         map.parse();
         return map;

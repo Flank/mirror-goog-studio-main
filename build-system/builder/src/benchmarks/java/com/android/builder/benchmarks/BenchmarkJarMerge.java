@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.zipflinger;
+package com.android.builder.benchmarks;
 
 import com.android.builder.packaging.JarFlinger;
 import com.android.builder.packaging.JarMerger;
@@ -24,11 +24,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-public class BenchmarkJarMerge extends TestBase {
+public class BenchmarkJarMerge {
 
-    public void BenchMarkWith(int numFiles, int fileSize) throws IOException {
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    private void BenchMarkWith(int numFiles, int fileSize) throws IOException {
         System.out.println(
                 String.format(
                         "With 2 jars of %s files each. Each file is %s bytes. "
@@ -36,7 +40,7 @@ public class BenchmarkJarMerge extends TestBase {
                         NumberFormat.getInstance().format(numFiles),
                         NumberFormat.getInstance().format(fileSize),
                         NumberFormat.getInstance().format(numFiles * fileSize)));
-        Path tmpFolder = Files.createTempDirectory(Paths.get("."), "jarBenchmark");
+        Path tmpFolder = temporaryFolder.newFolder().toPath();
 
         File zipInput1 = new File(tmpFolder + "/zip1.jar");
         ZipCreator.createZip(numFiles, fileSize, zipInput1.getPath());
@@ -46,7 +50,7 @@ public class BenchmarkJarMerge extends TestBase {
 
         StopWatch w;
 
-        long[] times = new long[BENCHMARK_SAMPLE_SIZE];
+        long[] times = new long[Utils.BENCHMARK_SAMPLE_SIZE];
         for (int i = 0; i < times.length; i++) {
             w = new StopWatch();
             JarMerger jarMerger = new JarMerger(dst.toPath());
@@ -57,7 +61,7 @@ public class BenchmarkJarMerge extends TestBase {
             Files.delete(dst.toPath());
         }
 
-        System.out.println(String.format("Jarmerger : %6d ms.", median(times)));
+        System.out.println(String.format("Jarmerger : %6d ms.", Utils.median(times)));
 
         for (int i = 0; i < times.length; i++) {
             w = new StopWatch();
@@ -69,7 +73,7 @@ public class BenchmarkJarMerge extends TestBase {
             Files.delete(dst.toPath());
         }
 
-        System.out.println(String.format("Zipflinger: %6d ms.", median(times)));
+        System.out.println(String.format("Zipflinger: %6d ms.", Utils.median(times)));
     }
 
     @Test

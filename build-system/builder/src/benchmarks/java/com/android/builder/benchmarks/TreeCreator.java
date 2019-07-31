@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.zipflinger;
+package com.android.builder.benchmarks;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

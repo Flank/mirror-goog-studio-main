@@ -12,7 +12,6 @@ maven_java_library(
         "//tools/base/signflinger:__subpackages__",
     ],
     deps = [
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
     ],
@@ -25,105 +24,10 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-java_test(
-    name = "testBenchmarkAdd",
-    size = "medium",
-    srcs = [
-        "test/src/java/com/android/zipflinger/BenchmarkAdd.java",
-    ],
-    jvm_flags = ["-Dtest.suite.jar=testBenchmarkAdd.jar"],
-    tags = [
-        "manual",
-    ],
-    test_class = "com.android.testutils.JarTestSuite",
-    deps = [
-        ":test_utils",
-        ":zipflinger",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
-        "//tools/apkzlib",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-    ],
-)
-
-java_test(
-    name = "testBenchmarkJarMerge",
-    size = "medium",
-    srcs = [
-        "test/src/java/com/android/zipflinger/BenchmarkJarMerge.java",
-    ],
-    jvm_flags = ["-Dtest.suite.jar=testBenchmarkJarMerge.jar"],
-    tags = [
-        "manual",
-    ],
-    test_class = "com.android.testutils.JarTestSuite",
-    deps = [
-        ":test_utils",
-        ":zipflinger",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
-        "//tools/apkzlib",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-    ],
-)
-
-java_test(
-    name = "testBenchmarkList",
-    size = "medium",
-    srcs = [
-        "test/src/java/com/android/zipflinger/BenchmarkList.java",
-    ],
-    jvm_flags = ["-Dtest.suite.jar=testBenchmarkList.jar"],
-    tags = [
-        "manual",
-    ],
-    test_class = "com.android.testutils.JarTestSuite",
-    deps = [
-        ":test_utils",
-        ":zipflinger",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
-        "//tools/apkzlib",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-    ],
-)
-
-java_test(
-    name = "testBenchmarkFolderMerge",
-    size = "medium",
-    srcs = [
-        "test/src/java/com/android/zipflinger/BenchmarkFolderMerge.java",
-    ],
-    jvm_flags = ["-Dtest.suite.jar=testBenchmarkAdd.jar"],
-    tags = [
-        "manual",
-    ],
-    test_class = "com.android.testutils.JarTestSuite",
-    deps = [
-        ":test_utils",
-        ":zipflinger",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
-        "//tools/apkzlib",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-    ],
-)
-
 java_library(
     name = "test_utils",
     srcs = [
-        "test/src/java/com/android/zipflinger/StopWatch.java",
         "test/src/java/com/android/zipflinger/TestBase.java",
-        "test/src/java/com/android/zipflinger/TreeCreator.java",
-        "test/src/java/com/android/zipflinger/ZipCreator.java",
     ],
     deps = [
         ":zipflinger",

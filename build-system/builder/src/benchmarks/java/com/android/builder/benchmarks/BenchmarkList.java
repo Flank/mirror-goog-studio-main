@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.zipflinger;
+package com.android.builder.benchmarks;
 
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.ZFile;
+import com.android.zipflinger.Entry;
+import com.android.zipflinger.ZipMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-public class BenchmarkList extends TestBase {
+public class BenchmarkList {
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void run() throws IOException {
@@ -40,7 +46,7 @@ public class BenchmarkList extends TestBase {
     }
 
     private void runTest(int numEntries, int entrySize) throws IOException {
-        String tmpFolder = Files.createTempDirectory("").toAbsolutePath().toString();
+        String tmpFolder = temporaryFolder.newFolder().getAbsolutePath();
         Path zipPath = Paths.get(tmpFolder, "app" + numEntries + ".apk");
         ZipCreator.createZip(numEntries, entrySize, zipPath.toAbsolutePath().toString());
 
@@ -56,7 +62,7 @@ public class BenchmarkList extends TestBase {
     }
 
     private void runZipFlinger(Path zipPath) throws IOException {
-        long[] times = new long[BENCHMARK_SAMPLE_SIZE];
+        long[] times = new long[Utils.BENCHMARK_SAMPLE_SIZE];
         for (int i = 0; i < times.length; i++) {
             StopWatch watch = new StopWatch();
             ZipMap map = ZipMap.from(zipPath.toFile(), false);
@@ -68,11 +74,11 @@ public class BenchmarkList extends TestBase {
             times[i] = runtime;
         }
 
-        System.out.println(String.format("Zipflinger:    %4d ms", median(times) / 1000000));
+        System.out.println(String.format("Zipflinger:    %4d ms", Utils.median(times) / 1000000));
     }
 
     private void runApkzlib(Path zipPath) throws IOException {
-        long[] times = new long[BENCHMARK_SAMPLE_SIZE];
+        long[] times = new long[Utils.BENCHMARK_SAMPLE_SIZE];
         for (int i = 0; i < times.length; i++) {
             StopWatch watch = new StopWatch();
             ZFile zFile = new ZFile(zipPath.toFile());
@@ -84,6 +90,6 @@ public class BenchmarkList extends TestBase {
             long runtime = watch.end();
             times[i] = runtime;
         }
-        System.out.println(String.format("Apkzlib   :    %4d ms", median(times) / 1000000));
+        System.out.println(String.format("Apkzlib   :    %4d ms", Utils.median(times) / 1000000));
     }
 }
