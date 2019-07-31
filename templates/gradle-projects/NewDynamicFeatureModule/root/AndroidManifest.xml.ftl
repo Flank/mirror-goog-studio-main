@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:dist="http://schemas.android.com/apk/distribution"
     package="${packageName}">
-    <#if dynamicFeatureSupportsDynamicDelivery>
     <dist:module
         dist:instant="${isInstantModule?c}"
         dist:title="@string/title_${projectSimpleName}">
@@ -33,13 +32,5 @@
         </dist:delivery>
         <dist:fusing dist:include="${dynamicFeatureFusing?c}" />
     </dist:module>
-    <#else>
-    <dist:module
-        dist:onDemand="${dynamicFeatureOnDemand?c}"
-        dist:instant="${isInstantModule?c}"
-        dist:title="@string/title_${projectSimpleName}">
-        <dist:fusing dist:include="${dynamicFeatureFusing?c}" />
-    </dist:module>
-    </#if>
 </manifest>
 
