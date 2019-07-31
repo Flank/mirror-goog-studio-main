@@ -24,15 +24,20 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.ide.common.symbols.SymbolIo;
 import com.android.ide.common.symbols.SymbolTable;
+import com.android.ide.common.xml.AndroidManifestParser;
 import com.google.common.collect.ImmutableList;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javax.inject.Inject;
+import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
+import org.xml.sax.SAXException;
 
 /**
  * Transform that extracts the package name from the manifest and combines it with the r.txt symbol
@@ -63,11 +68,21 @@ public class LibrarySymbolTableTransform extends ArtifactTransform {
         if (!Files.exists(manifest)) {
             return null;
         }
+        String packageName = getPackageName(manifest);
         // May not exist in some AARs. e.g. the multidex support library.
         Path rTxt = explodedAar.resolve(FN_RESOURCE_TEXT);
         Files.createDirectories(outputDirectory);
-        Path outputFile = outputDirectory.resolve("package-aware-r.txt");
-        SymbolIo.writeSymbolListWithPackageName(rTxt, manifest, outputFile);
+        Path outputFile = outputDirectory.resolve(packageName + "-r.txt");
+        SymbolIo.writeSymbolListWithPackageName(rTxt, packageName, outputFile);
         return outputFile;
+    }
+
+    private static String getPackageName(Path manifest) throws IOException {
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(manifest))) {
+            return AndroidManifestParser.parse(is).getPackage();
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new IOException(
+                    "Failed to get package name from manifest " + manifest.toAbsolutePath(), e);
+        }
     }
 }
