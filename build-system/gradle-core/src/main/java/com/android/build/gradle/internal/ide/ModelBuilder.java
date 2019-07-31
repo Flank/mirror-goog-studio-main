@@ -990,16 +990,11 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
-                                        new File(
-                                                variantScope
-                                                        .getArtifacts()
-                                                        .getFinalProduct(InternalArtifactType.AAR)
-                                                        .get()
-                                                        .getAsFile(),
-                                                variantScope
-                                                        .getOutputScope()
-                                                        .getMainSplit()
-                                                        .getOutputFileName()))));
+                                        variantScope
+                                                .getArtifacts()
+                                                .getFinalProduct(InternalArtifactType.AAR)
+                                                .get()
+                                                .getAsFile())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(InternalArtifactType.APK),

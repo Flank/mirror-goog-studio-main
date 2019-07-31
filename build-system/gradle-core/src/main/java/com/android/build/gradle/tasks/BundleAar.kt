@@ -34,6 +34,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
+import java.io.File
 
 /** Custom Zip task to allow archive name to be set lazily. */
 abstract class BundleAar : Zip(), VariantAwareTask {
@@ -53,12 +54,10 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         override fun handleProvider(taskProvider: TaskProvider<out BundleAar>) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.bundleLibraryTask = taskProvider
-            variantScope.artifacts.producesDir(InternalArtifactType.AAR,
+            variantScope.artifacts.producesFile(InternalArtifactType.AAR,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                BundleAar::getDestinationDirectory,
-                variantScope.aarLocation.absolutePath,
-                "")
+                BundleAar::getArchiveFile)
         }
 
         override fun configure(task: BundleAar) {
@@ -79,6 +78,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     + ".")
 
             task.archiveFileName.set(variantScope.outputScope.mainSplit.outputFileName)
+            task.destinationDirectory.set(File(variantScope.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
             task.from(
                 variantScope.artifacts.getFinalProduct<Directory>(

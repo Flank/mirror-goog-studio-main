@@ -179,6 +179,27 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
+     * Registers a new [RegularFile] producer for a particular [ArtifactType]. The producer is
+     * identified by a [TaskProvider] to avoid configuring the task until the produced [RegularFile]
+     * is required by another [Task].
+     *
+     * The passed [productProvider] returns a [Provider] which mean that the output location cannot
+     * be changed and will be set by the task itself or during its configuration.
+     */
+    fun <T: Task> producesFile(
+        artifactType: ArtifactType,
+        operationType: OperationType,
+        taskProvider: TaskProvider<out T>,
+        productProvider: (T) -> Provider<RegularFile>) {
+
+        produces(artifactType,
+            fileProducersMap,
+            operationType,
+            taskProvider,
+            productProvider)
+    }
+
+    /**
      * Registers a new [Directory] producer for a particular [ArtifactType]. The producer is
      * identified by a [TaskProvider] to avoid configuring the task until the produced [Directory]
      * is required by another [Task].
@@ -271,6 +292,18 @@ abstract class BuildArtifactsHolder(
         )
     }
 
+    private fun <T: FileSystemLocation, U: Task> produces(artifactType: ArtifactType,
+        producersMap: ProducersMap<T>,
+        operationType: OperationType,
+        taskProvider: TaskProvider<out U>,
+        productProvider: (U) -> Provider<T>) {
+
+        val producers = producersMap.getProducers(artifactType)
+        val product = taskProvider.map { productProvider(it) }
+
+        checkOperationType(operationType, artifactType, producers, taskProvider)
+        producers.add(product, taskProvider.name)
+    }
 
     private fun <T : FileSystemLocation, U: Task> produces(artifactType: ArtifactType,
         producersMap: ProducersMap<T>,
@@ -284,6 +317,28 @@ abstract class BuildArtifactsHolder(
         val producers = producersMap.getProducers(artifactType, buildDirectory)
         val product= taskProvider.map { productProvider(it) }
 
+        checkOperationType(operationType, artifactType, producers, taskProvider)
+        producers.add(settableFileLocation, product, taskProvider.name, fileName)
+
+        // note that this configuration block may be called immediately in case the task has
+        // already been initialized.
+        taskProvider.configure {
+
+            product.get().set(settableFileLocation)
+
+            // add a new configuration action to make sure the producers are configured even
+            // if no one injects the result. The task is being configured so it will be executed
+            // and output folders must be set correctly.
+            // this can happen when users request an intermediary task execution (instead of
+            // assemble for instance).
+            producers.resolveAllAndReturnLast()
+        }
+    }
+
+    private fun <T: FileSystemLocation> checkOperationType(operationType: OperationType,
+        artifactType: ArtifactType,
+        producers: ProducersMap.Producers<T>,
+        taskProvider: TaskProvider<out Task>) {
         when(operationType) {
             OperationType.INITIAL -> {
                 if (!producers.isEmpty()) {
@@ -301,21 +356,6 @@ abstract class BuildArtifactsHolder(
             OperationType.TRANSFORM -> {
                 producers.clear()
             }
-        }
-        producers.add(settableFileLocation, product, taskProvider.name, fileName)
-
-        // note that this configuration block may be called immediately in case the task has
-        // already been initialized.
-        taskProvider.configure {
-
-            product.get().set(settableFileLocation)
-
-            // add a new configuration action to make sure the producers are configured even
-            // if no one injects the result. The task is being configured so it will be executed
-            // and output folders must be set correctly.
-            // this can happen when users request an intermediary task execution (instead of
-            // assemble for instance).
-            producers.resolveAllAndReturnLast()
         }
     }
 

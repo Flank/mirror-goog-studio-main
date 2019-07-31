@@ -172,8 +172,13 @@ class ProducersMap<T: FileSystemLocation>(
             producerCount.incrementAndGet()
             listProperty.add(originalProperty.map { it.get() })
             dependencies.add(originalProperty)
-            add(Producer(settableProperty, originalProperty, taskName, fileName))
+            add(PropertyBasedProducer(settableProperty, originalProperty, taskName, fileName))
         }
+
+        fun add(
+            provider: Provider<Provider<T>>,
+            taskName: String) = add(ProviderBasedProducer(provider, taskName))
+
 
         override fun clear() {
             super.clear()
@@ -202,15 +207,66 @@ class ProducersMap<T: FileSystemLocation>(
     }
 
     /**
-     * A registered producer of an artifact. The artifact is produced by a Task identified by its
-     * name and a requested file name.
+     * Interface for all producer.
      */
-    class Producer<T: FileSystemLocation>(
+    interface Producer<T: FileSystemLocation> {
+        /**
+         * resolve this producer in the context of the passed [outputDirectory]
+         */
+        fun resolve(outputDirectory: File): Provider<T>
+
+        /**
+         * build [BuildArtifactsHolder.ProducerData] from this producer.
+         */
+        fun toProducerData(): BuildArtifactsHolder.ProducerData {
+            val originalProperty = asProvider()
+            return if (originalProperty.isPresent && originalProperty.get().isPresent) {
+                BuildArtifactsHolder.ProducerData(listOf(originalProperty.get().get().asFile.path), taskName)
+            } else {
+                BuildArtifactsHolder.ProducerData(listOf(), taskName)
+            }
+        }
+
+        /**
+         * Return the producer as a Provider<out Provider<T>>
+         */
+        fun asProvider(): Provider<out Provider<T>>
+
+        /**
+         * task name producing the artifact.
+         */
+        val taskName: String
+    }
+
+    /**
+     * A [Producer] that's based on a [Provider] which mean that its location cannot be reset or
+     * changed.
+     */
+    private class ProviderBasedProducer<T: FileSystemLocation>(
+        private val provider: Provider<Provider<T>>,
+        override val taskName: String): Producer<T> {
+
+        override fun resolve(outputDirectory: File): Provider<T> {
+            return provider.get()
+        }
+
+        override fun asProvider(): Provider<out Provider<T>> {
+            return provider
+        }
+    }
+
+    /**
+     * A [Producer] that's based on a [Property] which mean that its location can be changed
+     * depending on factors like if there are more than one providers at execution time.
+     * The artifact is produced by a Task identified by its name and a requested file name.
+     */
+    private class PropertyBasedProducer<T: FileSystemLocation>(
         private val settableLocation: Property<T>,
         private val originalProperty: Provider<Property<T>>,
-        val taskName: String,
-        val fileName: String) {
-        fun resolve(outputDirectory: File): Provider<T> {
+        override val taskName: String,
+        private val fileName: String): Producer<T> {
+
+        override fun resolve(outputDirectory: File): Provider<T> {
 
             val fileLocation = File(outputDirectory, fileName)
             when(settableLocation) {
@@ -224,12 +280,8 @@ class ProducersMap<T: FileSystemLocation>(
             return originalProperty.get()
         }
 
-        fun toProducerData(): BuildArtifactsHolder.ProducerData {
-            return if (originalProperty.isPresent && originalProperty.get().isPresent) {
-                BuildArtifactsHolder.ProducerData(listOf(originalProperty.get().get().asFile.path), taskName)
-            } else {
-                BuildArtifactsHolder.ProducerData(listOf(), taskName)
-            }
+        override fun asProvider(): Provider<out Provider<T>> {
+            return originalProperty
         }
     }
 }

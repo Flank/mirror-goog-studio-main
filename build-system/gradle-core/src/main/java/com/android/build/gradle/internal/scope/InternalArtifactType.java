@@ -279,7 +279,7 @@ public enum InternalArtifactType implements ArtifactType {
     APK,
     APK_FOR_LOCAL_TEST(Kind.FILE),
     APK_MAPPING(Category.OUTPUTS, Kind.FILE, "mapping"),
-    AAR,
+    AAR(Kind.FILE),
     INSTANTAPP_BUNDLE,
     SPLIT_LIST,
     APK_LIST(Kind.FILE),

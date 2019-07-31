@@ -25,8 +25,12 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.internal.AbstractTask
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -99,6 +103,31 @@ class NonParameterizedBuildArtifactsHolderTest {
         Truth.assertThat(finalVersion.get().asFile.parentFile.name).isEqualTo("set_location")
     }
 
+    @Test
+    fun locationProvidedOutput() {
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
+        val taskProvider = project.tasks.register("locationProvidedTask", ProviderBasedProducerTask::class.java)
+        newHolder.producesFile(
+            InternalArtifactType.AAR,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            ProviderBasedProducerTask::outputFile)
+
+        val files = newHolder.getCurrentProduct(InternalArtifactType.AAR)
+        Truth.assertThat(files).isNotNull()
+        Truth.assertThat(files?.isPresent)
+        Truth.assertThat(files?.get()?.asFile?.name).isEqualTo("provided_folder_name")
+
+        // now get final version.
+        val finalVersion = newHolder.getFinalProduct<FileSystemLocation>(InternalArtifactType.AAR)
+        Truth.assertThat(finalVersion.get().asFile.name).isEqualTo("provided_folder_name")
+    }
+
     private fun registerDirectoryTask(taskName: String) =
         project.tasks.register(taskName, DirectoryProducerTask::class.java) {
             initializedTasks[taskName] = it
@@ -122,4 +151,14 @@ class NonParameterizedBuildArtifactsHolderTest {
     open class RegularFileProducerTask @Inject constructor(objectFactory: ObjectFactory)
         : TaskWithOutput<RegularFileProperty>(objectFactory.fileProperty())
 
+    abstract class ProviderBasedProducerTask @Inject constructor(objectFactory: ObjectFactory): AbstractTask() {
+        @get:OutputFile
+        val outputFile: Provider<RegularFile>
+
+        init {
+            val regularFileProperty= objectFactory.fileProperty()
+            regularFileProperty.set(File("/tmp/provided_folder_name"))
+            outputFile = regularFileProperty
+        }
+    }
 }
