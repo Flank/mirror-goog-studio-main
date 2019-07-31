@@ -9,6 +9,11 @@ readonly script_dir="$(dirname "$0")"
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id="$(uuidgen)"
 
+if [[ -d "${dist_dir}" ]]; then
+  # Link to test results
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+fi
+
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
@@ -20,25 +25,22 @@ readonly invocation_id="$(uuidgen)"
   --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate_only \
   --define agent_coverage=true \
   -- \
-  @cov//:all.suite
+  @cov//:all.suite \
+  || exit $?
 
-# We want to still attach the upsalite link if tests fail so we can't abort now
-readonly bazel_test_status=$?
+# Generate another UUID for the report invocation
+readonly report_invocation_id="$(uuidgen)"
 
 if [[ -d "${dist_dir}" ]]; then
   # Link to test results
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
-fi
-
-# Abort if necessary now that the upsalite link is handled
-if [[ ${bazel_test_status} -ne 0 ]]; then
-  exit ${bazel_test_status}
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${report_invocation_id}'\" />" > "${dist_dir}"/upsalite_build_report_results.html
 fi
 
 # Build the lcov file
 "${script_dir}/bazel" \
   build \
   --config=remote \
+  --invocation_id=${report_invocation_id} \
   ${auth_options} \
   -- \
   @cov//:all.lcov \
