@@ -20,10 +20,12 @@ import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.collect.ImmutableList
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.ByteArrayOutputStream
 
 class SymbolExportUtilsTest {
 
@@ -103,5 +105,32 @@ class SymbolExportUtilsTest {
         assertThat(myProcessedSymbols.symbols.columnKeySet()).containsExactly("mystring")
         assertThat(libraryProcessedSymbols.tablePackage).isEqualTo("com.example.lib")
         assertThat(libraryProcessedSymbols.symbols.columnKeySet()).containsExactly("libstring")
+    }
+
+    @Test
+    fun testWriteSymbolListWithPackageName() {
+        val librarySymbols = SymbolTable.builder()
+            .tablePackage("com.example.mylib")
+            .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "my_string", 0))
+            .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "my_other_string", 0))
+            .add(
+                Symbol.createAndValidateStyleableSymbol(
+                    "my_styleable",
+                    ImmutableList.of(),
+                    ImmutableList.of("child1", "child2")
+                )
+            )
+            .build()
+        val os = ByteArrayOutputStream()
+        os.writer().use { writer -> writeSymbolListWithPackageName(librarySymbols, writer) }
+        assertThat(os.toString(Charsets.UTF_8.name())).isEqualTo(
+            """
+                com.example.mylib
+                string my_other_string
+                string my_string
+                styleable my_styleable child1 child2
+
+                """.trimIndent()
+        )
     }
 }

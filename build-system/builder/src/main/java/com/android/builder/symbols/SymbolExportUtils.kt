@@ -20,16 +20,19 @@ package com.android.builder.symbols
 import com.android.ide.common.symbols.IdProvider
 import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.symbols.RGeneration
+import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.getPackageNameFromManifest
 import com.android.ide.common.symbols.loadDependenciesSymbolTables
 import com.android.ide.common.symbols.mergeAndRenumberSymbols
 import com.android.ide.common.symbols.parseManifest
+import com.android.resources.ResourceType
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import java.io.File
 import java.io.IOException
+import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -124,3 +127,24 @@ internal fun processLibraryMainSymbolTable(
     }
 }
 
+
+fun writeSymbolListWithPackageName(table: SymbolTable, writer: Writer) {
+    writer.write(table.tablePackage)
+    writer.write('\n'.toInt())
+
+    for (resourceType in ResourceType.values()) {
+        val symbols = table.getSymbolByResourceType(resourceType)
+        for (symbol in symbols) {
+            writer.write(resourceType.getName())
+            writer.write(' '.toInt())
+            writer.write(symbol.canonicalName)
+            if (symbol is Symbol.StyleableSymbol) {
+                for (child in symbol.children) {
+                    writer.write(' '.toInt())
+                    writer.write(child)
+                }
+            }
+            writer.write('\n'.toInt())
+        }
+    }
+}
