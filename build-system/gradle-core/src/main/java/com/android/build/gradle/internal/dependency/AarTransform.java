@@ -64,12 +64,6 @@ public class AarTransform extends ArtifactTransform {
 
     @NonNull
     public static ArtifactType[] getTransformTargets() {
-        // Note that these transform targets come from TYPE_EXPLODED_AAR, which comes from
-        // TYPE_PROCESSED_AAR (see VariantManager), meaning that the aar has been processed, and
-        // therefore the jar inside the aar can also be considered processed. However, because a few
-        // places in the plugin still need to query for JAR instead of PROCESSED_JAR, we need to
-        // publish JAR instead of PROCESSED_JAR below. (Consequently, the jar may be processed
-        // twice, but it's probably okay since the ArtifactTransforms are cached.)
         return new ArtifactType[] {
             // For CLASSES, this transform is ues for runtime, and AarCompileClassesTransform is
             // used for compile
@@ -77,7 +71,13 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.SHARED_CLASSES,
             ArtifactType.JAVA_RES,
             ArtifactType.SHARED_JAVA_RES,
-            ArtifactType.JAR, /* Publish JAR instead of PROCESSED_JAR (see explanation above). */
+            ArtifactType.PROCESSED_JAR,
+            // This transform outputs JAR as well as PROCESSED_JAR as a few places in AGP query for
+            // JAR as a way of getting all artifacts. TODO(b/138772778): Clean this up.
+            // This does not supersede outputting PROCESSED_JAR, as it saves processing the JAR
+            // twice, as Gradle will pick the shorter of the two transform chains.
+            // The jars inside the AAR are processed already as part of the whole AAR processing.
+            ArtifactType.JAR,
             ArtifactType.MANIFEST,
             ArtifactType.NON_NAMESPACED_MANIFEST,
             ArtifactType.ANDROID_RES,
@@ -114,6 +114,7 @@ public class AarTransform extends ArtifactTransform {
                         ? AarTransformUtil.getJars(input)
                         : Collections.emptyList();
             case JAVA_RES:
+            case PROCESSED_JAR:
             case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessarily enforced by all build systems generating AAR so it's safer to
