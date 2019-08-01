@@ -28,7 +28,10 @@ import com.android.utils.SdkUtils
 import com.google.common.base.Preconditions
 import com.google.common.io.Files
 import org.w3c.dom.Document
+import org.xml.sax.SAXParseException
 import java.io.File
+import java.io.IOException
+import java.io.InputStream
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
@@ -237,6 +240,88 @@ fun shouldBeParsed(directoryName: String): Boolean {
 
     // More than 2 will always have a skippable config.
     return false
+}
+
+
+/**
+ * Given a zip entry, e.g. res/values/values.xml adds the resources defined to this symbol table builder.
+ *
+ * Ignores zip entries not starting with res/, and other errors are reported using the error handler.
+ */
+fun SymbolTable.Builder.parseAarZipEntry(
+    documentBuilder: DocumentBuilder,
+    errorHandler: (Exception) -> Unit,
+    name: String,
+    content: () -> InputStream
+) {
+    if (!name.startsWith("res/")) {
+        return
+    }
+
+    val firstSlashPosition = name.indexOf('/')
+    val lastSlashPosition = name.lastIndexOf('/')
+    if (lastSlashPosition == firstSlashPosition) {
+        errorHandler(ResourceDirectoryParseException("Error parsing '$name': Invalid resource path."))
+        return
+    }
+    val directoryName = name.substring(firstSlashPosition + 1, lastSlashPosition)
+    if (!shouldBeParsed(directoryName)) {
+        return
+    }
+    val folderResourceType = ResourceFolderType.getFolderType(directoryName) ?: run {
+        errorHandler(ResourceDirectoryParseException("Error parsing '$name': Invalid resource directory name '$directoryName'"))
+        return
+    }
+
+    if (folderResourceType == ResourceFolderType.VALUES) {
+        val domTree: Document = try {
+            documentBuilder.parse(content())
+        } catch (e: SAXParseException) {
+            errorHandler(ResourceDirectoryParseException("Error parsing '$name'", e))
+            return
+        }
+        val parsedXml = try {
+            parseValuesResource(domTree, IdProvider.constant(), null)
+        } catch (e: ResourceValuesXmlParseException) {
+            errorHandler(ResourceDirectoryParseException("Error parsing '$name'", e))
+            return
+        }
+        parsedXml.symbols.values().forEach { s -> addIfNotExisting(this, s) }
+
+    } else {
+        val fileName = name.substring(lastSlashPosition + 1)
+        val error = FileResourceNameValidator.getErrorTextForFileResource(fileName, folderResourceType)
+        if (error != null) {
+            errorHandler(ResourceDirectoryParseException("Error parsing '$name': $error"))
+            return
+        }
+        val symbolName = getNameWithoutExtensions(fileName)
+
+        val resourceType = FolderTypeRelationship
+            .getNonIdRelatedResourceType(folderResourceType)
+        addIfNotExisting(
+            this,
+            Symbol.createAndValidateSymbol(resourceType, symbolName, IdProvider.constant()))
+
+        if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
+            && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
+            // If we are parsing an XML file (but not in values directories), parse the file in
+            // search of lazy constructions like `@+id/name` that also declare resources.
+            val domTree: Document = try {
+                documentBuilder.parse(content())
+            } catch (e: SAXParseException) {
+                errorHandler(ResourceDirectoryParseException("Error parsing '$name'", e))
+                return
+            }
+            val extraSymbols  = try {
+                parseResourceForInlineResources(domTree, IdProvider.constant())
+            } catch (e: ResourceValuesXmlParseException) {
+                errorHandler(ResourceDirectoryParseException("Error parsing '$name'", e))
+                return
+            }
+            extraSymbols.symbols.values().forEach { s -> addIfNotExisting(this, s) }
+        }
+    }
 }
 
 /**

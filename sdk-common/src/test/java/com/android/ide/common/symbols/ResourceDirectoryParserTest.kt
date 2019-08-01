@@ -17,6 +17,7 @@
 package com.android.ide.common.symbols
 
 import com.android.utils.FileUtils
+import com.google.common.truth.ThrowableSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -26,6 +27,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.nio.file.Files
 import java.util.Random
+import javax.xml.parsers.DocumentBuilderFactory
 
 class ResourceDirectoryParserTest {
 
@@ -33,6 +35,8 @@ class ResourceDirectoryParserTest {
     val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
     private val random: Random = Random()
+
+    private val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /**
      * Creates a file in a directory with specific data. The file is created in the path `path`
@@ -183,6 +187,110 @@ class ResourceDirectoryParserTest {
     }
 
     @Test
+    fun parseAarZipEntrySmokeTest() {
+        val values = """
+            <resources>
+                <color name="my_color">#000000</color>
+            </resources>""".trimIndent()
+        val layout = """
+            <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/my_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hello_first_fragment"
+                    app:layout_constraintBottom_toTopOf="@id/button_first"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        """.trimIndent()
+
+        val parsed = SymbolTable.builder().apply {
+            // Read OK
+            assertParses("res/values/col.xml", values)
+            assertParses("res/drawable/my_drawable.png")
+            assertParses("res/layout/my_layout.xml", layout)
+        }.build()
+
+        val expected =
+            SymbolTable.builder()
+                .add(SymbolTestUtils.createSymbol("color", "my_color", "int", 0))
+                .add(SymbolTestUtils.createSymbol("drawable", "my_drawable", "int", 0))
+                .add(SymbolTestUtils.createSymbol("id", "my_id", "int", 0))
+                .add(SymbolTestUtils.createSymbol("layout", "my_layout", "int", 0))
+                .build()
+
+        assertThat(parsed).isEqualTo(expected)
+    }
+
+    @Test
+    fun parseAarZipIgnoresNonResources() {
+        val parsed = SymbolTable.builder().apply {
+            assertParses("classes.jar")
+            assertParsesWithError("res/bad").hasMessageThat().isEqualTo("Error parsing 'res/bad': Invalid resource path.")
+            assertParsesWithError("res/bad/a.xml").hasMessageThat().isEqualTo("Error parsing 'res/bad/a.xml': Invalid resource directory name 'bad'")
+            assertParsesWithError("res/drawable/%.png").hasMessageThat().isEqualTo("Error parsing 'res/drawable/%.png': The resource name must start with a letter")
+        }.build()
+
+        assertThat(parsed).isEqualTo(SymbolTable.builder().build())
+    }
+
+    @Test
+    fun parseAarZipIgnoresCorruptValues() {
+        val parsed = SymbolTable.builder().apply {
+            assertParsesWithError("res/values/corrupt.xml", "<").hasMessageThat().isEqualTo("Error parsing 'res/values/corrupt.xml'")
+            assertParsesWithError("res/values/corrupt.xml", "<other></other>").hasMessageThat().isEqualTo("Error parsing 'res/values/corrupt.xml'")
+        }.build()
+
+        assertThat(parsed).isEqualTo(SymbolTable.builder().build())
+    }
+
+    @Test
+    fun parseAarZipIsLenientCorruptLayout() {
+        val parsed = SymbolTable.builder().apply {
+            // Inner XML not read, but outer resource defined.
+            assertParsesWithError("res/layout/bad.xml", "<").hasMessageThat().isEqualTo("Error parsing 'res/layout/bad.xml'")
+            assertParsesWithError("res/layout/bad2.xml", "" ).hasMessageThat().isEqualTo("Error parsing 'res/layout/bad2.xml'")
+        }.build()
+
+        val expected =
+            SymbolTable.builder()
+                .add(SymbolTestUtils.createSymbol("layout", "bad", "int", 0))
+                .add(SymbolTestUtils.createSymbol("layout", "bad2", "int", 0))
+                .build()
+
+        assertThat(parsed).isEqualTo(expected)
+    }
+
+    @Test
+    fun parseAarZipIgnoresNonDefaultLanguageConfigs() {
+        val values = """
+            <resources>
+                <color name="a">#000000</color>
+                <color name="b">#000000</color>
+            </resources>""".trimIndent()
+
+        val parsed = SymbolTable.builder().apply {
+            assertParses("res/values/col.xml", values)
+            assertParses("res/values-en/col.xml")
+        }.build()
+
+        val expected =
+            SymbolTable.builder()
+                .add(SymbolTestUtils.createSymbol("color", "a", "int", 0))
+                .add(SymbolTestUtils.createSymbol("color", "b", "int", 0))
+                .build()
+
+        assertThat(parsed).isEqualTo(expected)
+    }
+
+    @Test
     fun failWithException() {
         val directory = temporaryFolder.newFolder()
 
@@ -284,4 +392,71 @@ class ResourceDirectoryParserTest {
         assertThat(shouldBeParsed("values-hdpi-fake")).isFalse()
         assertThat(shouldBeParsed("values-fake-v4")).isFalse()
     }
+
+    private fun SymbolTable.Builder.assertParses(name: String) {
+        getParseZipEntryError(name)?.let {
+            throw AssertionError(
+                "expected to parse without error",
+                it
+            )
+        }
+    }
+
+    private fun SymbolTable.Builder.assertParses(name: String, content: String) {
+        getParseZipEntryError(
+            name,
+            content
+        )?.let { throw AssertionError("expected to parse without error", it) }
+    }
+
+    private fun SymbolTable.Builder.assertParsesWithError(
+        name: String
+    ): ThrowableSubject {
+        return assertThat(
+            getParseZipEntryError(name) ?: throw AssertionError("expected to have error parsing")
+        )
+    }
+
+    private fun SymbolTable.Builder.assertParsesWithError(
+        name: String,
+        content: String
+    ): ThrowableSubject {
+        return assertThat(
+            getParseZipEntryError(name, content)
+                ?: throw AssertionError("expected to have error parsing")
+        )
+    }
+
+    private fun SymbolTable.Builder.getParseZipEntryError(name: String): Exception? =
+        getParseZipEntryError(name) { throw AssertionError("Expected content not to be read") }
+
+    private fun SymbolTable.Builder.getParseZipEntryError(name: String, value: String): Exception? {
+        var read = false
+        try {
+            return getParseZipEntryError(name) {
+                read = true
+                value
+            }
+        } finally {
+            if (!read) {
+                throw AssertionError("Expected content to be read")
+            }
+        }
+    }
+
+    private fun SymbolTable.Builder.getParseZipEntryError(
+        name: String,
+        content: () -> String
+    ): Exception? {
+        var error: Exception? = null
+        this.parseAarZipEntry(
+            documentBuilder,
+            { error = it },
+            name,
+            { content().byteInputStream() }
+        )
+        return error
+    }
+
+
 }
