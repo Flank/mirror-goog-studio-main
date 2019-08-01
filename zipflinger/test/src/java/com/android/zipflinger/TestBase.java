@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +32,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 public class TestBase {
     protected static long[] ALIGNMENTS = {FreeStore.DEFAULT_ALIGNMENT, FreeStore.PAGE_ALIGNMENT};
@@ -41,8 +42,10 @@ public class TestBase {
 
     protected static final String BASE = "tools/base/zipflinger/test/resource/";
 
-    protected static File getFile(String path) {
-        String fullPath = BASE + path;
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    protected static File getFile(String filename) {
+        String fullPath = BASE + filename;
         File prospect = new File(fullPath);
         if (prospect.exists()) {
             return prospect;
@@ -50,18 +53,16 @@ public class TestBase {
         return TestUtils.getWorkspaceFile(fullPath);
     }
 
-    protected static Path getPath(String path) {
-        return getFile(path).toPath();
+    protected static Path getPath(String filename) {
+        return getFile(filename).toPath();
     }
 
-    protected static File getTestFile(String path) throws IOException {
-        String directories = TestUtils.getTestOutputDir().getAbsolutePath() + File.separator + BASE;
-        Files.createDirectories(Paths.get(directories));
-        return new File(directories + path);
+    protected File getTestFile(String filename) throws IOException {
+        return new File(temporaryFolder.newFolder(), filename);
     }
 
-    protected static Path getTestPath(String path) throws IOException {
-        return getTestFile(path).toPath();
+    protected Path getTestPath(String filename) throws IOException {
+        return getTestFile(filename).toPath();
     }
 
     protected static Map<String, Entry> verifyArchive(File archiveFile) throws IOException {

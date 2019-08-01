@@ -223,7 +223,7 @@ public class TestZipFlinger extends TestBase {
         return sb.toString();
     }
 
-    private static void testFileSourceAlignment(long alignment) throws IOException {
+    private void testFileSourceAlignment(long alignment) throws IOException {
         Path dst = getTestPath("testFileSourceAlignment-" + alignment + ".zip");
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
             for (int length = 0; length < alignment; length++) {
@@ -251,7 +251,7 @@ public class TestZipFlinger extends TestBase {
         }
     }
 
-    public static void testBytesSourceAlignment(long alignment) throws IOException {
+    public void testBytesSourceAlignment(long alignment) throws IOException {
         Path dst = getTestPath("testBytesSourceAlignment-" + alignment + ".zip");
 
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
@@ -276,7 +276,7 @@ public class TestZipFlinger extends TestBase {
         }
     }
 
-    public static void testZipSourceAlignment(long alignment) throws IOException {
+    public void testZipSourceAlignment(long alignment) throws IOException {
         Path dst = getTestPath("testZipSourceAlignment-" + alignment + ".zip");
 
         ZipSource source = new ZipSource(getFile("4-5files.zip"));
@@ -304,7 +304,7 @@ public class TestZipFlinger extends TestBase {
         }
     }
 
-    public static void testInputSourceAlignment(long alignment) throws IOException {
+    public void testInputSourceAlignment(long alignment) throws IOException {
         Path dst = getTestPath("testInputSourceAlignment.zip");
 
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile());
