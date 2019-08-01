@@ -32,13 +32,19 @@ import javax.annotation.concurrent.GuardedBy
  * Information contained in each instance will be use to upload our performance data per task
  * once optional workers profiling information has been gathered.
  */
-open class TaskProfilingRecord {
-
-    private val taskPath: String
-    internal val projectPath: String
+open class TaskProfilingRecord
+/**
+ * Construct a new task profiling record with the [GradleBuildProfileSpan] and decorations like
+ * project path and variant name.
+ */(
+    private val recordWriter: ProfileRecordWriter,
+    span: GradleBuildProfileSpan.Builder,
+    private val taskPath: String,
+    internal val projectPath: String,
     internal val variant: String?
-    private val recordWriter: ProfileRecordWriter
-    val spanBuilder: GradleBuildProfileSpan.Builder
+) {
+
+    val spanBuilder: GradleBuildProfileSpan.Builder = span
     private val workerRecordList: MutableMap<String, WorkerProfilingRecord> = mutableMapOf()
     private val startTime = clock.instant()
     private var endTime = Instant.MIN
@@ -84,24 +90,6 @@ open class TaskProfilingRecord {
         SPAN_CLOSED
     }
 
-    /**
-     * Construct a new task profiling record with the [GradleBuildProfileSpan] and decorations like
-     * project path and variant name.
-     */
-    constructor(
-        recordWriter: ProfileRecordWriter,
-        span: GradleBuildProfileSpan.Builder,
-        taskPath: String,
-        projectPath: String,
-        variant: String?
-    ) {
-        this.taskPath = taskPath
-        this.recordWriter = recordWriter
-        this.projectPath = projectPath
-        this.spanBuilder = span
-        this.variant = variant
-    }
-
     fun setTaskWaiting() {
         status.set(Status.AWAIT)
     }
@@ -134,8 +122,7 @@ open class TaskProfilingRecord {
     }
 
     @Synchronized
-    open fun get(key: String): WorkerProfilingRecord = workerRecordList[key]
-        ?: dummyTaskRecord.get(key)
+    open fun get(key: String): WorkerProfilingRecord? = workerRecordList[key]
 
     @Synchronized
     fun allWorkersFinished(): Boolean {
@@ -212,36 +199,11 @@ open class TaskProfilingRecord {
         taskSpans.add(builder.build())
     }
 
-    private constructor() {
-        this.recordWriter = ProcessProfileWriter.get()
-        this.taskPath = "dummy"
-        this.projectPath = ":dummy"
-        this.variant = "dummy"
-        this.spanBuilder = GradleBuildProfileSpan.newBuilder()
-    }
-
     companion object {
         /**
          * Clock used to measure tasks and workers timings.
          */
         @VisibleForTesting
         var clock: Clock = Clock.systemDefaultZone()
-
-        /**
-         * Singleton object to satisfy usages when [ProfilerInitializer.recordingBuildListener]
-         * does not exist.
-         */
-        val dummyTaskRecord: TaskProfilingRecord = object : TaskProfilingRecord() {
-            override fun addWorker(key: String, type: GradleBuildProfileSpan.ExecutionType) {}
-            override fun get(key: String): WorkerProfilingRecord {
-                val workerProfilingRecord = WorkerProfilingRecord(
-                    "dummy",
-                    GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION,
-                    clock.instant()
-                )
-                workerProfilingRecord.executionStarted()
-                return workerProfilingRecord
-            }
-        }
     }
 }
