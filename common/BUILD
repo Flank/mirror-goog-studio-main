@@ -82,6 +82,7 @@ kotlin_test(
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
     ],
 )
 
@@ -106,5 +107,6 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/idea/.idea/libraries:kotlin-test[test]",
     ],
 )
