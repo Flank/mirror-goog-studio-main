@@ -135,7 +135,7 @@ class TableExtractorTest {
     val drawable = getValue("drawable/foo") as? BinaryPrimitive
     Truth.assertThat(drawable).isNotNull()
     Truth.assertThat(drawable!!.resValue.dataType).isEqualTo(ResValue.DataType.INT_COLOR_ARGB8)
-    Truth.assertThat(drawable!!.resValue.data).isEqualTo(0xcffffff)
+    Truth.assertThat(drawable.resValue.data).isEqualTo(0xcffffff)
   }
 
   @Test
