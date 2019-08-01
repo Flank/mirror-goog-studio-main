@@ -43,6 +43,8 @@ public class CompileOptions {
 
     @Nullable private Boolean incremental = null;
 
+    @Nullable private Boolean javaApiDesugaringEnabled = null;
+
     /** @see #setDefaultJavaVersion(JavaVersion) */
     @NonNull
     @VisibleForTesting
@@ -143,6 +145,17 @@ public class CompileOptions {
     /** @see #getIncremental() */
     public void setIncremental(boolean incremental) {
         this.incremental = incremental;
+    }
+
+    /** Whether Java Api desugaring is enabled */
+    @Nullable
+    public Boolean getJavaApiDesugaringEnabled() {
+        return javaApiDesugaringEnabled;
+    }
+
+    /** @see #getJavaApiDesugaringEnabled() */
+    public void setJavaApiDesugaringEnabled(boolean javaApiDesugaringEnabled) {
+        this.javaApiDesugaringEnabled = javaApiDesugaringEnabled;
     }
 
     /**

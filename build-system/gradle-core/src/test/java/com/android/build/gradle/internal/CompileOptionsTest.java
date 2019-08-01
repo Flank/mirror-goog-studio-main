@@ -69,4 +69,14 @@ public class CompileOptionsTest {
         options.setTargetCompatibility("VERSION_1_7");
         assertEquals(JavaVersion.VERSION_1_7, options.getTargetCompatibility());
     }
+
+    @Test
+    public void javaApiDesugaringEnabledTest() {
+        CompileOptions options = new CompileOptions();
+
+        assertEquals(null, options.getJavaApiDesugaringEnabled());
+
+        options.setJavaApiDesugaringEnabled(true);
+        assertEquals(true, options.getJavaApiDesugaringEnabled());
+    }
 }
