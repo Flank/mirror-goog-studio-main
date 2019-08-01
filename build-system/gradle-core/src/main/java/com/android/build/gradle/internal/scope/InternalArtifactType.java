@@ -59,7 +59,7 @@ public enum InternalArtifactType implements ArtifactType {
     MIXED_SCOPE_DEX_ARCHIVE,
     // Artifact for supporting faster incremental dex archive building. This artifact contains
     // information about inputs and it should not be consumed by other tasks.
-    DEX_ARCHIVE_INPUT_JAR_HASHES,
+    DEX_ARCHIVE_INPUT_JAR_HASHES(Kind.FILE),
 
     // External libraries' dex files only.
     EXTERNAL_LIBS_DEX,

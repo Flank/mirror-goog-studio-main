@@ -128,6 +128,42 @@ class NonParameterizedBuildArtifactsHolderTest {
         Truth.assertThat(finalVersion.get().asFile.name).isEqualTo("provided_folder_name")
     }
 
+    @Test(expected=java.lang.RuntimeException::class)
+    fun wrongDirAPIUsageTest() {
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
+        val taskProvider = registerDirectoryTask("final")
+        newHolder.producesDir(
+            InternalArtifactType.APP_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            DirectoryProducerTask::output,
+            fileName = "finalDir"
+        )
+    }
+
+    @Test(expected=java.lang.RuntimeException::class)
+    fun wrongFileAPIUsageTest() {
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
+        val taskProvider = registerRegularFileTask("final")
+        newHolder.producesFile(
+            InternalArtifactType.JAVA_RES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            RegularFileProducerTask::output,
+            fileName = "finalFile"
+        )
+    }
+
     private fun registerDirectoryTask(taskName: String) =
         project.tasks.register(taskName, DirectoryProducerTask::class.java) {
             initializedTasks[taskName] = it

@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param identifier a function to uniquely identify this context when creating files and folders.
  */
 class ProducersMap<T: FileSystemLocation>(
+    val fileKind: ArtifactType.Kind,
     val objectFactory: ObjectFactory,
     val buildDirectory: DirectoryProperty,
     val identifier: ()->String) {

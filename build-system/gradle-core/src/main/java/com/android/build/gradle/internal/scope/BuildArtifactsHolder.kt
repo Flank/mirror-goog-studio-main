@@ -55,10 +55,12 @@ abstract class BuildArtifactsHolder(
 ) {
 
     private val fileProducersMap = ProducersMap<RegularFile>(
+        ArtifactType.Kind.FILE,
         project.objects,
         project.layout.buildDirectory,
         this::getIdentifier)
     private val directoryProducersMap = ProducersMap<Directory>(
+        ArtifactType.Kind.DIRECTORY,
         project.objects,
         project.layout.buildDirectory,
         this::getIdentifier)
@@ -313,6 +315,15 @@ abstract class BuildArtifactsHolder(
         settableFileLocation: Property<T>,
         fileName: String,
         buildDirectory: String? = null) {
+
+        if (producersMap.fileKind != artifactType.kind()) {
+            val correctApiFamily = if (artifactType.kind()==ArtifactType.Kind.FILE)
+                "producesFile" else "producesDir"
+            throw RuntimeException("Wrong usage of the BuildArtifacts APIs by task ${taskProvider.name}\n" +
+                    "who is trying to publish $artifactType as a ${producersMap.fileKind} while the " +
+                    "artifact is defined as a ${artifactType.kind()}\n" +
+                    "For ${artifactType.kind()} use $correctApiFamily type of APIs")
+        }
 
         val producers = producersMap.getProducers(artifactType, buildDirectory)
         val product= taskProvider.map { productProvider(it) }
