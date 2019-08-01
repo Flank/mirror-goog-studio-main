@@ -95,6 +95,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     val fileName: String
         get() = bundleFile.get().asFile.name
 
+    @get:Input
+    var isDebugBuild: Boolean = false
+        private set
+
     override fun doTaskAction() {
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -108,7 +112,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
                     bundleFile = bundleFile.get().asFile,
-                    bundleDeps = bundleDeps.get().asFile
+                    bundleDeps = bundleDeps.get().asFile,
+                    // do not compress the bundle in debug builds where it will be only used as an
+                    // intermediate artifact
+                    uncompressBundle = isDebugBuild
                 )
             )
         }
@@ -123,7 +130,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val bundleOptions: BundleOptions,
         val bundleFlags: BundleFlags,
         val bundleFile: File,
-        val bundleDeps: File
+        val bundleDeps: File,
+        val uncompressBundle: Boolean
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -160,6 +168,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
 
             val command = BuildBundleCommand.builder()
+                .setUncompressedBundle(params.uncompressBundle)
                 .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
@@ -276,6 +285,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     task.obsfuscationMappingFile
                 )
             }
+
+            task.isDebugBuild = variantScope.variantConfiguration.buildType.isDebuggable
         }
     }
 }
