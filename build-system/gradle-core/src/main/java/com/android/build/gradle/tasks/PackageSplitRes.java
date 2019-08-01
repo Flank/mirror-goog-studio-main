@@ -27,8 +27,9 @@ import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.signing.SigningConfigProvider;
+import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -40,18 +41,16 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Package each split resources into a specific signed apk file. */
 public abstract class PackageSplitRes extends NonIncrementalTask {
 
-    private FileCollection signingConfig;
+    private SigningConfigProvider signingConfig;
     private File incrementalDir;
     private boolean keepTimestampsInApk;
 
@@ -61,9 +60,8 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
     @OutputDirectory
     public abstract DirectoryProperty getSplitResApkOutputDirectory();
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getSigningConfig() {
+    @Nested
+    public SigningConfigProvider getSigningConfig() {
         return signingConfig;
     }
 
@@ -109,8 +107,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
 
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
-                            .withSigning(
-                                    SigningConfigUtils.Companion.load(params.signingConfigFile))
+                            .withSigning(params.signingConfig.resolve())
                             .withOutputFile(params.output)
                             .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withIntermediateDir(intDir)
@@ -130,7 +127,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
         private final File input;
         private final File output;
         private final File incrementalDir;
-        private final File signingConfigFile;
+        private final SigningConfigProviderParams signingConfig;
         private final boolean keepTimestampsInApk;
 
         PackageSplitResTransformParams(ApkData apkInfo, File input, PackageSplitRes task) {
@@ -150,7 +147,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                                                     .get("archivesBaseName"),
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
-            signingConfigFile = SigningConfigUtils.Companion.getOutputFile(task.getSigningConfig());
+            signingConfig = task.getSigningConfig().convertToParams();
             keepTimestampsInApk = task.getKeepTimestampsInApk();
         }
 
@@ -209,7 +206,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.PROCESSED_RES, task.getProcessedResources());
-            task.signingConfig = scope.getSigningConfigFileCollection();
+            task.signingConfig = SigningConfigProvider.create(scope);
             task.incrementalDir = scope.getIncrementalDir(getName());
             task.keepTimestampsInApk =
                     scope.getGlobalScope()

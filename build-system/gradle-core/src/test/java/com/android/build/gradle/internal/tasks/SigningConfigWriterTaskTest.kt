@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.google.common.truth.Truth.assertThat
 
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.signing.SigningConfigData
 import java.io.File
 import java.io.IOException
 import org.gradle.api.Project
@@ -62,6 +63,6 @@ class SigningConfigWriterTaskTest {
         assertThat(files).hasLength(1)
 
         val config = SigningConfigUtils.load(files[0])
-        assertThat(config).isEqualTo(task.signingConfigData?.toSigningConfig())
+        assertThat(config).isEqualTo(task.signingConfigData)
     }
 }

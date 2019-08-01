@@ -30,9 +30,10 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.signing.SigningConfigProvider;
+import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
-import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -51,9 +52,8 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.BuildException;
 
@@ -62,7 +62,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
 
     private boolean jniDebuggable;
 
-    private FileCollection signingConfig;
+    private SigningConfigProvider signingConfig;
 
     private FileCollection jniFolders;
 
@@ -94,9 +94,8 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
         return jniDebuggable;
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getSigningConfig() {
+    @Nested
+    public SigningConfigProvider getSigningConfig() {
         return signingConfig;
     }
 
@@ -154,9 +153,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withOutputFile(params.getOutput())
-                            .withSigning(
-                                    SigningConfigUtils.Companion.load(params.signingConfigFile),
-                                    params.minSdkVersion)
+                            .withSigning(params.signingConfig.resolve(), params.minSdkVersion)
                             .withCreatedBy(params.createdBy)
                             // .withManifest(manifest)
                             .withAaptOptionsNoCompress(params.aaptOptionsNoCompress)
@@ -184,7 +181,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
         private final ApkData apkInfo;
         private final File output;
         private final File incrementalDir;
-        private final File signingConfigFile;
+        private final SigningConfigProviderParams signingConfig;
         private final String createdBy;
         private final Collection<String> aaptOptionsNoCompress;
         private final Set<File> jniFolders;
@@ -206,7 +203,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
                                                     .get("archivesBaseName"),
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
-            signingConfigFile = SigningConfigUtils.Companion.getOutputFile(task.signingConfig);
+            signingConfig = task.signingConfig.convertToParams();
             createdBy = task.getCreatedBy();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             jniFolders = task.getJniFolders().getFiles();
@@ -276,7 +273,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
                             task.getProcessedAbiResources());
-            task.signingConfig = scope.getSigningConfigFileCollection();
+            task.signingConfig = SigningConfigProvider.create(scope);
             task.minSdkVersion = config.getMinSdkVersion();
             task.incrementalDir = scope.getIncrementalDir(task.getName());
 

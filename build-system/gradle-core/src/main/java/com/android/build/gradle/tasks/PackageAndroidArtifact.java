@@ -44,9 +44,10 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.signing.SigningConfigProvider;
+import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
-import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -116,6 +117,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -196,7 +198,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     private boolean debugBuild;
     private boolean jniDebugBuild;
 
-    private FileCollection signingConfig;
+    private SigningConfigProvider signingConfig;
 
     protected Supplier<AndroidVersion> minSdkVersion;
 
@@ -267,18 +269,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         this.debugBuild = debugBuild;
     }
 
-    /**
-     * Retrieves the signing config file collection. It is necessary to make this an optional input
-     * for instant run packaging, which explicitly sets this to a null file collection.
-     */
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getSigningConfig() {
+    @Nested
+    public SigningConfigProvider getSigningConfig() {
         return signingConfig;
     }
 
-    public void setSigningConfig(FileCollection signingConfig) {
+    public void setSigningConfig(SigningConfigProvider signingConfig) {
         this.signingConfig = signingConfig;
     }
 
@@ -488,7 +484,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull protected final SerializableInputChanges javaResourceFiles;
         @NonNull protected final InternalArtifactType manifestType;
         @NonNull protected final IncrementalPackagerBuilder.ApkFormat apkFormat;
-        @Nullable protected final File signingConfig;
+        @Nullable protected final SigningConfigProviderParams signingConfig;
         @NonNull protected final Set<String> abiFilters;
         @NonNull protected final File manifestDirectory;
         @Nullable protected final Collection<String> aaptOptionsNoCompress;
@@ -548,7 +544,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             manifestType = task.manifestType;
             apkFormat = task.apkFormat;
-            signingConfig = SigningConfigUtils.Companion.getOutputFile(task.signingConfig);
+            signingConfig = task.signingConfig.convertToParams();
             abiFilters = task.abiFilters;
             manifestDirectory = task.getManifests().get().getAsFile();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
@@ -667,7 +663,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 new IncrementalPackagerBuilder(params.apkFormat, params.packagerMode)
                         .withOutputFile(outputFile)
                         .withSigning(
-                                SigningConfigUtils.Companion.load(params.signingConfig),
+                                params.signingConfig.resolve(),
                                 params.minSdkVersion,
                                 params.targetApi)
                         .withCreatedBy(params.createdBy)
@@ -1005,7 +1001,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getArtifacts()
                     .setTaskInputToFinalProduct(InternalArtifactType.APK_LIST, task.getApkList());
 
-            task.setSigningConfig(variantScope.getSigningConfigFileCollection());
+            task.setSigningConfig(SigningConfigProvider.create(variantScope));
         }
 
         @NonNull

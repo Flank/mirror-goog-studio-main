@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
+import com.android.build.gradle.internal.signing.SigningConfigData
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import java.io.File
-import java.io.IOException
 import org.apache.commons.io.FileUtils
-import org.gradle.api.file.FileCollection
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.attribute.AclEntry
@@ -32,23 +32,21 @@ import java.nio.file.attribute.AclFileAttributeView
 import java.nio.file.attribute.PosixFilePermission
 
 /**
- * Utility class to save/load the signing config information to/from a persisted json file.
+ * Utility class to save/load the signing config information to/from a json file.
  */
 class SigningConfigUtils {
+
     companion object {
-        private const val PERSISTED_FILE_NAME = "signing-config.json"
 
-        @Throws(IOException::class)
-        fun load(input: FileCollection?): com.android.builder.model.SigningConfig? {
-            return load(getOutputFile(input))
-        }
+        private const val SIGNING_CONFIG_FILE_NAME = "signing-config.json"
 
-        @Throws(IOException::class)
-        fun save(
-            outputDirectory: File,
-            signingConfig: com.android.build.gradle.internal.dsl.SigningConfig?
-        ) {
-            val outputFile = File(outputDirectory, PERSISTED_FILE_NAME)
+        /** Returns the signing config file under the given directory. */
+        fun getSigningConfigFile(directory: File) = File(directory, SIGNING_CONFIG_FILE_NAME)
+
+        /** Saves the signing config information to a json file under the given output directory. */
+        fun save(outputDirectory: File, signingConfig: SigningConfigData?) {
+            val outputFile = getSigningConfigFile(outputDirectory)
+
             // create the file, so we can set the permissions on it.
             outputFile.createNewFile()
             if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
@@ -83,42 +81,20 @@ class SigningConfigUtils {
                 view.acl = listOf(entry)
             }
 
-            val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
-            val gson = gsonBuilder.create()
-            FileUtils.write(outputFile, gson.toJson(signingConfig), StandardCharsets.UTF_8)
+            FileUtils.write(outputFile, getGson().toJson(signingConfig), StandardCharsets.UTF_8)
         }
 
-        /**
-         * Loads the SigningConfig object from the given file. This method returns an immutable
-         * [com.android.builder.model.SigningConfig] object instead of a mutable
-         * [com.android.build.gradle.internal.dsl.SigningConfig] object because the consumers
-         * shouldn't modify the returned object.
-         */
-        @Throws(IOException::class)
-        fun load(input: File?): com.android.builder.model.SigningConfig? {
-            if (input == null) return null
-            val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
-            val gson = gsonBuilder.create()
-            input.bufferedReader(StandardCharsets.UTF_8).use { fileReader ->
-                return gson.fromJson(
-                    fileReader,
-                    com.android.build.gradle.internal.dsl.SigningConfig::class.java
-                )
+        /** Loads the signing config information from a json file. */
+        fun load(input: File): SigningConfigData? {
+            return input.bufferedReader(StandardCharsets.UTF_8).use { reader ->
+                getGson().fromJson(reader, SigningConfigData::class.java)
             }
         }
 
-        fun getOutputFile(input: FileCollection?): File? {
-            if (input == null) return null
-            if (input.asFileTree.isEmpty) return null
-            val file = input.asFileTree.singleFile
-            if (file.name != PERSISTED_FILE_NAME) return null
-            return file
-        }
-
-        fun getOutputFile(directory: File): File {
-            return File(directory, PERSISTED_FILE_NAME)
+        private fun getGson(): Gson {
+            val gsonBuilder = GsonBuilder()
+            gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
+            return gsonBuilder.create()
         }
     }
 }

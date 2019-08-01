@@ -22,12 +22,14 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.internal.signing.SigningConfigProvider
+import com.android.build.gradle.internal.signing.SigningConfigProviderParams
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -35,6 +37,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -49,10 +52,9 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val intermediaryBundleFile: RegularFileProperty
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Nested
     @get:Optional
-    var signingConfig: FileCollection? = null
+    var signingConfig: SigningConfigProvider? = null
         private set
 
     @get:Input
@@ -70,7 +72,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 Params(
                     intermediaryBundleFile = intermediaryBundleFile.get().asFile,
                     finalBundleFile = finalBundleFile.get().asFile,
-                    signingConfig = SigningConfigUtils.getOutputFile(signingConfig)
+                    signingConfig = signingConfig?.convertToParams()
                 )
             )
         }
@@ -79,13 +81,14 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     private data class Params(
         val intermediaryBundleFile: File,
         val finalBundleFile: File,
-        val signingConfig: File?) : Serializable
+        val signingConfig: SigningConfigProviderParams?
+    ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
             FileUtils.cleanOutputDir(params.finalBundleFile.parentFile)
 
-            SigningConfigUtils.load(params.signingConfig)?.let {
+            params.signingConfig?.resolve()?.let {
                 val certificateInfo =
                     KeystoreHelper.getCertificateInfo(
                         it.storeType,
@@ -95,7 +98,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         it.keyAlias!!)
                 val signingConfig =
                     ApkSigner.SignerConfig.Builder(
-                        it.keyAlias!!.toUpperCase(), certificateInfo.key, listOf(certificateInfo.certificate))
+                        it.keyAlias.toUpperCase(Locale.US),
+                        certificateInfo.key,
+                        listOf(certificateInfo.certificate)
+                    )
                         .build()
                 ApkSigner.Builder(listOf(signingConfig))
                     .setOutputApk(params.finalBundleFile)
@@ -159,7 +165,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
             // Don't sign debuggable bundles.
             if (!variantScope.variantConfiguration.buildType.isDebuggable) {
-                task.signingConfig = variantScope.signingConfigFileCollection
+                task.signingConfig = SigningConfigProvider.create(variantScope)
             }
         }
 

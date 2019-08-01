@@ -17,15 +17,14 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.signing.SigningConfigData
 import com.google.common.truth.Truth.assertThat
-
-import com.android.build.gradle.internal.dsl.SigningConfig
-import java.io.File
-import java.io.IOException
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.attribute.AclEntry
 import java.nio.file.attribute.AclEntryPermission
@@ -52,12 +51,16 @@ class SigningConfigUtilsTest {
     @Test
     @Throws(IOException::class)
     fun testSaveAndLoad() {
-        val signingConfig = SigningConfig("signingConfig_name")
-        signingConfig.storePassword = "foobar"
-        signingConfig.keyPassword = "baz"
-        signingConfig.storeFile = storeFile
-        signingConfig.isV2SigningEnabled = true
-        signingConfig.isV1SigningEnabled = false
+        val signingConfig = SigningConfigData(
+            name = "sampleName",
+            storeType = "sampleStoreType",
+            storeFile = storeFile,
+            storePassword = "sampleStorePassword",
+            keyAlias = "sampleKeyAlias",
+            keyPassword = "sampleKeyPassword",
+            v1SigningEnabled = false,
+            v2SigningEnabled = true
+        )
         SigningConfigUtils.save(outputDirectory, signingConfig)
 
         val files = outputDirectory.listFiles()
@@ -70,12 +73,16 @@ class SigningConfigUtilsTest {
     @Test
     @Throws(IOException::class)
     fun testSavedFileIsReadWriteByOwnerOnly() {
-        val signingConfig = SigningConfig("signingConfig_name")
-        signingConfig.storePassword = "foobar"
-        signingConfig.keyPassword = "baz"
-        signingConfig.storeFile = storeFile
-        signingConfig.isV2SigningEnabled = true
-        signingConfig.isV1SigningEnabled = false
+        val signingConfig = SigningConfigData(
+            name = "sampleName",
+            storeType = "sampleStoreType",
+            storeFile = storeFile,
+            storePassword = "sampleStorePassword",
+            keyAlias = "sampleKeyAlias",
+            keyPassword = "sampleKeyPassword",
+            v1SigningEnabled = false,
+            v2SigningEnabled = true
+        )
         SigningConfigUtils.save(outputDirectory, signingConfig)
 
         val files = outputDirectory.listFiles()

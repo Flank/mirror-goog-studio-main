@@ -20,12 +20,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
 import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
+import com.android.build.gradle.internal.signing.SigningConfigData;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
@@ -194,7 +194,7 @@ public class IncrementalPackagerBuilder {
      * @return {@code this} for use with fluent-style notation
      */
     @NonNull
-    public IncrementalPackagerBuilder withSigning(@Nullable SigningConfig signingConfig) {
+    public IncrementalPackagerBuilder withSigning(@Nullable SigningConfigData signingConfig) {
         return withSigning(signingConfig, 1);
     }
 
@@ -207,7 +207,7 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(
-            @Nullable SigningConfig signingConfig, int minSdk) {
+            @Nullable SigningConfigData signingConfig, int minSdk) {
         return withSigning(signingConfig, minSdk, null);
     }
 
@@ -221,7 +221,7 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(
-            @Nullable SigningConfig signingConfig, int minSdk, @Nullable Integer targetApi) {
+            @Nullable SigningConfigData signingConfig, int minSdk, @Nullable Integer targetApi) {
         if (signingConfig == null) {
             return this;
         }
@@ -245,10 +245,10 @@ public class IncrementalPackagerBuilder {
             boolean enableV1Signing =
                     (targetApi == null || targetApi < NO_V1_SDK)
                             && minSdk < NO_V1_SDK
-                            && signingConfig.isV1SigningEnabled();
+                            && signingConfig.getV1SigningEnabled();
             boolean enableV2Signing =
                     (targetApi == null || targetApi >= NO_V1_SDK)
-                            && signingConfig.isV2SigningEnabled();
+                            && signingConfig.getV2SigningEnabled();
             creationDataBuilder.setSigningOptions(
                     SigningOptions.builder()
                             .setKey(certificateInfo.getKey())

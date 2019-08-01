@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.RELEASE;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
@@ -38,6 +39,8 @@ import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.BuilderConstants;
@@ -233,6 +236,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -241,6 +246,12 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/CERT.SF");
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
+
+        // Check that signing config is not written to disk when passed from the IDE (bug 137210434)
+        File signingConfigDir =
+                ArtifactTypeUtil.getOutputDir(
+                        InternalArtifactType.SIGNING_CONFIG, project.getBuildDir());
+        assertThat(signingConfigDir).doesNotExist();
     }
 
     @Test

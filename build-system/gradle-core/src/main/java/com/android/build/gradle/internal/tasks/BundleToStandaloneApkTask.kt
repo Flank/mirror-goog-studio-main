@@ -22,17 +22,18 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.commands.BuildApksCommand.ApkBuildMode
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -76,13 +77,12 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
 
     private lateinit var tempDirectory: File
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var signingConfig: FileCollection
+    @get:Nested
+    lateinit var signingConfig: SigningConfigProvider
         private set
 
     override fun doTaskAction() {
-        val config = SigningConfigUtils.load(signingConfig)
+        val config = signingConfig.resolve()
         getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleToolRunnable::class.java,
@@ -198,7 +198,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
             task.tempDirectory = variantScope.getIncrementalDir(name)
-            task.signingConfig = variantScope.signingConfigFileCollection
+            task.signingConfig = SigningConfigProvider.create(variantScope)
         }
     }
 }

@@ -389,6 +389,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/res/aapt2_version.properties",
                 "com/android/build/gradle/internal/res/namespaced/",
                 "com/android/build/gradle/internal/scope/",
+                "com/android/build/gradle/internal/signing/",
                 "com/android/build/gradle/internal/tasks/",
                 "com/android/build/gradle/internal/tasks/databinding/",
                 "com/android/build/gradle/internal/tasks/factory/",

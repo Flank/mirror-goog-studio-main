@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.packaging
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.fixtures.FakeLogger
+import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.builder.internal.packaging.ApkCreatorType
-import com.android.builder.model.SigningConfig
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.testutils.TestResources
 import org.junit.Assert.assertFalse
@@ -36,7 +36,7 @@ private const val KEY_ALIAS = "key0"
 
 class IncrementalPackagerBuilderTest {
 
-    lateinit var signingConfig: SigningConfig
+    lateinit var signingConfig: SigningConfigData
 
     @JvmField
     @Rule
@@ -56,25 +56,16 @@ class IncrementalPackagerBuilderTest {
             LoggerWrapper(FakeLogger())
         )
 
-        signingConfig = object : SigningConfig {
-            override fun getName() = "name"
-
-            override fun getStoreFile() = keyStoreFile
-
-            override fun getStorePassword() = ""
-
-            override fun getKeyAlias() = KEY_ALIAS
-
-            override fun getKeyPassword() = ""
-
-            override fun getStoreType() = null
-
-            override fun isV1SigningEnabled() = true
-
-            override fun isV2SigningEnabled() = true
-
-            override fun isSigningReady() = true
-        }
+        signingConfig = SigningConfigData(
+            name = "name",
+            storeType = null,
+            storeFile = keyStoreFile,
+            storePassword = "",
+            keyAlias = KEY_ALIAS,
+            keyPassword = "",
+            v1SigningEnabled = true,
+            v2SigningEnabled = true
+        )
     }
 
     @Test
