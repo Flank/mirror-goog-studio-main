@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
+<#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
 <recipe>
+    <#--
+    This needs to be before addAllKotlinDependencies because the merge instruction seems
+    to have non-commited documents that cause some UI tests to fail.
+    -->
+    <@navigation.addSafeArgsPluginToClasspath />
+    <@navigation.addSafeArgsPlugin />
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
@@ -12,9 +19,8 @@
     <#include "../common/recipe_manifest.xml.ftl" />
 
     <#assign activityMainLayout="navigation_activity_main" />
-    <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
 
-    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" withSafeArgs=true />
     <@navigation.instantiateFragmentAndViewModel fragmentPrefix="dashboard" />
     <@navigation.instantiateFragmentAndViewModel fragmentPrefix="notifications" />
     <@navigation.navigationDependencies />

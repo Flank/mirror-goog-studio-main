@@ -1,18 +1,18 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
+import android.view.Menu
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
+import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)}
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import ${getMaterialComponentName('android.support.v4.widget.DrawerLayout', useAndroidX)}
-import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)}
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
-import android.view.Menu
 
 class ${activityClass} : AppCompatActivity() {
 
@@ -35,8 +35,7 @@ class ${activityClass} : AppCompatActivity() {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(setOf(
-            R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow,
-            R.id.nav_tools, R.id.nav_share, R.id.nav_send), drawerLayout)
+            R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow), drawerLayout)
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }

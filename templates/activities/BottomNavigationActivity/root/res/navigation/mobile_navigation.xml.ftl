@@ -9,7 +9,25 @@
         android:id="@+id/navigation_home"
         android:name="${packageName}.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_HomeFragment_to_HomeSecondFragment"
+            app:destination="@id/navigation_home_second" />
+    </fragment>
+    <fragment
+        android:id="@+id/navigation_home_second"
+        android:name="${packageName}.ui.home.HomeSecondFragment"
+        android:label="@string/home_second"
+        tools:layout="@layout/fragment_home_second">
+        <action
+            android:id="@+id/action_HomeSecondFragment_to_HomeFragment"
+            app:destination="@id/navigation_home" />
+
+        <argument
+            android:name="myArg"
+            app:argType="string" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_dashboard"

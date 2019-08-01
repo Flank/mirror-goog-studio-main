@@ -1,4 +1,4 @@
-package ${packageName};
+package ${packageName}.ui.${navFragmentPrefix};
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +9,8 @@ import android.widget.TextView;
 import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
 import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)};
 import androidx.navigation.fragment.NavHostFragment;
+
+import ${packageName}.R;
 
 public class ${secondFragmentClass} extends Fragment {
 
@@ -25,10 +27,10 @@ public class ${secondFragmentClass} extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         String myArg = ${secondFragmentClass}Args.fromBundle(getArguments()).getMyArg();
-        TextView textView = view.findViewById(R.id.textview_second);
-        textView.setText(getString(R.string.hello_second_fragment, myArg));
+        TextView textView = view.findViewById(R.id.textview_${navFragmentPrefix}_second);
+        textView.setText(getString(R.string.hello_${navFragmentPrefix}_second, myArg));
 
-        view.findViewById(R.id.button_second).setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.button_${navFragmentPrefix}_second).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 NavHostFragment.findNavController(${secondFragmentClass}.this)

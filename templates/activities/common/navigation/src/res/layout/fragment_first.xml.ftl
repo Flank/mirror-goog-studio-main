@@ -2,9 +2,11 @@
 <${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
- 
+    android:layout_height="match_parent"
+    tools:context="${packageName}.ui.${navFragmentPrefix}.${firstFragmentClass}" >
+
     <TextView
         android:id="@+id/text_${navFragmentPrefix}"
         android:layout_width="match_parent"
@@ -16,5 +18,6 @@
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 </${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}>

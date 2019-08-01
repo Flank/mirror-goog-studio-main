@@ -10,7 +10,7 @@ import ${getMaterialComponentName('android.arch.lifecycle.Observer', useAndroidX
 import ${getMaterialComponentName('android.arch.lifecycle.ViewModelProviders', useAndroidX)}
 import ${escapeKotlinIdentifiers(packageName)}.R
 
-class ${navFragmentClass} : Fragment() {
+class ${firstFragmentClass} : Fragment() {
 
     private lateinit var ${navFragmentPrefix}ViewModel: ${navViewModelClass}
 
@@ -23,7 +23,7 @@ class ${navFragmentClass} : Fragment() {
                 ViewModelProviders.of(this).get(${navViewModelClass}::class.java)
         val root = inflater.inflate(R.layout.fragment_${navFragmentPrefix}, container, false)
         val textView: TextView = root.findViewById(R.id.text_${navFragmentPrefix})
-        ${navFragmentPrefix}ViewModel.text.observe(this, Observer {
+        ${navFragmentPrefix}ViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
         })
         return root

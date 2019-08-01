@@ -1,19 +1,18 @@
 package ${packageName};
 
 import android.os.Bundle;
+import android.view.View;
+import android.view.Menu;
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
-import android.view.View;
+import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)};
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)};
 import ${getMaterialComponentName('android.support.v4.widget.DrawerLayout', useAndroidX)};
-
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
-import android.view.Menu;
 
 public class ${activityClass} extends AppCompatActivity {
 
@@ -38,8 +37,7 @@ public class ${activityClass} extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow,
-                R.id.nav_tools, R.id.nav_share, R.id.nav_send)
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
                 .setDrawerLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);

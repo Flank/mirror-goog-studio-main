@@ -1,20 +1,38 @@
-<#macro instantiateFragmentAndViewModel fragmentPrefix >
+<#macro instantiateFragmentAndViewModel fragmentPrefix withSafeArgs=false>
     <global id="navFragmentPrefix" value="${fragmentPrefix}" />
     <#assign navFragmentPrefix="${fragmentPrefix}" />
-    <global id="navFragmentLayout" value="fragment_${fragmentPrefix}" />
-    <#assign navFragmentLayout="fragment_${fragmentPrefix}" />
-    <global id="navFragmentClass" value="${underscoreToCamelCase(navFragmentPrefix)}Fragment" />
+    <global id="firstFragmentClass" value="${underscoreToCamelCase(fragmentPrefix)}Fragment" />
     <global id="navViewModelClass" value="${underscoreToCamelCase(navFragmentPrefix)}ViewModel" />
-    <global id="navFragmentBinding" value="${underscoreToCamelCase(navFragmentLayout)}Binding" />
 
     <#assign inputDir="root://activities/common/navigation/src" /> 
-    <instantiate from="${inputDir}/res/layout/fragment_viewmodel.xml.ftl"
-        to="${escapeXmlAttribute(resOut)}/layout/fragment_${fragmentPrefix}.xml" />
-    <instantiate from="${inputDir}/ui/SimpleFragment.${ktOrJavaExt}.ftl"
-        to="${escapeXmlAttribute(srcOut)}/ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${ktOrJavaExt}" />
-    <instantiate from="${inputDir}/ui/SimpleViewModel.${ktOrJavaExt}.ftl"
-        to="${escapeXmlAttribute(srcOut)}/ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}ViewModel.${ktOrJavaExt}" />
+    <#assign escapedResOut="${escapeXmlAttribute(resOut)}" />
+    <#assign escapedSrcOut="${escapeXmlAttribute(srcOut)}" />
 
+    <#if withSafeArgs>
+        <#assign secondFragmentPrefix="${fragmentPrefix}_second" />
+        <#assign secondFragmentClass="${underscoreToCamelCase(secondFragmentPrefix)}Fragment" />
+        <#assign secondFragmentLayoutName="fragment_${secondFragmentPrefix}" />
+        <global id="secondFragmentLayoutName" value="${secondFragmentLayoutName}" />
+        <global id="secondFragmentClass" value="${secondFragmentClass}" />
+        <instantiate from="${inputDir}/res/layout/fragment_second.xml.ftl"
+            to="${escapedResOut}/layout/${secondFragmentLayoutName}.xml" />
+        <instantiate from="${inputDir}/ui/SecondFragment.${ktOrJavaExt}.ftl"
+            to="${escapedSrcOut}/ui/${fragmentPrefix}/${secondFragmentClass}.${ktOrJavaExt}" />
+        <instantiate from="${inputDir}/res/layout/fragment_first_with_safeargs.xml.ftl"
+            to="${escapedResOut}/layout/fragment_${fragmentPrefix}.xml" />
+        <instantiate from="${inputDir}/ui/FirstFragmentWithSafeArgs.${ktOrJavaExt}.ftl"
+            to="${escapedSrcOut}/ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${ktOrJavaExt}" />
+    <#else>
+        <instantiate from="${inputDir}/res/layout/fragment_first.xml.ftl"
+            to="${escapedResOut}/layout/fragment_${fragmentPrefix}.xml" />
+        <instantiate from="${inputDir}/ui/FirstFragment.${ktOrJavaExt}.ftl"
+            to="${escapedSrcOut}/ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${ktOrJavaExt}" />
+    </#if>
+
+    <instantiate from="${inputDir}/ui/ViewModel.${ktOrJavaExt}.ftl"
+        to="${escapedSrcOut}/ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}ViewModel.${ktOrJavaExt}" />
+    <merge from="${inputDir}/res/values/strings.xml.ftl"
+             to="${escapedResOut}/values/strings.xml" />
 </#macro>
 
 <#macro navigationDependencies>
