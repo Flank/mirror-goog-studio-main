@@ -94,7 +94,11 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     }
 
     // inputs
-    builder.add("-I", Preconditions.checkNotNull(config.androidJarPath))
+    if (config.mergeOnly) {
+        builder.add("--merge-only")
+    } else {
+        builder.add("-I", Preconditions.checkNotNull(config.androidJarPath))
+    }
 
     config.imports.forEach { file -> builder.add("-I", file.absolutePath) }
 

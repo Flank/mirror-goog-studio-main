@@ -29,7 +29,7 @@ import java.io.Serializable
 data class AaptPackageConfig(
     val manifestFile: File,
     val options: AaptOptions,
-    val androidJarPath: String,
+    val androidJarPath: String?,
     val variantType: VariantType,
     val sourceOutputDir: File? = null,
     val resourceOutputApk: File? = null,
@@ -46,6 +46,7 @@ data class AaptPackageConfig(
     val resourceConfigs: ImmutableSet<String> = ImmutableSet.of(),
     val generateProtos: Boolean = false,
     val imports: ImmutableList<File> = ImmutableList.of(),
+    val mergeOnly: Boolean = false,
     val packageId: Int? = null,
     val allowReservedPackageId: Boolean = false,
     val dependentFeatures: ImmutableCollection<File> = ImmutableList.of(),
@@ -57,6 +58,15 @@ data class AaptPackageConfig(
     val useMinimalKeepRules: Boolean = false,
     val useFinalIds: Boolean = true
 ) : Serializable {
+
+    init {
+        if (!mergeOnly && androidJarPath == null) {
+            throw IllegalStateException(
+                "Android jar path must be provided except in merge-only " +
+                        "(auto namespace transform) case."
+            )
+        }
+    }
 
     fun isStaticLibrary() = staticLibrary
     fun isListResourceFiles() = listResourceFiles
