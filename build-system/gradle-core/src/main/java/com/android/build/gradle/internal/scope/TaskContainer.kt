@@ -65,5 +65,5 @@ interface TaskContainer {
 
     var generateAnnotationsTask: TaskProvider<out ExtractAnnotations>?
 
-    val externalNativeBuildTasks: Collection<TaskProvider<out ExternalNativeBuildTask>>
+    val externalNativeBuildTask: TaskProvider<out ExternalNativeBuildTask>?
 }

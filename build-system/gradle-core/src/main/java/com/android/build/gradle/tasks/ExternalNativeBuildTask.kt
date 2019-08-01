@@ -444,7 +444,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExternalNativeBuildTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.externalNativeBuildTasks.add(taskProvider)
+            assert(variantScope.taskContainer.externalNativeBuildTask == null)
             variantScope.taskContainer.externalNativeBuildTask = taskProvider
         }
 

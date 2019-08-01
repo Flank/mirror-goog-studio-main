@@ -457,12 +457,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getExternalNativeBuildProviders()",
-                        "variant.getExternalNativeBuildTasks()",
+                        "variant.getExternalNativeBuildTask()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return getVariantData()
-                .getTaskContainer()
-                .getExternalNativeBuildTasks()
+
+        return getExternalNativeBuildProviders()
                 .stream()
                 .map(Provider::get)
                 .collect(Collectors.toList());
@@ -471,16 +470,15 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Collection<TaskProvider<ExternalNativeBuildTask>> getExternalNativeBuildProviders() {
-        return getVariantData()
-                .getTaskContainer()
-                .getExternalNativeBuildTasks()
-                .stream()
-                .map(
-                        taskProvider -> {
-                            //noinspection unchecked
-                            return (TaskProvider<ExternalNativeBuildTask>) taskProvider;
-                        })
-                .collect(Collectors.toList());
+        //noinspection unchecked
+        TaskProvider<ExternalNativeBuildTask> provider =
+                (TaskProvider<ExternalNativeBuildTask>)
+                        getVariantData().getTaskContainer().getExternalNativeBuildTask();
+        if (provider == null) {
+            return ImmutableList.of();
+        }
+
+        return ImmutableList.of(provider);
     }
 
     @Nullable

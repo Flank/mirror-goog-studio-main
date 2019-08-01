@@ -78,8 +78,8 @@ class MutableTaskContainer : TaskContainer {
     override val providerTestTaskList: List<TaskProvider<out DeviceProviderInstrumentTestTask>> = mutableListOf()
 
     override var generateAnnotationsTask: TaskProvider<out ExtractAnnotations>? = null
-
-    override val externalNativeBuildTasks: MutableCollection<TaskProvider<out ExternalNativeBuildTask>> = mutableListOf()
+    
+    override var externalNativeBuildTask: TaskProvider<out ExternalNativeBuildTask>? = null
 
     // required by the model.
     lateinit var sourceGenTask: TaskProvider<out Task>
@@ -91,7 +91,6 @@ class MutableTaskContainer : TaskContainer {
     lateinit var assetGenTask: TaskProvider<Task>
     var connectedTask: TaskProvider<out Task>? = null
     var microApkTask: TaskProvider<out Task>? = null
-    var externalNativeBuildTask: TaskProvider<out ExternalNativeBuildTask>? = null
     var externalNativeJsonGenerator: Provider<ExternalNativeJsonGenerator>? = null
     var packageSplitResourcesTask: TaskProvider<out Task>? = null
     var packageSplitAbiTask: TaskProvider<out Task>? = null
