@@ -22,8 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.level2.Library;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStub;
+import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStubBuilder;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
@@ -32,12 +31,10 @@ import org.junit.Test;
 /** Tests for {@link IdeAndroidLibrary}. */
 public class IdeAndroidLibraryTest {
     private IdeLibraryFactory myLibraryFactory;
-    private ModelCache myModelCache;
 
     @Before
     public void setUp() {
         myLibraryFactory = new IdeLibraryFactory();
-        myModelCache = new ModelCache();
     }
 
     @Test
@@ -47,7 +44,7 @@ public class IdeAndroidLibraryTest {
 
     @Test
     public void serialization() throws Exception {
-        Library androidLibrary = myLibraryFactory.create(new AndroidLibraryStub());
+        Library androidLibrary = myLibraryFactory.create(new AndroidLibraryStubBuilder().build());
         byte[] bytes = Serialization.serialize(androidLibrary);
         Object o = Serialization.deserialize(bytes);
         assertEquals(androidLibrary, o);
@@ -55,7 +52,7 @@ public class IdeAndroidLibraryTest {
 
     @Test
     public void constructor() throws Throwable {
-        Library original = new AndroidLibraryStub();
+        Library original = new AndroidLibraryStubBuilder().build();
         Library copy = myLibraryFactory.create(original);
         assertThat(copy.getAidlFolder())
                 .isEqualTo(join(original.getFolder(), original.getAidlFolder()).getPath());

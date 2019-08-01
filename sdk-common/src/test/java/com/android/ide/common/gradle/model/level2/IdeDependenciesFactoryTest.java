@@ -25,8 +25,13 @@ import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.level2.Library;
-import com.android.ide.common.gradle.model.stubs.*;
-import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStub;
+import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
+import com.android.ide.common.gradle.model.stubs.DependenciesStub;
+import com.android.ide.common.gradle.model.stubs.DependencyGraphsStub;
+import com.android.ide.common.gradle.model.stubs.GlobalLibraryMapStub;
+import com.android.ide.common.gradle.model.stubs.GradleStubBuilderUtil;
+import com.android.ide.common.gradle.model.stubs.GraphItemStub;
+import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
 import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub;
 import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStub;
 import com.android.ide.common.repository.GradleVersion;
@@ -63,14 +68,7 @@ public class IdeDependenciesFactoryTest {
                         return "javaLibrary";
                     }
                 };
-        Library level2AndroidLibrary =
-                new AndroidLibraryStub() {
-                    @Override
-                    @NonNull
-                    public String getArtifactAddress() {
-                        return "androidLibrary";
-                    }
-                };
+        Library level2AndroidLibrary = GradleStubBuilderUtil.l2AndroidLibrary("androidLibrary");
         Library level2ModuleLibrary =
                 new ModuleLibraryStub() {
                     @Override

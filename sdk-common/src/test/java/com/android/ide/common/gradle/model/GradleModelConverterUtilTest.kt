@@ -47,7 +47,7 @@ class GradleModelConverterUtilTest {
 
     @Test
     fun testConvertAndroidLibrary() {
-        val original = com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStub()
+        val original = com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStubBuilder().build()
         val result = convertLibrary(original)
 
         with(original) {
