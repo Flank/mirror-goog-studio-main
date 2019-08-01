@@ -335,7 +335,9 @@ open class DefaultJavaEvaluator(
         val parameters = parameterList.parameters
 
         var j = 0
-        if (parameters.firstOrNull()?.name?.startsWith("\$this") == true &&
+        val first = parameters.firstOrNull()?.name
+        // check if "$self" for UltraLightParameter
+        if ((first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) &&
             isKotlin(call.sourcePsi)
         ) {
             // Kotlin extension method.

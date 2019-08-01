@@ -76,10 +76,12 @@ import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
+import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.CliKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.UastAnalysisHandlerExtension
 import java.io.File
+import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 
 // Cleanup remaining:
 // * Find a way to test kotlin extensions (like the findViewById extension) ??
@@ -340,7 +342,8 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         configuration.put(CommonConfigurationKeys.MODULE_NAME, moduleName)
         configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
         if (configuration.getList(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS).isEmpty()) {
-            configuration.add(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)
+            configuration.add(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS,
+                ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
         }
 
         val sourceRoots = javaSourceRoots.map { VfsUtilCore.virtualToIoFile(it.file) }

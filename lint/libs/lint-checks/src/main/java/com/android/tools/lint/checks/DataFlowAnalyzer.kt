@@ -100,6 +100,8 @@ abstract class DataFlowAnalyzer(
         } else {
             val lambda = node.uastParent as? ULambdaExpression
                 ?: node.uastParent?.uastParent as? ULambdaExpression
+                // Kotlin 1.3.50 may add another layer UImplicitReturnExpression
+                ?: node.uastParent?.uastParent?.uastParent as? ULambdaExpression
             if (lambda != null && lambda.uastParent is UCallExpression &&
                 isKotlinScopingFunction(lambda.uastParent as UCallExpression)
             ) {
@@ -115,7 +117,11 @@ abstract class DataFlowAnalyzer(
                     instances.add(body)
                     if (body is UBlockExpression) {
                         for (expression in body.expressions) {
-                            instances.add(expression)
+                            if (expression is UReturnExpression) {
+                                expression.returnExpression?.let(instances::add)
+                            } else {
+                                instances.add(expression)
+                            }
                         }
                     }
                 }
@@ -145,7 +151,11 @@ abstract class DataFlowAnalyzer(
                     instances.add(body)
                     if (body is UBlockExpression) {
                         for (expression in body.expressions) {
-                            instances.add(expression)
+                            if (expression is UReturnExpression) {
+                                expression.returnExpression?.let(instances::add)
+                            } else {
+                                instances.add(expression)
+                            }
                         }
                     }
                 }

@@ -2073,7 +2073,9 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     if (valueArguments.isNotEmpty()) {
         var firstParameterIndex = 0
         // Kotlin extension method? Not included in valueArguments indices.
-        if (parameters.firstOrNull()?.name?.startsWith("\$this") == true) {
+        // check if "$self" for UltraLightParameter
+        val first = parameters.firstOrNull()?.name
+        if (first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) {
             firstParameterIndex++
         }
 

@@ -26,6 +26,7 @@ import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
@@ -43,6 +44,14 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                 override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
                     handleBinaryExpression(node, detectors, context)
                     return super.visitBinaryExpression(node)
+                }
+
+                override fun visitReturnExpression(node: UReturnExpression): Boolean {
+                    val returnExpression = node.returnExpression
+                    if (returnExpression is UCallExpression) {
+                        visitCallExpression(returnExpression)
+                    }
+                    return super.visitReturnExpression(node)
                 }
             })
     }
@@ -196,7 +205,11 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
     }
 
     private fun getSurroundingNamedBlock(node: UElement): UCallExpression? {
-        val parent = node.uastParent
+        var parent = node.uastParent
+        if (parent is UReturnExpression) {
+            // parent may be a UReturnExpression child of UBlockExpression
+            parent = parent?.uastParent
+        }
         if (parent is UBlockExpression) {
             val parentParent = parent.uastParent
             if (parentParent is ULambdaExpression) {
