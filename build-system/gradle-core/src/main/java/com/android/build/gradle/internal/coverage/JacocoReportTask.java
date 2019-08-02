@@ -43,10 +43,13 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.IsolationMode;
 import org.jacoco.core.analysis.Analyzer;
@@ -81,7 +84,9 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         getLogger().info("JacocoReportTask.setCoverageDir is deprecated and has no effect.");
     }
 
+    // PathSensitivity.NONE since only the contents of the files under the directory matter as input
     @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
     @Optional
     public abstract DirectoryProperty getCoverageDirectories();
 
@@ -94,26 +99,27 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         this.reportDir = reportDir;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getClassFileCollection() {
         return classFileCollection;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getSourceFolders() {
         return sourceFolders.get();
     }
 
+    @Input
     public String getReportName() {
         return reportName;
     }
 
-    @Input
     public void setReportName(String reportName) {
         this.reportName = reportName;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getJacocoClasspath() {
         return jacocoClasspath;
     }
