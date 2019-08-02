@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="${packageName}">
+          package="${sharedPackageName}">
 
     <application>
 
@@ -23,7 +23,7 @@
          consumers through MediaBrowserService and MediaSession. Consumers connect to it through
          MediaBrowser (for browsing) and MediaController (for playback control) -->
         <service
-            android:name="${packageName}.${mediaBrowserServiceName}"
+            android:name="${sharedPackageName}.${mediaBrowserServiceName}"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />

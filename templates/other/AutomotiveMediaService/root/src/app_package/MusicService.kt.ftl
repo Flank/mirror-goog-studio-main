@@ -1,4 +1,8 @@
-package ${kotlinEscapedPackageName}
+<#if Mobileincluded!false>
+  package ${kotlinEscapedPackageName}.${sharedModule}
+<#else>
+  package ${kotlinEscapedPackageName}
+</#if>
 
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.v4.media.MediaBrowserCompat.MediaItem', useAndroidX)}

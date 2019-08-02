@@ -1,4 +1,4 @@
-package ${packageName};
+package ${sharedPackageName};
 
 import android.os.Bundle;
 import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
