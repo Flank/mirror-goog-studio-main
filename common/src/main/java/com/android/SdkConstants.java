@@ -742,6 +742,7 @@ public final class SdkConstants {
     public static final String CLASS_NAME_FRAMELAYOUT = "FrameLayout"; //$NON-NLS-1$
     public static final String CLASS_FRAMELAYOUT =
             "android.widget." + CLASS_NAME_FRAMELAYOUT; //$NON-NLS-1$
+    public static final String CLASS_ADAPTER = "android.widget.Adapter";
     public static final String CLASS_PREFERENCE = "android.preference.Preference"; //$NON-NLS-1$
     public static final AndroidxName CLASS_PREFERENCE_ANDROIDX =
             AndroidxName.of("android.support.v7.preference.", "Preference");
@@ -2283,6 +2284,8 @@ public final class SdkConstants {
     // Method Names
     public static final String FORMAT_METHOD = "format"; //$NON-NLS-1$
     public static final String GET_STRING_METHOD = "getString"; //$NON-NLS-1$
+    public static final String SET_CONTENT_VIEW_METHOD = "setContentView";
+    public static final String INFLATE_METHOD = "inflate";
 
     public static final String ATTR_TAG = "tag"; //$NON-NLS-1$
     public static final String ATTR_NUM_COLUMNS = "numColumns"; //$NON-NLS-1$
