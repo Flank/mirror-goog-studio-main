@@ -9,7 +9,7 @@ import ${getMaterialComponentName('android.support.design.widget.Snackbar', useM
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
 import android.view.View;
-<#if isNewProject>
+<#if isNewModule>
 import android.view.Menu;
 import android.view.MenuItem;
 </#if>
@@ -39,7 +39,7 @@ public class ${activityClass} extends AppCompatActivity {
             }
         });
     }
-<#if isNewProject>
+<#if isNewModule>
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -1,5 +1,5 @@
 <resources>
-    <#if !isNewProject>
+    <#if !isNewModule>
     <string name="title_${activityToLayout(activityClass)}">${escapeXmlString(activityClass)}</string>
     </#if>
     <string name="intro_text">Swipe edge to exit the map.</string>

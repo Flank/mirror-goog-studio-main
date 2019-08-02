@@ -43,7 +43,7 @@
             type="string"
             constraints="layout|unique|nonempty"
             suggest="menu_${classToResource(activityClass)}"
-            visibility="isNewProject!false"
+            visibility="isNewModule!false"
             default="menu_main"
             help="The name of the resource file to create for the menu items"/>
 

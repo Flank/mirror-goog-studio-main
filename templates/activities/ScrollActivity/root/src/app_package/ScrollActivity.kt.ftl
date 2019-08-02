@@ -6,7 +6,7 @@ import ${getMaterialComponentName('android.support.design.widget.CollapsingToolb
 </#if>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
-<#if isNewProject>
+<#if isNewModule>
 import android.view.Menu
 import android.view.MenuItem
 </#if>
@@ -26,7 +26,7 @@ class ${activityClass} : AppCompatActivity() {
                     .setAction("Action", null).show()
         }
     }
-<#if isNewProject>
+<#if isNewModule>
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

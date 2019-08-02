@@ -1,6 +1,6 @@
 <resources>
 
-    <#if !isNewProject>
+    <#if !isNewModule>
     <string name="title_${simpleName}">${escapeXmlString(activityTitle)}</string>
     </#if>
     <string name="dummy_button">Dummy Button</string>

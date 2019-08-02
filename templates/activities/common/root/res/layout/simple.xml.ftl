@@ -11,7 +11,7 @@
 </#if>
     tools:context="${packageName}.${activityClass}">
 
-<#if isNewProject!false>
+<#if isNewModule!false>
     <TextView
 <#if includeCppSupport!false>
         android:id="@+id/sample_text"

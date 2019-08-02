@@ -1,6 +1,6 @@
 <resources>
     <!-- Strings related to login -->
-    <#if !isNewProject>
+    <#if !isNewModule>
     <string name="title_${simpleName}">${escapeXmlString(activityTitle)}</string>
     </#if>
     <string name="prompt_email">Email</string>

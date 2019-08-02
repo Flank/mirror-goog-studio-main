@@ -5,7 +5,7 @@
     <instantiate from="root/res/layout/simple.xml.ftl"
                  to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
 
-<#if (isNewProject!false) && !(excludeMenu!false)>
+<#if (isNewModule!false) && !(excludeMenu!false)>
     <#include "recipe_simple_menu.xml.ftl" />
 </#if>
 </recipe>

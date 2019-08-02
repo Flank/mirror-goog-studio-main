@@ -32,7 +32,7 @@
     <instantiate from="root/res-buildApi22/layout/navigation_content_main.xml.ftl"
                  to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
 
-    <#if (isNewProject!false) && !(excludeMenu!false)>
+    <#if (isNewModule!false) && !(excludeMenu!false)>
         <#include "../common/recipe_simple_menu.xml.ftl" />
     </#if>
 

@@ -16,9 +16,9 @@ apply plugin: 'kotlin-android-extensions'
 
 // TODO: <apply plugin /> Is adding the dependencies at the *end* of build.gradle
 // TODO: The two macros above, addKotlinPlugins and addKotlinDependencies, are duplicating the work of addAllKotlinDependencies, when
-//       creating a new project (isNewProject == true). The only reason is the above bug on <apply plugin />
+//       creating a new project (isNewModule == true). The only reason is the above bug on <apply plugin />
 <#macro addAllKotlinDependencies>
-  <#if !isNewProject && ((language!'Java')?string == 'Kotlin')>
+  <#if !isNewModule && ((language!'Java')?string == 'Kotlin')>
     <apply plugin="kotlin-android" />
     <apply plugin="kotlin-android-extensions" />
     <#if !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>

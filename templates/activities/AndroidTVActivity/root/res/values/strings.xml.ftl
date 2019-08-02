@@ -1,5 +1,5 @@
 <resources>
-  <#if isNewProject>
+  <#if isNewModule>
     <string name="app_name">Leanback ${escapeXmlString(activityTitle)}</string>
   <#else>
     <string name="title_${activityToLayout(activityClass)}">Leanback ${escapeXmlString(activityTitle)}</string>

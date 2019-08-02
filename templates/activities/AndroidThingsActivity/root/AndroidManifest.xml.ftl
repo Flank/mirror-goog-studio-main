@@ -7,7 +7,7 @@
 
         <activity android:name="${packageName}.${activityClass}"
             <#if generateActivityTitle!true>
-                <#if isNewProject>
+                <#if isNewModule>
                     android:label="@string/app_name"
                 <#else>
                     android:label="@string/title_${activityToLayout(activityClass)}"

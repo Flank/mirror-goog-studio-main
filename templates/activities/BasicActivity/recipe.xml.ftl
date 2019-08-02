@@ -19,7 +19,7 @@
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
     <instantiate from="root/res/layout/fragment_simple.xml.ftl"
                  to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
-    <#if (isNewProject!false) && !(excludeMenu!false)>
+    <#if (isNewModule!false) && !(excludeMenu!false)>
         <#include "../common/recipe_simple_menu.xml.ftl" />
     </#if>
     <#--------->
