@@ -17,6 +17,8 @@
 package com.android.builder.internal.packaging
 
 import com.android.SdkConstants
+import com.android.signflinger.SignedApk
+import com.android.signflinger.SignedApkOptions
 import com.android.tools.build.apkzlib.sign.SigningOptions
 import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
@@ -28,8 +30,6 @@ import com.android.zipflinger.ZipSource
 import com.google.common.base.Function
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
-import com.android.signflinger.SignedApk
-import com.android.signflinger.SignedApkOptions
 import java.io.File
 import java.io.IOException
 import java.nio.file.InvalidPathException
@@ -82,6 +82,7 @@ class ApkFlinger(
                     .setV1Enabled(signingOptions.isV1SigningEnabled)
                     .setV2Enabled(signingOptions.isV2SigningEnabled)
                     .setV1CreatedBy(creationData.createdBy ?: DEFAULT_CREATED_BY)
+                    .setV1TrustManifest(creationData.isIncremental)
             if (signingOptions.executor != null) {
                 signedApkOptionsBuilder.setExecutor(signingOptions.executor!!)
             }
