@@ -36,6 +36,7 @@ build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
 build --cxxopt=-std=c++11
 build --copt=-fvisibility=hidden
+build --define=grpc_no_ares=true
 
 # Forwards the system $SHELL environment variable so remote execution of bazel
 # finds make in the ndk-build script (see b/72179674).

@@ -205,7 +205,7 @@ def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility 
     native.cc_library(
         name = name,
         srcs = outs,
-        deps = deps + ["//external:grpc++_unsecure"],
+        deps = deps + ["//external:grpc++_unsecure", "//external:protobuf"],
         includes = includes,
         visibility = visibility,
         tags = tags,

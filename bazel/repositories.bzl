@@ -70,13 +70,15 @@ _binds = {
     "gtest": "@gtest_repo//:gtest",
     "gmock_main": "@gmock_repo//:gmock_main",
     "slicer": "@slicer_repo//:slicer",
-    "protobuf_clib": "@protobuf_repo//:protobuf",
+    "protobuf_clib": "@protobuf_repo//:protoc_lib",
     "nanopb": "@nanopb_repo//:nanopb",
     "zlib": "@zlib_repo//:zlib",
-    "protobuf_compiler": "@protobuf_repo//:protoc_lib",
+    "protobuf_headers": "@protobuf_repo//:protobuf_headers",
+    "protobuf": "@protobuf_repo//:protobuf",
     "protoc": "@protobuf_repo//:protoc",
     "grpc_cpp_plugin": "@grpc_repo//:grpc_cpp_plugin",
     "grpc++_unsecure": "@grpc_repo//:grpc++_unsecure",
+    "madler_zlib": "@zlib_repo//:zlib",  # Needed for grpc
 }
 
 def setup_external_repositories(prefix = ""):
