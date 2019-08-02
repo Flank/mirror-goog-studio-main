@@ -32,7 +32,6 @@ import com.android.ide.common.gradle.model.stubs.GlobalLibraryMapStub;
 import com.android.ide.common.gradle.model.stubs.GradleStubBuilderUtil;
 import com.android.ide.common.gradle.model.stubs.GraphItemStub;
 import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
-import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub;
 import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStub;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableMap;
@@ -60,15 +59,8 @@ public class IdeDependenciesFactoryTest {
                 new GraphItemStub("androidLibrary", Collections.emptyList(), "");
         GraphItemStub moduleGraphItem = new GraphItemStub("module", Collections.emptyList(), "");
 
-        Library level2JavaLibrary =
-                new JavaLibraryStub() {
-                    @Override
-                    @NonNull
-                    public String getArtifactAddress() {
-                        return "javaLibrary";
-                    }
-                };
         Library level2AndroidLibrary = GradleStubBuilderUtil.l2AndroidLibrary("androidLibrary");
+        Library level2JavaLibrary = GradleStubBuilderUtil.l2JavaLibrary("javaLibrary");
         Library level2ModuleLibrary =
                 new ModuleLibraryStub() {
                     @Override

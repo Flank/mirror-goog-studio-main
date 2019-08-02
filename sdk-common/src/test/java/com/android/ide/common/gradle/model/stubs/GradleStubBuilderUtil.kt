@@ -18,6 +18,11 @@ package com.android.ide.common.gradle.model.stubs
 
 import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStub
 import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStubBuilder
+import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub
+import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStubBuilder
 
 fun l2AndroidLibrary(address: String) : AndroidLibraryStub =
   AndroidLibraryStubBuilder(artifactAddress = address).build()
+
+fun l2JavaLibrary(address: String) : JavaLibraryStub =
+  JavaLibraryStubBuilder(artifactAddress = address).build()
