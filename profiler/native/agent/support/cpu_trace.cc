@@ -38,7 +38,6 @@ using profiler::proto::CpuTraceOperationResponse;
 using profiler::proto::CpuTraceType;
 using profiler::proto::EmptyResponse;
 using profiler::proto::InternalCpuService;
-using profiler::proto::SendBytesRequest;
 using profiler::proto::SendCommandRequest;
 using profiler::proto::TraceInitiationType;
 using std::string;

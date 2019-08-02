@@ -64,10 +64,15 @@ message SendEventRequest {
 message SendBytesRequest {
   // string id presenting the bytes (e.g. file name)
   string name = 1;
-  // byte content
-  bytes bytes = 2;
-  // whether the data is partial and more content should be expected
-  bool is_partial = 3;
+  oneof union {
+    // If set, byte content to append to the file of given |name|.
+    bytes bytes = 2;
+    // If set to true, the content of the file of given |name| is complete.
+    // If set to false, this request is no-op.
+    // It's a no-op to mark a file |complete| with no |bytes| added before.
+    // To send an empty file, send an empty |bytes| first and then mark it |complete|.
+    bool is_complete = 3;
+  }
 }
 
 // TODO b/120504084 replace with google.protobuf.empty

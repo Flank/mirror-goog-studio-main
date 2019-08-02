@@ -25,6 +25,7 @@ using grpc::ServerContext;
 using profiler::proto::EmptyResponse;
 using profiler::proto::Event;
 using profiler::proto::HeartBeatRequest;
+using profiler::proto::SendBytesRequest;
 using profiler::proto::SendCommandRequest;
 
 namespace profiler {
@@ -53,12 +54,15 @@ grpc::Status AgentServiceImpl::SendEvent(grpc::ServerContext* context,
 }
 
 grpc::Status AgentServiceImpl::SendBytes(grpc::ServerContext* context,
-                                         const proto::SendBytesRequest* request,
+                                         const SendBytesRequest* request,
                                          proto::EmptyResponse* response) {
   auto cache = daemon_->file_cache();
-  cache->AddChunk(request->name(), request->bytes());
-  if (!request->is_partial()) {
-    cache->Complete(request->name());
+  if (request->union_case() == SendBytesRequest::kBytes) {
+    cache->AddChunk(request->name(), request->bytes());
+  } else if (request->union_case() == SendBytesRequest::kIsComplete) {
+    if (request->is_complete()) {
+      cache->Complete(request->name());
+    }
   }
   return grpc::Status::OK;
 }

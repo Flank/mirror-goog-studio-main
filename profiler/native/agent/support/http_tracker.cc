@@ -105,7 +105,6 @@ struct PayloadBuffer {
               SendBytesRequest request;
               request.set_name(payload_name.str());
               request.set_bytes(batched_bytes.str());
-              request.set_is_partial(true);
 
               EmptyResponse response;
               Status result = stub.SendBytes(&ctx, request, &response);
@@ -260,7 +259,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
            // that the payload is complete.
            SendBytesRequest request;
            request.set_name(payload_name);
-           request.set_is_partial(false);
+           request.set_is_complete(true);
            EmptyResponse response;
            return stub.SendBytes(&ctx, request, &response);
          },
@@ -322,7 +321,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
            // that the payload is complete.
            SendBytesRequest request;
            request.set_name(payload_name);
-           request.set_is_partial(false);
+           request.set_is_complete(true);
            EmptyResponse response;
            return stub.SendBytes(&ctx, request, &response);
          },
