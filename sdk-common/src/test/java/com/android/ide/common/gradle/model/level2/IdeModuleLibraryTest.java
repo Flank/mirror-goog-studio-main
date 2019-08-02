@@ -15,12 +15,13 @@
  */
 package com.android.ide.common.gradle.model.level2;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.assertEqualsOrSimilar;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.level2.Library;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStubBuilder;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
@@ -30,12 +31,10 @@ import org.junit.Test;
 /** Tests for {@link IdeModuleLibrary}. */
 public class IdeModuleLibraryTest {
     private IdeLibraryFactory myLibraryFactory;
-    private ModelCache myModelCache;
 
     @Before
     public void setUp() throws Exception {
         myLibraryFactory = new IdeLibraryFactory();
-        myModelCache = new ModelCache();
     }
 
     @Test

@@ -18,6 +18,8 @@ package com.android.ide.common.gradle.model.stubs
 
 import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStub
 import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStubBuilder
+import com.android.ide.common.gradle.model.stubs.level2.IdeDependenciesStub
+import com.android.ide.common.gradle.model.stubs.level2.IdeDependenciesStubBuilder
 import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub
 import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStubBuilder
 import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStub
