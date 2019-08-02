@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStub;
+import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStubBuilder;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
@@ -45,7 +45,7 @@ public class IdeModuleLibraryTest {
 
     @Test
     public void serialization() throws Exception {
-        Library moduleLibrary = myLibraryFactory.create(new ModuleLibraryStub());
+        Library moduleLibrary = myLibraryFactory.create(new ModuleLibraryStubBuilder().build());
         byte[] bytes = Serialization.serialize(moduleLibrary);
         Object o = Serialization.deserialize(bytes);
         assertEquals(moduleLibrary, o);
@@ -53,8 +53,8 @@ public class IdeModuleLibraryTest {
 
     @Test
     public void constructor() throws Throwable {
-        Library original = new ModuleLibraryStub();
-        Library copy = myLibraryFactory.create(new ModuleLibraryStub());
+        Library original = new ModuleLibraryStubBuilder().build();
+        Library copy = myLibraryFactory.create(new ModuleLibraryStubBuilder().build());
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

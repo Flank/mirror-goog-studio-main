@@ -22,6 +22,7 @@ import com.android.builder.model.JavaLibrary;
 import com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStubBuilder;
 import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStubBuilder;
 import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStub;
+import com.android.ide.common.gradle.model.stubs.level2.ModuleLibraryStubBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +45,7 @@ public class IdeLibraryFactoryTest {
                 myLibraryFactory.create(new JavaLibraryStubBuilder().build());
         assertThat(javaLibrary).isInstanceOf(IdeJavaLibrary.class);
 
-        ModuleLibraryStub moduleLibrary = new ModuleLibraryStub();
+        ModuleLibraryStub moduleLibrary = new ModuleLibraryStubBuilder().build();
         assertThat(myLibraryFactory.create(moduleLibrary)).isInstanceOf(IdeModuleLibrary.class);
     }
 
