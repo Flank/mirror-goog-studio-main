@@ -61,11 +61,10 @@ class WorkerExecutorResourceCompilationService(
         if (requests.isEmpty()) {
             return
         }
-        // Sort the resource files by extension and directory name for a better distribution of
-        // files between workers, as files of the same type will be distributed equally between
-        // the workers and as the parent folder indicates how large the file is, large files
-        // of the same type will also be distributed equally between the workers.
-        requests.sortWith(compareBy({getExtension(it.inputFile)}, {it.inputDirectoryName}))
+        // Sort the resource files by extension and size for a better distribution of files
+        // between workers. Files of the same type will be distributed equally between the workers.
+        // Large files of the same type will also be distributed equally between the workers.
+        requests.sortWith(compareBy({getExtension(it.inputFile)}, {it.inputFile.length()}))
         val buckets = minOf(requests.size, 8) // Max 8 buckets
 
         for (bucket in 0 until buckets) {
