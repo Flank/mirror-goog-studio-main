@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.model.SourceProvider;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
 import com.android.ide.common.blame.MergingLog;
@@ -84,13 +83,10 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 @CacheableTask
@@ -112,9 +108,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     private boolean crunchPng;
 
     private File blameLogFolder;
-
-    // file inputs as raw files, lazy behind a memoized/bypassed supplier
-    private Supplier<Collection<File>> sourceFolderInputs;
 
     private List<ResourceSet> processedInputs;
 
@@ -525,12 +518,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         processedInputs = null;
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public Collection<File> getSourceFolderInputs() {
-        return sourceFolderInputs.get();
-    }
-
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
 
@@ -720,11 +707,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
             task.getResourcesComputer().initFromVariantScope(variantScope, includeDependencies);
-            task.sourceFolderInputs =
-                    () ->
-                            variantData
-                                    .getVariantConfiguration()
-                                    .getSourceFiles(SourceProvider::getResDirectories);
 
             if (!task.disableVectorDrawables) {
                 task.generatedPngsOutputDir = variantScope.getGeneratedPngsOutputDir();
