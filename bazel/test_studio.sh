@@ -30,6 +30,7 @@ readonly invocation_id="$(uuidgen)"
   ${config_options} \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
+  --build_event_binary_file="${dist_dir}/bazel-${build_number}.bes" \
   --define=meta_android_build_number=${build_number} \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
