@@ -7,9 +7,6 @@
 
 <#if minApiLevel lt 21>
     <dependency mavenUrl="com.android.support:support-vector-drawable:${buildApi}.+" />
-
-    <merge from="root/build.gradle"
-             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 </#if>
 
     <#include "../common/recipe_manifest.xml.ftl" />
