@@ -6,6 +6,6 @@
     <global id="manifestOut" value="${manifestDir}" />
     <global id="resOut" value="${resDir}" />
  
-    <#assign useAndroidX=isAndroidxEnabled()>
+    <#assign useAndroidX=addAndroidXSupport!false>
     <global id="useAndroidX" type="boolean" value="${useAndroidX?string}" />
 </globals>

@@ -2,7 +2,7 @@
     <#assign theme=applicationTheme!{ "name": "AppTheme"}>
     <#assign themeName=theme.name!'AppTheme'>
     <#assign themeNameNoActionBar=theme.nameNoActionBar!'AppTheme.NoActionBar'>
-    <#assign useAndroidX=isAndroidxEnabled()>
+    <#assign useAndroidX=addAndroidXSupport!false>
     <#assign useMaterial2=useAndroidX || hasDependency('com.google.android.material:material')>
 
     <global id="themeName" type="string" value="${themeName}" />
