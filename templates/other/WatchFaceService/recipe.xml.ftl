@@ -4,6 +4,7 @@
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.google.android.support:wearable:+" />
     <dependency mavenUrl="com.google.android.wearable:wearable:+" gradleConfiguration="provided" />
+    <dependency mavenUrl="com.google.android.gms:play-services-base:+" />
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
@@ -13,9 +14,6 @@
     <merge from="root/AndroidManifestPermissions.xml"
              to="${escapeXmlAttribute(appManifestOut)}/AndroidManifest.xml" />
 </#if>
-
-    <merge from="root/build.gradle.ftl"
-             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
     <merge from="root/res/values/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
