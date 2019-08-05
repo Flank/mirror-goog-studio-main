@@ -30,7 +30,7 @@ apply plugin: 'kotlin-android-extensions'
 </#macro>
 
 <#macro addKotlinToBaseProject>
-  <#if (language!'Java')?string == 'Kotlin'>
+  <#if !(isNewProject!false) && (language!'Java')?string == 'Kotlin'>
     <merge from="root://activities/common/kotlin.gradle.ftl"
              to="${escapeXmlAttribute(topOut)}/build.gradle" />
   </#if>
