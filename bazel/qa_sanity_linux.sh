@@ -29,7 +29,6 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   ${config_options} \
   --invocation_id=${invocation_id} \
   --define=meta_android_build_number=${build_number} \
-  --jobs 4 \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
@@ -56,7 +55,6 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
-  --jobs 1 \
   --define external_emulator=true \
   --define=meta_android_build_number=${build_number} \
   -- \
