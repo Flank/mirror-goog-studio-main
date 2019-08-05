@@ -36,7 +36,9 @@ import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.incremental.DependencyData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.repository.Revision;
 import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -83,12 +85,28 @@ public abstract class AidlCompile extends NonIncrementalTask {
     private FileCollection importDirs;
 
     private Provider<File> aidlExecutableProvider;
+    private Provider<Revision> buildToolsRevisionProvider;
+
     private Provider<File> aidlFrameworkProvider;
 
-    @InputFile
-    @PathSensitive(PathSensitivity.NONE)
-    public Provider<File> getAidlExecutableProvider() {
-        return aidlExecutableProvider;
+    // Given the same version, the path or contents of the AIDL tool may change across platforms,
+    // but it would still produce the same output (given the same inputs)---see bug 138920846.
+    // Therefore, the path or contents of the tool should not be an input. Instead, we set the
+    // tool's version as input.
+    @Input
+    public String getAidlVersion() {
+        Revision buildToolsRevision = buildToolsRevisionProvider.getOrNull();
+        Preconditions.checkState(buildToolsRevision != null, "Build Tools not present");
+
+        File aidlExecutable = aidlExecutableProvider.getOrNull();
+        Preconditions.checkState(
+                aidlExecutable != null,
+                "AIDL executable not present in Build Tools " + buildToolsRevision.toString());
+        Preconditions.checkState(
+                aidlExecutable.exists(),
+                "AIDL executable does not exist: " + aidlExecutable.getPath());
+
+        return buildToolsRevision.toString();
     }
 
     @InputFile
@@ -231,6 +249,8 @@ public abstract class AidlCompile extends NonIncrementalTask {
 
             compileTask.aidlExecutableProvider =
                     scope.getGlobalScope().getSdkComponents().getAidlExecutableProvider();
+            compileTask.buildToolsRevisionProvider =
+                    scope.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();
             compileTask.aidlFrameworkProvider =
                     scope.getGlobalScope().getSdkComponents().getAidlFrameworkProvider();
 
