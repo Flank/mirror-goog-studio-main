@@ -3,8 +3,8 @@
 
   <#if remapFolder>
     <mkdir at="${escapeXmlAttribute(projectOut)}/${escapeXmlAttribute(newLocation)}" />
-    <merge from="root/build.gradle.ftl"
-             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+    <sourceSet type="java" name="${sourceProviderName}" dir="src/${sourceProviderName}/java" />
+    <sourceSet type="java" name="${sourceProviderName}" dir="${newLocation}" />
   <#else>
       <mkdir at="${escapeXmlAttribute(manifestOut)}/java/" />
   </#if>

@@ -3,8 +3,8 @@
 
   <#if remapFolder>
     <mkdir at="${escapeXmlAttribute(projectOut)}/${escapeXmlAttribute(newLocation)}" />
-    <merge from="root/build.gradle.ftl"
-             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+    <sourceSet type="aidl" name="${sourceProviderName}" dir="src/${sourceProviderName}/aidl" />
+    <sourceSet type="aidl" name="${sourceProviderName}" dir="${newLocation}" />
   <#else>
       <mkdir at="${escapeXmlAttribute(manifestOut)}/aidl/" />
   </#if>

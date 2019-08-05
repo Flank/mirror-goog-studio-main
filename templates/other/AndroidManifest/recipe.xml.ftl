@@ -4,8 +4,7 @@
     <#if remapFile>
         <merge from="root/AndroidManifest.xml.ftl"
                  to="${escapeXmlAttribute(projectOut)}/${escapeXmlAttribute(newLocation)}" />
-        <merge from="root/build.gradle.ftl"
-                 to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+        <sourceSet type="manifest" name="${sourceProviderName}" dir="${newLocation}" />
     <#else>
         <merge from="root/AndroidManifest.xml.ftl"
                  to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
