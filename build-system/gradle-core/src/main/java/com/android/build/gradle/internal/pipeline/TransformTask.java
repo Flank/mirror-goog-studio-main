@@ -47,12 +47,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.LoggingManager;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -70,13 +70,14 @@ import org.gradle.workers.WorkerExecutor;
 
 /** A task running a transform. */
 @CacheableTask
-public abstract class TransformTask extends StreamBasedTask implements Context {
+public abstract class TransformTask extends StreamBasedTask {
 
     private Transform transform;
     private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
     List<FileCollection> secondaryInputFiles = null;
 
+    @Internal
     public Transform getTransform() {
         return transform;
     }
@@ -100,6 +101,8 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
     }
 
     @InputFiles
+    // Use ABSOLUTE to be safe, the API that this method calls is deprecated anyway.
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     @Optional
     public Collection<File> getOldSecondaryInputs() {
         //noinspection deprecation: Needed for backward compatibility.
@@ -243,9 +246,42 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
                 new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
+                        Context context =
+                                new Context() {
+                                    @Override
+                                    public LoggingManager getLogging() {
+                                        return TransformTask.this.getLogging();
+                                    }
 
+                                    @Override
+                                    public File getTemporaryDir() {
+                                        return TransformTask.this.getTemporaryDir();
+                                    }
+
+                                    @Override
+                                    public String getPath() {
+                                        return TransformTask.this.getPath();
+                                    }
+
+                                    @Override
+                                    public String getProjectName() {
+                                        return TransformTask.this.getProjectName();
+                                    }
+
+                                    @NonNull
+                                    @Override
+                                    public String getVariantName() {
+                                        return TransformTask.this.getVariantName();
+                                    }
+
+                                    @NonNull
+                                    @Override
+                                    public WorkerExecutor getWorkerExecutor() {
+                                        return TransformTask.this.getWorkerExecutor();
+                                    }
+                                };
                         transform.transform(
-                                new TransformInvocationBuilder(TransformTask.this)
+                                new TransformInvocationBuilder(context)
                                         .addInputs(consumedInputs.getValue())
                                         .addReferencedInputs(referencedInputs.getValue())
                                         .addSecondaryInputs(changedSecondaryInputs.getValue())
@@ -317,7 +353,6 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
                 .collect(Collectors.toList());
     }
 
-    @Internal
     private synchronized Collection<SecondaryFile> getAllSecondaryInputs() {
         if (secondaryFiles == null) {
             ImmutableList.Builder<SecondaryFile> builder = ImmutableList.builder();
