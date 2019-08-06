@@ -36,6 +36,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -55,6 +57,7 @@ abstract class CompileSourceSetResources : IncrementalTask() {
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:SkipWhenEmpty
     lateinit var inputDirectories: FileCollection
         private set

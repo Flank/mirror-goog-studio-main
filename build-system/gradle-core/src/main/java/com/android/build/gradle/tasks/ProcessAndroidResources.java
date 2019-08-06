@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
@@ -38,8 +39,12 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
     public abstract DirectoryProperty getManifestFiles();
 
     // Used by the kotlin plugin.
+    // Subclasses of this class should also declare this method as @Internal and have a separate
+    // method/field that declares the output.
+    @Internal
     public abstract File getSourceOutputDir();
 
+    @Internal // getManifestFiles() is already marked as @InputFiles
     public File getManifestFile() {
         File manifestDirectory = getManifestFiles().get().getAsFile();
         Preconditions.checkNotNull(manifestDirectory);

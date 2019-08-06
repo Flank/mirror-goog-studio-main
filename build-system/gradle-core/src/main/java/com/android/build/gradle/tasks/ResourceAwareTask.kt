@@ -19,12 +19,14 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.DependencyResourcesComputer
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 
 abstract class ResourceAwareTask : IncrementalTask() {
 
+    @get:Internal
     protected val resourcesComputer = DependencyResourcesComputer()
 
     @InputFiles

@@ -67,7 +67,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     @get:OutputFile @get:Optional var rClassOutputJar = objects.fileProperty()
         private set
 
-    override fun getSourceOutputDir() = rClassOutputJar.get().asFile
+    @Internal // rClassOutputJar is already marked as @OutputFile
+    override fun getSourceOutputDir(): File? = rClassOutputJar.get().asFile
 
     // used by Butterknife
     @Suppress("unused")

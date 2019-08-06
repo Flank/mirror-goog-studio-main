@@ -110,8 +110,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         }
     }
 
-    @Internal
-    private var sourceOutputDir= objects.directoryProperty()
+    @get:OutputDirectory
+    @get:Optional
+    abstract val sourceOutputDirProperty: DirectoryProperty
 
     @get:OutputFile
     @get:Optional
@@ -591,7 +592,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
-                    LinkApplicationAndroidResourcesTask::sourceOutputDir,
+                    LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
                     fileName = SdkConstants.FD_RES_CLASS
                 )
             } else {
@@ -668,7 +669,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                LinkApplicationAndroidResourcesTask::sourceOutputDir,
+                LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
                 fileName = "out"
             )
         }
@@ -954,14 +955,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         return resOffsetSupplier?.get()
     }
 
-    @OutputDirectory
-    @Optional
-    fun getSourceOutputFolder(): DirectoryProperty {
-        return sourceOutputDir
-    }
-
+    @Internal // sourceOutputDirProperty is already marked as @OutputDirectory
     override fun getSourceOutputDir(): File? {
-        return sourceOutputDir.orNull?.asFile
+        return sourceOutputDirProperty.orNull?.asFile
     }
 
     @Suppress("unused") // Used by butterknife
