@@ -1,15 +1,9 @@
 #!/bin/bash -x
 #
 # Build and test a set of targets via bazel using RBE.
-# This script is invoked by Android Build Launchcontrol, e.g:
-#  $ tools/base/bazel/test_studio.sh \
-#        out \
-#        /buildbot/dist_dirs/git_studio-master-dev-linux-studio_rbe/P9370467/0 \
-#        P9370467
 
-readonly out_dir="$1"
-readonly dist_dir="$2"
-readonly build_number="$3"
+# http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
+BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
@@ -30,30 +24,29 @@ readonly invocation_id="$(uuidgen)"
   ${config_options} \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
-  --build_event_binary_file="${dist_dir}/bazel-${build_number}.bes" \
-  --define=meta_android_build_number=${build_number} \
+  --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
+  --define=meta_android_build_number="${BUILD_NUMBER}" \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
-  --profile=${dist_dir}/profile-${build_number}.json \
+  --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json" \
   -- \
   //tools/idea/updater:updater_deploy.jar \
   $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
 
-# The dist_dir always exists on builds triggered by go/ab, but may not
-# exist during local testing
-if [[ -d "${dist_dir}" ]]; then
+# http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
+if [[ -d "${DIST_DIR}" ]]; then
 
   # Generate a simple html page that redirects to the test results page.
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${DIST_DIR}"/upsalite_test_results.html
 
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
-  cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${dist_dir}/android-studio-updater.jar
+  cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
-  mkdir "${dist_dir}"/bazel-testlogs
-  (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")
+  mkdir "${DIST_DIR}"/bazel-testlogs
+  (cd "${testlogs_dir}" && zip -R "${DIST_DIR}"/bazel-testlogs/xml_files.zip "*.xml")
 
 fi
 
