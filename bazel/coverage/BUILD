@@ -51,6 +51,7 @@ coverage_report(
         "tools/adt/idea/databinding/",
         "tools/adt/idea/android/src/com/android/tools/idea/databinding",
         "tools/adt/idea/android/src/com/android/tools/idea/lang/databinding",
+        "tools/adt/idea/android/src/com/android/tools/idea/res/binding",
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
