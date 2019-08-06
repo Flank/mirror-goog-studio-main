@@ -20,6 +20,9 @@
 
 #include "tools/base/deploy/common/utils.h"
 
+// Defined in main.cc
+std::string GetVersion();
+
 namespace deploy {
 
 namespace {
@@ -29,7 +32,7 @@ constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
 Workspace::Workspace(const std::string& executable_path, Executor* executor)
     : executor_(executor), output_pipe_(dup(STDOUT_FILENO)) {
   base_ = kBasedir;
-  tmp_ = base_ + "tmp/";
+  tmp_ = base_ + "tmp-" + GetVersion() + "/";
 }
 
 void Workspace::Init() noexcept {

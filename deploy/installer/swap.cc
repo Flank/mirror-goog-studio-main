@@ -38,15 +38,12 @@
 #include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/installer/runas_executor.h"
 
-// Defined in main.cc
-std::string GetVersion();
-
 namespace deploy {
 
 namespace {
-const std::string kAgentFilename = "agent-"_s + GetVersion() + ".so";
-const std::string kAgentAltFilename = "agent-alt-"_s + GetVersion() + ".so";
-const std::string kServerFilename = "server-"_s + GetVersion() + ".so";
+const std::string kAgentFilename = "agent.so";
+const std::string kAgentAltFilename = "agent-alt.so";
+const std::string kServerFilename = "server.so";
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
 const int kRxFileMode =
@@ -125,11 +122,6 @@ void SwapCommand::Run() {
 bool SwapCommand::Setup() noexcept {
   // Make sure the target dir exists.
   Phase p("Setup");
-  std::string output;
-  if (!RunCmd("mkdir", User::APP_PACKAGE, {"-p", target_dir_}, &output)) {
-    ErrEvent("Could not create .studio directory");
-    return false;
-  }
 
   if (!CopyBinaries(workspace_.GetTmpFolder(), target_dir_)) {
     ErrEvent("Could not copy binaries");
@@ -141,92 +133,67 @@ bool SwapCommand::Setup() noexcept {
 
 bool SwapCommand::CopyBinaries(const std::string& src_path,
                                const std::string& dst_path) const noexcept {
+  Phase p("CopyBinaries");
   // TODO: Cleanup previous version of the binaries?
-  // If we modify/delete the agent after ART has already loaded it, the app
-  // will crash, so we want to be careful here.
-
   std::string agent_src_path = src_path + kAgentFilename;
-  std::string agent_dst_path = dst_path + kAgentFilename;
-
   std::string agent_alt_src_path = src_path + kAgentAltFilename;
-  std::string agent_alt_dst_path = dst_path + kAgentAltFilename;
-
   std::string server_src_path = src_path + kServerFilename;
-  std::string server_dst_path = dst_path + kServerFilename;
 
-  // Checks if both binaries are in the data folder of the agent. Since the
-  // common case expects that both binaries will be present, we do both checks
-  // at once to minimize the expected number of additional run-as invocations.
-  if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path, server_dst_path},
-             nullptr)) {
-    LogEvent("Binaries already in data folder, skipping copy.");
-    return true;
-  }
+  bool need_agent = access(agent_src_path.c_str(), F_OK) == -1;
+  bool need_server = access(server_src_path.c_str(), F_OK) == -1;
 
-  // Since we did both checks at once, we still need to individually check for
-  // each missing file. This adds one run-as invocation in the "update
-  // required" case, but allows for one fewer run-as in the more common "no
-  // update" case.
+#if defined(__aarch64__) || defined(__x86_64__)
+  bool need_agent_alt = access(agent_alt_src_path.c_str(), F_OK) == -1;
+#else
+  bool need_agent_alt = false;
+#endif
 
-  std::vector<std::string> copy_args;
   std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
-  if (!matryoshka::Open(dolls)) {
-    ErrEvent("Installer binary does not contain any agent binaries.");
-    return false;
-  }
-
-  for (auto& doll : dolls) {
-    LogEvent("Matryoshka binary found:" + doll->name);
-  }
-
-  if (!RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
-    // If the agent library is not already on disk, write it there now.
-    if (access(agent_src_path.c_str(), F_OK) == -1) {
-      matryoshka::Doll* agent = matryoshka::FindByName(dolls, "agent.so");
-      if (!agent) {
-        ErrEvent("Installer binary does not contain agent.so");
-        return false;
-      }
-      WriteArrayToDisk(agent->content, agent->content_len, agent_src_path);
+  if (need_agent || need_agent_alt || need_server) {
+    if (!matryoshka::Open(dolls)) {
+      ErrEvent("Installer binary does not contain any agent binaries.");
+      return false;
     }
 
-    // Done using agent_src_path, so its safe to use emplace().
-    copy_args.emplace_back(agent_src_path);
-  }
-
-  matryoshka::Doll* agent_alt = matryoshka::FindByName(dolls, "agent-alt.so");
-  if (agent_alt) {
-    if (!RunCmd("stat", User::APP_PACKAGE, {agent_alt_dst_path}, nullptr)) {
-      WriteArrayToDisk(agent_alt->content, agent_alt->content_len,
-                       agent_alt_src_path);
-      copy_args.emplace_back(agent_alt_src_path);
+    for (auto& doll : dolls) {
+      LogEvent("Matryoshka binary found:" + doll->name);
     }
   }
 
-  if (!RunCmd("stat", User::APP_PACKAGE, {server_dst_path}, nullptr)) {
-    // If the server binary is not already on disk, write it there now.
-    if (access(server_src_path.c_str(), F_OK) == -1) {
-      matryoshka::Doll* agent_server =
-          matryoshka::FindByName(dolls, "agent_server");
-      if (!agent_server) {
-        ErrEvent("Installer binary does not contain agent_server");
-        return false;
-      }
-      WriteArrayToDisk(agent_server->content, agent_server->content_len,
-                       server_src_path);
+  if (need_agent) {
+    matryoshka::Doll* agent = matryoshka::FindByName(dolls, "agent.so");
+    if (!agent) {
+      ErrEvent("Installer binary does not contain agent.so");
+      return false;
     }
-
-    // Done using server_src_path, so its safe to use emplace().
-    copy_args.push_back(server_src_path);
+    WriteArrayToDisk(agent->content, agent->content_len, agent_src_path);
   }
 
-  // Add the destination path to the argument list. We don't use dst_path
-  // again, so it's safe to use emplace().
-  copy_args.push_back(dst_path);
+  if (need_agent_alt) {
+    matryoshka::Doll* agent_alt = matryoshka::FindByName(dolls, "agent-alt.so");
+    if (!agent_alt) {
+      ErrEvent("Installer binary does not contain agent-alt.so");
+      return false;
+    }
+    WriteArrayToDisk(agent_alt->content, agent_alt->content_len,
+                     agent_alt_src_path);
+  }
 
-  // Copy the binaries to the agent directory.
+  if (need_server) {
+    matryoshka::Doll* agent_server =
+        matryoshka::FindByName(dolls, "agent_server");
+    if (!agent_server) {
+      ErrEvent("Installer binary does not contain agent_server");
+      return false;
+    }
+
+    WriteArrayToDisk(agent_server->content, agent_server->content_len,
+                     server_src_path);
+  }
+
   std::string cp_output;
-  if (!RunCmd("cp", User::APP_PACKAGE, copy_args, &cp_output)) {
+  if (!RunCmd("cp", User::APP_PACKAGE, {"-r", src_path, dst_path},
+              &cp_output)) {
     ErrEvent("Could not copy agent binary: "_s + cp_output);
     return false;
   }
@@ -237,6 +204,7 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
 bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
                                    uint64_t array_len,
                                    const std::string& dst_path) const noexcept {
+  Phase p("WriteArrayToDisk");
   std::string real_path = workspace_.GetRoot() + dst_path;
   int fd = open(real_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
