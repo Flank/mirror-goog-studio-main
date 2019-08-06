@@ -866,4 +866,47 @@ public class TransformManagerTest extends TaskTestUtils {
                 .isEqualTo("transformClassesEnhancedAndNativeLibsWithFooBarFor");
     }
 
+    @Test
+    public void testStreamFilterInOriginalStream() throws Exception {
+
+        FileCollection keepFileCollection =
+                project.files(new File("keep")).builtBy(MY_FAKE_DEPENDENCY_TASK_NAME);
+
+        FileCollection discardFileCollection =
+                project.files(new File("discard")).builtBy(MY_FAKE_DEPENDENCY_TASK_NAME);
+
+        TransformStream originalStreamKeep =
+                OriginalStream.builder(project, "keepOriginal")
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScope(Scope.PROJECT)
+                        .setFileCollection(keepFileCollection)
+                        .build();
+        transformManager.addStream(originalStreamKeep);
+
+        TransformStream originalStreamDiscardLib =
+                OriginalStream.builder(project, "discardOriginalLib")
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setFileCollection(discardFileCollection)
+                        .build();
+        transformManager.addStream(originalStreamDiscardLib);
+
+        TransformStream originalStreamDiscardRes =
+                OriginalStream.builder(project, "discardOriginalRes")
+                        .addContentTypes(DefaultContentType.RESOURCES)
+                        .addScope(Scope.PROJECT)
+                        .setFileCollection(discardFileCollection)
+                        .build();
+        transformManager.addStream(originalStreamDiscardRes);
+
+        FileCollection outputs =
+                transformManager.getPipelineOutputAsFileCollection(
+                        (types, scopes) -> scopes.contains(Scope.PROJECT),
+                        (types, scopes) -> types.contains(DefaultContentType.CLASSES));
+
+        // There should be one file in the collection
+        assertThat(outputs.getFiles()).hasSize(1);
+        // Only the file in the keep stream should be in outputs
+        assertThat(outputs.getSingleFile().toString()).endsWith("keep");
+    }
 }

@@ -24,7 +24,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -34,7 +33,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -365,5 +363,16 @@ public class OriginalStream extends TransformStream {
                 .add("contentTypes", getContentTypes())
                 .add("fileCollection", getFileCollection())
                 .toString();
+    }
+    
+    @NonNull
+    @Override
+    FileCollection getOutputFileCollection(
+            @NonNull Project project, @NonNull StreamFilter streamFilter) {
+        if (streamFilter.accept(getContentTypes(), getScopes())) {
+            return getFileCollection();
+        } else {
+            return project.files();
+        }
     }
 }
