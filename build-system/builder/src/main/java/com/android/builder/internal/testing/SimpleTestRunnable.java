@@ -339,12 +339,12 @@ public class SimpleTestRunnable implements Runnable {
 
         executeShellCommand(
                 "content query --uri content://media/external/file"
-                        + " --projection _data --where \"_data LIKE '%Android/data'\"",
+                        + " --projection _data --where \"_data LIKE '%Android'\"",
                 receiver);
 
         receiver.flush();
 
-        return Paths.get(result[0], testData.getTestedApplicationId(), "files/test_data");
+        return Paths.get(result[0], "data", testData.getTestedApplicationId(), "files/test_data");
     }
 
     private void setUpDirectories(@NonNull String userCoverageDir)

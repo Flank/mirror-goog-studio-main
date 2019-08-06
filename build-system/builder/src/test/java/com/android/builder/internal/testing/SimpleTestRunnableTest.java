@@ -120,7 +120,7 @@ public class SimpleTestRunnableTest {
         Answer<Void> contentQueryAnswer =
                 invocation -> {
                     MultiLineReceiver receiver = invocation.getArgument(1);
-                    receiver.processNewLines(new String[] {"Row: 0 _data=/fake_path/Android/data"});
+                    receiver.processNewLines(new String[] {"Row: 0 _data=/fake_path/Android"});
                     receiver.flush();
                     return null;
                 };
