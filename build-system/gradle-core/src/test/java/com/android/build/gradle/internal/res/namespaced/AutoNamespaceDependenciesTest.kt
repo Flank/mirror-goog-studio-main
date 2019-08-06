@@ -42,7 +42,7 @@ import java.util.concurrent.ForkJoinPool
 import com.google.common.collect.ImmutableMap.of as map
 import com.google.common.collect.ImmutableSet.of as set
 
-class AutoNamespaceDependenciesTaskTest {
+class AutoNamespaceDependenciesTest {
     @get:Rule
     var tempFolder = TemporaryFolder()
 
@@ -514,7 +514,7 @@ class AutoNamespaceDependenciesTaskTest {
     }
 
     private fun getFile(name: String): File {
-        return TestResources.getFile(AutoNamespaceDependenciesTaskTest::class.java, name)
+        return TestResources.getFile(AutoNamespaceDependenciesTest::class.java, name)
     }
 
     private fun getArtifactCollection(files: Map<String, File>): ImmutableMap<String, ImmutableCollection<File>> {
