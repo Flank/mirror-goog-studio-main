@@ -163,7 +163,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
 
     @get:Input
-    val isFeatureVariantType: Property<Boolean> = objects.property(Boolean::class.java)
+    val hasFeatureVariantType: Property<Boolean> = objects.property(Boolean::class.java)
 
     private var debuggable: Boolean = false
 
@@ -524,7 +524,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(variantScope.type.canHaveSplits)
-            task.isFeatureVariantType.set(variantScope.type == VariantTypeImpl.FEATURE)
+            task.hasFeatureVariantType.set(variantScope.type == VariantTypeImpl.FEATURE)
 
             task.setMergeBlameLogFolder(variantScope.resourceBlameLogDir)
 
@@ -917,7 +917,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val variantScopeMainSplit: ApkData = task.outputScope.mainSplit
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
-        val isFeatureVariantType: Boolean = task.isFeatureVariantType.get()
+        val isFeatureVariantType: Boolean = task.hasFeatureVariantType.get()
         val originalApplicationId: String? = task.originalApplicationId.get()
         val sourceOutputDir: File? = task.getSourceOutputDir()
         val textSymbolOutputFile: File? = task.textSymbolOutputFileProperty.orNull?.asFile

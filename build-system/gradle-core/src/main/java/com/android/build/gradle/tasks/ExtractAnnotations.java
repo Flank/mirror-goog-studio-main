@@ -273,7 +273,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     }
 
     @Input
-    public boolean hasAndroidAnnotations() {
+    public boolean getHasAndroidAnnotations() {
         for (ResolvedArtifactResult artifact : libraries.getArtifacts()) {
             ComponentIdentifier id = artifact.getId()
                     .getComponentIdentifier();

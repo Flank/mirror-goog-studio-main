@@ -106,7 +106,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
     @get:Input
     val outBufferSize: Property<Int> = objectFactory.property(Int::class.java)
     @get:Input
-    val isDebuggable: Property<Boolean> = objectFactory.property(Boolean::class.java)
+    val debuggable: Property<Boolean> = objectFactory.property(Boolean::class.java)
     @get:Input
     val java8LangSupportType: Property<VariantScope.Java8LangSupport> =
         objectFactory.property(VariantScope.Java8LangSupport::class.java)
@@ -115,7 +115,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
     @get:Input
     val numberOfBuckets: Property<Int> = objectFactory.property(Int::class.java)
     @get:Input
-    val isDxNoOptimizeFlagPresent: Property<Boolean> = objectFactory.property(Boolean::class.java)
+    val dxNoOptimizeFlagPresent: Property<Boolean> = objectFactory.property(Boolean::class.java)
 
     @get:OutputDirectory
     abstract val projectOutputDex: DirectoryProperty
@@ -163,13 +163,13 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
             useGradleWorkers = useGradleWorkers.get(),
             inBufferSize = inBufferSize.get(),
             outBufferSize = outBufferSize.get(),
-            isDebuggable = isDebuggable.get(),
+            isDebuggable = debuggable.get(),
             java8LangSupportType = java8LangSupportType.get(),
             projectVariant = projectVariant.get(),
             numberOfBuckets = numberOfBuckets.get(),
 
             messageReceiver = messageReceiver,
-            isDxNoOptimizeFlagPresent = isDxNoOptimizeFlagPresent.get(),
+            isDxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get(),
             workerExecutor = workerExecutor,
             userLevelCache = userLevelCache
         ).doProcess()
@@ -351,7 +351,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
                 (projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE)
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
-            task.isDebuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
+            task.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
             task.java8LangSupportType.set(variantScope.java8LangSupportType)
             task.projectVariant.set(
                 "${variantScope.globalScope.project.name}:${variantScope.fullVariantName}"
@@ -359,7 +359,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS
             )
-            task.isDxNoOptimizeFlagPresent.set(
+            task.dxNoOptimizeFlagPresent.set(
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             task.messageReceiver = variantScope.globalScope.messageReceiver
