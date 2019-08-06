@@ -3,10 +3,8 @@ an app build.gradle -->
 
 <#macro addKotlinPlugins>
 <#if generateKotlin>
-<#compress>
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-</#compress>
 </#if>
 </#macro>
 
