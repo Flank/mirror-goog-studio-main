@@ -31,10 +31,8 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import java.io.File
 import java.util.Locale
-import javax.inject.Inject
 
 abstract class FilterShrinkerRulesTransform :
     TransformAction<FilterShrinkerRulesTransform.Parameters> {
@@ -110,7 +108,7 @@ abstract class FilterShrinkerRulesTransform :
 }
 
 // Regex for directories containing PG/R8 configuration files inside META-INF/com.android.tools/
-private val configDirRegex = """(proguard|r8)(?:-min-([^:@]+?))?(?:-max-([^:@]+?))?""".toRegex()
+private val configDirRegex = """(proguard|r8)(?:-from-([^:@]+?))?(?:-upto-([^:@]+?))?""".toRegex()
 
 @VisibleForTesting
 internal fun configDirMatchesVersion(
@@ -118,7 +116,7 @@ internal fun configDirMatchesVersion(
     versionedShrinker: VersionedCodeShrinker
 ): Boolean {
     configDirRegex.matchEntire(dirName.toLowerCase(Locale.US))?.let { matchResult ->
-        val (shrinker, min, max) = matchResult.destructured
+        val (shrinker, from, upto) = matchResult.destructured
 
         if (versionedShrinker.shrinker == CodeShrinker.R8 && shrinker != "r8") {
             return false
@@ -127,21 +125,21 @@ internal fun configDirMatchesVersion(
             return false
         }
 
-        if (min.isEmpty() && max.isEmpty()) {
+        if (from.isEmpty() && upto.isEmpty()) {
             return true
         }
 
         val shrinkerCoord =
             GradleVersion.tryParse(versionedShrinker.version) ?: return false
-        if (min.isNotEmpty()) {
-            val minCoord = GradleVersion.tryParse(min) ?: return false
+        if (from.isNotEmpty()) {
+            val minCoord = GradleVersion.tryParse(from) ?: return false
             if (minCoord.compareTo(shrinkerCoord) > 0) {
                 return false
             }
         }
-        if (max.isNotEmpty()) {
-            val maxCoord = GradleVersion.tryParse(max) ?: return false
-            if (maxCoord.compareTo(shrinkerCoord) < 0) {
+        if (upto.isNotEmpty()) {
+            val maxCoord = GradleVersion.tryParse(upto) ?: return false
+            if (maxCoord.compareTo(shrinkerCoord) <= 0) {
                 return false
             }
         }

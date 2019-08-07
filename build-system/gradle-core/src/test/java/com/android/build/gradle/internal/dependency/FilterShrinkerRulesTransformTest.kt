@@ -160,40 +160,39 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
         assertThat(configDirMatchesVersion("r8", r8Ver1_5_5)).isTrue()
         assertThat(configDirMatchesVersion("r8", r8Ver1_5_0_alpha)).isTrue()
 
-        assertThat(configDirMatchesVersion("r8-min-1.4.0", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-min-1.4.0", r8Ver1_5_0_alpha)).isTrue()
+        assertThat(configDirMatchesVersion("r8-from-1.4.0", r8Ver1_5_5)).isTrue()
+        assertThat(configDirMatchesVersion("r8-from-1.4.0", r8Ver1_5_0_alpha)).isTrue()
 
-        assertThat(configDirMatchesVersion("r8-min-1.5.0", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-min-1.5.5", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-min-1.5.0", r8Ver1_5_0_alpha)).isFalse()
+        assertThat(configDirMatchesVersion("r8-from-1.5.0", r8Ver1_5_5)).isTrue()
+        assertThat(configDirMatchesVersion("r8-from-1.5.5", r8Ver1_5_5)).isTrue()
+        assertThat(configDirMatchesVersion("r8-from-1.5.0", r8Ver1_5_0_alpha)).isFalse()
 
-        assertThat(configDirMatchesVersion("r8-min-1.6.0", r8Ver1_5_5)).isFalse()
-        assertThat(configDirMatchesVersion("r8-min-1.6.0", r8Ver1_5_0_alpha)).isFalse()
+        assertThat(configDirMatchesVersion("r8-from-1.6.0", r8Ver1_5_5)).isFalse()
+        assertThat(configDirMatchesVersion("r8-from-1.6.0", r8Ver1_5_0_alpha)).isFalse()
 
-        assertThat(configDirMatchesVersion("r8-max-1.6.0", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-max-1.6.0", r8Ver1_5_0_alpha)).isTrue()
-        assertThat(configDirMatchesVersion("r8-max-1.5.99", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-max-1.5.99", r8Ver1_5_0_alpha)).isTrue()
+        assertThat(configDirMatchesVersion("r8-upto-1.6.0", r8Ver1_5_5)).isTrue()
+        assertThat(configDirMatchesVersion("r8-upto-1.6.0", r8Ver1_5_0_alpha)).isTrue()
+        assertThat(configDirMatchesVersion("r8-upto-1.5.99", r8Ver1_5_5)).isTrue()
+        assertThat(configDirMatchesVersion("r8-upto-1.5.99", r8Ver1_5_0_alpha)).isTrue()
 
+        assertThat(configDirMatchesVersion("r8-upto-1.4.0", r8Ver1_5_5)).isFalse()
+        assertThat(configDirMatchesVersion("r8-upto-1.4.0", r8Ver1_5_0_alpha)).isFalse()
 
-        assertThat(configDirMatchesVersion("r8-max-1.4.0", r8Ver1_5_5)).isFalse()
-        assertThat(configDirMatchesVersion("r8-max-1.4.0", r8Ver1_5_0_alpha)).isFalse()
+        assertThat(configDirMatchesVersion("r8-upto-1.5.0", r8Ver1_5_5)).isFalse()
+        assertThat(configDirMatchesVersion("r8-upto-1.5.5", r8Ver1_5_5)).isFalse()
+        assertThat(configDirMatchesVersion("r8-upto-1.5.0", r8Ver1_5_0_alpha)).isTrue()
 
-        assertThat(configDirMatchesVersion("r8-max-1.5.0", r8Ver1_5_5)).isFalse()
-        assertThat(configDirMatchesVersion("r8-max-1.5.5", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-max-1.5.0", r8Ver1_5_0_alpha)).isTrue()
-
-        assertThat(configDirMatchesVersion("r8-min-1.4.0-max-1.6.0", r8Ver1_5_5)).isTrue()
-        assertThat(configDirMatchesVersion("r8-min-1.4.0-max-1.6.0", r8Ver1_5_0_alpha)).isTrue()
+        assertThat(configDirMatchesVersion("r8-from-1.4.0-upto-1.6.0", r8Ver1_5_5)).isTrue()
+        assertThat(configDirMatchesVersion("r8-from-1.4.0-upto-1.6.0", r8Ver1_5_0_alpha)).isTrue()
 
         assertThat(configDirMatchesVersion("proguard", pgVer6_1_5)).isTrue()
-        assertThat(configDirMatchesVersion("proguard-min-6.1.0", pgVer6_1_5)).isTrue()
-        assertThat(configDirMatchesVersion("proguard-min-6.0.0", pgVer6_1_5)).isTrue()
-        assertThat(configDirMatchesVersion("proguard-min-6.5.0", pgVer6_1_5)).isFalse()
+        assertThat(configDirMatchesVersion("proguard-from-6.1.0", pgVer6_1_5)).isTrue()
+        assertThat(configDirMatchesVersion("proguard-from-6.0.0", pgVer6_1_5)).isTrue()
+        assertThat(configDirMatchesVersion("proguard-from-6.5.0", pgVer6_1_5)).isFalse()
 
         assertThat(configDirMatchesVersion("abc", pgVer6_1_5)).isFalse()
-        assertThat(configDirMatchesVersion("abc-min-1.2.3", pgVer6_1_5)).isFalse()
-        assertThat(configDirMatchesVersion("-min-1.2.3", pgVer6_1_5)).isFalse()
+        assertThat(configDirMatchesVersion("abc-from-1.2.3", pgVer6_1_5)).isFalse()
+        assertThat(configDirMatchesVersion("-from-1.2.3", pgVer6_1_5)).isFalse()
     }
 }
 
