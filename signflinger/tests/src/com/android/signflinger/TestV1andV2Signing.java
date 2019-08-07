@@ -49,7 +49,7 @@ public class TestV1andV2Signing extends TestBaseSigning {
                         .setMinSdkVersion(21)
                         .setPrivateKey(signerConfig.privateKey)
                         .setCertificates(signerConfig.certificates)
-                        .setExecutor(Utils.createExecutor());
+                        .setExecutor(createExecutor());
         return builder.build();
     }
 }

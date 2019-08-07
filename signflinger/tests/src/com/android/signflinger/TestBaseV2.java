@@ -19,13 +19,12 @@ package com.android.signflinger;
 import java.io.File;
 import java.nio.file.Path;
 
-public class V2Signer {
+public class TestBaseV2 extends TestBase {
+    public SignResult sign(File fileToSign, Signer signer) throws Exception {
+        SignerConfig signerConfig = getSignerConfig(signer.type, signer.subtype);
 
-    public static SignResult sign(File fileToSign, Signer signer) throws Exception {
-        SignerConfig signerConfig = Utils.getSignerConfig(signer.type, signer.subtype);
-
-        Path dst = Utils.getTestOutputPath("signed.apk");
-        Utils.copy(fileToSign.toPath(), dst);
+        Path dst = getTestOutputPath("signed.apk");
+        TestBase.copy(fileToSign.toPath(), dst);
 
         SignedApkOptions.Builder builder =
                 new SignedApkOptions.Builder()
@@ -33,7 +32,7 @@ public class V2Signer {
                         .setV1Enabled(false)
                         .setPrivateKey(signerConfig.privateKey)
                         .setCertificates(signerConfig.certificates)
-                        .setExecutor(Utils.createExecutor());
+                        .setExecutor(createExecutor());
         SignedApkOptions options = builder.build();
 
         long startTime = System.nanoTime();

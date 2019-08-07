@@ -20,20 +20,20 @@ import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.ZipSource;
 import java.io.File;
 
-public abstract class TestBaseSigning {
+public abstract class TestBaseSigning extends TestBase {
 
     public void testSimpleZipWithOneFile() throws Exception {
-        for (Signer signer : Signers.signers) {
-            File file = Utils.getTestOutputFile("emptyApk.apk");
-            Utils.createZip(800, 20000, file);
-            SignerConfig signerConfig = Utils.getSignerConfig(signer.type, signer.subtype);
+        for (Signer signer : SIGNERS) {
+            File file = getTestOutputFile("emptyApk.apk");
+            createZip(800, 20000, file);
+            SignerConfig signerConfig = getSignerConfig(signer.type, signer.subtype);
             SignedApkOptions options = getOptions(signerConfig, false);
 
             long time = System.nanoTime();
             SignedApk signedApk = new SignedApk(file, options);
             signedApk.close();
             System.out.println("V1 time:" + (System.nanoTime() - time) / 1_000_000);
-            Utils.verify(file);
+            verify(file);
         }
     }
 
@@ -46,30 +46,30 @@ public abstract class TestBaseSigning {
     }
 
     private void signTwice(boolean trustManifest) throws Exception {
-        File file = Utils.getTestOutputFile("void.apk");
-        Utils.createZip(800, 20000, file);
+        File file = getTestOutputFile("void.apk");
+        createZip(800, 20000, file);
 
-        SignerConfig signerConfig = Signers.getDefaultRSA();
+        SignerConfig signerConfig = getDefaultRSASigner();
         SignedApkOptions options = getOptions(signerConfig, trustManifest);
 
         // Sign a first time
         SignedApk signedApk = new SignedApk(file, options);
         signedApk.close();
-        Utils.verify(file);
+        verify(file);
 
         // Incremental signing with file
         signedApk = new SignedApk(file, options);
-        signedApk.add(new BytesSource(Utils.getFile("test1.txt"), "test1.txt", 1));
+        signedApk.add(new BytesSource(getFile("test1.txt"), "test1.txt", 1));
         signedApk.close();
 
         // Incremental signing with zip
         signedApk = new SignedApk(file, options);
-        ZipSource zipSource = new ZipSource(Utils.getFile("1-2-3files.zip"));
+        ZipSource zipSource = new ZipSource(getFile("1-2-3files.zip"));
         zipSource.select("file2.txt", "file2.txt");
         signedApk.add(zipSource);
         signedApk.close();
 
-        Utils.verify(file);
+        verify(file);
     }
 
     protected abstract SignedApkOptions getOptions(

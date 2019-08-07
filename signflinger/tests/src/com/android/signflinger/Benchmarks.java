@@ -19,28 +19,30 @@ package com.android.signflinger;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
+import org.junit.Test;
 
-public class Benchmarks {
+public class Benchmarks extends TestBaseV2 {
 
-    public static void main(String[] args) throws Exception {
-        File file = Utils.getTestOutputFile("apk-12MiB.apk");
-        Utils.createZip(21, 1 << 20, file);
-        test(file);
+    @Test
+    public void run() throws Exception {
+        File file = getTestOutputFile("apk-12MiB.apk");
+        createZip(21, 1 << 20, file);
+        signAndVerify(file);
 
-        file = Utils.getTestOutputFile("apk-42MiB.apk");
-        Utils.createZip(41, 1 << 20, file);
-        test(file);
+        file = getTestOutputFile("apk-42MiB.apk");
+        createZip(41, 1 << 20, file);
+        signAndVerify(file);
     }
 
-    private static void test(File file) throws Exception {
-        for (Signer signer : Signers.signers) {
+    private void signAndVerify(File file) throws Exception {
+        for (Signer signer : SIGNERS) {
             long times[] = new long[3];
             SignResult result = null;
             for (int i = 0; i < times.length; i++) {
-                result = V2Signer.sign(file, signer);
+                result = sign(file, signer);
                 times[i] = result.time;
             }
-            Utils.verify(result.file);
+            verify(result.file);
             Arrays.sort(times);
             long timeMs = times[times.length / 2];
             long fileSizeMiB = Files.size(file.toPath()) / (1 << 20);

@@ -28,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -50,13 +49,39 @@ import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
-public class Utils {
+public class TestBase {
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     private static final String BASE = "tools/base/signflinger/tests/resources/";
+
+    protected static final Signer[] SIGNERS = {
+        new Signer("rsa", "1024"), //  80-bit (obsolete)
+        new Signer("rsa", "2048"), // 112-bit (default)
+        new Signer("rsa", "3072"), // 128-bit
+        new Signer("rsa", "4096"),
+        new Signer("rsa", "8192"),
+        new Signer("rsa", "16384"),
+        new Signer("dsa", "1024"),
+        new Signer("dsa", "2048"),
+        new Signer("dsa", "3072"),
+        new Signer("ec", "p256"),
+        new Signer("ec", "p384"),
+        new Signer("ec", "p521"),
+    };
+
+    private static final Signer DEFAULT_RSA_SIGNER = SIGNERS[1];
+
+    protected SignerConfig getDefaultRSASigner() throws Exception {
+        return getSignerConfig(DEFAULT_RSA_SIGNER.type, DEFAULT_RSA_SIGNER.subtype);
+    }
 
     // getWorkspaceFile will fail if not running within "bazel test" or Intellij test runner.
     // This is the case for "bazel run" (benchmarks).
-    static File getFile(String path) {
+    protected File getFile(String path) {
         String fullPath = BASE + path;
         File prospect = new File(fullPath);
         if (prospect.exists()) {
@@ -65,27 +90,26 @@ public class Utils {
         return TestUtils.getWorkspaceFile(fullPath);
     }
 
-    static Path getPath(String path) {
+    protected Path getPath(String path) {
         return getFile(path).toPath();
     }
 
-    static File getTestOutputFile(String path) throws IOException {
-        String directories = TestUtils.getTestOutputDir().getAbsolutePath() + File.separator + BASE;
-        Files.createDirectories(Paths.get(directories));
-        return new File(directories + path);
+    protected File getTestOutputFile(String path) throws IOException {
+        File directory = temporaryFolder.newFolder();
+        Files.createDirectories(directory.toPath());
+        return new File(directory, path);
     }
 
-    static Path getTestOutputPath(String path) throws IOException {
+    protected Path getTestOutputPath(String path) throws IOException {
         return getTestOutputFile(path).toPath();
     }
 
-    private static long fileId = 0;
-
-    static void createZip(long numFiles, int sizePerFile, File file) throws IOException {
+    protected void createZip(long numFiles, int sizePerFile, File file) throws IOException {
         if (file.exists()) {
             file.delete();
         }
 
+        long fileId = 0;
         Random random = new Random(1);
         try (FileOutputStream f = new FileOutputStream(file);
                 ZipOutputStream s = new ZipOutputStream(f)) {
@@ -101,13 +125,13 @@ public class Utils {
             }
             ZipEntry entry = new ZipEntry("AndroidManifest.xml");
             s.putNextEntry(entry);
-            byte[] bytes = Files.readAllBytes(Utils.getPath("AndroidManifest.xml"));
+            byte[] bytes = Files.readAllBytes(getPath("AndroidManifest.xml"));
             s.write(bytes);
             s.closeEntry();
         }
     }
 
-    static RunnablesExecutor createExecutor() {
+    protected RunnablesExecutor createExecutor() {
         RunnablesExecutor executor =
                 (RunnablesProvider provider) -> {
                     ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
@@ -130,7 +154,8 @@ public class Utils {
         return executor;
     }
 
-    static void verify(File file) throws ApkFormatException, NoSuchAlgorithmException, IOException {
+    protected static void verify(File file)
+            throws ApkFormatException, NoSuchAlgorithmException, IOException {
         ApkVerifier.Builder apkVerifierBuilder = new ApkVerifier.Builder(file);
         apkVerifierBuilder.setMinCheckedPlatformVersion(24);
         ApkVerifier verifier = apkVerifierBuilder.build();
@@ -142,14 +167,14 @@ public class Utils {
         Assert.assertTrue(result.isVerified());
     }
 
-    static void copy(Path src, Path dst) throws IOException {
+    protected static void copy(Path src, Path dst) throws IOException {
         if (Files.exists(dst)) {
             Files.delete(dst);
         }
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    public static PrivateKey toPrivateKey(String resourceName, String keyAlgorithm)
+    protected PrivateKey toPrivateKey(String resourceName, String keyAlgorithm)
             throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         byte[] bytes = Files.readAllBytes(getPath(resourceName));
 
@@ -173,7 +198,7 @@ public class Utils {
         return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(bytes));
     }
 
-    public static List<X509Certificate> toCertificateChain(String resourceName)
+    protected List<X509Certificate> toCertificateChain(String resourceName)
             throws IOException, CertificateException {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         byte[] bytes = Files.readAllBytes(getPath(resourceName));
@@ -186,14 +211,11 @@ public class Utils {
         return result;
     }
 
-    protected static SignerConfig getSignerConfig(String algoName, String subName)
-            throws Exception {
+    protected SignerConfig getSignerConfig(String algoName, String subName) throws Exception {
         PrivateKey privateKey = toPrivateKey(algoName + "-" + subName + ".pk8", algoName);
         List<X509Certificate> certs = toCertificateChain(algoName + "-" + subName + ".x509.pem");
         ApkSigner.SignerConfig signerConfig =
                 new ApkSigner.SignerConfig.Builder(algoName, privateKey, certs).build();
-        SignerConfig signer =
-                new SignerConfig(signerConfig.getPrivateKey(), signerConfig.getCertificates());
-        return signer;
+        return new SignerConfig(signerConfig.getPrivateKey(), signerConfig.getCertificates());
     }
 }

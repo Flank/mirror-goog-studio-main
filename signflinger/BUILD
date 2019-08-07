@@ -29,27 +29,31 @@ java_library(
         "tests/src/com/android/signflinger/SignResult.java",
         "tests/src/com/android/signflinger/Signer.java",
         "tests/src/com/android/signflinger/SignerConfig.java",
-        "tests/src/com/android/signflinger/Signers.java",
-        "tests/src/com/android/signflinger/Utils.java",
+        "tests/src/com/android/signflinger/TestBase.java",
+        "tests/src/com/android/signflinger/TestBaseV2.java",
     ],
     deps = [
+        ":signflinger",
         "//tools/apksig",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],
 )
 
-java_binary(
-    name = "benchmarks",
+java_test(
+    name = "benchmarkV2",
     srcs = [
         "tests/src/com/android/signflinger/Benchmarks.java",
-        "tests/src/com/android/signflinger/V2Signer.java",
     ],
     data =
         glob(["tests/resources/*.pem"]) + glob([
             "tests/resources/*.pk8",
         ]) + ["tests/resources/AndroidManifest.xml"],
-    main_class = "signflinger.Benchmarks",
+    jvm_flags = ["-Dtest.suite.jar=benchmarkV2.jar"],
+    tags = [
+        "manual",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":signflinger",
         ":test_utils",
@@ -92,7 +96,6 @@ java_test(
     size = "small",
     srcs = [
         "tests/src/com/android/signflinger/TestV2Signing.java",
-        "tests/src/com/android/signflinger/V2Signer.java",
     ],
     data = glob(["tests/resources/*.pem"]) + glob([
         "tests/resources/*.pk8",
