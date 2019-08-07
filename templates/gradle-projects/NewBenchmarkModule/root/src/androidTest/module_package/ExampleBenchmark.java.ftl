@@ -2,7 +2,7 @@ package ${packageName};
 
 import android.util.Log;
 
-import androidx.benchmark.BenchmarkRule;
+import androidx.benchmark.junit4.BenchmarkRule;
 import androidx.benchmark.BenchmarkState;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 

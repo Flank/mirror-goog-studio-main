@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="2"
+    revision="3"
     name="Benchmark Module"
     minApi="14"
     description="Creates a new benchmark module.">
