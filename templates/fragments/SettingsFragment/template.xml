@@ -37,8 +37,7 @@
 
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
-        <!-- TODO: Replace the thumbnail with its fragment -->
-        <thumb>template_settings_activity.png</thumb>
+        <thumb>template_settings_fragment.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl"/>
