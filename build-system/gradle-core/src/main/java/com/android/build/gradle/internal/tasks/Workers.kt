@@ -140,6 +140,16 @@ object Workers {
         return preferWorkers(projectName, owner, worker, executor)
     }
 
+    @JvmOverloads
+    @Synchronized
+    fun getSharedExecutorForAapt2(
+        projectName: String,
+        owner: String,
+        executor: ExecutorService? = aapt2ThreadPool
+    ): WorkerExecutorFacade {
+        return ProfileAwareExecutorServiceAdapter(projectName, owner, executor!!)
+    }
+
     /**
      * factory function initializer that uses the project's [ProjectOptions] to decide which
      * instance of [WorkerExecutorFacade] should be used. This function should be registered as the
