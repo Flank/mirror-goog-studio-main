@@ -1,5 +1,5 @@
 <globals>
-    <#assign generateKotlin=(((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin'))>
+    <#assign generateKotlin=((language!'Java')?string == 'Kotlin')>
 
     <global id="generateKotlin" type="boolean" value="${generateKotlin?string}" />
     <!-- Only Modules/Components have a package name, not projects -->
