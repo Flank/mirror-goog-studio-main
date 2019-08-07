@@ -3,8 +3,7 @@
 <recipe>
     <@kt.addKotlinToBaseProject />
 
-    <merge from="root/base_build.gradle.ftl"
-           to="${escapeXmlAttribute(topOut)}/build.gradle" />
+    <classpath mavenUrl="androidx.benchmark:benchmark-gradle-plugin:+" />
 
     <merge from="root/settings.gradle.ftl"
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
