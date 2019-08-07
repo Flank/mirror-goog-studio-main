@@ -48,6 +48,10 @@ if [[ -d "${DIST_DIR}" ]]; then
   mkdir "${DIST_DIR}"/bazel-testlogs
   (cd "${testlogs_dir}" && zip -R "${DIST_DIR}"/bazel-testlogs/xml_files.zip "*.xml")
 
+  # Save all output data from all the targets for post processing
+  # by the perfgate pubsub listener
+  find "${testlogs_dir}" -name outputs.zip -exec zip "${DIST_DIR}"/perfgate_data.zip {} \;
+
 fi
 
 exit $bazel_status
