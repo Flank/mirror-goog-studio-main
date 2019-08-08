@@ -472,9 +472,6 @@ final class AdbHelper {
             @Nullable InputStream is)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
-        if (SwingUtilities.isEventDispatchThread()) { // TODO: Remove when runtime checks for @Slow annotations is completely operational
-            Log.e("ddms", "execute: called '" + command + "' from the Event Dispatch Thread!");
-        }
         long maxTimeToOutputMs = 0;
         if (maxTimeToOutputResponse > 0) {
             if (maxTimeUnits == null) {
