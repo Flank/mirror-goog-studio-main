@@ -625,20 +625,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             task.setEnabled(deviceProvider.isConfigured());
 
-            if (testedVariantData != null) {
-                task.dependsOn(
-                        testedVariantData
-                                .getScope()
-                                .getArtifacts()
-                                .getFinalProduct(InternalArtifactType.APK));
-
-            } else {
-                // this is a separate the test project, we should consume the BA for the tested
-                // app
-                // FIXME handle separate test project BA
-
-            }
-
             // This task should not be UP-TO-DATE as we don't model the device state as input yet.
             task.getOutputs().upToDateWhen(it -> false);
         }
