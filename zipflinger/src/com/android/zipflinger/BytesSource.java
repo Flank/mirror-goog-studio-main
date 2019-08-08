@@ -17,13 +17,20 @@
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.zip.Deflater;
 
 public class BytesSource extends Source {
 
-    private ByteBuffer buffer;
+    // Bytes to be written in the zip, after the Local File Header.
+    private ByteBuffer zipEntryPayload;
+
+    // Bytes as there were provided to this class (before compression if any).
+    private ByteBuffer byteBuffer;
 
     /**
      * @param bytes
@@ -33,17 +40,55 @@ public class BytesSource extends Source {
     public BytesSource(@NonNull byte[] bytes, @NonNull String name, int compressionLevel)
             throws IOException {
         super(name);
-        crc = Crc32.crc32(bytes);
-        uncompressedSize = bytes.length;
+        build(bytes, bytes.length, compressionLevel);
+    }
+
+    public BytesSource(@NonNull File file, @NonNull String name, int compressionLevel)
+            throws IOException {
+        super(name);
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        build(bytes, bytes.length, compressionLevel);
+    }
+
+    /**
+     * @param stream BytesSource takes ownership of the InputStream and will close it after draining
+     *     it.
+     * @param name
+     * @param compressionLevel
+     * @throws IOException
+     */
+    public BytesSource(@NonNull InputStream stream, @NonNull String name, int compressionLevel)
+            throws IOException {
+        super(name);
+        try (NoCopyByteArrayOutputStream ncbos = new NoCopyByteArrayOutputStream(16000)) {
+            byte[] tmpBuffer = new byte[16000];
+            int bytesRead;
+            while ((bytesRead = stream.read(tmpBuffer)) != -1) {
+                ncbos.write(tmpBuffer, 0, bytesRead);
+            }
+            stream.close();
+            build(ncbos.buf(), ncbos.getCount(), compressionLevel);
+        }
+    }
+
+    private void build(byte[] bytes, int size, int compressionLevel) throws IOException {
+        byteBuffer = ByteBuffer.wrap(bytes, 0, size);
+        crc = Crc32.crc32(bytes, 0, size);
+        uncompressedSize = size;
         if (compressionLevel == Deflater.NO_COMPRESSION) {
-            buffer = ByteBuffer.wrap(bytes);
+            zipEntryPayload = ByteBuffer.wrap(bytes, 0, size);
             compressedSize = uncompressedSize;
             compressionFlag = LocalFileHeader.COMPRESSION_NONE;
         } else {
-            buffer = Compressor.deflate(bytes, compressionLevel);
-            compressedSize = buffer.limit();
+            zipEntryPayload = Compressor.deflate(bytes, 0, size, compressionLevel);
+            compressedSize = zipEntryPayload.limit();
             compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
+    }
+
+    @NonNull
+    ByteBuffer getBuffer() {
+        return byteBuffer;
     }
 
     @Override
@@ -51,6 +96,6 @@ public class BytesSource extends Source {
 
     @Override
     long writeTo(@NonNull ZipWriter writer) throws IOException {
-        return writer.write(buffer);
+        return writer.write(zipEntryPayload);
     }
 }

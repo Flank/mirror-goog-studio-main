@@ -17,13 +17,13 @@
 package com.android.builder.internal.packaging
 
 import com.android.zipflinger.Archive
-import com.android.zipflinger.Source
+import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipSource
 
 /** A synchronized wrapper around an Archive instance */
 class SynchronizedArchive(private val archive: Archive) : Archive {
 
-    override fun add(source: Source) {
+    override fun add(source: BytesSource) {
         synchronized(archive) {
             archive.add(source)
         }

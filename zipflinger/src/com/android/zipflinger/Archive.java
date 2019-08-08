@@ -29,7 +29,7 @@ public interface Archive extends Closeable {
      * @throws IllegalStateException if the entry name already exists in the archive.
      * @throws IOException if writing to the zip archive fails.
      */
-    void add(@NonNull Source source) throws IOException;
+    void add(@NonNull BytesSource source) throws IOException;
 
     /**
      * Add a set of selected entries from an other zip archive.

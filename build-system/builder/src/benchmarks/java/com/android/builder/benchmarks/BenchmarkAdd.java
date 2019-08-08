@@ -16,7 +16,7 @@
 package com.android.builder.benchmarks;
 
 import com.android.tools.build.apkzlib.zip.ZFile;
-import com.android.zipflinger.FileSource;
+import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.ZipArchive;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -86,8 +86,8 @@ public class BenchmarkAdd {
         ZipArchive archive = new ZipArchive(dst.toFile());
         for (String name : dexes.keySet()) {
             Path path = dexes.get(name);
-            FileSource fileSource = new FileSource(path.toFile(), name, Deflater.NO_COMPRESSION);
-            archive.add(fileSource);
+            BytesSource source = new BytesSource(path.toFile(), name, Deflater.NO_COMPRESSION);
+            archive.add(source);
         }
         archive.close();
 

@@ -117,7 +117,7 @@ public class SignedApk implements Archive {
 
     /** See Archive.add documentation */
     @Override
-    public void add(@NonNull Source source) throws IOException {
+    public void add(@NonNull BytesSource source) throws IOException {
         archive.add(source);
         if (options.v1Enabled) {
             ApkSignerEngine.InspectJarEntryRequest req = signer.outputJarEntry(source.getName());

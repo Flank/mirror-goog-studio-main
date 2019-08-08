@@ -16,7 +16,7 @@
 
 package com.android.signflinger;
 
-import com.android.zipflinger.FileSource;
+import com.android.zipflinger.BytesSource;
 import java.io.File;
 import org.junit.Test;
 
@@ -60,7 +60,7 @@ public class TestV2Signing {
 
         long start = System.nanoTime();
         SignedApk signedApk = new SignedApk(file, options);
-        signedApk.add(new FileSource(Utils.getFile("test1.txt"), "test1", 1));
+        signedApk.add(new BytesSource(Utils.getFile("test1.txt"), "test1", 1));
         signedApk.close();
         long totalTime = (System.nanoTime() - start) / 1000000;
         Utils.verify(file);
