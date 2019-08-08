@@ -343,16 +343,6 @@ final class AdbHelper {
     }
 
     /**
-     * @deprecated Use {@link #executeRemoteCommand(java.net.InetSocketAddress, String, IDevice, IShellOutputReceiver, long, java.util.concurrent.TimeUnit)}.
-     */
-    @Deprecated
-    static void executeRemoteCommand(InetSocketAddress adbSockAddr,
-            String command, IDevice device, IShellOutputReceiver rcvr, int maxTimeToOutputResponse)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
-        executeRemoteCommand(adbSockAddr, command, device, rcvr, maxTimeToOutputResponse, TimeUnit.MILLISECONDS);
-    }
-
-    /**
      * Executes a shell command on the device and retrieve the output. The output is handed to
      * <var>rcvr</var> as it arrives.
      *
