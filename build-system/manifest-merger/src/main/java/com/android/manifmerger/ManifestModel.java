@@ -405,10 +405,6 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
         /** Nav-graph (contained in activity), expanded into intent-filter by manifest merger */
         NAV_GRAPH(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
-        /** Child packages declaration (contained in manifest) */
-        PACKAGE(
-                MergeType.MERGE,
-                new AttributeBasedNodeKeyResolver(null /* nameSpace */, SdkConstants.ATTR_PACKAGE)),
         /**
          * Path-permission (contained in provider) <br>
          * <b>See also : </b> {@link <a

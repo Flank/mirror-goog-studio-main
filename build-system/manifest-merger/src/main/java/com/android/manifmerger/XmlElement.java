@@ -756,7 +756,7 @@ public class XmlElement extends OrphanXmlElement {
         int expectedChildrenSize = expectedChildren.size();
         if (expectedChildrenSize != actualChildrenSize) {
 
-            if (expectedChildrenSize > actualChildrenSize) {
+            if (expectedChildrenSize > actualChildren.size()) {
                 // missing some.
                 @NonNull List<String> missingChildrenNames =
                         Lists.transform(expectedChildren, NODE_TO_NAME);
@@ -767,22 +767,23 @@ public class XmlElement extends OrphanXmlElement {
                                         + "expected %2$d versus %3$d at %4$s, missing %5$s",
                                 getId(),
                                 expectedChildrenSize,
-                                actualChildrenSize,
+                                actualChildren.size(),
                                 otherNode.printPosition(),
                                 Joiner.on(",").join(missingChildrenNames)));
             } else {
                 // extra ones.
-                @NonNull List<String> extraChildrenNames = Lists.transform(actualChildren, NODE_TO_NAME);
-                Lists.transform(expectedChildren, NODE_TO_NAME).forEach(extraChildrenNames::remove);
+                @NonNull
+                List<String> extraChildrenNames = Lists.transform(actualChildren, NODE_TO_NAME);
+                extraChildrenNames.removeAll(Lists.transform(expectedChildren, NODE_TO_NAME));
                 return Optional.of(
                         String.format(
                                 "%1$s: Number of children do not match up: "
                                         + "expected %2$d versus %3$d at %4$s, extra elements found : %5$s",
                                 getId(),
                                 expectedChildrenSize,
-                                actualChildrenSize,
+                                actualChildren.size(),
                                 otherNode.printPosition(),
-                                Joiner.on(",").join(extraChildrenNames)));
+                                Joiner.on(",").join(expectedChildren)));
             }
         }
         for (Node expectedChild : expectedChildren) {
