@@ -18,6 +18,10 @@ android {
         testInstrumentationRunner 'androidx.benchmark.junit4.AndroidBenchmarkRunner'
     }
 
+<#if compareVersionsIgnoringQualifiers(gradlePluginVersion, '3.6.0') gte 0>
+    testBuildType = "release"
+
+</#if>
     buildTypes {
         debug {
             // Since debuggable can't be modified by gradle for library modules,
@@ -25,6 +29,12 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'benchmark-proguard-rules.pro'
         }
+<#if compareVersionsIgnoringQualifiers(gradlePluginVersion, '3.6.0') gte 0>
+
+        release {
+            isDefault = true
+        }
+</#if>
     }
 }
 
