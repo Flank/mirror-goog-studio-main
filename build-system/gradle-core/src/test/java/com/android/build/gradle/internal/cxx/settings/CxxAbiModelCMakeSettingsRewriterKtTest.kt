@@ -105,7 +105,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getGenerator()).isEqualTo("Ninja")
             assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY)).isEqualTo(abi.soFolder.absolutePath)
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_CXX_FLAGS)).isEqualTo(null)
+            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_CXX_FLAGS)).isEqualTo("-DCPP_FLAG_DEFINED")
             assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("Debug")
         }
     }
