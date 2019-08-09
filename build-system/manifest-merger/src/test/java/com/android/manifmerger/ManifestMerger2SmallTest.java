@@ -2348,6 +2348,72 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    @Test
+    public void testPackageElementMerge() throws Exception {
+        MockLog mockLog = new MockLog();
+        String appInput =
+                "<manifest\n"
+                        + "   xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "  <queries>\n"
+                        + "    <package android:name=\"some.package\" />\n"
+                        + "    <intent>\n"
+                        + "      <action android:name=\"some.action\" />\n"
+                        + "      <category android:name=\"some.category\" />\n"
+                        + "      <data android:scheme=\"http\" android:host=\"google\" />\n"
+                        + "    </intent>\n"
+                        + "  </queries>\n"
+                        + "</manifest>";
+
+        File appFile = TestUtils.inputAsFile("testPackageElementMergeApp", appInput);
+        assertTrue(appFile.exists());
+
+        String libraryInput =
+                "<manifest\n"
+                        + "   xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "  <queries>\n"
+                        + "    <package android:name=\"some.other.package\" />\n"
+                        + "    <intent>\n"
+                        + "      <action android:name=\"some.otherAction\" />\n"
+                        + "      <category android:name=\"some.otherCategory\" />\n"
+                        + "      <data android:scheme=\"http\" android:host=\"google\" />\n"
+                        + "    </intent>\n"
+                        + "  </queries>\n"
+                        + "</manifest>";
+        File libFile = TestUtils.inputAsFile("testPackageElementMergeLib", libraryInput);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addLibraryManifest(libFile)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document xmlDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList packageList = xmlDocument.getElementsByTagName(SdkConstants.TAG_PACKAGE);
+            assertThat(packageList.getLength()).isEqualTo(2);
+            assertEquals(
+                    "some.package",
+                    packageList
+                            .item(0)
+                            .getAttributes()
+                            .getNamedItem("android:name")
+                            .getNodeValue());
+            assertEquals(
+                    "some.other.package",
+                    packageList
+                            .item(1)
+                            .getAttributes()
+                            .getNamedItem("android:name")
+                            .getNodeValue());
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+            assertThat(libFile.delete()).named("libFile file was deleted").isTrue();
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {
@@ -2362,17 +2428,6 @@ public class ManifestMerger2SmallTest {
         if (!isValid) {
             fail("Expected Exception not thrown");
         }
-    }
-
-    public static Optional<Node> getChildByName(@NonNull Node parent, @NonNull String localName) {
-        NodeList childNodes = parent.getChildNodes();
-        for (int i=0; i<childNodes.getLength(); i++) {
-            Node item = childNodes.item(i);
-            if (localName.equals(item.getLocalName())) {
-                return Optional.of(item);
-            }
-        }
-        return Optional.absent();
     }
 
     public static Optional<Element> getElementByTypeAndKey(Document xmlDocument, String nodeType, String key) {
