@@ -87,7 +87,7 @@ public class BytesSource extends Source {
     }
 
     @NonNull
-    ByteBuffer getBuffer() {
+    public ByteBuffer getBuffer() {
         return byteBuffer;
     }
 

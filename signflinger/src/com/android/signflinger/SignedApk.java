@@ -58,8 +58,13 @@ public class SignedApk implements Archive {
 
     public SignedApk(@NonNull File file, @NonNull SignedApkOptions options)
             throws InvalidKeyException, IOException {
-        this.archive = new ZipArchive(file);
         this.options = options;
+        if (options.v1Enabled) {
+            // Improve V1 signing performance by briefly caching zip entry content.
+            this.archive = new CachedZipArchive(file);
+        } else {
+            this.archive = new ZipArchive(file);
+        }
 
         // TODO: Exploit bottom-up parsing of Android and request
         // zipflinger to not generate virtual entries on close
