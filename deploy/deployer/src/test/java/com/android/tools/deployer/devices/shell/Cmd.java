@@ -21,7 +21,9 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Cmd extends ShellCommand {
 
@@ -141,8 +143,68 @@ public class Cmd extends ShellCommand {
                             stdout.println("Success");
                             return 0;
                         }
+                    case "dump":
+                        {
+                            Map<String, List<String>> pkgToPaths = new HashMap<>();
+                            String pkg = args.nextArgument();
+                            if (pkg != null) {
+                                List<String> path = device.getAppPaths(pkg);
+                                if (path != null) {
+                                    pkgToPaths.put(pkg, path);
+                                }
+                            }
+                            if (pkgToPaths.isEmpty()) {
+                                // "cmd package" will dump all packages if the specified package isn't found
+                                device.getApps()
+                                        .forEach(
+                                                app ->
+                                                        pkgToPaths.put(
+                                                                app, device.getAppPaths(app)));
+                            }
+
+                            stdout.println("TEST HEADER DO NOT LOOK FOR THIS:");
+                            stdout.println("  [android]\n    path: /system/bin");
+                            pkgToPaths.forEach(
+                                    (packageName, pathList) -> {
+                                        stdout.println("  [" + packageName + "]");
+                                        pathList.forEach(
+                                                path ->
+                                                        stdout.println(
+                                                                "    path: /fake/path" + path));
+                                    });
+
+                            stdout.println("\n\nLoaded volumes:");
+                            stdout.println("  (none)");
+
+                            stdout.println("\n\nDexopt state:");
+                            stdout.println("  [com.android.development]");
+                            stdout.println("    path: /system/app/Development/Development.apk");
+                            pkgToPaths.forEach(
+                                    (packageName, pathList) -> {
+                                        stdout.println("  [" + packageName + "]");
+                                        stdout.println("    Instruction Set: x86_64");
+                                        pathList.forEach(
+                                                path -> stdout.println("      path: " + path));
+                                    });
+                            stdout.println("  [com.android.systemui]");
+                            stdout.println(
+                                    "    path: /system/priv-app/SystemUIGoogle/SystemUIGoogle.apk");
+
+                            stdout.println("\n\nCompiler stats:");
+                            pkgToPaths.forEach(
+                                    (packageName, pathList) -> {
+                                        stdout.println("  [" + packageName + "]");
+                                        stdout.println("    (No recorded stats)");
+                                    });
+                            return 0;
+                        }
                     case "path":
                         {
+                            if (device.getApi() < 28) {
+                                // "path" doesn't exist on APIs < 28
+                                stdout.println("Unknown command: path");
+                                return 255;
+                            }
                             String pkg = args.nextArgument();
                             if (pkg == null) {
                                 stdout.println(

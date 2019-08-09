@@ -24,6 +24,9 @@ class Env {
   // The shell binary to use when invoking commands.
   static std::string shell();
 
+  // The API level of the current device.
+  static int api_level();
+
   // The uid of the android system. (Not the same as the actual running uid)
   static int uid();
 

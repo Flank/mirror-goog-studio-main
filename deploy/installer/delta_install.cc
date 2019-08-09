@@ -22,24 +22,12 @@
 #include <sys/wait.h>
 
 #include "delta_install.h"
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/installer/patch_applier.h"
-
-namespace {
-#if defined(__ANDROID__)
-#include <sys/system_properties.h>
-int GetAPILevel() {
-  char sdk_ver_str[PROP_VALUE_MAX] = "0";
-  __system_property_get("ro.build.version.sdk", sdk_ver_str);
-  return atoi(sdk_ver_str);
-}
-#else
-int GetAPILevel() { return 21; }
-#endif
-}  // namespace
 
 namespace deploy {
 
@@ -57,7 +45,7 @@ void DeltaInstallCommand::Run() {
   auto response = new proto::DeltaInstallResponse();
   workspace_.GetResponse().set_allocated_deltainstall_response(response);
 
-  int api_level = GetAPILevel();
+  int api_level = Env::api_level();
   LogEvent("DeltaInstall found API level:" + to_string(api_level));
   if (api_level < 21) {
     Install();

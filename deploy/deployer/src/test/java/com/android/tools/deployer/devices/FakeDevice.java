@@ -457,6 +457,7 @@ public class FakeDevice {
         env.put("FAKE_DEVICE_ROOT", storage.getAbsolutePath());
         env.put("FAKE_DEVICE_LOGCAT", logcat.getAbsolutePath());
         env.put("FAKE_DEVICE_SHELL", fakeShell.getAbsolutePath());
+        env.put("FAKE_DEVICE_API_LEVEL", String.valueOf(api));
         env.put("FAKE_DEVICE_UID", String.valueOf(user.uid));
     }
 

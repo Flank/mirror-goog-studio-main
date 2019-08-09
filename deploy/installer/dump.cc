@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
@@ -252,9 +253,15 @@ std::vector<std::string> DumpCommand::RetrieveApks(
   // Android P.
   CmdCommand cmd(workspace_);
   std::string error_output;
-  cmd.GetAppApks(package_name, &apks, &error_output);
-  if (apks.size() == 0) {
-    // "cmd" likely failed. Try with PackageManager (pm)
+  int api = Env::api_level();
+  if (api >= 28) {
+    Phase p("apk_path_via_cmd_package_path");
+    cmd.GetAppApks(package_name, &apks, &error_output);
+  } else if (api >= 24) {
+    Phase p("apk_path_via_cmd_package_dump");
+    cmd.DumpApks(package_name, &apks, &error_output);
+  } else {
+    Phase p("apk_path_via_pm");
     PackageManager pm(workspace_);
     pm.GetApks(package_name, &apks, &error_output);
   }

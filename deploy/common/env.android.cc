@@ -1,5 +1,8 @@
 #include "tools/base/deploy/common/env.h"
 
+#include <stdlib.h>
+#include <sys/system_properties.h>
+
 namespace deploy {
 
 bool Env::IsValid() { return false; }
@@ -11,6 +14,12 @@ std::string Env::root() { return ""; }
 std::string Env::logcat() { return ""; }
 
 std::string Env::shell() { return ""; }
+
+int Env::api_level() {
+  char sdk_ver_str[PROP_VALUE_MAX] = "0";
+  __system_property_get("ro.build.version.sdk", sdk_ver_str);
+  return atoi(sdk_ver_str);
+}
 
 int Env::uid() { return 0; }
 

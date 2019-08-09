@@ -31,6 +31,32 @@ namespace deploy {
 
 namespace {
 const char* CMD_EXEC = "/system/bin/cmd";
+
+bool IsLeadingSpaceOrTab(const char* buf) {
+  return *buf == ' ' || *buf == '\t';
+}
+
+const char* Ltrim(const char* buf) {
+  while (IsLeadingSpaceOrTab(buf)) {
+    buf++;
+  }
+  return buf;
+}
+
+const char* FindEndOfLine(const char* buf) {
+  while (*buf != '\n' && *buf != '\0') {
+    buf++;
+  }
+  return buf;
+}
+
+const char* FindNextLine(const char* buf) {
+  buf = FindEndOfLine(buf);
+  if (*buf == '\0') {
+    return nullptr;
+  }
+  return buf + 1;
+}
 }  // namespace
 
 bool CmdCommand::GetAppApks(const std::string& package_name,
@@ -60,6 +86,72 @@ bool CmdCommand::GetAppApks(const std::string& package_name,
     }
   }
 
+  return true;
+}
+
+// Use "cmd package dump <pkg_name>" to find the path to the APK.
+// Note that this method uses a custom parser to parse through the
+// output, since in APIs 24-27 and if the package isn't installed,
+// cmd will dump all installed packages.
+//
+// The custom parser simply looks for the "Dexopt state:" header,
+// followed by "[pkg_name]", followed by the "path:" entry.
+bool CmdCommand::DumpApks(const std::string& package_name,
+                          std::vector<std::string>* apks,
+                          std::string* error_string) const noexcept {
+  Trace trace("CmdCommand::DumpApks");
+  std::vector<std::string> parameters;
+  parameters.emplace_back("package");
+  parameters.emplace_back("dump");
+  parameters.emplace_back(package_name);
+  std::string out;
+  std::string err;
+  bool success = workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, &err);
+  if (!success) {
+    *error_string = err;
+    return false;
+  }
+
+  bool found_dex_opt_section = false;
+  bool found_package = false;
+  const char* out_buf = out.c_str();
+  while (*out_buf != '\0') {
+    const char* line_end = FindEndOfLine(out_buf);
+    if (!IsLeadingSpaceOrTab(out_buf)) {
+      if (!found_dex_opt_section && !strncmp(out_buf, "Dexopt state:", 13)) {
+        found_dex_opt_section = true;
+      } else if (found_dex_opt_section) {
+        // Perhaps the package wasn't found or it was the last package in the
+        // Dexopt list, in which case we should exit the loop now that we found
+        // the next section.
+        break;
+      }
+    } else if (found_dex_opt_section) {
+      out_buf = Ltrim(out_buf);
+      if (found_dex_opt_section && *out_buf == '[') {
+        // Look for the closing square bracket from the current position to the
+        // end of the line. Note the first character cannot be '['.
+        const char* end_tag =
+            (const char*)memchr(out_buf, ']', line_end - out_buf);
+        // Use the size of "substring" as the limit for strncmp since it is not
+        // null-terminated (only package_name is null terminated).
+        bool package_match =
+            end_tag != nullptr &&
+            !strncmp(out_buf + 1, package_name.c_str(), end_tag - out_buf - 1);
+        if (package_match) {
+          found_package = true;
+        } else if (found_package && !package_match) {
+          // Exit the loop since we are past the correct package section.
+          break;
+        }
+      } else if (found_package && !strncmp(out_buf, "path:", 5)) {
+        out_buf = Ltrim(out_buf + 5);
+        std::string path(out_buf, line_end - out_buf);
+        apks->push_back(path);
+      }
+    }
+    out_buf = FindNextLine(line_end);
+  }
   return true;
 }
 

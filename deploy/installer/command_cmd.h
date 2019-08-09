@@ -33,6 +33,9 @@ class CmdCommand {
                   std::vector<std::string>* apks,
                   std::string* error_string) const noexcept;
 
+  bool DumpApks(const std::string& package_name, std::vector<std::string>* apks,
+                std::string* error_string) const noexcept;
+
   bool AttachAgent(int pid, const std::string& agent, const std::string& args,
                    std::string* error_string) const noexcept;
 
