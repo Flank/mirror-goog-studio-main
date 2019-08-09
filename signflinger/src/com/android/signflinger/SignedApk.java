@@ -243,8 +243,7 @@ public class SignedApk implements Archive {
                 addV1SignatureRequest.getAdditionalJarEntries()) {
             archive.delete(entry.getName());
             BytesSource source =
-                    new BytesSource(entry.getData(), entry.getName(), Deflater.NO_COMPRESSION);
-            source.align(DEFAULT_ALIGNMENT);
+                    new BytesSource(entry.getData(), entry.getName(), Deflater.BEST_SPEED);
             archive.add(source);
             ApkSignerEngine.InspectJarEntryRequest request = signer.outputJarEntry(entry.getName());
             processRequest(request);
