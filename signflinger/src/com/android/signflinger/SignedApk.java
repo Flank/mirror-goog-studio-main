@@ -54,7 +54,6 @@ public class SignedApk implements Archive {
     static final String MANIFEST_CREATED_BY = "Created-By";
     static final String MANIFEST_BUILT_BY = "Built-By";
     static final String MANIFEST_VERSION = "Manifest-Version";
-    private static final Long DEFAULT_ALIGNMENT = 4L;
 
     public SignedApk(@NonNull File file, @NonNull SignedApkOptions options)
             throws InvalidKeyException, IOException {
@@ -194,23 +193,6 @@ public class SignedApk implements Archive {
             throw new IllegalStateException(e);
         }
 
-    }
-
-    private void processInstructions(
-            @NonNull ApkSignerEngine.InputJarEntryInstructions instructions,
-            @NonNull String entryName)
-            throws IOException {
-        switch (instructions.getOutputPolicy()) {
-            case SKIP:
-                break;
-            case OUTPUT_BY_ENGINE:
-                archive.delete(entryName);
-                break;
-            case OUTPUT:
-                ApkSignerEngine.InspectJarEntryRequest req = signer.outputJarEntry(entryName);
-                processRequest(req);
-                break;
-        }
     }
 
     private void processRequest(@Nullable ApkSignerEngine.InspectJarEntryRequest req)
