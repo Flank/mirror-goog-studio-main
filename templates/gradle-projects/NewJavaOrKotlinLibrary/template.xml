@@ -2,8 +2,8 @@
 <template
     format="5"
     revision="5"
-    name="Java Library"
-    description="Creates a new Java library.">
+    name="Java or Kotlin Library"
+    description="Creates a new Java or Kotlin library.">
 
     <category value="Application" />
 
