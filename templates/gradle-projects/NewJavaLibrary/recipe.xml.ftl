@@ -4,8 +4,8 @@
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
     <instantiate from="root/build.gradle.ftl"
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
-    <instantiate from="root/src/library_package/Placeholder.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.java" />
+    <instantiate from="root/src/library_package/Placeholder.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 
 	<mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
 </recipe>
