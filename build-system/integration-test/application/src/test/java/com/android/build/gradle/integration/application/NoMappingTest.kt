@@ -63,7 +63,7 @@ class NoMappingTest(val apkCreatorType: ApkCreatorType) {
     }
 
     private fun getGradleProperties() = when (apkCreatorType) {
-        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
-        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
+        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=false"
+        APK_FLINGER -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=true"
     }
 }

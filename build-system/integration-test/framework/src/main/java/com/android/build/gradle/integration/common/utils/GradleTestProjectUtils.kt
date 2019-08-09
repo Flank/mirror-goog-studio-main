@@ -25,8 +25,8 @@ import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 
 fun GradleTestProject.setApkCreatorType(apkCreatorType: ApkCreatorType) {
     val gradlePropertiesLine = when (apkCreatorType) {
-        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
-        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
+        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=false"
+        APK_FLINGER -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=true"
     }
     TestFileUtils.appendToFile(this.gradlePropertiesFile, gradlePropertiesLine)
 }

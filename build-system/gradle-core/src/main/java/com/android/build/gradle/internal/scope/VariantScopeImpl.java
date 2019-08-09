@@ -37,7 +37,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPI
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
-import static com.android.build.gradle.options.BooleanOption.USE_APK_FLINGER;
+import static com.android.build.gradle.options.BooleanOption.USE_NEW_APK_CREATOR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
@@ -1443,7 +1443,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public ApkCreatorType getApkCreatorType() {
-        if (globalScope.getProjectOptions().get(USE_APK_FLINGER)) {
+        if (globalScope.getProjectOptions().get(USE_NEW_APK_CREATOR)) {
             return ApkCreatorType.APK_FLINGER;
         } else {
             return ApkCreatorType.APK_Z_FILE_CREATOR;

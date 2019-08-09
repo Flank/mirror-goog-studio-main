@@ -383,10 +383,11 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder setApkCreatorType(@NonNull ApkCreatorType apkCreatorType) {
         switch (apkCreatorType) {
             case APK_Z_FILE_CREATOR:
-                gradleProperties.add(BooleanOption.USE_APK_FLINGER.getPropertyName() + "=false");
+                gradleProperties.add(
+                        BooleanOption.USE_NEW_APK_CREATOR.getPropertyName() + "=false");
                 return this;
             case APK_FLINGER:
-                gradleProperties.add(BooleanOption.USE_APK_FLINGER.getPropertyName() + "=true");
+                gradleProperties.add(BooleanOption.USE_NEW_APK_CREATOR.getPropertyName() + "=true");
                 return this;
         }
         throw new IllegalStateException();
