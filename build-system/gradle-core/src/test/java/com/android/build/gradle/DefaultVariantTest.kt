@@ -344,6 +344,20 @@ class DefaultVariantTest {
         ).isEqualTo("debug")
     }
 
+    @Test
+    fun `default respects tested build type`() {
+        assertThat(
+            computeDefaultVariant(
+                dsl = """
+                    buildTypes {
+                        a
+                    }
+                    testBuildType = 'a'
+                    """
+            )
+        ).isEqualTo("a")
+    }
+
     private class Result(val defaultVariant: String?, val syncIssues: Set<SyncIssue>)
 
     private fun computeDefaultVariant(dsl: String, pluginType: TestProjects.Plugin = TestProjects.Plugin.APP): String? {

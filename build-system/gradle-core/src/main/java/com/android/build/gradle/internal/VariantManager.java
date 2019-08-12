@@ -1557,13 +1557,14 @@ public class VariantManager implements VariantModel {
      * <p>Given user preferences, this attempts to respect them in the presence of the variant
      * filter.
      *
-     * <p>This prioritizes by, in decending order of preference:
+     * <p>This prioritizes by, in descending order of preference:
      *
      * <ol>
      *   <li>The build author's explicit build type settings
      *   <li>The build author's explicit product flavor settings, matching the highest number of
      *       chosen defaults
-     *   <li>The implicit default build type
+     *   <li>The fallback default build type, which is the tested build type, if applicable,
+     *       otherwise 'debug'
      *   <li>The alphabetically sorted default product flavors, left to right
      * </ol>
      *
@@ -1587,11 +1588,13 @@ public class VariantManager implements VariantModel {
         String chosenBuildType = getBuildAuthorSpecifiedDefaultBuildType(syncIssueHandler);
         Map<String, String> chosenFlavors = getBuildAuthorSpecifiedDefaultFlavors(syncIssueHandler);
 
+        String fallbackDefaultBuildType = getFallbackDefaultBuildType();
+
         Comparator<VariantScope> preferredDefaultVariantScopeComparator =
                 new BuildAuthorSpecifiedDefaultBuildTypeComparator(chosenBuildType)
                         .thenComparing(
                                 new BuildAuthorSpecifiedDefaultsFlavorComparator(chosenFlavors))
-                        .thenComparing(new DefaultBuildTypeComparator())
+                        .thenComparing(new DefaultBuildTypeComparator(fallbackDefaultBuildType))
                         .thenComparing(new DefaultFlavorComparator());
 
         // Ignore test, base feature and feature variants.
@@ -1604,6 +1607,15 @@ public class VariantManager implements VariantModel {
                         .filter(it -> !it.getType().isHybrid())
                         .min(preferredDefaultVariantScopeComparator);
         return defaultVariantScope.map(TransformVariantScope::getFullVariantName).orElse(null);
+    }
+
+    @NonNull
+    private String getFallbackDefaultBuildType() {
+        @Nullable String testBuildType = extension.getTestBuildType();
+        if (testBuildType != null) {
+            return testBuildType;
+        }
+        return "debug";
     }
 
     /**
@@ -1680,15 +1692,21 @@ public class VariantManager implements VariantModel {
      * <p>The best match is the <em>minimum</em> element.
      */
     private static class DefaultBuildTypeComparator implements Comparator<VariantScope> {
+        @NonNull private final String preferredBuildType;
+
+        private DefaultBuildTypeComparator(@NonNull String preferredBuildType) {
+            this.preferredBuildType = preferredBuildType;
+        }
+
         @Override
         public int compare(VariantScope v1, VariantScope v2) {
             String b1 = v1.getVariantConfiguration().getBuildType().getName();
             String b2 = v2.getVariantConfiguration().getBuildType().getName();
             if (b1.equals(b2)) {
                 return 0;
-            } else if (b1.equals("debug")) {
+            } else if (b1.equals(preferredBuildType)) {
                 return -1;
-            } else if (b2.equals("debug")) {
+            } else if (b2.equals(preferredBuildType)) {
                 return 1;
             } else {
                 return b1.compareTo(b2);
