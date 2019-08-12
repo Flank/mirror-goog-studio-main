@@ -192,7 +192,7 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   }
 
   std::string cp_output;
-  if (!RunCmd("cp", User::APP_PACKAGE, {"-r", src_path, dst_path},
+  if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", src_path, dst_path},
               &cp_output)) {
     ErrEvent("Could not copy agent binary: "_s + cp_output);
     return false;
