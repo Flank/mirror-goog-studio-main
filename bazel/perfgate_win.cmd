@@ -15,13 +15,9 @@ set SCRIPTDIR=%~dp0
 CALL :NORMALIZE_PATH "%SCRIPTDIR%..\..\.."
 set BASEDIR=%RETVAL%
 
-@rem Capture location of command.log  Will be out as unix filepath
-FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info command_log') DO (
-SET COMMANDLOG=%%F
-)
-@rem convert unix path to windows path using cygpath.
-FOR /F "tokens=*" %%F IN ('cygpath --windows --absolute %COMMANDLOG%') DO (
-SET COMMANDLOGLOC=%%F
+@rem Generate a UUID for use as the Bazel invocation ID
+FOR /F "tokens=*" %%F IN ('uuidgen') DO (
+SET INVOCATIONID=%%F
 )
 
 echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBER=%BUILDNUMBER%, SCRIPTDIR=%SCRIPTDIR%, BASEDIR=%BASEDIR%"
@@ -31,16 +27,22 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test --keep_going --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\winprof%BUILDNUMBER%.json --runs_per_test=5 -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd ^
+ --max_idle_secs=60 ^
+ test ^
+ --keep_going ^
+ --config=remote ^
+ --build_tag_filters=-no_rbe_windows,-no_windows ^
+ --invocation_id=%INVOCATIONID% ^
+ --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% ^
+ --profile=%DISTDIR%\winprof%BUILDNUMBER%.json ^
+ --runs_per_test=5 ^
+ -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
-@rem Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-@rem We cheat here and use cygwin sed.  This is not easy with native Windows tools.
-FOR /F "tokens=*" %%F IN ('sed -n -e "s/.*invocation_id: //p" %COMMANDLOGLOC%') DO (
-SET UPSALITEID=%%F
-)
-echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%'" />" > %DISTDIR%\upsalite_test_results.html
+
+echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
 
 cd %BASEDIR%\bazel-testlogs
 
