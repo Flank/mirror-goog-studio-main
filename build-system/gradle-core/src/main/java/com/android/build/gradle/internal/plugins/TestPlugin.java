@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle.internal.plugins;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
+import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.AndroidProject;
@@ -39,22 +41,17 @@ import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/** Gradle plugin class for 'application' projects. */
-public abstract class AbstractAppPlugin extends BasePlugin {
-    private final boolean isBaseApplication;
-
+/** Gradle plugin class for 'test' projects. */
+public class TestPlugin extends BasePlugin {
     @Inject
-    public AbstractAppPlugin(
-            ToolingModelBuilderRegistry registry,
-            SoftwareComponentFactory componentFactory,
-            boolean isBaseApplication) {
+    public TestPlugin(
+            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
         super(registry, componentFactory);
-        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
     protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_APP;
+        return AndroidProject.PROJECT_TYPE_TEST;
     }
 
     @NonNull
@@ -72,7 +69,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
         return project.getExtensions()
                 .create(
                         "android",
-                        getExtensionClass(),
+                        TestExtension.class,
                         project,
                         projectOptions,
                         globalScope,
@@ -81,17 +78,13 @@ public abstract class AbstractAppPlugin extends BasePlugin {
                         signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo,
-                        isBaseApplication);
+                        extraModelInfo);
     }
-
-    @NonNull
-    protected abstract Class<? extends AppExtension> getExtensionClass();
 
     @NonNull
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
-        return GradleBuildProject.PluginType.APPLICATION;
+        return GradleBuildProject.PluginType.TEST;
     }
 
     @NonNull
@@ -105,7 +98,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        return new ApplicationTaskManager(
+        return new TestApplicationTaskManager(
                 globalScope,
                 project,
                 projectOptions,
@@ -116,9 +109,14 @@ public abstract class AbstractAppPlugin extends BasePlugin {
                 recorder);
     }
 
+    @Override
+    protected void pluginSpecificApply(@NonNull Project project) {
+        // do nothing
+    }
+
     @NonNull
     @Override
-    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new ApplicationVariantFactory(globalScope);
+    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new TestVariantFactory(globalScope);
     }
 }

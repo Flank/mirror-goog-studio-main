@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.structureplugin
 
-import com.android.build.gradle.BasePlugin
+import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.android.resources.ResourceType

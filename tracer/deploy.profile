@@ -18,7 +18,7 @@ Trace: com.android.tools.idea.gradle.run.DefaultGradleTaskRunner::*
 Trace: com.android.tools.idea.gradle.project.build.invoker.GradleBuildInvoker::*
 
 # Android plugin gradle side
-Trace: com.android.build.gradle.BasePlugin
+Trace: com.android.build.gradle.internal.plugins.BasePlugin
 # START REPO MANAGER (Bug #122905819)
 Trace: com.android.repository.impl.manager.RepoManagerImpl::*
 Trace: com.android.repository.impl.manager.LocalRepoLoaderImpl::*

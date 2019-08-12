@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
+import com.android.build.gradle.internal.plugins.PluginExtensionsKt;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
@@ -54,7 +55,7 @@ public class FeaturePluginDslTest {
 
     @Test
     public void testTasks() throws Exception {
-        plugin.createAndroidTasks();
+        PluginExtensionsKt.runAfterEvaluate(plugin, false);
 
         SortedSet<String> taskNames = project.getTasks().getNames();
 

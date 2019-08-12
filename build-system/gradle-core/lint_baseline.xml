@@ -5,8 +5,8 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="625"/>
+            file="src/main/java/com/android/build/gradle/internal/plugins/BasePlugin.java"
+            line="600"/>
     </issue>
 
     <issue
@@ -62,7 +62,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/LinkApplicationAndroidResourcesTask.kt"
-            line="833"/>
+            line="821"/>
     </issue>
 
     <issue
@@ -326,7 +326,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/tasks/VerifyLibraryResourcesTask.kt"
-            line="281"/>
+            line="279"/>
     </issue>
 
     <issue
@@ -334,23 +334,23 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/tasks/VerifyLibraryResourcesTask.kt"
-            line="281"/>
+            line="279"/>
     </issue>
 
     <issue
         id="CommonForkJoinPool"
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
-            file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="241"/>
+            file="src/main/java/com/android/build/gradle/internal/plugins/BasePlugin.java"
+            line="243"/>
     </issue>
 
     <issue
         id="CommonForkJoinPool"
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
-            file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="376"/>
+            file="src/main/java/com/android/build/gradle/internal/plugins/BasePlugin.java"
+            line="379"/>
     </issue>
 
     <issue
@@ -374,7 +374,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
-            line="58"/>
+            line="57"/>
     </issue>
 
     <issue
@@ -398,7 +398,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
-            line="166"/>
+            line="175"/>
     </issue>
 
 </issues>

@@ -18,12 +18,12 @@ package com.android.build.gradle.internal.tests
 
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixture.createAndConfig
-import com.android.build.gradle.runAfterEvaluate
+import com.android.build.gradle.internal.plugins.runAfterEvaluate
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration

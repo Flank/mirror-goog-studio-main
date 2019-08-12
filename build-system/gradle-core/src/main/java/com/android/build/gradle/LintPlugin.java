@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.dsl.LintOptions;
+import com.android.build.gradle.internal.plugins.BasePlugin;
 import com.android.build.gradle.internal.tasks.LintStandaloneTask;
 import java.io.File;
 import org.gradle.api.Action;

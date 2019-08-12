@@ -21,8 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.AppExtension;
-import com.android.build.gradle.AppPlugin;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.plugins.AppPlugin;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.sdklib.SdkVersionInfo;

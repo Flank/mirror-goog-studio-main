@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle
+package com.android.build.gradle.internal.plugins
 
+import com.android.build.gradle.AppExtension
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.google.common.truth.Expect

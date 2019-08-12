@@ -18,10 +18,10 @@ package com.android.build.gradle.api;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.AppPlugin;
 import com.android.build.gradle.FeaturePlugin;
-import com.android.build.gradle.LibraryPlugin;
-import com.android.build.gradle.TestPlugin;
+import com.android.build.gradle.internal.plugins.AppPlugin;
+import com.android.build.gradle.internal.plugins.LibraryPlugin;
+import com.android.build.gradle.internal.plugins.TestPlugin;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;

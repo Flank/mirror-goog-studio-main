@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.ide.SyncIssueImpl
+import com.android.build.gradle.internal.plugins.AppPlugin
+import com.android.build.gradle.internal.plugins.LibraryPlugin
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.model.SyncIssue
 import com.google.common.collect.ImmutableList

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,18 @@
 
 package com.android.build.gradle
 
+import org.gradle.api.Project
+
 /**
- * extension to call afterEvaluate on a plugin directly. This also works around the
- * package visibility of createAndroidTasks for testing.
+ * The plugin applied with 'com.android.library'
  */
-fun BasePlugin.runAfterEvaluate(force: Boolean = false) {
-    this.createAndroidTasks()
+@Suppress("DEPRECATION")
+class LibraryPlugin: BasePlugin() {
+    override fun apply(project: Project) {
+        super.apply(project)
+
+        project.apply(INTERNAL_PLUGIN_ID)
+    }
 }
+
+private val INTERNAL_PLUGIN_ID = mapOf("plugin" to "com.android.internal.library")

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
+import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -680,7 +682,7 @@ public class PluginDslTest {
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
         plugin.createAndroidTasks();
-        assertThat(android.globalScope.getSdkComponents().getBuildToolsRevisionProvider().get())
+        assertThat(plugin.globalScope.getSdkComponents().getBuildToolsRevisionProvider().get())
                 .isEqualTo(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.
         Collection<SyncIssue> syncIssues =

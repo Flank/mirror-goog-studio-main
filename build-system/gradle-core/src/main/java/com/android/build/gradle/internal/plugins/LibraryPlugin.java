@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.build.gradle;
+package com.android.build.gradle.internal.plugins;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.variant.TestVariantFactory;
+import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.AndroidProject;
@@ -39,17 +40,13 @@ import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/** Gradle plugin class for 'test' projects. */
-public class TestPlugin extends BasePlugin {
+/** Gradle plugin class for 'library' projects. */
+public class LibraryPlugin extends BasePlugin {
+
     @Inject
-    public TestPlugin(
+    public LibraryPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
         super(registry, componentFactory);
-    }
-
-    @Override
-    protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_TEST;
     }
 
     @NonNull
@@ -67,7 +64,7 @@ public class TestPlugin extends BasePlugin {
         return project.getExtensions()
                 .create(
                         "android",
-                        TestExtension.class,
+                        getExtensionClass(),
                         project,
                         projectOptions,
                         globalScope,
@@ -80,9 +77,25 @@ public class TestPlugin extends BasePlugin {
     }
 
     @NonNull
+    protected Class<? extends BaseExtension> getExtensionClass() {
+        return LibraryExtension.class;
+    }
+
+    @NonNull
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
-        return GradleBuildProject.PluginType.TEST;
+        return GradleBuildProject.PluginType.LIBRARY;
+    }
+
+    @NonNull
+    @Override
+    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new LibraryVariantFactory(globalScope);
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_LIBRARY;
     }
 
     @NonNull
@@ -96,7 +109,7 @@ public class TestPlugin extends BasePlugin {
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        return new TestApplicationTaskManager(
+        return new LibraryTaskManager(
                 globalScope,
                 project,
                 projectOptions,
@@ -109,12 +122,10 @@ public class TestPlugin extends BasePlugin {
 
     @Override
     protected void pluginSpecificApply(@NonNull Project project) {
-        // do nothing
     }
 
-    @NonNull
     @Override
-    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new TestVariantFactory(globalScope);
+    protected boolean isPackagePublished() {
+        return true;
     }
 }

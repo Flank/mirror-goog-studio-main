@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;

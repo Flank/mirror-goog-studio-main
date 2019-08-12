@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.io.File.separator;
@@ -24,6 +24,8 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
@@ -132,7 +134,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     protected ProjectOptions projectOptions;
 
-    private GlobalScope globalScope;
+    GlobalScope globalScope;
 
     private DataBindingBuilder dataBindingBuilder;
 
@@ -153,7 +155,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private boolean hasCreatedTasks = false;
 
-    BasePlugin(
+    public BasePlugin(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull SoftwareComponentFactory componentFactory) {
         ClasspathVerifier.checkClasspathSanity();

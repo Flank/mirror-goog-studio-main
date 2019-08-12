@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.MultiTypeTaskManager;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.plugins.LibraryPlugin;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.MultiTypeVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;

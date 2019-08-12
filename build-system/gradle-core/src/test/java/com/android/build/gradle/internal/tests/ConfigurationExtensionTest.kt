@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.tests
 
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.BasePlugin
+import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixture.createAndConfig
-import com.android.build.gradle.runAfterEvaluate
+import com.android.build.gradle.internal.plugins.runAfterEvaluate
 import com.android.ide.common.util.multimapOf
 import com.android.ide.common.util.multimapWithSingleKeyOf
 import com.google.common.collect.ImmutableSetMultimap

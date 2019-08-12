@@ -1,5 +1,14 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:utils.bzl", "fileset")
+
+fileset(
+    name = "resources",
+    srcs = glob(["src/main/resources/**"]),
+    mappings = {
+        "src/main/resources/": "",
+    },
+)
 
 kotlin_library(
     name = "gradle-api",
@@ -8,6 +17,7 @@ kotlin_library(
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
+    resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
         ":builder-model_neverlink",  # Only present for legacy reasons.

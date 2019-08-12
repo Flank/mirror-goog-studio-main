@@ -13,7 +13,7 @@ Trace: org.gradle.execution.DefaultBuildExecuter::execute
 Trace: org.gradle.execution.DefaultBuildConfigurationActionExecuter::configure
 
 # Android plugin
-Trace: com.android.build.gradle.BasePlugin
+Trace: com.android.build.gradle.internal.plugins.BasePlugin
 Annotation: org.gradle.api.tasks.TaskAction
 
 # Apk step

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal
 
-import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
 import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput

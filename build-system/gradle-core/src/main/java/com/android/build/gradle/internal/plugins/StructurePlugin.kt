@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.plugins
 
-import com.android.build.gradle.BasePlugin
 import com.android.build.gradle.internal.tasks.structureplugin.CombineModuleInfoTask
 import com.android.build.gradle.internal.tasks.structureplugin.GatherModuleInfoTask
 import org.gradle.api.NamedDomainObjectContainer

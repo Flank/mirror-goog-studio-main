@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
+import com.android.build.gradle.internal.plugins.BasePlugin;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;

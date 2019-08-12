@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle;
+
+package com.android.build.gradle.internal.plugins;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.variant.LibraryVariantFactory;
+import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.AndroidProject;
@@ -38,13 +41,22 @@ import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/** Gradle plugin class for 'library' projects. */
-public class LibraryPlugin extends BasePlugin {
+/** Gradle plugin class for 'application' projects. */
+public abstract class AbstractAppPlugin extends BasePlugin {
+    private final boolean isBaseApplication;
 
     @Inject
-    public LibraryPlugin(
-            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
+    public AbstractAppPlugin(
+            ToolingModelBuilderRegistry registry,
+            SoftwareComponentFactory componentFactory,
+            boolean isBaseApplication) {
         super(registry, componentFactory);
+        this.isBaseApplication = isBaseApplication;
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_APP;
     }
 
     @NonNull
@@ -71,29 +83,17 @@ public class LibraryPlugin extends BasePlugin {
                         signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo);
+                        extraModelInfo,
+                        isBaseApplication);
     }
 
     @NonNull
-    protected Class<? extends BaseExtension> getExtensionClass() {
-        return LibraryExtension.class;
-    }
+    protected abstract Class<? extends AppExtension> getExtensionClass();
 
     @NonNull
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
-        return GradleBuildProject.PluginType.LIBRARY;
-    }
-
-    @NonNull
-    @Override
-    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new LibraryVariantFactory(globalScope);
-    }
-
-    @Override
-    protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_LIBRARY;
+        return GradleBuildProject.PluginType.APPLICATION;
     }
 
     @NonNull
@@ -107,7 +107,7 @@ public class LibraryPlugin extends BasePlugin {
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        return new LibraryTaskManager(
+        return new ApplicationTaskManager(
                 globalScope,
                 project,
                 projectOptions,
@@ -118,12 +118,9 @@ public class LibraryPlugin extends BasePlugin {
                 recorder);
     }
 
+    @NonNull
     @Override
-    protected void pluginSpecificApply(@NonNull Project project) {
-    }
-
-    @Override
-    protected boolean isPackagePublished() {
-        return true;
+    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new ApplicationVariantFactory(globalScope);
     }
 }
