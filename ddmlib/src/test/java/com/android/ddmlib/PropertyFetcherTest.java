@@ -16,17 +16,39 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.PropertyFetcher.GetPropReceiver;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
 
+/** Unit tests for {@link PropertyFetcher}. */
 public class PropertyFetcherTest extends TestCase {
     static final String GETPROP_RESPONSE =
             "\n[ro.sf.lcd_density]: [480]\n" +
             "[ro.secure]: [1]\r\n";
+
+    static final String MULTI_LINE_PROP =
+            "[persist.before]: [before]\n"
+                    + "[persist.sys.boot.reason.history]: [reboot,remount,1565385848\n"
+                    + "reboot,remount-test,1565385820\n"
+                    + "reboot,remount-test,1565385798]\n"
+                    + "[persist.after]: [after]\r\n";
+
+    static final String MULTI_LINE_PROP_WITH_EMPTY_LINES =
+            "[persist.before]: [before]\n"
+                    + "[persist.sys.boot.reason.history]: [reboot,remount,1565385848\n"
+                    + "\n"
+                    + "reboot,remount-test,1565385820\n"
+                    + "reboot,remount-test,1565385798]\n"
+                    + "[persist.after]: [after]\r\n";
+
+    static final String ERROR_MULTI_LINE_PROP =
+            "[persist.before]: [before]\n"
+                    + "[persist.sys.boot.reason.history]: [reboot,remount,1565385848\n"
+                    + "reboot,remount-test,1565385820\n"
+                    + "reboot,remount-test,ERROR\n" // not ended properly
+                    + "[persist.after]: [after]\r\n";
 
     /**
      * Simple test to ensure parsing result of 'shell getprop' works as expected
@@ -36,6 +58,45 @@ public class PropertyFetcherTest extends TestCase {
         byte[] byteData = GETPROP_RESPONSE.getBytes();
         receiver.addOutput(byteData, 0, byteData.length);
         assertEquals("480", receiver.getCollectedProperties().get("ro.sf.lcd_density"));
+    }
+
+    /** Test that properties with multi-lines value are parsed. */
+    public void testGetPropReceiver_multilineproperty() {
+        GetPropReceiver receiver = new GetPropReceiver();
+        byte[] byteData = MULTI_LINE_PROP.getBytes();
+        receiver.addOutput(byteData, 0, byteData.length);
+        assertEquals(
+                "reboot,remount,1565385848\n"
+                        + "reboot,remount-test,1565385820\n"
+                        + "reboot,remount-test,1565385798",
+                receiver.getCollectedProperties().get("persist.sys.boot.reason.history"));
+        assertEquals("before", receiver.getCollectedProperties().get("persist.before"));
+        assertEquals("after", receiver.getCollectedProperties().get("persist.after"));
+    }
+
+    /** Test that properties with multi-lines value are parsed, even if a line is empty. */
+    public void testGetPropReceiver_multilineproperty_with_empty_lines() {
+        GetPropReceiver receiver = new GetPropReceiver();
+        byte[] byteData = MULTI_LINE_PROP_WITH_EMPTY_LINES.getBytes();
+        receiver.addOutput(byteData, 0, byteData.length);
+        assertEquals(
+                "reboot,remount,1565385848\n"
+                        + "\n"
+                        + "reboot,remount-test,1565385820\n"
+                        + "reboot,remount-test,1565385798",
+                receiver.getCollectedProperties().get("persist.sys.boot.reason.history"));
+        assertEquals("before", receiver.getCollectedProperties().get("persist.before"));
+        assertEquals("after", receiver.getCollectedProperties().get("persist.after"));
+    }
+
+    /** Test that properties with multi-lines value are ignored if not well formatted */
+    public void testGetPropReceiver_multilineproperty_formatError() {
+        GetPropReceiver receiver = new GetPropReceiver();
+        byte[] byteData = ERROR_MULTI_LINE_PROP.getBytes();
+        receiver.addOutput(byteData, 0, byteData.length);
+        assertNull(receiver.getCollectedProperties().get("persist.sys.boot.reason.history"));
+        assertEquals("before", receiver.getCollectedProperties().get("persist.before"));
+        assertEquals("after", receiver.getCollectedProperties().get("persist.after"));
     }
 
     /**

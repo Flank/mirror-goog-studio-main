@@ -32,6 +32,13 @@ class PropertyFetcher {
     /** the amount of time to wait between unsuccessful prop fetch attempts */
     private static final String GETPROP_COMMAND = "getprop"; //$NON-NLS-1$
     private static final Pattern GETPROP_PATTERN = Pattern.compile("^\\[([^]]+)\\]\\:\\s*\\[(.*)\\]$"); //$NON-NLS-1$
+    /** Two patterns in case the property span several lines. */
+    private static final Pattern GETPROP_START_LINE_PATTERN =
+            Pattern.compile("^\\[([^]]+)\\]\\:\\s*\\[(.*)$"); //$NON-NLS-1$
+
+    private static final Pattern GETPROP_END_LINE_PATTERN =
+            Pattern.compile("(.*)\\]$"); //$NON-NLS-1$
+
     private static final int GETPROP_TIMEOUT_SEC = 2;
     private static final int EXPECTED_PROP_COUNT = 150;
 
@@ -50,13 +57,20 @@ class PropertyFetcher {
 
         @Override
         public void processNewLines(@NonNull String[] lines) {
-            // We receive an array of lines. We're expecting
-            // to have the build info in the first line, and the build
-            // date in the 2nd line. There seems to be an empty line
-            // after all that.
-
-            for (String line : lines) {
-                if (line.isEmpty() || line.startsWith("#")) {
+            // We receive an array of lines.
+            // Some properties are single line, e.g.
+            //   [foo.bar] = [blah]
+            // Some properties span multiple lines, e.g.
+            //   [foo.bar] = [line 1\n
+            //   line 2\n
+            //   line 3]
+            String multiLineLabel = null;
+            String multiLineValue = null;
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
+                // If the line is empty in a multi-line property, we keep it, as its part of the
+                // property field.
+                if (multiLineLabel == null && (line.isEmpty() || line.startsWith("#"))) {
                     continue;
                 }
 
@@ -68,6 +82,32 @@ class PropertyFetcher {
                     if (!label.isEmpty()) {
                         mCollectedProperties.put(label, value);
                     }
+                    multiLineLabel = null;
+                    multiLineValue = null;
+                    continue;
+                }
+
+                Matcher multiLinePattern = GETPROP_START_LINE_PATTERN.matcher(line);
+                if (multiLinePattern.matches()) {
+                    multiLineLabel = multiLinePattern.group(1);
+                    if (multiLineLabel.isEmpty()) {
+                        continue;
+                    }
+                    multiLineValue = multiLinePattern.group(2);
+                    continue;
+                }
+
+                Matcher endPattern = GETPROP_END_LINE_PATTERN.matcher(line);
+                if (endPattern.matches()) {
+                    multiLineValue += "\n" + endPattern.group(1);
+                    mCollectedProperties.put(multiLineLabel, multiLineValue);
+                    multiLineLabel = null;
+                    multiLineValue = null;
+                    continue;
+                }
+                // If we are in-progress of a multi-line property.
+                if (multiLineValue != null) {
+                    multiLineValue += "\n" + line;
                 }
             }
         }
