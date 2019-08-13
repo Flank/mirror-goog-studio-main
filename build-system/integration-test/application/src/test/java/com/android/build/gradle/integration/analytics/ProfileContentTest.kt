@@ -14,80 +14,69 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.analytics;
+package com.android.build.gradle.integration.analytics
 
-import static com.android.build.gradle.integration.common.fixture.TestVersions.SUPPORT_LIB_MIN_SDK;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
-import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.wireless.android.sdk.stats.GradleBuildProfile;
-import com.google.wireless.android.sdk.stats.GradleBuildProject;
-import com.google.wireless.android.sdk.stats.GradleBuildVariant;
-import java.util.HashSet;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer
+import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.Iterables
+import com.google.wireless.android.sdk.stats.GradleBuildProject
+import java.util.HashSet
+import org.junit.Rule
+import org.junit.Test
 
 /**
  * This test exists to make sure that the profiles we get back from the Android Gradle Plugin meet
  * the expectations we have for them in our benchmarking infrastructure.
  */
-public class ProfileContentTest {
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-                    .enableProfileOutput()
-                    .create();
+class ProfileContentTest {
+    @get:Rule
+    var project = GradleTestProject.builder()
+        .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
+        .enableProfileOutput()
+        .create()
 
     @Test
-    public void testProfileProtoContentMakesSense() throws Exception {
-        ProfileCapturer capturer = new ProfileCapturer(project);
+    fun testProfileProtoContentMakesSense() {
+        val capturer = ProfileCapturer(project)
 
-        GradleBuildProfile getModel =
-                Iterables.getOnlyElement(
-                        capturer.capture(
-                                () -> {
-                                    project.model().fetchAndroidProjects();
-                                }));
+        val getModel = Iterables.getOnlyElement(
+            capturer.capture { project.model().fetchAndroidProjects() })
 
-        GradleBuildProfile cleanBuild =
-                Iterables.getOnlyElement(
-                        capturer.capture(
-                                () -> {
-                                    project.execute("assembleDebug");
-                                }));
+        val cleanBuild = Iterables.getOnlyElement(
+            capturer.capture { project.execute("assembleDebug") })
 
-        GradleBuildProfile noOpBuild =
-                Iterables.getOnlyElement(
-                        capturer.capture(
-                                () -> {
-                                    project.execute("assembleDebug");
-                                }));
+        val noOpBuild = Iterables.getOnlyElement(
+            capturer.capture { project.execute("assembleDebug") })
 
-        for (GradleBuildProfile profile : ImmutableList.of(getModel, cleanBuild, noOpBuild)) {
-            assertThat(profile.getSpanCount()).isGreaterThan(0);
+        for (profile in listOf(getModel, cleanBuild, noOpBuild)) {
+            assertThat(profile.spanCount).isGreaterThan(0)
 
-            assertThat(profile.getProjectCount()).isGreaterThan(0);
-            GradleBuildProject gbp = profile.getProject(0);
-            assertThat(gbp.getCompileSdk()).isEqualTo(GradleTestProject.getCompileSdkHash());
-            assertThat(gbp.getKotlinPluginVersion()).isEqualTo(project.getKotlinVersion());
-            assertThat(gbp.getPluginList())
-                    .contains(
-                            GradleBuildProject.GradlePlugin
-                                    .ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER);
-            assertThat(gbp.getPluginList())
-                    .doesNotContain(GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN);
-            assertThat(gbp.getVariantCount()).isGreaterThan(0);
-            GradleBuildVariant gbv = gbp.getVariant(0);
-            assertThat(gbv.getMinSdkVersion().getApiLevel()).isEqualTo(SUPPORT_LIB_MIN_SDK);
-            assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isFalse();
-            assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse();
-            assertThat(new HashSet<>(profile.getRawProjectIdList()))
-                    .containsExactly("com.example.helloworld");
+            assertThat(profile.projectCount).isGreaterThan(0)
+            val gbp = profile.getProject(0)
+            assertThat(gbp.compileSdk).isEqualTo(GradleTestProject.getCompileSdkHash())
+            assertThat(gbp.kotlinPluginVersion).isEqualTo(project.kotlinVersion)
+            assertThat<GradleBuildProject.GradlePlugin,
+                    Iterable<GradleBuildProject.GradlePlugin>>(gbp.pluginList)
+                .contains(
+                    GradleBuildProject.GradlePlugin
+                        .ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER
+                )
+            assertThat<GradleBuildProject.GradlePlugin,
+                    Iterable<GradleBuildProject.GradlePlugin>>(gbp.pluginList)
+                .doesNotContain(GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN)
+            assertThat(gbp.variantCount).isGreaterThan(0)
+            val gbv = gbp.getVariant(0)
+            assertThat(gbv.minSdkVersion.apiLevel).isEqualTo(SUPPORT_LIB_MIN_SDK)
+            assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isFalse()
+            assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse()
+            assertThat(HashSet(profile.rawProjectIdList))
+                .containsExactly("com.example.helloworld")
         }
     }
 }
+
