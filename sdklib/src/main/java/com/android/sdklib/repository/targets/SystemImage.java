@@ -53,11 +53,6 @@ public class SystemImage implements ISystemImage {
     public static final IdDisplay CHROMEOS_TAG = IdDisplay.create("chromeos", "Chrome OS Device");
 
     /**
-     * Tag to apply to system images for Glass.
-     */
-    public static final IdDisplay GLASS_TAG = IdDisplay.create("google_gdk", "Android Glass");
-
-    /**
      * Tag to apply to system images that include Google APIs.
      * Note that {@link #PLAY_STORE_TAG}, {@link #WEAR_TAG}, and {@link #TV_TAG} each imply the presence of Google APIs.
      * In addition, there is one system image that uses {@link #GOOGLE_APIS_X86_TAG}.
