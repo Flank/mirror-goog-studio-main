@@ -61,3 +61,26 @@ cc_test(
         "//tools/base/transport/proto:cc_proto",
     ],
 )
+
+cc_test(
+    name = "daemon_test_linux_only",
+    srcs = [
+        "grpc_compatibility_test.cc",
+    ],
+    copts = [
+        "-Itools/base/profiler/native",
+        "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/transport",
+    ],
+    linkstatic = 1,
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    deps = [
+        ":daemon",
+        "//external:gmock_main",
+        "//tools/base/profiler/native/perfd",
+        "//tools/base/transport/proto:cc_proto",
+    ],
+)
