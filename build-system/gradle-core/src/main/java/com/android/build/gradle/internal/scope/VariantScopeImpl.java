@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
@@ -986,7 +987,10 @@ public class VariantScopeImpl implements VariantScope {
     public FileCollection getLocalPackagedJars() {
         Configuration configuration = getVariantDependencies().getRuntimeClasspath();
 
-        // Get a list of local Jars dependencies.
+        // Get a list of local Jars dependencies. There is currently no API to filter for just jar
+        // files here, so we need to filter it in the return statement below. That means that if an
+        // AarProducerTask produces an aar, then the returned FileCollection contains only jars but
+        // still has AarProducerTask as a dependency.
         Callable<Collection<SelfResolvingDependency>> dependencies =
                 () ->
                         configuration
@@ -1006,6 +1010,11 @@ public class VariantScopeImpl implements VariantScope {
                                                 .call()
                                                 .stream()
                                                 .flatMap((it) -> it.resolve().stream())
+                                                .filter(
+                                                        (file) ->
+                                                                file.getName()
+                                                                        .toLowerCase(Locale.US)
+                                                                        .endsWith(DOT_JAR))
                                                 .collect(Collectors.toList()))
                 .builtBy(dependencies);
     }

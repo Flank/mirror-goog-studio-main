@@ -16,28 +16,58 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.internal.packaging.ApkCreatorType;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+/** test for building a test APK for a library module with dependencies. */
+@RunWith(FilterableParameterized.class)
 public class TestLibraryWithDep {
 
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("libTestDep")
-            .create();
+    @FilterableParameterized.Parameters(name = "apkCreatorType_{0}")
+    public static ApkCreatorType[] params() {
+        return new ApkCreatorType[] {APK_Z_FILE_CREATOR, APK_FLINGER};
+    }
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        project.executeAndReturnMultiModel("clean", "assembleDebugAndroidTest");
+    @FilterableParameterized.Parameter public ApkCreatorType apkCreatorType;
+
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("libTestDep").create();
+
+    @Before
+    public void setup() {
+        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
     }
 
     @Test
     public void checkLibDependencyJarIsPackaged() throws Exception {
+        project.execute("clean", "assembleDebugAndroidTest");
+        // Check for class from the library's Guava dependency
         TruthHelper.assertThat(project.getTestApk())
                 .containsClass("Lcom/google/common/base/Splitter;");
+    }
+
+    @Test
+    public void checkLocalAarDependencyJarIsPackaged() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" + "dependencies {\n" + "    api files(\"libs/local.aar\")\n" + "}\n");
+        project.execute("clean", "assembleDebugAndroidTest");
+        TruthHelper.assertThat(project.getTestApk())
+                .containsClass("Lcom/example/locallib/BuildConfig;");
+        TruthHelper.assertThat(project.getTestApk())
+                .containsJavaResource("com/example/localLibJavaRes.txt");
     }
 }
 
