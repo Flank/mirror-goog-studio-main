@@ -14,63 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.builder.utils.FileCache;
-import com.google.common.base.Preconditions;
-import java.io.IOException;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.plugins.BasePlugin;
-import org.gradle.api.tasks.TaskAction;
+import com.android.annotations.concurrency.Immutable
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.builder.utils.FileCache
+import java.io.IOException
+import org.gradle.api.DefaultTask
+import org.gradle.api.plugins.BasePlugin
+import org.gradle.api.tasks.TaskAction
+import java.lang.NullPointerException
 
-/** Task to clean the build cache. */
-public class CleanBuildCache extends DefaultTask {
+/** Task to clean the build cache.  */
+abstract class CleanBuildCache : DefaultTask() {
 
-    @Nullable private FileCache buildCache;
+    private lateinit var buildCache: FileCache
 
-    public void setBuildCache(@NonNull FileCache buildCache) {
-        this.buildCache = buildCache;
+    fun setBuildCache(buildCache: FileCache) {
+        this.buildCache = buildCache
     }
 
     @TaskAction
-    public void clean() throws IOException {
-        Preconditions.checkNotNull(buildCache, "buildCache must not be null");
-        buildCache.delete();
+    @Throws(IOException::class)
+    fun clean() {
+        buildCache.delete()
     }
 
     @Immutable
-    public static final class CreationAction extends TaskCreationAction<CleanBuildCache> {
+    class CreationAction(private val buildCache: FileCache) :
+        TaskCreationAction<CleanBuildCache>() {
 
-        @NonNull private final GlobalScope globalScope;
+        override val name: String = "cleanBuildCache"
+        override val type: Class<CleanBuildCache> = CleanBuildCache::class.java
 
-        public CreationAction(@NonNull GlobalScope globalScope) {
-            this.globalScope = globalScope;
-        }
-
-        @NonNull
-        @Override
-        public String getName() {
-            return "cleanBuildCache";
-        }
-
-        @NonNull
-        @Override
-        public Class<CleanBuildCache> getType() {
-            return CleanBuildCache.class;
-        }
-
-        @Override
-        public void configure(@NonNull CleanBuildCache task) {
-            Preconditions.checkNotNull(globalScope.getBuildCache());
-
-            task.setDescription("Deletes the build cache directory.");
-            task.setGroup(BasePlugin.BUILD_GROUP);
-            task.setBuildCache(globalScope.getBuildCache());
+        override fun configure(task: CleanBuildCache) {
+            task.description = "Deletes the build cache directory."
+            task.group = BasePlugin.BUILD_GROUP
+            task.setBuildCache(buildCache)
         }
     }
 }

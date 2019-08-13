@@ -400,7 +400,7 @@ public abstract class TaskManager {
         globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
 
         if (buildCache != null) {
-            taskFactory.register(new CleanBuildCache.CreationAction(globalScope));
+            taskFactory.register(new CleanBuildCache.CreationAction(buildCache));
         }
 
         // for testing only.

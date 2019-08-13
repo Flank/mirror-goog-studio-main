@@ -14,49 +14,51 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.testutils.truth.PathSubject.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import com.google.common.truth.Truth.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
+import org.junit.Assert.fail
 
-import com.android.builder.utils.FileCache;
-import com.android.utils.FileUtils;
-import java.io.File;
-import java.io.IOException;
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import com.android.builder.utils.FileCache
+import com.android.utils.FileUtils
+import java.io.File
+import java.io.IOException
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
-/** Unit test for {@link CleanBuildCache}. */
-public class CleanBuildCacheTest {
+/** Unit test for [CleanBuildCache].  */
+class CleanBuildCacheTest {
 
-    @Rule public TemporaryFolder testDir = new TemporaryFolder();
+    @Rule
+    @JvmField
+    var testDir = TemporaryFolder()
 
     @Test
-    public void test() throws IOException {
-        File projectDir = testDir.newFolder();
-        File buildCacheDir = testDir.newFolder();
+    @Throws(IOException::class)
+    fun test() {
+        val projectDir = testDir.newFolder()
+        val buildCacheDir = testDir.newFolder()
 
-        Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
-        FileUtils.mkdirs(new File(buildCacheDir, "some_cache_entry"));
+        val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+        FileUtils.mkdirs(File(buildCacheDir, "some_cache_entry"))
 
-        CleanBuildCache task = project.getTasks().create("cleanBuildCache", CleanBuildCache.class);
+        val task = project.tasks.create("cleanBuildCache", CleanBuildCache::class.java)
         try {
-            task.clean();
-            fail("expected NullPointerException");
-        } catch (NullPointerException exception) {
-            assertEquals("buildCache must not be null", exception.getMessage());
+            task.clean()
+            fail("Expected Exception when buildCache is not initialized.")
+        } catch (exception: Exception) {
+            assertThat(exception.message).contains("buildCache")
         }
 
-        task.setBuildCache(FileCache.getInstanceWithMultiProcessLocking(buildCacheDir));
-        task.clean();
-        assertThat(buildCacheDir).doesNotExist();
+        task.setBuildCache(FileCache.getInstanceWithMultiProcessLocking(buildCacheDir))
+        task.clean()
+        assertThat(buildCacheDir).doesNotExist()
 
         // Clean one more time to see if any exception occurs when buildCacheDir does not exist
-        task.clean();
-        assertThat(buildCacheDir).doesNotExist();
+        task.clean()
+        assertThat(buildCacheDir).doesNotExist()
     }
 }
