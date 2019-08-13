@@ -35,6 +35,8 @@ import java.util.zip.*;
 
 public class GzipSizeCalculator implements ApkSizeCalculator {
 
+    public static final String VIRTUAL_ENTRY_NAME = "";
+
     public GzipSizeCalculator() {}
 
     private static void verify(@NonNull Path apk) {
@@ -111,6 +113,11 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
             Enumeration<? extends ZipEntry> entries = zf.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry zipEntry = entries.nextElement();
+                // In dev mode, zipflinger may generate virtual entries which must be
+                // ignored.
+                if (isVirtualEntry(zipEntry)) {
+                    continue;
+                }
                 if (!zipEntry.isDirectory()) {
                     sizes.put("/" + zipEntry.getName(), zipEntry.getCompressedSize());
                 }
@@ -137,6 +144,11 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
                                 new BufferedOutputStream(Files.newOutputStream(to)))) {
             ZipEntry ze;
             while ((ze = zis.getNextEntry()) != null) {
+                // In dev mode, zipflinger may generate virtual entries which must be
+                // ignored.
+                if (isVirtualEntry(ze)) {
+                    continue;
+                }
                 ZipEntry compressedZe = new ZipEntry(ze.getName());
                 compressedZe.setMethod(ZipEntry.DEFLATED);
                 compressedZe.setTime(ze.getTime());
@@ -159,5 +171,9 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
             super(out);
             def.setLevel(Deflater.BEST_COMPRESSION);
         }
+    }
+
+    public static boolean isVirtualEntry(ZipEntry e) {
+        return VIRTUAL_ENTRY_NAME.equals(e.getName());
     }
 }
