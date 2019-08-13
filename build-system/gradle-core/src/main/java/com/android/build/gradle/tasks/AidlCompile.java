@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.tasks.TaskInputHelper.memoizeToProvider;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -46,17 +47,18 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -78,16 +80,18 @@ public abstract class AidlCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet().include("**/*.aidl");
 
-    @Nullable
-    private Collection<String> packageWhitelist;
+    @Nullable private Collection<String> packageWhitelist;
 
-    private Supplier<Collection<File>> sourceDirs;
+    @Internal
+    public abstract ListProperty<File> getSourceDirs();
+
     private FileCollection importDirs;
 
-    private Provider<File> aidlExecutableProvider;
-    private Provider<Revision> buildToolsRevisionProvider;
+    @Internal
+    public abstract Property<File> getAidlExecutableProvider();
 
-    private Provider<File> aidlFrameworkProvider;
+    @Internal
+    public abstract Property<Revision> getBuildToolsRevisionProvider();
 
     // Given the same version, the path or contents of the AIDL tool may change across platforms,
     // but it would still produce the same output (given the same inputs)---see bug 138920846.
@@ -95,10 +99,10 @@ public abstract class AidlCompile extends NonIncrementalTask {
     // tool's version as input.
     @Input
     public String getAidlVersion() {
-        Revision buildToolsRevision = buildToolsRevisionProvider.getOrNull();
+        Revision buildToolsRevision = getBuildToolsRevisionProvider().getOrNull();
         Preconditions.checkState(buildToolsRevision != null, "Build Tools not present");
 
-        File aidlExecutable = aidlExecutableProvider.getOrNull();
+        File aidlExecutable = getAidlExecutableProvider().getOrNull();
         Preconditions.checkState(
                 aidlExecutable != null,
                 "AIDL executable not present in Build Tools " + buildToolsRevision.toString());
@@ -111,18 +115,12 @@ public abstract class AidlCompile extends NonIncrementalTask {
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
-    public Provider<File> getAidlFrameworkProvider() {
-        return aidlFrameworkProvider;
-    }
+    public abstract Property<File> getAidlFrameworkProvider();
 
     @InputFiles
     @SkipWhenEmpty
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileTree getSourceFiles() {
-        // this is because aidl may be in the same folder as Java and we want to restrict to
-        // .aidl files and not java files.
-        return getProject().files(sourceDirs.get()).getAsFileTree().matching(PATTERN_SET);
-    }
+    public abstract Property<FileTree> getSourceFiles();
 
     private static class DepFileProcessor implements DependencyFileProcessor {
         @Override
@@ -142,7 +140,7 @@ public abstract class AidlCompile extends NonIncrementalTask {
         }
 
         try (WorkerExecutorFacade workers = getWorkerFacadeWithThreads(false)) {
-            Collection<File> sourceFolders = sourceDirs.get();
+            Collection<File> sourceFolders = getSourceDirs().get();
             Set<File> importFolders = getImportDirs().getFiles();
 
             List<File> fullImportList =
@@ -152,8 +150,8 @@ public abstract class AidlCompile extends NonIncrementalTask {
 
             AidlProcessor processor =
                     new AidlProcessor(
-                            aidlExecutableProvider.get().getAbsolutePath(),
-                            aidlFrameworkProvider.get().getAbsolutePath(),
+                            getAidlExecutableProvider().get().getAbsolutePath(),
+                            getAidlFrameworkProvider().get().getAbsolutePath(),
                             fullImportList,
                             destinationDir,
                             parcelableDir != null ? parcelableDir.getAsFile() : null,
@@ -195,8 +193,6 @@ public abstract class AidlCompile extends NonIncrementalTask {
     }
 
     public static class CreationAction extends VariantTaskCreationAction<AidlCompile> {
-
-        private File packagedDir;
 
         public CreationAction(@NonNull VariantScope scope) {
             super(scope);
@@ -244,25 +240,47 @@ public abstract class AidlCompile extends NonIncrementalTask {
             super.configure(compileTask);
             VariantScope scope = getVariantScope();
 
-            final VariantConfiguration<?, ?, ?> variantConfiguration = scope
-                    .getVariantConfiguration();
+            final VariantConfiguration<?, ?, ?> variantConfiguration =
+                    scope.getVariantConfiguration();
 
-            compileTask.aidlExecutableProvider =
-                    scope.getGlobalScope().getSdkComponents().getAidlExecutableProvider();
-            compileTask.buildToolsRevisionProvider =
-                    scope.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();
-            compileTask.aidlFrameworkProvider =
-                    scope.getGlobalScope().getSdkComponents().getAidlFrameworkProvider();
+            compileTask
+                    .getAidlExecutableProvider()
+                    .set(scope.getGlobalScope().getSdkComponents().getAidlExecutableProvider());
+            compileTask
+                    .getBuildToolsRevisionProvider()
+                    .set(scope.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider());
+            compileTask
+                    .getAidlFrameworkProvider()
+                    .set(scope.getGlobalScope().getSdkComponents().getAidlFrameworkProvider());
 
-            compileTask.sourceDirs = variantConfiguration::getAidlSourceList;
-            compileTask.importDirs = scope.getArtifactFileCollection(
-                    COMPILE_CLASSPATH, ALL, AIDL);
+            compileTask
+                    .getSourceDirs()
+                    .set(
+                            memoizeToProvider(
+                                    scope.getGlobalScope().getProject(),
+                                    variantConfiguration::getAidlSourceList));
+
+            // This is because aidl may be in the same folder as Java and we want to restrict to
+            // .aidl files and not java files.
+            compileTask
+                    .getSourceFiles()
+                    .set(
+                            memoizeToProvider(
+                                    scope.getGlobalScope().getProject(),
+                                    () ->
+                                            scope.getGlobalScope()
+                                                    .getProject()
+                                                    .getLayout()
+                                                    .files(compileTask.getSourceDirs())
+                                                    .getAsFileTree()
+                                                    .matching(PATTERN_SET)));
+
+            compileTask.importDirs = scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL);
 
             if (variantConfiguration.getType().isAar()) {
                 compileTask.setPackageWhitelist(
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }
-
         }
     }
 
