@@ -168,7 +168,7 @@ public abstract class BaseVariantData {
                         this);
         outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantConfiguration);
 
-        taskManager.configureScopeForNdk(scope);
+        TaskManager.configureScopeForNdk(scope);
 
         // this must be created immediately since the variant API happens after the task that
         // depends on this are created.

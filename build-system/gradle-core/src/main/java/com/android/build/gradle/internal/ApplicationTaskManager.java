@@ -210,7 +210,7 @@ public class ApplicationTaskManager extends TaskManager {
         }
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
+        createDataBindingTasksIfNecessary(variantScope);
 
         // Add a compile task
         createCompileTask(variantScope);

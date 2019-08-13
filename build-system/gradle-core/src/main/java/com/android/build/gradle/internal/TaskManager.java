@@ -268,7 +268,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Manages tasks creation. */
 public abstract class TaskManager {
 
-    public static final String DIR_BUNDLES = "bundles";
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
     public static final String ANDROID_GROUP = "Android";
@@ -342,10 +341,8 @@ public abstract class TaskManager {
     public abstract void createTasksForVariantScope(
             @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint);
 
-    /**
-     * Override to configure NDK data in the scope.
-     */
-    public void configureScopeForNdk(@NonNull VariantScope scope) {
+    /** Override to configure NDK data in the scope. */
+    public static void configureScopeForNdk(@NonNull VariantScope scope) {
         final BaseVariantData variantData = scope.getVariantData();
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
@@ -651,7 +648,7 @@ public abstract class TaskManager {
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
             // now get the output type
             com.android.build.api.artifact.ArtifactType testedOutputType =
-                    taskOutputSpec.getOutputType();
+                    Objects.requireNonNull(taskOutputSpec).getOutputType();
 
             variantScope
                     .getArtifacts()
@@ -738,10 +735,8 @@ public abstract class TaskManager {
                         variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
-    public TaskProvider<? extends ManifestProcessorTask> createMergeLibManifestsTask(
-            @NonNull VariantScope scope) {
-
-        return taskFactory.register(new ProcessLibraryManifest.CreationAction(scope));
+    public void createMergeLibManifestsTask(@NonNull VariantScope scope) {
+        taskFactory.register(new ProcessLibraryManifest.CreationAction(scope));
     }
 
     protected void createProcessTestManifestTask(
@@ -769,7 +764,7 @@ public abstract class TaskManager {
         }
     }
 
-    public TaskProvider<MergeResources> createMergeResourcesTask(
+    public void createMergeResourcesTask(
             @NonNull VariantScope scope,
             boolean processResources,
             ImmutableSet<MergeResources.Flag> flags) {
@@ -779,7 +774,7 @@ public abstract class TaskManager {
                         && !scope.getType().isForTesting()
                         && scope.useResourceShrinker();
 
-        return basicCreateMergeResourcesTask(
+        basicCreateMergeResourcesTask(
                 scope,
                 MergeType.MERGE,
                 null /*outputLocation*/,
@@ -881,7 +876,6 @@ public abstract class TaskManager {
         taskFactory.register(new MergeSourceSetFolders.MergeAppAssetCreationAction(scope));
     }
 
-    @NonNull
     public void createMergeJniLibFoldersTasks(@NonNull final VariantScope variantScope) {
         // merge the source folders together using the proper priority.
         taskFactory.register(
@@ -1082,8 +1076,7 @@ public abstract class TaskManager {
                 variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "Can only create split resources tasks for pure splits.");
 
-        TaskProvider<PackageSplitRes> task =
-                taskFactory.register(new PackageSplitRes.CreationAction(scope));
+        taskFactory.register(new PackageSplitRes.CreationAction(scope));
     }
 
     public void createSplitAbiTasks(@NonNull VariantScope scope) {
@@ -1209,22 +1202,19 @@ public abstract class TaskManager {
 
     }
 
-    public TaskProvider<AidlCompile> createAidlTask(@NonNull VariantScope scope) {
+    public void createAidlTask(@NonNull VariantScope scope) {
         MutableTaskContainer taskContainer = scope.getTaskContainer();
 
         TaskProvider<AidlCompile> aidlCompileTask =
                 taskFactory.register(new AidlCompile.CreationAction(scope));
 
         TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
-
-        return aidlCompileTask;
     }
 
     public void createShaderTask(@NonNull VariantScope scope) {
         // merge the shader folders together using the proper priority.
-        TaskProvider<MergeSourceSetFolders> mergeShadersTask =
-                taskFactory.register(
-                        new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
+        taskFactory.register(
+                new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
 
         // compile the shaders
         TaskProvider<ShaderCompile> shaderCompileTask =
@@ -1386,8 +1376,6 @@ public abstract class TaskManager {
                 taskFactory.register(
                         ExternalNativeBuildJsonTask.createTaskConfigAction(generator, scope));
 
-        ProjectOptions projectOptions = globalScope.getProjectOptions();
-
         // Set up build tasks
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.register(
@@ -1399,13 +1387,11 @@ public abstract class TaskManager {
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
         CxxModuleModel module = tryCreateCxxModuleModel(scope.getGlobalScope());
 
-        if (module == null) {
-            return;
+        if (module != null) {
+            TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
+                    taskFactory.register(new ExternalNativeCleanTask.CreationAction(module, scope));
+            TaskFactoryUtils.dependsOn(cleanTask, externalNativeCleanTask);
         }
-
-        TaskFactoryUtils.dependsOn(
-                cleanTask,
-                taskFactory.register(new ExternalNativeCleanTask.CreationAction(module, scope)));
     }
 
     /** Creates the tasks to build unit tests. */
@@ -1444,7 +1430,7 @@ public abstract class TaskManager {
                 taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
 
                 // Add data binding tasks if enabled
-                createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
+                createDataBindingTasksIfNecessary(variantScope);
             } else if (testedVariantScope.getType().isApk()) {
                 // The IDs will have been inlined for an non-namespaced application
                 // so just re-export the artifacts here.
@@ -1505,6 +1491,7 @@ public abstract class TaskManager {
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add
         // dependencies on tasks that prepare necessary data files.
         TaskProvider<? extends Task> compileTask = variantScope.getTaskContainer().getCompileTask();
+        //noinspection unchecked
         TaskFactoryUtils.dependsOn(
                 compileTask,
                 variantScope.getTaskContainer().getProcessJavaResourcesTask(),
@@ -1601,7 +1588,7 @@ public abstract class TaskManager {
         createMergeJniLibFoldersTasks(variantScope);
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
+        createDataBindingTasksIfNecessary(variantScope);
 
         // Add a task to compile the test application
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
@@ -2091,8 +2078,6 @@ public abstract class TaskManager {
      */
     private void createDexTasks(
             @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
-        TransformManager transformManager = variantScope.getTransformManager();
-
         DefaultDexOptions dexOptions;
         if (variantScope.getVariantData().getType().isTestComponent()) {
             // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
@@ -2221,13 +2206,6 @@ public abstract class TaskManager {
         }
     }
 
-    @NonNull
-    private static String getProjectVariantId(@NonNull VariantScope variantScope) {
-        return variantScope.getGlobalScope().getProject().getName()
-                + ":"
-                + variantScope.getFullVariantName();
-    }
-
     @Nullable
     private FileCache getUserDexCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
         if (!preDexLibraries || isMinifiedEnabled) {
@@ -2351,8 +2329,7 @@ public abstract class TaskManager {
         taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(variantScope));
     }
 
-    protected void createDataBindingTasksIfNecessary(
-            @NonNull VariantScope scope, @NonNull MergeType mergeType) {
+    protected void createDataBindingTasksIfNecessary(@NonNull VariantScope scope) {
         boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
         boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
         if (!dataBindingEnabled && !viewBindingEnabled) {
@@ -2376,12 +2353,11 @@ public abstract class TaskManager {
 
         if (dataBindingEnabled) {
             taskFactory.register(new DataBindingExportBuildInfoTask.CreationAction(scope));
-            setDataBindingAnnotationProcessorParams(scope, mergeType);
+            setDataBindingAnnotationProcessorParams(scope);
         }
     }
 
-    private void setDataBindingAnnotationProcessorParams(
-            @NonNull VariantScope scope, @NonNull MergeType mergeType) {
+    private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         JavaCompileOptions javaCompileOptions = variantConfiguration.getJavaCompileOptions();
@@ -2409,8 +2385,11 @@ public abstract class TaskManager {
                             dataBindingBuilder.getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
         } else {
-            getLogger().error("Cannot setup data binding for %s because java compiler options"
-                    + " is not an instance of AnnotationProcessorOptions", processorOptions);
+            getLogger()
+                    .error(
+                            "Cannot setup data binding for {} because java compiler options"
+                                    + " is not an instance of AnnotationProcessorOptions",
+                            processorOptions);
         }
     }
 
@@ -2481,8 +2460,6 @@ public abstract class TaskManager {
                                 packagesCustomClassDependencies(variantScope, projectOptions)),
                         null,
                         task -> {
-                            //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
-
                             task.dependsOn(taskContainer.getJavacTask());
 
                             if (taskContainer.getPackageSplitResourcesTask() != null) {
@@ -2524,7 +2501,6 @@ public abstract class TaskManager {
         taskFactory.register(new InstallVariantTask.CreationAction(variantScope));
     }
 
-    @Nullable
     protected void createValidateSigningTask(@NonNull VariantScope variantScope) {
         if (variantScope.getVariantConfiguration().getSigningConfig() == null) {
             return;
@@ -2618,7 +2594,7 @@ public abstract class TaskManager {
             Set<String> dimensionKeys = assembleMap.keySet();
 
             for (String dimensionKey : dimensionKeys) {
-                final String dimensionName = StringHelper.capitalize(dimensionKey);
+                final String dimensionName = StringHelper.usLocaleCapitalize(dimensionKey);
 
                 // create the task and add it to the list
                 subAssembleTasks.add(
@@ -2687,7 +2663,7 @@ public abstract class TaskManager {
             Set<String> dimensionKeys = assembleMap.keySet();
 
             for (String dimensionKey : dimensionKeys) {
-                final String dimensionName = StringHelper.capitalize(dimensionKey);
+                final String dimensionName = StringHelper.usLocaleCapitalize(dimensionKey);
 
                 // create the task and add it to the list
                 subAssembleTasks.add(
@@ -2768,11 +2744,10 @@ public abstract class TaskManager {
         taskFactory.register(
                 getAssembleTaskName(scope, "assemble"),
                 null /*preConfigAction*/,
-                task -> {
-                    task.setDescription(
-                            "Assembles main output for variant "
-                                    + scope.getVariantConfiguration().getFullName());
-                },
+                task ->
+                        task.setDescription(
+                                "Assembles main output for variant "
+                                        + scope.getVariantConfiguration().getFullName()),
                 taskProvider -> scope.getTaskContainer().setAssembleTask(taskProvider));
     }
 
@@ -3315,11 +3290,7 @@ public abstract class TaskManager {
     }
 
     public void createCheckManifestTask(@NonNull VariantScope scope) {
-        taskFactory.register(getCheckManifestConfig(scope));
-    }
-
-    protected CheckManifest.CreationAction getCheckManifestConfig(@NonNull VariantScope scope) {
-        return new CheckManifest.CreationAction(scope, false);
+        taskFactory.register(new CheckManifest.CreationAction(scope, false));
     }
 
     @NonNull
@@ -3402,10 +3373,9 @@ public abstract class TaskManager {
             project.getPluginManager()
                     .withPlugin(
                             "org.jetbrains.kotlin.kapt",
-                            appliedPlugin -> {
-                                configureKotlinKaptTasksForDataBinding(
-                                        project, variantScopes, version);
-                            });
+                            appliedPlugin ->
+                                    configureKotlinKaptTasksForDataBinding(
+                                            project, variantScopes, version));
         }
     }
 

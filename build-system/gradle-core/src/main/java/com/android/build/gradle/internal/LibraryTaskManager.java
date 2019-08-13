@@ -170,7 +170,7 @@ public class LibraryTaskManager extends TaskManager {
         createAidlTask(variantScope);
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(variantScope, MergeType.PACKAGE);
+        createDataBindingTasksIfNecessary(variantScope);
 
         // Add a compile task
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
