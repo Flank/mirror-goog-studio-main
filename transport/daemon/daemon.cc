@@ -204,13 +204,23 @@ void Daemon::RunServer(const string& server_address) {
 
   agent_status_thread_ = std::thread(&Daemon::RunAgentStatusThread, this);
 
+  // According to GRPC documentation, the |port| passed to AddListeningPort()
+  // will be "populated with the port number bound to the grpc::Server for the
+  // corresponding endpoint after it is successfully bound by BuildAndStart(), 0
+  // otherwise. AddListeningPort does not modify this pointer."
   int port = 0;
   builder_.AddListeningPort(server_address, grpc::InsecureServerCredentials(),
                             &port);
   std::unique_ptr<grpc::Server> server(builder_.BuildAndStart());
+  if (port == 0) {
+    // The port wasn't successfully bound to the server by BuildAndStart().
+    std::cout << "Server failed to start. A port number wasn't bound."
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
   std::cout << "Server listening on " << server_address << " port:" << port
             << std::endl;
-  server->Wait();
+  server->Wait();  // Block until the server shuts down.
 }
 
 bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
