@@ -161,7 +161,9 @@ public class IncrementalPackager implements Closeable {
         }
         checkOutputFile(creationData.getApkPath());
 
-        if (apkCreatorType == ApkCreatorType.APK_Z_FILE_CREATOR || !apkFormatIsFile) {
+        if (apkCreatorType == ApkCreatorType.APK_Z_FILE_CREATOR
+                || !apkFormatIsFile
+                || !debuggableBuild) {
             mApkCreator = factory.make(creationData);
         } else if (apkCreatorType == ApkCreatorType.APK_FLINGER) {
             int compressionLevel =

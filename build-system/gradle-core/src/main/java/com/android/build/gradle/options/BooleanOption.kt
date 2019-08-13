@@ -82,7 +82,6 @@ enum class BooleanOption(
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
-    USE_NEW_APK_CREATOR("android.useNewApkCreator", false),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", false),
     ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false),
@@ -116,6 +115,7 @@ enum class BooleanOption(
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, Option.Status.STABLE),
     USE_NEW_JAR_CREATOR("android.useNewJarCreator", true),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, Option.Status.STABLE),
+    USE_NEW_APK_CREATOR("android.useNewApkCreator", true),
 
     // ---------------
     // Lifecycle flags: Deprecated stage, feature is stable and we want to get rid of the ability to revert to older code path
