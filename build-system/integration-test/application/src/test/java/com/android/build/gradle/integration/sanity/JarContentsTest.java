@@ -428,6 +428,7 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.internal.reporting.properties",
                 "META-INF/gradle-plugins/com.android.internal.test.properties",
                 "META-INF/gradle-plugins/com.android.lint.properties",
+                "META-INF/gradle-plugins/com.android.internal.version-check.properties",
                 // Following to be moved to gradle-api
                 "META-INF/gradle-plugins/android.properties",
                 "META-INF/gradle-plugins/android-library.properties",

@@ -24,6 +24,7 @@ import org.gradle.api.Project
  */
 class ReportingPlugin: Plugin<Project> {
     override fun apply(project: Project) {
+        project.apply(VERSION_CHECK_PLUGIN_ID)
         project.apply(INTERNAL_PLUGIN_ID)
     }
 }

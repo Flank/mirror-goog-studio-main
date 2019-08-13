@@ -30,6 +30,8 @@ open class BasePlugin: Plugin<Project> {
 
     override fun apply(project: Project) {
         this.project = project
+
+        project.apply(VERSION_CHECK_PLUGIN_ID)
     }
 
     /**
@@ -42,3 +44,5 @@ open class BasePlugin: Plugin<Project> {
         return project.extensions.getByName("android") as BaseExtension
     }
 }
+
+internal val VERSION_CHECK_PLUGIN_ID = mapOf("plugin" to "com.android.internal.version-check")

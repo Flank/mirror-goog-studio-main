@@ -28,7 +28,7 @@ import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
-import com.android.build.gradle.internal.plugins.BasePlugin;
+import com.android.build.gradle.internal.plugins.VersionCheckPlugin;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
@@ -156,7 +156,7 @@ public final class GradleTestProject implements TestRule {
                                 getLatestGradleCheckedIn(),
                                 "Failed to find latest nightly version.");
             } else {
-                GRADLE_TEST_VERSION = BasePlugin.GRADLE_MIN_VERSION.toString();
+                GRADLE_TEST_VERSION = VersionCheckPlugin.GRADLE_MIN_VERSION.toString();
             }
 
             // These are some properties that we use in the integration test projects, when generating

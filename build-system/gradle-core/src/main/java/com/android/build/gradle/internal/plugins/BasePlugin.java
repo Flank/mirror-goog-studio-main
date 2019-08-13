@@ -120,10 +120,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Base class for all Android plugins */
 public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProvider {
 
-    @VisibleForTesting
-    public static final GradleVersion GRADLE_MIN_VERSION =
-            GradleVersion.parse(SdkConstants.GRADLE_MINIMUM_VERSION);
-
     private BaseExtension extension;
 
     private VariantManager variantManager;
@@ -228,7 +224,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         this.project = project;
         this.projectOptions = new ProjectOptions(project);
-        checkGradleVersion(project, getLogger(), projectOptions);
         DependencyResolutionChecks.registerDependencyCheck(project, projectOptions);
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
@@ -575,34 +570,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                                     null,
                                     this::createAndroidTasks);
                         }));
-    }
-
-    static void checkGradleVersion(
-            @NonNull Project project,
-            @NonNull ILogger logger,
-            @NonNull ProjectOptions projectOptions) {
-        String currentVersion = project.getGradle().getGradleVersion();
-        if (GRADLE_MIN_VERSION.compareTo(currentVersion) > 0) {
-            File file = new File("gradle" + separator + "wrapper" + separator +
-                    "gradle-wrapper.properties");
-            String errorMessage =
-                    String.format(
-                            "Minimum supported Gradle version is %s. Current version is %s. "
-                                    + "If using the gradle wrapper, try editing the distributionUrl in %s "
-                                    + "to gradle-%s-all.zip",
-                            GRADLE_MIN_VERSION,
-                            currentVersion,
-                            file.getAbsolutePath(),
-                            GRADLE_MIN_VERSION);
-            if (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)) {
-                logger.warning(errorMessage);
-                logger.warning(
-                        "As %s is set, continuing anyway.",
-                        BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.getPropertyName());
-            } else {
-                throw new RuntimeException(errorMessage);
-            }
-        }
     }
 
     @VisibleForTesting
