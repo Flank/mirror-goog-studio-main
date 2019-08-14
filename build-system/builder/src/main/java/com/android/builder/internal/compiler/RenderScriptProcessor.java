@@ -33,11 +33,14 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.android.sdklib.BuildToolInfo;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +124,10 @@ public class RenderScriptProcessor {
 
     private final Set<String> mAbiFilters;
 
+    // These indicate whether to compile with ndk for 32 or 64 bits
+    private boolean is32Bit;
+    private boolean is64Bit;
+
 
     private final File mRsLib;
     private final Map<String, File> mLibClCore = Maps.newHashMap();
@@ -175,6 +182,32 @@ public class RenderScriptProcessor {
         } else {
             mRsLib = null;
         }
+
+
+        // If no abi filters were set, assume compilation for both 32 bit and 64 bit
+        if (abiFilters == null || abiFilters.isEmpty()) {
+            is32Bit = true;
+            is64Bit = true;
+        } else {
+            // Check if abi filters contains an abi that is 32 bit
+            is32Bit =
+                    Arrays.stream(ABIS_32)
+                            .map((Abi abi) -> abi.mDevice)
+                            .anyMatch(abi -> mAbiFilters.contains(abi));
+
+            // Check if abi filters contains an abi that is 64 bit
+            is64Bit =
+                    Arrays.stream(ABIS_64)
+                            .map((Abi abi) -> abi.mDevice)
+                            .anyMatch(abi -> mAbiFilters.contains(abi));
+        }
+
+        // Api < 21 does not support 64 bit ndk compilation
+        if (mTargetApi < 21 && is64Bit && mNdkMode) {
+            throw new RuntimeException(
+                    "Api version " + mTargetApi + " does not support 64 bit ndk compilation");
+        }
+
     }
 
     public static File getSupportJar(File buildToolsFolder, boolean useAndroidX) {
@@ -194,7 +227,6 @@ public class RenderScriptProcessor {
     private static File getBaseRenderscriptLibFolder(File buildToolsFolder) {
         return new File(buildToolsFolder, "renderscript/lib");
     }
-
 
     public void build(
             @NonNull ProcessExecutor processExecutor,
@@ -230,11 +262,130 @@ public class RenderScriptProcessor {
         }
     }
 
+    private File getArchSpecificRawFolder(@NonNull String architecture) {
+        return FileUtils.join(mResOutputDir, SdkConstants.FD_RES_RAW, "bc" + architecture);
+    }
+
+    private File getGenericRawFolder() {
+        return new File(mResOutputDir, SdkConstants.FD_RES_RAW);
+    }
+
     private void doMainCompilation(
             @NonNull List<File> inputFiles,
             @NonNull ProcessExecutor processExecutor,
             @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull Map<String, String> env)
+            throws ProcessException {
+
+        ArrayList<String> fixedBuilderArgs = new ArrayList<>();
+
+        String rsPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS);
+        String rsClangPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG);
+
+        List<String> architectures = new ArrayList();
+
+        if (is32Bit) {
+            architectures.add("32");
+        }
+        if (is64Bit) {
+            architectures.add("64");
+        }
+
+        // First add all the arguments that are common between the runs
+
+        // add all import paths
+        fixedBuilderArgs.add("-I");
+        fixedBuilderArgs.add(rsPath);
+        fixedBuilderArgs.add("-I");
+        fixedBuilderArgs.add(rsClangPath);
+
+        for (File importPath : mImportFolders) {
+            if (importPath.isDirectory()) {
+                fixedBuilderArgs.add("-I");
+                fixedBuilderArgs.add(importPath.getAbsolutePath());
+            }
+        }
+
+        if (mSupportMode) {
+            if (mUseAndroidX) {
+                fixedBuilderArgs.add("-rs-package-name=" + FN_ANDROIDX_RENDERSCRIPT_PACKAGE);
+            } else {
+                fixedBuilderArgs.add("-rs-package-name=" + FN_RENDERSCRIPT_V8_PACKAGE);
+            }
+        }
+
+        // source output
+        fixedBuilderArgs.add("-p");
+        fixedBuilderArgs.add(mSourceOutputDir.getAbsolutePath());
+
+        fixedBuilderArgs.add("-target-api");
+        int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
+        targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
+        fixedBuilderArgs.add(Integer.toString(targetApi));
+
+        // input files
+        for (File sourceFile : inputFiles) {
+            fixedBuilderArgs.add(sourceFile.getAbsolutePath());
+        }
+
+        if (mNdkMode) {
+            fixedBuilderArgs.add("-reflect-c++");
+        }
+
+        fixedBuilderArgs.add("-O");
+        fixedBuilderArgs.add(Integer.toString(mOptimizationLevel));
+
+        // Due to a device side bug, let's not enable this at this time.
+        //        if (mDebugBuild) {
+        //            command.add("-g");
+        //        }
+
+        if (mTargetApi >= 21) {
+            // Add the arguments that are specific to each run.
+            // Then, for each arch specific folder, run the compiler once.
+            for (String arch : architectures) {
+                ArrayList<String> variableBuilderArgs = new ArrayList<>();
+
+                // res output
+                variableBuilderArgs.add("-o");
+
+                // the renderscript compiler doesn't expect the top res folder,
+                // but the raw folder directly.
+                variableBuilderArgs.add(getArchSpecificRawFolder(arch).getAbsolutePath());
+
+                if (mNdkMode) {
+                    variableBuilderArgs.add("-m" + arch);
+                }
+
+                ArrayList<String> builderArgs = new ArrayList<>(variableBuilderArgs);
+                builderArgs.addAll(fixedBuilderArgs);
+                builderArgs.addAll(variableBuilderArgs);
+
+                compileSingleFile(processExecutor, processOutputHandler, env, builderArgs);
+            }
+        } else {
+            ArrayList<String> variableBuilderArgs = new ArrayList<>();
+            // Add the rest of the arguments and run the compiler once
+            // res output
+            variableBuilderArgs.add("-o");
+
+            // the renderscript compiler doesn't expect the top res folder,
+            // but the raw folder directly.
+            variableBuilderArgs.add(getGenericRawFolder().getAbsolutePath());
+
+            ArrayList<String> builderArgs = new ArrayList<>(variableBuilderArgs);
+            builderArgs.addAll(fixedBuilderArgs);
+            builderArgs.addAll(variableBuilderArgs);
+
+            compileSingleFile(processExecutor, processOutputHandler, env, builderArgs);
+        }
+    }
+
+    private void compileSingleFile(
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull Map<String, String> env,
+            @NonNull List<String> builderArgs)
             throws ProcessException {
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
@@ -243,70 +394,16 @@ public class RenderScriptProcessor {
             throw new IllegalStateException(BuildToolInfo.PathId.LLVM_RS_CC + " is missing");
         }
 
-        String rsPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS);
-        String rsClangPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG);
-
-        // the renderscript compiler doesn't expect the top res folder,
-        // but the raw folder directly.
-        File rawFolder = new File(mResOutputDir, SdkConstants.FD_RES_RAW);
-
         // compile all the files in a single pass
         builder.setExecutable(renderscript);
         builder.addEnvironments(env);
 
-        // Due to a device side bug, let's not enable this at this time.
-//        if (mDebugBuild) {
-//            command.add("-g");
-//        }
-
-        builder.addArgs("-O");
-        builder.addArgs(Integer.toString(mOptimizationLevel));
-
-        // add all import paths
-        builder.addArgs("-I");
-        builder.addArgs(rsPath);
-        builder.addArgs("-I");
-        builder.addArgs(rsClangPath);
-
-        for (File importPath : mImportFolders) {
-            if (importPath.isDirectory()) {
-                builder.addArgs("-I");
-                builder.addArgs(importPath.getAbsolutePath());
-            }
+        for (String arg : builderArgs) {
+            builder.addArgs(arg);
         }
 
-        if (mSupportMode) {
-            if (mUseAndroidX) {
-                builder.addArgs("-rs-package-name=" + FN_ANDROIDX_RENDERSCRIPT_PACKAGE);
-            } else {
-                builder.addArgs("-rs-package-name=" + FN_RENDERSCRIPT_V8_PACKAGE);
-            }
-        }
-
-        // source output
-        builder.addArgs("-p");
-        builder.addArgs(mSourceOutputDir.getAbsolutePath());
-
-        if (mNdkMode) {
-            builder.addArgs("-reflect-c++");
-        }
-
-        // res output
-        builder.addArgs("-o");
-        builder.addArgs(rawFolder.getAbsolutePath());
-
-        builder.addArgs("-target-api");
-        int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
-        targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
-        builder.addArgs(Integer.toString(targetApi));
-
-        // input files
-        for (File sourceFile : inputFiles) {
-            builder.addArgs(sourceFile.getAbsolutePath());
-        }
-
-        ProcessResult result = processExecutor.execute(
-                builder.createProcess(), processOutputHandler);
+        ProcessResult result =
+                processExecutor.execute(builder.createProcess(), processOutputHandler);
         result.rethrowFailure().assertNormalExitValue();
     }
 
@@ -319,16 +416,15 @@ public class RenderScriptProcessor {
         int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
         targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
         if (targetApi < 21) {
-            File rawFolder = new File(mResOutputDir, SdkConstants.FD_RES_RAW);
+            File rawFolder = getGenericRawFolder();
             createSupportFilesHelper(rawFolder, ABIS_32, processExecutor, processOutputHandler, env);
         } else {
-            File rawFolder32 = new File(mResOutputDir, SdkConstants.FD_RES_RAW + "/bc32");
+            File rawFolder32 = getArchSpecificRawFolder("32");
             createSupportFilesHelper(rawFolder32, ABIS_32, processExecutor,
                     processOutputHandler, env);
-            File rawFolder64 = new File(mResOutputDir, SdkConstants.FD_RES_RAW + "/bc64");
+            File rawFolder64 = getArchSpecificRawFolder("64");
             createSupportFilesHelper(rawFolder64, ABIS_64, processExecutor,
                     processOutputHandler, env);
-
         }
     }
 

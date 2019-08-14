@@ -33,7 +33,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.internal.compiler.DirectoryWalker
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.ide.common.process.LoggedProcessOutputHandler
-import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.sdklib.BuildToolInfo
 import com.android.utils.FileUtils

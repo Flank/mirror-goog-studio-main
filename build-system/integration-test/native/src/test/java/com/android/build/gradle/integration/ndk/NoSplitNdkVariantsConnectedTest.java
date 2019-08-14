@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import static com.android.build.gradle.integration.common.utils.AbiMatcher.anyAbi;
 import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.anyAndroidVersion;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -106,7 +107,7 @@ public class NoSplitNdkVariantsConnectedTest {
                 .run(
                         "assembleX86Debug", "assembleX86DebugAndroidTest",
                         "assembleArmDebug", "assembleArmDebugAndroidTest");
-        IDevice testDevice = adb.getDevice(anyAndroidVersion());
+        IDevice testDevice = adb.getDevice(anyAndroidVersion(), anyAbi());
         Collection<String> abis = testDevice.getAbis();
         String taskName =
                 abis.contains("x86")

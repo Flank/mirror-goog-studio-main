@@ -20,9 +20,11 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.DeviceHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
+import com.android.build.gradle.internal.core.Abi;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
@@ -35,6 +37,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.junit.rules.TestRule;
@@ -45,9 +48,9 @@ import org.junit.runners.model.Statement;
 /**
  * Utilities for handling real devices.
  *
- * <p>To request a device use {@link #getDevice(Matcher)}. This reserves the device from the device
- * pool, allowing the connected integration tests to run in parallel without interfering with each
- * other.
+ * <p>To request a device use {@link #getDevice(Matcher, Matcher)}. This reserves the device from
+ * the device pool, allowing the connected integration tests to run in parallel without interfering
+ * with each other.
  *
  * <p>At the end of the test method, the device is returned to the pool.
  */
@@ -81,15 +84,46 @@ public class Adb implements TestRule {
 
     /** Reserves and returns a connected device that has a version that satisfies the matcher. */
     @NonNull
-    public IDevice getDevice(@NonNull Matcher<AndroidVersion> matcher) {
+    public IDevice getDevice(
+            @NonNull Matcher<AndroidVersion> versionMatcher,
+            @NonNull Matcher<List<Abi>> abiMatcher) {
         IDevice device =
                 getDevice(
-                        matcher,
+                        versionMatcher,
+                        abiMatcher,
                         error -> {
                             throw new AssertionError(error);
                         });
         assert device != null;
         return device;
+    }
+
+    private StringDescription getMismatchDescription(
+            IDevice device,
+            @NonNull Matcher<AndroidVersion> versionMatcher,
+            @NonNull Matcher<List<Abi>> abiMatcher) {
+        StringDescription description = new StringDescription();
+
+        String indent = "    ";
+
+        description.appendText(indent).appendText(device.toString()).appendText(": ");
+
+        // Since no device was found, it is guaranteed that one of these will be true
+        if (!versionMatcher.matches(device.getVersion())) {
+            description.appendText("\n" + indent + indent);
+
+            versionMatcher.describeMismatch(device.getVersion(), description);
+        }
+
+        List<Abi> abis = device.getAbis().stream().map(Abi::getByName).collect(Collectors.toList());
+
+        if (!abiMatcher.matches(abis)) {
+            description.appendText("\n" + indent + indent);
+
+            abiMatcher.describeMismatch(abis, description);
+        }
+
+        return description;
     }
 
     /**
@@ -99,16 +133,24 @@ public class Adb implements TestRule {
      */
     @Nullable
     public IDevice getDevice(
-            @NonNull Matcher<AndroidVersion> matcher, @NonNull Consumer<String> errorHandler) {
+            @NonNull Matcher<AndroidVersion> versionMatcher,
+            @NonNull Matcher<List<Abi>> abiMatcher,
+            @NonNull Consumer<String> errorHandler) {
         if (exclusiveAccess) {
             throw new IllegalStateException("Cannot call both getDevice() and exclusiveAccess() "
                     + "in one test");
         }
+
         IDevice[] devices = getBridge().getDevices();
 
         List<String> possibleDeviceSerials = Lists.newArrayList();
         for (IDevice device: devices) {
-            if (matcher.matches(device.getVersion())) {
+            if (versionMatcher.matches(device.getVersion())
+                    && abiMatcher.matches(
+                            device.getAbis()
+                                    .stream()
+                                    .map(Abi::getByName)
+                                    .collect(Collectors.toList()))) {
                 possibleDeviceSerials.add(device.getSerialNumber());
             }
         }
@@ -131,13 +173,17 @@ public class Adb implements TestRule {
         }
 
         // Failed to find, make a pretty error message.
-        StringBuilder errorMessage = new StringBuilder("Test requires device that matches ")
-                .append(StringDescription.toString(matcher)).append("\nConnected Devices:\n");
+        StringBuilder errorMessage =
+                new StringBuilder("Test requires device that matches\n")
+                        .append("    " + StringDescription.toString(versionMatcher) + "\n")
+                        .append("    " + StringDescription.toString(abiMatcher));
+
+        errorMessage.append("\nConnected Devices:\n");
+
         for (IDevice device: devices) {
-            errorMessage.append("    ").append(device).append(": ");
-            StringDescription mismatch = new StringDescription();
-            matcher.describeMismatch(device.getVersion(), mismatch);
-            errorMessage.append(mismatch.toString()).append('\n');
+            errorMessage
+                    .append(getMismatchDescription(device, versionMatcher, abiMatcher).toString())
+                    .append("\n");
         }
 
         errorHandler.accept(errorMessage.toString());
@@ -145,7 +191,7 @@ public class Adb implements TestRule {
     }
 
     public IDevice getDevice(int version) {
-        return getDevice(AndroidVersionMatcher.exactly(version));
+        return getDevice(AndroidVersionMatcher.exactly(version), AbiMatcher.anyAbi());
     }
 
     /**

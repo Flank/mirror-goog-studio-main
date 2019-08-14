@@ -429,6 +429,7 @@ maven_repo(
     name = "prebuilts",
     # keep sorted
     artifacts = [
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/livedata/1.1.1:aar",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: remove
     ],
 )

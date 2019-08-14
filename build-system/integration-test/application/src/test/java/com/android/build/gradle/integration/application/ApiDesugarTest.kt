@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.StringOption
@@ -88,7 +89,7 @@ class ApiDesugarTest {
     @Test
     @Category(DeviceTests::class)
     fun testApiInvocation() {
-        val device = adb.getDevice(AndroidVersionMatcher.exactly(21))
+        val device = adb.getDevice(AndroidVersionMatcher.exactly(21), AbiMatcher.anyAbi())
         project.executor()
             .with(StringOption.DEVICE_POOL_SERIAL, device.serialNumber)
             .run("connectedDebugAndroidTest")

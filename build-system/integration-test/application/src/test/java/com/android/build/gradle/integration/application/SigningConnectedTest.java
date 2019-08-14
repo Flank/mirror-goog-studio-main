@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -188,7 +189,8 @@ public class SigningConnectedTest {
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
 
-        IDevice device24Plus = adb.getDevice(AndroidVersionMatcher.atLeast(24));
+        IDevice device24Plus =
+                adb.getDevice(AndroidVersionMatcher.atLeast(24), AbiMatcher.anyAbi());
         checkOnDevice(device24Plus);
 
         // Check APK with minimum SDK 18.
@@ -226,6 +228,7 @@ public class SigningConnectedTest {
         IDevice device17 =
                 adb.getDevice(
                         AndroidVersionMatcher.exactly(17),
+                        AbiMatcher.anyAbi(),
                         error -> {
                             throw new AssumptionViolatedException(error);
                         });

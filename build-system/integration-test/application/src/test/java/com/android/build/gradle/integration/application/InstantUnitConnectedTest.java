@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.utils.AndroidVersionMa
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.options.StringOption;
 import com.android.ddmlib.IDevice;
 import org.junit.ClassRule;
@@ -49,7 +50,7 @@ public class InstantUnitConnectedTest {
     @Category(DeviceTests.class)
     public void runTestsOnDevice() throws Exception {
         sProject.execute("clean");
-        IDevice device = adb.getDevice(thatUsesArt());
+        IDevice device = adb.getDevice(thatUsesArt(), AbiMatcher.anyAbi());
         sProject.executor()
                 .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
                 .executeConnectedCheck();

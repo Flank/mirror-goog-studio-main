@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -64,7 +65,8 @@ public class ConnectedCheckTest {
     @Test
     public void connectedCheckShardedOn1Device() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
-        IDevice device = adb.getDevice(AndroidVersionMatcher.anyAndroidVersion());
+        IDevice device =
+                adb.getDevice(AndroidVersionMatcher.anyAndroidVersion(), AbiMatcher.anyAbi());
         // Provide a single device to check.
         project.executor()
                 .with(BooleanOption.ENABLE_TEST_SHARDING, true)
