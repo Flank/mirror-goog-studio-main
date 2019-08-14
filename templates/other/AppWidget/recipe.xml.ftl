@@ -25,13 +25,13 @@
     <merge from="root/res/values/dimens.xml"
            to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />
 
-    <instantiate from="root/src/app_package/AppWidget.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.java" />
+    <instantiate from="root/src/app_package/AppWidget.${ktOrJavaExt}.ftl"
+                 to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 
     <#if configurable>
-    <instantiate from="root/src/app_package/AppWidgetConfigureActivity.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}ConfigureActivity.java" />
+    <instantiate from="root/src/app_package/AppWidgetConfigureActivity.${ktOrJavaExt}.ftl"
+                 to="${escapeXmlAttribute(srcOut)}/${className}ConfigureActivity.${ktOrJavaExt}" />
     </#if>
 
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.java" />
+    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 </recipe>
