@@ -13,10 +13,12 @@
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
     <instantiate from="root/AndroidManifest.xml.ftl"
-                   to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+	    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+
+<#if !isLibraryProject>
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-
+</#if>
     <instantiate from="root/test/app_package/ExampleInstrumentedTest.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.${ktOrJavaExt}" />
     <instantiate from="root/test/app_package/ExampleUnitTest.${ktOrJavaExt}.ftl"
