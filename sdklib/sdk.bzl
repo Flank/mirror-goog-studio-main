@@ -149,7 +149,7 @@ def sdk_package(name, binaries, sourceprops, visibility):
         srcs = [sourceprops, version_file],
         outs = ["source.properties"],
         cmd = """
-              version=$$(sed -n '/^buildVersion/s/.* //p' $(location {version_file}));
+              version=$$(sed -n '/^cmdlineToolsVersion/s/.* //p' $(location {version_file}));
               sed "s/{{VERSION}}/$$version/" $(location {sourceprops}) > $(location source.properties)
               """.format(version_file = version_file, sourceprops = sourceprops),
     )
