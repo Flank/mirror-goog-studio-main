@@ -47,11 +47,6 @@
     <#if useAndroidX>
         <classpath mavenUrl="androidx.navigation:navigation-safe-args-gradle-plugin:+"/>
     <#else>
-        <#--
-          TODO: Single '+' retrieves 2.x.x version, but android.arch.navigation dependency doesn'
-          t have that version (androidx.navigation has). The classpath directive should convert
-          the single '+' as the valid largest version number.
-        -->
-        <classpath mavenUrl="android.arch.navigation:navigation-safe-args-gradle-plugin:1.+"/>
+        <classpath mavenUrl="android.arch.navigation:navigation-safe-args-gradle-plugin:+"/>
     </#if>
 </#macro>
