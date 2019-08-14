@@ -79,8 +79,7 @@ public class FeatureExtension extends LibraryExtension {
                         .newInstance(
                                 BundleOptions.class,
                                 project.getObjects(),
-                                extraModelInfo.getDeprecationReporter(),
-                                project);
+                                extraModelInfo.getDeprecationReporter());
     }
 
     /**

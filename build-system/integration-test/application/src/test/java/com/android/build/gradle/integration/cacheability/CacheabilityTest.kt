@@ -89,8 +89,7 @@ class CacheabilityTest {
                     ":app:mergeDexDebug",
                     ":app:stripDebugDebugSymbols",
                     ":app:extractDeepLinksDebug",
-                    ":app:dexBuilderDebug",
-                    ":app:parseDebugIntegrityConfig"
+                    ":app:dexBuilderDebug"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -148,7 +147,7 @@ class CacheabilityTest {
         val buildCacheDir = File(projectCopy1.testDir.parent, GRADLE_BUILD_CACHE_DIR)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
         projectCopy1.executor().withArgument("--build-cache")
-            .run("clean", "assembleDebug", "testDebugUnitTest", ":app:parseDebugIntegrityConfig")
+            .run("clean", "assembleDebug", "testDebugUnitTest")
 
         // Check that the build cache has been populated
         assertThat(buildCacheDir).exists()
@@ -156,12 +155,7 @@ class CacheabilityTest {
         // Build the second project
         val result =
             projectCopy2.executor().withArgument("--build-cache")
-                .run(
-                    "clean",
-                    "assembleDebug",
-                    "testDebugUnitTest",
-                    ":app:parseDebugIntegrityConfig"
-                )
+                .run("clean", "assembleDebug", "testDebugUnitTest")
 
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.

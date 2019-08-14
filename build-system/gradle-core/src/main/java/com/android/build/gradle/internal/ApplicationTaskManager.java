@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.FinalizeBundleTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
-import com.android.build.gradle.internal.tasks.ParseIntegrityConfigTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PackageBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
@@ -419,7 +418,6 @@ public class ApplicationTaskManager extends TaskManager {
         taskFactory.register(new PerModuleReportDependenciesTask.CreationAction(scope));
 
         if (scope.getType().isBaseModule()) {
-            taskFactory.register(new ParseIntegrityConfigTask.CreationAction(scope));
             taskFactory.register(new PackageBundleTask.CreationAction(scope));
             taskFactory.register(new FinalizeBundleTask.CreationAction(scope));
             taskFactory.register(new BundleReportDependenciesTask.CreationAction(scope));
