@@ -28,6 +28,7 @@
         default="activity_main"
         help="The name of the layout to create for the activity" />
 
+    <!-- TODO(qumeric): this is not quite right. Fix it when new templates are ready. -->
     <parameter
         id="fragmentLayoutName"
         name="Fragment Layout Name"

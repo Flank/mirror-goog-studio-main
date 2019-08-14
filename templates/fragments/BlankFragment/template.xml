@@ -32,7 +32,7 @@
         constraints="layout|nonempty|unique"
         default="fragment_blank"
         visibility="includeLayout"
-        suggest="fragment_${classToResource(className)}"
+        suggest="${fragmentToLayout(className)}"
         help="The name of the layout to create" />
 
     <parameter
