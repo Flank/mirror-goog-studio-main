@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Expect
@@ -181,81 +182,6 @@ class CacheabilityTest {
         expect.that(result.failedTasks)
             .named("Failed Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
-
-        // Clean up the cache
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-    }
-
-    @Test
-    fun testCaching() {
-        // Build the project, first time
-        val buildCacheDir = File(projectCopy1.testDir.parent, GRADLE_BUILD_CACHE_DIR)
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-
-        val result1 =
-            projectCopy1.executor().withArgument("--build-cache")
-                .run("clean", "assembleDebug", "testDebugUnitTest")
-
-        // Check that the build cache has been populated
-        assertThat(buildCacheDir).exists()
-
-        // Build the project, second time
-        val result2 =
-            projectCopy1.executor().withArgument("--build-cache")
-                .run("clean", "assembleDebug", "testDebugUnitTest")
-
-        // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
-        // directory is not available. We need to remove that task from the expected tasks' states.
-        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
-        if (result2.findTask(":app:transformNativeLibsWithStripDebugSymbolForDebug") == null) {
-            expectedDidWorkTasks =
-                expectedDidWorkTasks.minus(":app:transformNativeLibsWithStripDebugSymbolForDebug")
-        }
-
-        //remove app:clean from "up to date" list and add it to "did work"
-        var uptodateTasks = EXPECTED_TASK_STATES[UP_TO_DATE]!!
-        uptodateTasks = uptodateTasks.minus(":app:clean");
-
-        expectedDidWorkTasks = expectedDidWorkTasks + ":app:clean";
-
-        //verify that the task states from second build are as expected
-        expect.that(result2.upToDateTasks)
-            .named("UpToDate Tasks")
-            .containsExactlyElementsIn(uptodateTasks)
-        expect.that(result2.fromCacheTasks)
-            .named("FromCache Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
-        expect.that(result2.didWorkTasks)
-            .named("DidWork Tasks")
-            .containsExactlyElementsIn(expectedDidWorkTasks)
-        expect.that(result2.skippedTasks)
-            .named("Skipped Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
-        expect.that(result2.failedTasks)
-            .named("Failed Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
-
-        // Build the project, third time
-        val result3 =
-            projectCopy1.executor().withArgument("--build-cache")
-                .run("clean", "assembleDebug", "testDebugUnitTest")
-
-        // Check that the tasks' states are identical across 2nd and 3rd build
-        expect.that(result2.upToDateTasks)
-            .named("UpToDate Tasks")
-            .containsExactlyElementsIn(result3.upToDateTasks)
-        expect.that(result2.fromCacheTasks)
-            .named("FromCache Tasks")
-            .containsExactlyElementsIn(result3.fromCacheTasks)
-        expect.that(result2.didWorkTasks)
-            .named("DidWork Tasks")
-            .containsExactlyElementsIn(result3.didWorkTasks)
-        expect.that(result2.skippedTasks)
-            .named("Skipped Tasks")
-            .containsExactlyElementsIn(result3.skippedTasks)
-        expect.that(result2.failedTasks)
-            .named("Failed Tasks")
-            .containsExactlyElementsIn(result3.failedTasks)
 
         // Clean up the cache
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
