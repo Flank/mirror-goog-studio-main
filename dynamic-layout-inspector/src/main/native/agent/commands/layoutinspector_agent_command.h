@@ -3,6 +3,7 @@
 
 #include "agent/agent.h"
 
+using layoutinspector::EditProperty;
 using layoutinspector::LayoutInspectorCommand;
 using layoutinspector::LayoutInspectorCommand_Type;
 using layoutinspector::PropertyEvent;
@@ -49,11 +50,29 @@ class LayoutInspectorAgentCommand {
               break;
             }
 
-            default: {
+            case LayoutInspectorCommand::START: {
               jmethodID start_command_method = jni_env->GetMethodID(
                   inspector_class, "onStartLayoutInspectorCommand", "()V");
               jni_env->CallVoidMethod(inspector_service, start_command_method);
+              break;
             }
+
+            case LayoutInspectorCommand::EDIT_PROPERTY: {
+              const EditProperty* edit_command = &liCommand->edit_property();
+
+              jmethodID edit_property_command_method = jni_env->GetMethodID(
+                  inspector_class, "onEditPropertyInspectorCommand", "(JII)V");
+
+              jni_env->CallVoidMethod(
+                  inspector_service, edit_property_command_method,
+                  liCommand->view_id(), edit_command->attribute_id(),
+                  edit_command->int32_value());
+              break;
+            }
+
+            default:
+              // Ignore unknown commands
+              break;
           }
         });
   }

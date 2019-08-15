@@ -202,6 +202,27 @@ public class LayoutInspectorService {
         }
     }
 
+    /**
+     * This method is called when an edit property command is received by the agent.
+     *
+     * @param viewId the uniqueDrawingId of the view to modify
+     * @param attributeId the resources ID of the attribute to modify
+     * @param value the value to set the attribute to
+     */
+    @SuppressWarnings("unused") // invoked via jni
+    public void onEditPropertyInspectorCommand(long viewId, int attributeId, int value) {
+        try {
+            View root = findRootView();
+            View view = findViewById(root, viewId);
+            if (view == null) {
+                return;
+            }
+            applyPropertyEdit(view, attributeId, value);
+        } catch (Throwable ex) {
+            sendErrorMessage(ex);
+        }
+    }
+
     private View findRootView() {
         try {
             Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
@@ -249,5 +270,41 @@ public class LayoutInspectorService {
         ByteArrayOutputStream error = new ByteArrayOutputStream();
         e.printStackTrace(new PrintStream(error));
         sendErrorMessage(error.toString());
+    }
+
+    private void applyPropertyEdit(View view, int attributeId, int value) {
+        switch (attributeId) {
+            case android.R.attr.padding:
+                view.setPadding(value, value, value, value);
+                break;
+            case android.R.attr.paddingLeft:
+                view.setPadding(
+                        value,
+                        view.getPaddingTop(),
+                        view.getPaddingRight(),
+                        view.getPaddingBottom());
+                break;
+            case android.R.attr.paddingTop:
+                view.setPadding(
+                        view.getPaddingLeft(),
+                        value,
+                        view.getPaddingRight(),
+                        view.getPaddingBottom());
+                break;
+            case android.R.attr.paddingRight:
+                view.setPadding(
+                        view.getPaddingLeft(),
+                        view.getPaddingTop(),
+                        value,
+                        view.getPaddingBottom());
+                break;
+            case android.R.attr.paddingBottom:
+                view.setPadding(
+                        view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), value);
+                break;
+            default:
+                sendErrorMessage(
+                        "Unsupported attribute for editing: " + Integer.toHexString(attributeId));
+        }
     }
 }
