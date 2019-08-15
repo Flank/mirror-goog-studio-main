@@ -353,13 +353,7 @@ bool SwapCommand::AttachAgents() const {
     std::string output;
     std::string agent = kAgentFilename;
 #if defined(__aarch64__) || defined(__x86_64__)
-    // TODO: This is a temp solution, we are going to get this info from dump
-    // and read that from the request PB anyways.
-    //
-    // readlink doesn't seem to work. Using ls -l should also do the trick.
-    RunCmd("ls", User::APP_PACKAGE, {"-l", "/proc/" + to_string(pid) + "/exe"},
-           &output);
-    if (output.find("app_process32") != std::string::npos) {
+    if (request_.arch() == proto::ARCH_32_BIT) {
       agent = kAgentAltFilename;
     }
 #endif

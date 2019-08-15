@@ -170,6 +170,12 @@ public class DeployerException extends Exception {
         DUMP_FAILED(
                 "We were unable to deploy your changes.", "%s", "Retry", ResolutionAction.RETRY),
 
+        DUMP_MIXED_ARCH(
+                "Application with process in both 32 and 64 bit mode.",
+                "%s",
+                "Retry",
+                ResolutionAction.RETRY),
+
         PREINSTALL_FAILED(
                 "The application could not be installed.", "%s", "Retry", ResolutionAction.RETRY),
 
@@ -351,6 +357,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException dumpFailed(String reason) {
         return new DeployerException(Error.DUMP_FAILED, NO_ARGS, reason);
+    }
+
+    public static DeployerException dumpMixedArch(String reason) {
+        return new DeployerException(Error.DUMP_MIXED_ARCH, NO_ARGS, reason);
     }
 
     public static DeployerException parseFailed(String reason) {

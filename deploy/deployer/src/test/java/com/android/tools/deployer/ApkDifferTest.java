@@ -161,6 +161,6 @@ public class ApkDifferTest {
   }
 
     private static ApplicationDumper.Dump toDump(List<ApkEntry> entries) {
-        return new ApplicationDumper.Dump(entries, null);
+        return new ApplicationDumper.Dump(entries, null, null);
     }
 }

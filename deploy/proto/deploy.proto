@@ -26,6 +26,8 @@ message SwapRequest {
   // The number of extra agents that the server should wait for.
   // Those are agents that the server is not responsible to start.
   int32 extra_agents = 7;
+
+  Arch arch = 8;
 }
 
 message ResumeRequest {}
@@ -158,6 +160,12 @@ message ApkDump {
   string absolute_path = 4;
 }
 
+enum Arch {
+  ARCH_UNKNOWN = 0;
+  ARCH_32_BIT = 1;
+  ARCH_64_BIT = 2;
+}
+
 message PackageDump {
   // The name of the package.
   string name = 1;
@@ -167,12 +175,6 @@ message PackageDump {
 
   // The package processes currently executing.
   repeated int32 processes = 3;
-
-  enum Arch {
-    ARCH_UNKNOWN = 0;
-    ARCH_32_BIT = 1;
-    ARCH_64_BIT = 2;
-  }
 
   // Whether the package is running as 32-bit or 64-bit.
   Arch arch = 4;

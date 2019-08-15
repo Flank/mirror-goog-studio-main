@@ -177,9 +177,9 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
     // We assume an app can't mix 32-bit and 64-bit ART processes, so we just
     // set this to the last architecture of the last zygote child we find.
     if (stats.ppid == zygote_pid) {
-      package_dump->set_arch(proto::PackageDump::ARCH_32_BIT);
+      package_dump->set_arch(proto::ARCH_32_BIT);
     } else if (stats.ppid == zygote64_pid) {
-      package_dump->set_arch(proto::PackageDump::ARCH_64_BIT);
+      package_dump->set_arch(proto::ARCH_64_BIT);
     } else {
       continue;
     }

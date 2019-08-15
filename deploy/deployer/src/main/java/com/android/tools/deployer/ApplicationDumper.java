@@ -98,16 +98,22 @@ public class ApplicationDumper {
             throw DeployerException.unknownPackage(response.getFailedPackage());
         }
 
-        return new Dump(GetApkEntries(response.getPackages(0)), GetPids(response));
+        return new Dump(
+                GetApkEntries(response.getPackages(0)), GetPids(response), GetArch(response));
     }
 
     public static class Dump {
         public final List<ApkEntry> apkEntries;
         public final Map<String, List<Integer>> packagePids;
+        public final Deploy.Arch arch;
 
-        public Dump(List<ApkEntry> apkEntries, Map<String, List<Integer>> packagePids) {
+        public Dump(
+                List<ApkEntry> apkEntries,
+                Map<String, List<Integer>> packagePids,
+                Deploy.Arch arch) {
             this.apkEntries = apkEntries;
             this.packagePids = packagePids;
+            this.arch = arch;
         }
     }
 
@@ -142,5 +148,24 @@ public class ApplicationDumper {
             }
         }
         return pids;
+    }
+
+    private static Deploy.Arch GetArch(Deploy.DumpResponse response) throws DeployerException {
+        List<Deploy.PackageDump> packages = response.getPackagesList();
+        Deploy.Arch arch = packages.get(0).getArch();
+        for (int i = 1; i < packages.size(); i++) {
+            if (!arch.equals(packages.get(i).getArch())) {
+                throw DeployerException.dumpMixedArch(
+                        packages.get(0).getName()
+                                + " is "
+                                + arch
+                                + " while "
+                                + packages.get(i).getName()
+                                + " is "
+                                + packages.get(i).getArch()
+                                + ".");
+            }
+        }
+        return arch;
     }
 }

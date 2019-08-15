@@ -167,6 +167,7 @@ public class ApkSwapper {
         }
 
         request.setExtraAgents(extraAgents);
+        request.setArch(dump.arch);
         return request.build();
     }
 
