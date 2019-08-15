@@ -36,4 +36,12 @@ class FakeGradleProvider<T>(private val v: T?): Provider<T> {
     override fun get() = v!!
 
     override fun getOrNull() = v
+
+    override fun orElse(p0: T): Provider<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun orElse(p0: Provider<out T>): Provider<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.fixtures
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 
 class FakeResolvedDependencyResult(
     private val from: ResolvedComponentResult? = null,
@@ -31,4 +32,7 @@ class FakeResolvedDependencyResult(
     override fun isConstraint() = constraint ?: error("value not set")
     override fun getSelected() = selected ?: error("value not set")
     override fun getRequested() = requested ?: error("value not set")
+    override fun getResolvedVariant(): ResolvedVariantResult {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

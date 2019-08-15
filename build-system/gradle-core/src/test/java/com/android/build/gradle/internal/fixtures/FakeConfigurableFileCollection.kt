@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
 import java.io.File
 
 /**
@@ -59,4 +61,11 @@ class FakeConfigurableFileCollection(vararg files : Any?)
         return this
     }
 
+    override fun disallowChanges() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun finalizeValue() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

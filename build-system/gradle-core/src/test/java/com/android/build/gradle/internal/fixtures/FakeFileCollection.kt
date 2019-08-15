@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.fixtures
 import groovy.lang.Closure
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileTree
+import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.TaskDependency
 import java.io.File
@@ -119,4 +121,7 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
                             "files: $files")
     }
 
+    override fun getElements(): Provider<MutableSet<FileSystemLocation>> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

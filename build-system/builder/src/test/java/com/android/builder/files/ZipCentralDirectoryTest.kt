@@ -20,7 +20,6 @@ import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExpectedException
 import org.junit.rules.TemporaryFolder
 import java.io.BufferedOutputStream
 import java.io.File
@@ -28,6 +27,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.math.min
 import kotlin.test.assertFailsWith
 
 class ZipCentralDirectoryTest {
@@ -118,15 +118,21 @@ class ZipCentralDirectoryTest {
     }
 
     private fun createFakeZip(path: File, numFiles: Int, sizePerFile: Int) {
-        ZipOutputStream(FileOutputStream(path)).use {
-            it.setLevel(ZipOutputStream.STORED)
+        ZipOutputStream(FileOutputStream(path)).use { output ->
+            output.setLevel(ZipOutputStream.STORED)
            for (i in 1..numFiles) {
                val name = String.format("file%06d", i)
                val entry = ZipEntry(name)
-               it.putNextEntry(entry)
-               val bytes = ByteArray(sizePerFile)
-               it.write(bytes)
-               it.closeEntry()
+               output.putNextEntry(entry)
+               val maxChunkSize = 20_000_000
+               var current = 0
+               while (current < sizePerFile) {
+                   val chunkSize = min(maxChunkSize, sizePerFile - current)
+                   val bytes = ByteArray(chunkSize)
+                   output.write(bytes)
+                   current += chunkSize
+               }
+               output.closeEntry()
             }
         }
     }
