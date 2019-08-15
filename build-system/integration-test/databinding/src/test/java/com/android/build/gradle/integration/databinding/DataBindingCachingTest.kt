@@ -18,17 +18,15 @@ package com.android.build.gradle.integration.databinding
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
-import java.io.IOException
 
 /**
  * Integration test to ensure cacheability when data binding is used
@@ -53,7 +51,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("databinding")
-        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE"))
         .withKotlinGradlePlugin(true)
         .withName("project")
         .create()
@@ -61,13 +58,14 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     @get:Rule
     val projectCopy = GradleTestProject.builder()
         .fromTestProject("databinding")
-        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE"))
         .withKotlinGradlePlugin(true)
         .withName("projectCopy")
         .create()
 
+    @get:Rule
+    val buildCacheDirRoot = TemporaryFolder()
+
     @Before
-    @Throws(IOException::class)
     fun setUp() {
         if (withKotlin) {
             for (project in listOf(project, projectCopy)) {
@@ -84,23 +82,15 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
 
     @Test
     fun `test main resources located within root project directory, expect cacheable tasks`() {
-        // Build the first project
-        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-        project.executor().withArgument("--build-cache").run("clean", JAVA_COMPILE_TASK)
-        assertThat(buildCacheDir).exists()
+        val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE)
 
-        // Build the second project that is identical to the first project but has a different
-        // location
-        val result = projectCopy.executor().withArgument("--build-cache")
-            .run("clean", JAVA_COMPILE_TASK)
-
-        // Check that the relevant tasks are cacheable
-        assertThat(result.getTask(DATA_BINDING_GEN_BASE_CLASSES_TASK)).wasFromCache()
-        assertThat(result.getTask(JAVA_COMPILE_TASK)).wasFromCache()
-
-        // Clean up
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+        CacheabilityTestHelper
+            .forProjects(project, projectCopy)
+            .withBuildCacheDir(buildCacheDir)
+            .withTasks("clean", JAVA_COMPILE_TASK)
+            .hasFromCacheTasks(setOf(
+                DATA_BINDING_GEN_BASE_CLASSES_TASK,
+                JAVA_COMPILE_TASK), false)
     }
 
     @Test
@@ -122,27 +112,24 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         }
 
-        // Build the first project
-        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-        project.executor().withArgument("--build-cache").run("clean", JAVA_COMPILE_TASK)
-        assertThat(buildCacheDir).exists()
+        val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE)
 
-        // Build the second project that is identical to the first project but has a different
-        // location
-        val result = projectCopy.executor().withArgument("--build-cache")
-            .run("clean", JAVA_COMPILE_TASK)
+        val didWork = mutableSetOf(DATA_BINDING_GEN_BASE_CLASSES_TASK)
 
-        // Check that the relevant tasks are not cacheable
-        assertThat(result.getTask(DATA_BINDING_GEN_BASE_CLASSES_TASK)).didWork()
+        val fromCache = mutableSetOf<String>()
+
+        // Data binding was processed by Kapt, so it doesn't make JavaCompile non-cacheable
         if (withKotlin) {
-            // Data binding was processed by Kapt, so it doesn't make JavaCompile non-cacheable
-            assertThat(result.getTask(JAVA_COMPILE_TASK)).wasFromCache()
+            fromCache.add(JAVA_COMPILE_TASK)
         } else {
-            assertThat(result.getTask(JAVA_COMPILE_TASK)).didWork()
+            didWork.add(JAVA_COMPILE_TASK)
         }
 
-        // Clean up
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+        CacheabilityTestHelper
+            .forProjects(project, projectCopy)
+            .withBuildCacheDir(buildCacheDir)
+            .withTasks("clean", JAVA_COMPILE_TASK)
+            .hasFromCacheTasks(fromCache, false)
+            .hasDidWorkTasks(didWork, false)
     }
 }
