@@ -42,6 +42,26 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
       }});
 }
 
+void EnqueueAppInspectionRawEvent(JNIEnv *env, jbyteArray event_data,
+                                  int32_t length, jstring inspector_id) {
+  profiler::JByteArrayWrapper data(env, event_data, length);
+  profiler::JStringWrapper id(env, inspector_id);
+  profiler::Agent::Instance().SubmitAgentTasks(
+      {[data, id](profiler::proto::AgentService::Stub &stub,
+                  grpc::ClientContext &ctx) mutable {
+        profiler::proto::SendEventRequest request;
+        auto *event = request.mutable_event();
+        event->set_kind(profiler::proto::Event::APP_INSPECTION);
+        event->set_is_ended(true);
+        auto *inspection_event = event->mutable_app_inspection_event();
+        auto *raw_response = inspection_event->mutable_raw_event();
+        raw_response->set_inspector_id(id.get().c_str());
+        raw_response->set_raw_event(data.get());
+        profiler::proto::EmptyResponse response;
+        return stub.SendEvent(&ctx, request, &response);
+      }});
+}
+
 }  // namespace profiler
 
 extern "C" {
@@ -57,5 +77,12 @@ Java_com_android_tools_agent_app_inspection_AppInspectionService_replySuccess(
     JNIEnv *env, jobject obj, jint command_id) {
   profiler::EnqueueAppInspectionServiceResponse(
       env, command_id, ServiceResponse::SUCCESS, nullptr);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_AppInspectionService_sendEvent(
+    JNIEnv *env, jobject obj, jbyteArray event_data, jint length,
+    jstring inspector_id) {
+  profiler::EnqueueAppInspectionRawEvent(env, event_data, length, inspector_id);
 }
 }

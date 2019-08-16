@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package test.inspector;
+package com.android.tools.agent.app.inspection;
 
 import androidx.inspection.Connection;
-import androidx.inspection.InspectorFactory;
 
-public class TestInspectorFactory extends InspectorFactory<TestInspector> {
+public class ConnectionImpl extends Connection {
 
-    public TestInspectorFactory() {
-        super("test.inspector");
+    private String mInspectorId;
+
+    public ConnectionImpl(String inspectorId) {
+        mInspectorId = inspectorId;
     }
 
     @Override
-    public TestInspector createInspector(Connection connection) {
-        return new TestInspector(connection);
+    public void sendEvent(byte[] data) {
+        sendEvent(data, data.length, mInspectorId);
     }
+
+    private native void sendEvent(byte[] event_dat, int length, String inspectorId);
 }

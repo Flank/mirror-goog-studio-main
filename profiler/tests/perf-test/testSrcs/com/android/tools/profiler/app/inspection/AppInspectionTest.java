@@ -24,9 +24,11 @@ import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand;
 import com.android.tools.app.inspection.AppInspection.DisposeInspectorCommand;
+import com.android.tools.app.inspection.AppInspection.RawCommand;
 import com.android.tools.app.inspection.AppInspection.ServiceResponse.Status;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
+import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.Commands;
 import com.android.tools.profiler.proto.Common;
@@ -48,8 +50,10 @@ import org.junit.Test;
 public class AppInspectionTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.MyActivity";
-    private static final String EXPECTED_INSPECTOR_CREATED = "TEST INSPECTOR CREATED";
-    private static final String EXPECTED_INSPECTOR_DISPOSED = "TEST INSPECTOR DISPOSED";
+    private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
+    private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
+    private static final String EXPECTED_INSPECTOR_DISPOSED =
+            EXPECTED_INSPECTOR_PREFIX + "DISPOSED";
 
     @Rule public final PerfDriver perfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
     private ServiceLayer serviceLayer;
@@ -102,6 +106,30 @@ public class AppInspectionTest {
         assertResponseStatus(
                 serviceLayer.sendCommand(createInspector("test.inspector", "random_file")),
                 Status.ERROR);
+    }
+
+    @Test
+    public void sendBasicCommand() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
+        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_CREATED);
+        assertResponseStatus(
+                serviceLayer.sendCommand(
+                        rawCommandInspector("test.inspector", new byte[] {1, 2, 127})),
+                SUCCESS);
+        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_PREFIX + "[1, 2, 127]");
+    }
+
+    private static AppInspectionCommand rawCommandInspector(
+            String inspectorId, byte[] commandData) {
+        return AppInspectionCommand.newBuilder()
+                .setRawInspectorCommand(
+                        RawCommand.newBuilder()
+                                .setInspectorId(inspectorId)
+                                .setRawCommand(ByteString.copyFrom(commandData))
+                                .build())
+                .build();
     }
 
     private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {

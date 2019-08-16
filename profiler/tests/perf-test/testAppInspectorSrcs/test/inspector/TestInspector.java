@@ -16,16 +16,24 @@
 
 package test.inspector;
 
+import androidx.inspection.Connection;
 import androidx.inspection.Inspector;
+import java.util.Arrays;
 
 public class TestInspector extends Inspector {
 
-    TestInspector() {
+    TestInspector(Connection connection) {
+        super(connection);
         System.out.println("TEST INSPECTOR CREATED");
     }
 
     @Override
     public void onDispose() {
         System.out.println("TEST INSPECTOR DISPOSED");
+    }
+
+    @Override
+    public void onReceiveCommand(byte[] bytes) {
+        System.out.println("TEST INSPECTOR " + Arrays.toString(bytes));
     }
 }

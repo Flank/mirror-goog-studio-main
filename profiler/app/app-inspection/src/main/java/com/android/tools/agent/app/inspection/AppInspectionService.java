@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-/** This service controlls all app inspectors */
+/** This service controls all app inspectors */
 @SuppressWarnings("unused") // invoked via jni
 public class AppInspectionService {
     private static final String MAIN_THREAD_NAME = "main";
@@ -74,7 +74,9 @@ public class AppInspectionService {
             while (iterator.hasNext()) {
                 InspectorFactory inspectorFactory = iterator.next();
                 if (inspectorId.equals(inspectorFactory.getInspectorId())) {
-                    inspector = inspectorFactory.createInspector();
+                    ConnectionImpl connection = new ConnectionImpl(inspectorId);
+                    inspector = inspectorFactory.createInspector(connection);
+                    mInspectors.put(inspectorId, inspector);
                     break;
                 }
             }
@@ -82,7 +84,6 @@ public class AppInspectionService {
                 replyError(commandId, "Failed to find InspectorFactory with id " + inspectorId);
                 return;
             }
-            mInspectors.put(inspectorId, inspector);
             replySuccess(commandId);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -102,6 +103,19 @@ public class AppInspectionService {
             return;
         }
         inspector.onDispose();
+        replySuccess(commandId);
+    }
+
+    public void sendCommand(String inspectorId, int commandId, byte[] rawCommand) {
+        if (failNull("inspectorId", inspectorId, commandId)) {
+            return;
+        }
+        Inspector inspector = mInspectors.get(inspectorId);
+        if (inspector == null) {
+            replyError(
+                    commandId, "Inspector with id " + inspectorId + " wasn't previously created");
+        }
+        inspector.onReceiveCommand(rawCommand);
         replySuccess(commandId);
     }
 
@@ -130,9 +144,9 @@ public class AppInspectionService {
 
         Thread[] threads = new Thread[100];
         group.enumerate(threads);
-        for (int i = 0; i < threads.length; i++) {
-            if (threads[i] != null && threads[i].getName().equals(MAIN_THREAD_NAME)) {
-                return threads[i].getContextClassLoader();
+        for (Thread thread : threads) {
+            if (thread != null && thread.getName().equals(MAIN_THREAD_NAME)) {
+                return thread.getContextClassLoader();
             }
         }
         return null;
