@@ -66,17 +66,6 @@ class DependencyFailureHandler {
     }
 }
 
-fun processDependencyThrowable(
-        throwable: Throwable,
-        dataExtractor: (String) -> String?,
-        resultConsumer: BiConsumer<String?, List<String>>) {
-    processDependencyThrowable(
-            throwable,
-            dataExtractor,
-            { data, messages -> resultConsumer.accept(data, messages) }
-    )
-}
-
 private fun processDependencyThrowable(
         throwable: Throwable,
         dataExtractor: (String) -> String?,

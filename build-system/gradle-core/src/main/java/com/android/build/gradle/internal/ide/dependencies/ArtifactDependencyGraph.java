@@ -73,7 +73,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     public DependencyGraphs createLevel4DependencyGraph(
             @NonNull VariantScope variantScope,
             boolean withFullDependency,
-            boolean downloadSources,
             @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull SyncIssueHandler syncIssueHandler) {
         // FIXME change the way we compare dependencies b/64387392
@@ -86,18 +85,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
-
-            // force download the javadoc/source artifacts of compile scope only, since the
-            // the runtime-only is never used from the IDE.
-            if (downloadSources) {
-                Set<ComponentIdentifier> ids =
-                        Sets.newHashSetWithExpectedSize(compileArtifacts.size());
-                for (ResolvedArtifact artifact : compileArtifacts) {
-                    ids.add(artifact.getComponentIdentifier());
-                }
-
-                handleSources(variantScope.getGlobalScope().getProject(), ids, syncIssueHandler);
-            }
 
             // In this simpler model, faster computation of the runtime dependencies to get the
             // provided bit.
@@ -191,7 +178,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     @Override
     public DependenciesImpl createDependencies(
             @NonNull VariantScope variantScope,
-            boolean downloadSources,
             @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull SyncIssueHandler syncIssueHandler) {
         // FIXME change the way we compare dependencies b/64387392
@@ -289,16 +275,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 }
             }
 
-            // force download the source artifacts of the compile classpath only.
-            if (downloadSources) {
-                Set<ComponentIdentifier> ids = Sets.newHashSetWithExpectedSize(artifacts.size());
-                for (ResolvedArtifact artifact : artifacts) {
-                    ids.add(artifact.getComponentIdentifier());
-                }
-
-                handleSources(variantScope.getGlobalScope().getProject(), ids, syncIssueHandler);
-            }
-
             // get runtime-only jars by filtering out compile dependencies from runtime artifacts.
             Set<ComponentIdentifier> compileIdentifiers =
                     artifacts
@@ -323,38 +299,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     runtimeOnlyClasspath);
         } finally {
             dependencyFailureHandler.registerIssues(syncIssueHandler);
-        }
-    }
-
-    private static void handleSources(
-            @NonNull Project project,
-            @NonNull Set<ComponentIdentifier> artifacts,
-            @NonNull SyncIssueHandler syncIssueHandler) {
-        final DependencyHandler dependencies = project.getDependencies();
-
-        try {
-            ArtifactResolutionQuery query = dependencies.createArtifactResolutionQuery();
-            query.forComponents(artifacts);
-
-            @SuppressWarnings("unchecked")
-            Class<? extends Artifact>[] artifactTypesArray =
-                    (Class<? extends Artifact>[])
-                            new Class<?>[] {SourcesArtifact.class, JavadocArtifact.class};
-            query.withArtifacts(JvmLibrary.class, artifactTypesArray);
-            query.execute().getResolvedComponents();
-        } catch (Throwable t) {
-            DependencyFailureHandlerKt.processDependencyThrowable(
-                    t,
-                    s -> null,
-                    (data, messages) -> {
-                        syncIssueHandler.reportWarning(
-                                EvalIssueReporter.Type.GENERIC,
-                                String.format(
-                                        "Unable to download sources/javadoc: %s", messages.get(0)),
-                                null,
-                                messages);
-                    });
-
         }
     }
 

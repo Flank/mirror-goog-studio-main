@@ -20,17 +20,14 @@ import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.SyncIssue
 import com.android.builder.model.level2.DependencyGraphs
 import com.google.common.collect.ImmutableMap
-import java.util.function.Consumer
 
 interface DependencyGraphBuilder {
 
     /** Create a level 1 dependency list.  */
     fun createDependencies(
         variantScope: VariantScope,
-        downloadSources: Boolean,
         buildMapping: ImmutableMap<String, String>,
         syncIssueHandler: SyncIssueHandler
     ): DependenciesImpl
@@ -43,7 +40,6 @@ interface DependencyGraphBuilder {
     fun createLevel4DependencyGraph(
         variantScope: VariantScope,
         withFullDependency: Boolean,
-        downloadSources: Boolean,
         buildMapping: ImmutableMap<String, String>,
         syncIssueHandler: SyncIssueHandler
     ): DependencyGraphs

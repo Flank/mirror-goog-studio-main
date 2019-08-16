@@ -769,14 +769,6 @@ public class ModelBuilder<Extension extends BaseExtension>
             DependencyGraphBuilder graphBuilder = DependencyGraphBuilderKt.getDependencyGraphBuilder();
             // can't use ProjectOptions as this is likely to change from the initialization of
             // ProjectOptions due to how lint dynamically add/remove this property.
-            boolean downloadSources =
-                    !Boolean.parseBoolean(
-                            String.valueOf(
-                                            project.getProperties()
-                                                    .get(
-                                                            AndroidProject
-                                                                    .PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD))
-                                    .trim());
 
             if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
                 result =
@@ -785,7 +777,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 graphBuilder.createLevel4DependencyGraph(
                                         variantScope,
                                         modelWithFullDependency,
-                                        downloadSources,
                                         buildMapping,
                                         extraModelInfo.getSyncIssueHandler()));
             } else {
@@ -793,7 +784,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                         Pair.of(
                                 graphBuilder.createDependencies(
                                         variantScope,
-                                        downloadSources,
                                         buildMapping,
                                         extraModelInfo.getSyncIssueHandler()),
                                 EmptyDependencyGraphs.EMPTY);

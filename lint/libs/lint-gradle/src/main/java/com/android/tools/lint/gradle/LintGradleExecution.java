@@ -362,7 +362,6 @@ public class LintGradleExecution {
             ext.set(
                     AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
                     Integer.toString(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
-            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, true);
 
             try {
                 AndroidProject project =
@@ -373,7 +372,6 @@ public class LintGradleExecution {
                         project, new IdeDependenciesFactory(), project.getVariants(), null);
             } finally {
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
-                ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, null);
             }
         }
     }
