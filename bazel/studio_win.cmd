@@ -38,6 +38,20 @@ CALL %SCRIPTDIR%bazel.cmd ^
  -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
+@rem when we run Studio from IJ we first run the prebuild task, which builds adt/idea/android:artifacts
+@rem without any filters. Build that unfiltered here as well to ensure it's not broken.
+@rem 139743530 tracks cleaning up this situation, so build tag filters aren't needed at all.
+CALL %SCRIPTDIR%bazel.cmd ^
+ --max_idle_secs=60 ^
+ build ^
+ -- //tools/adt/idea/android:artifacts
+SET PREBUILD_EXITCODE=%errorlevel%
+@rem give priority to original exit code if it wasn't success
+if !EXITCODE! EQU 0 (SET EXITCODE=%PREBUILD_EXITCODE%)
+
+@rem write out a marker if the prebuild failed, since it won't show up in the test results
+if !PREBUILD_EXITCODE! NEQ 0 (echo "Unfiltered build of //tools/adt/idea/android:artifacts failed. See build.log for details." > %DISTDIR%\PREBUILD_FAILED)
+
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
 
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
