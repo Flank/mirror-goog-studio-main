@@ -398,4 +398,34 @@ public class SymbolUtilsTest {
                                                         "android_max_width", "android_max_height")))
                                 .build());
     }
+
+    /**
+     * Checks that the styleable parsing doesn't drop the styleable if it is last.
+     *
+     * <p>Regression test for https://issuetracker.google.com/139017699
+     */
+    @Test
+    public void testSymbolTableBuilderStyleableLast() {
+        // Given
+        SymbolTableBuilder visitor = new SymbolTableBuilder("com.example.app");
+        // When
+        visitor.visit();
+        visitor.symbol("styleable", "LimitedSizeLinearLayout");
+        visitor.child("android_max_width");
+        visitor.child("android_max_height");
+        visitor.visitEnd();
+
+        // Then
+        assertThat(visitor.getSymbolTable())
+                .isEqualTo(
+                        SymbolTable.builder()
+                                .tablePackage("com.example.app")
+                                .add(
+                                        Symbol.createAndValidateStyleableSymbol(
+                                                "LimitedSizeLinearLayout",
+                                                ImmutableList.of(),
+                                                ImmutableList.of(
+                                                        "android_max_width", "android_max_height")))
+                                .build());
+    }
 }

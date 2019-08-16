@@ -565,13 +565,16 @@ class SymbolTableBuilder(packageName: String) : SymbolListVisitor {
         symbol(ResourceType.fromClassName(resourceType.toString())!!, name.toString())
     }
 
-    private fun symbol(resourceType: ResourceType, name: String) {
+    private fun writeCurrentStyleable() {
         currentStyleable?.let {
             symbolTableBuilder.add(Symbol.StyleableSymbol(it, ImmutableList.of(), children.build()))
             currentStyleable = null
             children = ImmutableList.builder()
         }
+    }
 
+    private fun symbol(resourceType: ResourceType, name: String) {
+        writeCurrentStyleable()
         when (resourceType) {
             ResourceType.STYLEABLE -> currentStyleable = name
             ResourceType.ATTR -> symbolTableBuilder.add(Symbol.AttributeSymbol(name, 0))
@@ -584,6 +587,7 @@ class SymbolTableBuilder(packageName: String) : SymbolListVisitor {
     }
 
     override fun visitEnd() {
+        writeCurrentStyleable()
         _symbolTable = symbolTableBuilder.build()
     }
 }
