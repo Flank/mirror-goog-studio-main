@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
+import static com.android.build.gradle.internal.dependency.L8DexDesugarLibTransformKt.getDesugarLibConfigurations;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
@@ -51,6 +52,7 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
+import com.android.build.gradle.internal.dependency.DesugarLibConfiguration;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform;
@@ -886,6 +888,10 @@ public class VariantManager implements VariantModel {
                                     });
                         });
             }
+        }
+
+        for (DesugarLibConfiguration configuration : getDesugarLibConfigurations(variantScopes)) {
+            configuration.registerTransform(dependencies);
         }
     }
 

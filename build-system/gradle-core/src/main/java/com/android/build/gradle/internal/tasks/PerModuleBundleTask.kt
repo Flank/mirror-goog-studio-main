@@ -25,13 +25,13 @@ import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.build.gradle.internal.scope.CodeShrinker.R8
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.build.gradle.internal.utils.getDesugarLibDexFromTransform
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.JarCreator
@@ -220,7 +220,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                         InternalArtifactType.LINKED_RES_FOR_BUNDLE
                     }, task.resFiles)
 
-            task.dexFiles =
+            val programDexFiles =
                 if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
                     variantScope
                         .artifacts
@@ -232,6 +232,17 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                 } else {
                     variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }
+            val desugarLibDexFile =
+                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)) {
+                    variantScope
+                        .artifacts
+                        .getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
+                        .get()
+                } else {
+                    getDesugarLibDexFromTransform(variantScope)
+                }
+
+            task.dexFiles = programDexFiles.plus(desugarLibDexFile)
 
             task.featureDexFiles =
                 variantScope.getArtifactFileCollection(

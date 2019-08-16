@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -76,6 +78,8 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var preBuildTask: TaskProvider<out Task>
     @Mock private lateinit var projectLayout: ProjectLayout
     @Mock private lateinit var projectFiles: ConfigurableFileCollection
+    @Mock private lateinit var extension: BaseExtension
+    @Mock private lateinit var compileOptions: CompileOptions
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -127,6 +131,9 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
         Mockito.`when`(variantScope.jarCreatorType).thenReturn(JarCreatorType.JAR_FLINGER)
+        Mockito.`when`(globalScope.extension).thenReturn(extension)
+        Mockito.`when`(extension.compileOptions).thenReturn(compileOptions)
+        Mockito.`when`(dexFiles.plus(projectFiles)).thenReturn(dexFiles)
 
         val testFiles = testFolder.newFolder("test_files")
         val featureMetadata = File(testFiles, "feature-metadata.json")

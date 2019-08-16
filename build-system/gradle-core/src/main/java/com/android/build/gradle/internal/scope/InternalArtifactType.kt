@@ -91,6 +91,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object DESUGAR_EXTERNAL_LIBS_CLASSES: InternalArtifactType<Directory>(DIRECTORY)
     // Local state output for desugar.
     object DESUGAR_LOCAL_STATE_OUTPUT: InternalArtifactType<Directory>(DIRECTORY)
+    // The output of L8 invocation, which is the dex output of desugar_jdk_libs.jar
+    object DESUGAR_LIB_DEX: InternalArtifactType<RegularFile>(FILE)
 
     // --- java res ---
     // java processing output

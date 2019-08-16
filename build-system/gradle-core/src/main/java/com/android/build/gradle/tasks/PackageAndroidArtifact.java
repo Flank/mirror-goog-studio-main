@@ -52,6 +52,7 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -998,9 +999,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE)) {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX.INSTANCE)
-                        .get();
+                        .get()
+                        .plus(getDesugarLibDexIfExists());
             } else {
-                return project.files(artifacts.getFinalProducts(InternalArtifactType.DEX.INSTANCE));
+                return project.files(artifacts.getFinalProducts(InternalArtifactType.DEX.INSTANCE))
+                        .plus(getDesugarLibDexIfExists());
             }
         }
 
@@ -1048,6 +1051,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .filter(abi -> allowedAbis.contains(abi))
                             .findFirst();
             return firstValidAbi.isPresent() ? ImmutableSet.of(firstValidAbi.get()) : null;
+        }
+
+        @NonNull
+        private FileCollection getDesugarLibDexIfExists() {
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
+                return project.files(
+                        artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
+            } else {
+                return DesugarLibUtils.getDesugarLibDexFromTransform(getVariantScope());
+            }
         }
     }
 }

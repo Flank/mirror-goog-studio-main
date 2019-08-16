@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public abstract class AndroidArchive extends Zip {
 
     public static final Pattern CLASS_FORMAT =
-            Pattern.compile("^L([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z0-9$._]+;$");
+            Pattern.compile("^L([a-zA-Z][a-zA-Z0-9_$]*/)*[a-zA-Z0-9$._]+;$");
 
     public AndroidArchive(@NonNull Path file) throws IOException {
         super(file);
