@@ -204,7 +204,7 @@ dex_library(
 
 perf_test(
     name = "AppInspectionTest",
-    size = "small",
+    size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/app/inspection/AppInspectionTest.java",
     ],
