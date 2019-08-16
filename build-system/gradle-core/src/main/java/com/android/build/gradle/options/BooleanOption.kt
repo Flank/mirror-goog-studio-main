@@ -102,7 +102,6 @@ enum class BooleanOption(
     /** Set to true to build native .so libraries only for the device it will be run on. */
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
-    ENABLE_SEPARATE_R_CLASS_COMPILATION(AndroidProject.PROPERTY_SEPARATE_R_CLASS_COMPILATION, true),
     ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
     ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true),
     ENABLE_NATIVE_COMPILER_SETTINGS_CACHE("android.enableNativeCompilerSettingsCache", false),

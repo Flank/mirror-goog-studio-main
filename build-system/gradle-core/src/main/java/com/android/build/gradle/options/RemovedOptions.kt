@@ -101,6 +101,9 @@ enum class RemovedOptions(
     ),
 
     ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", "The raw resource for unit test functionality is removed."),
+    ENABLE_SEPARATE_R_CLASS_COMPILATION(
+        "android.enableSeparateRClassCompilation",
+        "Separate R class compilation has been enabled and can no longer be disabled."),
     ;
 
     override val status: Option.Status
