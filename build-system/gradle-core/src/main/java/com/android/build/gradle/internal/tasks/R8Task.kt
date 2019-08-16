@@ -42,7 +42,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -51,9 +50,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import javax.inject.Inject
 
 /**
  * Task that uses R8 to convert class files to dex. In case of a library variant, this
@@ -278,10 +275,10 @@ abstract class R8Task: ProguardConfigurableTask() {
             mainDexListFiles = mainDexListFiles.toList(),
             mainDexRulesFiles = mainDexRulesFiles.toList(),
             inputProguardMapping =
-                if (inputMappingFile.isEmpty) {
+                if (testedMappingFile.isEmpty) {
                     null
                 } else {
-                    inputMappingFile.singleFile
+                    testedMappingFile.singleFile
                 },
             proguardConfigurationFiles = configurationFiles.toList(),
             proguardConfigurations = proguardConfigurations,

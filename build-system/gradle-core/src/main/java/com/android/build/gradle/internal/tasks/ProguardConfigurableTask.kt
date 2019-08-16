@@ -75,7 +75,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     @get:Optional
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputMappingFile: ConfigurableFileCollection
+    abstract val testedMappingFile: ConfigurableFileCollection
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -213,14 +213,14 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             super.configure(task)
 
             if (testedVariantData?.scope?.artifacts?.hasFinalProduct(APK_MAPPING) == true) {
-                task.inputMappingFile.from(
+                task.testedMappingFile.from(
                     testedVariantData
                         .scope
                         .artifacts
                         .getFinalProduct<FileSystemLocation>(APK_MAPPING)
                 )
             } else if (isTestApplication) {
-                task.inputMappingFile.from(
+                task.testedMappingFile.from(
                     variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
@@ -241,7 +241,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             task.referencedResources.from(referencedResources)
 
-            applyProguardRules(task, task.inputMappingFile, testedVariantData)
+            applyProguardRules(task, task.testedMappingFile, testedVariantData)
         }
 
         private fun applyProguardRules(

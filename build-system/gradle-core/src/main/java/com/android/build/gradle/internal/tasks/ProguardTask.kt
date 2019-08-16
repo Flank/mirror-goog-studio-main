@@ -23,12 +23,10 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.base.Charsets
-import com.google.common.collect.ImmutableList
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -100,7 +98,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
                             mappingFile.get().asFile,
                             seedsFile,
                             usageFile,
-                            inputMappingFile.singleOrNull(),
+                            testedMappingFile.singleOrNull(),
                             configurationFiles.files,
                             bootClasspath.files,
                             fullBootClasspath.files,
