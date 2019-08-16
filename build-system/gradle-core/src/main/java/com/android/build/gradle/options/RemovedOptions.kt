@@ -104,6 +104,8 @@ enum class RemovedOptions(
     ENABLE_SEPARATE_R_CLASS_COMPILATION(
         "android.enableSeparateRClassCompilation",
         "Separate R class compilation has been enabled and can no longer be disabled."),
+    ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", "Instant run is replaced by apply changes."),
+
     ;
 
     override val status: Option.Status
