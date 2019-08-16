@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.SdkConstants;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.tracer.Trace;
@@ -202,10 +203,19 @@ public class ApkParser {
 
     private HashMap<String, ZipUtils.ZipEntry> readZipEntries(
             RandomAccessFile randomAccessFile, ApkArchiveMap map) throws IOException {
-        byte[] cdContent = new byte[(int) map.cdSize];
-        randomAccessFile.seek(map.cdOffset);
-        randomAccessFile.readFully(cdContent);
-        ByteBuffer buffer = ByteBuffer.wrap(cdContent);
+        ByteBuffer buffer;
+        // There is no method to unmap a MappedByteBuffer so we cannot use FileChannel.map() on Windows.
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            byte[] cdContent = new byte[(int) map.cdSize];
+            randomAccessFile.seek(map.cdOffset);
+            randomAccessFile.readFully(cdContent);
+            buffer = ByteBuffer.wrap(cdContent);
+        } else {
+            buffer =
+                    randomAccessFile
+                            .getChannel()
+                            .map(FileChannel.MapMode.READ_ONLY, map.cdOffset, map.cdSize);
+        }
         return ZipUtils.readZipEntries(buffer);
     }
 
