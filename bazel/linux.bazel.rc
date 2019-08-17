@@ -17,3 +17,9 @@ build:remote --platforms=//tools/base/bazel/foundry:rbe_ubuntu16
 
 build:remote --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 build:remote --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+
+# Enable "Builds without Bytes" which reduces downloading of all action outputs
+# This doesn't work on Windows as yet (b/139655502)
+build:remote --experimental_inmemory_jdeps_files
+build:remote --experimental_inmemory_dotd_files
+build:remote --experimental_remote_download_outputs=minimal
