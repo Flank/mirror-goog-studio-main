@@ -238,6 +238,10 @@ class PathStringTest {
     fun testToString() {
         assertThat(PathString(URI("file:///"), "/zero/one/two").toString()).isEqualTo("file:///zero/one/two")
         assertThat(PathString(URI("file:///"), "zero/one/two").toString()).isEqualTo("file://zero/one/two")
+        assertThat(PathString(URI("file:///"), "C:\\zero\\one\\two").toString()).isEqualTo("file://C:\\zero\\one\\two")
+        assertThat(PathString(URI("file:///"), "C:zero\\one\\two").toString()).isEqualTo("file://C:zero\\one\\two")
+        assertThat(PathString(URI("file:///"), "D:\\zero\\one\\two").toString()).isEqualTo("file://D:\\zero\\one\\two")
+        assertThat(PathString(URI("file:///"), "D:zero\\one\\two").toString()).isEqualTo("file://D:zero\\one\\two")
         assertThat(PathString(URI("zip:///foo/bar/baz.zip"), "zero/one/two").toString())
             .isEqualTo("zip:///foo/bar/baz.zip!/zero/one/two")
     }
@@ -250,12 +254,10 @@ class PathStringTest {
         assertThat(testPath[0..0]).isEqualTo(PathString("zero"))
         assertThat(testPath[0..1]).isEqualTo(PathString("zero\\one"))
         assertThat(testPath[0..2]).isEqualTo(PathString("zero\\one\\two"))
-        assertThat(testPath[1..0]).isEqualTo(PathString(""))
+        assertThat(testPath[IntRange.EMPTY]).isEqualTo(PathString(""))
         assertThat(testPath[1..1]).isEqualTo(PathString("one"))
         assertThat(testPath[1..2]).isEqualTo(PathString("one\\two"))
-        assertThat(testPath[2..1]).isEqualTo(PathString(""))
         assertThat(testPath[2..2]).isEqualTo(PathString("two"))
-        assertThat(testPath[3..2]).isEqualTo(PathString(""))
     }
 
     @Test
@@ -449,7 +451,7 @@ class PathStringTest {
         assertRelativize("D:", ".bashrc", ".bashrc")
         assertRelativize("D:", "~", "~")
         assertRelativize("D:", "misc/some_file", "misc/some_file")
-        assertRelativize("My Documents\\Project", "", "../..")
+        assertRelativize("My Documents\\Project", "", "..\\..")
         assertRelativize("My Documents\\Project", "C:", "C:")
         assertRelativize("My Documents\\Project", "C:\\", "C:\\")
         assertRelativize("My Documents\\Project", "\\\\Server", "\\\\Server")
@@ -462,8 +464,8 @@ class PathStringTest {
         assertRelativize("My Documents\\Project", "/", "/")
         assertRelativize("My Documents\\Project", "/bin/bash", "/bin/bash")
         assertRelativize("My Documents\\Project", "/bin/bash/boom/flash/", "/bin/bash/boom/flash/")
-        assertRelativize("My Documents\\Project", ".bashrc", "../../.bashrc")
-        assertRelativize("My Documents\\Project", "~", "../../~")
+        assertRelativize("My Documents\\Project", ".bashrc", "..\\..\\.bashrc")
+        assertRelativize("My Documents\\Project", "~", "..\\..\\~")
         assertRelativize("My Documents\\Project", "misc/some_file", "../../misc/some_file")
         assertRelativize("/", "", "")
         assertRelativize("/", "C:", "C:")
@@ -527,7 +529,7 @@ class PathStringTest {
         assertRelativize(".bashrc", "/bin/bash", "/bin/bash")
         assertRelativize(".bashrc", "/bin/bash/boom/flash/", "/bin/bash/boom/flash/")
         assertRelativize(".bashrc", ".bashrc", "")
-        assertRelativize(".bashrc", "~", "../~")
+        assertRelativize(".bashrc", "~", ".." + File.separatorChar + "~")
         assertRelativize(".bashrc", "misc/some_file", "../misc/some_file")
         assertRelativize("~", "", "..")
         assertRelativize("~", "C:", "C:")
@@ -542,7 +544,7 @@ class PathStringTest {
         assertRelativize("~", "/", "/")
         assertRelativize("~", "/bin/bash", "/bin/bash")
         assertRelativize("~", "/bin/bash/boom/flash/", "/bin/bash/boom/flash/")
-        assertRelativize("~", ".bashrc", "../.bashrc")
+        assertRelativize("~", ".bashrc", ".." + File.separatorChar + ".bashrc")
         assertRelativize("~", "~", "")
         assertRelativize("~", "misc/some_file", "../misc/some_file")
         assertRelativize("misc/some_file", "", "../..")
@@ -661,11 +663,11 @@ class PathStringTest {
     @Test
     fun testEmptySegments() {
         val emptyPath = PathString("")
-        assertThat(emptyPath.segments).isEqualTo(listOf<String>())
+        assertThat(emptyPath.segments).isEmpty()
         val rootPath = PathString("/")
-        assertThat(emptyPath.segments).isEqualTo(listOf<String>())
+        assertThat(rootPath.segments).isEmpty()
         val windowsRootPath = PathString("C:\\")
-        assertThat(emptyPath.segments).isEqualTo(listOf<String>())
+        assertThat(windowsRootPath.segments).isEmpty()
     }
 
     @Test
@@ -713,11 +715,11 @@ class PathStringTest {
         assertResolves("C:", "D:\\Program Files", "D:\\Program Files")
         assertResolves("C:", "D:myfile.txt", "D:myfile.txt")
         assertResolves("C:", "My Documents\\Project", "C:My Documents\\Project")
-        assertResolves("C:", "/", "C:\\")
-        assertResolves("C:", "/bin/bash", "C:\\bin\\bash")
+        assertResolves("C:", "/", "C:/")
+        assertResolves("C:", "/bin/bash", "C:/bin/bash")
         assertResolves("C:", ".bashrc", "C:.bashrc")
         assertResolves("C:", "~", "C:~")
-        assertResolves("C:", "misc/some_file", "C:misc\\some_file")
+        assertResolves("C:", "misc/some_file", "C:misc/some_file")
         assertResolves("C:\\", "", "C:\\")
         assertResolves("C:\\", "C:", "C:\\")
         assertResolves("C:\\", "C:\\", "C:\\")
@@ -728,9 +730,9 @@ class PathStringTest {
         assertResolves("C:\\", "D:myfile.txt", "D:myfile.txt")
         assertResolves("C:\\", "My Documents\\Project", "C:\\My Documents\\Project")
         assertResolves("C:\\", "C:\\", "C:\\")
-        assertResolves("C:\\", "/bin/bash", "C:\\bin\\bash")
+        assertResolves("C:\\", "/bin/bash", "C:/bin/bash")
         assertResolves("C:\\", ".bashrc", "C:\\.bashrc")
-        // Currently no special handling for ~
+        // Currently there is no special handling for '~'.
         assertResolves("C:\\", "~", "C:\\~")
         assertResolves("C:\\", "misc/some_file", "C:\\misc\\some_file")
         assertResolves("\\\\Server", "", "\\\\Server")
@@ -783,11 +785,10 @@ class PathStringTest {
         assertResolves("D:\\Program Files", "\\", "D:\\")
         assertResolves("D:\\Program Files", "D:\\Program Files", "D:\\Program Files")
         assertResolves("D:\\Program Files", "D:myfile.txt", "D:\\Program Files\\myfile.txt")
-        assertResolves("D:\\Program Files",
-                "My Documents\\Project",
+        assertResolves("D:\\Program Files", "My Documents\\Project",
                 "D:\\Program Files\\My Documents\\Project")
-        assertResolves("D:\\Program Files", "/", "D:\\")
-        assertResolves("D:\\Program Files", "/bin/bash", "D:\\bin\\bash")
+        assertResolves("D:\\Program Files", "/", "D:/")
+        assertResolves("D:\\Program Files", "/bin/bash", "D:/bin/bash")
         assertResolves("D:\\Program Files", ".bashrc", "D:\\Program Files\\.bashrc")
         assertResolves("D:\\Program Files", "~", "D:\\Program Files\\~")
         assertResolves("D:\\Program Files", "misc/some_file", "D:\\Program Files\\misc\\some_file")
@@ -798,15 +799,14 @@ class PathStringTest {
         assertResolves("D:myfile.txt", "\\\\", "\\\\")
         assertResolves("D:myfile.txt", "\\", "D:\\")
         assertResolves("D:myfile.txt", "D:\\Program Files", "D:\\Program Files")
-        assertResolves("D:myfile.txt", "D:myfile.txt", "D:myfile.txt\\myfile.txt")
-        assertResolves("D:myfile.txt",
-                "My Documents\\Project",
+        assertResolves("D:myfile.txt", "D:myfile.txt", "D:myfile.txt" + File.separatorChar + "myfile.txt")
+        assertResolves("D:myfile.txt", "My Documents\\Project",
                 "D:myfile.txt\\My Documents\\Project")
-        assertResolves("D:myfile.txt", "/", "D:\\")
-        assertResolves("D:myfile.txt", "/bin/bash", "D:\\bin\\bash")
-        assertResolves("D:myfile.txt", ".bashrc", "D:myfile.txt\\.bashrc")
-        assertResolves("D:myfile.txt", "~", "D:myfile.txt\\~")
-        assertResolves("D:myfile.txt", "misc/some_file", "D:myfile.txt\\misc\\some_file")
+        assertResolves("D:myfile.txt", "/", "D:/")
+        assertResolves("D:myfile.txt", "/bin/bash", "D:/bin/bash")
+        assertResolves("D:myfile.txt", ".bashrc", "D:myfile.txt" + File.separatorChar + ".bashrc")
+        assertResolves("D:myfile.txt", "~", "D:myfile.txt" + File.separatorChar + "~")
+        assertResolves("D:myfile.txt", "misc/some_file", "D:myfile.txt/misc/some_file")
         assertResolves("My Documents\\Project", "", "My Documents\\Project")
         assertResolves("My Documents\\Project", "C:", "C:")
         assertResolves("My Documents\\Project", "C:\\", "C:\\")
@@ -815,15 +815,13 @@ class PathStringTest {
         assertResolves("My Documents\\Project", "\\", "\\")
         assertResolves("My Documents\\Project", "D:\\Program Files", "D:\\Program Files")
         assertResolves("My Documents\\Project", "D:myfile.txt", "D:myfile.txt")
-        assertResolves("My Documents\\Project",
-                "My Documents\\Project",
+        assertResolves("My Documents\\Project", "My Documents\\Project",
                 "My Documents\\Project\\My Documents\\Project")
         assertResolves("My Documents\\Project", "/", "/")
         assertResolves("My Documents\\Project", "/bin/bash", "/bin/bash")
         assertResolves("My Documents\\Project", ".bashrc", "My Documents\\Project\\.bashrc")
         assertResolves("My Documents\\Project", "~", "My Documents\\Project\\~")
-        assertResolves("My Documents\\Project",
-                "misc/some_file",
+        assertResolves("My Documents\\Project", "misc/some_file",
                 "My Documents\\Project\\misc\\some_file")
         assertResolves("/", "", "/")
         assertResolves("/", "C:", "C:")
@@ -861,11 +859,11 @@ class PathStringTest {
         assertResolves(".bashrc", "\\", "\\")
         assertResolves(".bashrc", "D:\\Program Files", "D:\\Program Files")
         assertResolves(".bashrc", "D:myfile.txt", "D:myfile.txt")
-        assertResolves(".bashrc", "My Documents\\Project", ".bashrc/My Documents/Project")
+        assertResolves(".bashrc", "My Documents\\Project", ".bashrc\\My Documents\\Project")
         assertResolves(".bashrc", "/", "/")
         assertResolves(".bashrc", "/bin/bash", "/bin/bash")
-        assertResolves(".bashrc", ".bashrc", ".bashrc/.bashrc")
-        assertResolves(".bashrc", "~", ".bashrc/~")
+        assertResolves(".bashrc", ".bashrc", ".bashrc" + File.separatorChar + ".bashrc")
+        assertResolves(".bashrc", "~", ".bashrc" + File.separatorChar + "~")
         assertResolves(".bashrc", "misc/some_file", ".bashrc/misc/some_file")
         assertResolves("~", "", "~")
         assertResolves("~", "C:", "C:")
@@ -875,11 +873,11 @@ class PathStringTest {
         assertResolves("~", "\\", "\\")
         assertResolves("~", "D:\\Program Files", "D:\\Program Files")
         assertResolves("~", "D:myfile.txt", "D:myfile.txt")
-        assertResolves("~", "My Documents\\Project", "~/My Documents/Project")
+        assertResolves("~", "My Documents\\Project", "~\\My Documents\\Project")
         assertResolves("~", "/", "/")
         assertResolves("~", "/bin/bash", "/bin/bash")
-        assertResolves("~", ".bashrc", "~/.bashrc")
-        assertResolves("~", "~", "~/~")
+        assertResolves("~", ".bashrc", "~" + File.separatorChar + ".bashrc")
+        assertResolves("~", "~", "~" + File.separatorChar + "~")
         assertResolves("~", "misc/some_file", "~/misc/some_file")
         assertResolves("misc/some_file", "", "misc/some_file")
         assertResolves("misc/some_file", "C:", "C:")
@@ -889,8 +887,7 @@ class PathStringTest {
         assertResolves("misc/some_file", "\\", "\\")
         assertResolves("misc/some_file", "D:\\Program Files", "D:\\Program Files")
         assertResolves("misc/some_file", "D:myfile.txt", "D:myfile.txt")
-        assertResolves("misc/some_file",
-                "My Documents\\Project",
+        assertResolves("misc/some_file", "My Documents\\Project",
                 "misc/some_file/My Documents/Project")
         assertResolves("misc/some_file", "/", "/")
         assertResolves("misc/some_file", "/bin/bash", "/bin/bash")
@@ -901,9 +898,11 @@ class PathStringTest {
 
     private fun assertResolves(path1: String, path2: String, resolved: String) {
         val p1 = PathString(path1)
-        val resolvedPath = PathString(resolved)
+        val expected = PathString(resolved)
 
-        assertThat(p1.resolve(PathString(path2))).isEqualTo(resolvedPath)
-        assertThat(p1.resolve(path2)).isEqualTo(resolvedPath)
+        val resolved1 = p1.resolve(PathString(path2))
+        assertThat(resolved1).isEqualTo(expected)
+        val resolved2 = p1.resolve(path2)
+        assertThat(resolved2).isEqualTo(expected)
     }
 }

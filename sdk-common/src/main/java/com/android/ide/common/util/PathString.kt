@@ -16,6 +16,7 @@
 @file:JvmName("PathStringUtil")
 package com.android.ide.common.util
 
+import com.google.common.base.Joiner
 import java.io.File
 import java.net.URI
 import java.nio.file.*
@@ -37,9 +38,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class PathString private constructor(
         /**
-         * Holds the URI for the filesystem root. This is intended to be the shortest path such that
-         * [FileSystems.getFileSystem] will return the correct filesystem. For example, this would be
-         * "file:///" for local filesystem paths on Unix.
+         * Holds the URI for the filesystem root. For example, this would be `file:///` for local filesystem paths on
+         * Unix and `file:///X:\` or `file:///X:/` on Windows.
          */
         val filesystemUri: URI,
         /**
@@ -58,19 +58,20 @@ class PathString private constructor(
         private val suffixEndIndex: Int,
         /**
          * Exclusive index into "path" containing the last character of the prefix identifier. This would be something like
-         * "C:/" on windows or "/" on linux.
+         * "C:/" on Windows or "/" on Linux.
          */
         private val prefixEndIndex: Int = 0,
         /**
-         * Separator to be used when interpreting the [path] string. This might be different from the system separator
-         * when manipulating paths intended for use on other filesystems.
+         * Separator to be used when interpreting the [path] string, or [NUL_CHAR] if the [path] string doesn't contain any
+         * separators. This might be different from the system separator when manipulating paths intended for use on
+         * other filesystems.
          */
         private val separator: Char
 ) : Comparable<PathString> {
     private var hash: Int = 0
 
     private constructor(filesystem: URI, path: String, rootLength: Int) :
-            this(filesystem, path, rootLength, path.length, rootLength, detectSeparator(path))
+            this(filesystem, path, rootLength, path.length, rootLength, detectSeparator(path, rootLength))
 
     /**
      * Creates a [PathString] given a filesystem [protocol] and [path]. This constructor is applicable
@@ -457,8 +458,7 @@ class PathString private constructor(
 
         val rootString = root?.rawPath?.withSeparator(separator) ?: ""
 
-        return PathString(filesystemUri,
-                rootString + newNames.joinToString("" + separator))
+        return PathString(filesystemUri, rootString + Joiner.on(separator).join(newNames))
     }
 
     /**
@@ -520,8 +520,9 @@ class PathString private constructor(
 
         val newSegments = (commonPrefixLength.until(segments.size)).map { PARENT } +
                 (commonPrefixLength.until(otherSegments.size)).map { otherSegments[it] }
-        val sepString = "" + other.separator
-        val finalString = newSegments.joinToString(sepString) + if (other.hasTrailingSeparator && !newSegments.isEmpty()) sepString else ""
+        val newSeparator = chooseSeparator(other.separator, separator)
+        val finalString =
+                Joiner.on(newSeparator).join(newSegments) + if (other.hasTrailingSeparator && !newSegments.isEmpty()) newSeparator else ""
 
         return PathString(filesystemUri,
                 finalString,
@@ -569,13 +570,13 @@ class PathString private constructor(
             // Windows-specific paths: If the other root is just a slash and this root contains a drive specifier,
             // use this drive specifier combined with the slash.
             if (otherRoot != null && otherRoot.prefixEndIndex == 1) {
-                val indexOfDriveSeparator = prefixEndIndex - 0.until(prefixEndIndex).reversed().countUntil { path[it] == ':' }
-                if (indexOfDriveSeparator > 0) {
-                    return PathString(filesystemUri,
-                            path.substring(0, indexOfDriveSeparator) + other.rawPath.withSeparator(
-                                    separator),
-                            indexOfDriveSeparator + 1)
+                val indexOfDriveSeparator = path.lastIndexOf(':', prefixEndIndex)
+                val newPath = if (indexOfDriveSeparator > 0) {
+                    path.substring(0, indexOfDriveSeparator + 1) + other.rawPath
+                } else {
+                    other.rawPath
                 }
+                return PathString(filesystemUri, newPath)
             }
             return other
         }
@@ -588,20 +589,26 @@ class PathString private constructor(
             return this
         }
 
-        val otherRelPath = other.path.substring(other.startIndex,
-                other.suffixEndIndex).withSeparator(separator)
-        var path = this.rawPath
-        if (startIndex < suffixEndIndex && !isSeparator(path[suffixEndIndex - 1])) {
-            path += separator
+        val otherRelPath = other.path.substring(other.startIndex, other.suffixEndIndex)
+        val newPath = if (separator == NUL_CHAR) {
+            // This path only does not contain a separator.
+            if (startIndex == path.length) {
+                // This path is either empty or consists of a drive letter with a colon.
+                path + otherRelPath
+            } else {
+                val newSeparator = chooseSeparator(other.separator, NUL_CHAR)
+                path + newSeparator + otherRelPath.withSeparator((newSeparator))
+            }
+        } else {
+            // This path contains a separator.
+            if (startIndex < suffixEndIndex && !isSeparator(path[suffixEndIndex - 1])) {
+                rawPath + separator + otherRelPath.withSeparator(separator)
+            } else {
+                rawPath + otherRelPath.withSeparator(separator)
+            }
         }
-        path += otherRelPath
 
-        return PathString(filesystemUri,
-                path,
-                prefixEndIndex,
-                path.length,
-                prefixEndIndex,
-                separator)
+        return PathString(filesystemUri, newPath)
     }
 
     /**
@@ -762,6 +769,7 @@ fun File?.toPathStringOrNull() : PathString? = this?.toPathString()
 
 const val PARENT = ".."
 const val SELF = "."
+const val NUL_CHAR = 0.toChar()
 val defaultFilesystemUri: URI = FileSystems.getDefault().let { it.getPath(it.separator) }.toUri()
 
 private fun isSeparator(c: Char) = c == '/' || c == '\\'
@@ -778,7 +786,7 @@ private fun prefixLength(path: String): Int {
 
     var prefixEnd = firstColon + 1
     if (firstColon >= firstSlash) {
-        // This path does not contain a windows-style drive specifier
+        // This path does not contain a Windows-style drive specifier.
         if (firstSlash > 0) {
             return 0
         }
@@ -812,18 +820,22 @@ private fun String.countUntil(char: Char, startIndex: Int = 0, ignoreCase: Boole
     } else result
 }
 
-private fun detectSeparator(path: String): Char {
-    for (i in 0.until(path.length)) {
-        when (path[i]) {
-            '/' -> return '/'
-            '\\' -> return '\\'
-            ':' -> return '\\'
+private fun detectSeparator(path: String, rootLength: Int): Char {
+    val startIndex = (rootLength - 1).coerceAtLeast(0)
+    for (i in startIndex.until(path.length)) {
+        val c = path[i]
+        if (isSeparator(c)) {
+            return c;
         }
     }
-    return '/'
+    return NUL_CHAR
 }
 
-private fun String.withSeparator(sep: Char): String = replace('/', sep).replace('\\', sep)
+private fun String.withSeparator(sep: Char): String =
+        if (sep == NUL_CHAR) this else replace('/', sep).replace('\\', sep)
+
+private fun chooseSeparator(c1: Char, c2: Char) =
+    if (c1 == NUL_CHAR) { if (c2 == NUL_CHAR) File.separatorChar else c2 } else c1
 
 /** Keyed by URI scheme. */
 private val uriCache = ConcurrentHashMap<String, URI>()
