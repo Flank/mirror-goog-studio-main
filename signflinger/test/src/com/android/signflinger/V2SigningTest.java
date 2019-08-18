@@ -16,54 +16,70 @@
 
 package com.android.signflinger;
 
+import static org.junit.Assert.assertTrue;
+
 import com.android.zipflinger.BytesSource;
+import com.android.zipflinger.ZipArchive;
 import java.io.File;
+import java.nio.file.Files;
+import org.junit.Rule;
 import org.junit.Test;
 
-public class V2SigningTest extends TestBaseV2 {
+public class V2SigningTest {
+
+    @Rule public final Workspace workspace = new Workspace();
 
     @Test
     public void v2SignNormalApk() throws Exception {
-        File file = getTestOutputFile("apk-22MiB.apk");
-        createZip(1, 12_000_000, file);
-        v2Sign(file);
+        createZipAndSign(12_000_000);
     }
 
     @Test
     public void v2SignBigApk() throws Exception {
-        File file = getTestOutputFile("apk-42MiB.apk");
-        createZip(1, 42_000_000, file);
+        createZipAndSign(42_000_000);
+    }
+
+    private void createZipAndSign(int size) throws Exception {
+        File androidManifest = workspace.getDummyAndroidManifest();
+        File file = workspace.createZip(1, size, "apk-" + size + ".apk", androidManifest);
+        assertTrue(Files.size(file.toPath()) > size);
         v2Sign(file);
     }
 
     private void v2Sign(File file) throws Exception {
-        for (Signer signer : SIGNERS) {
-            SignResult result = sign(file, signer);
-            verify(result.file);
+
+        for (SignerConfig signerConfig : Signers.getAll(workspace)) {
+            // Remove signature
+            try (ZipArchive ignored = new ZipArchive(file)) {}
+            // Sign
+            V2Signer.sign(file, signerConfig);
+            // Verify
+            Utils.verifyApk(file);
         }
     }
 
     @Test
     public void benchmarkAddAndV2sign() throws Exception {
-        File file = getTestOutputFile("apk-42MiB-400files.apk");
-        createZip(400, 120_000, file);
+        File androidManifest = workspace.getDummyAndroidManifest();
+        File file = workspace.createZip(400, 120_000, "apk-42MiB-400files.apk", androidManifest);
 
-        SignerConfig signerConfig = getDefaultRSASigner();
+        SignerConfig signerConfig = Signers.getDefaultRSASigner(workspace);
         SignedApkOptions.Builder builder =
                 new SignedApkOptions.Builder()
                         .setV2Enabled(true)
                         .setV1Enabled(false)
-                        .setPrivateKey(signerConfig.privateKey)
-                        .setCertificates(signerConfig.certificates)
-                        .setExecutor(createExecutor());
+                        .setPrivateKey(signerConfig.getPrivateKey())
+                        .setCertificates(signerConfig.getCertificates())
+                        .setExecutor(Utils.createExecutor());
         SignedApkOptions options = builder.build();
 
         long start = System.nanoTime();
-        SignedApk signedApk = new SignedApk(file, options);
-        signedApk.add(new BytesSource(getFile("test1.txt"), "test1", 1));
-        signedApk.close();
+        try (SignedApk signedApk = new SignedApk(file, options)) {
+            signedApk.add(new BytesSource(workspace.getResourceFile("test1.txt"), "test1", 1));
+        }
         long totalTime = (System.nanoTime() - start) / 1000000;
-        verify(file);
+        Utils.verifyApk(file);
         System.out.println("Adding and Signing time=" + totalTime);
     }
+
 }

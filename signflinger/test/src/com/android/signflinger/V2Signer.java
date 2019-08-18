@@ -17,26 +17,17 @@
 package com.android.signflinger;
 
 import java.io.File;
-import java.nio.file.Path;
 
-public class TestBaseV2 extends TestBase {
-    public SignResult sign(File fileToSign, Signer signer) throws Exception {
-        SignerConfig signerConfig = getSignerConfig(signer.type, signer.subtype);
-
-        Path dst = getTestOutputPath("signed.apk");
-        TestBase.copy(fileToSign.toPath(), dst);
-
+public class V2Signer {
+    static void sign(File fileToSign, SignerConfig signerConfig) throws Exception {
         SignedApkOptions.Builder builder =
                 new SignedApkOptions.Builder()
                         .setV2Enabled(true)
                         .setV1Enabled(false)
-                        .setPrivateKey(signerConfig.privateKey)
-                        .setCertificates(signerConfig.certificates)
-                        .setExecutor(createExecutor());
+                        .setPrivateKey(signerConfig.getPrivateKey())
+                        .setCertificates(signerConfig.getCertificates())
+                        .setExecutor(Utils.createExecutor());
         SignedApkOptions options = builder.build();
-
-        long startTime = System.nanoTime();
-        try (SignedApk s = new SignedApk(dst.toFile(), options)) {}
-        return new SignResult(dst.toFile(), (System.nanoTime() - startTime) / 1_000_000);
+        try (SignedApk s = new SignedApk(fileToSign, options)) {}
     }
 }
