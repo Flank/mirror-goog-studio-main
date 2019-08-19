@@ -71,6 +71,7 @@ public class LintGradleClient extends LintCliClient {
     private String baselineVariantName;
     private final Revision buildToolInfoRevision;
     private final boolean isAndroid;
+    private final KotlinSourceFoldersResolver resolver;
 
     public LintGradleClient(
             @NonNull String version,
@@ -81,6 +82,7 @@ public class LintGradleClient extends LintCliClient {
             @Nullable Variant variant,
             @NonNull VariantInputs variantInputs,
             @Nullable Revision buildToolInfoRevision,
+            @NonNull KotlinSourceFoldersResolver resolver,
             boolean isAndroid,
             String baselineVariantName) {
         super(flags, CLIENT_GRADLE);
@@ -91,8 +93,24 @@ public class LintGradleClient extends LintCliClient {
         this.baselineVariantName = baselineVariantName;
         this.registry = registry;
         this.buildToolInfoRevision = buildToolInfoRevision;
+        this.resolver = resolver;
         this.variant = variant;
         this.isAndroid = isAndroid;
+    }
+
+    public List<File> getKotlinSourceFolders(String projectPath) {
+        if (projectPath == null || variant == null) {
+            return Collections.emptyList();
+        }
+        return resolver.getKotlinSourceFolders(
+                variant.getName(), gradleProject.findProject(projectPath));
+    }
+
+    public List<File> getKotlinSourceFolders(org.gradle.api.Project project) {
+        if (variant == null) {
+            return Collections.emptyList();
+        }
+        return resolver.getKotlinSourceFolders(variant.getName(), project);
     }
 
     @Nullable

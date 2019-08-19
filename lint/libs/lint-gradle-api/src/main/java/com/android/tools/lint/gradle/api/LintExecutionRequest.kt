@@ -43,6 +43,8 @@ abstract class LintExecutionRequest {
 
     abstract val variantName: String?
 
+    abstract fun getKotlinSourceFolders(variantName: String, project: Project?): List<File>
+
     abstract fun getVariantInputs(variantName: String): VariantInputs?
 
     open var autoFix = false

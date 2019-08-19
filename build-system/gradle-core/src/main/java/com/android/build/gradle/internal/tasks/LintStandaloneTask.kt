@@ -79,6 +79,10 @@ open class LintStandaloneTask : DefaultTask() {
         val lintClassPath = project.configurations.getByName(LINT_CLASS_PATH)
         if (lintClassPath != null) {
             val request = object : LintExecutionRequest() {
+                override fun getKotlinSourceFolders(
+                    variantName: String,
+                    project: Project?
+                ): List<File> = emptyList()
                 override val project: Project = this@LintStandaloneTask.project
                 override val reportsDir: File? = this@LintStandaloneTask.reportDir
                 override val lintOptions: LintOptions? = this@LintStandaloneTask.lintOptions

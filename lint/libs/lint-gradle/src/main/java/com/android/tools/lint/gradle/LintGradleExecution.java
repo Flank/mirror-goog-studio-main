@@ -228,6 +228,7 @@ public class LintGradleExecution {
                         variant,
                         variantInputs,
                         descriptor.getBuildToolsRevision(),
+                        new KotlinSourceFoldersResolver(descriptor::getKotlinSourceFolders),
                         isAndroid,
                         variant != null ? variant.getName() : null);
         boolean fatalOnly = descriptor.isFatalOnly();
@@ -478,6 +479,7 @@ public class LintGradleExecution {
                             variant,
                             variantInputs,
                             descriptor.getBuildToolsRevision(),
+                            new KotlinSourceFoldersResolver(descriptor::getKotlinSourceFolders),
                             true,
                             isFatalOnly() ? VARIANT_FATAL : VARIANT_ALL);
             syncOptions(

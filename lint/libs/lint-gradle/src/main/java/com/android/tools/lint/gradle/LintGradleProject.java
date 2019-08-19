@@ -85,6 +85,7 @@ import org.w3c.dom.Document;
 public class LintGradleProject extends Project {
     protected AndroidVersion minSdkVersion;
     protected AndroidVersion targetSdkVersion;
+    protected List<File> kotlinSourceFolders;
 
     private LintGradleProject(
             @NonNull LintGradleClient client,
@@ -403,6 +404,7 @@ public class LintGradleProject extends Project {
                     javaSourceFolders.addAll(
                             srcDirs.stream().filter(File::exists).collect(Collectors.toList()));
                 }
+                javaSourceFolders.addAll(kotlinSourceFolders);
             }
 
             return javaSourceFolders;
@@ -1075,6 +1077,7 @@ public class LintGradleProject extends Project {
             } else {
                 File manifest = client.getMergedManifest();
                 lintProject = new AppGradleProject(client, dir, dir, project, variant, manifest);
+                lintProject.kotlinSourceFolders = client.getKotlinSourceFolders(gradleProject);
             }
             appProjects.put(project, lintProject);
 
@@ -1187,6 +1190,7 @@ public class LintGradleProject extends Project {
 
             File dir = library.getFolder();
             LibraryProject project = new LibraryProject(client, dir, dir, library);
+            project.kotlinSourceFolders = client.getKotlinSourceFolders(library.getProject());
             project.setMavenCoordinates(coordinates);
             if (library.getProject() == null) {
                 project.setExternalLibrary(true);

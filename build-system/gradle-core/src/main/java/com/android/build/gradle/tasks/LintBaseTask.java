@@ -31,6 +31,10 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.LibraryExtension;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -46,16 +50,27 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.core.VariantType;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
+import com.android.utils.Pair;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.internal.HasConvention;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -150,6 +165,74 @@ public abstract class LintBaseTask extends DefaultTask {
         @Override
         public String getGradlePluginVersion() {
             return Version.ANDROID_GRADLE_PLUGIN_VERSION;
+        }
+
+        private final Cache<Pair<String, String>, List<File>> kotlinSourceFoldersCache =
+                CacheBuilder.newBuilder().build();
+
+        private List<File> doFetchKotlinSourceFolders(
+                @NonNull String sourceSetName, @NonNull Project project) throws Exception {
+            BaseExtension extension = (BaseExtension) project.getExtensions().getByName("android");
+            Object kotlinSourceSet =
+                    ((HasConvention) extension.getSourceSets().getByName(sourceSetName))
+                            .getConvention()
+                            .getPlugins()
+                            .get("kotlin");
+            Method getSourceDirectorySet =
+                    kotlinSourceSet.getClass().getDeclaredMethod("getKotlin");
+            SourceDirectorySet sourceDirectorySet =
+                    (SourceDirectorySet) getSourceDirectorySet.invoke(kotlinSourceSet);
+            return sourceDirectorySet
+                    .getSrcDirs()
+                    .stream()
+                    .filter(File::exists)
+                    .collect(Collectors.toList());
+        }
+
+        private List<File> fetchKotlinSourceFolders(
+                @NonNull String sourceSetName, @NonNull Project project) {
+            try {
+                return kotlinSourceFoldersCache.get(
+                        Pair.of(sourceSetName, project.getPath()),
+                        () -> doFetchKotlinSourceFolders(sourceSetName, project));
+            } catch (Throwable e) {
+                getLogger()
+                        .warn(
+                                "Unable to fetch kotlin source folders for source set "
+                                        + sourceSetName,
+                                e);
+                return Collections.emptyList();
+            }
+        }
+
+        @NonNull
+        @Override
+        public List<File> getKotlinSourceFolders(@NonNull String variantName, Project project) {
+            if (project == null || !project.getPlugins().hasPlugin("kotlin-android")) {
+                return Collections.emptyList();
+            }
+            ImmutableSet.Builder<File> builder = new ImmutableSet.Builder<>();
+            BaseExtension extension = (BaseExtension) project.getExtensions().getByName("android");
+            DomainObjectSet<? extends BaseVariant> variants;
+            if (extension instanceof AppExtension) {
+                variants = ((AppExtension) extension).getApplicationVariants();
+            } else if (extension instanceof LibraryExtension) {
+                variants = ((LibraryExtension) extension).getLibraryVariants();
+            } else {
+                return Collections.emptyList();
+            }
+            variants.matching(it -> it.getName().equals(variantName))
+                    .forEach(
+                            variant ->
+                                    variant.getSourceSets()
+                                            .forEach(
+                                                    sourceProvider -> {
+                                                        builder.addAll(
+                                                                fetchKotlinSourceFolders(
+                                                                        sourceProvider.getName(),
+                                                                        project));
+                                                    }));
+            return builder.build().asList();
         }
     }
 
