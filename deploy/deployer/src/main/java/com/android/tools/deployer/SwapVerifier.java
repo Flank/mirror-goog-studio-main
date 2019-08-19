@@ -42,7 +42,11 @@ class SwapVerifier {
                     continue;
                 }
                 if (!allChanges) {
-                    throw DeployerException.changedResources(name);
+                    if (name.endsWith("crashlytics-build.properties")) {
+                        throw DeployerException.changedCrashlyticsBuildId(name);
+                    } else {
+                        throw DeployerException.changedResources(name);
+                    }
                 }
             }
         }

@@ -107,6 +107,14 @@ public class DeployerException extends Exception {
                 "Apply changes and restart activity",
                 ResolutionAction.APPLY_CHANGES),
 
+        CANNOT_SWAP_CRASHLYTICS_PROPERTY(
+                "Crashlytics modified your build ID, which requires an activity restart. "
+                        + "<a href=\"https://d.android.com/r/studio-ui/apply-changes-crashlytics-buildid\""
+                        + ">See here</a>",
+                "Resource '%s' was modified.",
+                "Apply changes and restart activity",
+                ResolutionAction.APPLY_CHANGES),
+
         CANNOT_ADD_RESOURCE(
                 "Adding or renaming a resource requires an application restart.",
                 "Resource '%s' (%s) was added.",
@@ -308,6 +316,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException changedResources(String filePath) {
         return new DeployerException(Error.CANNOT_SWAP_RESOURCE, NO_ARGS, filePath);
+    }
+
+    public static DeployerException changedCrashlyticsBuildId(String filePath) {
+        return new DeployerException(Error.CANNOT_SWAP_CRASHLYTICS_PROPERTY, NO_ARGS, filePath);
     }
 
     public static DeployerException addedResources(String name, String type) {

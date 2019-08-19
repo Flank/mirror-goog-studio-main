@@ -49,7 +49,9 @@ public class SwapVerifierTest {
             new SwapVerifier().verify(diffs, false);
         } catch (DeployerException e) {
             Assert.assertEquals(DeployerException.Error.CANNOT_SWAP_STATIC_LIB, e.getError());
+            return;
         }
+        Assert.fail("Exception not thrown");
     }
 
     @Test
@@ -89,7 +91,9 @@ public class SwapVerifierTest {
             new SwapVerifier().verify(diffs, false);
         } catch (DeployerException e) {
             Assert.assertEquals(DeployerException.Error.CANNOT_SWAP_MANIFEST, e.getError());
+            return;
         }
+        Assert.fail("Exception not thrown");
     }
 
     @Test
@@ -103,7 +107,9 @@ public class SwapVerifierTest {
             new SwapVerifier().verify(diffs, false);
         } catch (DeployerException e) {
             Assert.assertEquals(DeployerException.Error.CANNOT_SWAP_RESOURCE, e.getError());
+            return;
         }
+        Assert.fail("Exception not thrown");
     }
 
     @Test
@@ -114,6 +120,23 @@ public class SwapVerifierTest {
         diffs.add(makeDiff("META-INF/MANIFEST.MF", MODIFIED));
         diffs.add(makeDiff("Not-The-Real-AndroidManifest.xml", MODIFIED));
         new SwapVerifier().verify(diffs, true);
+    }
+
+    @Test
+    public void testCrashlyticsBuildIdCodeSwap() throws DeployerException {
+        List<FileDiff> diffs = new ArrayList<>();
+        diffs.add(makeDiff("META-INF/CERT.SF ", MODIFIED));
+        diffs.add(makeDiff("META-INF/CERT.RSA", MODIFIED));
+        diffs.add(makeDiff("META-INF/MANIFEST.MF", MODIFIED));
+        diffs.add(makeDiff("assets/crashlytics-build.properties", MODIFIED));
+        try {
+            new SwapVerifier().verify(diffs, false);
+        } catch (DeployerException e) {
+            Assert.assertEquals(
+                    DeployerException.Error.CANNOT_SWAP_CRASHLYTICS_PROPERTY, e.getError());
+            return;
+        }
+        Assert.fail("Exception not thrown");
     }
 
     private FileDiff makeDiff(String name, FileDiff.Status status) {
