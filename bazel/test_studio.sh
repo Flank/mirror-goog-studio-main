@@ -13,6 +13,13 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-pe
 
 config_options="--config=remote"
 
+# Enable "Builds without Bytes" which reduces downloading of all action outputs
+# These settings are made here rather than in the bazelrc files:
+#   - many of our linux invocations (coverage, qa, perf, ..) assume that logs
+#     will be available locally, which isn't true with these flags
+#   - This doesn't work on Windows as yet (b/139655502)
+readonly MINIMAL_DOWNLOADS="--experimental_inmemory_jdeps_files --experimental_inmemory_dotd_files --experimental_remote_download_outputs=minimal"
+
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id="$(uuidgen)"
 
@@ -22,6 +29,7 @@ readonly invocation_id="$(uuidgen)"
   test \
   --keep_going \
   ${config_options} \
+  ${MINIMAL_DOWNLOADS} \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
