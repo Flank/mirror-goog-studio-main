@@ -969,6 +969,15 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     @NonNull
+    @Override
+    public ArtifactCollection getArtifactCollectionForToolingModel(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType) {
+        return computeArtifactCollection(configType, scope, artifactType, null);
+    }
+
+    @NonNull
     private ArtifactCollection computeArtifactCollection(
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,

@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
@@ -62,6 +63,7 @@ import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.MockableJarTransform;
+import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule;
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -147,12 +149,6 @@ import org.gradle.api.provider.Provider;
  * Class to create, manage variants.
  */
 public class VariantManager implements VariantModel {
-
-    /**
-     * Artifact type for processed aars (the aars may need to be processed, e.g. jetified to
-     * AndroidX, before they can be used).
-     */
-    private static final String TYPE_PROCESSED_AAR = "processed-aar";
 
     private static final String MULTIDEX_VERSION = "1.0.2";
 
@@ -604,7 +600,7 @@ public class VariantManager implements VariantModel {
                         spec.getParameters().getProjectName().set(project.getName());
                         spec.getParameters().getBlackListOption().set(jetifierBlackList);
                         spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     });
             dependencies.registerTransform(
                     JetifyTransform.class,
@@ -620,7 +616,7 @@ public class VariantManager implements VariantModel {
                     spec -> {
                         spec.getParameters().getProjectName().set(project.getName());
                         spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     });
             dependencies.registerTransform(
                     IdentityTransform.class,
@@ -636,7 +632,7 @@ public class VariantManager implements VariantModel {
                 spec -> {
                     spec.getParameters().getProjectName().set(project.getName());
 
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     spec.getTo().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
                 });
 
@@ -730,7 +726,7 @@ public class VariantManager implements VariantModel {
         dependencies.registerTransform(
                 AarToClassTransform.class,
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
                     reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
                     reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
@@ -752,7 +748,7 @@ public class VariantManager implements VariantModel {
         dependencies.registerTransform(
                 AarToClassTransform.class,
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
                     reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
                     reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
@@ -831,6 +827,8 @@ public class VariantManager implements VariantModel {
         setBuildTypeStrategy(schema);
 
         setupFlavorStrategy(schema);
+
+        setupModelStrategy(schema);
     }
 
     /** Configure artifact transforms that require variant-specific attribute information. */
@@ -991,6 +989,10 @@ public class VariantManager implements VariantModel {
                 .add(
                         AlternateDisambiguationRule.ProductFlavorRule.class,
                         config -> config.setParams(alternateMap));
+    }
+
+    private static void setupModelStrategy(@NonNull AttributesSchema attributesSchema) {
+        ModelArtifactCompatibilityRule.Companion.setUp(attributesSchema);
     }
 
     private static void handleMissingDimensions(

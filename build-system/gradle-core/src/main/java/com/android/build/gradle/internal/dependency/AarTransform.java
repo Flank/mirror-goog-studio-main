@@ -76,12 +76,6 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             ArtifactType.JAVA_RES,
             ArtifactType.SHARED_JAVA_RES,
             ArtifactType.PROCESSED_JAR,
-            // This transform outputs JAR as well as PROCESSED_JAR as a few places in AGP query for
-            // JAR as a way of getting all artifacts. TODO(b/138772778): Clean this up.
-            // This does not supersede outputting PROCESSED_JAR, as it saves processing the JAR
-            // twice, as Gradle will pick the shorter of the two transform chains.
-            // The jars inside the AAR are processed already as part of the whole AAR processing.
-            ArtifactType.JAR,
             ArtifactType.MANIFEST,
             ArtifactType.NON_NAMESPACED_MANIFEST,
             ArtifactType.ANDROID_RES,
@@ -123,7 +117,6 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                 break;
             case JAVA_RES:
             case PROCESSED_JAR:
-            case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessarily enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.

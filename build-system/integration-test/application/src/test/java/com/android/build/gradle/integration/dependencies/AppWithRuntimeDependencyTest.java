@@ -42,7 +42,7 @@ import org.junit.Test;
  * library -> library2 (implementation) ---- library -> guava (implementation) The test verifies
  * that the dependency model of app module contains library2 and guava as runtime only dependencies.
  */
-public class appWithRuntimeDependencyTest {
+public class AppWithRuntimeDependencyTest {
 
     @ClassRule
     public static GradleTestProject project =

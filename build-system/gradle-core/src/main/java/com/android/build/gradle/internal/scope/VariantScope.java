@@ -193,6 +193,12 @@ public interface VariantScope extends TransformVariantScope {
             @Nullable Map<Attribute<String>, String> attributeMap);
 
     @NonNull
+    ArtifactCollection getArtifactCollectionForToolingModel(
+            @NonNull AndroidArtifacts.ConsumedConfigType configType,
+            @NonNull AndroidArtifacts.ArtifactScope scope,
+            @NonNull ArtifactType artifactType);
+
+    @NonNull
     FileCollection getLocalPackagedJars();
 
     /**

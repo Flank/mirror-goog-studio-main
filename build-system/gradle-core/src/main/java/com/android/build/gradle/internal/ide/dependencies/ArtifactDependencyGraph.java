@@ -23,14 +23,12 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.DependenciesImpl;
 import com.android.build.gradle.internal.ide.DependencyFailureHandler;
-import com.android.build.gradle.internal.ide.DependencyFailureHandlerKt;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -47,17 +45,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.artifacts.dsl.DependencyHandler;
-import org.gradle.api.artifacts.query.ArtifactResolutionQuery;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.component.Artifact;
-import org.gradle.jvm.JvmLibrary;
-import org.gradle.language.base.artifact.SourcesArtifact;
-import org.gradle.language.java.artifact.JavadocArtifact;
 
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
 class ArtifactDependencyGraph implements DependencyGraphBuilder {
@@ -95,8 +86,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 // Instead just get all the jars to get all the dependencies.
                 // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
                 ArtifactCollection runtimeArtifactCollection =
-                        ArtifactUtils.computeArtifactList(
-                                variantScope,
+                        variantScope.getArtifactCollectionForToolingModel(
                                 RUNTIME_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.ALL,
                                 AndroidArtifacts.ArtifactType.JAR);
@@ -193,11 +183,10 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // Instead just get all the jars to get all the dependencies.
             // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
             ArtifactCollection runtimeArtifactCollection =
-                    ArtifactUtils.computeArtifactList(
-                            variantScope,
+                    variantScope.getArtifactCollectionForToolingModel(
                             RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.JAR);
+                            AndroidArtifacts.ArtifactType.AAR_OR_JAR);
 
             // build a list of the artifacts
             Set<ComponentIdentifier> runtimeIdentifiers =
