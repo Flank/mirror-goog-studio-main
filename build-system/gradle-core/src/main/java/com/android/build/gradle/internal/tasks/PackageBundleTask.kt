@@ -88,7 +88,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         private set
 
     @get:OutputFile
-    @get:PathSensitive(PathSensitivity.NONE)
     abstract val bundleFile: RegularFileProperty
 
     @get:Input

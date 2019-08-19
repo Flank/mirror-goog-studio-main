@@ -414,7 +414,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     }
 
     @NonNull
-    @Internal
     private static String getNameFromAutoNamespacedManifest(@NonNull File manifest) {
         final String manifestSuffix = "_AndroidManifest.xml";
         String fileName = manifest.getName();
@@ -429,7 +428,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
     // TODO put somewhere else?
     @NonNull
-    @Internal
     public static String getArtifactName(@NonNull ResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
         if (id instanceof ProjectComponentIdentifier) {

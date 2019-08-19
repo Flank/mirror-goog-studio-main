@@ -61,7 +61,6 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 public abstract class LintBaseTask extends DefaultTask {
@@ -97,7 +96,7 @@ public abstract class LintBaseTask extends DefaultTask {
         }
     }
 
-    @Internal("No influence on output, this is to give access to the build tools version")
+    // No influence on output, this is to give access to the build tools version.
     @NonNull
     private Revision getBuildToolsRevision() {
         return buildToolsRevisionProvider.get();

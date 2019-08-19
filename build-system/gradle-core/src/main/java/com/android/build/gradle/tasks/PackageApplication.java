@@ -65,7 +65,6 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
     }
 
     @Nullable
-    @Internal
     private static Long getSize(@Nullable File file) {
         if (file == null) {
             return null;

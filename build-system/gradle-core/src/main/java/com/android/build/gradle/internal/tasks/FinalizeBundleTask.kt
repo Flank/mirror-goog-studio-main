@@ -62,7 +62,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         get() = finalBundleFile.get().asFile.name
 
     @get:OutputFile
-    @get:PathSensitive(PathSensitivity.NONE)
     abstract val finalBundleFile: RegularFileProperty
 
     override fun doTaskAction() {

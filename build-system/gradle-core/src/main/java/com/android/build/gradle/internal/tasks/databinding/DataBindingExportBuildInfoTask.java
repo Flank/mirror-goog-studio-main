@@ -26,7 +26,6 @@ import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -40,7 +39,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask {
 
-    @Internal private Supplier<LayoutXmlProcessor> xmlProcessor;
+    private Supplier<LayoutXmlProcessor> xmlProcessor;
 
     private boolean useAndroidX;
 

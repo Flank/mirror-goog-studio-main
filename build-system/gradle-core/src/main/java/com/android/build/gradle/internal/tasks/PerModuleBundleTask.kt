@@ -64,7 +64,6 @@ import java.util.zip.Deflater
 abstract class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:OutputDirectory
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val outputDir: DirectoryProperty
 
     @get:InputFiles

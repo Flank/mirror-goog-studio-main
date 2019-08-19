@@ -121,7 +121,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     }
 
     @CompileClasspath
-    @PathSensitive(PathSensitivity.NONE)
     public FileCollection getClasspath() {
         return classpath;
     }
@@ -133,7 +132,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
     /** Boot classpath: typically android.jar */
     @CompileClasspath
-    @PathSensitive(PathSensitivity.NONE)
     public FileCollection getBootClasspath() {
         return bootClasspath;
     }
