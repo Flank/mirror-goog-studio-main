@@ -40,13 +40,13 @@ class MockProcfsFiles final : public ProcfsFiles {
 
   string GetSystemMinCpuFrequencyPath(int32_t cpu) const override {
     std::ostringstream os;
-    os << "cpu" << cpu << "/scaling_min_freq.txt";
+    os << "cpu" << cpu << "/cpuinfo_min_freq.txt";
     return TestUtils::getCpuTestData(os.str());
   }
 
   string GetSystemMaxCpuFrequencyPath(int32_t cpu) const override {
     std::ostringstream os;
-    os << "cpu" << cpu << "/scaling_max_freq.txt";
+    os << "cpu" << cpu << "/cpuinfo_max_freq.txt";
     return TestUtils::getCpuTestData(os.str());
   }
 };

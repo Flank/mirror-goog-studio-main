@@ -36,21 +36,21 @@ string ProcfsFiles::GetSystemCpuPath() const { return kSystemCpuPath; }
 string ProcfsFiles::GetSystemCurrentCpuFrequencyPath(int32_t cpu) const {
   // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
   std::ostringstream os;
-  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/scaling_cur_freq";
+  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/cpuinfo_cur_freq";
   return os.str();
 }
 
 string ProcfsFiles::GetSystemMinCpuFrequencyPath(int32_t cpu) const {
   // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
   std::ostringstream os;
-  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/scaling_min_freq";
+  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/cpuinfo_min_freq";
   return os.str();
 }
 
 string ProcfsFiles::GetSystemMaxCpuFrequencyPath(int32_t cpu) const {
   // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
   std::ostringstream os;
-  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/scaling_max_freq";
+  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/cpuinfo_max_freq";
   return os.str();
 }
 
