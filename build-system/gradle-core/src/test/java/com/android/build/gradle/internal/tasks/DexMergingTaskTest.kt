@@ -274,6 +274,7 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
         ClassFileProviderFactory(emptyList()),
         ClassFileProviderFactory(emptyList()),
         false,
+        null,
         NoOpMessageReceiver()
     )
 

@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
+import static com.android.build.gradle.internal.utils.DesugarLibUtils.getDesugarLibConfig;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
@@ -849,13 +850,13 @@ public class VariantManager implements VariantModel {
         DependencyHandler dependencies = project.getDependencies();
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)) {
-
             for (DexingArtifactConfiguration artifactConfiguration :
                     getDexingArtifactConfigurations(variantScopes)) {
                 artifactConfiguration.registerTransform(
                         globalScope.getProject().getName(),
                         dependencies,
                         globalScope.getBootClasspath(),
+                        getDesugarLibConfig(globalScope.getProject()),
                         SyncOptions.getErrorFormatMode(globalScope.getProjectOptions()));
             }
         }

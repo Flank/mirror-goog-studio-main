@@ -110,6 +110,7 @@ class DexArchiveBuilderTaskDelegate(
     projectVariant: String,
     private val numberOfBuckets: Int,
     private val isDxNoOptimizeFlagPresent: Boolean,
+    private val libConfiguration: String?,
     private var messageReceiver: MessageReceiver,
     private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool(),
     userLevelCache: FileCache? = null,
@@ -576,6 +577,7 @@ class DexArchiveBuilderTaskDelegate(
         private val isDebuggable: Boolean,
         internal val isIncremental: Boolean,
         private val java8LangSupportType: VariantScope.Java8LangSupport,
+        private val libConfiguration: String?,
         internal val additionalPaths: Set<File>,
         internal val changedFiles: Set<File>,
         internal val errorFormatMode: SyncOptions.ErrorFormatMode
@@ -614,6 +616,7 @@ class DexArchiveBuilderTaskDelegate(
                     INSTANCE.getService(bootClasspath).service,
                     INSTANCE.getService(classpath).service,
                     java8LangSupportType == VariantScope.Java8LangSupport.D8,
+                    libConfiguration,
                     messageReceiver
                 )
                 else -> throw AssertionError("Unknown dexer type: " + dexer.name)
@@ -682,6 +685,7 @@ class DexArchiveBuilderTaskDelegate(
                 isDebuggable,
                 isIncremental,
                 java8LangSupportType,
+                libConfiguration,
                 additionalPaths,
                 changedFiles,
                 errorFormatMode

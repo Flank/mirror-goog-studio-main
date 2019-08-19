@@ -429,7 +429,8 @@ class DexArchiveBuilderDelegateDesugaringTest {
         projectOutput: File = tmpDir.newFolder(),
         externalLibClasses: Set<File> = emptySet(),
         desugaringClasspath: Set<File> = emptySet(),
-        inputJarHashes: File = tmpDir.newFile()
+        inputJarHashes: File = tmpDir.newFile(),
+        libConfiguration: String? = null
     ): DexArchiveBuilderTaskDelegate {
 
         val bootClasspath = if (includeAndroidJar) {
@@ -471,7 +472,8 @@ class DexArchiveBuilderDelegateDesugaringTest {
             subProjectOutputDex = tmpDir.newFolder(),
             externalLibsOutputDex = tmpDir.newFolder(),
             mixedScopeOutputDex = tmpDir.newFolder(),
-            dexer = DexerTool.D8
+            dexer = DexerTool.D8,
+            libConfiguration = libConfiguration
         )
     }
 

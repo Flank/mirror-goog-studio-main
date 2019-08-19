@@ -84,6 +84,7 @@ public final class DexArchiveTestUtil {
                                 new ClassFileProviderFactory(Collections.emptyList()),
                                 new ClassFileProviderFactory(Collections.emptyList()),
                                 true,
+                                null,
                                 new StandardOutErrMessageReceiver());
             }
 

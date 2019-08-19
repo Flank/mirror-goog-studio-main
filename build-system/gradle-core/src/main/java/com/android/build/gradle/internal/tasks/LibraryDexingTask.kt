@@ -161,6 +161,7 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                     bootClasspath,
                     classpath,
                     params.enableDesugaring,
+                    null,
                     MessageReceiverImpl(
                         params.errorFormatMode,
                         Logging.getLogger(LibraryDexingTask::class.java)

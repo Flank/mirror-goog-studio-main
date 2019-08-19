@@ -117,6 +117,7 @@ abstract class DexFileDependenciesTask
                     ClassFileProviderFactory(bootClasspath).also { closer.register(it) },
                     ClassFileProviderFactory(classpath).also { closer.register(it) },
                     true,
+                    null,
                     MessageReceiverImpl(
                         errorFormatMode = params.errorFormatMode,
                         logger = Logging.getLogger(DexFileDependenciesWorkerAction::class.java)

@@ -17,6 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageReceiver;
@@ -51,6 +52,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     @NonNull private final ClassFileProviderFactory bootClasspath;
     @NonNull private final ClassFileProviderFactory classpath;
     private final boolean desugaring;
+    @Nullable private final String libConfiguration;
     @NonNull private final MessageReceiver messageReceiver;
 
     public D8DexArchiveBuilder(
@@ -59,12 +61,14 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             @NonNull ClassFileProviderFactory bootClasspath,
             @NonNull ClassFileProviderFactory classpath,
             boolean desugaring,
+            @Nullable String libConfiguration,
             @NonNull MessageReceiver messageReceiver) {
         this.minSdkVersion = minSdkVersion;
         this.compilationMode = isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE;
         this.bootClasspath = bootClasspath;
         this.classpath = classpath;
         this.desugaring = desugaring;
+        this.libConfiguration = libConfiguration;
         this.messageReceiver = messageReceiver;
     }
 
@@ -99,6 +103,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             if (desugaring) {
                 builder.addLibraryResourceProvider(bootClasspath.getOrderedProvider());
                 builder.addClasspathResourceProvider(classpath.getOrderedProvider());
+
+                if (libConfiguration != null) {
+                    builder.addSpecialLibraryConfiguration(libConfiguration);
+                }
             } else {
                 builder.setDisableDesugaring(true);
             }

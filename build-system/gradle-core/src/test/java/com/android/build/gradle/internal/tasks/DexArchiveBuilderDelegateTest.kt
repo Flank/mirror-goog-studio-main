@@ -558,7 +558,8 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
         projectOutput: File = tmpDir.newFolder(),
         externalLibsOutput: File = tmpDir.newFolder(),
         java8Desugaring: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
-        desugaringClasspath: Set<File> = emptySet()
+        desugaringClasspath: Set<File> = emptySet(),
+        libConfiguration: String? = null
     ): DexArchiveBuilderTaskDelegate {
         return DexArchiveBuilderTaskDelegate(
             isIncremental = isIncremental,
@@ -589,6 +590,7 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
             projectVariant = "myVariant",
             numberOfBuckets = 1,
             isDxNoOptimizeFlagPresent = false,
+            libConfiguration = libConfiguration,
             messageReceiver = NoOpMessageReceiver(),
             userLevelCache = userCache.takeIf { withCache },
             workerExecutor = workerExecutor

@@ -61,6 +61,14 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
     return getDesugarLibDexFromTransform(createDesugarLibConfiguration(project))
 }
 
+/**
+ * Returns a string which has the content of desugar lib configuration resolved from maven repo
+ */
+fun getDesugarLibConfig(project: Project): String {
+    //TODO(b/140371855) switch to real lib configuration once available
+    return "default"
+}
+
 private fun createDesugarLibConfiguration(project: Project): Configuration {
     val config = project.configurations.create(DESUGAR_LIB_CONFIG_NAME) {
         it.isVisible = false

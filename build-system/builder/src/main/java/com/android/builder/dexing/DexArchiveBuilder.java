@@ -17,6 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.MessageReceiver;
 import java.nio.file.Path;
@@ -45,6 +46,7 @@ public abstract class DexArchiveBuilder {
             @NonNull ClassFileProviderFactory bootClasspath,
             @NonNull ClassFileProviderFactory classpath,
             boolean desugaring,
+            @Nullable String libConfiguration,
             @NonNull MessageReceiver messageReceiver) {
         return new D8DexArchiveBuilder(
                 minSdkVersion,
@@ -52,6 +54,7 @@ public abstract class DexArchiveBuilder {
                 bootClasspath,
                 classpath,
                 desugaring,
+                libConfiguration,
                 messageReceiver);
     }
 

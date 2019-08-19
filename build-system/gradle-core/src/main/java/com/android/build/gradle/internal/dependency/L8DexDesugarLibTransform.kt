@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.DESUGAR_LIB_DEX
+import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.builder.dexing.runL8
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -91,7 +92,7 @@ fun getDesugarLibConfigurations(scopes: Collection<VariantScope>): Set<DesugarLi
 }
 
 private fun getDesugarLibConfiguration(scope: VariantScope): DesugarLibConfiguration {
-    val libConfiguration = "default"
+    val libConfiguration = getDesugarLibConfig(scope.globalScope.project)
     val bootClasspath = scope.bootClasspath.filter { it.name == SdkConstants.FN_FRAMEWORK_LIBRARY }
     val minSdkVersion = scope.variantConfiguration.minSdkVersion.apiLevel
 

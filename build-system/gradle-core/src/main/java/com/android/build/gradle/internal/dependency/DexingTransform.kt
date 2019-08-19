@@ -44,6 +44,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
@@ -60,6 +61,9 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
         val bootClasspath: ConfigurableFileCollection
         @get:Internal
         val errorFormat: Property<SyncOptions.ErrorFormatMode>
+        @get:Optional
+        @get:Input
+        val libConfiguration: Property<String>
     }
 
     @get:Classpath
@@ -85,6 +89,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                         .also { closer.register(it) },
                     ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
                     parameters.enableDesugaring.get(),
+                    parameters.libConfiguration.orNull,
                     MessageReceiverImpl(
                         parameters.errorFormat.get(),
                         LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
@@ -130,14 +135,15 @@ fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfigura
     val minSdk = scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
     val debuggable = scope.variantConfiguration.buildType.isDebuggable
     val enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-
-    return DexingArtifactConfiguration(minSdk, debuggable, enableDesugaring)
+    val enableApiDesugaring = scope.globalScope.extension.compileOptions.javaApiDesugaringEnabled
+    return DexingArtifactConfiguration(minSdk, debuggable, enableDesugaring, enableApiDesugaring)
 }
 
 data class DexingArtifactConfiguration(
     private val minSdk: Int,
     private val isDebuggable: Boolean,
-    private val enableDesugaring: Boolean
+    private val enableDesugaring: Boolean,
+    private val enableApiDesugaring: Boolean?
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -146,6 +152,7 @@ data class DexingArtifactConfiguration(
         projectName: String,
         dependencyHandler: DependencyHandler,
         bootClasspath: FileCollection,
+        libConfiguration: String,
         errorFormat: SyncOptions.ErrorFormatMode
     ) {
         dependencyHandler.registerTransform(getTransformClass()) { spec ->
@@ -158,6 +165,9 @@ data class DexingArtifactConfiguration(
                     parameters.bootClasspath.from(bootClasspath)
                 }
                 parameters.errorFormat.set(errorFormat)
+                if (enableApiDesugaring != null && enableApiDesugaring) {
+                    parameters.libConfiguration.set(libConfiguration)
+                }
             }
             spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.PROCESSED_JAR.type)
             spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)

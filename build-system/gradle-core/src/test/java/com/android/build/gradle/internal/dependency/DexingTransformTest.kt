@@ -34,6 +34,7 @@ import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.junit.Rule
 import org.junit.Test
@@ -185,6 +186,7 @@ class DexingTransformTest {
             override val bootClasspath = FakeConfigurableFileCollection(bootClasspath)
             override val errorFormat = FakeGradleProperty(errorFormat)
             override val enableDesugaring = FakeGradleProperty(desugaring)
+            override val libConfiguration: Property<String> = FakeGradleProperty()
         }
 
         override fun getParameters(): Parameters {

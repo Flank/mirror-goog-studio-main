@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
@@ -45,6 +46,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.ChangeType
@@ -116,6 +118,9 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
     val numberOfBuckets: Property<Int> = objectFactory.property(Int::class.java)
     @get:Input
     val dxNoOptimizeFlagPresent: Property<Boolean> = objectFactory.property(Boolean::class.java)
+    @get:Optional
+    @get:Input
+    val libConfiguration: Property<String> = objectFactory.property(String::class.java)
 
     @get:OutputDirectory
     abstract val projectOutputDex: DirectoryProperty
@@ -170,6 +175,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
 
             messageReceiver = messageReceiver,
             isDxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get(),
+            libConfiguration = libConfiguration.orNull,
             workerExecutor = workerExecutor,
             userLevelCache = userLevelCache
         ).doProcess()
@@ -364,6 +370,11 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
             )
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.userLevelCache = userLevelCache
+            val javaApiDesugaringEnabled
+                    = variantScope.globalScope.extension.compileOptions.javaApiDesugaringEnabled
+            if (javaApiDesugaringEnabled != null && javaApiDesugaringEnabled) {
+                task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
+            }
         }
     }
 }
