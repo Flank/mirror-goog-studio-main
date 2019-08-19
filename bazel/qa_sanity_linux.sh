@@ -47,27 +47,34 @@ fi
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id_emu="$(uuidgen)"
 
-# Run Bazel tests - only emulator tests should run here
-target_filters=qa_sanity_emu,-qa_unreliable,-no_linux,-no_test_linux
-QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
-  --max_idle_secs=60 \
-  test \
-  --keep_going \
-  ${config_options} \
-  --invocation_id=${invocation_id_emu} \
-  --build_tag_filters=${target_filters} \
-  --test_tag_filters=${target_filters} \
-  --tool_tag=${script_name} \
-  --define external_emulator=true \
-  --define=meta_android_build_number=${build_number} \
-  -- \
-  //tools/adt/idea/android-uitests/...
+# Skips emulator tests on crostini because they are not currently supported
+if [[ $(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release) != "crostini" ]]; then
+  # Run Bazel tests - only emulator tests should run here
+  target_filters=qa_sanity_emu,-qa_unreliable,-no_linux,-no_test_linux
+  QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
+    --max_idle_secs=60 \
+    test \
+    --keep_going \
+    ${config_options} \
+    --invocation_id=${invocation_id_emu} \
+    --build_tag_filters=${target_filters} \
+    --test_tag_filters=${target_filters} \
+    --tool_tag=${script_name} \
+    --define external_emulator=true \
+    --define=meta_android_build_number=${build_number} \
+    -- \
+    //tools/adt/idea/android-uitests/...
 
-readonly bazel_status_emu=$?
+  readonly bazel_status_emu=$?
+
+  if [[ -d "${dist_dir}" ]]; then
+    echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_emu}'\" />" > "${dist_dir}"/upsalite_emu_test_results.html
+  fi
+else
+  readonly bazel_status_emu=0
+fi
 
 if [[ -d "${dist_dir}" ]]; then
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_emu}'\" />" > "${dist_dir}"/upsalite_emu_test_results.html
-
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs
   (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
