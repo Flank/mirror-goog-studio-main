@@ -1412,7 +1412,7 @@ open class ResTableConfig(
       if (localeScriptEnd == -1) {
         localeScriptEnd = localeScript.size
       }
-      localeString.append(localeScript, 0, localeScriptEnd)
+      localeString.append(String(localeScript, 0, localeScriptEnd))
       localeString.append('-')
     }
 
@@ -1426,7 +1426,7 @@ open class ResTableConfig(
       if (localeVariantEnd == -1) {
         localeVariantEnd = localeVariant.size
       }
-      localeString.append(localeVariant, 0, localeVariantEnd)
+      localeString.append(String(localeVariant, 0, localeVariantEnd))
       localeString.append('-')
     }
 
@@ -1437,7 +1437,7 @@ open class ResTableConfig(
       if (localeNumberEnd == -1) {
         localeNumberEnd = localeNumberSystem.size
       }
-      localeString.append(localeNumberSystem, 0, localeNumberEnd)
+      localeString.append(String(localeNumberSystem, 0, localeNumberEnd))
       localeString.append('-')
     }
 

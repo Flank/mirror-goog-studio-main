@@ -79,6 +79,7 @@ enum class BooleanOption(
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
     DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
+    ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false),
     NAMESPACED_R_CLASS("android.namespacedRClass", false),
     FULL_R8("android.enableR8.fullMode", false),

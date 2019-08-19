@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
+import com.android.build.gradle.internal.res.ResourceCompilerRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
@@ -36,7 +37,6 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito.mock
 import java.io.File
 import java.io.Serializable
-import java.util.HashMap
 
 /*
  * Unit tests for {@link VerifyLibraryResourcesTask}.
@@ -48,10 +48,16 @@ class VerifyLibraryResourcesTaskTest {
 
     object Facade : WorkerExecutorFacade {
         override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
-            assertThat(actionClass).isEqualTo(Aapt2CompileRunnable::class.java)
-            parameter as Aapt2CompileRunnable.Params
-            for (request in parameter.requests) {
-                Files.copy(request.inputFile, compileOutputFor(request))
+            assertThat(actionClass).isIn(
+              listOf(Aapt2CompileRunnable::class.java, ResourceCompilerRunnable::class.java))
+            if (actionClass == Aapt2CompileRunnable::class.java) {
+                parameter as Aapt2CompileRunnable.Params
+                for (request in parameter.requests) {
+                    Files.copy(request.inputFile, compileOutputFor(request))
+                }
+            } else {
+                parameter as ResourceCompilerRunnable.Params
+                Files.copy(parameter.request.inputFile, compileOutputFor(parameter.request))
             }
         }
 
@@ -96,7 +102,8 @@ class VerifyLibraryResourcesTaskTest {
             Facade,
             mock(Aapt2ServiceKey::class.java),
             SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-            temporaryFolder.newFolder()
+            temporaryFolder.newFolder(),
+            false
         )
 
         val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))

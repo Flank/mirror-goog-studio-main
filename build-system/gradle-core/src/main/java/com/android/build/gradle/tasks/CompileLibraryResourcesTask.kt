@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
@@ -78,6 +79,10 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
+    @get:Input
+    var useJvmResourceCompiler: Boolean = false
+        private set
+
     override fun doTaskAction(inputChanges: InputChanges) {
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven, LoggerWrapper(logger)
@@ -113,7 +118,8 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                     path,
                     aapt2ServiceKey,
                     errorFormatMode,
-                    requests.build()
+                    requests.build(),
+                    useJvmResourceCompiler
                 )
             )
         }
@@ -173,7 +179,8 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         val owner: String,
         val aapt2ServiceKey: Aapt2ServiceKey,
         val errorFormatMode: SyncOptions.ErrorFormatMode,
-        val requests: List<CompileResourceRequest>
+        val requests: List<CompileResourceRequest>,
+        val useJvmResourceCompiler: Boolean
     ) : Serializable
 
     private class CompileLibraryResourcesRunnable
@@ -183,7 +190,8 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 params.projectName,
                 params.owner,
                 params.aapt2ServiceKey,
-                params.errorFormatMode
+                params.errorFormatMode,
+                params.useJvmResourceCompiler
             ).use {
                 it.submitCompile(params.requests)
             }
@@ -229,6 +237,9 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
+
+            task.useJvmResourceCompiler =
+              variantScope.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
         }
     }
 }

@@ -50,6 +50,7 @@ kotlin_library(
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.manifest-merger",
+        "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",

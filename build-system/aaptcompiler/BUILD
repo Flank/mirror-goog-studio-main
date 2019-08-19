@@ -5,6 +5,7 @@ kotlin_library(
     name = "aaptcompiler",
     srcs = ["src/main/java"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/build-system/aaptcompiler",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/shared:tools.analytics-shared",

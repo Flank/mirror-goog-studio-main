@@ -18,12 +18,10 @@ class ResourceCompilerTest {
   @JvmField
   var tempFolder = TemporaryFolder()
 
-  lateinit var compiler: ResourceCompiler
   lateinit var outputDir: File
 
   @Before
   fun setup() {
-    compiler = ResourceCompiler("")
     outputDir = tempFolder.newFolder()
   }
 
@@ -37,11 +35,11 @@ class ResourceCompilerTest {
     return file
   }
 
-  private fun testValuesFile(input: String, config: String = ""): File {
+  private fun testValuesFile(input: String, config: String = "", options: ResourceCompilerOptions = ResourceCompilerOptions()): File {
     val valuesFolder = tempFolder.newFolder("values")
     val configSuffix = if (config.isEmpty()) "" else "-$config"
     val file = createFile(input, "test$configSuffix.xml", valuesFolder)
-    compiler.compileResource(file, outputDir)
+    compileResource(file, outputDir, options)
     val filePath = extractPathData(file)
     // The extension is changed when the table is compiled.
     filePath.extension = "arsc"
@@ -52,7 +50,7 @@ class ResourceCompilerTest {
     val resourceFolder = tempFolder.newFolder(type.tagName)
     val configSuffix = if (config.isEmpty()) "" else "-$config"
     val file = createFile(input, "test$configSuffix.xml", resourceFolder)
-    compiler.compileResource(file, outputDir)
+    compileResource(file, outputDir, ResourceCompilerOptions())
     val filePath = extractPathData(file)
     return File(outputDir, filePath.getIntermediateContainerFilename())
   }
@@ -61,7 +59,7 @@ class ResourceCompilerTest {
     val resourceFolder = tempFolder.newFolder(AaptResourceType.RAW.tagName)
     val configSuffix = if (config.isEmpty()) "" else "-$config"
     val file = createFile(input, "test$configSuffix.$extension", resourceFolder)
-    compiler.compileResource(file, outputDir)
+    compileResource(file, outputDir, ResourceCompilerOptions())
     val filePath = extractPathData(file)
     return File(outputDir, filePath.getIntermediateContainerFilename())
   }
@@ -70,7 +68,7 @@ class ResourceCompilerTest {
     val resourceFolder = tempFolder.newFolder(type.tagName)
     val configSuffix = if (config.isEmpty()) "" else "-$config"
     val file = createFile(input, "test$configSuffix.png", resourceFolder)
-    compiler.compileResource(file, outputDir)
+    compileResource(file, outputDir, ResourceCompilerOptions())
     val filePath = extractPathData(file)
     return File(outputDir, filePath.getIntermediateContainerFilename())
   }

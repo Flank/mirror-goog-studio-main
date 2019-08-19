@@ -176,6 +176,17 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
+                "com/android/tools/build/aaptcompiler",
+                "com/",
+                "com/android/",
+                "com/android/aaptcompiler/",
+                "com/android/aaptcompiler/android/",
+                "com/android/aaptcompiler/buffer/",
+                "com/android/aaptcompiler/proto/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+        expected.putAll(
                 "com/android/tools/build/builder",
                 "com/",
                 "com/android/",
