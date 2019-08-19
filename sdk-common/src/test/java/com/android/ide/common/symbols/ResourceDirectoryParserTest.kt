@@ -377,10 +377,11 @@ class ResourceDirectoryParserTest {
         assertThat(shouldBeParsed("drawables")).isTrue()
         assertThat(shouldBeParsed("fake")).isTrue()
 
-        // If it's only density or SDK version config (or both) it should be kept.
+        // If it's not a language directory it should be kept.
         assertThat(shouldBeParsed("values-v4")).isTrue()
         assertThat(shouldBeParsed("drawables-hdpi")).isTrue()
         assertThat(shouldBeParsed("drawables-hdpi-v21")).isTrue()
+        assertThat(shouldBeParsed("layout-sw720dp")).isTrue()
 
         // Incorrect order and other configs should be skipped.
         assertThat(shouldBeParsed("values-en")).isFalse()
