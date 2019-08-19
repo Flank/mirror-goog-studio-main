@@ -83,8 +83,8 @@ static bool matchUid(const string& line, const char* uid, int uidTokenIndex) {
 jint Java_com_android_profilerapp_network_NetworkFragment_getConnectionCount(JNIEnv* env, jobject thisObject, jstring uidString) {
     jint connectionCount = 0;
     // Converts the jstring to be compatible with the string comparison.
-    const char* uidChars = env->GetStringUTFChars(uidString, JNI_FALSE);
-
+    JStringWrapper uid(env, uidString);
+    const char* uidChars = uid.get().c_str();
     for (unsigned int i = 0; i < CONNECTION_FILE_COUNT; ++i) {
         const char* fileName = CONNECTION_FILES[i];
         ifstream inStream(fileName);
@@ -116,8 +116,8 @@ jlongArray Java_com_android_profilerapp_network_NetworkFragment_getTrafficBytes(
     ifstream inStream(TRAFFIC_BYTES_FILE);
     if (inStream.is_open()) {
         // Converts the jstring to be compatible with the string comparison.
-        const char* uidChars = env->GetStringUTFChars(uidString, JNI_FALSE);
-
+        JStringWrapper uid(env, uidString);
+        const char* uidChars = uid.get().c_str();
         string line;
 
         size_t receiveTokenStart;
