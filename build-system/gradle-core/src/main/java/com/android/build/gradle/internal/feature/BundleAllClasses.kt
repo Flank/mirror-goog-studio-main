@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.feature
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -51,7 +52,6 @@ import java.util.zip.Deflater
  */
 abstract class BundleAllClasses : NonIncrementalTask() {
 
-
     @get:OutputFile
     abstract val outputJar: RegularFileProperty
 
@@ -85,20 +85,27 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
     public override fun doTaskAction() {
         val files = HashMap<String, File>()
-        val collector = object: ReproducibleFileVisitor {
+        val collector = object : ReproducibleFileVisitor {
             override fun isReproducibleFileOrder() = true
             override fun visitFile(fileVisitDetails: FileVisitDetails) {
-                files[fileVisitDetails.relativePath.pathString] = fileVisitDetails.file
+                addFile(fileVisitDetails.relativePath.pathString, fileVisitDetails.file)
             }
+
             override fun visitDir(fileVisitDetails: FileVisitDetails) {
+            }
+
+            fun addFile(path: String, file: File) {
+                files[path] = file
             }
         }
         javacClasses.get().asFileTree.visit(collector)
         preJavacClasses.asFileTree.visit(collector)
         postJavacClasses.asFileTree.visit(collector)
-        val rRClassJarFile = thisRClassClasses.orNull?.asFile
-        if (rRClassJarFile!=null) {
-            project.fileTree(rRClassJarFile).visit(collector)
+        thisRClassClasses.orNull?.asFile?.let {
+            check(
+                it.isFile && it.extension == SdkConstants.EXT_JAR
+            ) { "thisRClassClasses must be a Jar file." }
+            collector.addFile(it.name, it)
         }
 
         getWorkerFacadeWithWorkers().use {
@@ -137,7 +144,10 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.JAVAC, task.javacClasses)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.JAVAC,
+                task.javacClasses
+            )
             task.preJavacClasses = variantScope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = variantScope.variantData.allPostJavacGeneratedBytecode
             val globalScope = variantScope.globalScope
@@ -146,22 +156,24 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             if (globalScope.extension.aaptOptions.namespaced) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                    task.thisRClassClasses)
+                    task.thisRClassClasses
+                )
                 task.dependencyRClassClasses = variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        ALL,
-                        COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                    ALL,
+                    COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+                )
             } else if (!globalScope.projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
                 // This is actually thisRClassClasses and dependencyRClassClasses altogether. But
                 // thisRClassClasses expects *.class files as an input while this is *.jar. Thus,
                 // put it to dependencyRClassClasses and it will be processed properly.
                 task.dependencyRClassClasses =
-                        variantScope
-                            .artifacts
-                            .getFinalProductAsFileCollection(
-                                InternalArtifactType
-                                    .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                            ).get()
+                    variantScope
+                        .artifacts
+                        .getFinalProductAsFileCollection(
+                            InternalArtifactType
+                                .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                        ).get()
 
 
             }
