@@ -44,6 +44,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import com.android.builder.packaging.JarCreator
+import org.gradle.api.tasks.InputFiles
 import java.io.File
 import java.util.function.Predicate
 import java.util.function.Supplier
@@ -86,17 +87,16 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     fun getPackageName() = packageNameSupplier.get()
 
     @get:Classpath
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract var mainScopeClassFiles: FileCollection
         protected set
 
-    @get:Classpath
+    // We can't use @Classpath as it ignores empty directories which may still be used as resources.
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract var mainScopeResourceFiles: FileCollection
         protected set
 
     @get:Classpath
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract var localScopeInputFiles: FileCollection
         protected set
 
