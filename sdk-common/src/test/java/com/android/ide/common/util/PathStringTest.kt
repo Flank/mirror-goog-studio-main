@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.util
 
+import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.SdkConstants.currentPlatform
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
@@ -115,6 +117,9 @@ class PathStringTest {
     @Test
     fun testToPath() {
         assertThat(PathString("/foo").toPath()).isEqualTo(Paths.get("/foo"))
+        if (currentPlatform() == PLATFORM_WINDOWS) {
+            assertThat(PathString("D:/foo").toPath()).isEqualTo(Paths.get("D:/foo"))
+        }
     }
 
     @Test
@@ -236,12 +241,12 @@ class PathStringTest {
 
     @Test
     fun testToString() {
-        assertThat(PathString(URI("file:///"), "/zero/one/two").toString()).isEqualTo("file:///zero/one/two")
-        assertThat(PathString(URI("file:///"), "zero/one/two").toString()).isEqualTo("file://zero/one/two")
-        assertThat(PathString(URI("file:///"), "C:\\zero\\one\\two").toString()).isEqualTo("file://C:\\zero\\one\\two")
-        assertThat(PathString(URI("file:///"), "C:zero\\one\\two").toString()).isEqualTo("file://C:zero\\one\\two")
-        assertThat(PathString(URI("file:///"), "D:\\zero\\one\\two").toString()).isEqualTo("file://D:\\zero\\one\\two")
-        assertThat(PathString(URI("file:///"), "D:zero\\one\\two").toString()).isEqualTo("file://D:zero\\one\\two")
+        assertThat(PathString( "/zero/one/two").toString()).isEqualTo("file:///zero/one/two")
+        assertThat(PathString("zero/one/two").toString()).isEqualTo("file://zero/one/two")
+        assertThat(PathString("C:\\zero\\one\\two").toString()).isEqualTo("file://C:\\zero\\one\\two")
+        assertThat(PathString("C:zero\\one\\two").toString()).isEqualTo("file://C:zero\\one\\two")
+        assertThat(PathString("D:\\zero\\one\\two").toString()).isEqualTo("file://D:\\zero\\one\\two")
+        assertThat(PathString("D:zero\\one\\two").toString()).isEqualTo("file://D:zero\\one\\two")
         assertThat(PathString(URI("zip:///foo/bar/baz.zip"), "zero/one/two").toString())
             .isEqualTo("zip:///foo/bar/baz.zip!/zero/one/two")
     }

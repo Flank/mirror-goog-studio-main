@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.projectmodel
 
-import com.android.SdkConstants
 import com.android.ide.common.util.PathString
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -37,10 +35,7 @@ class ExternalLibraryTest {
             address = "foo",
             classJars = listOf(PathString("/bar/baz"))
         )
-        assertThat(cfg.toString()).isEqualTo("ExternalLibrary(address=foo,classJars=[" +
-                if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-                    "file:///C://bar/baz])"
-                else "file:///bar/baz])")
+        assertThat(cfg.toString()).isEqualTo("ExternalLibrary(address=foo,classJars=[file:///bar/baz])")
     }
 
     @Test

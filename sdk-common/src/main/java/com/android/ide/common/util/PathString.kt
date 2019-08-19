@@ -19,7 +19,11 @@ package com.android.ide.common.util
 import com.google.common.base.Joiner
 import java.io.File
 import java.net.URI
-import java.nio.file.*
+import java.nio.file.FileSystemNotFoundException
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.ProviderNotFoundException
 import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
@@ -125,7 +129,13 @@ class PathString private constructor(
      * Returns a string describing this path. The string describes both the filesystem and the path in use.
      */
     override fun toString(): String {
-        val schemeString = filesystemUri.toString()
+        var schemeString = filesystemUri.toString()
+        if (schemeString.startsWith("file:///") &&
+                schemeString.endsWith(":/") &&
+                schemeString.length == 11) {
+            // File system URI contains a drive letter - remove it to get just the scheme.
+            schemeString = "file:///"
+        }
         val path = rawPath
         val buf = StringBuilder(schemeString.length + 1 + path.length)
         if (schemeString.endsWith("///")) {
