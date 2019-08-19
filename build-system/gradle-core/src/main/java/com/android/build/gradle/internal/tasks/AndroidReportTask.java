@@ -38,8 +38,12 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
 
@@ -79,6 +83,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
     }
 
     @Override
+    @Internal // This is an output, not an input of this task
     public boolean getTestFailed() {
         return testFailed;
     }
@@ -93,6 +98,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
         this.ignoreFailures = ignoreFailures;
     }
 
+    @Input
     public ReportType getReportType() {
         return reportType;
     }
@@ -107,6 +113,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public List<File> getResultsDirectories() {
         return subTasks.stream().map(AndroidTestTask::getResultsDir).collect(Collectors.toList());
     }
@@ -225,4 +232,3 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
         }
     }
 }
-

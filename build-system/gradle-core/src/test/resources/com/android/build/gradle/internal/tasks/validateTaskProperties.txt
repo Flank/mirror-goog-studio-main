@@ -1,16 +1,8 @@
-Warning: Type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'reportType' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'resultsDirectories' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'testFailed' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.ApplicationIdWriterTask': property 'appMetadata' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.CheckManifest': property 'manifest' has @Input annotation used on property of type java.io.File.
 Warning: Type 'com.android.build.gradle.internal.tasks.CheckProguardFiles': property 'proguardFiles' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'buddyApks' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'deviceProvider' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testApkDir' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testData' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testTargetManifests' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testedApksDir' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testedApksFromBundle' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.GenerateApkDataTask': property 'apkFileCollection' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'adbExe' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'apkDirectory' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.

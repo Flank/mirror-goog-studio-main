@@ -373,27 +373,32 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
      * @return tested variant metadata file.
      */
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getTestTargetManifests() {
         return testTargetManifests;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getBuddyApks() {
         return buddyApks;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Provider<Directory> getTestApkDir() {
         return testData.getTestApkDir();
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getTestedApksDir() {
         return testData.getTestedApksDir();
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getTestedApksFromBundle() {
         return testData.getTestedApksFromBundle();
