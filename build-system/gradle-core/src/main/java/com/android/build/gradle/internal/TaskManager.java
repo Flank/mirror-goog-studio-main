@@ -3079,10 +3079,6 @@ public abstract class TaskManager {
                 scope.getTaskContainer().getCompileTask());
     }
 
-    public void createCheckManifestTask(@NonNull VariantScope scope) {
-        taskFactory.register(new CheckManifest.CreationAction(scope, false));
-    }
-
     @NonNull
     protected Logger getLogger() {
         return logger;

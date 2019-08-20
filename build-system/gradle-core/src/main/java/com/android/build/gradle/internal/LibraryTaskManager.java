@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
+import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask;
 import com.android.build.gradle.internal.tasks.LibraryDexingTask;
@@ -122,7 +123,7 @@ public class LibraryTaskManager extends TaskManager {
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
 
-        createCheckManifestTask(variantScope);
+        taskFactory.register(new CheckManifest.CreationAction(variantScope));
 
         taskFactory.register(
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(variantScope));

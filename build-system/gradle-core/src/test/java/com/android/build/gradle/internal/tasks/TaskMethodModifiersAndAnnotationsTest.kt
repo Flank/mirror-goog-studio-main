@@ -118,8 +118,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setResultsDir",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setWillRun",
                 "com.android.build.gradle.internal.tasks.AndroidVariantTask::setVariantName",
-                "com.android.build.gradle.internal.tasks.CheckManifest::setManifest",
-                "com.android.build.gradle.internal.tasks.CheckManifest::setOptional",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setCoverageDir",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setDeviceProvider",

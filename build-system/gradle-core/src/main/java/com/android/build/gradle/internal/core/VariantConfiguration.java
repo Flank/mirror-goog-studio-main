@@ -29,6 +29,7 @@ import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.MergedFlavor;
 import com.android.builder.core.VariantAttributesProvider;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.ClassFieldImpl;
@@ -941,13 +942,28 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return targetSdkVersion;
     }
 
+    /** Returns whether the main manifest file is required to exist. */
+    public boolean isMainManifestRequired() {
+        // The main manifest file is not required to exist for a test project
+        return getType() != VariantTypeImpl.TEST_APK;
+    }
+
+    /** Returns the path to the main manifest file. It may or may not exist. */
+    @NonNull
+    public File getMainManifestFilePath() {
+        return mDefaultSourceProvider.getManifestFile();
+    }
+
+    /**
+     * Returns the path to the main manifest file if it exists, or `null` otherwise (e.g., the main
+     * manifest file is not required to exist for a test project).
+     */
     @Nullable
     public File getMainManifest() {
-        File defaultManifest = mDefaultSourceProvider.getManifestFile();
+        File mainManifest = getMainManifestFilePath();
 
-        // this could not exist in a test project.
-        if (defaultManifest.isFile()) {
-            return defaultManifest;
+        if (mainManifest.isFile()) {
+            return mainManifest;
         }
 
         return null;
