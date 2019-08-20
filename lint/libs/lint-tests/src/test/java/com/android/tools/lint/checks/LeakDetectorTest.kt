@@ -554,36 +554,4 @@ class LeakDetectorTest : AbstractCheckTest() {
             """
         )
     }
-
-    fun testLateInit() {
-        lint().files(
-            kotlin(
-                """
-                @file:Suppress("unused")
-
-                package test.pkg
-
-                import android.app.Fragment
-                import android.view.View
-
-                class MyClass {
-                    lateinit var view: MyView // OK - not in a fragment context
-                }
-
-                class MyFragment : Fragment() {
-                    lateinit var view: MyView // ERROR
-                }
-
-                abstract class MyView : View(null)
-                """
-            ).indented()
-        ).run().expect(
-            """
-src/test/pkg/MyClass.kt:13: Warning: Views should not be lateinit in fragments; they need to be nulled out in onDestroyView [StaticFieldLeak]
-    lateinit var view: MyView // ERROR
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-0 errors, 1 warnings
-            """
-        )
-    }
 }
