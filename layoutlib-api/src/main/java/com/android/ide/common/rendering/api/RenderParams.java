@@ -35,6 +35,7 @@ public abstract class RenderParams {
     private final LayoutlibCallback mLayoutlibCallback;
     private final int mMinSdkVersion;
     private final int mTargetSdkVersion;
+    private float mFontScale = 1f;
     private final LayoutLog mLog;
 
     private boolean mCustomBackgroundEnabled;
@@ -112,6 +113,7 @@ public abstract class RenderParams {
             mFlags = new HashMap<>(params.mFlags);
         }
         mEnableQuickStep = params.mEnableQuickStep;
+        mFontScale = params.mFontScale;
     }
 
     public void setOverrideBgColor(int color) {
@@ -166,6 +168,14 @@ public abstract class RenderParams {
      */
     public void setQuickStep(boolean quickStep) {
         mEnableQuickStep = quickStep;
+    }
+
+    /**
+     * Sets user preference for the scaling factor for fonts, relative to the base density scaling.
+     * See {@link android.content.res.Configuration#fontScale}
+     */
+    public void setFontScale(float fontScale) {
+        mFontScale = fontScale;
     }
 
     public Object getProjectKey() {
