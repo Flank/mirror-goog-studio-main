@@ -341,9 +341,11 @@ public class BenchmarkTest {
 
             listeners.forEach(BenchmarkListener::benchmarkDone);
 
-            PerfData perfData = new PerfData();
-            perfData.addBenchmark(benchmark);
-            perfData.commit();
+            if (benchmarkRun.iterations > 0) {
+                PerfData perfData = new PerfData();
+                perfData.addBenchmark(benchmark);
+                perfData.commit();
+            }
         }
     }
 
