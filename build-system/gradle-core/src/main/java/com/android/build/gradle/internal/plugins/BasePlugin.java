@@ -17,10 +17,8 @@
 package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.io.File.separator;
 
 import android.databinding.tool.DataBindingBuilder;
-import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -41,6 +39,7 @@ import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -83,7 +82,6 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
@@ -230,6 +228,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         checkPathForErrors();
         checkModulesForErrors();
+
+        AttributionListenerInitializer.INSTANCE.init(
+                project, projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION));
 
         PluginInitializer.initialize(project);
         RecordingBuildListener buildListener = ProfilerInitializer.init(project, projectOptions);

@@ -126,6 +126,12 @@ public interface AndroidProject {
      */
     String PROPERTY_APK_LOCATION = "android.injected.apk.location";
 
+    /**
+     * Location of the build attribution file produced by the gradle plugin to be deserialized and
+     * used in the IDE build attribution.
+     */
+    String PROPERTY_ATTRIBUTION_FILE_LOCATION = "android.injected.attribution.file.location";
+
     String ARTIFACT_MAIN = "_main_";
     String ARTIFACT_ANDROID_TEST = "_android_test_";
     String ARTIFACT_UNIT_TEST = "_unit_test_";

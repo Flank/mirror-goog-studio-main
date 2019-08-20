@@ -337,6 +337,11 @@ public final class SdkConstants {
     public static final String FN_ADVANCED_FEATURES = "advancedFeatures.ini";
     /** File holding a list of advanced features when user is on canary channel */
     public static final String FN_ADVANCED_FEATURES_CANARY = "advancedFeaturesCanary.ini";
+    /**
+     * File contains a serialized AndroidGradlePluginAttributionData object to be deserialized and
+     * used in the IDE build attribution.
+     */
+    public static final String FN_AGP_ATTRIBUTION_DATA = "androidGradlePluginAttributionData";
 
     /* Folder Names for Android Projects . */
 
@@ -510,6 +515,9 @@ public final class SdkConstants {
 
     /** Name of the cache folder in the $HOME/.android. */
     public static final String FD_CACHE = "cache"; //$NON-NLS-1$
+
+    /** Name of the build attribution internal output folder */
+    public static final String FD_BUILD_ATTRIBUTION = "build-attribution"; //$NON-NLS-1$
 
     /** API codename of a release (non preview) system image or platform. */
     public static final String CODENAME_RELEASE = "REL"; //$NON-NLS-1$
