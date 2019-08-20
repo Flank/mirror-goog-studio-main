@@ -214,7 +214,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.SHADER_ASSETS,
+                            InternalArtifactType.SHADER_ASSETS.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ShaderCompile::getOutputDir,
@@ -229,7 +229,8 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
 
             task.ndkLocation = scope.getGlobalScope().getSdkComponents().getNdkFolderProvider();
-            scope.getArtifacts().setTaskInputToFinalProduct(MERGED_SHADERS, task.getSourceDir());
+            scope.getArtifacts()
+                    .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
 

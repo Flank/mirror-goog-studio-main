@@ -71,7 +71,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
@@ -585,7 +584,8 @@ public abstract class BaseVariantData {
                 Provider<Directory> rClassSource =
                         scope.getArtifacts()
                                 .getFinalProduct(
-                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
+                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
+                                                .INSTANCE);
                 if (rClassSource.isPresent()) {
                     sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource));
                 }
@@ -599,9 +599,10 @@ public abstract class BaseVariantData {
             }
 
             if (taskContainer.getAidlCompileTask() != null) {
-                Provider<FileSystemLocation> aidlFC =
+                Provider<Directory> aidlFC =
                         scope.getArtifacts()
-                                .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR);
+                                .getFinalProduct(
+                                        InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE);
                 sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC));
             }
 
@@ -616,10 +617,11 @@ public abstract class BaseVariantData {
                                             scope.getTaskContainer()
                                                     .getDataBindingExportBuildInfoTask()));
                 }
-                if (scope.getArtifacts().hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)) {
-                    Provider<FileSystemLocation> baseClassSource =
+                if (scope.getArtifacts()
+                        .hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)) {
+                    Provider<Directory> baseClassSource =
                             scope.getArtifacts()
-                                    .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                                    .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE);
                     sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource));
                 }
             }
@@ -629,7 +631,8 @@ public abstract class BaseVariantData {
                 Provider<Directory> rsFC =
                         scope.getArtifacts()
                                 .getFinalProduct(
-                                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR);
+                                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
+                                                .INSTANCE);
                 sourceSets.add(project.fileTree(rsFC).builtBy(rsFC));
             }
 
@@ -660,12 +663,15 @@ public abstract class BaseVariantData {
 
         // then all the generated src folders, except the ones for the R/Manifest and
         // BuildConfig classes.
-        fc.from(scope.getArtifacts().getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR));
+        fc.from(
+                scope.getArtifacts()
+                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE));
 
         if (!variantConfiguration.getRenderscriptNdkModeEnabled()) {
             fc.from(
                     scope.getArtifacts()
-                            .getFinalProduct(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR));
+                            .getFinalProduct(
+                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE));
         }
 
         return fc;
@@ -691,7 +697,7 @@ public abstract class BaseVariantData {
             return processJavaResourcesTask.getOutputs().getFiles().getSingleFile();
         } else {
             return scope.getArtifacts()
-                    .getFinalProduct(InternalArtifactType.JAVA_RES)
+                    .getFinalProduct(InternalArtifactType.JAVA_RES.INSTANCE)
                     .get()
                     .getAsFile();
         }

@@ -14,32 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.build.api.artifact;
+package com.android.build.api.artifact
 
-import com.android.annotations.NonNull;
-import java.util.Locale;
-import org.gradle.api.Incubating;
+import com.android.build.api.artifact.ArtifactType
+import org.gradle.api.Incubating
+import org.gradle.api.file.Directory
 
 /**
  * Artifact type use for transform
  *
- * <p>This interface is not currently usable. It is a work in progress.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
-public enum BuildArtifactType implements ArtifactType {
-    JAVAC_CLASSES,
-    JAVA_COMPILE_CLASSPATH,
-    ;
+sealed class BuildArtifactType : ArtifactType<Directory>(DIRECTORY) {
 
-    @NonNull
-    @Override
-    public Kind kind() {
-        return Kind.DIRECTORY;
-    }
+    override val isPublic: Boolean
+        get() = true
 
-
-    @Override
-    public String getFolderName() {
-        return name().toLowerCase(Locale.US);
-    }
+    @Incubating
+    object JAVAC_CLASSES : BuildArtifactType()
+    @Incubating
+    object JAVA_COMPILE_CLASSPATH: BuildArtifactType()
 }

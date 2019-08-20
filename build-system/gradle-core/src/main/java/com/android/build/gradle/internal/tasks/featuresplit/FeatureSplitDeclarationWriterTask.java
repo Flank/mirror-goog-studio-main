@@ -85,7 +85,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.METADATA_FEATURE_DECLARATION,
+                            InternalArtifactType.METADATA_FEATURE_DECLARATION.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             FeatureSplitDeclarationWriterTask::getOutputDirectory,

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
@@ -23,8 +24,8 @@ import com.android.builder.errors.FakeEvalIssueReporter
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.AbstractTask
@@ -62,8 +63,7 @@ class NonParameterizedBuildArtifactsHolderTest {
         val newHolder = TestBuildArtifactsHolder(
             project,
             "test",
-            ::root,
-            dslScope
+            ::root
         )
         val task1Provider = registerRegularFileTask("original")
         newHolder.producesFile(
@@ -75,7 +75,7 @@ class NonParameterizedBuildArtifactsHolderTest {
             "initialFile"
         )
 
-        val finalVersion = newHolder.getFinalProduct<FileSystemLocation>(InternalArtifactType.LIBRARY_MANIFEST)
+        val finalVersion = newHolder.getFinalProduct(InternalArtifactType.LIBRARY_MANIFEST)
         Truth.assertThat(finalVersion.get().asFile.name).isEqualTo("initialFile")
         Truth.assertThat(finalVersion.get().asFile.parentFile.name).isEqualTo("set_location")
     }
@@ -86,8 +86,7 @@ class NonParameterizedBuildArtifactsHolderTest {
         val newHolder = TestBuildArtifactsHolder(
             project,
             "test",
-            ::root,
-            dslScope
+            ::root
         )
         val task1Provider = registerDirectoryTask("original")
         newHolder.producesDir(
@@ -98,7 +97,7 @@ class NonParameterizedBuildArtifactsHolderTest {
             buildDirectory= "set_location"
         )
 
-        val finalVersion = newHolder.getFinalProduct<FileSystemLocation>(InternalArtifactType.MERGED_MANIFESTS)
+        val finalVersion = newHolder.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS)
         Truth.assertThat(finalVersion.get().asFile.name).isEqualTo("out")
         Truth.assertThat(finalVersion.get().asFile.parentFile.name).isEqualTo("set_location")
     }
@@ -108,8 +107,7 @@ class NonParameterizedBuildArtifactsHolderTest {
         val newHolder = TestBuildArtifactsHolder(
             project,
             "test",
-            ::root,
-            dslScope
+            ::root
         )
         val taskProvider = project.tasks.register("locationProvidedTask", ProviderBasedProducerTask::class.java)
         newHolder.producesFile(
@@ -124,7 +122,7 @@ class NonParameterizedBuildArtifactsHolderTest {
         Truth.assertThat(files?.get()?.asFile?.name).isEqualTo("provided_folder_name")
 
         // now get final version.
-        val finalVersion = newHolder.getFinalProduct<FileSystemLocation>(InternalArtifactType.AAR)
+        val finalVersion = newHolder.getFinalProduct(InternalArtifactType.AAR)
         Truth.assertThat(finalVersion.get().asFile.name).isEqualTo("provided_folder_name")
     }
 
@@ -133,12 +131,12 @@ class NonParameterizedBuildArtifactsHolderTest {
         val newHolder = TestBuildArtifactsHolder(
             project,
             "test",
-            ::root,
-            dslScope
+            ::root
         )
         val taskProvider = registerDirectoryTask("final")
+        @Suppress("UNCHECKED_CAST") // Wrong API Test !
         newHolder.producesDir(
-            InternalArtifactType.APP_CLASSES,
+            InternalArtifactType.APP_CLASSES as ArtifactType<Directory>,
             BuildArtifactsHolder.OperationType.INITIAL,
             taskProvider,
             DirectoryProducerTask::output,
@@ -151,12 +149,12 @@ class NonParameterizedBuildArtifactsHolderTest {
         val newHolder = TestBuildArtifactsHolder(
             project,
             "test",
-            ::root,
-            dslScope
+            ::root
         )
         val taskProvider = registerRegularFileTask("final")
+        @Suppress("UNCHECKED_CAST") // Wrong API Test !
         newHolder.producesFile(
-            InternalArtifactType.JAVA_RES,
+            InternalArtifactType.JAVA_RES as ArtifactType<RegularFile>,
             BuildArtifactsHolder.OperationType.INITIAL,
             taskProvider,
             RegularFileProducerTask::output,

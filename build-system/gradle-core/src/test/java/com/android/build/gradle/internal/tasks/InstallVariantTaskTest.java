@@ -64,7 +64,7 @@ public class InstallVariantTaskTest {
 
         ApkData apkInfo = mock(ApkData.class);
         when(apkInfo.getType()).thenReturn(OutputFile.OutputType.MAIN);
-        return new BuildOutput(InternalArtifactType.APK, apkInfo, mainOutputFileApk);
+        return new BuildOutput(InternalArtifactType.APK.INSTANCE, apkInfo, mainOutputFileApk);
     }
 
     @Before

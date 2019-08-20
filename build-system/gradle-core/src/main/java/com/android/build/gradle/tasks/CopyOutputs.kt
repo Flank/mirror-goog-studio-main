@@ -91,7 +91,7 @@ abstract class CopyOutputs : NonIncrementalTask() {
     }
 
     private fun copy(
-        inputType: InternalArtifactType,
+        inputType: InternalArtifactType<Directory>,
         inputs: DirectoryProperty
     ): Callable<BuildElements> {
         return ExistingBuildElements.from(inputType, inputs)
@@ -135,14 +135,14 @@ abstract class CopyOutputs : NonIncrementalTask() {
             super.configure(task)
 
             val artifacts = variantScope.artifacts
-            artifacts.setTaskInputToFinalProduct<Directory>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FULL_APK,
                 task.fullApks
             )
-            artifacts.setTaskInputToFinalProduct<Directory>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ABI_PACKAGED_SPLIT, task.abiSplits
             )
-            artifacts.setTaskInputToFinalProduct<Directory>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                 task.resourcesSplits
             )

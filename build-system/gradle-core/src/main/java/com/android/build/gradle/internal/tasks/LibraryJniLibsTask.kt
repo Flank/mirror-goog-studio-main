@@ -119,7 +119,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     abstract class CreationAction(
         variantScope: VariantScope,
-        val artifactType: InternalArtifactType
+        val artifactType: InternalArtifactType<Directory>
     ) : VariantTaskCreationAction<LibraryJniLibsTask>(variantScope) {
         override val type = LibraryJniLibsTask::class.java
 
@@ -142,7 +142,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     class ProjectOnlyCreationAction(
         variantScope: VariantScope,
-        artifactType: InternalArtifactType
+        artifactType: InternalArtifactType<Directory>
     ): CreationAction(variantScope, artifactType) {
         override val name: String = variantScope.getTaskName("copy", "JniLibsProjectOnly")
 
@@ -154,7 +154,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     class ProjectAndLocalJarsCreationAction(
         variantScope: VariantScope,
-        artifactType: InternalArtifactType
+        artifactType: InternalArtifactType<Directory>
     ) : CreationAction(variantScope, artifactType) {
         override val name: String = variantScope.getTaskName("copy", "JniLibsProjectAndLocalJars")
 

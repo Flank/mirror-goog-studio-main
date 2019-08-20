@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -213,7 +214,7 @@ class DataBindingCompilerArguments constructor(
          * trigger unnecessary computations (see bug 133092984 and 110412851).
          */
         @JvmStatic
-        fun getLayoutInfoArtifactType(variantScope: VariantScope): InternalArtifactType {
+        fun getLayoutInfoArtifactType(variantScope: VariantScope): InternalArtifactType<Directory> {
             return if (variantScope.variantData.type.isAar) {
                 DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
             } else {

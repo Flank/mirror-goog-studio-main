@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.VariantOutput
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -86,8 +87,8 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     fun persist(projectPath: Path): String {
         val gsonBuilder = GsonBuilder()
         gsonBuilder.registerTypeAdapter(ApkData::class.java, ExistingBuildElements.ApkDataAdapter())
-        gsonBuilder.registerTypeAdapter(
-            InternalArtifactType::class.java, ExistingBuildElements.OutputTypeTypeAdapter()
+        gsonBuilder.registerTypeHierarchyAdapter(
+            ArtifactType::class.java, ExistingBuildElements.OutputTypeTypeAdapter()
         )
         gsonBuilder.registerTypeAdapter(
             AnchorOutputType::class.java,
@@ -139,18 +140,18 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     ) : BuildElementActionScheduler() {
 
         @Throws(BuildException::class)
-        override fun into(type: InternalArtifactType): BuildElements {
+        override fun into(type: ArtifactType<*>): BuildElements {
             return intoCallable(type).call()
         }
 
         @Throws(BuildException::class)
-        override fun intoCallable(type: InternalArtifactType): Callable<BuildElements> {
+        override fun intoCallable(type: ArtifactType<*>): Callable<BuildElements> {
             return transform(type, transformRunnableClass, paramsFactory)
         }
 
         @Throws(BuildException::class)
         private fun transform(
-            to: InternalArtifactType,
+            to: ArtifactType<*>,
             transformRunnableClass: Class<out BuildElementsTransformRunnable>,
             paramsFactory: (apkData: ApkData, input: File) -> BuildElementsTransformParams
         ): Callable<BuildElements> {

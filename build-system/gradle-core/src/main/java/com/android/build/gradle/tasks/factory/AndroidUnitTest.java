@@ -176,13 +176,14 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             // 1. the config file
             if (includeAndroidResources) {
                 collection.from(
-                        artifacts.getFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
+                        artifacts.getFinalProduct(
+                                InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE));
             }
 
             // 2. the test component classes and java_res
             collection.from(artifacts.getAllClasses());
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
-            collection.from(artifacts.getFinalProduct(InternalArtifactType.JAVA_RES));
+            collection.from(artifacts.getFinalProduct(InternalArtifactType.JAVA_RES.INSTANCE));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES));

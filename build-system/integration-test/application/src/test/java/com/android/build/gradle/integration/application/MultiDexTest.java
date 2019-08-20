@@ -203,8 +203,8 @@ public class MultiDexTest {
             File aaptGeneratedRules =
                     FileUtils.join(
                             ArtifactTypeUtil.getOutputDir(
-                                    InternalArtifactType
-                                            .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                                    InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
+                                            .INSTANCE,
                                     project.getBuildDir()),
                             "icsR8/manifest_keep.txt");
 

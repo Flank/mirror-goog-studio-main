@@ -94,7 +94,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                                 getTestedApksConfigurationName(variantScope.getFullVariantName()));
 
         Provider<Directory> testingApk =
-                variantScope.getArtifacts().getFinalProduct(InternalArtifactType.APK);
+                variantScope.getArtifacts().getFinalProduct(InternalArtifactType.APK.INSTANCE);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration

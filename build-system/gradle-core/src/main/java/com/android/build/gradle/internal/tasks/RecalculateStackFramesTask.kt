@@ -117,10 +117,10 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
-                    variantScope.artifacts.getFinalProduct<Directory>(
+                    variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
                     variantScope.globalScope.project.files(
-                        variantScope.artifacts.getFinalProduct<Directory>(
+                        variantScope.artifacts.getFinalProduct(
                             InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
             } else {
                 referencedClasses.from(variantScope.artifacts.getAllClasses())
@@ -130,7 +130,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 val testedVariantScope = it.scope
 
                 referencedClasses.from(
-                    variantScope.artifacts.getFinalProduct<FileSystemLocation>(
+                    variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES
                     )
                 )

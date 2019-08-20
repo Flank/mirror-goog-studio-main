@@ -249,7 +249,7 @@ public class InstantAppModelBuilder
                                 variantScope.getFullVariantName(),
                                 instantAppOutputScope.getApplicationId(),
                                 new BuildOutput(
-                                        InternalArtifactType.INSTANTAPP_BUNDLE,
+                                        InternalArtifactType.INSTANTAPP_BUNDLE.INSTANCE,
                                         ApkData.of(
                                                 VariantOutput.OutputType.MAIN,
                                                 ImmutableList.of(),
@@ -257,10 +257,12 @@ public class InstantAppModelBuilder
                                         instantAppOutputScope.getInstantAppBundle()),
                                 new BuildOutputsSupplier(
                                                 ImmutableList.of(
-                                                        InternalArtifactType.APK,
-                                                        InternalArtifactType.ABI_PACKAGED_SPLIT,
+                                                        InternalArtifactType.APK.INSTANCE,
+                                                        InternalArtifactType.ABI_PACKAGED_SPLIT
+                                                                .INSTANCE,
                                                         InternalArtifactType
-                                                                .DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
+                                                                .DENSITY_OR_LANGUAGE_PACKAGED_SPLIT
+                                                                .INSTANCE),
                                                 instantAppOutputScope.getApkDirectories())
                                         .get()));
             }
@@ -338,7 +340,8 @@ public class InstantAppModelBuilder
                                 () ->
                                         ImmutableList.of(
                                                 new EarlySyncBuildOutput(
-                                                        InternalArtifactType.INSTANTAPP_BUNDLE,
+                                                        InternalArtifactType.INSTANTAPP_BUNDLE
+                                                                .INSTANCE,
                                                         OutputFile.OutputType.MAIN,
                                                         ImmutableList.of(),
                                                         -1,

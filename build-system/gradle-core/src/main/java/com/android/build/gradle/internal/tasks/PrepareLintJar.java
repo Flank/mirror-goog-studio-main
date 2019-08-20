@@ -103,11 +103,13 @@ public abstract class PrepareLintJar extends DefaultTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends PrepareLintJar> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getArtifacts().producesFile(InternalArtifactType.LINT_JAR,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    taskProvider,
-                    PrepareLintJar::getOutputLintJar,
-                    FN_LINT_JAR);
+            scope.getArtifacts()
+                    .producesFile(
+                            InternalArtifactType.LINT_JAR.INSTANCE,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            PrepareLintJar::getOutputLintJar,
+                            FN_LINT_JAR);
         }
 
         @Override

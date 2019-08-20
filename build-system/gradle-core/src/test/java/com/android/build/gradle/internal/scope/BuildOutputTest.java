@@ -57,7 +57,8 @@ public class BuildOutputTest {
                         42);
 
         BuildOutput buildOutput =
-                new BuildOutput(InternalArtifactType.APK, apkData, new File("/tmp/bar/output"));
+                new BuildOutput(
+                        InternalArtifactType.APK.INSTANCE, apkData, new File("/tmp/bar/output"));
 
         assertThat(buildOutput.getFilterTypes())
                 .containsExactlyElementsIn(
@@ -68,6 +69,6 @@ public class BuildOutputTest {
     public void testNullApkData() {
         exceptionRule.expect(NullPointerException.class);
         exceptionRule.expectMessage("apkData for APK [/tmp/bar/output] is null.");
-        new BuildOutput(InternalArtifactType.APK, null, new File("/tmp/bar/output"));
+        new BuildOutput(InternalArtifactType.APK.INSTANCE, null, new File("/tmp/bar/output"));
     }
 }

@@ -137,9 +137,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 val processedClasses = variantScope.globalScope.project.files(
                     variantScope
                         .artifacts
-                        .getFinalProduct<FileSystemLocation>(
-                            output
-                        )
+                        .getFinalProduct(output)
                 )
                     .asFileTree
                 variantScope
@@ -222,7 +220,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 val testedVariantScope = it.scope
 
                 task.desugaringClasspath.from(
-                    variantScope.artifacts.getFinalProduct<FileSystemLocation>(
+                    variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES
                     )
                 )

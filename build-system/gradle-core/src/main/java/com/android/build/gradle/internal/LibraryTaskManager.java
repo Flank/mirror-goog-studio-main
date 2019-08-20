@@ -81,6 +81,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -279,7 +280,7 @@ public class LibraryTaskManager extends TaskManager {
         // scope.
         taskFactory.register(
                 new LibraryJniLibsTask.ProjectOnlyCreationAction(
-                        variantScope, InternalArtifactType.LIBRARY_JNI));
+                        variantScope, InternalArtifactType.LIBRARY_JNI.INSTANCE));
 
         // Now go back to fill the pipeline with transforms used when
         // publishing the AAR
@@ -307,19 +308,19 @@ public class LibraryTaskManager extends TaskManager {
         // and the LOCAL_PROJECT scopes
         taskFactory.register(
                 new LibraryJniLibsTask.ProjectAndLocalJarsCreationAction(
-                        variantScope, InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI));
+                        variantScope, InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI.INSTANCE));
 
         createLintTasks(variantScope, variantScopesForLint);
         createBundleTask(variantScope);
     }
 
     private void registerLibraryRClassTransformStream(@NonNull VariantScope variantScope) {
-        InternalArtifactType rClassJar;
+        InternalArtifactType<RegularFile> rClassJar;
 
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
-            rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
+            rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE;
         } else {
-            rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR;
+            rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE;
         }
         QualifiedContent.ScopeType scopeType;
         if (variantScope.getCodeShrinker() != null) {
@@ -408,7 +409,7 @@ public class LibraryTaskManager extends TaskManager {
             variantScope
                     .getArtifacts()
                     .producesFile(
-                            InternalArtifactType.PUBLIC_RES,
+                            InternalArtifactType.PUBLIC_RES.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             MergeResources::getPublicFile,
@@ -435,7 +436,7 @@ public class LibraryTaskManager extends TaskManager {
         basicCreateMergeResourcesTask(
                 variantScope,
                 MergeType.PACKAGE,
-                variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES),
+                variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                 false,
                 false,
                 false,
@@ -462,7 +463,7 @@ public class LibraryTaskManager extends TaskManager {
                 scope.getGlobalScope()
                         .getProject()
                         .files(
-                                scope.getArtifacts().getFinalProduct(JAVAC),
+                                scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE),
                                 scope.getVariantData().getAllPreJavacGeneratedBytecode(),
                                 scope.getVariantData().getAllPostJavacGeneratedBytecode());
         scope.getArtifacts().appendToAllClasses(files);
@@ -490,7 +491,8 @@ public class LibraryTaskManager extends TaskManager {
             File dependencyArtifactsDir =
                     variantScope
                             .getArtifacts()
-                            .getFinalProduct(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
+                            .getFinalProduct(
+                                    InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS.INSTANCE)
                             .get()
                             .getAsFile();
             return dataBindingBuilder.getJarExcludeList(

@@ -92,7 +92,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             variantScope
                     .getArtifacts()
                     .producesFile(
-                            InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE,
+                            InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             MergeConsumerProguardFilesTask::getOutputFile,
@@ -118,7 +118,9 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             ConfigurableFileCollection inputFiles =
                     project.files(
                             task.getConsumerProguardFiles(),
-                            variantScope.getArtifacts().getFinalProduct(GENERATED_PROGUARD_FILE));
+                            variantScope
+                                    .getArtifacts()
+                                    .getFinalProduct(GENERATED_PROGUARD_FILE.INSTANCE));
             task.setInputFiles(inputFiles);
         }
     }

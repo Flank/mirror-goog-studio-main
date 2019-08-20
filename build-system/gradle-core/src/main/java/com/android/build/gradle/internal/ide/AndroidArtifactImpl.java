@@ -206,14 +206,14 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         return ImmutableList.of(
                 new AndroidArtifactOutputImpl(
                         new EarlySyncBuildOutput(
-                                InternalArtifactType.APK,
+                                InternalArtifactType.APK.INSTANCE,
                                 mainApkInfo.getType(),
                                 mainApkInfo.getFilters(),
                                 mainApkInfo.getVersionCode(),
                                 splitOutputsSupplier.guessOutputFile(
                                         baseName + SdkConstants.DOT_ANDROID_PACKAGE)),
                         new EarlySyncBuildOutput(
-                                InternalArtifactType.APK,
+                                InternalArtifactType.APK.INSTANCE,
                                 mainApkInfo.getType(),
                                 mainApkInfo.getFilters(),
                                 mainApkInfo.getVersionCode(),
@@ -230,7 +230,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                         manifestOutput ->
                                 new AndroidArtifactOutputImpl(
                                         new EarlySyncBuildOutput(
-                                                InternalArtifactType.APK,
+                                                InternalArtifactType.APK.INSTANCE,
                                                 manifestOutput.getApkType(),
                                                 manifestOutput.getFiltersData(),
                                                 manifestOutput.getVersionCode(),

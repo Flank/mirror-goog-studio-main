@@ -158,7 +158,7 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Override
     public File getTestApk() {
         BuildElements testApkOutputs =
-                ExistingBuildElements.from(InternalArtifactType.APK, testApkDir);
+                ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, testApkDir);
         if (testApkOutputs.size() != 1) {
             throw new RuntimeException(
                     "Unexpected number of main APKs, expected 1, got  "

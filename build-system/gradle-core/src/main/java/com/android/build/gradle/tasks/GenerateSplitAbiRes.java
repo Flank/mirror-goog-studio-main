@@ -205,7 +205,7 @@ public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
 
                 buildOutputs.add(
                         new BuildOutput(
-                                InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                                InternalArtifactType.ABI_PROCESSED_SPLIT_RES.INSTANCE,
                                 splits.get(split),
                                 resPackageFile));
             }
@@ -346,7 +346,7 @@ public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             GenerateSplitAbiRes::getOutputDirectory,
@@ -388,7 +388,8 @@ public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
 
             task.manifestMergeBlameFile =
                     scope.getArtifacts()
-                            .getFinalProduct(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE);
+                            .getFinalProduct(
+                                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE);
 
             task.errorFormatMode =
                     SyncOptions.getErrorFormatMode(scope.getGlobalScope().getProjectOptions());

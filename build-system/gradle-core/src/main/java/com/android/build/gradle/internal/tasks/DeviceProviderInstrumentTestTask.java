@@ -459,7 +459,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     getVariantScope()
                             .getArtifacts()
                             .producesDir(
-                                    InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT,
+                                    InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
+                                            .INSTANCE,
                                     BuildArtifactsHolder.OperationType.INITIAL,
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
@@ -468,7 +469,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 getVariantScope()
                         .getArtifacts()
                         .producesDir(
-                                InternalArtifactType.CODE_COVERAGE,
+                                InternalArtifactType.CODE_COVERAGE.INSTANCE,
                                 BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
@@ -481,7 +482,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             .getArtifacts()
                             .producesDir(
                                     InternalArtifactType
-                                            .DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT,
+                                            .DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT
+                                            .INSTANCE,
                                     BuildArtifactsHolder.OperationType.INITIAL,
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
@@ -490,7 +492,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 getVariantScope()
                         .getArtifacts()
                         .producesDir(
-                                InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE,
+                                InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE,
                                 BuildArtifactsHolder.OperationType.APPEND,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,

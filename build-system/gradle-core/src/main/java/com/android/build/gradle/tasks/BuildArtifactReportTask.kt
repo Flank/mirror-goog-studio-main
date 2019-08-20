@@ -56,8 +56,8 @@ open class BuildArtifactReportTask : DefaultTask() {
             }
         }
         for ((type, producersData) in report.entries) {
-            println(type.name())
-            println("-".repeat(type.name().length))
+            println(type)
+            println("-".repeat(type.length))
             producersData.producers.forEach { producerData: BuildArtifactsHolder.ProducerData ->
                 println("files: ${producerData.files}")
                 println("builtBy: ${producerData.builtBy}")

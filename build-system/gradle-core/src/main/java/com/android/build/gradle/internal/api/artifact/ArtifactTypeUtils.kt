@@ -21,19 +21,30 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import org.gradle.api.file.Directory
+import java.lang.RuntimeException
+import kotlin.reflect.KClass
 
 /**
  * Utility class for [ArtifactType]
  */
 
-private val sourceArtifactMap : Map<String, ArtifactType> =
-        SourceArtifactType.values().associateBy(ArtifactType::name)
-private val buildArtifactMap : Map<String, ArtifactType> =
-        BuildArtifactType.values().associateBy(ArtifactType::name)
-private val internalArtifactMap : Map<String, ArtifactType> =
-        InternalArtifactType.values().associateBy(ArtifactType::name)
-private val anchorArtifactMap : Map<String, ArtifactType> =
-        AnchorOutputType.values().associateBy(ArtifactType::name)
+private val sourceArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+        SourceArtifactType::class.sealedSubclasses.associateBy {
+                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+        }
+private val buildArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+        BuildArtifactType::class.sealedSubclasses.associateBy {
+                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+        }
+private val internalArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+        InternalArtifactType::class.sealedSubclasses.associateBy {
+                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+        }
+private val anchorArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+        AnchorOutputType::class.sealedSubclasses.associateBy {
+                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+        }
 
 /**
  * Return the enum of [ArtifactType] base on the name.
@@ -42,9 +53,11 @@ private val anchorArtifactMap : Map<String, ArtifactType> =
  * multiple implementations of [ArtifactType].  For this to work, the name of all
  * [ArtifactType] must be unique across all implementations.
  */
-fun String.toArtifactType() : ArtifactType =
-    sourceArtifactMap[this] ?:
-            buildArtifactMap[this]  ?:
-            internalArtifactMap[this] ?:
-            anchorArtifactMap[this] ?:
+fun String.toArtifactType() : ArtifactType<*> =
+    sourceArtifactMap[this]?.objectInstance ?:
+            buildArtifactMap[this]?.objectInstance  ?:
+            internalArtifactMap[this]?.objectInstance ?:
+            anchorArtifactMap[this]?.objectInstance ?:
             throw IllegalArgumentException("'$this' is not a value ArtifactType.")
+
+

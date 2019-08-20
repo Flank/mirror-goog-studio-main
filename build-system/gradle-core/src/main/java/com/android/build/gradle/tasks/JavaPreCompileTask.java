@@ -251,7 +251,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
             getVariantScope()
                     .getArtifacts()
                     .producesFile(
-                            InternalArtifactType.ANNOTATION_PROCESSOR_LIST,
+                            InternalArtifactType.ANNOTATION_PROCESSOR_LIST.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             JavaPreCompileTask::getProcessorListFile,

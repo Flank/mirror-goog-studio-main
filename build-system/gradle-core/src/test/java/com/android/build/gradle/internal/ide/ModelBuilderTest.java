@@ -178,7 +178,7 @@ public class ModelBuilderTest {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        InternalArtifactType.APK,
+                                        InternalArtifactType.APK.INSTANCE,
                                         outputFactory.addMainApk(),
                                         apkOutput)))
                 .save(variantOutputFolder);
@@ -228,14 +228,15 @@ public class ModelBuilderTest {
 
         ImmutableList.Builder<BuildOutput> buildOutputBuilder = ImmutableList.builder();
         buildOutputBuilder.add(
-                new BuildOutput(InternalArtifactType.APK, outputFactory.addMainApk(), apkOutput));
+                new BuildOutput(
+                        InternalArtifactType.APK.INSTANCE, outputFactory.addMainApk(), apkOutput));
 
         for (int i = 0; i < 5; i++) {
             apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
             buildOutputBuilder.add(
                     new BuildOutput(
-                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE,
                             outputFactory.addConfigurationSplit(
                                     VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
                             apkOutput));
@@ -302,7 +303,7 @@ public class ModelBuilderTest {
             new BuildElements(
                             ImmutableList.of(
                                     new BuildOutput(
-                                            InternalArtifactType.APK,
+                                            InternalArtifactType.APK.INSTANCE,
                                             outputFactory.addMainApk(),
                                             apkOutput)))
                     .save(variantOutputFolder);
@@ -352,7 +353,7 @@ public class ModelBuilderTest {
 
         RegularFile regularFileMock = Mockito.mock(RegularFile.class);
         when(regularFileMock.getAsFile()).thenReturn(temporaryFolder.getRoot());
-        when(artifacts.<RegularFile>getFinalProduct(InternalArtifactType.AAR))
+        when(artifacts.<RegularFile>getFinalProduct(InternalArtifactType.AAR.INSTANCE))
                 .thenReturn(new FakeGradleProvider<>(regularFileMock));
 
         OutputScope outputScopeMock = Mockito.mock(OutputScope.class);
@@ -393,7 +394,7 @@ public class ModelBuilderTest {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        InternalArtifactType.APK,
+                                        InternalArtifactType.APK.INSTANCE,
                                         outputFactory.addMainApk(),
                                         apkOutput)))
                 .save(variantOutputFolder);

@@ -96,7 +96,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                     List<OutputFile> outputs =
                             ImmutableList.copyOf(
                                     ExistingBuildElements.from(
-                                            InternalArtifactType.APK, getApkDirectory()));
+                                            InternalArtifactType.APK.INSTANCE, getApkDirectory()));
 
                     install(
                             getProjectName(),
@@ -253,7 +253,8 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             task.setDescription("Installs the " + scope.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             scope.getArtifacts()
-                    .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getApkDirectory());
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.APK.INSTANCE, task.getApkDirectory());
             task.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             task.setInstallOptions(

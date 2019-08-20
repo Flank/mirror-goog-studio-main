@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.FilterData
 import com.android.build.VariantOutput
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
@@ -51,7 +52,7 @@ class ExistingBuildElements {
          * @param directoryProvider the directory containing the metadata file.
          */
         @JvmStatic
-        fun from(artifactType: ArtifactType, directoryProvider: Provider<Directory>): BuildElements {
+        fun from(artifactType: ArtifactType<Directory>, directoryProvider: Provider<Directory>): BuildElements {
             return if (directoryProvider.isPresent) {
                 from(artifactType, directoryProvider.get().asFile)
             } else BuildElements(listOf())
@@ -63,7 +64,7 @@ class ExistingBuildElements {
          * @param from the file collection containing the metadata file.
          */
         @JvmStatic
-        fun from(elementType: ArtifactType, from: FileCollection): BuildElements {
+        fun from(elementType: ArtifactType<Directory>, from: FileCollection): BuildElements {
             val metadataFile = getMetadataFileIfPresent(from)
             return loadFrom(elementType, metadataFile)
         }
@@ -74,7 +75,7 @@ class ExistingBuildElements {
          * @param from the folder containing the metadata file.
          */
         @JvmStatic
-        fun from(elementType: ArtifactType, from: File): BuildElements {
+        fun from(elementType: ArtifactType<Directory>, from: File): BuildElements {
 
             val metadataFile = getMetadataFileIfPresent(from)
             return loadFrom(elementType, metadataFile)
@@ -93,7 +94,7 @@ class ExistingBuildElements {
         }
 
         private fun loadFrom(
-            elementType: ArtifactType?,
+            elementType: ArtifactType<Directory>?,
                 metadataFile: File?): BuildElements {
             if (metadataFile == null || !metadataFile.exists()) {
                 return BuildElements(ImmutableList.of())
@@ -150,7 +151,7 @@ class ExistingBuildElements {
         @JvmStatic
         fun load(
                 projectPath: Path,
-                outputType: ArtifactType?,
+                outputType: ArtifactType<Directory>?,
                 reader: Reader): Collection<BuildOutput> {
             val gsonBuilder = GsonBuilder()
 
@@ -164,7 +165,7 @@ class ExistingBuildElements {
             // resolve the file path to the current project location.
             return buildOutputs
                     .asSequence()
-                    .filter { outputType == null || it.type == outputType }
+                    .filter { outputType == null || it.type.name() == outputType.name() }
                     .map { buildOutput ->
                         BuildOutput(
                                 buildOutput.type,
@@ -280,27 +281,24 @@ class ExistingBuildElements {
         }
     }
 
-    internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType>() {
+    internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType<*>>() {
 
         @Throws(IOException::class)
-        override fun write(out: JsonWriter, value: ArtifactType) {
+        override fun write(out: JsonWriter, value: ArtifactType<*>) {
             out.beginObject()
             out.name("type").value(value.name())
             out.endObject()
         }
 
         @Throws(IOException::class)
-        override fun read(reader: JsonReader): ArtifactType {
+        override fun read(reader: JsonReader): ArtifactType<Directory> {
             reader.beginObject()
             if (!reader.nextName().endsWith("type")) {
                 throw IOException("Invalid format")
             }
             val nextString = reader.nextString()
-            val outputType: ArtifactType = try {
-                InternalArtifactType.valueOf(nextString)
-            } catch (e: IllegalArgumentException) {
-                AnchorOutputType.valueOf(nextString)
-            }
+            val outputType: ArtifactType<Directory> =
+                nextString.toArtifactType() as ArtifactType<Directory>
 
             reader.endObject()
             return outputType

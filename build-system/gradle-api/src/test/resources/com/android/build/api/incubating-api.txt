@@ -4,22 +4,35 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-897e3237e37a95c52638ff70fc9932b6cc7901ebf38f61d9687c542f32b39ccc
+e85278f380191f565cd7c2a25646d4864a3c3c7d3bb419dae8ba469d7e367126
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
+com.android.build.api.artifact.ArtifactKind
+com.android.build.api.artifact.ArtifactKind$DIRECTORY
+com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()
+com.android.build.api.artifact.ArtifactKind$FILE
+com.android.build.api.artifact.ArtifactKind$FILE.dataType: kotlin.reflect.KClass<org.gradle.api.file.RegularFile> ()
+com.android.build.api.artifact.ArtifactKind.<init>: com.android.build.api.artifact.ArtifactKind<T> (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> ()
 com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.ArtifactType$Kind
-com.android.build.api.artifact.ArtifactType$Kind.valueOf: com.android.build.api.artifact.ArtifactType$Kind (java.lang.String)
-com.android.build.api.artifact.ArtifactType$Kind.values: com.android.build.api.artifact.ArtifactType$Kind[] ()
+com.android.build.api.artifact.ArtifactType$Appendable
+com.android.build.api.artifact.ArtifactType$Companion
+com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.ArtifactType$Multiple
+com.android.build.api.artifact.ArtifactType$Replaceable
+com.android.build.api.artifact.ArtifactType$Single
+com.android.build.api.artifact.ArtifactType$Transformable
+com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind<T>)
 com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
-com.android.build.api.artifact.ArtifactType.kind: com.android.build.api.artifact.ArtifactType$Kind ()
+com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
+com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.BuildArtifactType
-com.android.build.api.artifact.BuildArtifactType.getFolderName: java.lang.String ()
-com.android.build.api.artifact.BuildArtifactType.kind: com.android.build.api.artifact.ArtifactType$Kind ()
-com.android.build.api.artifact.BuildArtifactType.valueOf: com.android.build.api.artifact.BuildArtifactType (java.lang.String)
-com.android.build.api.artifact.BuildArtifactType.values: com.android.build.api.artifact.BuildArtifactType[] ()
+com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES
+com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH
+com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.BuildArtifactType.isPublic: boolean ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getFilter: org.gradle.api.tasks.util.PatternFilterable ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceDirectoryTrees: java.util.List<org.gradle.api.file.ConfigurableFileTree> ()

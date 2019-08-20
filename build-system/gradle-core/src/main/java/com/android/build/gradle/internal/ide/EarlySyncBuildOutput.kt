@@ -16,10 +16,11 @@
 
 package com.android.build.gradle.internal.ide
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -41,7 +42,7 @@ import java.io.Reader
  * IDE only relies on minimalistic after build model.
  */
 data class EarlySyncBuildOutput(
-        val type: ArtifactType,
+        val type: ArtifactType<*>,
         val apkType: VariantOutput.OutputType,
         val filtersData: Collection<FilterData>,
         val version: Int,
@@ -179,23 +180,21 @@ data class EarlySyncBuildOutput(
             }
         }
 
-        internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType>() {
-            override fun write(out: JsonWriter?, value: ArtifactType?) {
+        internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType<*>>() {
+            override fun write(out: JsonWriter?, value: ArtifactType<*>?) {
                 throw IOException("Unexpected call to write")
             }
 
             @Throws(IOException::class)
-            override fun read(`in`: JsonReader): ArtifactType {
+            override fun read(`in`: JsonReader): ArtifactType<*> {
                 `in`.beginObject()
                 if (!`in`.nextName().endsWith("type")) {
                     throw IOException("Invalid format")
                 }
                 val nextString = `in`.nextString()
-                val outputType: ArtifactType = try {
-                    InternalArtifactType.valueOf(nextString)
-                } catch (e: IllegalArgumentException) {
-                    AnchorOutputType.valueOf(nextString)
-                }
+                val outputType: ArtifactType<*> =
+                    nextString.toArtifactType()
+
                 `in`.endObject()
                 return outputType
             }

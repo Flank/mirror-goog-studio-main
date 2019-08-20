@@ -78,13 +78,13 @@ import org.gradle.api.tasks.TaskProvider;
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
  *
- * <p>For both test modules and tests in androidTest process is the same, expect
- * for how the tested application id is extracted.</p>
+ * <p>For both test modules and tests in androidTest process is the same, expect for how the tested
+ * application id is extracted.
  *
- * <p>Tests in androidTest get that info form the
- * {@link VariantConfiguration#getTestedApplicationId()}, while the test modules get the info from
- * the published intermediate manifest with type {@link AndroidArtifacts#TYPE_METADATA}
- * of the tested app.</p>
+ * <p>Tests in androidTest get that info form the {@link
+ * VariantConfiguration#getTestedApplicationId()}, while the test modules get the info from the
+ * published intermediate manifest with type {@link AndroidArtifacts} TYPE_METADATA of the tested
+ * app.
  */
 public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
@@ -127,7 +127,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
                     ExistingBuildElements.from(
-                            MERGED_MANIFESTS, testTargetMetadata.getSingleFile());
+                            MERGED_MANIFESTS.INSTANCE, testTargetMetadata.getSingleFile());
 
             java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
@@ -185,7 +185,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
         new BuildElements(
                         ImmutableList.of(
-                                new BuildOutput(MERGED_MANIFESTS, mainApkData, manifestOutputFile)))
+                                new BuildOutput(
+                                        MERGED_MANIFESTS.INSTANCE,
+                                        mainApkData,
+                                        manifestOutputFile)))
                 .save(getManifestOutputDirectory().get().getAsFile());
     }
 
@@ -521,8 +524,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             getVariantScope()
                     .getArtifacts()
                     .republish(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            InternalArtifactType.MANIFEST_METADATA);
+                            InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
+                            InternalArtifactType.MANIFEST_METADATA.INSTANCE);
         }
 
         @Override
@@ -533,14 +536,14 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
-                    InternalArtifactType.MERGED_MANIFESTS,
+                    InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,

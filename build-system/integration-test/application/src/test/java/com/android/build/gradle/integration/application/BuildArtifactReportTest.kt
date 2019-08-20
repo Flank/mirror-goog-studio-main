@@ -59,7 +59,7 @@ android {
         val report = BuildArtifactsHolder.parseReport(project.file("report.txt"))
         for ((artifactType, data) in report) {
             // We may reassign ALL_CLASSES
-            if (artifactType != AnchorOutputType.ALL_CLASSES) {
+            if (artifactType != AnchorOutputType.ALL_CLASSES.name()) {
                 assertThat(data.producers).hasSize(1)
             }
         }

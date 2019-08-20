@@ -121,14 +121,15 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
         FileUtils.cleanOutputDir(incrementalDir);
 
         ExistingBuildElements.from(
-                        InternalArtifactType.ABI_PROCESSED_SPLIT_RES, getProcessedAbiResources())
+                        InternalArtifactType.ABI_PROCESSED_SPLIT_RES.INSTANCE,
+                        getProcessedAbiResources())
                 .transform(
                         getWorkerFacadeWithWorkers(),
                         PackageSplitAbiTransformRunnable.class,
                         (apkInfo, input) ->
                                 new PackageSplitAbiTransformParams(apkInfo, input, this))
                 .into(
-                        InternalArtifactType.ABI_PACKAGED_SPLIT,
+                        InternalArtifactType.ABI_PACKAGED_SPLIT.INSTANCE,
                         getOutputDirectory().get().getAsFile());
     }
 
@@ -244,7 +245,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.ABI_PACKAGED_SPLIT,
+                            InternalArtifactType.ABI_PACKAGED_SPLIT.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             PackageSplitAbi::getOutputDirectory,
@@ -260,7 +261,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
             VariantConfiguration config = scope.getVariantConfiguration();
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
-                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES.INSTANCE,
                             task.getProcessedAbiResources());
             task.signingConfig = SigningConfigProvider.create(scope);
             task.minSdkVersion = config.getMinSdkVersion();

@@ -185,12 +185,12 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.uncompressedResources
             )
 
-            artifacts.setTaskInputToFinalProduct<RegularFile>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                 task.lightRClasses
             )
 
-            artifacts.setTaskInputToFinalProduct<Directory>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir
             )

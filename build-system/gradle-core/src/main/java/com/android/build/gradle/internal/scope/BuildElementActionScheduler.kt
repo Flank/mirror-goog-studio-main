@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.api.artifact.ArtifactType
 import org.gradle.tooling.BuildException
 import java.io.File
 import java.util.concurrent.Callable
@@ -25,15 +26,15 @@ import java.util.concurrent.Callable
  */
 abstract class BuildElementActionScheduler {
     @Throws(BuildException::class)
-    abstract fun into(type : InternalArtifactType) : BuildElements
+    abstract fun into(type : ArtifactType<*>) : BuildElements
 
     @Throws(BuildException::class)
-    open fun intoCallable(type: InternalArtifactType): Callable<BuildElements> {
+    open fun intoCallable(type: ArtifactType<*>): Callable<BuildElements> {
         return Callable { into(type) }
     }
 
     @Throws(BuildException::class)
-    fun into(type : InternalArtifactType, folder: File) : BuildElements {
+    fun into(type : ArtifactType<*>, folder: File) : BuildElements {
         return into(type).save(folder)
     }
 }

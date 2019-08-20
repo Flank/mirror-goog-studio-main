@@ -134,7 +134,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         // read the output of the compatible screen manifest.
         BuildElements compatibleScreenManifests =
                 ExistingBuildElements.from(
-                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                         getCompatibleScreensManifest().get().getAsFile());
 
         ModuleMetadata moduleMetadata = null;
@@ -255,26 +255,26 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             mergedManifestOutputs.add(
                     new BuildOutput(
-                            InternalArtifactType.MERGED_MANIFESTS,
+                            InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                             apkData,
                             manifestOutputFile,
                             properties));
 
             metadataFeatureMergedManifestOutputs.add(
                     new BuildOutput(
-                            InternalArtifactType.METADATA_FEATURE_MANIFEST,
+                            InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
                             apkData,
                             metadataFeatureManifestOutputFile));
             bundleManifestOutputs.add(
                     new BuildOutput(
-                            InternalArtifactType.BUNDLE_MANIFEST,
+                            InternalArtifactType.BUNDLE_MANIFEST.INSTANCE,
                             apkData,
                             bundleManifestOutputFile,
                             properties));
             if (instantAppManifestOutputFile != null) {
                 instantAppManifestOutputs.add(
                         new BuildOutput(
-                                InternalArtifactType.INSTANT_APP_MANIFEST,
+                                InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE,
                                 apkData,
                                 instantAppManifestOutputFile,
                                 properties));
@@ -335,7 +335,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             File directory = artifact.getFile();
             BuildElements splitOutputs =
                     ExistingBuildElements.from(
-                            InternalArtifactType.METADATA_FEATURE_MANIFEST, directory);
+                            InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE, directory);
             if (splitOutputs.isEmpty()) {
                 throw new GradleException("Could not load manifest from " + directory);
             }
@@ -564,7 +564,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
 
             artifacts.republish(
-                    InternalArtifactType.MERGED_MANIFESTS, InternalArtifactType.MANIFEST_METADATA);
+                    InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
+                    InternalArtifactType.MANIFEST_METADATA.INSTANCE);
         }
 
         @Override
@@ -574,24 +575,22 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
-            artifacts
-                    .producesDir(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ManifestProcessorTask::getManifestOutputDirectory,
-                            "");
+            artifacts.producesDir(
+                    InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ManifestProcessorTask::getManifestOutputDirectory,
+                    "");
 
-            artifacts
-                    .producesDir(
-                            InternalArtifactType.INSTANT_APP_MANIFEST,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ManifestProcessorTask::getInstantAppManifestOutputDirectory,
-                            "");
+            artifacts.producesDir(
+                    InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ManifestProcessorTask::getInstantAppManifestOutputDirectory,
+                    "");
 
             artifacts.producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
@@ -600,14 +599,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             + "-report.txt");
 
             artifacts.producesDir(
-                    InternalArtifactType.METADATA_FEATURE_MANIFEST,
+                    InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getMetadataFeatureManifestOutputDirectory,
                     "metadata-feature");
 
             artifacts.producesDir(
-                    InternalArtifactType.BUNDLE_MANIFEST,
+                    InternalArtifactType.BUNDLE_MANIFEST.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
@@ -616,7 +615,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             getVariantScope()
                     .getArtifacts()
                     .producesFile(
-                            InternalArtifactType.MANIFEST_MERGE_REPORT,
+                            InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ProcessApplicationManifest::getReportFile,
@@ -660,7 +659,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 getVariantScope()
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
-                                InternalArtifactType.NAMESPACED_MANIFESTS,
+                                InternalArtifactType.NAMESPACED_MANIFESTS.INSTANCE,
                                 task.getAutoNamespacedManifests());
             }
 
@@ -671,7 +670,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
 
             task.minSdkVersion =
@@ -696,7 +695,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     TaskInputHelper.memoize(
                             () -> getOptionalFeatures(getVariantScope(), isAdvancedProfilingOn));
 
-            artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST, task.getApkList());
+            artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.APK_LIST.INSTANCE, task.getApkList());
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
@@ -732,7 +732,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                         project.files(
                                 getVariantScope()
                                         .getArtifacts()
-                                        .getFinalProduct(InternalArtifactType.NAVIGATION_JSON),
+                                        .getFinalProduct(
+                                                InternalArtifactType.NAVIGATION_JSON.INSTANCE),
                                 getVariantScope()
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));

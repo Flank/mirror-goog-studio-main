@@ -290,7 +290,7 @@ public abstract class LintBaseTask extends DefaultTask {
                             variantScope
                                     .getGlobalScope()
                                     .getArtifacts()
-                                    .getFinalProduct(LINT_JAR));
+                                    .getFinalProduct(LINT_JAR.INSTANCE));
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
@@ -302,9 +302,9 @@ public abstract class LintBaseTask extends DefaultTask {
 
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
-                    artifacts.getFinalProduct(MERGED_MANIFESTS);
+                    artifacts.getFinalProduct(MERGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
-                tmpMergedManifest = artifacts.getFinalProduct(LIBRARY_MANIFEST);
+                tmpMergedManifest = artifacts.getFinalProduct(LIBRARY_MANIFEST.INSTANCE);
             }
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(
@@ -314,7 +314,7 @@ public abstract class LintBaseTask extends DefaultTask {
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
 
-            mergedManifestReport = artifacts.getFinalProduct(MANIFEST_MERGE_REPORT);
+            mergedManifestReport = artifacts.getFinalProduct(MANIFEST_MERGE_REPORT.INSTANCE);
             if (mergedManifest.isPresent()) {
                 allInputs.from(mergedManifestReport);
             } else {
@@ -358,7 +358,8 @@ public abstract class LintBaseTask extends DefaultTask {
             }
 
             BuildElements manifests =
-                    ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, file);
+                    ExistingBuildElements.from(
+                            InternalArtifactType.MERGED_MANIFESTS.INSTANCE, file);
 
             if (manifests.isEmpty()) {
                 throw new RuntimeException("Can't find any manifest in folder: " + file);

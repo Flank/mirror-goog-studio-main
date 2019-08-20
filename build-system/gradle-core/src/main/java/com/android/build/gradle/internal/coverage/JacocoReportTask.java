@@ -214,7 +214,8 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
 
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
-                            InternalArtifactType.CODE_COVERAGE, task.getCoverageDirectories());
+                            InternalArtifactType.CODE_COVERAGE.INSTANCE,
+                            task.getCoverageDirectories());
 
             task.classFileCollection = testedScope.getArtifacts().getAllClasses();
 

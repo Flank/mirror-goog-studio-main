@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.ArtifactKind
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
@@ -37,12 +38,12 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param identifier a function to uniquely identify this context when creating files and folders.
  */
 class ProducersMap<T: FileSystemLocation>(
-    val fileKind: ArtifactType.Kind,
+    val artifactKind: ArtifactKind<T>,
     val objectFactory: ObjectFactory,
     val buildDirectory: DirectoryProperty,
     val identifier: ()->String) {
 
-    private val producersMap = ConcurrentHashMap<ArtifactType, Producers<T>>()
+    private val producersMap = ConcurrentHashMap<ArtifactType<T>, Producers<T>>()
 
     // unset properties that represent a non satisfied file or directory dependency. This is ok
     // when the dependency is Optional.
@@ -54,7 +55,7 @@ class ProducersMap<T: FileSystemLocation>(
      *
      * @param artifactType the artifact type for looked up producers.
      */
-    fun hasProducers(artifactType: ArtifactType) = producersMap.containsKey(artifactType)
+    fun hasProducers(artifactType: ArtifactType<T>) = producersMap.containsKey(artifactType)
 
     /**
      * Returns a [Producers] instance (possibly empty of any [Producer]) for a passed
@@ -64,7 +65,7 @@ class ProducersMap<T: FileSystemLocation>(
      * @param buildLocation intended location for the artifact or not provided if using the default.
      * @return a [Producers] instance for that [ArtifactType]
      */
-    internal fun getProducers(artifactType: ArtifactType, buildLocation: String? = null): Producers<T> {
+    internal fun getProducers(artifactType: ArtifactType<T>, buildLocation: String? = null): Producers<T> {
 
         val outputLocationResolver: (Producers<T>, Producer<T>) -> Provider<T> =
             if (buildLocation != null) {
@@ -83,14 +84,16 @@ class ProducersMap<T: FileSystemLocation>(
                 artifactType,
                 identifier,
                 outputLocationResolver,
-                when (artifactType.kind()) {
-                    ArtifactType.Kind.DIRECTORY -> emptyDirectoryProperty
-                    ArtifactType.Kind.FILE -> emptyFileProperty
+                when (artifactType.kind) {
+                    ArtifactType.DIRECTORY -> emptyDirectoryProperty
+                    ArtifactType.FILE -> emptyFileProperty
+                    else -> throw java.lang.RuntimeException("${artifactType.kind} is not handled.")
                 } as Provider<T>,
                 objectFactory.listProperty(
-                    when (artifactType.kind()) {
-                        ArtifactType.Kind.DIRECTORY -> Directory::class.java
-                        ArtifactType.Kind.FILE -> RegularFile::class.java
+                    when (artifactType.kind) {
+                        ArtifactType.DIRECTORY -> Directory::class.java
+                        ArtifactType.FILE -> RegularFile::class.java
+                        else -> throw java.lang.RuntimeException("${artifactType.kind} is not handled.")
                     } as Class<T>
                 ),
                 objectFactory.listProperty(Provider::class.java as Class<Provider<T>>)
@@ -106,7 +109,7 @@ class ProducersMap<T: FileSystemLocation>(
      * @param to the supplemental [ArtifactType] the same built artifacts will also be published
      * under.
      */
-    fun republish(from: ArtifactType, to: ArtifactType) {
+    fun republish(from: ArtifactType<T>, to: ArtifactType<T>) {
         producersMap[to] = getProducers(from)
     }
 
@@ -116,7 +119,7 @@ class ProducersMap<T: FileSystemLocation>(
      * @param artifactType the artifact type for the producers to be copied in this map.
      * @param source the originating producers map to copy from.
      */
-    fun copy(artifactType: ArtifactType, source: Producers<out FileSystemLocation>) {
+    fun copy(artifactType: ArtifactType<T>, source: Producers<out FileSystemLocation>) {
         producersMap[artifactType] = source as Producers<T>
     }
 
@@ -127,7 +130,7 @@ class ProducersMap<T: FileSystemLocation>(
      * artifact type.
      */
     class Producers<T : FileSystemLocation>(
-        val artifactType: ArtifactType,
+        val artifactType: ArtifactType<T>,
         val identifier: () -> String,
         val resolver: (Producers<T>, Producer<T>) -> Provider<T>,
         private val emptyProvider: Provider<T>,

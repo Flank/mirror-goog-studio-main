@@ -197,7 +197,7 @@ public class DexArchivesTest {
         File inputJarHashes =
                 new File(
                         ArtifactTypeUtil.getOutputDir(
-                                InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES,
+                                InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES.INSTANCE,
                                 project.getBuildDir()),
                         "debug/out");
         assertThat(inputJarHashes).exists();
@@ -223,7 +223,8 @@ public class DexArchivesTest {
         File projectDexOut =
                 new File(
                         ArtifactTypeUtil.getOutputDir(
-                                InternalArtifactType.PROJECT_DEX_ARCHIVE, project.getBuildDir()),
+                                InternalArtifactType.PROJECT_DEX_ARCHIVE.INSTANCE,
+                                project.getBuildDir()),
                         "debug/out");
 
         List<String> dexInDirs = new ArrayList<>();
@@ -289,7 +290,7 @@ public class DexArchivesTest {
     private File builderDir() {
         return new File(
                 ArtifactTypeUtil.getOutputDir(
-                        InternalArtifactType.PROJECT_DEX_ARCHIVE, project.getBuildDir()),
+                        InternalArtifactType.PROJECT_DEX_ARCHIVE.INSTANCE, project.getBuildDir()),
                 "debug/out");
     }
 }

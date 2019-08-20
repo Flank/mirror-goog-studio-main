@@ -55,6 +55,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -96,7 +97,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
-import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
@@ -242,7 +242,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -484,7 +483,7 @@ public abstract class TaskManager {
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
         for (VariantScope scope : variants) {
-            scope.getArtifacts().copy(LINT_PUBLISH_JAR, globalScope.getArtifacts());
+            scope.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
         }
     }
 
@@ -640,13 +639,14 @@ public abstract class TaskManager {
                             AndroidArtifacts.ArtifactType.CLASSES,
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
             // now get the output type
-            com.android.build.api.artifact.ArtifactType testedOutputType =
-                    Objects.requireNonNull(taskOutputSpec).getOutputType();
+            com.android.build.api.artifact.ArtifactType<Directory> testedOutputType =
+                    (ArtifactType<Directory>)
+                            Objects.requireNonNull(taskOutputSpec).getOutputType();
 
             variantScope
                     .getArtifacts()
                     .copy(
-                            InternalArtifactType.TESTED_CODE_CLASSES,
+                            InternalArtifactType.TESTED_CODE_CLASSES.INSTANCE,
                             testedVariantScope.getArtifacts(),
                             testedOutputType);
 
@@ -736,8 +736,8 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull VariantScope testedScope) {
 
-        Provider<FileSystemLocation> mergedManifest =
-                testedScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS);
+        Provider<Directory> mergedManifest =
+                testedScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS.INSTANCE);
         taskFactory.register(
                 new ProcessTestManifest.CreationAction(scope, project.files(mergedManifest)));
     }
@@ -783,8 +783,8 @@ public abstract class TaskManager {
         /** Merge all resources with all the dependencies resources (i.e. "big merge"). */
         MERGE {
             @Override
-            public InternalArtifactType getOutputType() {
-                return InternalArtifactType.MERGED_RES;
+            public InternalArtifactType<Directory> getOutputType() {
+                return InternalArtifactType.MERGED_RES.INSTANCE;
             }
         },
         /**
@@ -792,12 +792,12 @@ public abstract class TaskManager {
          */
         PACKAGE {
             @Override
-            public InternalArtifactType getOutputType() {
-                return InternalArtifactType.PACKAGED_RES;
+            public InternalArtifactType<Directory> getOutputType() {
+                return InternalArtifactType.PACKAGED_RES.INSTANCE;
             }
         };
 
-        public abstract InternalArtifactType getOutputType();
+        public abstract InternalArtifactType<Directory> getOutputType();
     }
 
     public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
@@ -849,7 +849,7 @@ public abstract class TaskManager {
         if (alsoOutputNotCompiledResources) {
             scope.getArtifacts()
                     .producesDir(
-                            MERGED_NOT_COMPILED_RES,
+                            MERGED_NOT_COMPILED_RES.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             mergeResourcesTask,
                             MergeResources::getMergedNotCompiledResourcesOutputDirectory,
@@ -899,8 +899,10 @@ public abstract class TaskManager {
     public void createApkProcessResTask(
             @NonNull VariantScope scope) {
         VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
-        InternalArtifactType packageOutputType =
-                (variantType.isApk() && !variantType.isForTesting()) ? FEATURE_RESOURCE_PKG : null;
+        InternalArtifactType<Directory> packageOutputType =
+                (variantType.isApk() && !variantType.isForTesting())
+                        ? FEATURE_RESOURCE_PKG.INSTANCE
+                        : null;
 
         createApkProcessResTask(scope, packageOutputType);
 
@@ -910,7 +912,7 @@ public abstract class TaskManager {
     }
 
     private void createApkProcessResTask(
-            @NonNull VariantScope scope, @Nullable InternalArtifactType packageOutputType) {
+            @NonNull VariantScope scope, @Nullable ArtifactType<Directory> packageOutputType) {
 
         // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(
@@ -940,7 +942,7 @@ public abstract class TaskManager {
 
     public void createProcessResTask(
             @NonNull VariantScope scope,
-            @Nullable InternalArtifactType packageOutputType,
+            @Nullable ArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         BaseVariantData variantData = scope.getVariantData();
@@ -960,7 +962,8 @@ public abstract class TaskManager {
                             useAaptToGenerateLegacyMultidexMainDexProguardRules);
 
             FileCollection rFiles =
-                    project.files(scope.getArtifacts().getFinalProduct(RUNTIME_R_CLASS_CLASSES));
+                    project.files(
+                            scope.getArtifacts().getFinalProduct(RUNTIME_R_CLASS_CLASSES.INSTANCE));
 
             scope.getTransformManager()
                     .addStream(
@@ -986,7 +989,7 @@ public abstract class TaskManager {
 
     private void createNonNamespacedResourceTasks(
             @NonNull VariantScope scope,
-            InternalArtifactType packageOutputType,
+            ArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
@@ -1021,7 +1024,7 @@ public abstract class TaskManager {
                             baseName));
 
             if (packageOutputType != null) {
-                artifacts.republish(PROCESSED_RES, packageOutputType);
+                artifacts.republish(PROCESSED_RES.INSTANCE, packageOutputType);
             }
 
             // create the task that creates the aapt output for the bundle.
@@ -1032,7 +1035,8 @@ public abstract class TaskManager {
                         .appendToAllClasses(
                                 artifacts
                                         .getFinalProductAsFileCollection(
-                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                                                        .INSTANCE)
                                         .get());
             }
         }
@@ -1127,8 +1131,7 @@ public abstract class TaskManager {
      *
      * <ul>
      *   <li>{@link Sync} task configured with {@link ProcessJavaResTask.CreationAction} will sync
-     *       all source folders into a single folder identified by {@link
-     *       InternalArtifactType#JAVA_RES}
+     *       all source folders into a single folder identified by {@link InternalArtifactType}
      *   <li>{@link MergeJavaResourceTask} will take the output of this merge plus the dependencies
      *       and will create a single merge with the {@link PackagingOptions} settings applied.
      * </ul>
@@ -1161,7 +1164,8 @@ public abstract class TaskManager {
                                                                     .getArtifacts()
                                                                     .getFinalProduct(
                                                                             InternalArtifactType
-                                                                                    .JAVA_RES)))
+                                                                                    .JAVA_RES
+                                                                                    .INSTANCE)))
                                     .build());
         }
     }
@@ -1183,7 +1187,7 @@ public abstract class TaskManager {
         // also add a new merged java res stream if needed.
         if (variantScope.getNeedsMergedJavaResStream()) {
             Provider<RegularFile> mergedJavaResProvider =
-                    variantScope.getArtifacts().getFinalProduct(MERGED_JAVA_RES);
+                    variantScope.getArtifacts().getFinalProduct(MERGED_JAVA_RES.INSTANCE);
             transformManager.addStream(
                     OriginalStream.builder(project, "merged-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
@@ -1247,7 +1251,7 @@ public abstract class TaskManager {
      */
     protected void addJavacClassesStream(VariantScope scope) {
         BuildArtifactsHolder artifacts = scope.getArtifacts();
-        Provider<Directory> javaOutputs = artifacts.getFinalProduct(JAVAC);
+        Provider<Directory> javaOutputs = artifacts.getFinalProduct(JAVAC.INSTANCE);
         Preconditions.checkNotNull(javaOutputs);
         // create separate streams for the output of JAVAC and for the pre/post javac
         // bytecode hooks
@@ -1300,7 +1304,8 @@ public abstract class TaskManager {
                                             artifacts
                                                     .getFinalProductAsFileCollection(
                                                             InternalArtifactType
-                                                                    .NAMESPACED_CLASSES_JAR)
+                                                                    .NAMESPACED_CLASSES_JAR
+                                                                    .INSTANCE)
                                                     .get())
                                     .build());
         }
@@ -1419,7 +1424,7 @@ public abstract class TaskManager {
 
                 createMergeResourcesTask(variantScope, true, ImmutableSet.of());
                 // Add a task to process the Android Resources and generate source files
-                createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
+                createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG.INSTANCE);
                 taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
 
                 // Add data binding tasks if enabled
@@ -1427,8 +1432,8 @@ public abstract class TaskManager {
             } else if (testedVariantScope.getType().isApk()) {
                 // The IDs will have been inlined for an non-namespaced application
                 // so just re-export the artifacts here.
-                artifacts.copy(PROCESSED_RES, testedVariantScope.getArtifacts());
-                artifacts.copy(MERGED_ASSETS, testedVariantScope.getArtifacts());
+                artifacts.copy(PROCESSED_RES.INSTANCE, testedVariantScope.getArtifacts());
+                artifacts.copy(MERGED_ASSETS.INSTANCE, testedVariantScope.getArtifacts());
 
                 taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
             } else {
@@ -1491,7 +1496,7 @@ public abstract class TaskManager {
                 testedVariantScope.getTaskContainer().getProcessJavaResourcesTask());
 
         // Empty R class jar. TODO: Resources support for unit tests?
-        artifacts.emptyFile(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR);
+        artifacts.emptyFile(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE);
 
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
@@ -1518,8 +1523,8 @@ public abstract class TaskManager {
                 variantScope
                         .getArtifacts()
                         .getFinalProductAsFileCollection(
-                                InternalArtifactType
-                                        .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                                        .INSTANCE);
 
         variantScope
                 .getTransformManager()
@@ -1786,7 +1791,7 @@ public abstract class TaskManager {
                             testVariantData,
                             testVariantScope
                                     .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.APK),
+                                    .getFinalProduct(InternalArtifactType.APK.INSTANCE),
                             FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             baseVariantData
                                     .getScope()
@@ -1799,14 +1804,14 @@ public abstract class TaskManager {
                                     .getTestedVariantData()
                                     .getScope()
                                     .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.APK));
+                                    .getFinalProduct(InternalArtifactType.APK.INSTANCE));
 
             testData =
                     new TestDataImpl(
                             testVariantData,
                             testVariantScope
                                     .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.APK),
+                                    .getFinalProduct(InternalArtifactType.APK.INSTANCE),
                             isLibrary ? null : testedApkFileCollection);
         }
 
@@ -2168,8 +2173,8 @@ public abstract class TaskManager {
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask,
                             produceSeparateOutputs
-                                    ? InternalArtifactType.DEX
-                                    : InternalArtifactType.EXTERNAL_LIBS_DEX));
+                                    ? InternalArtifactType.DEX.INSTANCE
+                                    : InternalArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
 
             if (produceSeparateOutputs) {
                 DexMergingTask.CreationAction mergeProject =
@@ -2273,13 +2278,15 @@ public abstract class TaskManager {
                 project.files(
                         variantScope
                                 .getArtifacts()
-                                .getFinalProduct(InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
+                                .getFinalProduct(
+                                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE),
                         project.files(
                                         variantScope
                                                 .getArtifacts()
                                                 .getFinalProduct(
                                                         InternalArtifactType
-                                                                .JACOCO_INSTRUMENTED_JARS))
+                                                                .JACOCO_INSTRUMENTED_JARS
+                                                                .INSTANCE))
                                 .getAsFileTree());
         variantScope
                 .getTransformManager()
@@ -2406,7 +2413,7 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        InternalArtifactType manifestType = variantScope.getManifestArtifactType();
+        ArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
 
         final boolean splitsArePossible =
                 variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
@@ -2422,13 +2429,15 @@ public abstract class TaskManager {
                         ? variantScope.getFullApkPackagesOutputDirectory()
                         : finalApkLocation;
 
-        InternalArtifactType taskOutputType =
-                splitsArePossible ? InternalArtifactType.FULL_APK : InternalArtifactType.APK;
+        ArtifactType<Directory> taskOutputType =
+                splitsArePossible
+                        ? InternalArtifactType.FULL_APK.INSTANCE
+                        : InternalArtifactType.APK.INSTANCE;
 
-        InternalArtifactType resourceFilesInputType =
+        ArtifactType<Directory> resourceFilesInputType =
                 variantScope.useResourceShrinker()
-                        ? InternalArtifactType.SHRUNK_PROCESSED_RES
-                        : InternalArtifactType.PROCESSED_RES;
+                        ? InternalArtifactType.SHRUNK_PROCESSED_RES.INSTANCE
+                        : InternalArtifactType.PROCESSED_RES.INSTANCE;
 
         // Common code for both packaging tasks.
         Action<Task> configureResourcesAndAssetsDependencies =
@@ -2767,7 +2776,8 @@ public abstract class TaskManager {
                             "Assembles bundle for variant "
                                     + scope.getVariantConfiguration().getFullName());
                     task.dependsOn(
-                            scope.getArtifacts().getFinalProduct(InternalArtifactType.BUNDLE));
+                            scope.getArtifacts()
+                                    .getFinalProduct(InternalArtifactType.BUNDLE.INSTANCE));
                 },
                 taskProvider -> scope.getTaskContainer().setBundleTask(taskProvider));
     }
@@ -2884,7 +2894,9 @@ public abstract class TaskManager {
                         + "VariantType: "
                         + variantScope.getType());
         Provider<Directory> artifact =
-                variantScope.getArtifacts().getFinalProduct(InternalArtifactType.FEATURE_DEX);
+                variantScope
+                        .getArtifacts()
+                        .getFinalProduct(InternalArtifactType.FEATURE_DEX.INSTANCE);
         for (String modulePath : modulePaths) {
             Provider<RegularFile> file =
                     artifact.map(directory -> directory.file(getFeatureFileName(modulePath, null)));
@@ -3253,7 +3265,7 @@ public abstract class TaskManager {
 
         scope.getArtifacts()
                 .producesDir(
-                        InternalArtifactType.DATA_BINDING_ARTIFACT,
+                        InternalArtifactType.DATA_BINDING_ARTIFACT.INSTANCE,
                         BuildArtifactsHolder.OperationType.TRANSFORM,
                         kaptTaskProvider,
                         (Task task) -> databindingArtifact,

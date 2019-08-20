@@ -123,7 +123,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
                 task.consumerProguardFiles,
                 variantScope
                     .artifacts
-                    .getFinalProduct<FileSystemLocation>(InternalArtifactType.GENERATED_PROGUARD_FILE)
+                    .getFinalProduct(InternalArtifactType.GENERATED_PROGUARD_FILE)
             )
             if (variantScope.type.isFeatureSplit) {
                 task.inputFiles.from(

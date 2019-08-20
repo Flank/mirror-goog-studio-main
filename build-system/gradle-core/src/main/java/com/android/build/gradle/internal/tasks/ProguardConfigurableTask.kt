@@ -217,7 +217,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     testedVariantData
                         .scope
                         .artifacts
-                        .getFinalProduct<FileSystemLocation>(APK_MAPPING)
+                        .getFinalProduct(APK_MAPPING)
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
@@ -323,8 +323,8 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             val configurationFiles = task.project.files(
                 proguardConfigFiles,
-                variantScope.artifacts.getFinalProduct<FileSystemLocation>(aaptProguardFileType),
-                variantScope.artifacts.getFinalProduct<FileSystemLocation>(GENERATED_PROGUARD_FILE),
+                variantScope.artifacts.getFinalProduct(aaptProguardFileType),
+                variantScope.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
                 variantScope.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,

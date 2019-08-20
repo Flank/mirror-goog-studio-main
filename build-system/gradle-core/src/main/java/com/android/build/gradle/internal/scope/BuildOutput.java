@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.gradle.api.file.FileSystemLocation;
 
 /**
  * A build output like a merged manifest file, a jar file, an APK file.
@@ -75,7 +76,10 @@ public final class BuildOutput implements OutputFile, Serializable {
         this.outputType = outputType;
         this.apkData =
                 Preconditions.checkNotNull(
-                        apkData, "apkData for %s [%s] is null.", outputType, systemIndependentPath);
+                        apkData,
+                        "apkData for %s [%s] is null.",
+                        outputType.name(),
+                        systemIndependentPath);
         this.path = systemIndependentPath;
         this.properties = properties;
     }
@@ -107,7 +111,7 @@ public final class BuildOutput implements OutputFile, Serializable {
      * @return the build output type.
      */
     @NonNull
-    public ArtifactType getType() {
+    public ArtifactType<FileSystemLocation> getType() {
         return outputType;
     }
 

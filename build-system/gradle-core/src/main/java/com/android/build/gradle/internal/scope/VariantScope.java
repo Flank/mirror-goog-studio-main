@@ -43,8 +43,10 @@ import javax.annotation.Nonnull;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
 /** A scope containing data for a specific variant. */
@@ -205,7 +207,7 @@ public interface VariantScope extends TransformVariantScope {
     FileCollection getProvidedOnlyClasspath();
 
     @NonNull
-    Provider<FileSystemLocation> getRJarForUnitTests();
+    Provider<RegularFile> getRJarForUnitTests();
 
     @NonNull
     File getDefaultMergeResourcesOutputDir();
@@ -273,7 +275,8 @@ public interface VariantScope extends TransformVariantScope {
     VariantDependencies getVariantDependencies();
 
     @NonNull
-    File getIntermediateDir(@NonNull InternalArtifactType taskOutputType);
+    File getIntermediateDir(
+            @NonNull com.android.build.api.artifact.ArtifactType<Directory> taskOutputType);
 
     enum Java8LangSupport {
         INVALID,
@@ -300,7 +303,7 @@ public interface VariantScope extends TransformVariantScope {
     FileCollection getBootClasspath();
 
     @NonNull
-    InternalArtifactType getManifestArtifactType();
+    InternalArtifactType<Directory> getManifestArtifactType();
 
     @NonNull
     FileCollection getSigningConfigFileCollection();

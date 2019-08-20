@@ -105,7 +105,7 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
         FileUtils.cleanOutputDir(outDir);
 
         if (apkDirectory != null) {
-            BuildElements apks = ExistingBuildElements.from(APK, apkDirectory);
+            BuildElements apks = ExistingBuildElements.from(APK.INSTANCE, apkDirectory);
 
             if (apks.isEmpty()) {
                 throw new IllegalStateException("Wear App dependency resolve to zero APK");

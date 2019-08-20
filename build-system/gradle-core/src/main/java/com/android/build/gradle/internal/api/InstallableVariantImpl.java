@@ -30,6 +30,7 @@ import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -120,7 +121,8 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
      */
     @NonNull
     @Incubating
-    public Provider<FileCollection> getFinalArtifact(@NonNull ArtifactType artifactType) {
+    public Provider<FileCollection> getFinalArtifact(
+            @NonNull ArtifactType<FileSystemLocation> artifactType) {
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
         return artifacts.getFinalProductAsFileCollection(artifactType);
     }

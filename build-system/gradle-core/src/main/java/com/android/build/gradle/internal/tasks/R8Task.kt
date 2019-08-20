@@ -223,7 +223,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             if (artifacts.hasFinalProduct(
                     InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES)) {
                 task.mainDexRulesFiles.from(
-                    artifacts.getFinalProduct<FileSystemLocation>(
+                    artifacts.getFinalProduct(
                         InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
                     )
                 )

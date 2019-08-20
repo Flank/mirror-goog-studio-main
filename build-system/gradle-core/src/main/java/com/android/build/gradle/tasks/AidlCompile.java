@@ -221,7 +221,7 @@ public abstract class AidlCompile extends NonIncrementalTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
+                            InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             AidlCompile::getSourceOutputDir,
@@ -231,7 +231,7 @@ public abstract class AidlCompile extends NonIncrementalTask {
                 getVariantScope()
                         .getArtifacts()
                         .producesDir(
-                                InternalArtifactType.AIDL_PARCELABLE,
+                                InternalArtifactType.AIDL_PARCELABLE.INSTANCE,
                                 BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
                                 AidlCompile::getPackagedDir,

@@ -131,8 +131,10 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 
@@ -634,9 +636,9 @@ public class VariantScopeImpl implements VariantScope {
 
         BaseVariantData tested = getTestedVariantData();
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
-            Provider<FileSystemLocation> namespacedRClassJar =
+            Provider<RegularFile> namespacedRClassJar =
                     artifacts.getFinalProduct(
-                            InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR);
+                            InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE);
 
             ConfigurableFileTree fileTree =
                     getProject().fileTree(namespacedRClassJar).builtBy(namespacedRClassJar);
@@ -655,7 +657,8 @@ public class VariantScopeImpl implements VariantScope {
                         mainCollection.plus(
                                 artifacts
                                         .getFinalProductAsFileCollection(
-                                                InternalArtifactType.NAMESPACED_CLASSES_JAR)
+                                                InternalArtifactType.NAMESPACED_CLASSES_JAR
+                                                        .INSTANCE)
                                         .get());
 
                 mainCollection =
@@ -664,7 +667,8 @@ public class VariantScopeImpl implements VariantScope {
                                         .files(
                                                 artifacts.getFinalProduct(
                                                         InternalArtifactType
-                                                                .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR)));
+                                                                .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR
+                                                                .INSTANCE)));
             }
 
             if (tested != null) {
@@ -676,7 +680,8 @@ public class VariantScopeImpl implements VariantScope {
                                                 .getArtifacts()
                                                 .getFinalProduct(
                                                         InternalArtifactType
-                                                                .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                                                                .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+                                                                .INSTANCE)
                                                 .get());
             }
         } else {
@@ -690,8 +695,9 @@ public class VariantScopeImpl implements VariantScope {
                                 && !getType().isForTesting();
 
                 if (getType().isAar() || useCompileRClassInApp) {
-                    Provider<FileSystemLocation> rJar =
-                            artifacts.getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                    Provider<RegularFile> rJar =
+                            artifacts.getFinalProduct(
+                                    COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
                     mainCollection = getProject().files(mainCollection, rJar);
                 } else {
                     checkState(getType().isApk(), "Expected APK type but found: " + getType());
@@ -704,16 +710,16 @@ public class VariantScopeImpl implements VariantScope {
                     // artifact for each publication.
                     Provider<FileCollection> rJar =
                             artifacts.getFinalProductAsFileCollection(
-                                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
                     mainCollection = getProject().files(rJar, mainCollection);
                 }
             } else { // Android test or unit test
                 if (!globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
-                    Provider<FileSystemLocation> rJar;
+                    Provider<RegularFile> rJar;
                     if (getType() == ANDROID_TEST) {
                         rJar =
                                 artifacts.getFinalProduct(
-                                        COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                                        COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
                     } else {
                         rJar = getRJarForUnitTests();
                     }
@@ -857,8 +863,8 @@ public class VariantScopeImpl implements VariantScope {
                 // was published to.
                 if (publishedConfigs.contains(configType.getPublishedTo())) {
                     // if it's the case then we add the tested artifact.
-                    final com.android.build.api.artifact.ArtifactType taskOutputType =
-                            taskOutputSpec.getOutputType();
+                    final com.android.build.api.artifact.ArtifactType<? extends FileSystemLocation>
+                            taskOutputType = taskOutputSpec.getOutputType();
                     BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
                     artifacts =
                             ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
@@ -1042,7 +1048,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public Provider<FileSystemLocation> getRJarForUnitTests() {
+    public Provider<RegularFile> getRJarForUnitTests() {
         VariantScope testedScope =
                 checkNotNull(
                                 getTestedVariantData(),
@@ -1058,11 +1064,11 @@ public class VariantScopeImpl implements VariantScope {
                     .isIncludeAndroidResources()) {
                 // Unit tests that use Android resources require the same R.jar as Android tests
                 return this.getArtifacts()
-                        .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                        .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
             } else {
                 return testedScope
                         .getArtifacts()
-                        .getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                        .getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
             }
         } else {
             checkState(
@@ -1070,7 +1076,7 @@ public class VariantScopeImpl implements VariantScope {
                     "Expected APK type but found: " + testedScope.getType());
             return testedScope
                     .getArtifacts()
-                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         }
     }
 
@@ -1208,7 +1214,8 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public File getIntermediateDir(@NonNull InternalArtifactType taskOutputType) {
+    public File getIntermediateDir(
+            @NonNull com.android.build.api.artifact.ArtifactType<Directory> taskOutputType) {
         return intermediate(taskOutputType.name().toLowerCase(Locale.US));
     }
 
@@ -1403,10 +1410,10 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public InternalArtifactType getManifestArtifactType() {
+    public InternalArtifactType<Directory> getManifestArtifactType() {
         return globalScope.getProjectOptions().get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
-                ? InternalArtifactType.INSTANT_APP_MANIFEST
-                : InternalArtifactType.MERGED_MANIFESTS;
+                ? InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE
+                : InternalArtifactType.MERGED_MANIFESTS.INSTANCE;
     }
 
     @NonNull
@@ -1428,14 +1435,18 @@ public class VariantScopeImpl implements VariantScope {
                         AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
             } else {
                 return getProject()
-                        .files(getArtifacts().getFinalProduct(InternalArtifactType.SIGNING_CONFIG));
+                        .files(
+                                getArtifacts()
+                                        .getFinalProduct(
+                                                InternalArtifactType.SIGNING_CONFIG.INSTANCE));
             }
         } else {
             return variantType.isBaseModule()
                     ? getProject()
                             .files(
                                     getArtifacts()
-                                            .getFinalProduct(InternalArtifactType.SIGNING_CONFIG))
+                                            .getFinalProduct(
+                                                    InternalArtifactType.SIGNING_CONFIG.INSTANCE))
                     : getArtifactFileCollection(
                             ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,

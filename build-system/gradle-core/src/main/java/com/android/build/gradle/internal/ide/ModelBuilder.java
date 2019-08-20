@@ -129,6 +129,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -718,10 +719,12 @@ public class ModelBuilder<Extension extends BaseExtension>
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
-        if (scope.getArtifacts().hasFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
+        if (scope.getArtifacts()
+                .hasFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)) {
             additionalTestClasses.add(
                     scope.getArtifacts()
-                            .getFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
+                            .getFinalProduct(
+                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)
                             .get()
                             .getAsFile());
         }
@@ -741,7 +744,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 scope.getTaskContainer().getCompileTask().getName(),
                 Sets.newHashSet(taskManager.createMockableJar.getName()),
                 getGeneratedSourceFoldersForUnitTests(variantData),
-                scope.getArtifacts().getFinalProduct(JAVAC).get().getAsFile(),
+                scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,
                 variantData.getJavaResourcesForUnitTesting(),
                 mockableJar,
@@ -903,7 +906,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getCompileTask().getName(),
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
-                scope.getArtifacts().getFinalProduct(JAVAC).get().getAsFile(),
+                scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
@@ -967,9 +970,9 @@ public class ModelBuilder<Extension extends BaseExtension>
             case TEST_APK:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(
-                                InternalArtifactType.APK,
-                                InternalArtifactType.ABI_PACKAGED_SPLIT,
-                                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
+                                InternalArtifactType.APK.INSTANCE,
+                                InternalArtifactType.ABI_PACKAGED_SPLIT.INSTANCE,
+                                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 ApkData mainApkInfo =
@@ -977,18 +980,18 @@ public class ModelBuilder<Extension extends BaseExtension>
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
-                                        InternalArtifactType.AAR,
+                                        InternalArtifactType.AAR.INSTANCE,
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
                                         variantScope
                                                 .getArtifacts()
-                                                .getFinalProduct(InternalArtifactType.AAR)
+                                                .getFinalProduct(InternalArtifactType.AAR.INSTANCE)
                                                 .get()
                                                 .getAsFile())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(InternalArtifactType.APK),
+                        ImmutableList.of(InternalArtifactType.APK.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case UNIT_TEST:
                 return (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
@@ -1013,11 +1016,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             AndroidArtifacts.ArtifactType.CLASSES,
                                             AndroidArtifacts.PublishedConfigType.API_ELEMENTS);
                             // now get the output type
-                            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
+                            ArtifactType<? extends FileSystemLocation> testedOutputType =
+                                    taskOutputSpec.getOutputType();
 
                             return ImmutableList.of(
                                     new EarlySyncBuildOutput(
-                                            JAVAC,
+                                            JAVAC.INSTANCE,
                                             VariantOutput.OutputType.MAIN,
                                             ImmutableList.of(),
                                             variantData.getVariantConfiguration().getVersionCode(),
@@ -1054,7 +1058,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             case ANDROID_TEST:
             case TEST_APK:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS),
+                        ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS.INSTANCE),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
             case LIBRARY:
                 ApkData mainApkInfo =
@@ -1062,7 +1066,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
-                                        InternalArtifactType.MERGED_MANIFESTS,
+                                        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
@@ -1109,7 +1113,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantData
                         .getScope()
                         .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.AP_GENERATED_SOURCES)
+                        .getFinalProduct(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE)
                         .get()
                         .getAsFile());
         return folders;
@@ -1128,7 +1132,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
         boolean addBindingSources =
                 (isDataBindingEnabled || isViewBindingEnabled)
-                        && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                        && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
         // Set this to the number of folders you expect to add explicitly in the code below.
@@ -1142,7 +1146,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         folders.add(
                 scope.getArtifacts()
-                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
+                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE)
                         .get()
                         .getAsFile());
         folders.add(scope.getBuildConfigSourceOutputDir());
@@ -1150,15 +1154,17 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (ndkMode == null || !ndkMode) {
             folders.add(
                     scope.getArtifacts()
-                            .getFinalProduct(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+                            .getFinalProduct(
+                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
                             .get()
                             .getAsFile());
         }
         if (addBindingSources
-                && scope.getArtifacts().hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)) {
+                && scope.getArtifacts()
+                        .hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)) {
             folders.add(
                     scope.getArtifacts()
-                            .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
+                            .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)
                             .get()
                             .getAsFile());
         }

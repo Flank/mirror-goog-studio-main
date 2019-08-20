@@ -504,10 +504,13 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
-        if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
+        if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)) {
             //     bypass the configuration time resolution check as some calls this API during
             // configuration.
-            return artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING).get().getAsFile();
+            return artifacts
+                    .getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)
+                    .get()
+                    .getAsFile();
         }
         return null;
     }
@@ -518,7 +521,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         return getVariantData()
                 .getScope()
                 .getArtifacts()
-                .getFinalProductAsFileCollection(InternalArtifactType.APK_MAPPING);
+                .getFinalProductAsFileCollection(InternalArtifactType.APK_MAPPING.INSTANCE);
     }
 
     @Override

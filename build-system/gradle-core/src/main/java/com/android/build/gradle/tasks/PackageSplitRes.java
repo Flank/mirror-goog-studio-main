@@ -65,7 +65,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
     @Override
     protected void doTaskAction() {
         ExistingBuildElements.from(
-                        InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                        InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES.INSTANCE,
                         getProcessedResources())
                 .transform(
                         getWorkerFacadeWithWorkers(),
@@ -73,7 +73,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                         ((apkInfo, file) ->
                                 new PackageSplitResTransformParams(apkInfo, file, this)))
                 .into(
-                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE,
                         getSplitResApkOutputDirectory().get().getAsFile());
     }
 
@@ -180,7 +180,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             PackageSplitRes::getSplitResApkOutputDirectory,
@@ -194,7 +194,8 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
 
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
-                            InternalArtifactType.PROCESSED_RES, task.getProcessedResources());
+                            InternalArtifactType.PROCESSED_RES.INSTANCE,
+                            task.getProcessedResources());
             task.signingConfig = SigningConfigProvider.create(scope);
             task.incrementalDir = scope.getIncrementalDir(getName());
         }

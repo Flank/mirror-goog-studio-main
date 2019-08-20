@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,108 @@
 package com.android.build.api.artifact
 
 import org.gradle.api.Incubating
+import org.gradle.api.file.Directory
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
+import java.util.Locale
+import java.io.Serializable
 
-/** Represents a type of build artifact.
+/**
+ * Defines a type of artifact handled by the Android Gradle Plugin.
  *
- * This interface is not currently usable. It is a work in progress.
+ * Each instance of [ArtifactType] is produced by a [org.gradle.api.Task] and potentially consumed by
+ * one to many tasks.
+ *
+ * An artifact can potentially be produced by more than one tasks (each task acting in an additive
+ * behavior), but consumers must be aware when more than one artifacts can be present,
+ * implementing [Multiple] interface will indicate such requirement.
+ *
+ * An artifact must be one the supported [ArtifactKind] which provided at construction time which also
+ * defines the Gradle file type used to abstract a filesystem location.
  */
 @Incubating
-interface ArtifactType {
-    fun name(): String
-    fun kind(): Kind
+abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): Serializable {
 
     /**
-     * Denotes the expected type of artifact type, this represent a binding contract between
-     * producers and consumers.
+     * Returns true if this artifact type is meant to be public, therefore available through
+     * the variant API that third party plugins can use.
+     *
+     * @return true if this artifact can be consumed by third party plugins, false otherwise.
+     */
+    abstract val isPublic: Boolean
+
+    /**
+     * Provide a unique name for the artifact type. For external plugins defining new types,
+     * consider adding the plugin name to the artifact's name to avoid collision with other plugins.
+     */
+    fun name(): String = javaClass.simpleName
+
+    /**
+     * @return the folder name under which the artifact files or folders should be stored.
+     */
+    open fun getFolderName(): String = name().toLowerCase(Locale.US)
+
+    /**
+     * Supported [ArtifactKind]
      */
     @Incubating
-    enum class Kind {
-        FILE,
-        DIRECTORY
+    companion object {
+        /**
+         * [ArtifactKind] for [RegularFile]
+         */
+        @JvmField
+        val FILE= ArtifactKind.FILE
+
+        /**
+         * [ArtifactKind] for [Directory]
+         */
+        @JvmField
+        val DIRECTORY= ArtifactKind.DIRECTORY
     }
 
     /**
-     * @return the folder name to use when persisting artifacts, by default, we use the [name]
+     * Denotes possible multiple [FileSystemLocation] instances for this artifact type.
+     * Consumers of artifact types that are multiple must be consuming collection of
+     * [FileSystemLocation]
      */
-    fun getFolderName(): String
+    @Incubating
+    interface Multiple
+
+    /**
+     * Denotes a single [FileSystemLocation] instance of this artifact type at a given time.
+     * Single artifact types can be transformed or replaced but never appended.
+     * Consumers of artifact types that are multiple must be consuming collection of
+     * [FileSystemLocation]
+     */
+    @Incubating
+    interface Single
+
+    /**
+     * Denotes an artifact type that can be appended to.
+     * Appending means that existing artifacts produced by other tasks are untouched and a
+     * new task producing the artifact type will have its output appended to the list of artifacts.
+     *
+     * Due to the additive behavior of the append scenario, an [Appendable] is by definition also
+     * [Multiple]
+     */
+    @Incubating
+    interface Appendable: Multiple
+
+    /**
+     * Denotes an artifact type that can transformed.
+     *
+     * Either a [Single] or [Multiple] artifact type can be transformed.
+     */
+    @Incubating
+    interface Transformable
+
+    /**
+     * Denotes an artifact type that can be replaced.
+     * Only [Single] artifacts can be replaced, if you want to replace a [Multiple] artifact type,
+     * you will need to transform it by combining all the inputs into a single output instance.
+     */
+    @Incubating
+    interface Replaceable: Single
 }
+
+

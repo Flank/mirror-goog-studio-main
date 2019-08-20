@@ -144,13 +144,13 @@ class BuildElementsTest {
                 ExistingBuildElements.from(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, folder)
         assertThat(densityOrLanguageSplits
                 .asSequence()
-                .filter { it.type === DENSITY_OR_LANGUAGE_PACKAGED_SPLIT }
+                .filter { it.type.name() == DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.name() }
                 .count())
                 .isEqualTo(3)
         val mergedManifests = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         assertThat(mergedManifests
                 .asSequence()
-                .filter { it.type === MERGED_MANIFESTS }
+                .filter { it.type.name() == MERGED_MANIFESTS.name() }
                 .count())
                 .isEqualTo(1)
     }

@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -204,7 +205,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         private set
 
     @get:Input
-    lateinit var taskInputType: InternalArtifactType
+    lateinit var taskInputType: InternalArtifactType<Directory>
         private set
 
     @get:Input

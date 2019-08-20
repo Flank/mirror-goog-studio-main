@@ -127,7 +127,7 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
             super.handleProvider(taskProvider);
             scope.getArtifacts()
                     .producesDir(
-                            InternalArtifactType.INSTANTAPP_BUNDLE,
+                            InternalArtifactType.INSTANTAPP_BUNDLE.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             BundleInstantApp::getBundleDirectory,
@@ -190,7 +190,7 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
                         for (File apkDirectory : params.apkDirectories) {
                             for (BuildOutput buildOutput :
                                     ExistingBuildElements.from(
-                                            InternalArtifactType.APK, apkDirectory)) {
+                                            InternalArtifactType.APK.INSTANCE, apkDirectory)) {
                                 File apkFile = buildOutput.getOutputFile();
                                 try (FileInputStream fileInputStream =
                                         new FileInputStream(apkFile)) {

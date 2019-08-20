@@ -45,7 +45,8 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
         List<File> testedApkFiles =
                 getTestedApks().isPresent()
-                        ? ExistingBuildElements.from(InternalArtifactType.APK, getTestedApks())
+                        ? ExistingBuildElements.from(
+                                        InternalArtifactType.APK.INSTANCE, getTestedApks())
                                 .stream()
                                 .map(BuildOutput::getOutputFile)
                                 .collect(Collectors.toList())
@@ -56,7 +57,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
         }
         File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
         List<File> testApkFiles =
-                ExistingBuildElements.from(InternalArtifactType.APK, getTestApks())
+                ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, getTestApks())
                         .stream()
                         .map(BuildOutput::getOutputFile)
                         .collect(Collectors.toList());
@@ -132,15 +133,17 @@ public abstract class TestServerTask extends NonIncrementalTask {
                     && testedVariantData
                             .getScope()
                             .getArtifacts()
-                            .hasFinalProduct(InternalArtifactType.APK)) {
+                            .hasFinalProduct(InternalArtifactType.APK.INSTANCE)) {
                 testedVariantData
                         .getScope()
                         .getArtifacts()
-                        .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getTestedApks());
+                        .setTaskInputToFinalProduct(
+                                InternalArtifactType.APK.INSTANCE, task.getTestedApks());
             }
 
             scope.getArtifacts()
-                    .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getTestApks());
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.APK.INSTANCE, task.getTestApks());
 
             if (!testServer.isConfigured()) {
                 task.setEnabled(false);

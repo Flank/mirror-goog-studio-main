@@ -16,34 +16,24 @@
 
 package com.android.build.gradle.internal.api.artifact;
 
-import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
-import java.util.Locale;
+import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.Incubating;
+import org.gradle.api.file.Directory
 
 /** [ArtifactType] for source set. */
 @Incubating
-public enum SourceArtifactType implements ArtifactType {
-    JAVA_SOURCES,
-    JAVA_RESOURCES,
-    ASSETS,
-    ANDROID_RESOURCES,
-    AIDL,
-    RENDERSCRIPT,
-    JNI,
-    JNI_LIBS,
-    SHADERS;
+sealed class SourceArtifactType: ArtifactType<Directory>(
+    DIRECTORY) {
+    override val isPublic: Boolean
+        get() = true
 
-    @NonNull
-    @Override
-    public Kind kind() {
-        return Kind.DIRECTORY;
-    }
-
-
-    @NonNull
-    @Override
-    public String getFolderName() {
-        return name().toLowerCase(Locale.US);
-    }
+    object JAVA_SOURCES : SourceArtifactType()
+    object JAVA_RESOURCES : SourceArtifactType()
+    object ASSETS : SourceArtifactType()
+    object ANDROID_RESOURCES : SourceArtifactType()
+    object AIDL : SourceArtifactType()
+    object RENDERSCRIPT : SourceArtifactType()
+    object JNI : SourceArtifactType()
+    object JNI_LIBS : SourceArtifactType()
+    object SHADERS : SourceArtifactType()
 }

@@ -250,7 +250,7 @@ public class SigningTest {
         // Check that signing config is not written to disk when passed from the IDE (bug 137210434)
         File signingConfigDir =
                 ArtifactTypeUtil.getOutputDir(
-                        InternalArtifactType.SIGNING_CONFIG, project.getBuildDir());
+                        InternalArtifactType.SIGNING_CONFIG.INSTANCE, project.getBuildDir());
         assertThat(signingConfigDir).doesNotExist();
     }
 

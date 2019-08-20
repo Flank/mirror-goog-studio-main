@@ -133,42 +133,42 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     artifacts.getFinalProduct<RegularFile>(
                         InternalArtifactType.COMPILE_SYMBOL_LIST))
                 task.from(
-                    artifacts.getFinalProduct<Directory>(InternalArtifactType.PACKAGED_RES),
+                    artifacts.getFinalProduct(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
                 )
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
-                task.from(artifacts.getFinalProduct<Directory>(InternalArtifactType.LIBRARY_MANIFEST))
+                task.from(artifacts.getFinalProduct(InternalArtifactType.LIBRARY_MANIFEST))
             } else {
                 // In namespaced projects the bundled manifest needs to have stripped resource
                 // references for backwards compatibility.
-                task.from(artifacts.getFinalProduct<RegularFile>(
+                task.from(artifacts.getFinalProduct(
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
             }
             task.from(
-                artifacts.getFinalProduct<Directory>(InternalArtifactType.RENDERSCRIPT_HEADERS),
+                artifacts.getFinalProduct(InternalArtifactType.RENDERSCRIPT_HEADERS),
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
-            task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.PUBLIC_RES))
+            task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
             if (artifacts.hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
-                task.from(artifacts.getFinalProduct<RegularFile>(
+                task.from(artifacts.getFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
             task.from(artifacts.getFinalProductAsFileCollection(InternalArtifactType.RES_STATIC_LIBRARY))
             task.from(
-                artifacts.getFinalProduct<Directory>(LIBRARY_AND_LOCAL_JARS_JNI),
+                artifacts.getFinalProduct(LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
             task.from(variantScope.globalScope.artifacts
-                .getFinalProduct<RegularFile>(InternalArtifactType.LINT_PUBLISH_JAR))
-            task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.ANNOTATIONS_ZIP))
-            task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.AAR_MAIN_JAR))
+                .getFinalProduct(InternalArtifactType.LINT_PUBLISH_JAR))
+            task.from(artifacts.getFinalProduct(InternalArtifactType.ANNOTATIONS_ZIP))
+            task.from(artifacts.getFinalProduct(InternalArtifactType.AAR_MAIN_JAR))
             task.from(
-                artifacts.getFinalProduct<Directory>(InternalArtifactType.AAR_LIBS_DIRECTORY),
+                artifacts.getFinalProduct(InternalArtifactType.AAR_LIBS_DIRECTORY),
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
             task.from(
                 variantScope.artifacts
-                    .getFinalProduct<Directory>(InternalArtifactType.LIBRARY_ASSETS),
+                    .getFinalProduct(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
             task.localAarDeps.from(
                 variantScope.getLocalFileDependencies {

@@ -291,7 +291,8 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
-        final Provider<Directory> javacOutput = scope.getArtifacts().getFinalProduct(JAVAC);
+        final Provider<Directory> javacOutput =
+                scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
                 scope.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =
@@ -451,7 +452,7 @@ public class ApplicationTaskManager extends TaskManager {
             basicCreateMergeResourcesTask(
                     variantScope,
                     MergeType.PACKAGE,
-                    variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES),
+                    variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                     false,
                     false,
                     false,

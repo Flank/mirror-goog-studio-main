@@ -164,7 +164,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
         private val dexingType: DexingType,
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
-        private val outputType: InternalArtifactType = InternalArtifactType.DEX
+        private val outputType: InternalArtifactType<Directory> = InternalArtifactType.DEX
     ) : VariantTaskCreationAction<DexMergingTask>(variantScope) {
 
         private val internalName: String = when (action) {

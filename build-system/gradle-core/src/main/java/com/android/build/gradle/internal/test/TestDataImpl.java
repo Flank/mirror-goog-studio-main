@@ -109,11 +109,11 @@ public class TestDataImpl extends AbstractTestDataImpl {
         Collection<OutputFile> splitOutputs =
                 ImmutableList.copyOf(
                         ExistingBuildElements.from(
-                                InternalArtifactType.APK,
+                                InternalArtifactType.APK.INSTANCE,
                                 testedVariantData
                                         .getScope()
                                         .getArtifacts()
-                                        .getFinalProduct(InternalArtifactType.APK)));
+                                        .getFinalProduct(InternalArtifactType.APK.INSTANCE)));
         apks.addAll(
                 SplitOutputMatcher.computeBestOutput(
                         processExecutor,

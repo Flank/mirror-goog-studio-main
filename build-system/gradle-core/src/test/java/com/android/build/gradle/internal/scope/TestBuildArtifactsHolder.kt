@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
 import org.gradle.api.Project
 import java.io.File
@@ -24,14 +23,13 @@ import java.io.File
 internal class TestBuildArtifactsHolder(
     project: Project,
     val variantName: String,
-    val rootOutputDir: () -> File,
-    dslScope: DslScope
+    val rootOutputDir: () -> File
 ) : BuildArtifactsHolder(project, rootOutputDir) {
 
     override fun getIdentifier() = variantName
 
     /** Return the expected location of a generated file given the task name and file name. */
-    internal fun file(artifactType: InternalArtifactType, taskName : String, filename : String) =
+    internal fun file(artifactType: InternalArtifactType<*>, taskName : String, filename : String) =
         FileUtils.join(artifactType.getOutputDir(rootOutputDir()), variantName, taskName, filename)
 
 }

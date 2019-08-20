@@ -256,7 +256,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             try {
                 if (params.manifestOutputDirectory != null) {
                     new BuildOutput(
-                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                                     params.mainSplit,
                                     params.manifestOutputFile,
                                     properties)
@@ -265,7 +265,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
                 if (params.aaptFriendlyManifestOutputDirectory != null) {
                     new BuildOutput(
-                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS.INSTANCE,
                                     params.mainSplit,
                                     params.aaptFriendlyManifestOutputFile,
                                     properties)
@@ -386,28 +386,28 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
-                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory,
                     "aapt");
 
             artifacts.producesDir(
-                    InternalArtifactType.MERGED_MANIFESTS,
+                    InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
-                    InternalArtifactType.LIBRARY_MANIFEST,
+                    InternalArtifactType.LIBRARY_MANIFEST.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getManifestOutputFile,
                     SdkConstants.ANDROID_MANIFEST_XML);
 
             artifacts.producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getMergeBlameFile,
@@ -416,7 +416,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             + "-report.txt");
 
             artifacts.producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_REPORT,
+                    InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getReportFile,

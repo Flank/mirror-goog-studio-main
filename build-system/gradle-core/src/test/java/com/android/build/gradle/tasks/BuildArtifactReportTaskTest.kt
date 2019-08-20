@@ -92,7 +92,7 @@ class BuildArtifactReportTaskTest {
         task.report()
 
         val report = BuildArtifactsHolder.parseReport(outputFile)
-        val javacArtifacts = report[InternalArtifactType.COMPILE_LIBRARY_CLASSES] ?: throw NullPointerException()
+        val javacArtifacts = report[InternalArtifactType.COMPILE_LIBRARY_CLASSES.name()] ?: throw NullPointerException()
         assertThat(javacArtifacts.producers).hasSize(2)
         assertThat(javacArtifacts.producers[0].files[0]).endsWith("task0_output")
         assertThat(javacArtifacts.producers[0].builtBy).isEqualTo("task0")

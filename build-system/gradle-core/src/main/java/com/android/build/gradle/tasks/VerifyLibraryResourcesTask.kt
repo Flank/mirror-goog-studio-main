@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -71,11 +72,11 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDirectory: DirectoryProperty
 
-    lateinit var taskInputType: InternalArtifactType private set
+    lateinit var taskInputType: InternalArtifactType<Directory> private set
 
     @Input
     fun getTaskInputType(): String {
-        return taskInputType.name
+        return taskInputType.javaClass.name
     }
 
     @get:InputFiles

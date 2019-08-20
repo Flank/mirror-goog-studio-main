@@ -39,6 +39,7 @@ import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Lists
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
@@ -308,7 +309,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
     open class MergeAssetBaseCreationAction(
         scope: VariantScope,
-        private val outputArtifactType: ArtifactType,
+        private val outputArtifactType: ArtifactType<Directory>,
         private val includeDependencies: Boolean
     ) : CreationAction(scope) {
 

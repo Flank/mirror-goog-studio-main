@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -27,21 +27,19 @@ import com.android.builder.utils.FileCache;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
-import javax.inject.Inject;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 /** Task to package an Android application (APK). */
 public abstract class PackageApplication extends PackageAndroidArtifact {
 
-    InternalArtifactType expectedOutputType;
+    ArtifactType<Directory> expectedOutputType;
 
     @Override
     @Internal
-    protected InternalArtifactType getInternalArtifactType() {
+    protected ArtifactType<Directory> getInternalArtifactType() {
         return expectedOutputType;
     }
 
@@ -85,18 +83,18 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
     public static class CreationAction
             extends PackageAndroidArtifact.CreationAction<PackageApplication> {
 
-        private final InternalArtifactType expectedOutputType;
+        private final ArtifactType<Directory> expectedOutputType;
         private final File outputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
-                @NonNull InternalArtifactType inputResourceFilesType,
+                @NonNull ArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
-                @NonNull InternalArtifactType manifestType,
+                @NonNull ArtifactType<Directory> manifestType,
                 @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
-                @NonNull InternalArtifactType expectedOutputType,
+                @NonNull ArtifactType<Directory> expectedOutputType,
                 boolean packageCustomClassDependencies) {
             super(
                     packagingScope,

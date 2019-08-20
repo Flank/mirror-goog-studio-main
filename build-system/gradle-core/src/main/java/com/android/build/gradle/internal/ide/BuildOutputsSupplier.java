@@ -89,7 +89,7 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
             ArtifactType taskOutputType,
             File file,
             ImmutableList.Builder<EarlySyncBuildOutput> outputs) {
-        if (taskOutputType == InternalArtifactType.MERGED_MANIFESTS) {
+        if (taskOutputType == InternalArtifactType.MERGED_MANIFESTS.INSTANCE) {
             if (file.getName().equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                 outputs.add(
                         new EarlySyncBuildOutput(
@@ -101,8 +101,8 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
             }
         } else {
             VariantOutput.OutputType fileOutputType =
-                    taskOutputType == InternalArtifactType.AAR
-                                    || taskOutputType == InternalArtifactType.APK
+                    taskOutputType == InternalArtifactType.AAR.INSTANCE
+                                    || taskOutputType == InternalArtifactType.APK.INSTANCE
                             ? VariantOutput.OutputType.MAIN
                             : VariantOutput.OutputType.SPLIT;
             outputs.add(

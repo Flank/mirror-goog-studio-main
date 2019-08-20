@@ -113,7 +113,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES,
+                            InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             JacocoTask::getOutput,
@@ -122,7 +122,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS,
+                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS.INSTANCE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             JacocoTask::getOutputJars,

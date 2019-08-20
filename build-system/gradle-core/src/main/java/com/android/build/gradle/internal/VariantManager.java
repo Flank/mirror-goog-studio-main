@@ -523,8 +523,8 @@ public class VariantManager implements VariantModel {
         BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
         for (PublishingSpecs.OutputSpec outputSpec :
                 variantScope.getPublishingSpec().getOutputs()) {
-            com.android.build.api.artifact.ArtifactType buildArtifactType =
-                    outputSpec.getOutputType();
+            com.android.build.api.artifact.ArtifactType<? extends FileSystemLocation>
+                    buildArtifactType = outputSpec.getOutputType();
 
             // Gradle only support publishing single file.  Therefore, unless Gradle starts
             // supporting publishing multiple files, PublishingSpecs should not contain any
@@ -539,14 +539,16 @@ public class VariantManager implements VariantModel {
 
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
                 Pair<Provider<String>, Provider<FileSystemLocation>> finalProduct =
-                        buildArtifactsHolder.getFinalProductWithTaskName(buildArtifactType);
+                        buildArtifactsHolder.getFinalProductWithTaskName(
+                                (com.android.build.api.artifact.ArtifactType<FileSystemLocation>)
+                                        buildArtifactType);
                 variantScope.publishIntermediateArtifact(
                         finalProduct.getSecond(),
                         finalProduct.getFirst(),
                         outputSpec.getArtifactType(),
                         outputSpec.getPublishedConfigTypes());
             } else {
-                if (buildArtifactType == AnchorOutputType.ALL_CLASSES) {
+                if (buildArtifactType == AnchorOutputType.ALL_CLASSES.INSTANCE) {
                     variantScope.publishIntermediateArtifact(
                             buildArtifactsHolder.getFinalProductAsFileCollection(buildArtifactType),
                             outputSpec.getArtifactType(),

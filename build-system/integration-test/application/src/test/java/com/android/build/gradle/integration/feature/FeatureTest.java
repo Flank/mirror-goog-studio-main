@@ -181,7 +181,7 @@ public class FeatureTest {
         File featureResFile =
                 FileUtils.join(
                         ArtifactTypeUtil.getOutputDir(
-                                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES.INSTANCE,
                                 featureProject.file("build")),
                         "debugFeature",
                         SdkConstants.FD_RES_CLASS,

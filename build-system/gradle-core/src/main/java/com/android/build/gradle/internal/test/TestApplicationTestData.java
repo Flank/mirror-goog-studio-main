@@ -64,7 +64,8 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     public void loadFromMetadataFile(File metadataFile) {
         BuildElements testedManifests =
                 ExistingBuildElements.from(
-                        InternalArtifactType.MERGED_MANIFESTS, metadataFile.getParentFile());
+                        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
+                        metadataFile.getParentFile());
         // all published manifests have the same package so first one will do.
         Optional<BuildOutput> splitOutput = testedManifests.stream().findFirst();
 
@@ -105,7 +106,7 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
         ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
         // retrieve all the published files.
         BuildElements testedApkFiles =
-                ExistingBuildElements.from(InternalArtifactType.APK, testedApksDir);
+                ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, testedApksDir);
 
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {

@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.utils.FileUtils
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import java.io.File
-import java.util.Locale
 
 /**
  * Returns a suitable output directory for this receiving artifact type.
@@ -30,7 +30,7 @@ import java.util.Locale
  *
  * @param parentFile the parent directory.
  */
-fun ArtifactType.getOutputDir(parentFile: File)=
+fun ArtifactType<*>.getOutputDir(parentFile: File)=
     File(
         if (this is InternalArtifactType) {
             category.getOutputDir(parentFile)
@@ -45,7 +45,7 @@ fun ArtifactType.getOutputDir(parentFile: File)=
  *
  * @return a relative path
  */
-fun ArtifactType.getOutputPath() =
+fun ArtifactType<*>.getOutputPath() =
     if (this is InternalArtifactType) {
         category.outputPath
     } else {
@@ -61,7 +61,7 @@ fun ArtifactType.getOutputPath() =
  *
  * @return a [File] that can be safely use as task output.
  */
-fun ArtifactType.getOutputDirectory(
+fun ArtifactType<*>.getOutputDirectory(
     buildDirectory: DirectoryProperty,
     identifier: String,
     taskName: String?= "") = FileUtils.join(

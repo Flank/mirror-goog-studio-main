@@ -132,7 +132,8 @@ public abstract class InstantAppSideLoadTask extends NonIncrementalTask {
                                 for (File apkDirectory : outputScope.getApkDirectories()) {
                                     for (BuildOutput buildOutput :
                                             ExistingBuildElements.from(
-                                                    InternalArtifactType.APK, apkDirectory)) {
+                                                    InternalArtifactType.APK.INSTANCE,
+                                                    apkDirectory)) {
                                         apks.add(buildOutput.getOutputFile());
                                     }
                                 }
@@ -189,7 +190,7 @@ public abstract class InstantAppSideLoadTask extends NonIncrementalTask {
                     scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
-                            InternalArtifactType.INSTANTAPP_BUNDLE, task.getBundleDir());
+                            InternalArtifactType.INSTANTAPP_BUNDLE.INSTANCE, task.getBundleDir());
         }
     }
 }
