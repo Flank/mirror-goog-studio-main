@@ -17,10 +17,10 @@
                     <!--     <dist:country dist:code="US" /> -->
                     <!--   </dist:user-countries> -->
                     <#list dynamicFeatureDeviceFeatureList as deviceFeature>
-                        <#if deviceFeature.deviceFeatureType().get().getDisplayName() == "Name">
-                            <dist:device-feature dist:name="${deviceFeature.deviceFeatureValue()}" />
-                        <#elseif deviceFeature.deviceFeatureType().get().getDisplayName() == "OpenGL ES Version">
-                            <dist:device-feature dist:name="android.hardware.opengles.version" dist:version="${deviceFeature.deviceFeatureValue()}" />
+                        <#if deviceFeature.getDeviceFeatureType().get().getDisplayName() == "Name">
+                            <dist:device-feature dist:name="${deviceFeature.getDeviceFeatureValue()}" />
+                        <#elseif deviceFeature.getDeviceFeatureType().get().getDisplayName() == "OpenGL ES Version">
+                            <dist:device-feature dist:name="android.hardware.opengles.version" dist:version="${deviceFeature.getDeviceFeatureValue()}" />
                         </#if>
                     </#list>
                 </dist:conditions>
