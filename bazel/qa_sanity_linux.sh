@@ -9,10 +9,17 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
+readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
+
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/bazel" clean --async
 
-config_options="--config=remote"
+#Have crostini tests run locally
+if [[ $lsb_release != "crostini" ]]; then
+  config_options="--config=remote"
+else
+  config_options="--config=cloud_resultstore"
+fi
 
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id="$(uuidgen)"
@@ -48,7 +55,7 @@ fi
 readonly invocation_id_emu="$(uuidgen)"
 
 # Skips emulator tests on crostini because they are not currently supported
-if [[ $(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release) != "crostini" ]]; then
+if [[ $lsb_release != "crostini" ]]; then
   # Run Bazel tests - only emulator tests should run here
   target_filters=qa_sanity_emu,-qa_unreliable,-no_linux,-no_test_linux
   QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
