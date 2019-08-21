@@ -121,7 +121,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         var found: Boolean
         found = baseline.findAndMark(
             ManifestDetector.USES_SDK,
-            Location.create(File("bogus")), "Unrelated)", Severity.WARNING, null
+            Location.create(File("bogus")), "Unrelated", Severity.WARNING, null
         )
         assertThat(found).isFalse()
         assertThat(baseline.foundWarningCount).isEqualTo(0)
@@ -175,7 +175,6 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(baseline.foundErrorCount).isEqualTo(0)
         assertThat(baseline.fixedCount).isEqualTo(2)
 
-        // Match
         found = baseline.findAndMark(
             RangeDetector.RANGE,
             Location.create(
@@ -183,7 +182,9 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                     "java/android/support/v4/widget/SlidingPaneLayout.java"
                 )
             ),
-            "Value must be \u2265 0 (was -1)", Severity.WARNING, null
+            // Match, by different message
+            // Actual: "Value must be \u2265 0 (was -1)", Severity.WARNING, null
+            "Value must be \u2265 0", Severity.WARNING, null
         )
         assertThat(found).isTrue()
         assertThat(baseline.fixedCount).isEqualTo(1)

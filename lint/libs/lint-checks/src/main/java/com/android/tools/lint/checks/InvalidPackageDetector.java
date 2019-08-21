@@ -16,6 +16,8 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
+import com.android.builder.model.MavenCoordinates;
+import com.android.ide.common.gradle.model.IdeMavenCoordinates;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ClassScanner;
@@ -24,8 +26,10 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.helpers.DefaultJavaEvaluator;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
@@ -255,11 +259,21 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                 return;
             }
 
+            Project project = context.getProject();
+            DefaultJavaEvaluator evaluator = new DefaultJavaEvaluator(null, project);
+            MavenCoordinates library = evaluator.getLibrary(jarFile);
+            String libraryString;
+            if (library != null && !IdeMavenCoordinates.LOCAL_AARS.equals(library.getGroupId())) {
+                libraryString = library.getGroupId() + ':' + library.getArtifactId();
+            } else {
+                libraryString = "library";
+            }
+
             String message =
                     String.format(
-                            "Invalid package reference in library; not included in Android: `%1$s`. "
-                                    + "Referenced from `%2$s`.",
-                            pkg, ClassContext.getFqcn(referencedIn));
+                            "Invalid package reference in %1$s; not included in Android: `%2$s`. "
+                                    + "Referenced from `%3$s`.",
+                            libraryString, pkg, ClassContext.getFqcn(referencedIn));
             context.report(ISSUE, location, message);
         }
     }

@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.SdkConstants
 import com.android.SdkConstants.ATTR_FILE
 import com.android.SdkConstants.ATTR_FORMAT
 import com.android.SdkConstants.ATTR_ID
@@ -84,6 +83,8 @@ class LintBaseline(
 
     /** Map from message to [Entry]  */
     private val messageToEntry = ArrayListMultimap.create<String, Entry>(100, 20)
+
+    private val idToMessages = ArrayListMultimap.create<String, String>(30, 20)
 
     /**
      * Whether we should write the baseline file when the baseline is closed, if the
@@ -175,7 +176,7 @@ class LintBaseline(
                 issueTypes.append(id)
                 val count = ids[id]
                 if (count != null && count > 1) {
-                    issueTypes.append(" (").append(Integer.toString(count)).append(")")
+                    issueTypes.append(" (").append(count.toString()).append(")")
                 }
             }
 
@@ -245,8 +246,18 @@ class LintBaseline(
         message: String,
         severity: Severity?
     ): Boolean {
-        val entries = messageToEntry.get(message)
+        val entries = messageToEntry[message]
         if (entries == null || entries.isEmpty()) {
+            // Sometimes messages are changed in lint; try to gracefully handle this
+            val messages = idToMessages.get(issue.id)
+            if (messages != null && messages.isNotEmpty()) {
+                for (oldMessage in messages) {
+                    if (message != oldMessage && sameMessage(issue, message, oldMessage)) {
+                        return findAndMark(issue, location, oldMessage, severity)
+                    }
+                }
+            }
+
             return false
         }
 
@@ -265,6 +276,7 @@ class LintBaseline(
                     }
                     while (curr != null) {
                         messageToEntry.remove(curr.message, curr)
+                        idToMessages.remove(issue, curr.message)
                         curr = curr.next
                     }
 
@@ -280,6 +292,28 @@ class LintBaseline(
         }
 
         return false
+    }
+
+    private fun sameMessage(issue: Issue, new: String, old: String): Boolean {
+        // Sometimes the exact message format for a given error shifts over time, for example
+        // when we decide to make it clearer. Since baselines are primarily matched by
+        // the error message, any format change would mean the recorded issue in the baseline
+        // no longer matches the error, and the same error is now shown as a new error.
+        // To prevent this, the baseline mechanism will call this method to check if
+        // two messages represent the same error, and if so, we'll continue to match them.
+        // This jump table should record the various changes in error messages over time.
+        when (issue.id) {
+            "InvalidPackage" -> {
+                val i1 = new.indexOf("not included in")
+                val i2 = old.indexOf("not included in")
+                return i1 != -1 && i2 != -1 && new.regionMatches(i1, old, i2, new.length - i1, false)
+            }
+            // See https://issuetracker.google.com/68802305
+            "IconDensities" -> return true
+
+            // Sometimes we just append
+            else -> return new.startsWith(old) || old.startsWith(new)
+        }
     }
 
     /**
@@ -327,7 +361,7 @@ class LintBaseline(
                     val eventType = parser.eventType
                     if (eventType == XmlPullParser.END_TAG) {
                         val tag = parser.name
-                        if (tag == SdkConstants.TAG_LOCATION) {
+                        if (tag == TAG_LOCATION) {
                             if (issue != null && message != null && path != null) {
                                 val entry = Entry(issue, message, path)
                                 if (currentEntry != null) {
@@ -336,6 +370,7 @@ class LintBaseline(
                                 entry.previous = currentEntry
                                 currentEntry = entry
                                 messageToEntry.put(entry.message, entry)
+                                idToMessages.put(issue, message)
                             }
                         } else if (tag == TAG_ISSUE) {
                             totalCount++
@@ -568,7 +603,7 @@ class LintBaseline(
                         if (line >= 0) {
                             // +1: Line numbers internally are 0-based, report should be
                             // 1-based.
-                            writeAttribute(writer, 3, ATTR_LINE, Integer.toString(line + 1))
+                            writeAttribute(writer, 3, ATTR_LINE, (line + 1).toString())
                         }
                     }
 
@@ -700,10 +735,7 @@ class LintBaseline(
                     path = file.name
                 }
             } else if (file.isAbsolute && file.exists()) {
-                path = client.getRelativePath(project.referenceDir, file)
-                if (path == null) {
-                    path = file.path
-                }
+                path = client.getRelativePath(project.referenceDir, file) ?: file.path
             }
 
             return path

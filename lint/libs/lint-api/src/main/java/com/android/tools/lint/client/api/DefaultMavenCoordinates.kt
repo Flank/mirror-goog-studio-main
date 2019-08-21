@@ -24,7 +24,8 @@ import com.android.builder.model.MavenCoordinates
  */
 class DefaultMavenCoordinates(
     private val groupId: String,
-    private val artifactId: String
+    private val artifactId: String,
+    private val version: String = ""
 ) : MavenCoordinates {
 
     override fun getGroupId(): String {
@@ -36,7 +37,7 @@ class DefaultMavenCoordinates(
     }
 
     override fun getVersion(): String {
-        return ""
+        return version
     }
 
     override fun getPackaging(): String {
@@ -48,7 +49,7 @@ class DefaultMavenCoordinates(
     }
 
     override fun getVersionlessId(): String {
-        return groupId + ':' + artifactId
+        return "$groupId:$artifactId"
     }
 
     companion object {

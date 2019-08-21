@@ -200,13 +200,17 @@ open class DefaultJavaEvaluator(
     }
 
     override fun getProject(element: PsiElement): Project? {
+        val virtualFile = element.containingFile?.virtualFile ?: return null
+        val file = VfsUtilCore.virtualToIoFile(virtualFile)
+        return getProject(file)
+    }
+
+    fun getProject(file: File): Project? {
         val projects = myLintProject?.client?.knownProjects ?: return null
         if (projects.isEmpty()) {
             return null
         }
 
-        val virtualFile = element.containingFile?.virtualFile ?: return null
-        val file = VfsUtilCore.virtualToIoFile(virtualFile)
         val path = file.path
         return projects.asSequence()
             .filter { path == it.dir.path || path.startsWith(it.dir.path + File.separator) }

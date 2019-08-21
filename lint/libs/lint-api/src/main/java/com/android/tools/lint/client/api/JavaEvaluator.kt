@@ -819,6 +819,10 @@ class JavaEvaluator {
         return getLibrary(element as PsiElement)
     }
 
+    fun getLibrary(file: File): MavenCoordinates? {
+        return getLibrary(file.path)
+    }
+
     private fun getLibrary(jarFile: String?): MavenCoordinates? {
         if (jarFile != null) {
             if (jarToGroup == null) {
@@ -850,10 +854,13 @@ class JavaEvaluator {
                                     c = jarFile[j]
                                     if (c == '/' || c == File.separatorChar) {
                                         val artifactId = jarFile.substring(i, j)
+                                        val versionEnd = jarFile.indexOf(c, j + 1)
+                                        val version = if (versionEnd != -1) jarFile.substring(j + 1, versionEnd) else ""
                                         coordinates =
                                             DefaultMavenCoordinates(
                                                 groupId,
-                                                artifactId
+                                                artifactId,
+                                                version
                                             )
                                         break
                                     }

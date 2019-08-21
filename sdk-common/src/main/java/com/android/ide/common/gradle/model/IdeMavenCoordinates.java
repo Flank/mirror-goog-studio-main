@@ -26,6 +26,7 @@ import java.util.Objects;
 public final class IdeMavenCoordinates implements MavenCoordinates, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
+    public static final String LOCAL_AARS = "__local_aars__";
 
     @NonNull private final String myGroupId;
     @NonNull private final String myArtifactId;
@@ -56,7 +57,7 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
     }
 
     public IdeMavenCoordinates(@NonNull File localJar) {
-        myGroupId = "__local_aars__";
+        myGroupId = LOCAL_AARS;
         myArtifactId = localJar.getPath();
         myVersion = "unspecified";
         myPacking = "jar";

@@ -994,7 +994,7 @@ public class Project {
             if (androidProject != null) {
                 String groupId = androidProject.getGroupId();
                 if (groupId != null) {
-                    mavenCoordinates = new DefaultMavenCoordinates(groupId, "");
+                    mavenCoordinates = new DefaultMavenCoordinates(groupId, "", "");
                 }
             }
         }

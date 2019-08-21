@@ -472,6 +472,37 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testLibraryNameIncluded() throws Exception {
+        lint().files(
+                        manifest().minSdk(14),
+                        classpath("libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar"),
+                        base64gzip(
+                                "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar",
+                                UNSUPPORTED_BYTECODE))
+                .run()
+                .expect(
+                        ""
+                                + "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar: Error: Invalid package reference in foo.bar:baz; not included in Android: java.awt. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
+                                + "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar: Error: Invalid package reference in foo.bar:baz; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
+                                + "2 errors, 0 warnings");
+    }
+
+    public void testSuppressByLibrary() throws Exception {
+        // See https://issuetracker.google.com/139011783
+        lint().files(
+                        manifest().minSdk(14),
+                        classpath("libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar"),
+                        base64gzip(
+                                "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar",
+                                UNSUPPORTED_BYTECODE))
+                .run()
+                .expect(
+                        ""
+                                + "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar: Error: Invalid package reference in foo.bar:baz; not included in Android: java.awt. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
+                                + "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar: Error: Invalid package reference in foo.bar:baz; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
+                                + "2 errors, 0 warnings");
+    }
+
     @Override
     protected TestLintClient createClient() {
         if ("testSkipProvidedLibraries".equals(getName())) {
