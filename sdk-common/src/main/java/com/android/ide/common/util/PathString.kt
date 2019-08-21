@@ -132,8 +132,8 @@ class PathString private constructor(
         var schemeString = filesystemUri.toString()
         if (schemeString.startsWith("file:///") &&
                 schemeString.endsWith(":/") &&
-                schemeString.length == 11) {
-            // File system URI contains a drive letter - remove it to get just the scheme.
+                schemeString.length == "file:///".length + ":/".length + 1) {
+            // File system URI contains a drive letter ("file:///X:/") - remove it to get just the scheme.
             schemeString = "file:///"
         }
         val path = rawPath
