@@ -89,15 +89,6 @@
             constraints="package"
             default="com.mycompany.myapp"/>
 
-    <parameter
-            id="navigationGraphName"
-            name="Navigation Graph Name"
-            type="string"
-            visibility="false"
-            suggest="nav_graph"
-            constraints="navigation|unique|nonempty"
-            default="nav_graph" />
-
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
         <!-- default thumbnail is required -->

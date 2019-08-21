@@ -36,7 +36,7 @@
     <instantiate from="root/res/layout/fragment_second.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${secondFragmentLayoutName}.xml" />
     <merge from="root/res/navigation/nav_graph.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/navigation/${navigationGraphName}.xml" />
+             to="${escapeXmlAttribute(resOut)}/navigation/nav_graph.xml" />
     <merge from="root/res/values/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 
