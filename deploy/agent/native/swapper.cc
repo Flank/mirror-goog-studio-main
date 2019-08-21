@@ -23,14 +23,9 @@
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/log.h"
-#include "tools/base/deploy/common/socket.h"
-#include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
-
-Swapper::Swapper() : jvmti_(nullptr) {}
 
 Swapper* Swapper::instance_ = nullptr;
 
@@ -41,47 +36,20 @@ Swapper& Swapper::Instance() {
   return *instance_;
 }
 
-void Swapper::Initialize(jvmtiEnv* jvmti, std::unique_ptr<Socket> socket) {
-  // Always reset first, to make sure that anything the previous agent left
-  // behind is cleaned up.
-  if (jvmti_ != nullptr) {
-    Reset();
-  }
-
-  jvmti_ = jvmti;
-  socket_ = std::move(socket);
-}
-
-void Swapper::Swap(JNIEnv* jni) {
+proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
+                                       const proto::SwapRequest& request) {
   proto::AgentSwapResponse response;
   response.set_pid(getpid());
 
-  std::string request_bytes;
-  if (!socket_->Read(&request_bytes)) {
-    LogEvent("Could not read request from socket");
-    response.set_status(proto::AgentSwapResponse::SOCKET_READ_FAILED);
-    SendResponse(response);
-    return;
-  }
-
-  request_ = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
-  if (!request_->ParseFromString(request_bytes)) {
-    LogEvent("Could not parse swap request");
-    response.set_status(proto::AgentSwapResponse::REQUEST_PARSE_FAILED);
-    SendResponse(response);
-    return;
-  }
-
-  if (!InstrumentApplication(jvmti_, jni, request_->package_name())) {
-    LogEvent("Could not instrument application");
+  if (!InstrumentApplication(jvmti, jni, request.package_name())) {
+    ErrEvent("Could not instrument application");
     response.set_status(proto::AgentSwapResponse::INSTRUMENTATION_FAILED);
-    SendResponse(response);
-    return;
+    return response;
   }
 
-  HotSwap code_swap(jvmti_, jni);
+  HotSwap code_swap(jvmti, jni);
 
-  SwapResult result = code_swap.DoHotSwap(*request_);
+  SwapResult result = code_swap.DoHotSwap(request);
   if (result.status == SwapResult::SUCCESS) {
     response.set_status(proto::AgentSwapResponse::OK);
   } else if (result.status == SwapResult::CLASS_NOT_FOUND) {
@@ -101,31 +69,11 @@ void Swapper::Swap(JNIEnv* jni) {
     JniClass instrument(
         jni,
         "com/android/tools/deploy/instrument/ActivityThreadInstrumentation");
-    jvalue arg{.z = request_->restart_activity()};
+    jvalue arg{.z = request.restart_activity()};
     instrument.CallStaticMethod<void>({"setRestart", "(Z)V"}, &arg);
   }
 
-  SendResponse(response);
-}
-
-void Swapper::Reset() {
-  socket_.reset(nullptr);
-  request_.reset(nullptr);
-
-  // This relinquishes all capabilities.
-  jvmti_->DisposeEnvironment();
-  jvmti_ = nullptr;
-}
-
-void Swapper::SendResponse(proto::AgentSwapResponse& response) {
-  // Convert all events to proto events.
-  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
-  for (Event& event : *events) {
-    ConvertEventToProtoEvent(event, response.add_events());
-  }
-  std::string response_bytes;
-  response.SerializeToString(&response_bytes);
-  socket_->Write(response_bytes);
+  return response;
 }
 
 }  // namespace deploy

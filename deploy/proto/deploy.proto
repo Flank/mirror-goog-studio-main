@@ -72,6 +72,9 @@ message AgentSwapResponse {
     INSTRUMENTATION_FAILED = 4;  // The application could not be instrumented
     CLASS_NOT_FOUND = 5;  // The class requested for swap could not be found
     JVMTI_ERROR = 6;      // A JVMTI error occurred during swap
+    JNI_SETUP_FAILED = 7; // The JNI environment could not be set up.
+    JVMTI_SETUP_FAILED = 8; // The JVMTI environment could not be set up.
+    SET_CAPABILITIES_FAILED = 9; // JVMTI capabilities could not be set.
   }
 
   // The state of the swap that was requested.

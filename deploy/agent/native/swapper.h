@@ -23,46 +23,24 @@
 #include <memory>
 #include <string>
 
-namespace proto {
-class SwapRequest;
-class AgentSwapResponse;
-}  // namespace proto
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
-class Socket;
 
 class Swapper {
  public:
   ~Swapper() = default;
 
-  // Sets the Swapper instance's jvmti environment and socket, cleaning up any
-  // previously set socket, request, or jvmti environment.
-  void Initialize(jvmtiEnv* jvmti, std::unique_ptr<Socket> socket);
-
-  // Reads a SwapRequest from the underlying socket, then performs a swap using
-  // the specified JNI environment, which should be the JNI environment attached
-  // to the currently executing thread.
-  void Swap(JNIEnv* jni);
-
-  // Frees the memory associated with the socket and request objects, and closes
-  // the socket. Destroys the JVMTI environment.
-  void Reset();
+  // Performs a swap using the specified swap request.
+  proto::AgentSwapResponse Swap(jvmtiEnv* jvmti, JNIEnv* jni,
+                                const proto::SwapRequest& request);
 
   // Returns the current swapper instance.
   static Swapper& Instance();
 
  private:
-  jvmtiEnv* jvmti_;
-  std::unique_ptr<Socket> socket_;
-  std::unique_ptr<proto::SwapRequest> request_;
-
   static Swapper* instance_;
-
-  Swapper();
-  Swapper(const Swapper&) = delete;
-  Swapper& operator=(const Swapper&) = delete;
-
-  void SendResponse(proto::AgentSwapResponse& response);
+  Swapper() = default;
 };
 }  // namespace deploy
 
