@@ -203,7 +203,7 @@ public final class EmulatorConsole {
         public int latency = -1;
     }
 
-    private int mPort = -1;
+    private final int mPort;
 
     private SocketChannel mSocketChannel;
 
@@ -231,8 +231,8 @@ public final class EmulatorConsole {
         EmulatorConsole console = retrieveConsole(port);
 
         if (!console.checkConnection()) {
-            removeConsole(console.mPort);
-            console = null;
+            console.close();
+            return null;
         }
 
         return console;
@@ -279,18 +279,20 @@ public final class EmulatorConsole {
         }
     }
 
-    /**
-     * Removes the console object associated with a port from the map.
-     * @param port The port of the console to remove.
-     */
-    private static void removeConsole(int port) {
+    /** Disconnect the socket channel and remove self from emulator console cache. */
+    public void close() {
         synchronized (sEmulators) {
-            Log.v(LOG_TAG, "Removing emulator console for " + Integer.toString(port));
-            EmulatorConsole console = sEmulators.get(port);
-            if (console != null) {
-                console.closeConnection();
-                sEmulators.remove(port);
+            Log.v(LOG_TAG, "Removing emulator console for " + mPort);
+            sEmulators.remove(mPort);
+        }
+
+        try {
+            if (mSocketChannel != null) {
+                mSocketChannel.close();
             }
+            mSocketChannel = null;
+        } catch (IOException e) {
+            Log.w(LOG_TAG, "Failed to close EmulatorConsole channel");
         }
     }
 
@@ -312,14 +314,17 @@ public final class EmulatorConsole {
                 socketAddr = new InetSocketAddress(hostAddr, mPort);
                 mSocketChannel = SocketChannel.open(socketAddr);
                 mSocketChannel.configureBlocking(false);
+
                 // read initial output from console
                 String[] welcome = readLines();
+                if (welcome == null) {
+                    return false;
+                }
 
                 // the first line starts with a bunch of telnet noise, just check the end
                 if (welcome[0].endsWith(RE_AUTH_REQUIRED)) {
                     // we need to send an authentication message before any other
                     if (RESULT_OK != sendAuthentication()) {
-                        closeConnection();
                         Log.w(LOG_TAG, "Emulator console auth failed (is the emulator running as a different user?)");
                         return false;
                     }
@@ -351,38 +356,10 @@ public final class EmulatorConsole {
     }
 
     /**
-     * Close the socket channel and reset internal console state.
-     */
-    private synchronized void closeConnection() {
-        try {
-            if (mSocketChannel != null) {
-                mSocketChannel.close();
-            }
-            mSocketChannel = null;
-            mPort = -1;
-        } catch (IOException e) {
-            Log.w(LOG_TAG, "Failed to close EmulatorConsole channel");
-        }
-    }
-
-    /**
      * Sends a KILL command to the emulator.
      */
     public synchronized void kill() {
-        if (sendCommand(COMMAND_KILL)) {
-            close();
-        }
-    }
-
-    /**
-     * Closes this instance of the emulator console.
-     */
-    public synchronized void close() {
-        if (mPort == -1) {
-            return;
-        }
-
-        removeConsole(mPort);
+        sendCommand(COMMAND_KILL);
     }
 
     public synchronized String getAvdName() {
@@ -656,11 +633,6 @@ public final class EmulatorConsole {
             Log.d(LOG_TAG, "Exception sending command " + command + " to " +
                 Integer.toString(mPort));
             return false;
-        } finally {
-            if (!result) {
-                // FIXME connection failed somehow, we need to disconnect the console.
-                removeConsole(mPort);
-            }
         }
 
         return result;
