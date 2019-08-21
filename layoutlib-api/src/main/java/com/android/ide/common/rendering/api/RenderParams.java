@@ -178,6 +178,14 @@ public abstract class RenderParams {
         mFontScale = fontScale;
     }
 
+    /**
+     * Returns the user preference for the font scaling factor. See {@link
+     * android.content.res.Configuration#fontScale}
+     */
+    public float getFontScale() {
+        return mFontScale;
+    }
+
     public Object getProjectKey() {
         return mProjectKey;
     }
