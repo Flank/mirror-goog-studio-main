@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
+import org.gradle.api.logging.Logging;
 
 /** Transform that converts an Android JAR file into a Mockable Android JAR file. */
 public class MockableJarTransform extends ArtifactTransform {
@@ -43,7 +44,7 @@ public class MockableJarTransform extends ArtifactTransform {
 
         mkdirs(outputDir);
         File outputFile = new File(outputDir, input.getName());
-        System.out.println(
+        Logging.getLogger(MockableJarTransform.class).info(
                 "Calling mockable JAR artifact transform to create file: "
                         + outputFile.getAbsolutePath()
                         + " with input "
