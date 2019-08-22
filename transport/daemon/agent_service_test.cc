@@ -15,18 +15,15 @@
  */
 #include <gtest/gtest.h>
 #include <climits>
-#include <unordered_set>
 
 #include <grpc++/grpc++.h>
 #include "daemon/agent_service.h"
 #include "daemon/daemon.h"
 #include "daemon/event_buffer.h"
-#include "perfd/perfd.h"
 #include "proto/common.grpc.pb.h"
 #include "utils/daemon_config.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
-#include "utils/fs/memory_file_system.h"
 #include "utils/log.h"
 
 using profiler::proto::EmptyResponse;
@@ -53,7 +50,6 @@ class AgentServiceTest : public ::testing::Test {
     builder.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(),
                              &port);
     builder.RegisterService(&service_);
-    Perfd::Initialize(&daemon_);
     server_ = builder.BuildAndStart();
     std::shared_ptr<grpc::ChannelInterface> channel =
         grpc::CreateChannel(std::string("0.0.0.0:") + std::to_string(port),

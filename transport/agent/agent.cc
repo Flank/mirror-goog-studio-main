@@ -114,12 +114,19 @@ void Agent::SubmitAgentTasks(const std::vector<AgentServiceTask>& tasks) {
   background_queue_.EnqueueTask([this, tasks] {
     for (auto task : tasks) {
       if (can_grpc_target_change_) {
+        bool error_per_task_logged = false;
         bool success = false;
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
           SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(agent_stub(), ctx);
+          if (!error_per_task_logged && !status.ok()) {
+            Log::E("Agent::SubmitAgentTasks error_code=%d '%s' '%s'",
+                   status.error_code(), status.error_message().data(),
+                   status.error_details().data());
+            error_per_task_logged = true;
+          }
           success = status.ok();
         } while (!success);
       } else {

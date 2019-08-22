@@ -31,6 +31,7 @@
 #include "proto/internal_network.grpc.pb.h"
 
 #include "memory_component.h"
+#include "utils/agent_task.h"
 #include "utils/background_queue.h"
 #include "utils/clock.h"
 
@@ -63,11 +64,6 @@ using EnergyServiceTask = std::function<grpc::Status(
 // |context|. Returns the status from the grpc call.
 using CpuServiceTask = std::function<grpc::Status(
     proto::InternalCpuService::Stub& stub, grpc::ClientContext& context)>;
-
-// Function for submitting an agent grpc request via |stub| using the given
-// |context|. Returns the status from the grpc call.
-using AgentServiceTask = std::function<grpc::Status(
-    proto::AgentService::Stub& stub, grpc::ClientContext& context)>;
 
 class Agent {
  public:

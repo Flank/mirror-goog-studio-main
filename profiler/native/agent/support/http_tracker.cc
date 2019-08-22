@@ -100,7 +100,7 @@ struct PayloadBuffer {
                 chunks.erase(juid);
               }
 
-              std::stringstream payload_name;
+              std::ostringstream payload_name;
               payload_name << juid << name_suffix;
               SendBytesRequest request;
               request.set_name(payload_name.str());
@@ -250,7 +250,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << juid << kResponsePayloadSuffix;
     std::string payload_name = ss.str();
     Agent::Instance().SubmitAgentTasks(
@@ -312,7 +312,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << juid << kRequestPayloadSuffix;
     std::string payload_name = ss.str();
     Agent::Instance().SubmitAgentTasks(

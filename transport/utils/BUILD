@@ -10,6 +10,7 @@ cc_library(
         "bash_command.cc",
         "current_process.cc",
         "daemon_config.cc",
+        "agent_task.cc",
         "file_cache.cc",
         "file_reader.cc",
         "fs/dir.cc",
@@ -64,6 +65,7 @@ cc_library(
     ),
     hdrs = [
         "activity_manager.h",
+        "agent_task.h",
         "android_studio_version.h",
         "background_queue.h",
         "bash_command.h",
@@ -119,6 +121,7 @@ cc_test(
     name = "utils_test",
     srcs = [
         "activity_manager_test.cc",
+        "agent_task_test.cc",
         "background_queue_test.cc",
         "circular_buffer_test.cc",
         "clock_test.cc",

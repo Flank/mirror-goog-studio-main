@@ -15,11 +15,13 @@
  */
 #include <jni.h>
 #include <unistd.h>
+#include <sstream>
 #include <string>
 
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
 #include "proto/internal_cpu.grpc.pb.h"
+#include "utils/agent_task.h"
 #include "utils/file_reader.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
@@ -43,6 +45,8 @@ using profiler::proto::TraceInitiationType;
 using std::string;
 
 namespace {
+
+constexpr char kTraceFileSuffix[] = "_api_initiated_trace";
 
 class TraceMonitor {
  public:
@@ -125,6 +129,7 @@ void TraceMonitor::CheckFixTracePathCall(int32_t tid,
 }
 
 void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
+  Log::D("TraceMonitor::SubmitStartEvent '%s'", fixed_path.c_str());
   if (api_initiated_trace_in_progress_) {
     Log::W(
         "API-initiated tracing is already in progress; the call is ignored.");
@@ -213,14 +218,23 @@ void TraceMonitor::SubmitStopEvent(int tid) {
   int32_t pid = getpid();
   string trace_content;
   ReadTraceContent(confirmed_trace_path_, &trace_content);
+  Log::D("TraceMonitor::SubmitStopEvent '%s' size=%u",
+         confirmed_trace_path_.c_str(), trace_content.size());
   // We are done with the cached data. Reset so that the next API tracing call
   // proceeds as normal while the tasks below run asynchonrously.
   Reset();
 
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
+    // First, send the content of the trace file.
+    std::ostringstream oss;
+    oss << timestamp << kTraceFileSuffix;
+    std::string payload_name{oss.str()};
     Agent::Instance().SubmitAgentTasks(
-        {[this, pid, timestamp, trace_content](AgentService::Stub& stub,
-                                               ClientContext& ctx) mutable {
+        profiler::CreateTasksToSendPayload(payload_name, trace_content, true));
+    // Second, send the command to signal the recording is complete.
+    Agent::Instance().SubmitAgentTasks(
+        {[this, pid, timestamp, payload_name](AgentService::Stub& stub,
+                                              ClientContext& ctx) mutable {
           SendCommandRequest request;
           auto* command = request.mutable_command();
           command->set_type(Command::STOP_CPU_TRACE);
@@ -228,7 +242,7 @@ void TraceMonitor::SubmitStopEvent(int tid) {
           auto* stop = command->mutable_stop_cpu_trace();
           auto* metadata = stop->mutable_api_stop_metadata();
           metadata->set_stop_timestamp(timestamp);
-          metadata->set_trace_content(trace_content);
+          metadata->set_trace_name(payload_name);
 
           auto* config = stop->mutable_configuration();
           config->set_app_name(app_name_);

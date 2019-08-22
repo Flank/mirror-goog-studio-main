@@ -54,26 +54,26 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
 
   if (capture != nullptr) {
     if (status.status() == TraceStopStatus::SUCCESS) {
+      std::string from_file_name;
       if (stopped_from_api) {
-        std::ostringstream oss;
-        oss << capture->trace_id;
-        std::string file_name = oss.str();
-        daemon->file_cache()->AddChunk(
-            file_name, stop_command.api_stop_metadata().trace_content());
-        daemon->file_cache()->Complete(file_name);
+        // The trace file has been sent via SendBytes API before the command
+        // arrives.
+        from_file_name = CurrentProcess::dir();
+        from_file_name.append(kCacheLocation)
+            .append(stop_command.api_stop_metadata().trace_name());
       } else {
-        std::ostringstream oss;
-
-        oss << CurrentProcess::dir() << kCacheLocation << capture->trace_id;
-        DiskFileSystem fs;
         // TODO b/133321803 save this move by having Daemon generate a path in
         // the byte cache that traces can output contents to directly.
-        bool move_failed =
-            fs.MoveFile(capture->configuration.temp_path(), oss.str());
-        if (move_failed) {
-          stop_status->set_status(TraceStopStatus::CANNOT_READ_FILE);
-          stop_status->set_error_message("Failed to read trace from device");
-        }
+        from_file_name = capture->configuration.temp_path();
+      }
+      std::ostringstream oss;
+      oss << CurrentProcess::dir() << kCacheLocation << capture->trace_id;
+      std::string to_file_name = oss.str();
+      DiskFileSystem fs;
+      bool move_failed = fs.MoveFile(from_file_name, to_file_name);
+      if (move_failed) {
+        stop_status->set_status(TraceStopStatus::CANNOT_READ_FILE);
+        stop_status->set_error_message("Failed to read trace from device");
       }
     }
 

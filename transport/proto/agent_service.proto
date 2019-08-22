@@ -66,6 +66,8 @@ message SendBytesRequest {
   string name = 1;
   oneof union {
     // If set, byte content to append to the file of given |name|.
+    // Note that this field must be smaller than 4 MB which is the size limit for each
+    // gRPC message.
     bytes bytes = 2;
     // If set to true, the content of the file of given |name| is complete.
     // If set to false, this request is no-op.
