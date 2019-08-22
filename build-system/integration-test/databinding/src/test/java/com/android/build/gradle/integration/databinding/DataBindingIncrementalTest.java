@@ -366,7 +366,7 @@ public class DataBindingIncrementalTest {
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
         assertThat(landscapeActivity.getParentFile().mkdirs()).isTrue();
         Files.copy(mainActivity, landscapeActivity);
-        project.executor().run("assembleDebug");
+        project.executor().withArgument("-Pkapt.incremental.apt=false").run("assembleDebug");
 
         DexSubject apk = assertThat(project.getApk(DEBUG)).hasMainDexFile().that();
         apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
@@ -375,7 +375,7 @@ public class DataBindingIncrementalTest {
 
         // delete and recompile
         assertThat(landscapeActivity.delete()).isTrue();
-        project.executor().run("assembleDebug");
+        project.executor().withArgument("-Pkapt.incremental.apt=false").run("assembleDebug");
         assertThat(project.getApk(DEBUG))
                 .doesNotContainClass(MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL);
         for (String className : mainActivityBindingClasses) {
