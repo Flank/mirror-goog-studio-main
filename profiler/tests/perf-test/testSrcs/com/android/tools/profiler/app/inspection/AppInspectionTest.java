@@ -48,7 +48,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class AppInspectionTest {
-
+    private static final long TIMEOUT_SECONDS = 30;
     private static final String ACTIVITY_CLASS = "com.activity.MyActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
@@ -57,11 +57,11 @@ public class AppInspectionTest {
 
     @Rule public final PerfDriver perfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
     private ServiceLayer serviceLayer;
-    private FakeAndroidDriver myAndroidDriver;
+    private FakeAndroidDriver androidDriver;
 
     @Before
     public void setUp() throws Exception {
-        myAndroidDriver = perfDriver.getFakeAndroidDriver();
+        androidDriver = perfDriver.getFakeAndroidDriver();
         serviceLayer = ServiceLayer.create(perfDriver);
     }
 
@@ -70,9 +70,9 @@ public class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
-        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_CREATED);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
-        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @Test
@@ -80,12 +80,12 @@ public class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
-        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_CREATED);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         assertResponseStatus(
                 serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)),
                 Status.ERROR);
         assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
-        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @Test
@@ -113,12 +113,12 @@ public class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
-        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_CREATED);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         assertResponseStatus(
                 serviceLayer.sendCommand(
                         rawCommandInspector("test.inspector", new byte[] {1, 2, 127})),
                 SUCCESS);
-        myAndroidDriver.waitForInput(EXPECTED_INSPECTOR_PREFIX + "[1, 2, 127]");
+        assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + "[1, 2, 127]");
     }
 
     private static AppInspectionCommand rawCommandInspector(
@@ -162,8 +162,12 @@ public class AppInspectionTest {
         return onDevicePath;
     }
 
+    private static void assertInput(FakeAndroidDriver androidDriver, String expected) {
+        assertThat(androidDriver.waitForInput(expected, TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS)))
+                .isTrue();
+    }
+
     static class ServiceLayer {
-        private static final long TIMEOUT_SECONDS = 30;
 
         private final ExecutorService executor;
         private final TransportServiceBlockingStub transportStub;
@@ -193,8 +197,8 @@ public class AppInspectionTest {
                     executor, transportStub, eventsIterator, driver.getSession().getPid());
         }
 
-        int commandId = nextCommandId++;
         AppInspectionEvent sendCommand(AppInspectionCommand appInspectionCommand) throws Exception {
+            int commandId = nextCommandId++;
             Commands.Command command =
                     Commands.Command.newBuilder()
                             .setType(Commands.Command.CommandType.APP_INSPECTION)

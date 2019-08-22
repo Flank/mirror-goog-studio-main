@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 public class ProcessRunner {
 
-    public static final int LONG_TIMEOUT_MS = 100000;
-    public static final int SHORT_TIMEOUT_MS = 10000;
+    public static final long LONG_TIMEOUT_MS = 100000;
+    public static final long SHORT_TIMEOUT_MS = 10000;
     protected String[] myProcessArgs;
     protected String[] myProcessEnv;
     private final List<String> myInput = new ArrayList<>();
@@ -96,12 +96,12 @@ public class ProcessRunner {
         return containsStatement(myInput, statement, LONG_TIMEOUT_MS);
     }
 
-    public boolean waitForInput(String statement, int timeout) {
-        return containsStatement(myInput, statement, timeout);
+    public boolean waitForInput(String statement, long timeoutMs) {
+        return containsStatement(myInput, statement, timeoutMs);
     }
 
-    public boolean waitForError(String statement, int timeout) {
-        return containsStatement(myError, statement, timeout);
+    public boolean waitForError(String statement, long timeoutMs) {
+        return containsStatement(myError, statement, timeoutMs);
     }
 
     /**
@@ -115,17 +115,19 @@ public class ProcessRunner {
         return containsStatement(myInput, statement, LONG_TIMEOUT_MS);
     }
 
-    public String waitForInput(Pattern statement, int timeout) {
-        return containsStatement(myInput, statement, timeout);
+    public String waitForInput(Pattern statement, long timeoutMs) {
+        return containsStatement(myInput, statement, timeoutMs);
     }
 
-    private boolean containsStatement(List<String> storage, String statement, int timeout) {
+    private boolean containsStatement(List<String> storage, String statement, long timeoutMs) {
         return containsStatement(
-                        storage, Pattern.compile("(.*)(?<result>" + statement + ")(.*)"), timeout)
+                        storage,
+                        Pattern.compile("(.*)(?<result>" + Pattern.quote(statement) + ")(.*)"),
+                        timeoutMs)
                 != null;
     }
 
-    private String containsStatement(List<String> storage, Pattern statement, int timeout) {
+    private String containsStatement(List<String> storage, Pattern statement, long timeoutMs) {
         boolean notFound = true;
         final long SLEEP_TIME_MS = 100;
         long time = System.currentTimeMillis();
@@ -139,7 +141,7 @@ public class ProcessRunner {
                         }
                     }
                 }
-                if (System.currentTimeMillis() - time > timeout + SLEEP_TIME_MS) {
+                if (System.currentTimeMillis() - time > timeoutMs + SLEEP_TIME_MS) {
                     break;
                 }
                 Thread.sleep(SLEEP_TIME_MS);
