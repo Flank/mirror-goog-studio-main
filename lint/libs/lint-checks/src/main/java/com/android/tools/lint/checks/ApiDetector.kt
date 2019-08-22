@@ -2269,7 +2269,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 ATTR_IMPORTANT_FOR_AUTOFILL,
                 ATTR_AUTOFILL_HINTS,
                 "foregroundServiceType",
-                "autofilledHighlight" -> true
+                "autofilledHighlight",
+
+                // The following attributes are benign because aapt2 will rewrite them
+                // into the safe alternatives; e.g. paddingHorizontal gets rewritten as
+                // paddingLeft and paddingRight; this is done in aapt2's
+                // ResourceFileFlattener::ResourceFileFlattener
+                "paddingHorizontal",
+                "paddingVertical",
+                "layout_marginHorizontal",
+                "layout_marginVertical" -> true
+
                 else -> false
             }
         }
