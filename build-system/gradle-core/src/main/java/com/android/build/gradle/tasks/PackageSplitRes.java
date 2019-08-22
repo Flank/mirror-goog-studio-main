@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.signing.SigningConfigProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -41,7 +40,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
@@ -52,7 +50,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
 
     private SigningConfigProvider signingConfig;
     private File incrementalDir;
-    private boolean keepTimestampsInApk;
 
     @InputFiles
     public abstract DirectoryProperty getProcessedResources();
@@ -63,11 +60,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
     @Nested
     public SigningConfigProvider getSigningConfig() {
         return signingConfig;
-    }
-
-    @Input
-    public boolean getKeepTimestampsInApk() {
-        return keepTimestampsInApk;
     }
 
     @Override
@@ -109,7 +101,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withSigning(params.signingConfig.resolve())
                             .withOutputFile(params.output)
-                            .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withIntermediateDir(intDir)
                             .withApkCreatorType(ApkCreatorType.APK_Z_FILE_CREATOR)
                             .withChangedAndroidResources(
@@ -128,7 +119,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
         private final File output;
         private final File incrementalDir;
         private final SigningConfigProviderParams signingConfig;
-        private final boolean keepTimestampsInApk;
 
         PackageSplitResTransformParams(ApkData apkInfo, File input, PackageSplitRes task) {
             if (input == null) {
@@ -148,7 +138,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
             signingConfig = task.getSigningConfig().convertToParams();
-            keepTimestampsInApk = task.getKeepTimestampsInApk();
         }
 
         @Nullable
@@ -208,10 +197,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                             InternalArtifactType.PROCESSED_RES, task.getProcessedResources());
             task.signingConfig = SigningConfigProvider.create(scope);
             task.incrementalDir = scope.getIncrementalDir(getName());
-            task.keepTimestampsInApk =
-                    scope.getGlobalScope()
-                            .getProjectOptions()
-                            .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
         }
     }
 }

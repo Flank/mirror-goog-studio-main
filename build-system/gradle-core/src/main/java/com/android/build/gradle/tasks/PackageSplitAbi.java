@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -74,8 +73,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
 
     private Set<String> splits;
 
-    private boolean keepTimestampsInApk;
-
     private String createdBy;
 
     @InputFiles
@@ -112,11 +109,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
     @Input
     public Collection<String> getNoCompressExtensions() {
         return aaptOptionsNoCompress != null ? aaptOptionsNoCompress : Collections.emptyList();
-    }
-
-    @Input
-    public boolean getKeepTimestampsInApk() {
-        return keepTimestampsInApk;
     }
 
     @Input
@@ -158,7 +150,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
                             // .withManifest(manifest)
                             .withAaptOptionsNoCompress(params.aaptOptionsNoCompress)
                             .withIntermediateDir(params.incrementalDir)
-                            .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withDebuggableBuild(params.isJniDebuggable)
                             .withJniDebuggableBuild(params.isJniDebuggable)
                             .withAcceptedAbis(ImmutableSet.of(params.apkInfo.getFilterName()))
@@ -185,7 +176,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
         private final String createdBy;
         private final Collection<String> aaptOptionsNoCompress;
         private final Set<File> jniFolders;
-        private final boolean keepTimestampsInApk;
         private final boolean isJniDebuggable;
         private final int minSdkVersion;
 
@@ -207,7 +197,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
             createdBy = task.getCreatedBy();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             jniFolders = task.getJniFolders().getFiles();
-            keepTimestampsInApk = task.getKeepTimestampsInApk();
             isJniDebuggable = task.jniDebuggable;
             minSdkVersion = task.getMinSdkVersion();
         }
@@ -285,9 +274,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
                     PerModuleBundleTaskKt.getNativeLibsFiles(scope, packageCustomClassDependencies);
             task.jniDebuggable = config.getBuildType().isJniDebuggable();
             task.splits = scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
-
-            task.keepTimestampsInApk =
-                    globalScope.getProjectOptions().get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
 
             task.createdBy = globalScope.getCreatedBy();
 

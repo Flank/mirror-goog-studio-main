@@ -105,6 +105,9 @@ enum class RemovedOptions(
         "android.enableSeparateRClassCompilation",
         "Separate R class compilation has been enabled and can no longer be disabled."),
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", "Instant run is replaced by apply changes."),
+    KEEP_TIMESTAMPS_IN_APK(
+        "android.keepTimestampsInApk",
+        "The ability to keep timestamps in the APK is removed in AGP 3.6"),
 
     ;
 

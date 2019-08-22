@@ -63,7 +63,6 @@ enum class BooleanOption(
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", true),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),
-    KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
     ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
     USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE),

@@ -102,7 +102,6 @@ class IncrementalPackagerBuilderTest {
         IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
             .withSigning(signingConfig, minSdk)
             .withOutputFile(outputFile)
-            .withKeepTimestampsInApk(false)
             .withIntermediateDir(intermediateDir)
             .withApkCreatorType(ApkCreatorType.APK_Z_FILE_CREATOR)
             .build().use { }

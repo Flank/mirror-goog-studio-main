@@ -68,19 +68,16 @@ public class IncrementalPackagerBuilder {
         /** Usual APK format. */
         FILE {
             @Override
-            ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild) {
-                return ApkCreatorFactories.fromProjectProperties(
-                        keepTimestampsInApk, debuggableBuild);
+            ApkCreatorFactory factory(boolean debuggableBuild) {
+                return ApkCreatorFactories.fromProjectProperties(debuggableBuild);
             }
         },
 
         FILE_WITH_LIST_OF_CHANGES {
             @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
             @Override
-            ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild) {
-                ApkCreatorFactory apk =
-                        ApkCreatorFactories.fromProjectProperties(
-                                keepTimestampsInApk, debuggableBuild);
+            ApkCreatorFactory factory(boolean debuggableBuild) {
+                ApkCreatorFactory apk = ApkCreatorFactories.fromProjectProperties(debuggableBuild);
                 return creationData ->
                         new CapturingChangesApkCreator(creationData, apk.make(creationData));
             }
@@ -90,14 +87,14 @@ public class IncrementalPackagerBuilder {
         DIRECTORY {
             @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
             @Override
-            ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild) {
+            ApkCreatorFactory factory(boolean debuggableBuild) {
                 return creationData ->
                         new CapturingChangesApkCreator(
                                 creationData, new FolderBasedApkCreator(creationData));
             }
         };
 
-        abstract ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild);
+        abstract ApkCreatorFactory factory(boolean debuggableBuild);
     }
 
     /**
@@ -132,9 +129,6 @@ public class IncrementalPackagerBuilder {
      * it can be inferred.
      */
     @Nullable private Predicate<String> noCompressPredicate;
-
-    /** Whether the timestamps should be kept in the apk. */
-    @Nullable private Boolean keepTimestampsInApk;
 
     /**
      * Directory for intermediate contents.
@@ -368,18 +362,6 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets whether the timestamps should be kept in the apk.
-     *
-     * @param keepTimestampsInApk whether the timestamps should be kept in the apk
-     * @return {@code this} for use with fluent-style notation
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withKeepTimestampsInApk(boolean keepTimestampsInApk) {
-        this.keepTimestampsInApk = keepTimestampsInApk;
-        return this;
-    }
-
-    /**
      * Sets the intermediate directory used to store information for incremental builds.
      *
      * @param intermediateDir the intermediate directory
@@ -522,7 +504,6 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackager build() {
-        Preconditions.checkState(keepTimestampsInApk != null, "keepTimestampsInApk == null");
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 
         ManifestAttributeSupplier manifest =
@@ -556,7 +537,7 @@ public class IncrementalPackagerBuilder {
             return new IncrementalPackager(
                     creationDataBuilder.build(),
                     intermediateDir,
-                    apkFormat.factory(keepTimestampsInApk, debuggableBuild),
+                    apkFormat.factory(debuggableBuild),
                     ApkFormat.FILE.equals(apkFormat),
                     abiFilters,
                     jniDebuggableBuild,

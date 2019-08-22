@@ -42,17 +42,15 @@ private const val MAXIMUM_COMPRESSION_THREADS = 2
  * Creates an [ApkCreatorFactory] based on the definitions in the project. This is only to
  * be used with the incremental packager.
  *
- * @param keepTimestampsInApk whether the timestamps should be kept in the apk
  * @param debuggableBuild whether the [ApkCreatorFactory] will be used to create a
  * debuggable archive
  * @return the factory
  */
 fun fromProjectProperties(
-    keepTimestampsInApk: Boolean,
     debuggableBuild: Boolean
 ): ApkCreatorFactory {
     val options = ZFileOptions()
-    options.noTimestamps = !keepTimestampsInApk
+    options.noTimestamps = true
     options.coverEmptySpaceUsingExtraField = true
 
     val compressionExecutor = ThreadPoolExecutor(

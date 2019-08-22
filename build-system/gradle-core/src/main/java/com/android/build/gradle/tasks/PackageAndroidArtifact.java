@@ -222,8 +222,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     protected com.android.builder.utils.FileCache fileCache;
 
-    protected boolean keepTimestampsInApk;
-
     @Nullable protected Integer targetApi;
 
     @Nullable
@@ -231,11 +229,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Optional
     public Integer getTargetApi() {
         return targetApi;
-    }
-
-    @Input
-    public boolean getKeepTimestampsInApk() {
-        return keepTimestampsInApk;
     }
 
     /** Desired output format. */
@@ -493,7 +486,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         protected final int minSdkVersion;
         protected final boolean isDebuggableBuild;
         protected final boolean isJniDebuggableBuild;
-        protected final boolean keepTimestampsInApk;
         @Nullable protected final Integer targetApi;
         @NonNull protected final IncrementalPackagerBuilder.BuildType packagerMode;
         @NonNull protected final ApkCreatorType apkCreatorType;
@@ -553,7 +545,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             minSdkVersion = task.getMinSdkVersion();
             isDebuggableBuild = task.getDebugBuild();
             isJniDebuggableBuild = task.getJniDebugBuild();
-            keepTimestampsInApk = task.getKeepTimestampsInApk();
             targetApi = task.getTargetApi();
             packagerMode =
                     changes.isIncremental()
@@ -677,7 +668,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 PackagingUtils.getNoCompressPredicate(
                                         params.aaptOptionsNoCompress, manifest))
                         .withIntermediateDir(incrementalDirForSplit)
-                        .withKeepTimestampsInApk(params.keepTimestampsInApk)
                         .withDebuggableBuild(params.isDebuggableBuild)
                         .withAcceptedAbis(
                                 filter == null ? params.abiFilters : ImmutableSet.of(filter))
@@ -958,12 +948,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             : projectOptions.get(BooleanOption.DEPLOYMENT_PROVIDES_LIST_OF_CHANGES)
                                     ? IncrementalPackagerBuilder.ApkFormat.FILE_WITH_LIST_OF_CHANGES
                                     : IncrementalPackagerBuilder.ApkFormat.FILE;
-
-            packageAndroidArtifact.keepTimestampsInApk =
-                    variantScope
-                            .getGlobalScope()
-                            .getProjectOptions()
-                            .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
 
             packageAndroidArtifact.targetApi =
                     projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
