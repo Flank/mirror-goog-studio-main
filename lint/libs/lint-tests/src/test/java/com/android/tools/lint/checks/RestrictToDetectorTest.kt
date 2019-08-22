@@ -1262,6 +1262,42 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testPackagePrivateFromKotlin() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import android.support.annotation.VisibleForTesting
+                @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+                class RunnerFactoryKotlin {
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+                public class NotWorkingEngineJava {
+                    public void test() {
+                        final RunnerFactoryKotlin runnerFactory = new RunnerFactoryKotlin();
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+                class NotWorkingEngineKotlin {
+                    fun test() {
+                        val runnerFactory = RunnerFactoryKotlin()
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     companion object {
         /*
                 Compiled version of these 5 files (and the RestrictTo annotation);

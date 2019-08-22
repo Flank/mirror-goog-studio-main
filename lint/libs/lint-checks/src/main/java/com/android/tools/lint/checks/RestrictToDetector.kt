@@ -33,12 +33,14 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.isKotlin
+import com.intellij.lang.jvm.annotation.JvmAnnotationConstantValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.impl.compiled.ClsAnnotationImpl
 import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
@@ -49,6 +51,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UTypeReferenceExpression
+import org.jetbrains.uast.UastEmptyExpression
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isArrayInitializer
@@ -222,7 +225,9 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val evaluator = context.evaluator
             val pkg = evaluator.getPackage(node)
             val methodPackage = evaluator.getPackage(method)
-            if (pkg == methodPackage) {
+            // can't compare pkg == methodPackage because PsiPackageImpl#equals only returns
+            // true for other instances of the exact same class
+            if (pkg?.qualifiedName == methodPackage?.qualifiedName) {
                 // Same package
                 return
             }
@@ -575,6 +580,22 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     "PROTECTED" -> return VISIBILITY_PROTECTED
                     "PACKAGE_PRIVATE" -> return VISIBILITY_PACKAGE_PRIVATE
                 }
+            } else if (value is UastEmptyExpression) {
+                // Some kind of error in UAST; try harder. JavaUAnnotation is used to wrap
+                // class file annotations and in findDeclaredAttributeValue it returns
+                // UastEmptyExpression if it cannot convert it to UAST.
+                val psi = annotation.sourcePsi
+                if (psi is ClsAnnotationImpl) {
+                    val otherwise = psi.findAttribute(ATTR_OTHERWISE)
+                        ?: psi.findAttribute(ATTR_PRODUCTION_VISIBILITY)
+                    val v = otherwise?.attributeValue
+                    if (v is JvmAnnotationConstantValue) {
+                        val constant = v.constantValue
+                        if (constant is Number) {
+                            return constant.toInt()
+                        }
+                    }
+                }
             }
 
             return VISIBILITY_PRIVATE // the default
@@ -595,21 +616,21 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         private fun getRestrictionScope(annotation: UAnnotation): Int {
             val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
             if (value != null) {
-                return getRestrictionScope(value)
+                return getRestrictionScope(value, annotation)
             } else if (GMS_HIDE_ANNOTATION == annotation.qualifiedName) {
                 return RESTRICT_TO_ALL
             }
             return 0
         }
 
-        private fun getRestrictionScope(expression: UExpression?): Int {
+        private fun getRestrictionScope(expression: UExpression?, annotation: UAnnotation): Int {
             var scope = 0
             if (expression != null) {
                 if (expression.isArrayInitializer()) {
                     val initializerExpression = expression as UCallExpression?
                     val initializers = initializerExpression!!.valueArguments
                     for (initializer in initializers) {
-                        scope = scope or getRestrictionScope(initializer)
+                        scope = scope or getRestrictionScope(initializer, annotation)
                     }
                 } else if (expression is UReferenceExpression) {
                     val resolved = expression.resolve()
@@ -625,6 +646,19 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                             scope = scope or RESTRICT_TO_LIBRARY
                         } else if ("LIBRARY_GROUP_PREFIX" == name) {
                             scope = scope or RESTRICT_TO_LIBRARY_GROUP_PREFIX
+                        }
+                    }
+                } else if (expression is UastEmptyExpression) {
+                    // See JavaUAnnotation.findDeclaredAttributeValue
+                    val psi = annotation.sourcePsi
+                    if (psi is ClsAnnotationImpl) {
+                        val otherwise = psi.findAttribute(ATTR_VALUE)
+                        val v = otherwise?.attributeValue
+                        if (v is JvmAnnotationConstantValue) {
+                            val constant = v.constantValue
+                            if (constant is Number) {
+                                scope = scope or constant.toInt()
+                            }
                         }
                     }
                 }
