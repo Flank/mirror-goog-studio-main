@@ -80,7 +80,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     private OutputScope outputScope;
 
     private final RegularFileProperty manifestOutputFile;
-    private final RegularFileProperty mainManifest;
     private final Property<String> packageOverride;
     private final Property<Integer> versionCode;
     private final Property<String> versionName;
@@ -93,7 +92,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     public ProcessLibraryManifest(ObjectFactory objectFactory) {
         super(objectFactory);
         manifestOutputFile = objectFactory.fileProperty();
-        mainManifest = objectFactory.fileProperty();
         packageOverride = objectFactory.property(String.class);
         versionCode = objectFactory.property(Integer.class);
         versionName = objectFactory.property(String.class);
@@ -119,7 +117,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     new ProcessLibParams(
                             getAaptFriendlyManifestOutputFile(),
                             isNamespaced,
-                            mainManifest.getAsFile().get(),
+                            getMainManifest().get(),
                             manifestOverlays.get(),
                             packageOverride.getOrNull(),
                             versionCode.get(),
@@ -313,9 +311,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public RegularFileProperty getMainManifest() {
-        return mainManifest;
-    }
+    public abstract Property<File> getMainManifest();
 
     @Input
     @Optional
@@ -435,12 +431,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
-            getVariantScope()
-                    .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                            InternalArtifactType.CHECK_MANIFEST_RESULT,
-                            task.getCheckManifestResult());
-
             VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getVariantScope().getVariantConfiguration();
 
@@ -481,15 +471,10 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.packageOverride.set(task.getProject().provider(config::getApplicationId));
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));
-            task.mainManifest.set(
-                    task.getProject()
-                            .provider(
-                                    () -> {
-                                        RegularFileProperty fileProp =
-                                                task.getProject().getObjects().fileProperty();
-                                        fileProp.set(config.getMainManifest());
-                                        return fileProp.get();
-                                    }));
+            task.getMainManifest()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    task.getProject(), config::getMainManifestFilePath));
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
         }
     }

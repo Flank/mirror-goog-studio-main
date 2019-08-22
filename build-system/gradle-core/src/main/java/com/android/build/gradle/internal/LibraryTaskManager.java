@@ -123,12 +123,13 @@ public class LibraryTaskManager extends TaskManager {
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
 
-        taskFactory.register(new CheckManifest.CreationAction(variantScope));
-
         taskFactory.register(
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(variantScope));
 
         createGenerateResValuesTask(variantScope);
+
+        // Add a task to check the manifest
+        taskFactory.register(new CheckManifest.CreationAction(variantScope));
 
         createMergeLibManifestsTask(variantScope);
 

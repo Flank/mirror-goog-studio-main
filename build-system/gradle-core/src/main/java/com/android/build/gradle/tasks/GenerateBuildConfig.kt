@@ -67,11 +67,6 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     private lateinit var itemsSupplier: Supplier<List<Any>>
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    abstract val checkManifestResult: DirectoryProperty
-
     @get:Input
     var isLibrary: Boolean = false
         private set
@@ -252,10 +247,6 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.itemsSupplier = TaskInputHelper.memoize { variantConfiguration.buildConfigItems }
 
             task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
-
-            variantScope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.CHECK_MANIFEST_RESULT,
-                task.checkManifestResult)
 
             if (variantScope.variantConfiguration.type.isTestComponent) {
                 variantScope.artifacts.setTaskInputToFinalProduct(

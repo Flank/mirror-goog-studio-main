@@ -29,7 +29,6 @@ import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.MergedFlavor;
 import com.android.builder.core.VariantAttributesProvider;
 import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.ClassFieldImpl;
@@ -944,11 +943,16 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     /** Returns whether the main manifest file is required to exist. */
     public boolean isMainManifestRequired() {
-        // The main manifest file is not required to exist for a test project
-        return getType() != VariantTypeImpl.TEST_APK;
+        // The main manifest file is not required to exist for a test variant or a test project
+        return !getType().isForTesting();
     }
 
-    /** Returns the path to the main manifest file. It may or may not exist. */
+    /**
+     * Returns the path to the main manifest file. It may or may not exist.
+     *
+     * <p>Note: Avoid calling this method at configuration time because the final path to the
+     * manifest file may change during that time.
+     */
     @NonNull
     public File getMainManifestFilePath() {
         return mDefaultSourceProvider.getManifestFile();
@@ -956,10 +960,13 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     /**
      * Returns the path to the main manifest file if it exists, or `null` otherwise (e.g., the main
-     * manifest file is not required to exist for a test project).
+     * manifest file is not required to exist for a test variant or a test project).
+     *
+     * <p>Note: Avoid calling this method at configuration time because (1) the final path to the
+     * manifest file may change during that time, and (2) this method performs I/O.
      */
     @Nullable
-    public File getMainManifest() {
+    public File getMainManifestIfExists() {
         File mainManifest = getMainManifestFilePath();
 
         if (mainManifest.isFile()) {

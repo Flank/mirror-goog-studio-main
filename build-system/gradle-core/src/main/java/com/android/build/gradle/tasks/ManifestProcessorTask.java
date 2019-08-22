@@ -33,13 +33,10 @@ import javax.annotation.Nonnull;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 
 /** A task that processes the manifest */
 public abstract class ManifestProcessorTask extends IncrementalTask {
@@ -57,11 +54,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     @Nonnull private final DirectoryProperty aaptFriendlyManifestOutputDirectory;
 
     @Nonnull private final DirectoryProperty instantAppManifestOutputDirectory;
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
-    @Optional
-    public abstract DirectoryProperty getCheckManifestResult();
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some

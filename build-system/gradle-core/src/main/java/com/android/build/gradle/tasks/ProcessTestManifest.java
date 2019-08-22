@@ -66,10 +66,13 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 /**
@@ -86,9 +89,6 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
     @NonNull private FileCollection testTargetMetadata;
-
-    @Nullable
-    private File testManifestFile;
 
     /** Whether there's just a single APK with both test and tested code. */
     private boolean onlyTestApk;
@@ -177,7 +177,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                 getHandleProfiling(),
                 getFunctionalTest(),
                 getTestLabel(),
-                getTestManifestFile(),
+                getTestManifestFile().getOrNull(),
                 computeProviders(),
                 getPlaceholdersValues(),
                 manifestOutputFile,
@@ -406,16 +406,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         return null;
     }
 
-    @Nullable
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
-    public File getTestManifestFile() {
-        return testManifestFile;
-    }
-
-    public void setTestManifestFile(@Nullable File testManifestFile) {
-        this.testManifestFile = testManifestFile;
-    }
+    public abstract Property<File> getTestManifestFile();
 
     public File getTmpDir() {
         return tmpDir;
@@ -559,16 +553,16 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         public void configure(@NonNull final ProcessTestManifest task) {
             super.configure(task);
 
-            getVariantScope()
-                    .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                            InternalArtifactType.CHECK_MANIFEST_RESULT,
-                            task.getCheckManifestResult());
-
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getVariantScope().getVariantConfiguration();
 
-            task.setTestManifestFile(config.getMainManifest());
+            // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
+            // accepts either a non-null file that exists or a null file, it does not accept a
+            // non-null file that does not exist.
+            task.getTestManifestFile()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    task.getProject(), config::getMainManifestIfExists));
             task.outputScope = getVariantScope().getOutputScope();
 
             task.setTmpDir(

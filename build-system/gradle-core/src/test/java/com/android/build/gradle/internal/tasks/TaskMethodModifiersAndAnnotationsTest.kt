@@ -169,7 +169,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setSigningConfig",
-                "com.android.build.gradle.tasks.ProcessTestManifest::setTestManifestFile",
                 "com.android.build.gradle.tasks.ProcessTestManifest::setTmpDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setDebugBuild",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setImportDirs",

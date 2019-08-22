@@ -443,8 +443,9 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         List<File> manifests = new ArrayList<>(variantConfiguration.getManifestOverlays());
-        if (variantConfiguration.getMainManifest() != null) {
-            manifests.add(variantConfiguration.getMainManifest());
+        File mainManifest = variantConfiguration.getMainManifestIfExists();
+        if (mainManifest != null) {
+            manifests.add(mainManifest);
         }
         if (manifests.isEmpty()) {
             return false;
@@ -560,7 +561,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        File manifest = variantConfiguration.getMainManifest();
+        File manifest = variantConfiguration.getMainManifestIfExists();
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
                     new DefaultManifestParser(

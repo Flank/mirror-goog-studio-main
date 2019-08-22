@@ -110,7 +110,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private FileCollection packageManifest;
     private Supplier<EnumSet<Feature>> optionalFeatures;
 
-    private final RegularFileProperty mainManifest;
     private final Property<String> packageOverride;
     private final ListProperty<File> manifestOverlays;
     private final MapProperty<String, Object> manifestPlaceholders;
@@ -125,7 +124,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Inject
     public ProcessApplicationManifest(ObjectFactory objectFactory) {
         super(objectFactory);
-        mainManifest = objectFactory.fileProperty();
         packageOverride = objectFactory.property(String.class);
         manifestOverlays = objectFactory.listProperty(File.class);
         manifestPlaceholders = objectFactory.mapProperty(String.class, Object.class);
@@ -208,7 +206,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             MergingReport mergingReport =
                     ManifestHelperKt.mergeManifestsForApplication(
-                            mainManifest.getAsFile().get(),
+                            getMainManifest().get(),
                             manifestOverlays.get(),
                             computeFullProviderList(compatibleScreenManifestForSplit),
                             navJsons,
@@ -302,12 +300,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         return null;
     }
 
-    @Optional
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public RegularFileProperty getMainManifest() {
-        return mainManifest;
-    }
+    public abstract Property<File> getMainManifest();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -638,12 +633,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            getVariantScope()
-                    .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                            InternalArtifactType.CHECK_MANIFEST_RESULT,
-                            task.getCheckManifestResult());
-
             final BaseVariantData variantData = getVariantScope().getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = getVariantScope().getGlobalScope();
@@ -751,15 +740,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.packageOverride.set(task.getProject().provider(config::getApplicationId));
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));
-            task.mainManifest.set(
-                    task.getProject()
-                            .provider(
-                                    () -> {
-                                        RegularFileProperty fileProp =
-                                                task.getProject().getObjects().fileProperty();
-                                        fileProp.set(config.getMainManifest());
-                                        return fileProp.get();
-                                    }));
+            task.getMainManifest()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, config::getMainManifestFilePath));
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
             task.isHybridVariantType = config.getType().isHybrid();
             task.buildTypeName = config.getBuildType().getName();

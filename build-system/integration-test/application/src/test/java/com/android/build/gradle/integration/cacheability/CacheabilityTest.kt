@@ -99,7 +99,6 @@ class CacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
-                    ":app:checkDebugManifest" /* Bug 74595857 */,
                     ":app:packageDebug" /* Bug 74595859 */
                 ),
                 SKIPPED to setOf(

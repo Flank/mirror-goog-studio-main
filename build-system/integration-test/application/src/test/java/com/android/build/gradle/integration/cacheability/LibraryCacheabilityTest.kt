@@ -89,7 +89,6 @@ class LibraryCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
-                    ":lib:checkReleaseManifest" /* Bug 74595857 */,
                     ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
                     ":lib:mergeReleaseGeneratedProguardFiles" /* Bug 127247527 */,
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
