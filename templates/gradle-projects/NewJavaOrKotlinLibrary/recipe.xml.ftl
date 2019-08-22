@@ -6,6 +6,8 @@
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
     <instantiate from="root/src/library_package/Placeholder.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+    <copy from="root://gradle-projects/common/gitignore"
+            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
 
 	<mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
 </recipe>

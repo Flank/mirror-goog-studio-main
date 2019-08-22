@@ -28,6 +28,9 @@
 
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 
+    <copy from="root://gradle-projects/common/gitignore"
+            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
+
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
     <instantiate from="root/res/values/styles.xml.ftl"
