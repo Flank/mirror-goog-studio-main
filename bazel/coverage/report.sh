@@ -4,7 +4,7 @@ readonly report_name="$1"
 readonly html_dir="$2"
 
 if [[ ! -f "./tools/base/bazel/coverage/report.sh" ]]; then
-  echo "you should run this from studio-master-dev"
+  echo "you should run this from the top level WORKSPACE directory"
   exit 1
 fi
 
