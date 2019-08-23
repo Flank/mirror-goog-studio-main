@@ -19,15 +19,20 @@ package com.android.build.gradle.integration.library
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.AarSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import org.gradle.tooling.BuildException
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ExpectedException
 
 /** Test for library module with local file dependencies. */
 class LibWithLocalDepsTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("multiproject").create()
+
+    @get:Rule
+    val expectedException: ExpectedException = ExpectedException.none()
 
     @Before
     fun setup() {
@@ -60,5 +65,32 @@ class LibWithLocalDepsTest {
         val aar = project.getSubproject("library").getAar("debug")
         assertThat(aar).doesNotContainClass("Lcom/example/local/Foo;")
         assertThat(aar).doesNotContainJavaResource("com/example/local/javaRes.txt")
+    }
+
+    @Test
+    fun testFailureWhenBuildingAarWithDirectLocalAarDep() {
+        expectedException.expect(BuildException::class.java)
+        TestFileUtils.appendToFile(
+            project.getSubproject("baseLibrary").buildFile,
+            """
+                dependencies {
+                    api files("libs/local.aar")
+                }
+                """
+        )
+        project.execute("clean", ":baseLibrary:assembleDebug")
+    }
+
+    @Test
+    fun testSuccessWhenBuildingAarWithTransitiveLocalAarDep() {
+        TestFileUtils.appendToFile(
+            project.getSubproject("baseLibrary").buildFile,
+            """
+                dependencies {
+                    api files("libs/local.aar")
+                }
+                """
+        )
+        project.execute("clean", ":library:assembleDebug")
     }
 }

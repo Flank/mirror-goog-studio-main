@@ -114,6 +114,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -985,10 +986,25 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getLocalPackagedJars() {
+        return getLocalFileDependencies(
+                (file) -> file.getName().toLowerCase(Locale.US).endsWith(DOT_JAR));
+    }
+
+    /**
+     * Returns the direct (i.e., non-transitive) local file dependencies matching the given
+     * predicate
+     *
+     * @return a non null, but possibly empty FileCollection
+     * @param filePredicate the file predicate used to filter the local file dependencies
+     */
+    @NonNull
+    @Override
+    public FileCollection getLocalFileDependencies(Predicate<File> filePredicate) {
         Configuration configuration = getVariantDependencies().getRuntimeClasspath();
 
-        // Get a list of local Jars dependencies. There is currently no API to filter for just jar
-        // files here, so we need to filter it in the return statement below. That means that if an
+        // Get a list of local file dependencies. There is currently no API to filter the
+        // files here, so we need to filter it in the return statement below. That means that if,
+        // for example, filePredicate filters out all files but jars in the return statement, but an
         // AarProducerTask produces an aar, then the returned FileCollection contains only jars but
         // still has AarProducerTask as a dependency.
         Callable<Collection<SelfResolvingDependency>> dependencies =
@@ -1010,11 +1026,7 @@ public class VariantScopeImpl implements VariantScope {
                                                 .call()
                                                 .stream()
                                                 .flatMap((it) -> it.resolve().stream())
-                                                .filter(
-                                                        (file) ->
-                                                                file.getName()
-                                                                        .toLowerCase(Locale.US)
-                                                                        .endsWith(DOT_JAR))
+                                                .filter(filePredicate)
                                                 .collect(Collectors.toList()))
                 .builtBy(dependencies);
     }

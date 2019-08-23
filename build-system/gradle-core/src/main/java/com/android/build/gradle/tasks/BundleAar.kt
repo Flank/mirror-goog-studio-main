@@ -26,21 +26,44 @@ import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.file.RegularFile
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import java.io.File
+import java.util.Locale
 
 /** Custom Zip task to allow archive name to be set lazily. */
 abstract class BundleAar : Zip(), VariantAwareTask {
 
     @Internal
     override lateinit var variantName: String
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val localAarDeps: ConfigurableFileCollection
+
+    @get:Input
+    val hasLocalAarDeps: Boolean
+        get() {
+            val hasLocalAarDependencies = localAarDeps.files.isNotEmpty()
+            if (hasLocalAarDependencies) {
+                throw RuntimeException(
+                    "Direct local .aar file dependencies for a library module are not supported " +
+                            "when creating an AAR for the library module."
+                )
+            }
+            return hasLocalAarDependencies
+        }
 
     class CreationAction(
         variantScope: VariantScope
@@ -147,6 +170,11 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 variantScope.artifacts
                     .getFinalProduct<Directory>(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
+            task.localAarDeps.from(
+                variantScope.getLocalFileDependencies {
+                    it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)
+                }
+            )
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->

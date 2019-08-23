@@ -38,6 +38,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.attributes.Attribute;
@@ -189,6 +190,16 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     FileCollection getLocalPackagedJars();
+
+    /**
+     * Returns the direct (i.e., non-transitive) local file dependencies matching the given
+     * predicate
+     *
+     * @return a non null, but possibly empty FileCollection
+     * @param filePredicate the file predicate used to filter the local file dependencies
+     */
+    @NonNull
+    FileCollection getLocalFileDependencies(Predicate<File> filePredicate);
 
     @NonNull
     FileCollection getProvidedOnlyClasspath();
