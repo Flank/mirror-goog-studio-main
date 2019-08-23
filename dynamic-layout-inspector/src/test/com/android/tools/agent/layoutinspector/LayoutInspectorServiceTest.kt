@@ -196,7 +196,7 @@ class LayoutInspectorServiceTest {
         `when`(handler.looper).thenReturn(Looper.myLooper())
         val renderer = HardwareRenderer()
         val info = AttachInfo(handler, renderer)
-        val view: View = StandardView.createLinearLayout()
+        val view: View = StandardView.createLinearLayoutWithTextView()
         setField(view, "mAttachInfo", info)
         WindowInspector.setGlobalWindowViews(listOf(view))
         Picture.setCanvasFactory(TestCanvasFactory())

@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.layoutinspector;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -28,8 +29,10 @@ import java.util.Map;
 
 /** Services for writing the view hierarchy into a ComponentTreeEvent protobuf. */
 class ComponentTree {
+    private static final String COMPOSE_VIEW = "androidx.ui.core.AndroidComposeView";
     private final StringTable mStringTable = new StringTable();
     private final ResourceConfiguration mConfiguration = new ResourceConfiguration(mStringTable);
+    private ComposeTree mComposeTree;
 
     /**
      * Write the component tree starting with the specified view into the event buffer.
@@ -94,6 +97,16 @@ class ComponentTree {
                     toInt(layout.getNamespace()),
                     toInt(layout.getType()),
                     toInt(layout.getName()));
+        }
+        if (COMPOSE_VIEW.equals(klass.getCanonicalName())) {
+            try {
+                if (mComposeTree == null) {
+                    mComposeTree = new ComposeTree(view.getClass().getClassLoader(), mStringTable);
+                }
+                mComposeTree.loadComposeTree(viewBuffer);
+            } catch (Throwable ex) {
+                Log.w("Compose", "loadComposeTree failed: ", ex);
+            }
         }
         if (viewBuffer == 0 || !(view instanceof ViewGroup)) {
             return;

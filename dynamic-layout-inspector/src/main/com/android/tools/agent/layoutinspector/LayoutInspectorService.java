@@ -271,8 +271,21 @@ public class LayoutInspectorService {
             }
             long event = initComponentTree(request, rootViewIds);
             if (root != null) {
-                new ComponentTree().writeTree(event, root);
+                // The compose API must run on the UI thread.
+                // For now: Build the entire component tree on the UI thread.
+                ComponentTreeBuilder builder = new ComponentTreeBuilder(event, root);
+                root.post(builder);
+                synchronized (builder) {
+                    if (!builder.isDone()) {
+                        builder.wait(5000);
+                    }
+                }
+                Throwable ex = builder.getException();
+                if (ex != null) {
+                    throw ex;
+                }
             }
+            // Send the message from a non UI thread:
             int messageId = (int) System.currentTimeMillis();
             sendComponentTree(request, image, image.length, messageId, type.ordinal());
         } catch (LayoutModifiedException e) {
@@ -441,6 +454,41 @@ public class LayoutInspectorService {
             default:
                 sendErrorMessage(
                         "Unsupported attribute for editing: " + Integer.toHexString(attributeId));
+        }
+    }
+
+    private static class ComponentTreeBuilder implements Runnable {
+        private final long mEvent;
+        private final View mRoot;
+        private boolean mDone;
+        private Throwable mException;
+
+        private ComponentTreeBuilder(long event, @NonNull View root) {
+            mEvent = event;
+            mRoot = root;
+        }
+
+        public boolean isDone() {
+            return mDone;
+        }
+
+        @Nullable
+        public Throwable getException() {
+            return mException;
+        }
+
+        @Override
+        public void run() {
+            try {
+                new ComponentTree().writeTree(mEvent, mRoot);
+            } catch (Throwable ex) {
+                mException = ex;
+            } finally {
+                synchronized (this) {
+                    mDone = true;
+                    notify();
+                }
+            }
         }
     }
 }

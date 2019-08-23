@@ -34,7 +34,7 @@ public class ComponentTreeTest {
         long event = allocateEvent();
 
         ComponentTree treeBuilder = new ComponentTree();
-        treeBuilder.writeTree(event, StandardView.createLinearLayout());
+        treeBuilder.writeTree(event, StandardView.createLinearLayoutWithTextView());
 
         ComponentTreeEvent proto = ComponentTreeEvent.parseFrom(toByteArray(event));
         StringTable table = new StringTable(proto.getStringList());

@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.RootLinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.ui.core.AndroidComposeView;
 
 public class StandardView {
     private static final int LAYOUT = 1;
@@ -103,9 +104,19 @@ public class StandardView {
     }
 
     /** Creates a LinearLayout instance with a TextView as a child. */
-    public static LinearLayout createLinearLayout() {
-        TextView textView = createTextView();
+    public static LinearLayout createLinearLayoutWithTextView() {
+        return createLinearLayoutWithComponent(createTextView());
+    }
 
+    /** Creates a LinearLayout instance with a ComposeView as a child. */
+    public static LinearLayout createLinearLayoutWithComposeView() {
+        return createLinearLayoutWithComponent(
+                ViewBuilder.create(AndroidComposeView.class, LinearLayout.LayoutParams.class)
+                        .build());
+    }
+
+    /** Creates a root of a LinearLayout with the specified view as a child. */
+    private static LinearLayout createLinearLayoutWithComponent(@NonNull View view) {
         Resources resources =
                 ResourcesBuilder.create()
                         .add(LAYOUT, "layout", PACKAGE_NAME, "main_activity")
@@ -131,7 +142,7 @@ public class StandardView {
 
         Context context = createContext();
         when(linearLayout.getChildCount()).thenReturn(1);
-        when(linearLayout.getChildAt(eq(0))).thenReturn(textView);
+        when(linearLayout.getChildAt(eq(0))).thenReturn(view);
         when(linearLayout.getContext()).thenReturn(context);
 
         return linearLayout;

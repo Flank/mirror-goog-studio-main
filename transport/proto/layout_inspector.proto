@@ -86,18 +86,22 @@ message Locale {
 }
 
 message View {
-  int64 draw_id = 1;       // the uniqueDrawingId
-  Resource view_id = 2;    // the id attribute on a View
-  Resource layout = 3;     // the layout where the view was found
+  int64 draw_id = 1;              // the uniqueDrawingId
+  Resource view_id = 2;           // the id attribute on a View
+  Resource layout = 3;            // the layout where the view was found
   int32 x = 4;
   int32 y = 5;
   int32 width = 6;
   int32 height = 7;
-  int32 class_name = 8;    // the simple class name of the view e.g. LinearLayout
-  int32 package_name = 9;  // the package part of the class name e.g. android.view
-  int32 text_value = 10;   // the value of the text property if it exists
+  int32 class_name = 8;           // the simple class name of the view e.g. LinearLayout
+  int32 package_name = 9;         // the package part of the class name e.g. android.view
+  int32 text_value = 10;          // the value of the text property if it exists
   int32 layout_flags = 11;
-  repeated View sub_view = 12;
+  int32 compose_filename = 12;    // name of file where invocation is found
+  int32 compose_invocation = 13;  // name of method of lambda invocation
+  int32 compose_package = 14;     // package part of lambda invocation
+  int32 compose_line_number = 15; // line number of lambda invocation
+  repeated View sub_view = 16;
 }
 
 message Property {
