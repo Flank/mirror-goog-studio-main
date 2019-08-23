@@ -658,7 +658,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     // ---- implements SourceCodeScanner ----
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
-        if (apiDatabase == null || context.isTestSource) {
+        if (apiDatabase == null || context.isTestSource && !context.driver.checkTestSources) {
             return null
         }
         return if (!context.mainProject.isAndroidProject) {

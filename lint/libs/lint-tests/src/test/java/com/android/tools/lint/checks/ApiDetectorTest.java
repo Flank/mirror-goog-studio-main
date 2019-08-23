@@ -1970,6 +1970,62 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testUnignoreTestSources() {
+        lint().files(
+                        manifest().minSdk(4),
+                        java(
+                                "src/test/java/test/pkg/UnitTest.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.widget.GridLayout;\n"
+                                        + "\n"
+                                        + "public class UnitTest {\n"
+                                        + "    private GridLayout field1 = new GridLayout(null);\n"
+                                        + "}\n"),
+                        gradle(
+                                ""
+                                        + "android {\n"
+                                        + "    lintOptions {\n"
+                                        + "        checkTestSources true\n"
+                                        + "    }\n"
+                                        + "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/java/test/pkg/UnitTest.java:6: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]\n"
+                                + "    private GridLayout field1 = new GridLayout(null);\n"
+                                + "                                ~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
+    public void testTestSourcesInEditor() {
+        lint().files(
+                        manifest().minSdk(4),
+                        java(
+                                "src/test/java/test/pkg/UnitTest.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.widget.GridLayout;\n"
+                                        + "\n"
+                                        + "public class UnitTest {\n"
+                                        + "    private GridLayout field1 = new GridLayout(null);\n"
+                                        + "}\n"),
+                        gradle(
+                                ""
+                                        + "android {\n"
+                                        + "    lintOptions {\n"
+                                        + "        checkTestSources false\n"
+                                        + "    }\n"
+                                        + "}"))
+                .checkMessage(this::checkReportedError)
+                .incremental("src/test/java/test/pkg/UnitTest.java")
+                .run()
+                .expectClean();
+    }
+
     public void testDensity() {
         // 120162341: Lint detection of Configuration.densityDpi field is strange when minSdk < 17
         lint().files(

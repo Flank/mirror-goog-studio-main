@@ -204,6 +204,45 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             .expectClean()
     }
 
+    fun testCheckResultInTests() {
+        // Make sure tests work with checkTestSources true
+        // Regression test for b/148841320
+        lint().files(
+                kotlin(
+                    "src/test/java/test/pkg/UnitTest.kt",
+                    """
+                    package test.pkg
+                    import android.support.annotation.CheckResult
+                    fun something(list: List<String>) {
+                        fromNullable(list)
+                    }
+                    @CheckResult
+                    fun fromNullable(a: Any?): Any? = a
+                    """
+                ).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR,
+                gradle(
+                        """
+                    android {
+                        lintOptions {
+                            checkTestSources true
+                        }
+                    }"""
+                ).indented()
+            )
+            .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
+            .run()
+            .expect(
+                """
+                src/test/java/test/pkg/UnitTest.kt:4: Warning: The result of fromNullable is not used [CheckResult]
+                    fromNullable(list)
+                    ~~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                """
+            )
+    }
+
     fun testNotIgnoredInBlock() {
         // Regression test for
         // 69534608: False positive for "The result of <method_name> is not used"
