@@ -52,7 +52,7 @@ public class CallStatement extends Statement {
     }
 
     boolean isManaged() {
-        return preComments.stream().anyMatch(s -> s.toLowerCase().contains("iml_to_build"));
+        return preComments.stream().anyMatch(s -> s.toLowerCase().contains("managed by go/iml_to_build"));
     }
 
     public void setIsManaged() {
