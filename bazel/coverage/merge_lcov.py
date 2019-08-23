@@ -16,23 +16,15 @@ def main():
             for record in contents.split("end_of_record\n"):
                 if "SF:" not in record:
                     continue
-                sf = record.split("SF:")[1].split("\n")[0]
-                if sf not in data:
-                    data[sf] = {}
-                for line in record.split("\n"):
-                    if line.startswith("DA:"):
-                        [num, hit] = line[3:].split(",")
-                        num = int(num)
-                        hit = hit != "0" # convert to boolean
-                        if num not in data[sf]:
-                            data[sf][num] = hit
-                        else:
-                            data[sf][num] |= hit
-    for f in sorted(data):
-        sys.stdout.write('SF:{}\n'.format(f))
-        for l in sorted(data[f]):
-            sys.stdout.write('DA:{},{}\n'.format(l, int(data[f][l])))
-        sys.stdout.write('end_of_record\n')
+                # path has a fix 38 character long prefix and a 5 character long
+                # suffix to it, which is being sliced to get the test name
+                # for example, if path is
+                # bazel-genfiles/external/results/tools/adt/idea/adt-ui/intellij.android.adt.ui_tests/lcov
+                # test name will be
+                # tools/adt/idea/adt-ui/intellij.android.adt.ui_tests
+                sys.stdout.write('TN:{}\n'.format((path[38:])[:-5]))
+                sys.stdout.write(record)
+                sys.stdout.write('end_of_record\n')
 
 if __name__ == '__main__':
     main()

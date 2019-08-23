@@ -9,16 +9,21 @@
 import sys
 
 def read_lcov():
-    file_line_cov = {} # map[file][line] = covered
+    file_line_cov = {} # map[test][file][line] = covered
     current_sf = None
+    current_tn = None
     for line in sys.stdin:
         line = line.strip()
-        if line[:3] == "SF:":
+        if line[:3] == "TN:":
+            current_tn = line[3:]
+            if current_tn not in file_line_cov:
+                file_line_cov[current_tn] = {}
+        elif line[:3] == "SF:":
             current_sf = line[3:]
-            file_line_cov[current_sf] = {}
+            file_line_cov[current_tn][current_sf] = {}
         elif line[:3] == "DA:":
             [num, hit] = line[3:].split(",")
-            file_line_cov[current_sf][int(num)] = hit != "0" # convert to bool
+            file_line_cov[current_tn][current_sf][int(num)] = hit != "0" # convert to bool
         else:
             pass
 
@@ -40,11 +45,13 @@ def is_included(path, includes):
     return False
 
 def write_lcov(filtered_cov):
-    for filepath in sorted(filtered_cov):
-        sys.stdout.write('SF:{}\n'.format(filepath))
-        for line in sorted(filtered_cov[filepath]):
-            sys.stdout.write('DA:{},{}\n'.format(line, int(filtered_cov[filepath][line])))
-        sys.stdout.write('end_of_record\n')
+    for tn in sorted(filtered_cov):
+        for filepath in sorted(filtered_cov[tn]):
+            sys.stdout.write('TN:{}\n'.format(tn))
+            sys.stdout.write('SF:{}\n'.format(filepath))
+            for line in sorted(filtered_cov[tn][filepath]):
+                sys.stdout.write('DA:{},{}\n'.format(line, int(filtered_cov[tn][filepath][line])))
+            sys.stdout.write('end_of_record\n')
 
 
 def main():
@@ -54,11 +61,15 @@ def main():
 
     file_line_cov = read_lcov()
 
-    after_excludes = {f: file_line_cov[f] for f in file_line_cov if not is_excluded(f, excludes)}
+    after_excludes = {}
+    for tn in file_line_cov:
+        after_excludes[tn] = {f: file_line_cov[tn][f] for f in file_line_cov[tn] if not is_excluded(f, excludes)}
 
     filtered = after_excludes # by default include everything
     if len(includes) > 0: # but if there are explicit includes then only include those
-        filtered = {f: after_excludes[f] for f in after_excludes if is_included(f, includes)}
+        filtered = {}
+        for tn in after_excludes:
+            filtered[tn] = {f: after_excludes[tn][f] for f in after_excludes[tn] if is_included(f, includes)}
 
     write_lcov(filtered)
 
