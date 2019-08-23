@@ -16,6 +16,7 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_SPLIT;
 import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
@@ -58,6 +59,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -104,6 +108,7 @@ public class ManifestMerger2 {
     @NonNull private final ImmutableList<File> mNavigationFiles;
     @NonNull private final ImmutableList<File> mNavigationJsons;
     @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
+    @NonNull private final ImmutableList<String> mDependencyFeatureNames;
 
     private ManifestMerger2(
             @NonNull ILogger logger,
@@ -119,7 +124,8 @@ public class ManifestMerger2 {
             @NonNull String featureName,
             @NonNull FileStreamProvider fileStreamProvider,
             @NonNull ImmutableList<File> navigationFiles,
-            @NonNull ImmutableList<File> navigationJsons) {
+            @NonNull ImmutableList<File> navigationJsons,
+            @NonNull ImmutableList<String> dependencyFeatureNames) {
         this.mSystemPropertyResolver = systemPropertiesResolver;
         this.mPlaceHolderValues = placeHolderValues;
         this.mManifestFile = mainManifestFile;
@@ -134,6 +140,7 @@ public class ManifestMerger2 {
         this.mFileStreamProvider = fileStreamProvider;
         this.mNavigationFiles = navigationFiles;
         this.mNavigationJsons = navigationJsons;
+        this.mDependencyFeatureNames = dependencyFeatureNames;
         this.mModel =
                 new ManifestModel(
                         mOptionalFeatures.contains(
@@ -523,7 +530,8 @@ public class ManifestMerger2 {
      * @param mergingReport the merging report builder
      */
     private void processOptionalFeatures(
-            @Nullable Document document, @NonNull MergingReport.Builder mergingReport) {
+            @Nullable Document document, @NonNull MergingReport.Builder mergingReport)
+            throws MergeFailureException {
         if (document == null) {
             return;
         }
@@ -583,6 +591,12 @@ public class ManifestMerger2 {
                     MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
+            addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+        }
+
         // These features should occur at the end of all optional features, as they are based off of
         // the final merged manifest. This is true for all instant app manifests, bundletool manifests,
         // and feature manifests.
@@ -591,6 +605,11 @@ public class ManifestMerger2 {
         }
         if (mOptionalFeatures.contains(Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)) {
             createBundleToolManifest(document, mergingReport);
+        } else if (mOptionalFeatures.contains(Invoker.Feature.CREATE_FEATURE_MANIFEST)) {
+            // createBundleToolManifest will produce the feature manifest at a certain point;
+            // if we're not making a bundletool manifest we need to prepare the feature manifest
+            // now
+            createStrippedFeatureManifest(document, mergingReport);
         }
     }
 
@@ -624,7 +643,8 @@ public class ManifestMerger2 {
     }
 
     private void createBundleToolManifest(
-            @NonNull Document document, @NonNull MergingReport.Builder mergingReport) {
+            @NonNull Document document, @NonNull MergingReport.Builder mergingReport)
+            throws MergeFailureException {
         // add splitName if requested for bundletool and we haven't added it to the merged manifest.
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
                 && !mOptionalFeatures.contains(
@@ -636,20 +656,45 @@ public class ManifestMerger2 {
                 MergingReport.MergedManifestKind.BUNDLE, prettyPrint(document));
         if (mOptionalFeatures.contains(Invoker.Feature.CREATE_FEATURE_MANIFEST)) {
             // feature manifest should be added based on the bundle manifest for merging.
-            if (mOptionalFeatures.contains(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)) {
-                stripMinSdkFromFeatureManifest(document, mergingReport);
-            } else {
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(document));
-            }
+            createStrippedFeatureManifest(document, mergingReport);
         }
 
         // remove split name from the manifest, unless it was requested from before.
         if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
         }
+
         mergingReport.setMergedDocument(
                 MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+    }
+
+    /**
+     * Prepares a feature manifest suitable for inclusion in dependent features or a base module,
+     * and saves it as part of the merging report. Does not mutate the passed in document.
+     */
+    private void createStrippedFeatureManifest(
+            @NonNull Document mergedManifest, @NonNull MergingReport.Builder mergingReport)
+            throws MergeFailureException {
+
+        // Avoid a clone if won't have any work to do
+        if (!mOptionalFeatures.contains(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
+                && !mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(mergedManifest));
+            return;
+        }
+
+        Document featureManifest = cloneDocument(mergedManifest);
+
+        if (mOptionalFeatures.contains(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)) {
+            stripMinSdkFromFeatureManifest(featureManifest);
+        }
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
+            stripUsesSplitFromFeatureManifest(featureManifest);
+        }
+
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(featureManifest));
     }
 
     /**
@@ -658,33 +703,34 @@ public class ManifestMerger2 {
      * the base module. It doesn't need to be strictly <= the base module like libraries.
      *
      * @param document the resulting document to use for stripping the min sdk from.
-     * @param mergingReport the merging report builder
      */
-    private void stripMinSdkFromFeatureManifest(
-            @NonNull Document document, @NonNull MergingReport.Builder mergingReport) {
+    private void stripMinSdkFromFeatureManifest(@NonNull Document document) {
         // make changes necessary for metadata feature manifest
         Element manifest = document.getDocumentElement();
         ImmutableList<Element> usesSdkList =
                 getChildElementsByName(manifest, SdkConstants.TAG_USES_SDK);
         final Element usesSdk;
-        final String minSdkVersion;
         if (!usesSdkList.isEmpty()) {
             usesSdk = usesSdkList.get(0);
-            minSdkVersion =
-                    usesSdk.getAttributeNS(
-                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION);
             usesSdk.removeAttributeNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION);
-        } else {
-            usesSdk = null;
-            minSdkVersion = null;
         }
-        // record amended document
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(document));
-        // undo changes necessary for metadata feature manifest
-        if (usesSdk != null && minSdkVersion != null) {
-            setAndroidAttribute(usesSdk, SdkConstants.ATTR_MIN_SDK_VERSION, minSdkVersion);
-        }
+    }
+
+    /**
+     * This will strip uses-split from the feature manifest used to merge it back into the base
+     * module and features that require it. If featureB depends on featureA, we don't want the
+     * {@code <uses split android:name="featureA"/>} from featureB's manifest to appear in
+     * featureA's manifest after merging.
+     *
+     * @param document the resulting document to use for stripping the min sdk from.
+     */
+    private void stripUsesSplitFromFeatureManifest(@NonNull Document document) {
+        // make changes necessary for metadata feature manifest
+        Element manifest = document.getDocumentElement();
+        ImmutableList<Element> usesSplitList =
+                getChildElementsByName(manifest, SdkConstants.TAG_USES_SPLIT);
+
+        usesSplitList.forEach(manifest::removeChild);
     }
 
     /**
@@ -896,6 +942,22 @@ public class ManifestMerger2 {
     }
 
     /**
+     * Adds <uses-split> tags for feature-on-feature dependencies.
+     *
+     * @param dependencyFeatureNames the names of feature modules on which this depends, if any.
+     */
+    private static void addUsesSplitTagsForDependencies(
+            @NonNull Document document, ImmutableList<String> dependencyFeatureNames) {
+        Element manifest = document.getDocumentElement();
+
+        for (String usedSplitName : dependencyFeatureNames) {
+            Element usesSplit = document.createElement(SdkConstants.TAG_USES_SPLIT);
+            setAndroidAttribute(usesSplit, ATTR_NAME, usedSplitName);
+            manifest.appendChild(usesSplit);
+        }
+    }
+
+    /**
      * Sets the element's attribute value to True.
      * @param element the xml element which attribute should be mutated.
      * @param attributeName the android namespace attribute name.
@@ -1011,6 +1073,20 @@ public class ManifestMerger2 {
                 XmlFormatStyle.get(document.getDocumentElement()),
                 null, /* endOfLineSeparator */
                 false /* endWithNewLine */);
+    }
+
+    /** Clones an XML document. */
+    @NonNull
+    private static Document cloneDocument(Document document) throws MergeFailureException {
+        try {
+            DOMResult domResult = new DOMResult();
+            TransformerFactory.newInstance()
+                    .newTransformer()
+                    .transform(new DOMSource(document), domResult);
+            return (Document) domResult.getNode();
+        } catch (Exception e) {
+            throw new MergeFailureException(e);
+        }
     }
 
     /**
@@ -1512,6 +1588,10 @@ public class ManifestMerger2 {
         private final ImmutableList.Builder<File> mNavigationJsonsBuilder =
                 new ImmutableList.Builder<>();
 
+        @NonNull
+        private final ImmutableList.Builder<String> mDependencyFetureNamesBuilder =
+                new ImmutableList.Builder<>();
+
         /**
          * Sets a value for a {@link ManifestSystemProperty}
          * @param override the property to set
@@ -1661,6 +1741,9 @@ public class ManifestMerger2 {
 
             /** Enforce that dependencies manifests don't have duplicated package names. */
             ENFORCE_UNIQUE_PACKAGE_NAME,
+
+            /** Adds <uses-split> tags referring to feature dependencies. */
+            ADD_USES_SPLIT_DEPENDENCIES,
         }
 
         /**
@@ -1893,6 +1976,18 @@ public class ManifestMerger2 {
         }
 
         /**
+         * Specifies a list of feature modules on which this module will depend. This is only valid
+         * for feature manifests.
+         *
+         * @param names the names of the dynamic features.
+         * @return itself.
+         */
+        public Invoker addDependencyFeatureNames(@NonNull Iterable<String> names) {
+            this.mDependencyFetureNamesBuilder.addAll(names);
+            return thisAsT();
+        }
+
+        /**
          * Perform the merging and return the result.
          *
          * @return an instance of {@link com.android.manifmerger.MergingReport} that will give
@@ -1937,7 +2032,8 @@ public class ManifestMerger2 {
                             mFeatureName,
                             fileStreamProvider,
                             mNavigationFilesBuilder.build(),
-                            mNavigationJsonsBuilder.build());
+                            mNavigationJsonsBuilder.build(),
+                            mDependencyFetureNamesBuilder.build());
             return manifestMerger.merge();
         }
 

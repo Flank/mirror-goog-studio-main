@@ -51,6 +51,7 @@ fun mergeManifestsForApplication(
     mergeType: ManifestMerger2.MergeType,
     placeHolders: Map<String, Any>,
     optionalFeatures: Collection<ManifestMerger2.Invoker.Feature>,
+    dependencyFeatureNames: Collection<String>,
     reportFile: File?,
     logger: ILogger
 ): MergingReport {
@@ -65,6 +66,7 @@ fun mergeManifestsForApplication(
             .withFeatures(*optionalFeatures.toTypedArray())
             .setMergeReportFile(reportFile)
             .setFeatureName(featureName)
+            .addDependencyFeatureNames(dependencyFeatureNames)
 
         if (mergeType == ManifestMerger2.MergeType.APPLICATION) {
             manifestMergerInvoker.withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)

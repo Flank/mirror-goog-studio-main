@@ -234,6 +234,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             ManifestMerger2.MergeType.LIBRARY,
                             params.manifestPlaceholders,
                             optionalFeatures,
+                            /* dependencyFeatureNames= */ Collections.emptyList(),
                             params.reportFile,
                             LoggerWrapper.getLogger(ProcessLibraryManifest.class));
 

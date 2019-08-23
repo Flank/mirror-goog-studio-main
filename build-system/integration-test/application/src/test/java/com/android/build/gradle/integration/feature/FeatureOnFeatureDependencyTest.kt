@@ -20,7 +20,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.testutils.truth.FileSubject.assertThat
+import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -119,6 +120,70 @@ class FeatureOnFeatureDependencyTest(val multiApkMode: MultiApkMode) {
         project.execute("clean", "assembleDebug")
     }
 
+    @Test
+    fun includeUsesSplitInFeatureManifestForMiddleFeature() {
+        project.execute("clean", "assembleDebug")
+
+        val manifestFile = getMergedManifestFile(project.getSubproject(":middleFeature"))
+
+        assertThat(manifestFile).exists()
+        assertThat(manifestFile)
+            .containsAllOf(
+                "<uses-split android:name=\"feature1\" />")
+
+        // Ensure we're not somehow including the wrong dependencies
+        assertThat(manifestFile)
+            .doesNotContain(
+                "<uses-split android:name=\"leafFeature\" />")
+        assertThat(manifestFile)
+            .doesNotContain(
+                "<uses-split android:name=\"baseModule\" />")
+    }
+
+    @Test
+    fun includeUsesSplitInFeatureManifestForLeafFeature() {
+        project.execute("clean", "assembleDebug")
+
+        val manifestFile = getMergedManifestFile(project.getSubproject(":leafFeature"))
+
+        assertThat(manifestFile).exists()
+        assertThat(manifestFile)
+            .containsAllOf(
+                "<uses-split android:name=\"feature1\" />",
+                "<uses-split android:name=\"middleFeature\" />")
+
+    }
+
+    @Test
+    fun includeUsesSplitInBundleManifest() {
+        project.execute("clean", "assembleDebug")
+
+        val manifestFile = project.getSubproject(":leafFeature").getIntermediateFile(
+            "bundle_manifest",
+            if (multiApkMode == MultiApkMode.INSTANT_APP) "debugFeature" else "debug",
+            "bundle-manifest",
+            "AndroidManifest.xml")
+
+        assertThat(manifestFile).exists()
+        assertThat(manifestFile)
+            .containsAllOf(
+                "<uses-split android:name=\"feature1\" />",
+                "<uses-split android:name=\"middleFeature\" />")
+    }
+
+    @Test
+    fun doesNotPropagateUsesSplitsWhenMergingDependencyManifests() {
+        project.execute("clean", "assembleDebug")
+
+        val feature1Manifest = getMergedManifestFile(project.getSubproject(":feature1"))
+        assertThat(feature1Manifest).exists()
+        assertThat(feature1Manifest).doesNotContain("uses-split")
+
+        val baseManifest = getMergedManifestFile(project.getSubproject(":baseModule"))
+        assertThat(baseManifest).exists()
+        assertThat(baseManifest).doesNotContain("uses-split")
+    }
+
     private fun createFeatureSplitWithGsonDep(packageName: String) =
         createFeatureSplit(packageName)
             .appendToBuild(
@@ -133,4 +198,11 @@ class FeatureOnFeatureDependencyTest(val multiApkMode: MultiApkMode) {
             MultiApkMode.DYNAMIC_APP -> MinimalSubProject.dynamicFeature(packageName)
             MultiApkMode.INSTANT_APP -> MinimalSubProject.feature(packageName)
         }
+
+    private fun getMergedManifestFile(project: GradleTestProject): File {
+        return project.getIntermediateFile(
+            "merged_manifests",
+            if (multiApkMode == MultiApkMode.INSTANT_APP) "debugFeature" else "debug",
+            "AndroidManifest.xml")
+    }
 }

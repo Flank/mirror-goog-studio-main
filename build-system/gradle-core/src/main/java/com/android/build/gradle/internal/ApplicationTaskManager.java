@@ -60,6 +60,7 @@ import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
@@ -210,6 +211,7 @@ public class ApplicationTaskManager extends TaskManager {
                         new DataBindingExportFeatureInfoTask.CreationAction(variantScope));
             }
             taskFactory.register(new ExportConsumerProguardFilesTask.CreationAction(variantScope));
+            taskFactory.register(new FeatureNameWriterTask.CreationAction(variantScope));
         }
 
         // Add data binding tasks if enabled

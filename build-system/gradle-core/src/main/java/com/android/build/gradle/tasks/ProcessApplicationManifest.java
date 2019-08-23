@@ -19,6 +19,7 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_NAME;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION;
@@ -63,6 +64,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -106,6 +108,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private Supplier<Integer> maxSdkVersion;
     private ArtifactCollection manifests;
     private ArtifactCollection featureManifests;
+    private FileCollection dependencyFeatureNameArtifacts;
     private FileCollection microApkManifest;
     private FileCollection packageManifest;
     private Supplier<EnumSet<Feature>> optionalFeatures;
@@ -114,6 +117,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private final ListProperty<File> manifestOverlays;
     private final MapProperty<String, Object> manifestPlaceholders;
     private boolean isHybridVariantType;
+    private boolean isFeatureSplitVariantType;
     private String buildTypeName;
 
     private FileCollection navigationJsons;
@@ -234,6 +238,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             ManifestMerger2.MergeType.APPLICATION,
                             manifestPlaceholders.get(),
                             getOptionalFeatures(),
+                            getDependencyFeatureNames(),
                             getReportFile().get().getAsFile(),
                             LoggerWrapper.getLogger(ProcessApplicationManifest.class));
 
@@ -408,6 +413,24 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         return providers;
     }
 
+    private List<String> getDependencyFeatureNames() {
+        List<String> list = new ArrayList<>();
+
+        if (!isFeatureSplitVariantType) {
+            // Only feature splits can have feature dependencies
+            return list;
+        }
+
+        try {
+            for (File file : dependencyFeatureNameArtifacts.getFiles()) {
+                list.add(org.apache.commons.io.FileUtils.readFileToString(file));
+            }
+            return list;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not load feature declaration", e);
+        }
+    }
+
     @NonNull
     private static String getNameFromAutoNamespacedManifest(@NonNull File manifest) {
         final String manifestSuffix = "_AndroidManifest.xml";
@@ -494,6 +517,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             return null;
         }
         return featureManifests.getArtifactFiles();
+    }
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getDependencyFeatureNameArtifacts() {
+        return dependencyFeatureNameArtifacts;
     }
 
     @InputFiles
@@ -725,6 +755,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         COMPILE_CLASSPATH,
                                         PROJECT,
                                         FEATURE_APPLICATION_ID_DECLARATION);
+
+                task.dependencyFeatureNameArtifacts =
+                        getVariantScope()
+                                .getArtifactFileCollection(
+                                        RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
             }
 
             if (!getVariantScope()
@@ -751,6 +786,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                     project, config::getMainManifestFilePath));
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
             task.isHybridVariantType = config.getType().isHybrid();
+            task.isFeatureSplitVariantType = config.getType().isFeatureSplit();
             task.buildTypeName = config.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
@@ -799,6 +835,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         if (variantType.isFeatureSplit()) {
             features.add(Feature.ADD_FEATURE_SPLIT_ATTRIBUTE);
             features.add(Feature.CREATE_FEATURE_MANIFEST);
+            features.add(Feature.ADD_USES_SPLIT_DEPENDENCIES);
         }
 
         if (variantType.isDynamicFeature()) {

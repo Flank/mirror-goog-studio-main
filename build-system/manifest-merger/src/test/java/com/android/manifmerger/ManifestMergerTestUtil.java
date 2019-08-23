@@ -25,7 +25,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
+import com.google.common.base.Enums;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closeables;
@@ -108,6 +110,19 @@ public class ManifestMergerTestUtil {
     private static final String DELIM_PACKAGE = "package";
 
     /**
+     * Delimiter for a section that declares feature-on-feature dependencies. The section is
+     * composed of one or more lines line containing a feature name on each line.
+     */
+    private static final String DELIM_DEPENDENCY_FEATURE_NAMES = "featureDeps";
+
+    /**
+     * Delimiter for a section that declares the {@Link MergedManifestKind} to request for the
+     * result. This section is composed of one line containing the enum name of the merged manifest
+     * kind, and defaults to MERGED if it is omitted.
+     */
+    private static final String DELIM_RESULT_KIND = "resultKind";
+
+    /**
      * Loads test data for a given test case.
      * The input (main + libs) are stored in temp files.
      * A new destination temp file is created to store the actual result output.
@@ -181,6 +196,8 @@ public class ManifestMergerTestUtil {
             List<File> libFiles = new ArrayList<File>();
             List<File> overlayFiles = new ArrayList<File>();
             List<File> navigationFiles = new ArrayList<File>();
+            List<String> dependencyFeatureNames = new ArrayList<>();
+            MergingReport.MergedManifestKind resultKind = MergingReport.MergedManifestKind.MERGED;
             int tempIndex = 0;
 
             while ((line = reader.readLine()) != null) {
@@ -203,7 +220,9 @@ public class ManifestMergerTestUtil {
                                     || delimiter.equals(DELIM_FAILS)
                                     || delimiter.equals(DELIM_FEATURES)
                                     || delimiter.equals(DELIM_INJECT_ATTR)
-                                    || delimiter.equals(DELIM_PACKAGE));
+                                    || delimiter.equals(DELIM_PACKAGE)
+                                    || delimiter.equals(DELIM_DEPENDENCY_FEATURE_NAMES)
+                                    || delimiter.equals(DELIM_RESULT_KIND));
 
                     skipEmpty = true;
 
@@ -215,10 +234,12 @@ public class ManifestMergerTestUtil {
                     if (delimiter.equals(DELIM_FAILS)) {
                         shouldFail = true;
 
-                    } else if (!delimiter.equals(DELIM_ERRORS) &&
-                            !delimiter.equals(DELIM_FEATURES) &&
-                            !delimiter.equals(DELIM_INJECT_ATTR) &&
-                            !delimiter.equals(DELIM_PACKAGE)) {
+                    } else if (!delimiter.equals(DELIM_ERRORS)
+                            && !delimiter.equals(DELIM_FEATURES)
+                            && !delimiter.equals(DELIM_INJECT_ATTR)
+                            && !delimiter.equals(DELIM_PACKAGE)
+                            && !delimiter.equals(DELIM_DEPENDENCY_FEATURE_NAMES)
+                            && !delimiter.equals(DELIM_RESULT_KIND)) {
                         File tempFile;
                         if (delimiter.startsWith(DELIM_NAVIGATION)) {
                             tempFile =
@@ -291,6 +312,25 @@ public class ManifestMergerTestUtil {
                     if (packageOverride == null) {
                         packageOverride = line;
                     }
+                } else if (DELIM_DEPENDENCY_FEATURE_NAMES.equals(delimiter)) {
+                    String fname = line.trim();
+                    if (!fname.isEmpty()) {
+                        dependencyFeatureNames.add(fname);
+                    }
+                } else if (DELIM_RESULT_KIND.equals(delimiter)) {
+                    String kindName = line.trim();
+
+                    if (!kindName.isEmpty()) {
+                        Optional<MergingReport.MergedManifestKind> optKind =
+                                Enums.getIfPresent(
+                                        MergingReport.MergedManifestKind.class, kindName);
+
+                        if (!optKind.isPresent()) {
+                            fail("No value of MergedManifestKind has the name '" + kindName + "'");
+                        }
+
+                        resultKind = optKind.get();
+                    }
                 }
             }
 
@@ -308,7 +348,9 @@ public class ManifestMergerTestUtil {
                     navigationFiles,
                     features,
                     injectAttributes,
+                    dependencyFeatureNames,
                     packageOverride,
+                    resultKind,
                     actualResultFile,
                     expectedResult.toString(),
                     expectedErrors.toString());
@@ -329,12 +371,14 @@ public class ManifestMergerTestUtil {
         private final File[] mLibs;
         private final List<File> mNavigationFiles;
         private final Map<String, String> mInjectAttributes;
+        private final ImmutableList<String> mDependencyFeatureNames;
         private final String mPackageOverride;
         private final File mActualResult;
         private final String mExpectedResult;
         private final String mExpectedErrors;
         private final boolean mShouldFail;
         private final Map<String, Boolean> mFeatures;
+        private final MergingReport.MergedManifestKind mResultKind;
 
         /** Files used by a given test case. */
         public TestFiles(
@@ -345,7 +389,9 @@ public class ManifestMergerTestUtil {
                 @NonNull Iterable<File> navigationFiles,
                 @NonNull Map<String, Boolean> features,
                 @NonNull Map<String, String> injectAttributes,
+                @NonNull List<String> dependencyFeatureNames,
                 @Nullable String packageOverride,
+                @NonNull MergingReport.MergedManifestKind resultKind,
                 @Nullable File actualResult,
                 @NonNull String expectedResult,
                 @NonNull String expectedErrors) {
@@ -353,9 +399,11 @@ public class ManifestMergerTestUtil {
             mMain = main;
             mLibs = libs;
             mNavigationFiles = ImmutableList.copyOf(navigationFiles);
+            mDependencyFeatureNames = ImmutableList.copyOf(dependencyFeatureNames);
             mFeatures = features;
             mPackageOverride = packageOverride;
             mInjectAttributes = injectAttributes;
+            mResultKind = resultKind;
             mActualResult = actualResult;
             mExpectedResult = expectedResult;
             mExpectedErrors = expectedErrors;
@@ -396,9 +444,19 @@ public class ManifestMergerTestUtil {
             return mInjectAttributes;
         }
 
+        @NonNull
+        public ImmutableList<String> getDependencyFeatureNames() {
+            return mDependencyFeatureNames;
+        }
+
         @Nullable
         public String getPackageOverride() {
             return mPackageOverride;
+        }
+
+        @NonNull
+        public MergingReport.MergedManifestKind getResultKind() {
+            return mResultKind;
         }
 
         @Nullable

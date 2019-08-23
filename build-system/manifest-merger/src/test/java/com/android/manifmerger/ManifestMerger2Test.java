@@ -132,6 +132,10 @@ public class ManifestMerger2Test {
                 "96_enforce_unique_package_name_error.xml",
                 "97_enforce_unique_package_name_same_as_app_error.xml",
                 "98_fail_if_package_name_does_not_contain_dot.xml",
+                "99_inject_feature_deps_with_add_uses_split_dependencies.xml",
+                "99b_no_uses_split_when_disabled.xml",
+                "99c_no_uses_split_in_feature_manifest_for_merging.xml",
+                "99d_inject_feature_deps_in_bundle_manifest.xml",
             };
 
     private static final Multimap<Predicate<String>, ManifestMerger2.Invoker.Feature>
@@ -155,6 +159,20 @@ public class ManifestMerger2Test {
                                     testCaseIs(
                                             "97_enforce_unique_package_name_same_as_app_error.xml"),
                                     ManifestMerger2.Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
+                            .put(
+                                    testCaseIs(
+                                            "99_inject_feature_deps_with_add_uses_split_dependencies.xml"),
+                                    ManifestMerger2.Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)
+                            .putAll(
+                                    testCaseIs(
+                                            "99c_no_uses_split_in_feature_manifest_for_merging.xml"),
+                                    ManifestMerger2.Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES,
+                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST,
+                                    ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
+                            .putAll(
+                                    testCaseIs("99d_inject_feature_deps_in_bundle_manifest.xml"),
+                                    ManifestMerger2.Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES,
+                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                             .build();
 
     @Parameterized.Parameters(name = "{0}")
@@ -186,6 +204,7 @@ public class ManifestMerger2Test {
                         .addLibraryManifests(testFiles.getLibs())
                         .addFlavorAndBuildTypeManifests(testFiles.getOverlayFiles())
                         .addNavigationFiles(testFiles.getNavigationFiles())
+                        .addDependencyFeatureNames(testFiles.getDependencyFeatureNames())
                         .withFeatures(
                                 optionalFeatures.toArray(new ManifestMerger2.Invoker.Feature[0]));
 
@@ -208,8 +227,7 @@ public class ManifestMerger2Test {
         boolean notExpectingError = !isExpectingError(testFiles.getExpectedErrors());
         mergeReport.log(stdLogger);
         if (mergeReport.getResult().isSuccess()) {
-            String xmlDocument = mergeReport.getMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED);
+            String xmlDocument = mergeReport.getMergedDocument(testFiles.getResultKind());
             assertNotNull(xmlDocument);
             stdLogger.info(xmlDocument);
 

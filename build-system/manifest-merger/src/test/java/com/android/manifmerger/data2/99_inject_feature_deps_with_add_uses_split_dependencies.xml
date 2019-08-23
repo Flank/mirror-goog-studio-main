@@ -1,0 +1,36 @@
+#
+# Syntax:
+# - Lines starting with # are ignored (anywhere, as long as # is the first char).
+# - Lines before the first @delimiter are ignored.
+# - Empty lines just after the @delimiter and before the first < XML line are ignored.
+# - Valid delimiters are @main for the XML of the main app manifest.
+# - Following delimiters are @libXYZ, read in the order of definition. The name can be
+#   anything as long as it starts with "@lib".
+# - Last delimiter should be @result.
+#
+
+# This test expects the optional feature ADD_USES_SPLIT_DEPENDENCIES to be enabled.
+
+@featureDeps
+featureA
+featureB
+
+@main
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.somefeature">
+
+</manifest>
+
+@result
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.somefeature">
+
+  <uses-split android:name="featureA"/>
+  <uses-split android:name="featureB"/>
+</manifest>
+
+@errors

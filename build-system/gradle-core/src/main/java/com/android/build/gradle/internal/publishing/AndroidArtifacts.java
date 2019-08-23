@@ -100,6 +100,8 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
     private static final String TYPE_FEATURE_DEX = "android-feature-dex";
     private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
+    private static final String TYPE_FEATURE_NAME = "android-feature-name";
+
 
     // types for metadata content.
     private static final String TYPE_REVERSE_METADATA_FEATURE_DECLARATION =
@@ -277,6 +279,11 @@ public class AndroidArtifacts {
         // The feature dex files output by the DexSplitter from the base. The base produces and
         // publishes these files when there's multi-apk code shrinking.
         FEATURE_DEX(TYPE_FEATURE_DEX),
+
+        // The name of an instant or dynamic feature module
+        // This is published by {@link FeatureNameWriterTask} to be consumed by dependencies
+        // of the feature that need to know the name of its feature split
+        FEATURE_NAME(TYPE_FEATURE_NAME),
 
         // Reverse Metadata artifacts
         REVERSE_METADATA_FEATURE_DECLARATION(TYPE_REVERSE_METADATA_FEATURE_DECLARATION),

@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -206,6 +207,7 @@ class PublishingSpecs {
                 reverseMetadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 reverseMetadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
+                runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)
 
                 // ----
 
@@ -309,6 +311,7 @@ class PublishingSpecs {
 
                 runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
                 runtime(APK, ArtifactType.APK)
+                runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)
 
                 api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
                 api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,

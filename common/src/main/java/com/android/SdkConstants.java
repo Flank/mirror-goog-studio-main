@@ -1043,6 +1043,7 @@ public final class SdkConstants {
     public static final String TAG_USES_PERMISSION_SDK_23 = "uses-permission-sdk-23"; //$NON-NLS-1$
     public static final String TAG_USES_PERMISSION_SDK_M = "uses-permission-sdk-m"; //$NON-NLS-1$
     public static final String TAG_USES_LIBRARY = "uses-library"; //$NON-NLS-1$
+    public static final String TAG_USES_SPLIT = "uses-split"; //$NON-NLS-1$
     public static final String TAG_APPLICATION = "application"; //$NON-NLS-1$
     public static final String TAG_INTENT_FILTER = "intent-filter"; //$NON-NLS-1$
     public static final String TAG_CATEGORY = "category"; //$NON-NLS-1$

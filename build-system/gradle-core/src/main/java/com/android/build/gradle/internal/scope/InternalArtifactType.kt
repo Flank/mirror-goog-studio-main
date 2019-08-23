@@ -357,6 +357,8 @@ object AAR_LIBS_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY)
     object FEATURE_DEX: InternalArtifactType<Directory>(DIRECTORY)
     // The class files for a module and all of its runtime dependencies.
     object MODULE_AND_RUNTIME_DEPS_CLASSES: InternalArtifactType<RegularFile>(FILE)
+    // The name of a dynamic or legacy instant feature`
+    object FEATURE_NAME: InternalArtifactType<RegularFile>(FILE)
 
     // The signing configuration the feature module should be using: InternalArtifactType<RegularFile>(FILE) which is taken from the
     // application module. Also used for androidTest variants (bug 118611693). This has already
