@@ -31,5 +31,5 @@ public class ConnectionImpl extends Connection {
         sendEvent(data, data.length, mInspectorId);
     }
 
-    private native void sendEvent(byte[] event_dat, int length, String inspectorId);
+    private native void sendEvent(byte[] eventData, int length, String inspectorId);
 }

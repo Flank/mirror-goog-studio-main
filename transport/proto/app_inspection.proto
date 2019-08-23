@@ -55,7 +55,7 @@ message RawCommand {
   // inspector_id identifies an inspector that should handle this command
   string inspector_id = 1;
   // An opaque serialized command, inspectors themselves define serialization format
-  bytes raw_command = 2;
+  bytes content = 2;
 }
 
 // Union of all events and responses.
@@ -87,5 +87,5 @@ message RawEvent {
   // inspector_id identifies an inspector that sent given event
   string inspector_id = 1;
   // An opaque serialized event, inspectors themselves define serialization format
-  bytes raw_event = 2;
+  bytes content = 2;
 }

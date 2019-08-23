@@ -67,7 +67,7 @@ class AppInspectionAgentCommand {
             auto& raw_inspector_command = app_command.raw_inspector_command();
             jstring inspector_id = jni_env->NewStringUTF(
                 raw_inspector_command.inspector_id().c_str());
-            const std::string& cmd = raw_inspector_command.raw_command();
+            const std::string& cmd = raw_inspector_command.content();
             jbyteArray raw_command = jni_env->NewByteArray(cmd.length());
             jni_env->SetByteArrayRegion(raw_command, 0, cmd.length(),
                                         (const jbyte*)cmd.c_str());

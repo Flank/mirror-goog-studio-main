@@ -17,6 +17,7 @@
 package com.android.tools.profiler.app.inspection;
 
 import static com.android.tools.app.inspection.AppInspection.ServiceResponse.Status.SUCCESS;
+import static com.android.tools.profiler.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -30,25 +31,17 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.proto.Commands;
-import com.android.tools.profiler.proto.Common;
-import com.android.tools.profiler.proto.Transport.ExecuteRequest;
-import com.android.tools.profiler.proto.Transport.GetEventsRequest;
-import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Iterator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.concurrent.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class AppInspectionTest {
-    private static final long TIMEOUT_SECONDS = 30;
     private static final String ACTIVITY_CLASS = "com.activity.MyActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
@@ -63,6 +56,11 @@ public class AppInspectionTest {
     public void setUp() throws Exception {
         androidDriver = perfDriver.getFakeAndroidDriver();
         serviceLayer = ServiceLayer.create(perfDriver);
+    }
+
+    @After
+    public void tearDown() {
+        serviceLayer.shutdown();
     }
 
     @Test
@@ -118,6 +116,10 @@ public class AppInspectionTest {
                 serviceLayer.sendCommand(
                         rawCommandInspector("test.inspector", new byte[] {1, 2, 127})),
                 SUCCESS);
+        List<AppInspectionEvent> events = serviceLayer.consumeCollectedEvents();
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0).getRawEvent().getContent().toByteArray())
+                .isEqualTo(new byte[] {8, 92, 43});
         assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + "[1, 2, 127]");
     }
 
@@ -127,7 +129,7 @@ public class AppInspectionTest {
                 .setRawInspectorCommand(
                         RawCommand.newBuilder()
                                 .setInspectorId(inspectorId)
-                                .setRawCommand(ByteString.copyFrom(commandData))
+                                .setContent(ByteString.copyFrom(commandData))
                                 .build())
                 .build();
     }
@@ -165,66 +167,5 @@ public class AppInspectionTest {
     private static void assertInput(FakeAndroidDriver androidDriver, String expected) {
         assertThat(androidDriver.waitForInput(expected, TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS)))
                 .isTrue();
-    }
-
-    static class ServiceLayer {
-
-        private final ExecutorService executor;
-        private final TransportServiceBlockingStub transportStub;
-        private final Iterator<Common.Event> eventsIterator;
-        private final int pid;
-        private int nextCommandId = 1;
-
-        private ServiceLayer(
-                ExecutorService executor,
-                TransportServiceBlockingStub transportStub,
-                Iterator<Common.Event> eventsIterator,
-                int pid) {
-            this.executor = executor;
-            this.transportStub = transportStub;
-            this.eventsIterator = eventsIterator;
-            this.pid = pid;
-        }
-
-        static ServiceLayer create(PerfDriver driver) throws Exception {
-            TransportServiceBlockingStub transportStub = driver.getGrpc().getTransportStub();
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            Future<Iterator<Common.Event>> future =
-                    executor.submit(
-                            () -> transportStub.getEvents(GetEventsRequest.getDefaultInstance()));
-            Iterator<Common.Event> eventsIterator = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            return new ServiceLayer(
-                    executor, transportStub, eventsIterator, driver.getSession().getPid());
-        }
-
-        AppInspectionEvent sendCommand(AppInspectionCommand appInspectionCommand) throws Exception {
-            int commandId = nextCommandId++;
-            Commands.Command command =
-                    Commands.Command.newBuilder()
-                            .setType(Commands.Command.CommandType.APP_INSPECTION)
-                            .setAndroidxInspectionCommand(appInspectionCommand)
-                            .setStreamId(1234)
-                            .setPid(pid)
-                            .setCommandId(commandId)
-                            .build();
-
-            ExecuteRequest executeRequest = ExecuteRequest.newBuilder().setCommand(command).build();
-            AppInspectionEvent appInspectionEvent =
-                    executor.submit(
-                                    () -> {
-                                        transportStub.execute(executeRequest);
-                                        while (eventsIterator.hasNext()) {
-                                            Common.Event event = eventsIterator.next();
-                                            if (event.hasAppInspectionEvent()
-                                                    && event.getCommandId() == commandId) {
-                                                return event.getAppInspectionEvent();
-                                            }
-                                        }
-                                        return null;
-                                    })
-                            .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            assertThat(appInspectionEvent).isNotNull();
-            return appInspectionEvent;
-        }
     }
 }

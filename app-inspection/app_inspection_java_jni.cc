@@ -56,7 +56,7 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, jbyteArray event_data,
         auto *inspection_event = event->mutable_app_inspection_event();
         auto *raw_response = inspection_event->mutable_raw_event();
         raw_response->set_inspector_id(id.get().c_str());
-        raw_response->set_raw_event(data.get());
+        raw_response->set_content(data.get());
         profiler::proto::EmptyResponse response;
         return stub.SendEvent(&ctx, request, &response);
       }});
@@ -80,7 +80,7 @@ Java_com_android_tools_agent_app_inspection_AppInspectionService_replySuccess(
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_AppInspectionService_sendEvent(
+Java_com_android_tools_agent_app_inspection_ConnectionImpl_sendEvent(
     JNIEnv *env, jobject obj, jbyteArray event_data, jint length,
     jstring inspector_id) {
   profiler::EnqueueAppInspectionRawEvent(env, event_data, length, inspector_id);
