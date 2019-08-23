@@ -2582,7 +2582,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         )
             .issues(COMPATIBILITY)
             .run()
-            .expect(expected, TestResultTransformer {
+            .expect(expected, transformer = TestResultTransformer {
                 it.replace(
                     Regex("found .* and .* incompatible"),
                     "found __ and __ incompatible"

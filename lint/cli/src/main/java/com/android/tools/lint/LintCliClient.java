@@ -76,6 +76,7 @@ import com.android.utils.CharSequences;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1342,6 +1343,13 @@ public class LintCliClient extends LintClient {
                         ServiceManager.getService(mockProject, JavaFileManager.class);
         List<JavaRoot> roots = new ArrayList<>();
         for (File file : files) {
+            // IntelliJ's framework requires absolute path to JARs, name resolution might fail
+            // otherwise. We defensively ensure all paths are absolute.
+            Preconditions.checkState(
+                    file.isAbsolute(),
+                    "Relative Path found: %s. All paths should be absolute.",
+                    file.getPath());
+
             if (file.isDirectory()) {
                 VirtualFile vFile = StandardFileSystems.local().findFileByPath(file.getPath());
                 if (vFile != null) {

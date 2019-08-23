@@ -234,7 +234,7 @@ public class MainTest extends AbstractCheckTest {
     public void testNonexistentLibrary() {
         checkDriver(
                 "",
-                "Library foo.jar does not exist.\n",
+                "Library /TESTROOT/foo.jar does not exist.\n",
 
                 // Expected exit code
                 ERRNO_INVALID_ARGS,
@@ -516,6 +516,63 @@ public class MainTest extends AbstractCheckTest {
         assertEquals(expected, newBaseline);
 
         baseline.delete();
+    }
+
+    /**
+     * This test emulates Google3's `android_lint` setup, and catches regression caused by relative
+     * path for JAR files.
+     *
+     * @throws Exception
+     */
+    public void testRelativePaths() throws Exception {
+        // Project with source only
+        File project = getProjectDir(null, manifest().minSdk(1), mGetterTest);
+
+        // Create external jar. This jar shares a common root with projectDir, but sits
+        // outside projectDir
+        File tempDir = getTempDir();
+        File classFile = mGetterTest2.createFile(tempDir);
+
+        // Change current directory to the temporary directory. This ensures that relative path
+        // to the JAR is valid.
+        System.setProperty("user.dir", tempDir.getAbsolutePath());
+
+        checkDriver(
+                "\n"
+                        + "Scanning MainTest_testRelativePaths: \n"
+                        + "src/test/bytecode/GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
+                        + "  getFoo1();\n"
+                        + "  ~~~~~~~\n"
+                        + "src/test/bytecode/GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
+                        + "  getFoo2();\n"
+                        + "  ~~~~~~~\n"
+                        + "src/test/bytecode/GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access (mBar1) [FieldGetter]\n"
+                        + "  isBar1();\n"
+                        + "  ~~~~~~\n"
+                        + "src/test/bytecode/GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
+                        + "  this.getFoo1();\n"
+                        + "       ~~~~~~~\n"
+                        + "src/test/bytecode/GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
+                        + "  this.getFoo2();\n"
+                        + "       ~~~~~~~\n"
+                        + "0 errors, 5 warnings\n",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "--check",
+                    "FieldGetter",
+                    "--classpath",
+                    mGetterTest2.targetRelativePath,
+                    "--disable",
+                    "LintError",
+                    project.getPath()
+                });
+
+        classFile.delete();
     }
 
     @Override

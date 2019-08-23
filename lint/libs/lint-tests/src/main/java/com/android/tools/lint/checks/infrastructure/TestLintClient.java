@@ -153,7 +153,15 @@ public class TestLintClient extends LintCliClient {
     }
 
     public TestLintClient(String clientName) {
-        super(new LintCliFlags(), clientName);
+        this(new LintCliFlags(), clientName);
+    }
+
+    public TestLintClient(LintCliFlags flags) {
+        this(flags, CLIENT_UNIT_TESTS);
+    }
+
+    public TestLintClient(LintCliFlags flags, String clientName) {
+        super(flags, clientName);
         TextReporter reporter = new TextReporter(this, flags, writer, false);
         reporter.setForwardSlashPaths(true); // stable tests
         flags.getReporters().add(reporter);

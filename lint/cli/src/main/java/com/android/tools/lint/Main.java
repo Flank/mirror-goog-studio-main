@@ -1052,7 +1052,12 @@ public class Main {
                     }
                 }
             }
+
+            if (!file.isAbsolute()) {
+                file = file.getAbsoluteFile();
+            }
         }
+
         return file;
     }
 
@@ -1078,7 +1083,12 @@ public class Main {
                     file = file2;
                 }
             }
+
+            if (file.isAbsolute()) {
+                file = file.getAbsoluteFile();
+            }
         }
+
         return file;
     }
 

@@ -88,9 +88,10 @@ class TestLintResult internal constructor(
     @JvmOverloads
     fun expect(
         expectedText: String,
+        expectedException: Class<out Exception>? = null,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        val actual = transformer.transform(describeOutput())
+        val actual = transformer.transform(describeOutput(expectedException))
 
         if (actual.trim() != expectedText.trimIndent().trim()) {
             // See if it's a Windows path issue
@@ -112,11 +113,11 @@ class TestLintResult internal constructor(
         return this
     }
 
-    private fun describeOutput(): String {
-        return formatOutput(this.output)
+    private fun describeOutput(expectedException: Class<out Exception>? = null): String {
+        return formatOutput(this.output, expectedException)
     }
 
-    private fun formatOutput(outputOrNull: String?): String {
+    private fun formatOutput(outputOrNull: String?, expectedException: Class<out Exception>?): String {
         var output = outputOrNull
         if (output == null) {
             output = ""
@@ -140,9 +141,13 @@ class TestLintResult internal constructor(
 
         return if (exception != null) {
             val writer = StringWriter()
-            exception.printStackTrace(PrintWriter(writer))
+            if (expectedException != null && expectedException.isInstance(exception)) {
+                writer.write("${exception.message}\n")
+            } else {
+                exception.printStackTrace(PrintWriter(writer))
+            }
 
-            if (!output.isEmpty()) {
+            if (output.isNotEmpty()) {
                 writer.write(output)
             }
 
