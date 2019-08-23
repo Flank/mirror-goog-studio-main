@@ -17,6 +17,7 @@
 #include <sstream>
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
+#include "utils/agent_task.h"
 
 using layoutinspector::ComponentTreeEvent;
 using layoutinspector::PropertyEvent;
@@ -112,26 +113,21 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendComponen
   std::string payload_name = ss.str();
 
   // Note: property_event is copied by value here which is not optimal.
+  Agent::Instance().SubmitAgentTasks(profiler::CreateTasksToSendPayload(
+      payload_name, std::string(message.get().data(), message.length()),
+      false));
   Agent::Instance().SubmitAgentTasks(
-      {[message, payload_name](AgentService::Stub &stub,
-                               grpc::ClientContext &ctx) mutable {
-         profiler::proto::EmptyResponse response;
-         profiler::proto::SendBytesRequest payload;
-         payload.set_name(payload_name);
-         payload.set_bytes(message.get().data(), message.length());
-         return stub.SendBytes(&ctx, payload, &response);
-       },
-       {[request, id](AgentService::Stub &stub,
-                      grpc::ClientContext &ctx) mutable {
-         auto *event = request.mutable_event();
-         auto *inspector_event = event->mutable_layout_inspector_event();
-         auto *tree = inspector_event->mutable_tree();
-         tree->set_payload_id(id);
-         event->set_is_ended(true);
-         event->set_kind(Event::LAYOUT_INSPECTOR);
-         event->set_group_id(Event::COMPONENT_TREE);
-         EmptyResponse response;
-         return stub.SendEvent(&ctx, request, &response);
-       }}});
+      {[request, id](AgentService::Stub &stub,
+                     grpc::ClientContext &ctx) mutable {
+        auto *event = request.mutable_event();
+        auto *inspector_event = event->mutable_layout_inspector_event();
+        auto *tree = inspector_event->mutable_tree();
+        tree->set_payload_id(id);
+        event->set_is_ended(true);
+        event->set_kind(Event::LAYOUT_INSPECTOR);
+        event->set_group_id(Event::COMPONENT_TREE);
+        EmptyResponse response;
+        return stub.SendEvent(&ctx, request, &response);
+      }});
 }
 }
