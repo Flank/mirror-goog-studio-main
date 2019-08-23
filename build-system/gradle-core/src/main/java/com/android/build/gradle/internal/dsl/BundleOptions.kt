@@ -26,8 +26,7 @@ import javax.inject.Inject
 /** Features that apply to distribution by the bundle  */
 open class BundleOptions @Inject constructor(
     objectFactory: ObjectFactory,
-    deprecationReporter: DeprecationReporter,
-    private val project: Project
+    deprecationReporter: DeprecationReporter
 ) {
 
     val abi: BundleOptionsAbi = objectFactory.newInstance(BundleOptionsAbi::class.java)

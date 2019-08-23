@@ -73,7 +73,7 @@ class ParseIntegrityConfigTaskTest {
         val configXML = configDirectory.resolve(configFileName)
         FileUtils.writeToFile(configXML, "<integrity_config/>")
 
-        val bundleOptions = BundleOptions(project.objects, NoOpDeprecationReporter(), project)
+        val bundleOptions = BundleOptions(project.objects, NoOpDeprecationReporter())
         bundleOptions.integrityConfigDir.set(configDirectory)
         val variantScope = createScopeFromBundleOptions(bundleOptions)
 
