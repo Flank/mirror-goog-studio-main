@@ -227,8 +227,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object CHECK_MANIFEST_RESULT: InternalArtifactType<Directory>(DIRECTORY)
 
     object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY)
-    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY)
-    object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE)
+    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Single
+    object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Single
     // Same as above: InternalArtifactType<RegularFile>(FILE) but the resource references have stripped namespaces.
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE)
     // A directory of AAR manifests that have been auto-namespaced and are fully resource namespace aware.

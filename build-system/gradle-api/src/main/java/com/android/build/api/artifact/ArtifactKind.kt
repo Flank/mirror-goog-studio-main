@@ -32,14 +32,14 @@ import kotlin.reflect.KClass
 @Incubating
 sealed class ArtifactKind<T: FileSystemLocation>(): Serializable {
     @Incubating
-    object FILE: ArtifactKind<RegularFile>() {
+    object FILE : ArtifactKind<RegularFile>() {
         override fun dataType(): KClass<RegularFile> {
             return RegularFile::class
         }
     }
 
     @Incubating
-    object DIRECTORY: ArtifactKind<Directory>() {
+    object DIRECTORY : ArtifactKind<Directory>() {
         override fun dataType(): KClass<Directory> {
             return Directory::class
         }

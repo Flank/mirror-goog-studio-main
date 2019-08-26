@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-e85278f380191f565cd7c2a25646d4864a3c3c7d3bb419dae8ba469d7e367126
+a0d0a92a0e8d638a5b93dc8859088c7884d85289b867e33f52c27a056686cfaf
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -20,8 +20,10 @@ com.android.build.api.artifact.ArtifactType$Appendable
 com.android.build.api.artifact.ArtifactType$Companion
 com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType$Multiple
+com.android.build.api.artifact.ArtifactType$Multiple.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Replaceable
 com.android.build.api.artifact.ArtifactType$Single
+com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Transformable
 com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind<T>)
 com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()

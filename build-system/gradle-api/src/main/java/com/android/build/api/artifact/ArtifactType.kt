@@ -33,8 +33,8 @@ import java.io.Serializable
  * behavior), but consumers must be aware when more than one artifacts can be present,
  * implementing [Multiple] interface will indicate such requirement.
  *
- * An artifact must be one the supported [ArtifactKind] which provided at construction time which also
- * defines the Gradle file type used to abstract a filesystem location.
+ * An artifact must be one the supported [ArtifactKind] which must be provided at construction time
+ * ArtifactKind also defines the concrete [FileSystemLocation] subclass used.
  */
 @Incubating
 abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): Serializable {
@@ -67,13 +67,13 @@ abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): S
          * [ArtifactKind] for [RegularFile]
          */
         @JvmField
-        val FILE= ArtifactKind.FILE
+        val FILE = ArtifactKind.FILE
 
         /**
          * [ArtifactKind] for [Directory]
          */
         @JvmField
-        val DIRECTORY= ArtifactKind.DIRECTORY
+        val DIRECTORY = ArtifactKind.DIRECTORY
     }
 
     /**
@@ -82,7 +82,9 @@ abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): S
      * [FileSystemLocation]
      */
     @Incubating
-    interface Multiple
+    interface Multiple  {
+        fun name(): String
+    }
 
     /**
      * Denotes a single [FileSystemLocation] instance of this artifact type at a given time.
@@ -91,7 +93,9 @@ abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): S
      * [FileSystemLocation]
      */
     @Incubating
-    interface Single
+    interface Single {
+        fun name(): String
+    }
 
     /**
      * Denotes an artifact type that can be appended to.
