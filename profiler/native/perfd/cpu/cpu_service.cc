@@ -165,7 +165,6 @@ grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
     status = thread_monitor_.RemoveProcess(pid);
   }
   response->set_status(status);
-  DoStopProfilingApp(request->app_name(), nullptr);
   // cache_.DeallocateAppCache(pid) must happen last because prior actions such
   // as DoStopProfilingApp() depends on data from the cache to act.
   cache_.DeallocateAppCache(pid);
@@ -185,7 +184,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 grpc::Status CpuServiceImpl::StopProfilingApp(
     ServerContext* context, const CpuProfilingAppStopRequest* request,
     CpuProfilingAppStopResponse* response) {
-  DoStopProfilingApp(request->app_name(), response);
+  DoStopProfilingApp(request->app_name(),
+                     request->need_trace_response() ? response : nullptr);
   return Status::OK;
 }
 

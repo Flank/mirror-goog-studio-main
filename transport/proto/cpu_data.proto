@@ -203,6 +203,8 @@ message StopCpuTrace {
   CpuTraceConfiguration configuration = 1;
   // Set only if configuration's initiation_type is |INITIATED_BY_API|.
   ApiStopTracingMetaData api_stop_metadata = 2;
+  // Whether the command needs to wait and parse the trace content.
+  bool need_trace_response = 3;
 }
 
 message CpuTraceConfiguration {

@@ -47,7 +47,8 @@ void Stop(Daemon* daemon, const profiler::proto::Command command_data,
 
   TraceStopStatus status;
   auto* capture = trace_manager->StopProfiling(
-      stop_timestamp, stop_command.configuration().app_name(), true, &status);
+      stop_timestamp, stop_command.configuration().app_name(),
+      stop_command.need_trace_response(), &status);
 
   Event status_event;
   status_event.set_pid(command_data.pid());
