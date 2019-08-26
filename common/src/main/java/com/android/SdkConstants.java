@@ -2700,6 +2700,8 @@ public final class SdkConstants {
             AndroidxName.of("android.databinding.", "ViewStubProxy");
     public static final AndroidxName BINDING_ADAPTER_ANNOTATION =
             AndroidxName.of("android.databinding.", "BindingAdapter");
+    public static final AndroidxName BINDING_CONVERSION_ANNOTATION =
+            AndroidxName.of("android.databinding.", "BindingConversion");
     public static final AndroidxName BINDING_METHODS_ANNOTATION =
             AndroidxName.of("android.databinding.", "BindingMethods");
     public static final AndroidxName INVERSE_BINDING_ADAPTER_ANNOTATION =
