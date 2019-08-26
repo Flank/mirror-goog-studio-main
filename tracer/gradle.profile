@@ -2,6 +2,11 @@
 # Add the agent flag via _JAVA_OPTIONS to get both the wrapper and gradle instrumented
 # Trace-Agent: true
 
+# *flingers
+Trace: com.android.zipflinger.Compressor
+Trace: com.android.zipflinger.ZipArchive
+Trace: com.android.signflinger.SignedApk
+
 # Gradle wraper end-to-end events
 Start: org.gradle.wrapper.GradleWrapperMain::main
 Flush: org.gradle.launcher.Main::doAction
