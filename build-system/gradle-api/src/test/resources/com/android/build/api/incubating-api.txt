@@ -4,8 +4,10 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a0d0a92a0e8d638a5b93dc8859088c7884d85289b867e33f52c27a056686cfaf
+f648975a357220a616c5ceba510edbed728d246fc7fd5de73bfc8a50eb91a1a0
 -------------------------------------------------------------------------
+com.android.build.api.artifact.AppendRequest
+com.android.build.api.artifact.AppendRequest.to: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
 com.android.build.api.artifact.ArtifactKind
@@ -35,6 +37,19 @@ com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES
 com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH
 com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.BuildArtifactType.isPublic: boolean ()
+com.android.build.api.artifact.CombineRequest
+com.android.build.api.artifact.CombineRequest.on: void (ARTIFACT_TYPE)
+com.android.build.api.artifact.Operations
+com.android.build.api.artifact.Operations.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Provider<FILE_TYPE>>)
+com.android.build.api.artifact.Operations.combine: com.android.build.api.artifact.CombineRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Provider<FILE_TYPE>>)
+com.android.build.api.artifact.Operations.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Provider<FILE_TYPE>>)
+com.android.build.api.artifact.Operations.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Property<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Provider<FILE_TYPE>>)
+com.android.build.api.artifact.ReplaceRequest
+com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
+com.android.build.api.artifact.TransformRequest
+com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.sourcesets.AndroidSourceDirectorySet
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getFilter: org.gradle.api.tasks.util.PatternFilterable ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceDirectoryTrees: java.util.List<org.gradle.api.file.ConfigurableFileTree> ()

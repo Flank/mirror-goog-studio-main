@@ -19,6 +19,7 @@ dependencies {
     testCompile project(':base:testutils')
     testCompile gradleApi()
     testCompile project(':base:builder-model')
+    testCompile libs.mockito_core
 }
 
 sourceSets {
