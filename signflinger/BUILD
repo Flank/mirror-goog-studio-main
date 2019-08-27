@@ -26,11 +26,11 @@ maven_pom(
 java_library(
     name = "test_utils",
     srcs = [
-        "tests/src/com/android/signflinger/SignResult.java",
-        "tests/src/com/android/signflinger/Signer.java",
-        "tests/src/com/android/signflinger/SignerConfig.java",
-        "tests/src/com/android/signflinger/TestBase.java",
-        "tests/src/com/android/signflinger/TestBaseV2.java",
+        "test/src/com/android/signflinger/SignResult.java",
+        "test/src/com/android/signflinger/Signer.java",
+        "test/src/com/android/signflinger/SignerConfig.java",
+        "test/src/com/android/signflinger/TestBase.java",
+        "test/src/com/android/signflinger/TestBaseV2.java",
     ],
     deps = [
         ":signflinger",
@@ -43,12 +43,12 @@ java_library(
 java_test(
     name = "benchmarkV2",
     srcs = [
-        "tests/src/com/android/signflinger/Benchmarks.java",
+        "test/src/com/android/signflinger/Benchmarks.java",
     ],
     data =
-        glob(["tests/resources/*.pem"]) + glob([
-            "tests/resources/*.pk8",
-        ]) + ["tests/resources/AndroidManifest.xml"],
+        glob(["test/resources/*.pem"]) + glob([
+            "test/resources/*.pk8",
+        ]) + ["test/resources/AndroidManifest.xml"],
     jvm_flags = ["-Dtest.suite.jar=benchmarkV2.jar"],
     tags = [
         "manual",
@@ -68,15 +68,15 @@ java_test(
     name = "testV1Signing",
     size = "small",
     srcs = [
-        "tests/src/com/android/signflinger/TestBaseSigning.java",
-        "tests/src/com/android/signflinger/TestV1Signing.java",
+        "test/src/com/android/signflinger/TestBaseSigning.java",
+        "test/src/com/android/signflinger/TestV1Signing.java",
     ],
-    data = glob(["tests/resources/*.pem"]) + glob([
-        "tests/resources/*.pk8",
+    data = glob(["test/resources/*.pem"]) + glob([
+        "test/resources/*.pk8",
     ]) + [
-        "tests/resources/AndroidManifest.xml",
-        "tests/resources/test1.txt",
-        "tests/resources/1-2-3files.zip",
+        "test/resources/AndroidManifest.xml",
+        "test/resources/test1.txt",
+        "test/resources/1-2-3files.zip",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV1Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -95,13 +95,13 @@ java_test(
     name = "testV2Signing",
     size = "small",
     srcs = [
-        "tests/src/com/android/signflinger/TestV2Signing.java",
+        "test/src/com/android/signflinger/TestV2Signing.java",
     ],
-    data = glob(["tests/resources/*.pem"]) + glob([
-        "tests/resources/*.pk8",
+    data = glob(["test/resources/*.pem"]) + glob([
+        "test/resources/*.pk8",
     ]) + [
-        "tests/resources/AndroidManifest.xml",
-        "tests/resources/test1.txt",
+        "test/resources/AndroidManifest.xml",
+        "test/resources/test1.txt",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV2Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -120,15 +120,15 @@ java_test(
     name = "testV1andV2Signing",
     size = "small",
     srcs = [
-        "tests/src/com/android/signflinger/TestBaseSigning.java",
-        "tests/src/com/android/signflinger/TestV1andV2Signing.java",
+        "test/src/com/android/signflinger/TestBaseSigning.java",
+        "test/src/com/android/signflinger/TestV1andV2Signing.java",
     ],
-    data = glob(["tests/resources/*.pem"]) + glob([
-        "tests/resources/*.pk8",
+    data = glob(["test/resources/*.pem"]) + glob([
+        "test/resources/*.pk8",
     ]) + [
-        "tests/resources/AndroidManifest.xml",
-        "tests/resources/test1.txt",
-        "tests/resources/1-2-3files.zip",
+        "test/resources/AndroidManifest.xml",
+        "test/resources/test1.txt",
+        "test/resources/1-2-3files.zip",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV1andV2Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",

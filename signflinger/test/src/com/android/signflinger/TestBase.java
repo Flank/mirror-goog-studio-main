@@ -56,7 +56,7 @@ public class TestBase {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private static final String BASE = "tools/base/signflinger/tests/resources/";
+    private static final String BASE = "tools/base/signflinger/test/resources/";
 
     protected static final Signer[] SIGNERS = {
         new Signer("rsa", "1024"), //  80-bit (obsolete)
