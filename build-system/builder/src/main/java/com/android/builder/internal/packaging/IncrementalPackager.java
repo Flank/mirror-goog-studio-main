@@ -18,6 +18,8 @@ package com.android.builder.internal.packaging;
 
 import static com.android.ide.common.resources.FileStatus.CHANGED;
 import static com.android.ide.common.resources.FileStatus.REMOVED;
+import static java.util.zip.Deflater.BEST_COMPRESSION;
+import static java.util.zip.Deflater.BEST_SPEED;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -44,7 +46,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import java.util.zip.Deflater;
 
 /**
  * Makes the final app package. The packager allows build an APK from:
@@ -89,14 +90,51 @@ import java.util.zip.Deflater;
  */
 public class IncrementalPackager implements Closeable {
 
-    /** APK creator. {@code null} if closed. */
+    /**
+     * {@link ApkCreator}, which is {@code null} until it's initialized via getApkCreator(). Use
+     * getApkCreator() instead of accessing this field directly, except in {@link
+     * IncrementalPackager::close}, where direct access is appropriate to avoid unnecessary
+     * initialization.
+     */
     @Nullable private ApkCreator mApkCreator;
+
+    /** {@link ApkCreatorFactory.CreationData} for mApkCreator initialization. */
+    @NonNull private final ApkCreatorFactory.CreationData mCreationData;
+
+    /** {@link ApkCreatorFactory} for mApkCreator initialization. */
+    @NonNull private final ApkCreatorFactory mApkCreatorFactory;
+
+    /** Whether the build is debuggable, which might influence the compression level. */
+    private boolean mIsDebuggableBuild;
+
+    /** Returns mApkCreator, initialized lazily. */
+    @NonNull
+    private ApkCreator getApkCreator() {
+        if (mApkCreator == null) {
+            switch (mApkCreatorType) {
+                case APK_Z_FILE_CREATOR:
+                    mApkCreator = mApkCreatorFactory.make(mCreationData);
+                    break;
+                case APK_FLINGER:
+                    int compressionLevel = mIsDebuggableBuild ? BEST_SPEED : BEST_COMPRESSION;
+                    mApkCreator = new ApkFlinger(mCreationData, compressionLevel);
+                    break;
+                default:
+                    throw new RuntimeException("unexpected apkCreatorType");
+            }
+        }
+        return mApkCreator;
+    }
+
+    /** False until {@link IncrementalPackager::close} method called, and true thereafter. */
+    private boolean mClosed;
 
     /**
      * APK creator type. We make calls differently depending on {@link ApkCreatorType} because
-     * {@link ZipArchive} requires that all delete() calls come before all add() calls.
+     * {@link ZipArchive} requires that existing entries be deleted before an entry with the same
+     * path is added.
      */
-    @NonNull private ApkCreatorType mApkCreatorType;
+    @NonNull private final ApkCreatorType mApkCreatorType;
 
     /**
      * Class that manages the renaming of dex files.
@@ -161,18 +199,15 @@ public class IncrementalPackager implements Closeable {
         }
         checkOutputFile(creationData.getApkPath());
 
-        if (apkCreatorType == ApkCreatorType.APK_Z_FILE_CREATOR
-                || !apkFormatIsFile
-                || !debuggableBuild) {
-            mApkCreator = factory.make(creationData);
-        } else if (apkCreatorType == ApkCreatorType.APK_FLINGER) {
-            int compressionLevel =
-                    debuggableBuild ? Deflater.BEST_SPEED : Deflater.BEST_COMPRESSION;
-            mApkCreator = new ApkFlinger(creationData, compressionLevel);
+        mCreationData = creationData;
+        mApkCreatorFactory = factory;
+        mIsDebuggableBuild = debuggableBuild;
+        mClosed = false;
+        if (!apkFormatIsFile || !debuggableBuild) {
+            mApkCreatorType = ApkCreatorType.APK_Z_FILE_CREATOR;
         } else {
-            throw new RuntimeException("unexpected apkCreatorType");
+            mApkCreatorType = apkCreatorType;
         }
-        mApkCreatorType = apkCreatorType;
         mChangedDexFiles = changedDexFiles;
         mChangedJavaResources = changedJavaResources;
         mChangedAssets = changedAssets;
@@ -229,7 +264,7 @@ public class IncrementalPackager implements Closeable {
      * @throws IOException failed to update the archive
      */
     private void deleteFiles(@NonNull Collection<PackagedFileUpdate> updates) throws IOException {
-        Preconditions.checkNotNull(mApkCreator, "mApkCreator == null");
+        Preconditions.checkState(!mClosed, "IncrementalPackager has already been closed.");
 
         Predicate<PackagedFileUpdate> deletePredicate =
                 mApkCreatorType == ApkCreatorType.APK_FLINGER
@@ -243,7 +278,7 @@ public class IncrementalPackager implements Closeable {
                         .collect(Collectors.toList());
 
         for (String deletedPath : deletedPaths) {
-            mApkCreator.deleteFile(deletedPath);
+            getApkCreator().deleteFile(deletedPath);
         }
     }
 
@@ -255,7 +290,7 @@ public class IncrementalPackager implements Closeable {
      * @throws IOException failed to update the archive
      */
     private void addFiles(@NonNull Collection<PackagedFileUpdate> updates) throws IOException {
-        Preconditions.checkNotNull(mApkCreator, "mApkCreator == null");
+        Preconditions.checkState(!mClosed, "IncrementalPackager has already been closed.");
 
         Predicate<PackagedFileUpdate> isNewOrChanged =
                 pfu -> pfu.getStatus() == FileStatus.NEW || pfu.getStatus() == CHANGED;
@@ -270,7 +305,7 @@ public class IncrementalPackager implements Closeable {
 
         for (PackagedFileUpdate rf : newOrChangedNonArchiveFiles) {
             File out = rf.getSource().getFile();
-            mApkCreator.writeFile(out, rf.getName());
+            getApkCreator().writeFile(out, rf.getName());
         }
 
         Iterable<PackagedFileUpdate> newOrChangedArchiveFiles =
@@ -300,7 +335,7 @@ public class IncrementalPackager implements Closeable {
         }
 
         for (File arch : archives) {
-            mApkCreator.writeZip(arch, pathNameMap::get, name -> !names.contains(name));
+            getApkCreator().writeZip(arch, pathNameMap::get, name -> !names.contains(name));
         }
     }
 
@@ -353,14 +388,21 @@ public class IncrementalPackager implements Closeable {
 
     @Override
     public void close() throws IOException {
-        if (mApkCreator == null) {
+        if (mClosed) {
             return;
         }
 
         try (Closer closer = Closer.create()) {
+            // If not incremental, force the initialization of mApkCreator in order to force signing
+            // in case creationData.signingOptions has changed.
+            if (!mCreationData.isIncremental()) {
+                getApkCreator();
+            }
+            // Use mApkCreator instead of getApkCreator() here because if mApkCreator is null at
+            // this point, we don't want to initialize it just to close it.
             closer.register(mApkCreator);
             closer.register(mDexRenamer);
-            mApkCreator = null;
+            mClosed = true;
         }
     }
 }

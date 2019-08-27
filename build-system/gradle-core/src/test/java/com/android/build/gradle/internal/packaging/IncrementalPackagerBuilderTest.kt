@@ -103,7 +103,7 @@ class IncrementalPackagerBuilderTest {
             .withSigning(signingConfig, minSdk)
             .withOutputFile(outputFile)
             .withIntermediateDir(intermediateDir)
-            .withApkCreatorType(ApkCreatorType.APK_Z_FILE_CREATOR)
+            .withApkCreatorType(ApkCreatorType.APK_FLINGER)
             .build().use { }
     }
 }
