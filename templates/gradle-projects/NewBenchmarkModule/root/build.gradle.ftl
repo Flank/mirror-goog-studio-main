@@ -9,6 +9,17 @@ android {
     buildToolsVersion "${buildToolsVersion}"
 </#if>
 
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+<#if (language!'Java')?string == 'Kotlin'>
+     kotlinOptions {
+        jvmTarget = "1.8"
+     }
+
+</#if>
     defaultConfig {
         minSdkVersion ${minApi}
         targetSdkVersion ${targetApi}
