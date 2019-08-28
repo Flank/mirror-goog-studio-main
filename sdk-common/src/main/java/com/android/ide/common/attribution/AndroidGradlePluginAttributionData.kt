@@ -33,7 +33,12 @@ data class AndroidGradlePluginAttributionData(
      * A map that maps a task name to its class name
      * ex: mergeDevelopmentDebugResources -> com.android.build.gradle.tasks.MergeResources
      */
-    val taskNameToClassNameMap: Map<String, String>
+    val taskNameToClassNameMap: Map<String, String>,
+
+    /**
+     * Contains registered tasks that are not cacheable.
+     */
+    val noncacheableTasks: Set<String>
 ) : Serializable {
     companion object {
         fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
