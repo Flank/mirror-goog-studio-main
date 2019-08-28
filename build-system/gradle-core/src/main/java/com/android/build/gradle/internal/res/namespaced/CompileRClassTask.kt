@@ -21,9 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CL
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.getOutputDirectory
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import org.gradle.api.file.Directory
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 
@@ -49,14 +47,6 @@ class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
     override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        output.set(
-            RUNTIME_R_CLASS_CLASSES.getOutputDirectory(
-                variantScope.globalScope.project.layout.buildDirectory,
-                variantScope.artifacts.getIdentifier(),
-                name
-            )
-        )
-
         variantScope.artifacts.producesDir(
             RUNTIME_R_CLASS_CLASSES,
             BuildArtifactsHolder.OperationType.INITIAL,
@@ -73,10 +63,10 @@ class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
 
         task.classpath = task.project.files()
         task.source(variantScope.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_SOURCES))
-        task.destinationDir = output.get().asFile
+        task.setDestinationDir(output.asFile)
 
         // manually declare our output directory as a Task output since it's not annotated as
-        // an OutputDirectoy on the task implementation.
+        // an OutputDirectory on the task implementation.
         task.outputs.dir(output)
     }
 }

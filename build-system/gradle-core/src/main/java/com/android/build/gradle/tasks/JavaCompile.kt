@@ -77,16 +77,6 @@ class JavaCompileCreationAction(
         variantScope.globalScope.project.objects.directoryProperty()
 
     init {
-        // Initialize in the constructor as configure can be invoked before handleProvider,
-        // and it invokes get() on this provider.
-        classesOutputDirectory.set(
-            JAVAC.getOutputDirectory(
-                variantScope.globalScope.project.layout.buildDirectory,
-                variantScope.artifacts.getIdentifier(),
-                "classes"
-            )
-        )
-
         val compileSdkVersion = variantScope.globalScope.extension.compileSdkVersion
         if (isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
             throw RuntimeException(
@@ -116,13 +106,6 @@ class JavaCompileCreationAction(
 
         // When doing annotation processing, register its output
         if (!processAnnotationsTaskCreated) {
-            annotationProcessorOutputDirectory.set(
-                AP_GENERATED_SOURCES.getOutputDirectory(
-                    variantScope.globalScope.project.layout.buildDirectory,
-                    variantScope.artifacts.getIdentifier(),
-                    "out" // in order to preserve previous output path, pass out as taskName
-                )
-            )
             variantScope.artifacts.producesDir(
                 AP_GENERATED_SOURCES,
                 INITIAL,
@@ -133,13 +116,6 @@ class JavaCompileCreationAction(
 
         // Data binding artifact is one of the annotation processing outputs
         if (variantScope.globalScope.extension.dataBinding.isEnabled) {
-            bundleArtifactFolderForDataBinding.set(
-                DATA_BINDING_ARTIFACT.getOutputDirectory(
-                    variantScope.globalScope.project.layout.buildDirectory,
-                    variantScope.artifacts.getIdentifier(),
-                    "out" // in order to preserve previous output path, pass out as taskName
-                )
-            )
             variantScope.artifacts.producesDir(
                 DATA_BINDING_ARTIFACT,
                 APPEND,
@@ -215,9 +191,9 @@ class JavaCompileCreationAction(
             variantScope.fullVariantName
         )
 
-        task.destinationDir = classesOutputDirectory.asFile.get()
+        task.setDestinationDir(classesOutputDirectory.asFile)
         // Manually declare our output directory as a Task output since it's not annotated as
-        // an OutputDirectoy on the task implementation.
+        // an OutputDirectory on the task implementation.
         task.outputs.dir(classesOutputDirectory)
         task.outputs.dir(annotationProcessorOutputDirectory).optional()
         task.outputs.dir(bundleArtifactFolderForDataBinding).optional()

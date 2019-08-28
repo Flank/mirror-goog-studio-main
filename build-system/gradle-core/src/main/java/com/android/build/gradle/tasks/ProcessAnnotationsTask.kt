@@ -49,12 +49,6 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
     override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        output.set(AP_GENERATED_SOURCES.getOutputDirectory(
-            variantScope.globalScope.project.layout.buildDirectory,
-            variantScope.artifacts.getIdentifier(),
-            "out" // in order to preserve previous output path, pass out as taskName
-        ))
-
         variantScope.artifacts.producesDir(
             AP_GENERATED_SOURCES,
             BuildArtifactsHolder.OperationType.INITIAL,
@@ -80,10 +74,10 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
         // Since this task does not output compiled classes, destinationDir will not be used.
         // However, Gradle requires this property to be set, so let's just set it to the
         // annotation processor output directory for convenience.
-        task.destinationDir = output.get().asFile
+        task.setDestinationDir(output.asFile)
 
         // Manually declare our output directory as a Task output since it's not annotated as
-        // an OutputDirectoy on the task implementation.
+        // an OutputDirectory on the task implementation.
         task.outputs.dir(output)
 
         task.options.compilerArgs.add(PROC_ONLY)
