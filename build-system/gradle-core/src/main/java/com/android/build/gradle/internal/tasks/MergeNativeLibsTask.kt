@@ -212,7 +212,7 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
     if (taskContainer.externalNativeJsonGenerator != null) {
         nativeLibs.from(
             project
-                .files(taskContainer.externalNativeJsonGenerator!!.get().objFolder)
+                .files(File(taskContainer.externalNativeJsonGenerator!!.get().objFolder))
                 .builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }

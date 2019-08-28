@@ -549,14 +549,14 @@ public abstract class ExternalNativeJsonGenerator {
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
-    public File getObjFolder() {
-        return variant.getObjFolder();
+    public String getObjFolder() {
+        return variant.getObjFolder().getPath();
     }
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
-    public File getNdkFolder() {
-        return variant.getModule().getNdkFolder();
+    public String getNdkFolder() {
+        return variant.getModule().getNdkFolder().getPath();
     }
 
     @Input
@@ -604,14 +604,14 @@ public abstract class ExternalNativeJsonGenerator {
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
-    public File getSoFolder() {
-        return CxxVariantModelKt.getSoFolder(variant);
+    public String getSoFolder() {
+        return CxxVariantModelKt.getSoFolder(variant).getPath();
     }
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
-    public File getSdkFolder() {
-        return variant.getModule().getProject().getSdkFolder();
+    public String getSdkFolder() {
+        return variant.getModule().getProject().getSdkFolder().getPath();
     }
 
     @Input

@@ -89,11 +89,11 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
 
     // Exposed in Variants API
     val objFolder: File
-        get() = generator.get().objFolder
+        get() = File(generator.get().objFolder)
 
     // Exposed in Variants API
     val soFolder: File
-        get() = generator.get().soFolder
+        get() = File(generator.get().soFolder)
 
     private val stlSharedObjectFiles: Map<Abi, File>
         get() = generator.get().stlSharedObjectFiles

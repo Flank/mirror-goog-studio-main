@@ -246,7 +246,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
         // getObjFolder is set to the "local" subfolder in the user specified directory, therefore,
         // NDK_OUT should be set to getObjFolder().getParent() instead of getObjFolder().
-        String ndkOut = getObjFolder().getParent();
+        String ndkOut = new File(getObjFolder()).getParent();
         if (CURRENT_PLATFORM == PLATFORM_WINDOWS) {
             // Due to b.android.com/219225, NDK_OUT on Windows requires forward slashes.
             // ndk-build.cmd is supposed to escape the back-slashes but it doesn't happen.
@@ -257,7 +257,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         }
         result.add("NDK_OUT=" + ndkOut);
 
-        result.add("NDK_LIBS_OUT=" + getSoFolder().getAbsolutePath());
+        result.add("NDK_LIBS_OUT=" + getSoFolder());
 
         // Related to issuetracker.google.com/69110338. Semantics of APP_CFLAGS and APP_CPPFLAGS
         // is that the flag(s) are unquoted. User may place quotes if it is appropriate for the
