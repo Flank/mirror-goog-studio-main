@@ -36,7 +36,9 @@ string ProcfsFiles::GetSystemCpuPath() const { return kSystemCpuPath; }
 string ProcfsFiles::GetSystemCurrentCpuFrequencyPath(int32_t cpu) const {
   // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
   std::ostringstream os;
-  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/cpuinfo_cur_freq";
+  // Using scaling_cur_freq instead of cpuinfo_cur_freq because the latter may
+  // be inaccessible without root.
+  os << kSystemCpuPath << "cpu" << cpu << "/cpufreq/scaling_cur_freq";
   return os.str();
 }
 

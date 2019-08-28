@@ -55,7 +55,7 @@ class MockProcfsFiles final : public ProcfsFiles {
 
   std::string GetSystemCurrentCpuFrequencyPath(int32_t cpu) const override {
     std::ostringstream os;
-    os << "cpu" << cpu << "_cpuinfo_cur_freq.txt";
+    os << "cpu" << cpu << "_scaling_cur_freq.txt";
     return TestUtils::getCpuTestData(os.str());
   }
 };
