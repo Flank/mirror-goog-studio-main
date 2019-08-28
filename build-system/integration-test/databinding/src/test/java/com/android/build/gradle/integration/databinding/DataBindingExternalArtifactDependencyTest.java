@@ -85,7 +85,7 @@ public class DataBindingExternalArtifactDependencyTest {
     @Test
     public void runTest() throws Exception {
         List<String> args = createLibraryArtifact();
-        app.execute(args, ":app:assembleDebug");
-        app.execute(args, ":app:assembleDebugAndroidTest");
+        app.execute(args, "assembleDebug");
+        app.execute(args, "assembleDebugAndroidTest");
     }
 }
