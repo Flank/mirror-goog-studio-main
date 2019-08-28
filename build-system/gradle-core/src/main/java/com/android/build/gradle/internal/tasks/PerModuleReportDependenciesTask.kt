@@ -27,23 +27,30 @@ import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.MavenLibrary
 import com.android.tools.build.libraries.metadata.ModuleDependencies
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.component.ModuleComponentSelector
-import org.gradle.api.artifacts.result.ComponentSelectionCause
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
+import java.util.Base64
 import java.util.Dictionary
 import java.util.Hashtable
 import java.util.LinkedList
 import java.util.function.Supplier
 import javax.inject.Inject
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ModuleVersionIdentifier
+import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ComponentSelectionCause
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Task that publishes the app dependencies proto for each module.
@@ -68,6 +75,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
 
     private fun convertDependencyToMavenLibrary(
         moduleVersion: ModuleVersionIdentifier?,
+        digest: String?,
         librariesToIndexMap: Dictionary<Library, Integer>,
         libraries: LinkedList<Library>
     ): Integer? {
@@ -78,6 +86,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                     .setArtifactId(moduleVersion.name)
                     .setVersion(moduleVersion.version)
                     .build())
+                .setDigests(Library.Digests.newBuilder().setSha256(digest))
                 .build()
             var index = librariesToIndexMap.get(lib)
             if (index == null) {
@@ -90,12 +99,28 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         return null
     }
 
-    override fun doTaskAction() {
+    private fun getFileDigest(file: File): String {
+        return Base64.getEncoder().encodeToString(
+            MessageDigest.getInstance("SHA-256").digest(file.readBytes()))
+    }
 
+    override fun doTaskAction() {
         val librariesToIndexMap: Dictionary<Library, Integer> = Hashtable()
         val libraries = LinkedList<Library>()
         val libraryDependencies = LinkedList<LibraryDependencies>()
-        val directDependenciesIndices: MutableSet<Integer> = HashSet()
+        val directDependenciesIndices: MutableSet<Int> = HashSet()
+        val artifacts = runtimeClasspath.incoming.artifactView { config ->
+            config.componentFilter { id -> id !is ProjectComponentIdentifier }
+        }.artifacts
+        val componentDigestMap: HashMap<ComponentIdentifier, String> = HashMap()
+
+        for (artifact in artifacts) {
+            componentDigestMap.put(
+                artifact.id.componentIdentifier,
+                getFileDigest(artifact.file)
+            )
+        }
+
         for (dependency in runtimeClasspath.incoming.resolutionResult.allDependencies) {
             // ignore non maven repository dependencies for now.
             if (dependency !is ResolvedDependencyResult
@@ -105,6 +130,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             val resolvedComponent = dependency.selected
             val index = convertDependencyToMavenLibrary(
                 resolvedComponent.moduleVersion,
+                componentDigestMap.get(resolvedComponent.id),
                 librariesToIndexMap,
                 libraries)
             if (index != null) {
@@ -119,6 +145,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                         }
                         val depIndex = convertDependencyToMavenLibrary(
                             libDep.selected.moduleVersion,
+                            componentDigestMap.get(libDep.selected.id),
                             librariesToIndexMap,
                             libraries
                         )
@@ -135,15 +162,31 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                         it.cause == ComponentSelectionCause.ROOT
                     }.isNotEmpty()) {
                     // this is a direct module dependency.
-                    directDependenciesIndices.add(index)
+                    directDependenciesIndices.add(index.toInt())
                 }
             }
         }
 
+        // incoming.ResolutionResult will not return direct file dependencies (i.e. local jars), so
+        // file dependencies need to be processed using artifact view.
+        val fileComponentIds = componentDigestMap.keys.filter { !(it is ProjectComponentIdentifier || it is ModuleComponentIdentifier) }
+        for (fileComponentId in fileComponentIds) {
+            val library = Library.newBuilder()
+                .setDigests(Library.Digests.newBuilder().setSha256(componentDigestMap.get(fileComponentId)))
+                .build()
+            val index =  libraries.size
+            libraries.add(library)
+            // File dependency cannot have transitive dependencies.
+            val libraryDependency =
+                LibraryDependencies.newBuilder().setLibraryIndex(index)
+            libraryDependencies.add(libraryDependency.build())
+            // This is a direct module dependency.
+            directDependenciesIndices.add(index)
+        }
 
         val moduleDependency = ModuleDependencies.newBuilder().setModuleName(moduleName)
         for (index in directDependenciesIndices) {
-            moduleDependency.addDependencyIndex(index.toInt())
+            moduleDependency.addDependencyIndex(index)
         }
         val appDependencies = AppDependencies.newBuilder()
             .addAllLibrary(libraries)

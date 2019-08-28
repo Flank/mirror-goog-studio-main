@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
+import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.FileSubject
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.google.common.collect.ImmutableList.toImmutableList
@@ -39,6 +40,7 @@ import kotlin.test.fail
 class DependenciesReportTest {
 
     val app =  MinimalSubProject.app("com.example.app")
+                  .withFile("local.jar", TestInputsGenerator.jarWithClasses(listOf()))
 
     // Add both 1.0.0 and 1.0.1 so that androidx.core.core dependencies will be 1.0.0 and 1.0.1
     // We want to test that only the resolved 1.0.1 dependency gets added. Fragment implicitly tries
@@ -48,6 +50,7 @@ class DependenciesReportTest {
             .subproject(":app", app)
             .dependency(app, "androidx.fragment:fragment:1.0.0")
             .dependency(app, "androidx.core:core:1.0.1")
+            .fileDependency(app, "local.jar")
             .build()
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
@@ -63,11 +66,17 @@ class DependenciesReportTest {
             val deps = AppDependencies.parseDelimitedFrom(it.getInputStream(dependenciesFile))
             val mavenLib = deps.libraryList.stream()
                 .filter { library -> library.hasMavenLibrary() }
-                .map { library-> library.mavenLibrary }
-                .filter { library -> library.groupId.equals("androidx.core") && library.artifactId.equals("core") }
+                .filter { library -> library.mavenLibrary.groupId.equals("androidx.core") &&
+                                     library.mavenLibrary.artifactId.equals("core") }
+                .collect(toImmutableList())
+            val fileLib = deps.libraryList.stream()
+                .filter { library -> !library.hasMavenLibrary() }
                 .collect(toImmutableList())
             assertThat(mavenLib).hasSize(1)
-            assertThat(mavenLib.get(0).version).isEqualTo("1.0.1")
+            assertThat(mavenLib.get(0).mavenLibrary.version).isEqualTo("1.0.1")
+            assertThat(mavenLib.get(0).digests.sha256).isEqualTo("sakFIsIsrYxft6T5Ekk9vN5GPGo3tBSN+5QjdjRg+Zg=")
+            assertThat(fileLib).hasSize(1)
+            assertThat(fileLib.get(0).digests.sha256).isNotEmpty()
         }
     }
 
