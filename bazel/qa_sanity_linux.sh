@@ -10,6 +10,7 @@ readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
 readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
+readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/bazel" clean --async
@@ -18,6 +19,19 @@ readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
 if [[ $lsb_release == "crostini" ]]; then
   config_options="--config=cloud_resultstore"
   target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-perfgate_only,-no_crostini
+
+  current_time=$(date +"%s")
+
+  #This prevents builds from ocurring if the last one was started less than three hours ago
+  #so the chromebox doesn't become too bogged down
+  if [[ -f "${crostini_timestamp_file}" ]]; then
+    last_run_time=$(cat $crostini_timestamp_file)
+    #if the last build occurred less than three hours ago it exits
+    if [[ $(($current_time-$last_run_time)) -lt 10800 ]]; then
+      exit 0
+    fi
+  fi
+  echo $current_time > $crostini_timestamp_file
 
   # Generate a UUID for use as the bazel invocation id
   readonly build_invocation_id="$(uuidgen)"
