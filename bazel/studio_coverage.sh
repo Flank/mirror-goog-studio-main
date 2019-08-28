@@ -49,17 +49,17 @@ fi
 readonly lcov_path="./bazel-genfiles/external/cov/all/lcov"
 
 # Generate the HTML report
-genhtml -o "./out/html" ${lcov_path} -p $(pwd) --no-function-coverage || exit $?
+#genhtml -o "./out/html" ${lcov_path} -p $(pwd) --no-function-coverage || exit $?
 
 if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
   mkdir "${dist_dir}/coverage" || exit $?
   cp -pv ${lcov_path} "${dist_dir}/coverage" || exit $?
   # HTML report needs to be zipped for fast uploads
-  pushd "./out" || exit $?
-  zip -r "html.zip" "./html" || exit $?
-  popd || exit $?
-  mv -v "./out/html.zip" "${dist_dir}/coverage" || exit $?
+  #pushd "./out" || exit $?
+  #zip -r "html.zip" "./html" || exit $?
+  #popd || exit $?
+  #mv -v "./out/html.zip" "${dist_dir}/coverage" || exit $?
 
   # Upload the LCOV data to GCS if running on BYOB
   if [[ "$build_number" ]]; then
