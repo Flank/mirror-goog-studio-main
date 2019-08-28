@@ -218,6 +218,7 @@ coverage_report(
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/idea/updater:integration_test",
-        "//tools/vendor/google/android-ndk:android-ndk_tests",
+        # TODO(b/140178289): too flaky for use in the coverage suite
+        #"//tools/vendor/google/android-ndk:android-ndk_tests",
     ],
 )
