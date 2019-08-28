@@ -248,6 +248,11 @@ message CpuTraceConfiguration {
   // trace will be made available via the |GetBytes| rpc using the trace id as
   // the byte's id.
   string temp_path = 5;
+
+  // The host path to symbols for this trace. This is passed in by studio
+  // and used by the simpleperf preprocessor to properly symbolize the trace.
+  // The symbolized trace is then saved in the datastore.
+  repeated string symbol_dirs = 6;
 }
 
 // Data for the CpuCoreConfig command.
