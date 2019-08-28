@@ -1282,8 +1282,11 @@ public final class SdkConstants {
     public static final String ATTR_FORMAT = "format"; //$NON-NLS-1$
     public static final String ATTR_PREPROCESSING = "preprocessing"; //$NON-NLS-1$
 
-    // Attributes: Data-Binding
+    // Attributes: Data Binding
     public static final String ATTR_ALIAS = "alias"; //$NON-NLS-1$
+
+    // Attributes: View Binding
+    public static final String ATTR_VIEW_BINDING_IGNORE = "viewBindingIgnore";
 
     // Attributes: Layout
     public static final String ATTR_LAYOUT_RESOURCE_PREFIX = "layout_"; //$NON-NLS-1$
