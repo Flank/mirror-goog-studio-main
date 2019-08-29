@@ -31,7 +31,8 @@ const char* kArguments[] = {kCatPath, NULL};
 // Helper class to handle getting some output and validating it.
 class OutputValidator {
  public:
-  OutputValidator(const std::string& expected) : expected_(expected) {}
+  OutputValidator(const std::string& expected)
+      : expected_(expected), validated_(false) {}
 
   void Validate(int stdout_fd) {
     std::unique_lock<std::mutex> lock(output_mutex_);
@@ -39,18 +40,23 @@ class OutputValidator {
     std::vector<char> buffer(size);
     EXPECT_EQ(size, read(stdout_fd, buffer.data(), size));
     EXPECT_EQ(expected_, std::string(buffer.begin(), buffer.end()));
+    // "notify_all" can be run before "wait" as such we set a value indicating
+    // if we should wait or not. The condition variable will check this bool
+    // before blocking, it will check again after a notify call.
+    validated_ = true;
     output_cv_.notify_all();
   }
 
   void Wait() {
     std::unique_lock<std::mutex> lock(output_mutex_);
-    output_cv_.wait(lock);
+    output_cv_.wait(lock, [this] { return validated_; });
   }
 
  private:
   std::mutex output_mutex_;
   std::condition_variable output_cv_;
   std::string expected_;
+  bool validated_;
 };
 
 TEST(NonBlockingCommandRunnerTest, TestInputIsAsync) {
