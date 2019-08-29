@@ -16,19 +16,15 @@
 
 package com.android.tools.agent.app.inspection;
 
-import androidx.inspection.Connection;
+class Responses {
+    public static native void replyError(int commandId, String errorMessage);
 
-class ConnectionImpl extends Connection {
+    public static native void replySuccess(int commandId);
 
-    private String mInspectorId;
+    public static native void sendEvent(
+            int commandId, byte[] eventData, int length, String inspectorId);
 
-    public ConnectionImpl(String inspectorId) {
-        mInspectorId = inspectorId;
+    public static void sendEvent(byte[] eventData, int length, String inspectorId) {
+        sendEvent(0, eventData, length, inspectorId);
     }
-
-    @Override
-    public void sendEvent(byte[] data) {
-        Responses.sendEvent(data, data.length, mInspectorId);
-    }
-
 }

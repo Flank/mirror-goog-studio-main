@@ -42,17 +42,19 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
       }});
 }
 
-void EnqueueAppInspectionRawEvent(JNIEnv *env, jbyteArray event_data,
-                                  int32_t length, jstring inspector_id) {
+void EnqueueAppInspectionRawEvent(JNIEnv *env, int32_t command_id,
+                                  jbyteArray event_data, int32_t length,
+                                  jstring inspector_id) {
   profiler::JByteArrayWrapper data(env, event_data, length);
   profiler::JStringWrapper id(env, inspector_id);
   profiler::Agent::Instance().SubmitAgentTasks(
-      {[data, id](profiler::proto::AgentService::Stub &stub,
-                  grpc::ClientContext &ctx) mutable {
+      {[command_id, data, id](profiler::proto::AgentService::Stub &stub,
+                              grpc::ClientContext &ctx) mutable {
         profiler::proto::SendEventRequest request;
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
+        event->set_command_id(command_id);
         auto *inspection_event = event->mutable_app_inspection_event();
         auto *raw_response = inspection_event->mutable_raw_event();
         raw_response->set_inspector_id(id.get().c_str());
@@ -66,23 +68,24 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, jbyteArray event_data,
 
 extern "C" {
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_AppInspectionService_replyError(
+Java_com_android_tools_agent_app_inspection_Responses_replyError(
     JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
   profiler::EnqueueAppInspectionServiceResponse(
       env, command_id, ServiceResponse::ERROR, error_message);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_AppInspectionService_replySuccess(
+Java_com_android_tools_agent_app_inspection_Responses_replySuccess(
     JNIEnv *env, jobject obj, jint command_id) {
   profiler::EnqueueAppInspectionServiceResponse(
       env, command_id, ServiceResponse::SUCCESS, nullptr);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_ConnectionImpl_sendEvent(
-    JNIEnv *env, jobject obj, jbyteArray event_data, jint length,
-    jstring inspector_id) {
-  profiler::EnqueueAppInspectionRawEvent(env, event_data, length, inspector_id);
+Java_com_android_tools_agent_app_inspection_Responses_sendEvent(
+    JNIEnv *env, jobject obj, jint command_id, jbyteArray event_data,
+    jint length, jstring inspector_id) {
+  profiler::EnqueueAppInspectionRawEvent(env, command_id, event_data, length,
+                                         inspector_id);
 }
 }

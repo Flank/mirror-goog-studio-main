@@ -16,19 +16,19 @@
 
 package com.android.tools.agent.app.inspection;
 
-import androidx.inspection.Connection;
+import androidx.inspection.Inspector;
 
-class ConnectionImpl extends Connection {
-
+class CommandCallbackImpl implements Inspector.CommandCallback {
     private String mInspectorId;
+    private int mCommandId;
 
-    public ConnectionImpl(String inspectorId) {
+    CommandCallbackImpl(String inspectorId, int commandId) {
         mInspectorId = inspectorId;
+        mCommandId = commandId;
     }
 
     @Override
-    public void sendEvent(byte[] data) {
-        Responses.sendEvent(data, data.length, mInspectorId);
+    public void reply(byte[] bytes) {
+        Responses.sendEvent(mCommandId, bytes, bytes.length, mInspectorId);
     }
-
 }

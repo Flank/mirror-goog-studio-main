@@ -16,6 +16,9 @@
 
 package com.android.tools.agent.app.inspection;
 
+import static com.android.tools.agent.app.inspection.Responses.replyError;
+import static com.android.tools.agent.app.inspection.Responses.replySuccess;
+
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
@@ -115,8 +118,7 @@ public class AppInspectionService {
             replyError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
         }
-        inspector.onReceiveCommand(rawCommand);
-        replySuccess(commandId);
+        inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(inspectorId, commandId));
     }
 
     private boolean failNull(String name, Object value, int commandId) {
@@ -126,10 +128,6 @@ public class AppInspectionService {
         }
         return result;
     }
-
-    native void replyError(int commandId, String errorMessage);
-
-    native void replySuccess(int commandId);
 
     /**
      * Iterates through threads presented in the app and looks for a thread with name "main". It can

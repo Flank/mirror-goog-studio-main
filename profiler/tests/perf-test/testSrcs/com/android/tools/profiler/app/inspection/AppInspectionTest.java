@@ -34,6 +34,7 @@ import com.android.tools.profiler.PerfDriver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import org.junit.After;
@@ -107,20 +108,20 @@ public class AppInspectionTest {
     }
 
     @Test
-    public void sendBasicCommand() throws Exception {
+    public void sendRawCommand() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
-        assertResponseStatus(
-                serviceLayer.sendCommand(
-                        rawCommandInspector("test.inspector", new byte[] {1, 2, 127})),
-                SUCCESS);
+        byte[] commandBytes = new byte[] {1, 2, 127};
+        assertRawResponse(
+                serviceLayer.sendCommand(rawCommandInspector("test.inspector", commandBytes)),
+                commandBytes);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + Arrays.toString(commandBytes));
         List<AppInspectionEvent> events = serviceLayer.consumeCollectedEvents();
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getRawEvent().getContent().toByteArray())
                 .isEqualTo(new byte[] {8, 92, 43});
-        assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + "[1, 2, 127]");
     }
 
     private static AppInspectionCommand rawCommandInspector(
@@ -154,6 +155,11 @@ public class AppInspectionTest {
     private static void assertResponseStatus(AppInspectionEvent event, Status expected) {
         assertThat(event.hasResponse()).isTrue();
         assertThat(event.getResponse().getStatus()).isEqualTo(expected);
+    }
+
+    private static void assertRawResponse(AppInspectionEvent event, byte[] responseContent) {
+        assertThat(event.hasRawEvent()).isTrue();
+        assertThat(event.getRawEvent().getContent().toByteArray()).isEqualTo(responseContent);
     }
 
     private static String injectInspectorDex() throws IOException {
