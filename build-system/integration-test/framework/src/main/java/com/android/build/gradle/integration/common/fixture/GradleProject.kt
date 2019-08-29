@@ -22,7 +22,7 @@ import java.io.File
 /**
  * Contains the contents (source code and resources) of a Gradle project ([org.gradle.api.Project]).
  */
-abstract class GradleProject : TestProject {
+abstract class GradleProject(val name: String? = null) : TestProject {
 
     /** Map from a relative path to the corresponding [TestSourceFile] instance.  */
     private val sourceFiles: MutableMap<String, TestSourceFile> = mutableMapOf()
@@ -72,6 +72,14 @@ abstract class GradleProject : TestProject {
     /** Removes a source file with the specified file name. The file must already exist.  */
     fun removeFileByName(fileName: String) {
         removeFile(getFileByName(fileName).path)
+    }
+
+    /**
+     * Replaces a source file at the corresponding file path, or adds it if the file does not yet
+     * exist.
+     */
+    fun replaceFile(relativePath: String, content: String) {
+        replaceFile(TestSourceFile(relativePath, content))
     }
 
     /**

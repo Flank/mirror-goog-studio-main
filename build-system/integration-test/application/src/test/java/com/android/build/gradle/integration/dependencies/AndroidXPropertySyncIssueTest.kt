@@ -30,12 +30,15 @@ import org.junit.Test
 class AndroidXPropertySyncIssueTest {
 
     @get:Rule
-    var project = EmptyActivityProjectBuilder().build()
+    var project = EmptyActivityProjectBuilder().also {
+        it.withUnitTest = false
+        it.useAndroidX = false
+    }.build()
 
     @Before
     fun setUp() {
         TestFileUtils.appendToFile(
-            project.getSubproject(":app").buildFile,
+            project.getSubproject("app").buildFile,
             """
             dependencies {
                 implementation 'androidx.annotation:annotation:$ANDROIDX_VERSION'

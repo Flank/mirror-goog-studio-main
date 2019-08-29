@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
@@ -31,14 +30,7 @@ import org.junit.Test
 class EarlyTaskConfigurationTest {
 
     @get:Rule
-    var project = setUpTestProject()
-
-    private fun setUpTestProject(): GradleTestProject {
-        return with(EmptyActivityProjectBuilder()) {
-            withUnitTest = true
-            build()
-        }
-    }
+    var project = EmptyActivityProjectBuilder().build()
 
     @Test
     fun `check that build succeeds when tasks are configured early`() {

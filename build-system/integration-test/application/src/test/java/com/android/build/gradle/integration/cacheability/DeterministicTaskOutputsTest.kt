@@ -72,7 +72,6 @@ class DeterministicTaskOutputsTest {
     private fun setUpTestProject(projectName: String): GradleTestProject {
         return with(EmptyActivityProjectBuilder()) {
             this.projectName = projectName
-            withUnitTest = true
             build()
         }
     }

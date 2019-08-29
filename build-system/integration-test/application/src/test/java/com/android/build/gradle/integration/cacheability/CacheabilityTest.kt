@@ -120,7 +120,6 @@ class CacheabilityTest {
     private fun setUpTestProject(projectName: String): GradleTestProject {
         return with(EmptyActivityProjectBuilder()) {
             this.projectName = projectName
-            withUnitTest = true
             useGradleBuildCache = true
             gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE_DIR")
             build()
@@ -132,7 +131,7 @@ class CacheabilityTest {
         for (project in listOf(projectCopy1, projectCopy2)) {
             // Set up the project such that we can check the cacheability of AndroidUnitTest task
             TestFileUtils.appendToFile(
-                project.getSubproject(":app").buildFile,
+                project.getSubproject("app").buildFile,
                 "android { testOptions { unitTests { includeAndroidResources = true } } }"
             )
         }

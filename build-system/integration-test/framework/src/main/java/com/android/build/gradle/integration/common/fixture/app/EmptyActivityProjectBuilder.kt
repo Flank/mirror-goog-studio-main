@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.common.fixture.app
 
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
+import com.android.build.gradle.integration.common.fixture.EmptyGradleProject
+import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
@@ -27,6 +29,9 @@ import java.io.File
 /**
  * Builder for a [GradleTestProject] with an empty activity. It resembles the New Project wizard in
  * Android Studio.
+ *
+ * By default, the root project includes an app sub-project. It may also include additional
+ * sub-projects if they are provided to this builder.
  */
 class EmptyActivityProjectBuilder {
 
@@ -37,63 +42,69 @@ class EmptyActivityProjectBuilder {
     var packageName: String = "com.example.myapplication"
     var minApiLevel: String = "15"
     var useKotlin: Boolean = false
-    var useAndroidX: Boolean = false
 
     /*
      * The following are additional settings to further customize the project
      */
-    var withUnitTest: Boolean = false
+    var useAndroidX: Boolean = true
+    var withUnitTest: Boolean = true
     var useGradleBuildCache: Boolean = false
-    var gradleBuildCacheDir: File = File("gradle-build-cache")
+    var gradleBuildCacheDir: File? = null
+
+    /*
+     * This allows to add more subprojects
+     */
+    var additionalSubProjects: List<GradleProject> = listOf()
+
+    init {
+        if (useGradleBuildCache) {
+            checkNotNull(gradleBuildCacheDir) {
+                "gradleBuildCacheDir must be specified when useGradleBuildCache=true"
+            }
+        }
+    }
 
     fun build(): GradleTestProject {
-        val builder = GradleTestProject.builder()
-        builder
+        val subProjectsBuilder = MultiModuleTestProject.builder()
+        val appSubProject =
+            createAppSubProject(packageName, minApiLevel, useKotlin, useAndroidX, withUnitTest)
+        for (subProject in listOf(appSubProject) + additionalSubProjects) {
+            subProjectsBuilder.subproject(subProject.name!!, subProject)
+        }
+
+        val rootProjectBuilder = GradleTestProject.builder()
             .withName(projectName)
-            .fromTestApp(
-                MultiModuleTestProject.builder()
-                    .subproject(
-                        ":app",
-                        createAppModule(
-                            packageName,
-                            minApiLevel,
-                            useKotlin,
-                            useAndroidX,
-                            withUnitTest
-                        )
-                    )
-                    .build()
-            )
             .withKotlinGradlePlugin(useKotlin)
+            .fromTestApp(subProjectsBuilder.build())
 
         if (useAndroidX) {
-            builder
+            rootProjectBuilder
                 .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=true")
                 .addGradleProperties(BooleanOption.ENABLE_JETIFIER.propertyName + "=true")
         }
 
         if (useGradleBuildCache) {
-            builder.withGradleBuildCacheDirectory(gradleBuildCacheDir)
+            rootProjectBuilder.withGradleBuildCacheDirectory(gradleBuildCacheDir!!)
         }
 
-        return builder.create()
+        return rootProjectBuilder.create()
     }
 
-    private fun createAppModule(
+    private fun createAppSubProject(
         packageName: String,
         minApiLevel: String,
         useKotlin: Boolean,
         useAndroidX: Boolean,
         withUnitTest: Boolean
-    ): MinimalSubProject {
-        val app = MinimalSubProject.app(packageName)
+    ): GradleProject {
+        val app = EmptyGradleProject("app")
         val packagePath = packageName.replace('.', '/')
 
         // 1. Create build.gradle file
-        app.withFile(
+        app.replaceFile(
             "build.gradle",
             with(BuildFileBuilder()) {
-                plugin = app.plugin
+                plugin = "com.android.application"
                 this.useKotlin = useKotlin
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 minSdkVersion = minApiLevel
@@ -125,7 +136,7 @@ class EmptyActivityProjectBuilder {
         )
 
         // 2. Create AndroidManifest.xml file
-        app.withFile(
+        app.replaceFile(
             "src/main/AndroidManifest.xml",
             with(ManifestFileBuilder(packageName)) {
                 addApplicationTag("MainActivity")
@@ -139,7 +150,7 @@ class EmptyActivityProjectBuilder {
             "android.support.v7.app.AppCompatActivity"
         }
         if (useKotlin) {
-            app.withFile(
+            app.replaceFile(
                 "src/main/java/$packagePath/MainActivity.kt",
                 """
                 package $packageName
@@ -157,7 +168,7 @@ class EmptyActivityProjectBuilder {
                 """.trimIndent()
             )
             if (withUnitTest) {
-                app.withFile(
+                app.replaceFile(
                     "src/test/java/$packagePath/ExampleUnitTest.kt",
                     """
                     package $packageName
@@ -182,7 +193,7 @@ class EmptyActivityProjectBuilder {
                 )
             }
         } else {
-            app.withFile(
+            app.replaceFile(
                 "src/main/java/$packagePath/MainActivity.java",
                 """
                 package $packageName;
@@ -201,7 +212,7 @@ class EmptyActivityProjectBuilder {
                 """.trimIndent()
             )
             if (withUnitTest) {
-                app.withFile(
+                app.replaceFile(
                     "src/test/java/$packagePath/ExampleUnitTest.java",
                     """
                     package $packageName;
@@ -227,7 +238,7 @@ class EmptyActivityProjectBuilder {
         }
 
         // 4. Create layout file
-        app.withFile(
+        app.replaceFile(
             "src/main/res/layout/activity_main.xml",
             with(LayoutFileBuilder()) {
                 this.useAndroidX = useAndroidX
