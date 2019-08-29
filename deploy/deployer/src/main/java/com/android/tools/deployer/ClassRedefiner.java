@@ -66,5 +66,5 @@ public interface ClassRedefiner {
         NONE,
     }
 
-    RedefineClassSupportState canRedefineClass();
+    RedefineClassSupportState canRedefineClass() throws DeployerException;
 }

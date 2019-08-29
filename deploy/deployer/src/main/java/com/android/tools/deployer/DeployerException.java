@@ -230,6 +230,9 @@ public class DeployerException extends Exception {
                 "Debugger attachAgent invocation failed due to %s",
                 "%s", "Retry", ResolutionAction.RETRY),
 
+        NO_DEBUGGER_SESSION(
+                "No Debugger session found for port %s", "", "Retry", ResolutionAction.RETRY),
+
         JDI_INVAlID_STATE("Invalid Redefinition State.", "", "", ResolutionAction.RETRY),
 
         INTERRUPTED("Deployment was interrupted.", "%s", "Retry", ResolutionAction.RETRY),
@@ -439,6 +442,10 @@ public class DeployerException extends Exception {
                 Error.ATTACHAGENT_EXCEPTION,
                 new String[] {e.getClass().getSimpleName()},
                 e.getMessage());
+    }
+
+    public static DeployerException noDebuggerSession(int port) {
+        return new DeployerException(Error.NO_DEBUGGER_SESSION, new String[] {"" + port}, NO_ARGS);
     }
 
     public static DeployerException jdiInvalidState() {
