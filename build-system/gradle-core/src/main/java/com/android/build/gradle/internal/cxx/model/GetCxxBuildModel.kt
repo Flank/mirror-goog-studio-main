@@ -43,7 +43,8 @@ fun getCxxBuildModel(gradle: Gradle): CxxBuildModel = synchronized(GetCxxBuildMo
             override val buildId = UUID.randomUUID()
             override val services = createBuildModelServiceRegistry()
         }
-        fun Gradle.findRoot(): Gradle = gradle.parent?.findRoot() ?: this
+
+        fun Gradle.findRoot(): Gradle = parent?.findRoot() ?: this
         val rootGradle = gradle.findRoot()
         rootGradle.addBuildListener(object : BuildListener {
             override fun settingsEvaluated(ignored: Settings) {}
