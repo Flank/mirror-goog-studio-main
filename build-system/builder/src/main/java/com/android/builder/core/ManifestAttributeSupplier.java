@@ -23,6 +23,9 @@ import com.android.annotations.Nullable;
  */
 public interface ManifestAttributeSupplier {
 
+    /** Whether the manifest file is required to exist. */
+    boolean isManifestFileRequired();
+
     /**
      * Returns the package name from the manifest file.
      *

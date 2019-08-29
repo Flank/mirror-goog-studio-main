@@ -588,7 +588,10 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
                     new DefaultManifestParser(
-                            manifest, () -> true, extraModelInfo.getSyncIssueHandler());
+                            manifest,
+                            () -> true,
+                            variantConfiguration.isManifestFileRequired(),
+                            extraModelInfo.getSyncIssueHandler());
             try {
                 validateMinSdkVersion(attributeSupplier);
                 validateTargetSdkVersion(attributeSupplier);

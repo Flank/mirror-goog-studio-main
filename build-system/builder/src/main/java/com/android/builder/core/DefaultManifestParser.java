@@ -89,21 +89,31 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
 
     @NonNull private BooleanSupplier canParseManifest;
 
+    private boolean isManifestFileRequired;
+
     /**
      * Builds instance of the parser, and parses the supplied file. The manifest is lazily parsed
      * and should typically only be parsed during the execution phase.
      *
      * @param manifestFile manifest to be parsed.
      * @param canParseManifest whether the manifest can currently be parsed.
+     * @param isManifestFileRequired whether the manifest file is required to exist
      * @param issueReporter EvalIssueReporter
      */
     public DefaultManifestParser(
             @NonNull File manifestFile,
             @NonNull BooleanSupplier canParseManifest,
+            boolean isManifestFileRequired,
             @Nullable EvalIssueReporter issueReporter) {
         this.manifestFile = manifestFile;
         this.canParseManifest = canParseManifest;
+        this.isManifestFileRequired = isManifestFileRequired;
         this.issueReporter = issueReporter;
+    }
+
+    @Override
+    public boolean isManifestFileRequired() {
+        return isManifestFileRequired;
     }
 
     /** Gets the package name for the manifest file processed by this parser. */
@@ -298,7 +308,15 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
                                 + "that read the android manifest file.\n"
                                 + stackTrace);
             }
-            if (!initialized && manifestFile.isFile()) {
+            if (!initialized) {
+                if (!manifestFile.isFile()) {
+                    if (isManifestFileRequired) {
+                        throw new RuntimeException(
+                                "Manifest file does not exist: " + manifestFile.getAbsolutePath());
+                    } else {
+                        return;
+                    }
+                }
                 DefaultHandler handler =
                         new DefaultHandler() {
                             @Override

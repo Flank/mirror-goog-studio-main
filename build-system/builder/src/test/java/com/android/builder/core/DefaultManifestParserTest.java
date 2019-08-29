@@ -17,6 +17,7 @@
 package com.android.builder.core;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 import com.android.builder.errors.FakeEvalIssueReporter;
 import com.android.builder.model.ApiVersion;
@@ -39,13 +40,13 @@ public class DefaultManifestParserTest {
         manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml");
         issueReporter = new FakeEvalIssueReporter();
         defaultManifestParser =
-                new DefaultManifestParser(manifestFile, canParseManifest, issueReporter);
+                new DefaultManifestParser(manifestFile, canParseManifest, false, issueReporter);
     }
 
     @Test
     public void parseManifestReportsWarning() {
         DefaultManifestParser manifestParser =
-                new DefaultManifestParser(manifestFile, () -> false, issueReporter);
+                new DefaultManifestParser(manifestFile, () -> false, false, issueReporter);
         manifestParser.getPackage();
 
         assertThat(issueReporter.getWarnings()).hasSize(1);
@@ -55,6 +56,31 @@ public class DefaultManifestParserTest {
                                 + "either remove android.disableConfigurationManifestParsing "
                                 + "from build.gradle or remove any build configuration rules "
                                 + "that read the android manifest file.\n");
+    }
+
+    @Test
+    public void testMissingManifestFileAllowed() {
+        File nonExistentFile = new File("non-existent-file");
+        assertThat(nonExistentFile.exists()).isFalse();
+
+        ManifestAttributeSupplier manifestAttributeSupplier =
+                new DefaultManifestParser(nonExistentFile, canParseManifest, false, issueReporter);
+        assertThat(manifestAttributeSupplier.getPackage()).isNull();
+    }
+
+    @Test
+    public void testMissingManifestFileDisallowed() {
+        File nonExistentFile = new File("non-existent-file");
+        assertThat(nonExistentFile.exists()).isFalse();
+
+        ManifestAttributeSupplier manifestAttributeSupplier =
+                new DefaultManifestParser(nonExistentFile, canParseManifest, true, issueReporter);
+        try {
+            manifestAttributeSupplier.getPackage();
+            fail("Expected RuntimeException");
+        } catch (RuntimeException e) {
+            assertThat(e.getMessage().contains("Manifest file does not exist")).isTrue();
+        }
     }
 
     @Test

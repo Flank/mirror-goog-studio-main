@@ -245,6 +245,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                         : new DefaultManifestParser(
                                 mDefaultSourceProvider.getManifestFile(),
                                 isInExecutionPhase,
+                                VariantConfiguration.isManifestFileRequired(type),
                                 issueReporter);
         mVariantAttributesProvider =
                 new VariantAttributesProvider(
@@ -941,10 +942,15 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return targetSdkVersion;
     }
 
-    /** Returns whether the main manifest file is required to exist. */
-    public boolean isMainManifestRequired() {
-        // The main manifest file is not required to exist for a test variant or a test project
-        return !getType().isForTesting();
+    /** Returns whether the manifest file is required to exist. */
+    public boolean isManifestFileRequired() {
+        return isManifestFileRequired(getType());
+    }
+
+    /** Returns whether the manifest file is required to exist for the given variant type. */
+    public static boolean isManifestFileRequired(@NonNull VariantType variantType) {
+        // The manifest file is not required to exist for a test variant or a test project
+        return !variantType.isForTesting();
     }
 
     /**

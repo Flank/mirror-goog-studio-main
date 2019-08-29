@@ -155,6 +155,9 @@ public class IncrementalPackagerBuilder {
     /** Manifest. */
     @Nullable private File manifestFile;
 
+    /** Whether the manifest file is required to exist. */
+    private boolean isManifestFileRequired;
+
     /** aapt options no compress config. */
     @Nullable private Collection<String> aaptOptionsNoCompress;
 
@@ -323,14 +326,17 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets the manifest. While the manifest itself is not used for packaging, information on
-     * the native libraries packaging mode can be inferred from the manifest.
+     * Sets the manifest. While the manifest itself is not used for packaging, information on the
+     * native libraries packaging mode can be inferred from the manifest.
      *
      * @param manifest the manifest
+     * @param isManifestFileRequired whether the manifest file is required to exist
      * @return {@code this} for use with fluent-style notation
      */
-    public IncrementalPackagerBuilder withManifest(@NonNull File manifest) {
+    public IncrementalPackagerBuilder withManifest(
+            @NonNull File manifest, boolean isManifestFileRequired) {
         this.manifestFile = manifest;
+        this.isManifestFileRequired = isManifestFileRequired;
         return this;
     }
 
@@ -352,7 +358,7 @@ public class IncrementalPackagerBuilder {
      * Sets the {@code aapt} options no compress predicate.
      *
      * <p>The no-compress predicate can be computed if this and the manifest (see {@link
-     * #withManifest(File)}) are both defined.
+     * #withManifest(File, boolean)}) are both defined.
      */
     @NonNull
     public IncrementalPackagerBuilder withAaptOptionsNoCompress(
@@ -508,7 +514,8 @@ public class IncrementalPackagerBuilder {
 
         ManifestAttributeSupplier manifest =
                 this.manifestFile != null
-                        ? new DefaultManifestParser(this.manifestFile, () -> true, null)
+                        ? new DefaultManifestParser(
+                                this.manifestFile, () -> true, isManifestFileRequired, null)
                         : null;
 
         if (noCompressPredicate == null) {

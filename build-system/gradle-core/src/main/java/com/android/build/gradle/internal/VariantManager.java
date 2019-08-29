@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
 import com.android.build.gradle.internal.dependency.AarToClassTransform;
@@ -1100,7 +1101,9 @@ public class VariantManager implements VariantModel {
                                 globalScope.getProjectOptions(),
                                 defaultConfigData.getProductFlavor(),
                                 sourceSet,
-                                getParser(sourceSet.getManifestFile()),
+                                getParser(
+                                        sourceSet.getManifestFile(),
+                                        VariantConfiguration.isManifestFileRequired(variantType)),
                                 buildTypeData.getBuildType(),
                                 buildTypeData.getSourceSet(),
                                 variantType,
@@ -1285,7 +1288,11 @@ public class VariantManager implements VariantModel {
         GradleVariantConfiguration testVariantConfig =
                 testedConfig.getMyTestConfig(
                         testSourceSet,
-                        testSourceSet != null ? getParser(testSourceSet.getManifestFile()) : null,
+                        testSourceSet != null
+                                ? getParser(
+                                        testSourceSet.getManifestFile(),
+                                        VariantConfiguration.isManifestFileRequired(type))
+                                : null,
                         buildTypeData.getTestSourceSet(type),
                         type,
                         this::canParseManifest);
@@ -1545,12 +1552,16 @@ public class VariantManager implements VariantModel {
     }
 
     @NonNull
-    private ManifestAttributeSupplier getParser(@NonNull File file) {
+    private ManifestAttributeSupplier getParser(
+            @NonNull File file, boolean isManifestFileRequired) {
         return manifestParserMap.computeIfAbsent(
                 file,
                 f ->
                         new DefaultManifestParser(
-                                f, this::canParseManifest, globalScope.getErrorHandler()));
+                                f,
+                                this::canParseManifest,
+                                isManifestFileRequired,
+                                globalScope.getErrorHandler()));
     }
 
     private boolean canParseManifest() {

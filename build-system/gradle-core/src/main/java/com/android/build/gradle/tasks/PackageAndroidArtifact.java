@@ -296,7 +296,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     && manifest.getName()
                                             .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                                 ManifestAttributeSupplier parser =
-                                        new DefaultManifestParser(manifest, () -> true, null);
+                                        new DefaultManifestParser(manifest, () -> true, true, null);
                                 String extractNativeLibs =
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
                                                         parser)
@@ -651,7 +651,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         // In execution phase, so can parse the manifest.
         ManifestAttributeSupplier manifest =
-                new DefaultManifestParser(manifestForSplit.getOutputFile(), () -> true, null);
+                new DefaultManifestParser(manifestForSplit.getOutputFile(), () -> true, true, null);
 
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder(params.apkFormat, params.packagerMode)

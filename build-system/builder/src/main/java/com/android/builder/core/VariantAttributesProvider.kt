@@ -16,7 +16,6 @@
 
 package com.android.builder.core
 
-import com.android.builder.errors.EvalIssueReporter
 import com.google.common.base.Preconditions.checkState
 
 import com.android.builder.model.BuildType
@@ -244,18 +243,28 @@ class VariantAttributesProvider(
             val versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
                 buildType.versionNameSuffix, mergedFlavor.versionNameSuffix
             )
-            return SerializableStringSupplier(file, mergedFlavor.versionName, versionSuffix)
+            return SerializableStringSupplier(
+                file,
+                manifestSupplier.isManifestFileRequired,
+                mergedFlavor.versionName,
+                versionSuffix
+            )
         }
 
     val versionCodeSerializableSupplier: IntSupplier
         get() {
             val versionCode = mergedFlavor.versionCode ?: -1
             val file = if (isTestVariant) null else manifestFile
-            return SerializableIntSupplier(file, versionCode)
+            return SerializableIntSupplier(
+                file,
+                manifestSupplier.isManifestFileRequired,
+                versionCode
+            )
         }
 
     private class SerializableStringSupplier(
             private val manifestFile: File? = null,
+            private val isManifestFileRequired: Boolean,
             private val versionName: String? = null,
             private val versionSuffix: String? = null) : Supplier<String?>, Serializable {
 
@@ -267,7 +276,12 @@ class VariantAttributesProvider(
             }
             cachedVersionName = versionName
             if (cachedVersionName == null && manifestFile != null) {
-                cachedVersionName = DefaultManifestParser(manifestFile, { true }, null).versionName
+                cachedVersionName = DefaultManifestParser(
+                    manifestFile,
+                    { true },
+                    isManifestFileRequired,
+                    null
+                ).versionName
             }
 
             if (versionSuffix != null && !versionSuffix.isEmpty()) {
@@ -280,6 +294,7 @@ class VariantAttributesProvider(
 
     private class SerializableIntSupplier(
                 private val manifestFile: File? = null,
+                private val isManifestFileRequired: Boolean,
                 private var versionCode: Int = -1) : IntSupplier, Serializable
     {
         private var isCached: Boolean = false
@@ -289,7 +304,12 @@ class VariantAttributesProvider(
                 return versionCode
             }
             if (versionCode == -1 && manifestFile != null) {
-                versionCode = DefaultManifestParser(manifestFile, { true }, null).versionCode
+                versionCode = DefaultManifestParser(
+                    manifestFile,
+                    { true },
+                    isManifestFileRequired,
+                    null
+                ).versionCode
             }
             isCached = true
             return versionCode
