@@ -21,16 +21,21 @@
 #include "utils/process_manager.h"
 
 using grpc::Status;
+using profiler::proto::Command;
 using profiler::proto::Event;
 using profiler::proto::TraceStopStatus;
 
 namespace profiler {
 
+namespace {
 // "cache/complete" is where the generic bytes rpc fetches contents
 constexpr char kCacheLocation[] = "cache/complete/";
 
-Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
-  auto& stop_command = command().stop_cpu_trace();
+// Helper function to stop the tracing. This function works in the async
+// environment because it doesn't require a |profiler::StopCpuTrace| object.
+void Stop(Daemon* daemon, const profiler::proto::Command command_data,
+          TraceManager* trace_manager) {
+  auto& stop_command = command_data.stop_cpu_trace();
 
   int64_t stop_timestamp;
   bool stopped_from_api = stop_command.has_api_stop_metadata();
@@ -41,13 +46,13 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
   }
 
   TraceStopStatus status;
-  auto* capture = trace_manager_->StopProfiling(
+  auto* capture = trace_manager->StopProfiling(
       stop_timestamp, stop_command.configuration().app_name(), true, &status);
 
   Event status_event;
-  status_event.set_pid(command().pid());
+  status_event.set_pid(command_data.pid());
   status_event.set_kind(Event::CPU_TRACE_STATUS);
-  status_event.set_command_id(command().command_id());
+  status_event.set_command_id(command_data.command_id());
   auto* stop_status =
       status_event.mutable_cpu_trace_status()->mutable_trace_stop_status();
   stop_status->CopyFrom(status);
@@ -78,11 +83,11 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
     }
 
     Event event;
-    event.set_pid(command().pid());
+    event.set_pid(command_data.pid());
     event.set_kind(Event::CPU_TRACE);
     event.set_group_id(capture->trace_id);
     event.set_is_ended(true);
-    event.set_command_id(command().command_id());
+    event.set_command_id(command_data.command_id());
     event.set_timestamp(capture->end_timestamp);
 
     auto* trace_info =
@@ -100,7 +105,24 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
   } else {
     daemon->buffer()->Add(status_event);
   }
+}
 
+}  // namespace
+
+Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
+  // In order to make this command to return immediately, start a new
+  // detached thread to stop CPU recording which which may take several seconds.
+  // For example, we may need to wait for several seconds before the trace files
+  // from ART to be complete.
+  //
+  // We need to capture the values of the fields of |this| object because when
+  // the thread is executing, |this| object may be recycled.
+  profiler::proto::Command command_data = command();
+  TraceManager* trace_manager = trace_manager_;
+  std::thread worker([daemon, command_data, trace_manager]() {
+    Stop(daemon, command_data, trace_manager);
+  });
+  worker.detach();
   return Status::OK;
 }
 
