@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import org.junit.Test;
 
-public class Benchmarks extends TestBaseV2 {
+public class BenchmarkTest extends TestBaseV2 {
 
     @Test
     public void run() throws Exception {

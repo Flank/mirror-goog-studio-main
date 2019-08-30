@@ -30,26 +30,23 @@ import java.util.jar.Manifest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestV1Signing extends TestBaseSigning {
+public class V1SigningTest extends TestBaseSigning {
 
     private static final String CREATED_BY = "SignflingerTest Created-By";
     private static final String BUILT_BY = "SignflingerTest Built-By";
 
-    @Override
     @Test
-    public void testSimpleZipWithOneFile() throws Exception {
+    public void simpleZipWithOneFile() throws Exception {
         super.testSimpleZipWithOneFile();
     }
 
-    @Override
     @Test
-    public void testIncrementalSimpleFileTrustManifest() throws Exception {
+    public void incrementalSimpleFileTrustManifest() throws Exception {
         super.testIncrementalSimpleFileTrustManifest();
     }
 
-    @Override
     @Test
-    public void testIncrementalSimpleFileNoTrustManifest() throws Exception {
+    public void incrementalSimpleFileNoTrustManifest() throws Exception {
         super.testIncrementalSimpleFileNoTrustManifest();
     }
 
@@ -82,7 +79,7 @@ public class TestV1Signing extends TestBaseSigning {
     }
 
     @Test
-    public void testCreatedByAndBuiltBy() throws Exception {
+    public void createdByAndBuiltBy() throws Exception {
         File zipFile = getTestOutputFile("testCreatedBy.zip");
         createZip(5, 2000, zipFile);
 
@@ -108,7 +105,7 @@ public class TestV1Signing extends TestBaseSigning {
     }
 
     @Test
-    public void testV1FilesAreCompressed() throws Exception {
+    public void v1FilesAreCompressed() throws Exception {
         File zipFile = getTestOutputFile("testV1FilesAreCompressed.zip");
         createZip(1, 10, zipFile);
 

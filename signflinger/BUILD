@@ -43,7 +43,7 @@ java_library(
 java_test(
     name = "benchmarkV2",
     srcs = [
-        "test/src/com/android/signflinger/Benchmarks.java",
+        "test/src/com/android/signflinger/BenchmarkTest.java",
     ],
     data =
         glob(["test/resources/*.pem"]) + glob([
@@ -69,7 +69,7 @@ java_test(
     size = "small",
     srcs = [
         "test/src/com/android/signflinger/TestBaseSigning.java",
-        "test/src/com/android/signflinger/TestV1Signing.java",
+        "test/src/com/android/signflinger/V1SigningTest.java",
     ],
     data = glob(["test/resources/*.pem"]) + glob([
         "test/resources/*.pk8",
@@ -95,7 +95,7 @@ java_test(
     name = "testV2Signing",
     size = "small",
     srcs = [
-        "test/src/com/android/signflinger/TestV2Signing.java",
+        "test/src/com/android/signflinger/V2SigningTest.java",
     ],
     data = glob(["test/resources/*.pem"]) + glob([
         "test/resources/*.pk8",
@@ -121,7 +121,7 @@ java_test(
     size = "small",
     srcs = [
         "test/src/com/android/signflinger/TestBaseSigning.java",
-        "test/src/com/android/signflinger/TestV1andV2Signing.java",
+        "test/src/com/android/signflinger/V1andV2SigningTest.java",
     ],
     data = glob(["test/resources/*.pem"]) + glob([
         "test/resources/*.pk8",

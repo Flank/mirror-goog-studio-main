@@ -18,23 +18,20 @@ package com.android.signflinger;
 
 import org.junit.Test;
 
-public class TestV1andV2Signing extends TestBaseSigning {
+public class V1andV2SigningTest extends TestBaseSigning {
 
     @Test
-    @Override
-    public void testSimpleZipWithOneFile() throws Exception {
+    public void simpleZipWithOneFile() throws Exception {
         super.testSimpleZipWithOneFile();
     }
 
     @Test
-    @Override
-    public void testIncrementalSimpleFileTrustManifest() throws Exception {
+    public void incrementalSimpleFileTrustManifest() throws Exception {
         super.testIncrementalSimpleFileTrustManifest();
     }
 
     @Test
-    @Override
-    public void testIncrementalSimpleFileNoTrustManifest() throws Exception {
+    public void incrementalSimpleFileNoTrustManifest() throws Exception {
         super.testIncrementalSimpleFileNoTrustManifest();
     }
 
