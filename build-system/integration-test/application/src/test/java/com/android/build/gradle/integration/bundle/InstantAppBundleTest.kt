@@ -62,12 +62,16 @@ class InstantAppBundleTest {
         "/feature2/dex/classes.dex",
         "/feature2/manifest/AndroidManifest.xml",
         "/feature2/res/layout/activity_main.xml",
-        "/feature2/resources.pb",
-        "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
+        "/feature2/resources.pb")
 
     // Debuggable Bundles are always unsigned.
     private val debugUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
         "/base/dex/classes2.dex" // Legacy multidex has minimal main dex in debug mode.
+    ))
+
+    private val releaseUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
+        // Only the release variant would have the dependencies file.
+        "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb"
     ))
 
     @Test
@@ -132,7 +136,7 @@ class InstantAppBundleTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
         }
     }
 

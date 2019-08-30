@@ -58,8 +58,8 @@ class DependenciesReportTest {
     fun testDependenciesFile() {
         project.addUseAndroidXProperty()
         // test that androidx.core.core is only using 1.0.1 which will be the resolved version.
-        project.executor().run(":app:bundleDebug")
-        val bundle = getApkFolderOutput("debug").bundleFile
+        project.executor().run(":app:bundleRelease")
+        val bundle = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundle).exists()
         ZipFile(bundle).use {
             val dependenciesFile = it.getEntry("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")

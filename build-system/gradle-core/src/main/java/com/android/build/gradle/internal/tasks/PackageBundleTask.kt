@@ -62,6 +62,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         private set
 
     @get:InputFile
+    @get:Optional
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val bundleDeps: RegularFileProperty
 
@@ -117,7 +118,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
                     bundleFile = bundleFile.get().asFile,
-                    bundleDeps = bundleDeps.get().asFile,
+                    bundleDeps = if(bundleDeps.isPresent) bundleDeps.get().asFile else null,
                     // do not compress the bundle in debug builds where it will be only used as an
                     // intermediate artifact
                     uncompressBundle = isDebugBuild
@@ -136,7 +137,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val bundleOptions: BundleOptions,
         val bundleFlags: BundleFlags,
         val bundleFile: File,
-        val bundleDeps: File,
+        val bundleDeps: File?,
         val uncompressBundle: Boolean
     ) : Serializable
 
@@ -177,7 +178,13 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
-                .addMetadataFile("com.android.tools.build.libraries", "dependencies.pb", params.bundleDeps.toPath())
+
+             params.bundleDeps?.let {
+                 command.addMetadataFile(
+                 "com.android.tools.build.libraries",
+                 "dependencies.pb",
+                 it.toPath() )
+             }
 
             params.mainDexList?.let {
                 command.setMainDexListFile(it.toPath())
@@ -268,10 +275,12 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
-                task.bundleDeps
-            )
+            if(variantScope.artifacts.hasFinalProduct(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)) {
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+                    task.bundleDeps
+                )
+            }
 
             if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APP_INTEGRITY_CONFIG)) {
                 variantScope.artifacts.setTaskInputToFinalProduct(

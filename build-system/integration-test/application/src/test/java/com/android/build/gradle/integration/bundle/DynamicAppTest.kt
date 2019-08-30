@@ -88,8 +88,7 @@ class DynamicAppTest {
         "/feature2/dex/classes.dex",
         "/feature2/manifest/AndroidManifest.xml",
         "/feature2/res/layout/feature2_layout.xml",
-        "/feature2/resources.pb",
-        "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
+        "/feature2/resources.pb")
 
     // Debuggable Bundles are always unsigned.
     private val debugUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
@@ -98,7 +97,9 @@ class DynamicAppTest {
 
     private val releaseUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
         // Only the release variant is shrunk, so only it will contain a proguard mapping file.
-        "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"
+        "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map",
+        // Only the release variant would have the dependencies file.
+        "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb"
     ))
 
     private val mainDexClasses: List<String> =
