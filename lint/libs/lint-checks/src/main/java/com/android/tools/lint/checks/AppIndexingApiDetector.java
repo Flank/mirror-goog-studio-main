@@ -85,7 +85,8 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
                             5,
                             Severity.WARNING,
                             URL_IMPLEMENTATION)
-                    .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
+                    .addMoreInfo("https://g.co/AppIndexing/AndroidStudio")
+                    .setEnabledByDefault(false);
 
     public static final Issue ISSUE_APP_INDEXING_API =
             Issue.create(
