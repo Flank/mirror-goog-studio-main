@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -116,8 +117,23 @@ class LocaleDetector : Detector(), SourceCodeScanner {
                     "use `Locale.ROOT`, otherwise `Locale.getDefault()`.",
             method.name
         )
-        context.report(STRING_LOCALE, node, location, message)
+
+        val range = context.getCallLocation(node, includeReceiver = false, includeArguments = true)
+        val quickfixData = LintFix.create().group().also { groupBuilder ->
+            for (localeName in listOf("ROOT", "getDefault()")) {
+                groupBuilder.add(LintFix.create()
+                    .name("Replace with `${method.name}(Locale.$localeName)`")
+                    .sharedName("Use explicit locale")
+                    .replace()
+                    .range(range)
+                    .with("${method.name}(java.util.Locale.$localeName)")
+                    .shortenNames()
+                    .build())
+            }
+        }.build()
+        context.report(STRING_LOCALE, node, location, message, quickfixData)
     }
+
 
     private fun checkFormat(
         context: JavaContext,
