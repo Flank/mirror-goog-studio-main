@@ -56,7 +56,8 @@ data class AaptPackageConfig(
     val intermediateDir: File? = null,
     val useConditionalKeepRules: Boolean = false,
     val useMinimalKeepRules: Boolean = false,
-    val useFinalIds: Boolean = true
+    val useFinalIds: Boolean = true,
+    val excludeSources: Boolean = false
 ) : Serializable {
 
     init {
@@ -103,6 +104,7 @@ data class AaptPackageConfig(
         private var useConditionalKeepRules: Boolean = false
         private var useMinimalKeepRules: Boolean = false
         private var useFinalIds: Boolean = true
+        private var excludeSources: Boolean = false
 
         /**
          * Creates a new [AaptPackageConfig] from the data already placed in the builder.
@@ -139,7 +141,8 @@ data class AaptPackageConfig(
                 intermediateDir = intermediateDir,
                 useConditionalKeepRules = useConditionalKeepRules,
                 useMinimalKeepRules = useMinimalKeepRules,
-                useFinalIds = useFinalIds
+                useFinalIds = useFinalIds,
+                excludeSources = excludeSources
             )
         }
 
@@ -300,6 +303,11 @@ data class AaptPackageConfig(
 
         fun setUseFinalIds(value: Boolean): Builder {
             this.useFinalIds = value
+            return this
+        }
+
+        fun setExcludeSources(value: Boolean): Builder {
+            this.excludeSources = value
             return this
         }
     }

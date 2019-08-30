@@ -93,6 +93,13 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         builder.add("--proto-format")
     }
 
+    if (config.excludeSources) {
+        if (!config.generateProtos) {
+            throw AaptException("AAPT2 only supports excluding sources when building for a bundle.")
+        }
+        builder.add("--exclude-sources")
+    }
+
     // inputs
     if (config.mergeOnly) {
         builder.add("--merge-only")

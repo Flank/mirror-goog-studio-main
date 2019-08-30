@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
@@ -125,8 +126,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
     lateinit var aapt2Version: String
         private set
+
     @get:Internal
     abstract val aapt2FromMaven: ConfigurableFileCollection
+
+    @get:Input
+    var excludeResSources: Boolean = false
+        private set
 
     private var compiledDependenciesResources: ArtifactCollection? = null
 
@@ -169,7 +175,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 .add(
                     checkNotNull(getInputResourcesDir().orNull?.asFile)
                 ).build(),
-            resourceConfigs = ImmutableSet.copyOf(resConfig)
+            resourceConfigs = ImmutableSet.copyOf(resConfig),
+            excludeSources = excludeResSources
         )
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", outputFile.absolutePath)
@@ -285,6 +292,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.debuggable = config.buildType.isDebuggable
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
+
+            // We only want to exclude res sources for release builds and when the flag is turned on
+            // This will result in smaller release bundles
+            task.excludeResSources = !task.debuggable
+                    && projectOptions.get(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
 
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)

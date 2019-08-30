@@ -797,6 +797,52 @@ class DynamicAppTest {
             .isEqualTo(0)
     }
 
+    @Test
+    fun `test excluding sources for release`() {
+        val bundleTaskName = getBundleTaskName("release")
+
+        // First run without the flag so that we get the original sizes
+        project.executor()
+            .with(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES, false)
+            .run("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        val bundleTimestamp = bundleFile.lastModified()
+
+        val fileToSizeMap = HashMap<String, Int>()
+        Zip(bundleFile).use {bundle ->
+            bundle.entries.filter { it.toString().endsWith("resources.pb") }.forEach {
+                val size = Files.readAllBytes(it).size
+                assertThat(size).isGreaterThan(0)
+                fileToSizeMap[it.toString()] = size
+            }
+        }
+        assertThat(fileToSizeMap.keys).hasSize(3)
+
+        // Now run with the flag turned on - it should re-link the resources
+        project.executor()
+            .with(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES, true)
+            .run("app:$bundleTaskName")
+
+        // Make sure that the file exists and that it was updated
+        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile.lastModified()).isNotEqualTo(bundleTimestamp)
+
+        // Make sure the resources.pb files are smaller. 
+        // For this project the savings are (for the current version of aapt2):
+        // /feature2/resources.pb: 456 -> 158
+        // /feature1/resources.pb: 454 -> 156
+        // /base/resources.pb: 11527 -> 9215
+        Zip(bundleFile).use {bundle ->
+            fileToSizeMap.forEach { file, size ->
+                val newEntry = bundle.getEntry(file)!!
+                assertThat(size).isGreaterThan(Files.readAllBytes(newEntry).size)
+            }
+        }
+    }
+
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
