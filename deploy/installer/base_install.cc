@@ -75,13 +75,20 @@ bool BaseInstallCommand::SendApkToPackageManager(
                                        nullptr, &pid);
 
   PatchApplier patchApplier(workspace_.GetRoot());
-  patchApplier.ApplyPatchToFD(patch, pm_stdin);
+  bool patch_result = patchApplier.ApplyPatchToFD(patch, pm_stdin);
 
   // Clean up
   close(pm_stdin);
   int status;
   waitpid(pid, &status, 0);
 
+  // Patch failed ?
+  if (!patch_result) {
+    ErrEvent("Patching '"_s + patch.src_absolute_path() + "' failed");
+    return false;
+  }
+
+  // PM failed ?
   bool success = WIFEXITED(status) && (WEXITSTATUS(status) == 0);
   if (!success) {
     ErrEvent("Error while sending APKs to PM");
@@ -111,16 +118,20 @@ bool BaseInstallCommand::SendApksToPackageManager(
   // For all apks involved, stream the patched content to the Package Manager
   for (const proto::PatchInstruction& patch :
        install_info_.patchinstructions()) {
-    // Skip if we are inheriting and no delta
+    // Skip if we are inheriting and this apk did not change
     if (install_info_.inherit() && patch.patches().size() == 0) {
+      LogEvent("Skipping '"_s + patch.src_absolute_path() +
+               "' since inheriting mode and apk did not change");
       continue;
     }
     bool send_result = SendApkToPackageManager(patch, session_id);
     if (!send_result) {
       std::string abort_output;
       cmd.AbortInstall(session_id, &abort_output);
+      ErrEvent("Unable to stream '"_s + patch.src_absolute_path() + "' to PM");
       return false;
     }
+    LogEvent("Streaming succeeded for '"_s + patch.src_absolute_path() + "'");
   }
   return true;
 }

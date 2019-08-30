@@ -58,6 +58,7 @@ void DeltaPreinstallCommand::Run() {
     session_id = output;
     response->set_session_id(session_id);
   } else {
+    ErrEvent("Unable to create session");
     ErrEvent(output);
     response->set_status(proto::DeltaPreinstallResponse::ERROR);
     return;

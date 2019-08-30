@@ -101,6 +101,7 @@ bool PatchApplier::ApplyPatchToFD(const proto::PatchInstruction& patch,
   std::string full_path = root_directory_ + src_absolute_path;
   int src_fd = open(full_path.c_str(), O_RDONLY);
   if (src_fd == -1) {
+    ErrEvent("Unable to open : '"_s + full_path + "'");
     return false;
   }
 
@@ -111,8 +112,13 @@ bool PatchApplier::ApplyPatchToFD(const proto::PatchInstruction& patch,
   // Special case where there is no patch, the apk has not changed, feed it back
   // to pm.
   if (patches.size() == 0) {
-    Sendfile(dst_fd, src_fd, nullptr, patch.dst_filesize());
+    bool fileSent = Sendfile(dst_fd, src_fd, nullptr, patch.dst_filesize());
     close(src_fd);
+
+    if (!fileSent) {
+      ErrEvent("Sendfile failed:"_s + strerror(errno));
+      return false;
+    }
     return true;
   }
 
@@ -135,12 +141,19 @@ bool PatchApplier::ApplyPatchToFD(const proto::PatchInstruction& patch,
       // source apk.
       off_t offset = writeOffset;
       size_t cleanLength = dirtyOffset - writeOffset;
-      // TODO Check return of SendFile. This could fail if the disk is full.
-      Sendfile(dst_fd, src_fd, &offset, cleanLength);
+      bool fileSent = Sendfile(dst_fd, src_fd, &offset, cleanLength);
+      if (!fileSent) {
+        ErrEvent("Sendfile failed:"_s + strerror(errno));
+        return false;
+      }
       writeOffset += cleanLength;
     } else {
       // otherwise take it from the patch
-      write(dst_fd, dataIterator, length);
+      int written = write(dst_fd, dataIterator, length);
+      if (written < 0) {
+        ErrEvent("Write failed:"_s + strerror(errno));
+        return false;
+      }
       dataIterator += length;
       writeOffset += length;
 

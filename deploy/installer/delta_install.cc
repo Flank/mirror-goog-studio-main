@@ -68,8 +68,12 @@ void DeltaInstallCommand::Run() {
 
 void DeltaInstallCommand::Install() {
   Phase p("DeltaInstallCommand::Install");
+
+  auto response = new proto::DeltaInstallResponse();
+  workspace_.GetResponse().set_allocated_deltainstall_response(response);
+
   if (install_info_.patchinstructions().size() != 1) {
-    // TODO: ERROR GOES HERE
+    ErrEvent("Illegal operation, multiple APKs not supported");
     return;
   }
 
@@ -77,6 +81,11 @@ void DeltaInstallCommand::Install() {
       workspace_.GetTmpFolder() + to_string(GetTime()) + ".tmp.apk";
   // Create and open tmp apk
   int dst_fd = open(tmp_apk_path.c_str(), O_CREAT, O_WRONLY);
+  if (dst_fd == -1) {
+    ErrEvent("Unable to create tmp file"_s + tmp_apk_path);
+    response->set_status(proto::DeltaInstallResponse_Status_ERROR);
+    return;
+  }
 
   // Write content of the tmp apk
   PatchApplier patchApplier(workspace_.GetRoot());
@@ -97,9 +106,6 @@ void DeltaInstallCommand::Install() {
     options.emplace_back(option);
   }
   pm.Install(tmp_apk_path, options, &output);
-
-  proto::DeltaInstallResponse* response =
-      workspace_.GetResponse().mutable_deltainstall_response();
   response->set_install_output(output);
 
   // Clean up tmp apk
