@@ -17,6 +17,7 @@
 package com.android.flags;
 
 import com.android.annotations.NonNull;
+import java.util.Locale;
 
 /**
  * A flag is a setting with an unique ID and some value. Flags are often used to gate features (e.g.
@@ -66,6 +67,31 @@ public final class Flag<T> {
                     return strValue;
                 }
             };
+
+    /**
+     * Creates a {@link ValueConverter} for the given enum class. Values are stored using their
+     * names, to make it easier to override them using JVM properties (lower-case names are also
+     * recognized).
+     *
+     * @see Enum#name()
+     */
+    private static <T extends Enum<T>> ValueConverter<T> enumConverter(Class<T> enumClass) {
+        return new ValueConverter<T>() {
+
+            @NonNull
+            @Override
+            public String serialize(@NonNull T value) {
+                return value.name();
+            }
+
+            @NonNull
+            @Override
+            public T deserialize(@NonNull String strValue) {
+                return Enum.valueOf(enumClass, strValue.toUpperCase(Locale.US));
+            }
+        };
+    }
+
     private final FlagGroup group;
     private final String name;
     private final String displayName;
@@ -150,6 +176,23 @@ public final class Flag<T> {
             @NonNull String description,
             String defaultValue) {
         return new Flag<>(group, name, displayName, description, defaultValue, PASSTHRU_CONVERTER);
+    }
+
+    @NonNull
+    public static <T extends Enum<T>> Flag<T> create(
+            @NonNull FlagGroup group,
+            @NonNull String name,
+            @NonNull String displayName,
+            @NonNull String description,
+            T defaultValue) {
+        //noinspection unchecked: getClass() will return the type of T, which is an enum.
+        return new Flag<>(
+                group,
+                name,
+                displayName,
+                description,
+                defaultValue,
+                enumConverter((Class<T>) defaultValue.getClass()));
     }
 
     /** Returns the {@link FlagGroup} that this flag is part of. */

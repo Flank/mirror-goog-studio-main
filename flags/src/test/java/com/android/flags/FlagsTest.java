@@ -25,12 +25,21 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class FlagsTest {
+
+    /** Enum for testing enum flags below. */
+    private enum TestingEnum {
+        FOO,
+        BAR,
+        BAZ
+    }
+
     @Test
     public void propertiesCanOverrideFlagValues() throws Exception {
         Properties properties = new Properties();
-        properties.put("test.int", "123");
-        properties.put("test.bool", "true");
-        properties.put("test.str", "Property override");
+        properties.setProperty("test.int", "123");
+        properties.setProperty("test.bool", "true");
+        properties.setProperty("test.str", "Property override");
+        properties.setProperty("test.enum", "bar");
 
         PropertyOverrides propertyOverrides = new PropertyOverrides(properties);
         Flags flags = new Flags(propertyOverrides);
@@ -39,10 +48,13 @@ public class FlagsTest {
         Flag<Integer> flagInt = Flag.create(group, "int", "Unused", "Unused", 10);
         Flag<Boolean> flagBool = Flag.create(group, "bool", "Unused", "Unused", false);
         Flag<String> flagStr = Flag.create(group, "str", "Unused", "Unused", "Default value");
+        Flag<TestingEnum> flagEnum =
+                Flag.create(group, "enum", "Unused", "Unused", TestingEnum.FOO);
 
         assertThat(flagInt.get()).isEqualTo(123);
         assertThat(flagBool.get()).isEqualTo(true);
         assertThat(flagStr.get()).isEqualTo("Property override");
+        assertThat(flagEnum.get()).isEqualTo(TestingEnum.BAR);
     }
 
     @Test
@@ -54,22 +66,28 @@ public class FlagsTest {
         Flag<Integer> flagInt = Flag.create(group, "int", "Unused", "Unused", 10);
         Flag<Boolean> flagBool = Flag.create(group, "bool", "Unused", "Unused", false);
         Flag<String> flagStr = Flag.create(group, "str", "Unused", "Unused", "Default value");
+        Flag<TestingEnum> flagEnum =
+                Flag.create(group, "enum", "Unused", "Unused", TestingEnum.FOO);
 
         flags.getOverrides().put(flagInt, "456");
         flags.getOverrides().put(flagBool, "true");
         flags.getOverrides().put(flagStr, "Manual override");
+        flags.getOverrides().put(flagEnum, "bar");
 
         assertThat(flagInt.get()).isEqualTo(456);
         assertThat(flagBool.get()).isEqualTo(true);
         assertThat(flagStr.get()).isEqualTo("Manual override");
+        assertThat(flagEnum.get()).isEqualTo(TestingEnum.BAR);
 
         flags.getOverrides().remove(flagInt);
         flags.getOverrides().remove(flagBool);
         flags.getOverrides().remove(flagStr);
+        flags.getOverrides().remove(flagEnum);
 
         assertThat(flagInt.get()).isEqualTo(10);
         assertThat(flagBool.get()).isEqualTo(false);
         assertThat(flagStr.get()).isEqualTo("Default value");
+        assertThat(flagEnum.get()).isEqualTo(TestingEnum.FOO);
     }
 
     @Test
