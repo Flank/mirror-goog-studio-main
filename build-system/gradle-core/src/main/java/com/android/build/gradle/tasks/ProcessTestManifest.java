@@ -17,6 +17,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -57,11 +58,13 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.inject.Inject;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
@@ -79,7 +82,7 @@ import org.gradle.api.tasks.TaskProvider;
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
  *
- * <p>For both test modules and tests in androidTest process is the same, expect for how the tested
+ * <p>For both test modules and tests in androidTest process is the same, except for how the tested
  * application id is extracted.
  *
  * <p>Tests in androidTest get that info form the {@link
@@ -109,6 +112,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     private Supplier<String> testLabel;
 
     private OutputScope outputScope;
+
+    private FileCollection navigationJsons;
 
     @Inject
     public ProcessTestManifest(ObjectFactory objectFactory) {
@@ -169,6 +174,11 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         FileUtils.mkdirs(manifestOutputFolder);
         File manifestOutputFile = new File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML);
 
+        List<File> navJsons =
+                navigationJsons == null
+                        ? Collections.emptyList()
+                        : Lists.newArrayList(navigationJsons);
+
         mergeManifestsForTestVariant(
                 getTestApplicationId(),
                 getMinSdkVersion(),
@@ -181,6 +191,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                 getTestManifestFile().getOrNull(),
                 computeProviders(),
                 getPlaceholdersValues(),
+                navJsons,
                 manifestOutputFile,
                 getTmpDir());
 
@@ -209,6 +220,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
      * @param testManifestFile optionally user provided AndroidManifest.xml for testing application
      * @param manifestProviders the manifest providers
      * @param manifestPlaceholders used placeholders in the manifest
+     * @param navigationJsons the list of navigation JSON files
      * @param outManifest the output location for the merged manifest
      * @param tmpDir temporary dir used for processing
      */
@@ -224,6 +236,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             @Nullable File testManifestFile,
             @NonNull List<? extends ManifestProvider> manifestProviders,
             @NonNull Map<String, Object> manifestPlaceholders,
+            @NonNull List<File> navigationJsons,
             @NonNull File outManifest,
             @NonNull File tmpDir) {
         checkNotNull(testApplicationId, "testApplicationId cannot be null.");
@@ -272,7 +285,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                                 .setPlaceHolderValue(
                                         PlaceholderHandler.INSTRUMENTATION_RUNNER,
                                         instrumentationRunner)
-                                .addLibraryManifest(generatedTestManifest);
+                                .addLibraryManifest(generatedTestManifest)
+                                .addNavigationJsons(navigationJsons);
 
                 // we override these properties
                 invoker.setOverride(ManifestSystemProperty.PACKAGE, testApplicationId);
@@ -313,6 +327,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                                 .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                                 .addManifestProviders(manifestProviders)
                                 .setPlaceHolderValues(manifestPlaceholders)
+                                .addNavigationJsons(navigationJsons)
                                 .merge();
 
                 handleMergingResult(mergingReport, outManifest, logger);
@@ -476,6 +491,13 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         return testTargetMetadata;
     }
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
+    public FileCollection getNavigationJsons() {
+        return navigationJsons;
+    }
+
     /**
      * Compute the final list of providers based on the manifest file collection.
      * @return the list of providers.
@@ -603,6 +625,19 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             task.placeholdersValues = TaskInputHelper.memoize(config::getManifestPlaceholders);
+
+            if (!getVariantScope()
+                    .getGlobalScope()
+                    .getExtension()
+                    .getAaptOptions()
+                    .getNamespaced()) {
+                Project project = getVariantScope().getGlobalScope().getProject();
+                task.navigationJsons =
+                        project.files(
+                                getVariantScope()
+                                        .getArtifactFileCollection(
+                                                RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
+            }
         }
     }
 }

@@ -308,6 +308,27 @@ public class ManifestMergingTest {
         assertThat(manifestFile).contains("main/nav2");
     }
 
+    /**
+     * Check that a navigation file added to a library's source set generates the expected
+     * <intent-filter> element in the merged manifest for the library's androidTest APK
+     */
+    @Test
+    public void checkManifestMergingForLibraryAndroidTestWithNavigationFiles() throws Exception {
+        TestFileUtils.searchAndReplace(
+                new File(
+                        navigation.getSubproject("library").getMainSrcDir().getParent(),
+                        "AndroidManifest.xml"),
+                "</activity>",
+                "        <nav-graph android:value=\"@navigation/nav1\"/>\n    </activity>");
+
+        navigation.executor().run("clean", ":library:assembleDebugAndroidTest");
+
+        File manifestFile =
+                navigation.file(
+                        "library/build/intermediates/merged_manifests/debugAndroidTest/AndroidManifest.xml");
+        assertThat(manifestFile).contains("/library/nav1");
+    }
+
     @Test
     public void checkManifestFile_doesNotRebuildWhenNonNavigationResourceAreChanged()
             throws Exception {
