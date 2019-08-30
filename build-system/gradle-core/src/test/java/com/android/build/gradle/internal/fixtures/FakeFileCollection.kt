@@ -45,6 +45,7 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
             is String -> resolvedFiles.add(File(obj))
             is File -> resolvedFiles.add(obj)
             is Iterable<*> -> obj.forEach { resolveObject(it) }
+            is Provider<*> -> resolveObject(obj.get())
             null -> throw NullPointerException("Null object found in FakeFileCollection")
             else -> throw IllegalStateException(
                     """FakeFileCollection can only resolve object of type:
@@ -52,6 +53,7 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
                          |    File
                          |    Iterable<String>
                          |    Iterable<File>
+                         |    Provider
                          |It cannot resolve '$obj' of type ${obj.javaClass}""".trimMargin())
         }
     }

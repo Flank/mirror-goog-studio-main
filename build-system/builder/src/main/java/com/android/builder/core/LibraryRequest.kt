@@ -14,36 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.builder.core;
-
-import com.android.annotations.NonNull;
+package com.android.builder.core
 
 /**
  * a request for an optional library.
  */
-public class LibraryRequest {
-
-    @NonNull
-    private final String mName;
-    private final boolean mRequired;
-
-    public LibraryRequest(@NonNull String name, boolean required) {
-        mName = name;
-        mRequired = required;
-    }
-
+data class LibraryRequest(
     /**
      * The name of the library. This is the unique name that will show up in the manifest.
      */
-    @NonNull
-    public String getName() {
-        return mName;
-    }
-
+    val name: String,
     /**
      * Whether the library is required by the app or just optional.
      */
-    public boolean isRequired() {
-        return mRequired;
-    }
-}
+    val isRequired: Boolean
+)

@@ -17,9 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.builder.core.LibraryRequest
-import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
-import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.OptionalLibrary
 import com.google.common.base.Verify
@@ -34,7 +32,9 @@ import java.util.concurrent.ConcurrentHashMap
 /** Utility methods for computing class paths to use for compilation.  */
 object BootClasspathBuilder {
 
-    private val classpathCache = ConcurrentHashMap<Int, List<File>>()
+    private data class CacheKey(val target: AndroidVersion, val addAllOptionalLibraries: Boolean, val libraryRequests: List<LibraryRequest>)
+
+    private val classpathCache = ConcurrentHashMap<CacheKey, List<File>>()
 
     /**
      * Computes the classpath for compilation.
@@ -61,8 +61,8 @@ object BootClasspathBuilder {
 
         return project.files(
             targetBootClasspath.map { bootClasspath ->
-                val apiLevel = targetAndroidVersion.get().apiLevel
-                val key = calculateKey(apiLevel, addAllOptionalLibraries, libraryRequests)
+                val target = targetAndroidVersion.get()
+                val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
 
                 classpathCache.getOrPut(key) {
                     val files = ImmutableList.builder<File>()
@@ -76,7 +76,7 @@ object BootClasspathBuilder {
                     )
 
                     // add annotations.jar if needed.
-                    if (apiLevel <= 15) {
+                    if (target.apiLevel <= 15) {
                         files.add(annotationsJar.get())
                     }
 
@@ -84,12 +84,6 @@ object BootClasspathBuilder {
                 }
             })
     }
-
-    private fun calculateKey(
-        targetApiLevel: Int,
-        addAllOptionalLibraries: Boolean,
-        libraryRequests: List<LibraryRequest>
-    )= Objects.hash(AndroidTargetHash.getPlatformHashString(AndroidVersion(targetApiLevel)), addAllOptionalLibraries, libraryRequests)
 
     /**
      * Calculates the list of additional and requested optional library jar files

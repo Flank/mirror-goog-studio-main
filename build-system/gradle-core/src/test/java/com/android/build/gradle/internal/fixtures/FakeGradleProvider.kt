@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.fixtures
 import org.gradle.api.Transformer
 import org.gradle.api.provider.Provider
 
-class FakeGradleProvider<T>(private val v: T?): Provider<T> {
+class FakeGradleProvider<T>(private val v: (()-> T)?): Provider<T> {
+
+    constructor(v: T): this({v})
 
     override fun <S : Any?> flatMap(p0: Transformer<out Provider<out S>, in T>): Provider<S> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -27,15 +29,15 @@ class FakeGradleProvider<T>(private val v: T?): Provider<T> {
 
     override fun isPresent() = v != null
 
-    override fun getOrElse(p0: T) = if (isPresent) v else p0
+    override fun getOrElse(p0: T) = if (isPresent) orNull else p0
 
-    override fun <S : Any?> map(p0: Transformer<out S, in T>?): Provider<S> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <S : Any> map(transformer: Transformer<out S, in T>): Provider<S> {
+        return FakeGradleProvider { transformer.transform(get()) }
     }
 
-    override fun get() = v!!
+    override fun get() = orNull!!
 
-    override fun getOrNull() = v
+    override fun getOrNull() = v?.invoke()
 
     override fun orElse(p0: T): Provider<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
