@@ -48,6 +48,10 @@ if [[ -d "${DIST_DIR}" ]]; then
   mkdir "${DIST_DIR}"/bazel-testlogs
   (cd "${testlogs_dir}" && zip -R "${DIST_DIR}"/bazel-testlogs/xml_files.zip "*.xml")
 
+  # Additional logging to debug b/140193822
+  (cd tools/base && git log --oneline -5 && git diff --stat) > "${DIST_DIR}"/b140193822-tools-base.txt
+  (cd tools/adt/idea && git log --oneline -5 && git diff --stat) > "${DIST_DIR}"/b140193822-tools-adt-idea.txt
+
 fi
 
 exit $bazel_status
