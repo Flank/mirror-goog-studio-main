@@ -127,7 +127,6 @@ gradle_integration_test(
     ),
     data = TEST_DATA + [
         "//prebuilts/studio/sdk:ndk-bundle",
-        "//tools/base/build-system:gradle-distrib-nightly",
     ],
     dirs = ["src/testNightly/java"],
     #keep sorted
