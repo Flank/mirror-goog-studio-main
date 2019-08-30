@@ -77,8 +77,8 @@ class LocaleDetector : Detector(), SourceCodeScanner {
 
         if (context.evaluator.isMemberInClass(method, KOTLIN_STRINGS_JVM_KT)) {
             when (method.name) {
-                CAPITALIZE, DECAPITALIZE -> checkCapitalize(context, method, node)
-                TO_LOWER_CASE, TO_UPPER_CASE -> checkStringsKtToUpperLowerCase(context, method, node)
+                CAPITALIZE, DECAPITALIZE -> checkStringsKt(context, method, node)
+                TO_LOWER_CASE, TO_UPPER_CASE -> checkStringsKt(context, method, node)
             }
         }
     }
@@ -93,23 +93,6 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         // want duplicate warnings.
         if (LintClient.isStudio) return
         if (method.parameterList.parametersCount != 0) return
-        reportToUpperLoweCase(context, method, node)
-    }
-
-    private fun checkStringsKtToUpperLowerCase(
-        context: JavaContext,
-        method: PsiMethod,
-        node: UCallExpression
-    ) {
-        if (method.parameterList.parametersCount > 1) return
-        reportToUpperLoweCase(context, method, node)
-    }
-
-    private fun reportToUpperLoweCase(
-        context: JavaContext,
-        method: PsiMethod,
-        node: UCallExpression
-    ) {
         val location = context.getNameLocation(node)
         val message = String.format(
             "Implicitly using the default locale is a common source of bugs: " +
@@ -120,14 +103,17 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         context.report(STRING_LOCALE, node, location, message)
     }
 
-    private fun checkCapitalize(
+    private fun checkStringsKt(
         context: JavaContext,
         method: PsiMethod,
         node: UCallExpression
     ) {
+        if (method.parameterList.parametersCount > 1) return
         val location = context.getNameLocation(node)
         val message = String.format(
-            "Implicitly using the default locale is a common source of bugs.",
+            "Implicitly using the default locale is a common source of bugs: " +
+                    "Use `%1\$s(Locale)` instead. For strings meant to be internal " +
+                    "use `Locale.ROOT`, otherwise `Locale.getDefault()`.",
             method.name
         )
         context.report(STRING_LOCALE, node, location, message)

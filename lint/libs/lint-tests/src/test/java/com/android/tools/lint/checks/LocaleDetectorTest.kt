@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Detector
+import org.junit.Test
 
 class LocaleDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
@@ -133,16 +134,16 @@ class LocaleDetectorTest : AbstractCheckTest() {
     fun testKotlinCapitalize() {
         val expected =
             """
-            src/test/pkg/LocaleTest.kt:2: Warning: Implicitly using the default locale is a common source of bugs. [DefaultLocale]
+            src/test/pkg/LocaleTest.kt:2: Warning: Implicitly using the default locale is a common source of bugs: Use capitalize(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 "wrong".capitalize()
                         ~~~~~~~~~~
-            src/test/pkg/LocaleTest.kt:3: Warning: Implicitly using the default locale is a common source of bugs. [DefaultLocale]
+            src/test/pkg/LocaleTest.kt:4: Warning: Implicitly using the default locale is a common source of bugs: Use decapitalize(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 "Wrong".decapitalize()
                         ~~~~~~~~~~~~
-            src/test/pkg/LocaleTest.kt:4: Warning: Implicitly using the default locale is a common source of bugs: Use toUpperCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+            src/test/pkg/LocaleTest.kt:6: Warning: Implicitly using the default locale is a common source of bugs: Use toUpperCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 "wrong".toUpperCase()
                         ~~~~~~~~~~~
-            src/test/pkg/LocaleTest.kt:6: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+            src/test/pkg/LocaleTest.kt:8: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 "WRONG".toLowerCase()
                         ~~~~~~~~~~~
             0 errors, 4 warnings
@@ -153,7 +154,9 @@ class LocaleDetectorTest : AbstractCheckTest() {
                 "src/test/pkg/LocaleTest.kt", """
                     fun useMethods() {
                         "wrong".capitalize()
+                        "ok".capitalize(Locale.US)
                         "Wrong".decapitalize()
+                        "Ok".decapitalize(Locale.US)
                         "wrong".toUpperCase()
                         "ok".toUpperCase(Locale.US)
                         "WRONG".toLowerCase()
