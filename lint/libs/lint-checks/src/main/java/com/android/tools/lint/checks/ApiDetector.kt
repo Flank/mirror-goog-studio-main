@@ -1846,16 +1846,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             val containingClass = field.containingClass ?: return
             val evaluator = context.evaluator
-            val owner = evaluator.getQualifiedName(containingClass) ?: return
+            var owner = evaluator.getQualifiedName(containingClass) ?: return
 
             // Enforce @RequiresApi
             if (!checkRequiresApi(node, field, field)) {
                 checkRequiresApi(node, field, containingClass)
             }
 
-            val api = apiDatabase.getFieldVersion(owner, name)
+            var api = apiDatabase.getFieldVersion(owner, name)
             if (api != -1) {
-                val minSdk = getMinSdk(context)
+                var minSdk = getMinSdk(context)
                 if (api > minSdk && api > getTargetApi(node)) {
                     // Only look for compile time constants. See JLS 15.28 and JLS 13.4.9.
                     var issue = if (evaluator.isStatic(field) && evaluator.isFinal(field))
@@ -1893,10 +1893,40 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         }
                     }
 
-                    val fqcn = getFqcn(owner) + '#'.toString() + name
-
                     if (isSuppressed(context, api, node, minSdk)) {
                         return
+                    }
+
+                    if ((api == 28 || api == 29) && owner == "android.app.TaskInfo") {
+                        // A number of fields were moved up from ActivityManager.RecentTaskInfo
+                        // to the new class TaskInfo in Q; however, these field are almost
+                        // always accessed via ActivityManager#taskInfo which is still
+                        // a RecentTaskInfo so this code works prior to Q. If you explicitly
+                        // access it as a TaskInfo the class reference itself will be
+                        // flagged by lint. (The platform change was in
+                        // Change-Id: Iaf1731002196bb89319de141a05ab92a7dcb2928)
+                        // We can't just unconditionally exit here, since there are existing
+                        // API requirements on various fields in the TaskInfo subclasses,
+                        // so try to pick out the real type.
+                        val parent = node.uastParent
+                        if (parent is UQualifiedReferenceExpression) {
+                            val receiver = parent.receiver
+                            owner = receiver.getExpressionType()?.canonicalText
+                                ?: return
+                            api = apiDatabase.getFieldVersion(owner, name)
+                            if (api != -1) {
+                                minSdk = getMinSdk(context)
+                                if (api > minSdk && api > getTargetApi(node)) {
+                                    if (isSuppressed(context, api, node, minSdk)) {
+                                        return
+                                    }
+                                } else {
+                                    return
+                                }
+                            } else {
+                                return
+                            }
+                        }
                     }
 
                     // If the reference is a qualified expression, don't just highlight the
@@ -1915,6 +1945,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     }
 
                     val location = context.getLocation(locationNode)
+                    val fqcn = getFqcn(owner) + '#'.toString() + name
                     report(issue, node, location, "Field", fqcn, api, minSdk, apiLevelFix(api), owner, name)
                 }
             }

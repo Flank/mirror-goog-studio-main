@@ -2843,6 +2843,67 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testMovedField() {
+        // Regression test for https://issuetracker.google.com/139695984
+        // The baseIntent field moved up from ActivityManager.RecentTaskInfo
+        // into new super class TaskInfo; resolve will point to the new
+        // field in the new class and get flagged, but if you're referencing
+        // the field via ActivityManager.taskInfo there's no problem.
+        // But if we explicitly access it via the new TaskInfo class it will
+        // crash and should be flagged.
+        lint().files(
+                        manifest().minSdk(21),
+                        gradle(
+                                ""
+                                        + "apply plugin: 'com.android.application'\n"
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion '29'\n"
+                                        + "    defaultConfig {\n"
+                                        + "        minSdkVersion 21\n"
+                                        + "        targetSdkVersion 29\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "package com.example.myapplication\n"
+                                        + "\n"
+                                        + "import android.app.ActivityManager\n"
+                                        + "\n"
+                                        + "fun testRecentTaskInfo(activityManager: ActivityManager) {\n"
+                                        + "    // In running tasks all these fields are available since API 1\n"
+                                        + "    activityManager.appTasks.first()?.taskInfo?.let {\n"
+                                        + "        val baseIntent = it.baseIntent // OK\n"
+                                        + "        val baseActivity = it.baseActivity // since 23\n"
+                                        + "        val numActivities = it.numActivities // since 23\n"
+                                        + "        val topActivity = it.topActivity // since 23\n"
+                                        + "        val affiliatedTaskId = it.affiliatedTaskId // since 21\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "fun testRunningInfo(activityManager: ActivityManager) {\n"
+                                        + "    // In running tasks all these fields are available since API 1\n"
+                                        + "    activityManager.getRunningTasks(4).first()?.let {\n"
+                                        + "        val baseActivity = it.baseActivity // OK\n"
+                                        + "        val numActivities = it.numActivities // OK\n"
+                                        + "    }\n"
+                                        + "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/main/kotlin/com/example/myapplication/test.kt:9: Error: Field requires API level 23 (current min is 21): android.app.ActivityManager.RecentTaskInfo#baseActivity [NewApi]\n"
+                                + "        val baseActivity = it.baseActivity // since 23\n"
+                                + "                           ~~~~~~~~~~~~~~~\n"
+                                + "src/main/kotlin/com/example/myapplication/test.kt:10: Error: Field requires API level 23 (current min is 21): android.app.ActivityManager.RecentTaskInfo#numActivities [NewApi]\n"
+                                + "        val numActivities = it.numActivities // since 23\n"
+                                + "                            ~~~~~~~~~~~~~~~~\n"
+                                + "src/main/kotlin/com/example/myapplication/test.kt:11: Error: Field requires API level 23 (current min is 21): android.app.ActivityManager.RecentTaskInfo#topActivity [NewApi]\n"
+                                + "        val topActivity = it.topActivity // since 23\n"
+                                + "                          ~~~~~~~~~~~~~~\n"
+                                + "3 errors, 0 warnings");
+    }
+
     public void testKotlinVirtualDispatch() {
         // Regression test for https://issuetracker.google.com/64528052
         //noinspection all // Sample code
