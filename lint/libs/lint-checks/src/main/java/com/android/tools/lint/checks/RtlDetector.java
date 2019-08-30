@@ -50,11 +50,13 @@ import static com.android.SdkConstants.ATTR_PADDING_LEFT;
 import static com.android.SdkConstants.ATTR_PADDING_RIGHT;
 import static com.android.SdkConstants.ATTR_PADDING_START;
 import static com.android.SdkConstants.ATTR_TEXT_ALIGNMENT;
+import static com.android.SdkConstants.GRAVITY_VALUE_CENTER_HORIZONTAL;
 import static com.android.SdkConstants.GRAVITY_VALUE_END;
 import static com.android.SdkConstants.GRAVITY_VALUE_LEFT;
 import static com.android.SdkConstants.GRAVITY_VALUE_RIGHT;
 import static com.android.SdkConstants.GRAVITY_VALUE_START;
 import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TextAlignment;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -320,7 +322,9 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
     @Nullable
     static String getTextAlignmentToGravity(String attribute) {
-        if (attribute.endsWith(START)) { // textStart, viewStart, ...
+        if (attribute.equals(TextAlignment.CENTER)) {
+            return GRAVITY_VALUE_CENTER_HORIZONTAL;
+        } else if (attribute.endsWith(START)) { // textStart, viewStart, ...
             return GRAVITY_VALUE_START;
         } else if (attribute.endsWith(END)) { // textEnd, viewEnd, ...
             return GRAVITY_VALUE_END;

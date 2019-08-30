@@ -721,7 +721,10 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "            android:textAlignment=\"textStart\"/> <!-- ERROR -->\n"
                         + "                                   ~~~~~~~~~\n"
                         + "    res/layout/spinner.xml:46: Incompatible direction here\n"
-                        + "1 errors, 0 warnings\n",
+                        + "res/layout/spinner.xml:58: Error: To support older versions than API 17 (project specifies 5) you must also specify gravity or layout_gravity=\"center_horizontal\" [RtlCompat]\n"
+                        + "            android:textAlignment=\"center\"/> <!-- ERROR -->\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "2 errors, 0 warnings\n",
                 lintProject(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
@@ -777,6 +780,15 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "            android:ellipsize=\"marquee\"\n"
                                         + "            android:singleLine=\"true\"\n"
                                         + "            android:textAlignment=\"textStart\"/> <!-- ERROR -->\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "            android:id=\"@android:id/text2\"\n"
+                                        + "            style=\"?android:attr/spinnerItemStyle\"\n"
+                                        + "            android:layout_width=\"match_parent\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:ellipsize=\"marquee\"\n"
+                                        + "            android:singleLine=\"true\"\n"
+                                        + "            android:textAlignment=\"center\"/> <!-- ERROR -->\n"
                                         + "\n"
                                         + "</merge>\n")));
     }
