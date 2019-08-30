@@ -226,6 +226,13 @@ public class SigningTest {
         assertThat(apk).contains("META-INF/CERT.SF");
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
+
+        // Check that signing config is not written to disk when passed from the build script (bug
+        // 137210434)
+        File signingConfigDir =
+                ArtifactTypeUtil.getOutputDir(
+                        InternalArtifactType.SIGNING_CONFIG.INSTANCE, project.getBuildDir());
+        assertThat(signingConfigDir).doesNotExist();
     }
 
     @Test

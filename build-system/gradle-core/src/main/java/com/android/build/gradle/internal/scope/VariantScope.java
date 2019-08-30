@@ -306,9 +306,6 @@ public interface VariantScope extends TransformVariantScope {
     InternalArtifactType<Directory> getManifestArtifactType();
 
     @NonNull
-    FileCollection getSigningConfigFileCollection();
-
-    @NonNull
     File getSymbolTableFile();
 
     @NonNull

@@ -1418,44 +1418,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public FileCollection getSigningConfigFileCollection() {
-        VariantType variantType = getType();
-        if (variantType.isTestComponent()) {
-            // Only androidTest APKs need a signing config
-            Preconditions.checkState(
-                    variantType.isApk(), "Unexpected variant type: " + variantType);
-            if (getTestedVariantData() != null
-                    && getTestedVariantData()
-                            .getVariantConfiguration()
-                            .getType()
-                            .isDynamicFeature()) {
-                return getArtifactFileCollection(
-                        ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
-            } else {
-                return getProject()
-                        .files(
-                                getArtifacts()
-                                        .getFinalProduct(
-                                                InternalArtifactType.SIGNING_CONFIG.INSTANCE));
-            }
-        } else {
-            return variantType.isBaseModule()
-                    ? getProject()
-                            .files(
-                                    getArtifacts()
-                                            .getFinalProduct(
-                                                    InternalArtifactType.SIGNING_CONFIG.INSTANCE))
-                    : getArtifactFileCollection(
-                            ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
-        }
-    }
-
-    @NonNull
-    @Override
     public File getSymbolTableFile() {
         return new File(
                 globalScope.getIntermediatesDir(),

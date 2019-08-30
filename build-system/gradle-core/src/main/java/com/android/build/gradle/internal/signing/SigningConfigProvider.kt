@@ -16,10 +16,14 @@
 
 package com.android.build.gradle.internal.signing
 
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
 import com.android.build.gradle.options.SigningOptions
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -29,7 +33,7 @@ import java.io.File
 import java.io.Serializable
 
 /**
- * Encapsulates different ways to get the signing config information.
+ * Encapsulates different ways to get the signing config information. It may be `null`.
  *
  * This class is designed to be used by tasks that are interested in the actual signing config
  * information, not the ways to get that information (i.e., *how* to get the info is internal to
@@ -40,23 +44,28 @@ import java.io.Serializable
  */
 class SigningConfigProvider(
 
-    /** When not null, the signing config information can be obtained directly in memory. */
+    /** When not `null`, the signing config information can be obtained directly in memory. */
     @get:Nested
     @get:Optional
     val signingConfigData: SigningConfigData?,
 
-    /** When not null, the signing config information can be obtained from a file. */
+    /** When not `null`, the signing config information can be obtained from a file. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
-    val signingConfigFileCollection: FileCollection?
+    val signingConfigFileCollection: FileCollection?,
+
+    /**
+     * The result of validating the signing config information. It may be `null` if the validation
+     * is already taken care of elsewhere (e.g., by a different module/task).
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    val signingConfigValidationResultDir: Provider<Directory>?
 ) {
 
-    init {
-        check((signingConfigData != null).xor(signingConfigFileCollection != null))
-    }
-
-    /** Resolves this provider to get the signing config information. */
+    /** Resolves this provider to get the signing config information. It may be `null`. */
     fun resolve(): SigningConfigData? {
         return convertToParams().resolve()
     }
@@ -75,26 +84,67 @@ class SigningConfigProvider(
 
         @JvmStatic
         fun create(variantScope: VariantScope): SigningConfigProvider {
-            val signingOptions =
-                SigningOptions.readSigningOptions(variantScope.globalScope.projectOptions)
-            // If the signing config information is passed from the IDE, tasks can get this
-            // information directly without having to read from a file. This helps avoid writing the
-            // signing config information to disk (see bug 137210434).
-            return if (signingOptions != null
-                    && signingOptions.v1Enabled != null && signingOptions.v2Enabled != null) {
-                val signingConfig = SigningConfigData(
-                    name = "SigningConfigReceivedFromIDE",
-                    storeType = signingOptions.storeType, // The IDE may or may not send storeType
-                    storeFile = File(signingOptions.storeFile),
-                    storePassword = signingOptions.storePassword,
-                    keyAlias = signingOptions.keyAlias,
-                    keyPassword = signingOptions.keyPassword,
-                    v1SigningEnabled = signingOptions.v1Enabled!!,
-                    v2SigningEnabled = signingOptions.v2Enabled!!
+            val isInDynamicFeature =
+                variantScope.type.isDynamicFeature
+                        || (variantScope.type.isTestComponent
+                                && variantScope.testedVariantData!!.variantConfiguration.type
+                                        .isDynamicFeature)
+
+            // We want to avoid writing the signing config information to disk to protect sensitive
+            // data (see bug 137210434), so we'll attempt to get this information directly from
+            // memory first.
+            return if (!isInDynamicFeature) {
+                // Get it from the variant scope
+                SigningConfigProvider(
+                    signingConfigData = variantScope.variantConfiguration.signingConfig?.let {
+                        SigningConfigData.fromSigningConfig(it)
+                    },
+                    signingConfigFileCollection = null,
+                    signingConfigValidationResultDir = variantScope.artifacts.getFinalProduct(
+                        InternalArtifactType.VALIDATE_SIGNING_CONFIG
+                    )
                 )
-                SigningConfigProvider(signingConfig, null)
             } else {
-                SigningConfigProvider(null, variantScope.signingConfigFileCollection)
+                // Get it from the injected properties passed from the IDE
+                val signingOptions =
+                    SigningOptions.readSigningOptions(variantScope.globalScope.projectOptions)
+                return if (signingOptions != null
+                    && signingOptions.v1Enabled != null && signingOptions.v2Enabled != null
+                ) {
+                    SigningConfigProvider(
+                        signingConfigData = SigningConfigData(
+                            name = "SigningConfigReceivedFromIDE",
+                            storeType = signingOptions.storeType, // IDE may/may not send storeType
+                            storeFile = File(signingOptions.storeFile),
+                            storePassword = signingOptions.storePassword,
+                            keyAlias = signingOptions.keyAlias,
+                            keyPassword = signingOptions.keyPassword,
+                            v1SigningEnabled = signingOptions.v1Enabled!!,
+                            v2SigningEnabled = signingOptions.v2Enabled!!
+                        ),
+                        signingConfigFileCollection = null,
+                        // Validation for this case is currently missing because the base module
+                        // doesn't publish its validation result so that we can use it here.
+                        // However, normally the users would build both the base module and the
+                        // dynamic feature module, therefore the signing config info for both
+                        // modules would be validated when the base module is built, so it may be
+                        // acceptable to not validate it here.
+                        signingConfigValidationResultDir = null
+                    )
+                } else {
+                    // Otherwise, get it from the published artifact
+                    SigningConfigProvider(
+                        signingConfigData = null,
+                        signingConfigFileCollection = variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG
+                        ),
+                        // Validation is taken care of by the task in the base module that publishes
+                        // the signing config info (SigningConfigWriterTask).
+                        signingConfigValidationResultDir = null
+                    )
+                }
             }
         }
     }
@@ -109,13 +159,9 @@ class SigningConfigProviderParams(
     private val signingConfigFile: File?
 ) : Serializable {
 
-    init {
-        check((signingConfigData != null).xor(signingConfigFile != null))
-    }
-
-    /** Resolves this provider to get the signing config information. */
+    /** Resolves this provider to get the signing config information. It may be `null`. */
     fun resolve(): SigningConfigData? {
-        return signingConfigData?: SigningConfigUtils.load(signingConfigFile!!)
+        return signingConfigData ?: signingConfigFile?.let { SigningConfigUtils.load(it) }
     }
 
     companion object {

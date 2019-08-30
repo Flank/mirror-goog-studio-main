@@ -78,7 +78,6 @@ class CacheabilityTest {
                     ":app:processDebugResources",
                     ":app:mainApkListPersistenceDebug",
                     ":app:validateSigningDebug",
-                    ":app:signingConfigWriterDebug",
                     ":app:createDebugCompatibleScreenManifests",
                     ":app:javaPreCompileDebugUnitTest",
                     ":app:generateDebugUnitTestConfig",
