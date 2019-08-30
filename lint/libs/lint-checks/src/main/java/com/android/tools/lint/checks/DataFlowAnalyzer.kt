@@ -271,7 +271,21 @@ abstract class DataFlowAnalyzer(
      */
     open fun returnsSelf(call: UCallExpression): Boolean {
         val resolvedCall = call.resolve() ?: return false
-        return (call.returnType as? PsiClassType)?.resolve() == resolvedCall.containingClass
+        val containingClass = resolvedCall.containingClass
+        if ((call.returnType as? PsiClassType)?.resolve() == containingClass) {
+            return true
+        }
+
+        // Kotlin stdlib functions also return "this" but for various reasons
+        // don't have the right return type
+        val name = call.methodName
+        if ((name == "also" || name == "apply") &&
+            // See libraries/stdlib/jvm/build/stdlib-declarations.json
+            containingClass?.qualifiedName == "kotlin.StandardKt__StandardKt") {
+            return true
+        }
+
+        return false
     }
 
     companion object {

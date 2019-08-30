@@ -1686,6 +1686,32 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testKotlinAlsoStatements() {
+        // Regression test for
+        // 139566120: Lint check showing incorrect warning with TypedArray recycle call
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+
+                fun test1(context: Context, attrs: IntArray) {
+                    context.obtainStyledAttributes(attrs).also {
+                        //some code using it value
+                    }.recycle()
+                }
+
+                fun test2(context: Context, attrs: IntArray) {
+                    context.obtainStyledAttributes(attrs).apply {
+                        //some code using it value
+                    }.recycle()
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     fun testUse1() {
         // Regression test from 62377185
         lint().files(

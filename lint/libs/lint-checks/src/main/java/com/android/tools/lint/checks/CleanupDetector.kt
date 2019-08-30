@@ -62,7 +62,6 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.util.Arrays
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -74,7 +73,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
 
     override fun getApplicableMethodNames(): List<String>? {
-        return Arrays.asList(
+        return listOf(
             // FragmentManager commit check
             BEGIN_TRANSACTION,
 
