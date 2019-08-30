@@ -27,15 +27,6 @@ import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.MavenLibrary
 import com.android.tools.build.libraries.metadata.ModuleDependencies
-import java.io.File
-import java.io.FileOutputStream
-import java.security.MessageDigest
-import java.util.Base64
-import java.util.Dictionary
-import java.util.Hashtable
-import java.util.LinkedList
-import java.util.function.Supplier
-import javax.inject.Inject
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
@@ -47,10 +38,21 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
+import java.io.FileOutputStream
+import java.security.MessageDigest
+import java.util.Base64
+import java.util.Dictionary
+import java.util.Hashtable
+import java.util.LinkedList
+import java.util.function.Supplier
+import javax.inject.Inject
 
 /**
  * Task that publishes the app dependencies proto for each module.
@@ -60,7 +62,10 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
 
     private lateinit var runtimeClasspath: Configuration
 
-    @get:Input
+    // Don't use @Classpath here as @Classpath ignores some of the contents whereas the output of
+    // this task contains the hashes of the entire contents.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
     lateinit var runtimeClasspathArtifacts : FileCollection
         private set
 

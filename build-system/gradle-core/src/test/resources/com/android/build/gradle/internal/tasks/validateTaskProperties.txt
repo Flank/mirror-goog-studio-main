@@ -19,7 +19,6 @@ Warning: Type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': prop
 Warning: Type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'lintOptions' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask': property 'metadataFromInstalledModule' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.NdkTask': property 'ndkConfig' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask': property 'runtimeClasspathArtifacts' has @Input annotation used on property of type org.gradle.api.file.FileCollection.
 Warning: Type 'com.android.build.gradle.internal.tasks.PrepareLintJarForPublish': property 'lintChecks' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.ProcessJavaResTask': property 'variantName' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'bootClasspath' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
