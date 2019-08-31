@@ -44,9 +44,11 @@ fi
   ${auth_options} \
   -- \
   @cov//:all.lcov \
+  @cov//:comps.list_all \
   || exit $?
 
 readonly lcov_path="./bazel-genfiles/external/cov/all/lcov"
+readonly comp_list_path="./bazel-genfiles/external/cov/comps/list"
 
 # Generate the HTML report
 #genhtml -o "./out/html" ${lcov_path} -p $(pwd) --no-function-coverage || exit $?
@@ -55,6 +57,7 @@ if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
   mkdir "${dist_dir}/coverage" || exit $?
   cp -pv ${lcov_path} "${dist_dir}/coverage" || exit $?
+  cp -pv ${comp_list_path} "${dist_dir}/coverage" || exit $?
   # HTML report needs to be zipped for fast uploads
   #pushd "./out" || exit $?
   #zip -r "html.zip" "./html" || exit $?
@@ -64,6 +67,7 @@ if [[ -d "${dist_dir}" ]]; then
   # Upload the LCOV data to GCS if running on BYOB
   if [[ "$build_number" ]]; then
     gsutil cp ${lcov_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
+    gsutil cp ${comp_list_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
   fi
 fi
 

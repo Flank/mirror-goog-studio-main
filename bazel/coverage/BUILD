@@ -1,7 +1,9 @@
 load("//:coverage.bzl", "coverage_report")
+load("//:coverage.bzl", "comp_list")
 
 # This should be a py_binary, but due to a Bazel bug
 # using a py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
 py_library(
     name = "jacoco_xml_to_lcov",
     srcs = ["jacoco_xml_to_lcov.py"],
@@ -10,6 +12,7 @@ py_library(
 
 # This should be a py_binary, but due to a Bazel bug
 # using py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
 py_library(
     name = "merge_lcov",
     srcs = ["merge_lcov.py"],
@@ -17,9 +20,18 @@ py_library(
 
 # This should be a py_binary, but due to a Bazel bug
 # using py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
 py_library(
     name = "filter_lcov",
     srcs = ["filter_lcov.py"],
+)
+
+# This should be a py_binary, but due to a Bazel bug
+# using py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
+py_library(
+    name = "generate_list",
+    srcs = ["generate_list.py"],
 )
 
 # This is just an example report for testing during development
@@ -117,6 +129,18 @@ coverage_report(
     tests = [
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+    ],
+)
+
+combine_report_definitions(
+    prefix = "comps",
+    reports = [
+        "all",
+        "android-apk",
+        "databinding",
+        "navigationeditor",
+        "navigationpropertyinspector",
+        "spliteditor",
     ],
 )
 

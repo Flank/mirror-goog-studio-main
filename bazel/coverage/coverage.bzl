@@ -41,3 +41,25 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         tools = [":filter_lcov"],
         cmd = "python $(location :filter_lcov) <$< >$@ {} {}".format(spi, spe),
     )
+
+    native.genrule(
+        name = "{}.list".format(name),
+        srcs = ["{}.lcov".format(name)],
+        outs = ["{}/list".format(name)],
+        tools = [":generate_list"],
+        cmd = "python $(location :generate_list) <$< >$@ {}".format(name),
+    )
+
+# Combine custom coverage report definition into a format suitable for upload
+#
+# Arguments:
+#   prefix : prefix for generated target
+#   reports : list of custom coverage reports that needs to be merged
+def combine_report_definitions(prefix, reports):
+    native.genrule(
+        name = "{}.list_all".format(prefix),
+        srcs = ["{}.list".format(c) for c in reports],
+        outs = ["{}/list".format(prefix)],
+        tools = [":merge_list"],
+        cmd = "cat $(SRCS) >$@",
+    )
