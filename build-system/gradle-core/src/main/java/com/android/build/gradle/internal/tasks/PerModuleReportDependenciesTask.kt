@@ -27,6 +27,7 @@ import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.MavenLibrary
 import com.android.tools.build.libraries.metadata.ModuleDependencies
+import com.google.protobuf.ByteString
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
@@ -47,7 +48,6 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
-import java.util.Base64
 import java.util.Dictionary
 import java.util.Hashtable
 import java.util.LinkedList
@@ -80,7 +80,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
 
     private fun convertDependencyToMavenLibrary(
         moduleVersion: ModuleVersionIdentifier?,
-        digest: String?,
+        digest: ByteString?,
         librariesToIndexMap: Dictionary<Library, Integer>,
         libraries: LinkedList<Library>
     ): Integer? {
@@ -104,9 +104,8 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         return null
     }
 
-    private fun getFileDigest(file: File): String {
-        return Base64.getEncoder().encodeToString(
-            MessageDigest.getInstance("SHA-256").digest(file.readBytes()))
+    private fun getFileDigest(file: File): ByteString {
+        return ByteString.copyFrom(MessageDigest.getInstance("SHA-256").digest(file.readBytes()))
     }
 
     override fun doTaskAction() {
@@ -117,7 +116,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         val artifacts = runtimeClasspath.incoming.artifactView { config ->
             config.componentFilter { id -> id !is ProjectComponentIdentifier }
         }.artifacts
-        val componentDigestMap: HashMap<ComponentIdentifier, String> = HashMap()
+        val componentDigestMap: HashMap<ComponentIdentifier, ByteString> = HashMap()
 
         for (artifact in artifacts) {
             componentDigestMap.put(

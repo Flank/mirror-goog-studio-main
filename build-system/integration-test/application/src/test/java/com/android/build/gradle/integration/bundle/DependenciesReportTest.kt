@@ -30,6 +30,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import java.nio.charset.Charset
+import java.util.Base64
 import java.util.zip.ZipFile
 import kotlin.test.fail
 
@@ -74,7 +76,8 @@ class DependenciesReportTest {
                 .collect(toImmutableList())
             assertThat(mavenLib).hasSize(1)
             assertThat(mavenLib.get(0).mavenLibrary.version).isEqualTo("1.0.1")
-            assertThat(mavenLib.get(0).digests.sha256).isEqualTo("sakFIsIsrYxft6T5Ekk9vN5GPGo3tBSN+5QjdjRg+Zg=")
+            val base64EncodedDigest = Base64.getEncoder().encodeToString(mavenLib.get(0).digests.sha256.toByteArray())
+            assertThat(base64EncodedDigest).isEqualTo("sakFIsIsrYxft6T5Ekk9vN5GPGo3tBSN+5QjdjRg+Zg=")
             assertThat(fileLib).hasSize(1)
             assertThat(fileLib.get(0).digests.sha256).isNotEmpty()
         }

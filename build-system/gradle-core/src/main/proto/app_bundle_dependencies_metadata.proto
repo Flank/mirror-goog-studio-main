@@ -36,8 +36,8 @@ message Library {
 
     // This message contains various digests of the library contents.
     message Digests {
-        // Base64 with padding encoded SHA256 hash value of the file contents.
-        string sha256 = 1;
+        // SHA256 hash value of the file contents.
+        bytes sha256 = 1;
     }
 
     Digests digests = 2;
