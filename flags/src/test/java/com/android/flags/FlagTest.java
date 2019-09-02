@@ -127,31 +127,31 @@ public class FlagTest {
 
     @Test
     public void verifyDisplayTextThrowsExceptionForInvalidCases() throws Exception {
-        Flag.verifyDispayTextFormat("Valid");
-        Flag.verifyDispayTextFormat("Valid name");
-        Flag.verifyDispayTextFormat("V");
-        Flag.verifyDispayTextFormat("Numbers are ok: 123");
+        Flag.verifyDisplayTextFormat("Valid");
+        Flag.verifyDisplayTextFormat("Valid name");
+        Flag.verifyDisplayTextFormat("V");
+        Flag.verifyDisplayTextFormat("Numbers are ok: 123");
 
         try {
-            Flag.verifyDispayTextFormat("");
+            Flag.verifyDisplayTextFormat("");
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
 
         try {
-            Flag.verifyDispayTextFormat("      ");
+            Flag.verifyDisplayTextFormat("      ");
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
 
         try {
-            Flag.verifyDispayTextFormat("    A");
+            Flag.verifyDisplayTextFormat("    A");
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
 
         try {
-            Flag.verifyDispayTextFormat("A      ");
+            Flag.verifyDisplayTextFormat("A      ");
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }

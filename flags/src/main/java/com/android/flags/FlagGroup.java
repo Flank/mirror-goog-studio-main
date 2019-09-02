@@ -26,7 +26,7 @@ public final class FlagGroup {
 
     public FlagGroup(@NonNull Flags flags, @NonNull String name, @NonNull String displayName) {
         Flag.verifyFlagIdFormat(name);
-        Flag.verifyDispayTextFormat(displayName);
+        Flag.verifyDisplayTextFormat(displayName);
         this.flags = flags;
         this.name = name;
         this.displayName = displayName;

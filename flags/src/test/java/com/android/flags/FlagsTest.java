@@ -138,4 +138,22 @@ public class FlagsTest {
         } catch (IllegalArgumentException ignored) {
         }
     }
+
+    @Test
+    public void invalidOverrideValue() {
+        Properties properties = new Properties();
+        properties.setProperty("test.int", "madeup");
+        properties.setProperty("test.enum", "madeup");
+
+        PropertyOverrides propertyOverrides = new PropertyOverrides(properties);
+        Flags flags = new Flags(propertyOverrides);
+        FlagGroup group = new FlagGroup(flags, "test", "Test Group");
+
+        Flag<Integer> flagInt = Flag.create(group, "int", "Unused", "Unused", 10);
+        Flag<TestingEnum> flagEnum =
+                Flag.create(group, "enum", "Unused", "Unused", TestingEnum.FOO);
+
+        assertThat(flagInt.get()).isEqualTo(10);
+        assertThat(flagEnum.get()).isEqualTo(TestingEnum.FOO);
+    }
 }

@@ -101,7 +101,7 @@ public final class Flag<T> {
     @NonNull private final String defaultValue;
 
     /** Use one of the {@code Flag#create} convenience methods to construct this class. */
-    protected Flag(
+    private Flag(
             @NonNull FlagGroup group,
             @NonNull String name,
             @NonNull String displayName,
@@ -115,9 +115,10 @@ public final class Flag<T> {
         this.valueConverter = valueConverter;
         this.defaultValue = valueConverter.serialize(defaultValue);
 
-        Flag.verifyFlagIdFormat(getId());
-        Flag.verifyDispayTextFormat(displayName);
-        Flag.verifyDispayTextFormat(description);
+        verifyDefaultValue(defaultValue, this.defaultValue, valueConverter);
+        verifyFlagIdFormat(getId());
+        verifyDisplayTextFormat(displayName);
+        verifyDisplayTextFormat(description);
         group.getFlags().verifyUniqueId(this);
     }
 
@@ -133,9 +134,24 @@ public final class Flag<T> {
     }
 
     /** Verify that display text is correctly formatted. */
-    public static void verifyDispayTextFormat(@NonNull String name) {
+    public static void verifyDisplayTextFormat(@NonNull String name) {
         if (name.isEmpty() || name.charAt(0) == ' ' || name.charAt(name.length() - 1) == ' ') {
             throw new IllegalArgumentException("Invalid name: " + name);
+        }
+    }
+
+    private static <T> void verifyDefaultValue(
+            @NonNull T defaultValue,
+            @NonNull String stringDefaultValue,
+            @NonNull ValueConverter<T> converter) {
+        T deserialized;
+        try {
+            deserialized = converter.deserialize(stringDefaultValue);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Default value cannot be deserialized.");
+        }
+        if (!deserialized.equals(defaultValue)) {
+            throw new IllegalArgumentException("Default value cannot be deserialized.");
         }
     }
 
@@ -221,7 +237,11 @@ public final class Flag<T> {
             strValue = defaultValue;
         }
 
-        return valueConverter.deserialize(strValue);
+        try {
+            return valueConverter.deserialize(strValue);
+        } catch (Exception e) {
+            return valueConverter.deserialize(defaultValue);
+        }
     }
 
     /**
