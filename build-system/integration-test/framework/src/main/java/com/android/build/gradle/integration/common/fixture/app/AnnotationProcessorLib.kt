@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.fixture.app
 
+import com.android.build.gradle.integration.common.fixture.GradleProject
+
 /**
  * A simple annotation processor library.
  *
@@ -24,8 +26,7 @@ package com.android.build.gradle.integration.common.fixture.app
  * field.
  * In addition, it will also generated a InnerClass for the annotated class.
  */
-class AnnotationProcessorLib private constructor(isCompiler: Boolean) : AbstractAndroidTestModule(),
-    AndroidTestModule {
+class AnnotationProcessorLib private constructor(isCompiler: Boolean) : GradleProject() {
 
     init {
         addFiles(annotation, buildGradle)

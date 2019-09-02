@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import java.io.File;
 
 /**
@@ -24,7 +25,7 @@ import java.io.File;
  *
  * <p>NOTE: Android project must create an NDK module named "hello-jni".
  */
-public class HelloWorldJniApp extends AbstractAndroidTestModule implements AndroidTestModule {
+public class HelloWorldJniApp extends GradleProject {
 
     private static final TestSourceFile javaSource = new TestSourceFile(
             "src/main/java/com/example/hellojni", "HelloJni.java",
@@ -332,6 +333,11 @@ public class HelloWorldJniApp extends AbstractAndroidTestModule implements Andro
         if (withCmake) {
             addFile(cmakeLists("."));
         }
+    }
+
+    @Override
+    public boolean containsFullBuildScript() {
+        return false;
     }
 
     public static Builder builder() {

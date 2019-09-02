@@ -23,8 +23,8 @@ import com.android.testutils.truth.PathSubject.assertThat
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
+import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule
 import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -49,7 +49,7 @@ class AnnotationProcessorTest {
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestApp(
             MultiModuleTestProject(
-                mapOf<String, AndroidTestModule>(
+                mapOf<String, GradleProject>(
                     ":app" to app,
                     ":lib" to AnnotationProcessorLib.createLibrary(),
                     ":lib-compiler" to AnnotationProcessorLib.createCompiler()

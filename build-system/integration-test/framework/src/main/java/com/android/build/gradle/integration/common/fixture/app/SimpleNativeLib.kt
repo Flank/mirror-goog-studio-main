@@ -16,10 +16,14 @@
 
 package com.android.build.gradle.integration.common.fixture.app
 
+import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 
 /** A simple android library with only native code. */
-class SimpleNativeLib : AbstractAndroidTestModule() {
+class SimpleNativeLib : GradleProject() {
+
+    override fun containsFullBuildScript() = false
+
     private val buildGradle =
             TestSourceFile(
                     "build.gradle",

@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.application;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -35,7 +35,7 @@ import org.junit.Test;
 
 /** Test resValue for string type is treated as String. */
 public class ResValueTypeTest {
-    public static AndroidTestModule app = HelloWorldApp.noBuildFile();
+    public static GradleProject app = HelloWorldApp.noBuildFile();
     static {
         app.removeFileByName("HelloWorldTest.java");
         app.addFile(

@@ -2,6 +2,7 @@ package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -96,30 +97,30 @@ public class MultiModuleTestProject implements TestProject {
 
     public static class Builder {
 
-        private BiMap<String, AndroidTestModule> projects = HashBiMap.create();
+        private BiMap<String, GradleProject> projects = HashBiMap.create();
 
         @NonNull
-        public Builder subproject(@NonNull String name, @NonNull AndroidTestModule testProject) {
+        public Builder subproject(@NonNull String name, @NonNull GradleProject testProject) {
             projects.put(name, testProject);
             return this;
         }
 
         @NonNull
-        public Builder dependency(@NonNull AndroidTestModule from, @NonNull String to) {
+        public Builder dependency(@NonNull GradleProject from, @NonNull String to) {
             String snippet = "\ndependencies {\n    " + "implementation '" + to + "'\n}\n";
             from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
             return this;
         }
 
         @NonNull
-        public Builder fileDependency(@NonNull AndroidTestModule from, @NonNull String file) {
+        public Builder fileDependency(@NonNull GradleProject from, @NonNull String file) {
             String snippet = "\ndependencies {\n    " + "implementation files('" + file + "')\n}\n";
             from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
             return this;
         }
 
         @NonNull
-        public Builder androidTestDependency(@NonNull AndroidTestModule from, @NonNull String to) {
+        public Builder androidTestDependency(@NonNull GradleProject from, @NonNull String to) {
             String snippet =
                     "\ndependencies {\n    " + "androidTestImplementation '" + to + "'\n}\n";
             from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
@@ -127,15 +128,15 @@ public class MultiModuleTestProject implements TestProject {
         }
 
         @NonNull
-        public Builder dependency(@NonNull AndroidTestModule from, @NonNull AndroidTestModule to) {
+        public Builder dependency(@NonNull GradleProject from, @NonNull GradleProject to) {
             return dependency("implementation", from, to);
         }
 
         @NonNull
         public Builder dependency(
                 @NonNull String configuration,
-                @NonNull AndroidTestModule from,
-                @NonNull AndroidTestModule to) {
+                @NonNull GradleProject from,
+                @NonNull GradleProject to) {
             String snippet =
                     "\ndependencies {\n    "
                             + configuration

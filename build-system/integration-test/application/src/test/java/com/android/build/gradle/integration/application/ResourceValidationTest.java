@@ -20,8 +20,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
@@ -34,8 +34,7 @@ import org.junit.Test;
 
 public class ResourceValidationTest {
 
-    public static final AndroidTestModule TEST_APP =
-            HelloWorldApp.forPlugin("com.android.application");
+    public static final GradleProject TEST_APP = HelloWorldApp.forPlugin("com.android.application");
 
     static {
         TEST_APP.addFile(

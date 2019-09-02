@@ -20,8 +20,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
@@ -43,7 +43,7 @@ import org.junit.Test;
 public class PackagingOptionsTest {
 
     // Projects to create jar files.
-    private static AndroidTestModule jarProject1 = new EmptyAndroidTestApp();
+    private static GradleProject jarProject1 = new EmptyAndroidTestApp();
 
     static {
         jarProject1.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));
@@ -51,7 +51,7 @@ public class PackagingOptionsTest {
         jarProject1.addFile(new TestSourceFile("META-INF/proguard", "rules.pro", "# none"));
     }
 
-    private static AndroidTestModule jarProject2 = new EmptyAndroidTestApp();
+    private static GradleProject jarProject2 = new EmptyAndroidTestApp();
 
     static {
         jarProject2.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));

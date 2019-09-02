@@ -20,8 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
-import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestModule;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -310,7 +308,7 @@ public final class GradleTestProjectBuilder {
 
     /** Create GradleTestProject from an existing test project. */
     public GradleTestProjectBuilder fromTestProject(@NonNull String project) {
-        AndroidTestModule app = new EmptyTestApp();
+        GradleProject app = new EmptyTestApp();
         if (name == null) {
             name = project;
         }
@@ -323,7 +321,7 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder fromDir(@NonNull File dir) {
         Preconditions.checkArgument(
                 dir.isDirectory(), dir.getAbsolutePath() + " is not a directory");
-        AndroidTestModule app = new EmptyTestApp();
+        GradleProject app = new EmptyTestApp();
         addAllFiles(app, dir);
         return fromTestApp(app);
     }
@@ -342,7 +340,7 @@ public final class GradleTestProjectBuilder {
     /** Create GradleTestProject from a data binding integration test. */
     public GradleTestProjectBuilder fromDataBindingIntegrationTest(
             @NonNull String project, boolean useAndroidX) {
-        AndroidTestModule app = new EmptyTestApp();
+        GradleProject app = new EmptyTestApp();
         name = project;
         // compute the root folder of the checkout, based on test-projects.
         String suffix = useAndroidX ? "" : "-support";
@@ -364,10 +362,10 @@ public final class GradleTestProjectBuilder {
 
     /** Add a new file to the project. */
     public GradleTestProjectBuilder addFiles(@NonNull List<TestSourceFile> files) {
-        if (!(this.testProject instanceof AndroidTestModule)) {
-            throw new IllegalStateException("addFile is only for AndroidTestModule");
+        if (!(this.testProject instanceof GradleProject)) {
+            throw new IllegalStateException("addFile is only for GradleProject");
         }
-        AndroidTestModule app = (AndroidTestModule) this.testProject;
+        GradleProject app = (GradleProject) this.testProject;
         for (TestSourceFile file : files) {
             app.addFile(file);
         }
@@ -468,15 +466,15 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    private static class EmptyTestApp extends AbstractAndroidTestModule {
+    private static class EmptyTestApp extends GradleProject {
         @Override
         public boolean containsFullBuildScript() {
             return true;
         }
     }
 
-    /** Add all files in a directory to an AndroidTestModule. */
-    private static void addAllFiles(AndroidTestModule app, File projectDir) {
+    /** Add all files in a directory to an GradleProject. */
+    private static void addAllFiles(GradleProject app, File projectDir) {
         try {
             for (String filePath : TestFileUtils.listFiles(projectDir.toPath())) {
                 app.addFile(

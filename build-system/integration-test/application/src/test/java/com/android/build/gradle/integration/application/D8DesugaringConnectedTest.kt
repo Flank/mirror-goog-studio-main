@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 
 import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestModule
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -40,7 +40,7 @@ class D8DesugaringConnectedTest {
     var project = GradleTestProject.builder()
         .fromTestApp(
             MultiModuleTestProject(
-                ImmutableMap.of<String, AbstractAndroidTestModule>(
+                ImmutableMap.of<String, GradleProject>(
                     ":app",
                     HelloWorldApp.noBuildFile(),
                     ":lib",

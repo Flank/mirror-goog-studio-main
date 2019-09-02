@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ResValueTypeConnectedTest {
-    public static AndroidTestModule app = HelloWorldApp.noBuildFile();
+    public static GradleProject app = HelloWorldApp.noBuildFile();
 
     static {
         app.removeFileByName("HelloWorldTest.java");

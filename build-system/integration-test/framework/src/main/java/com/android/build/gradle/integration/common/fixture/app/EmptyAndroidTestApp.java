@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
+import com.android.build.gradle.integration.common.fixture.GradleProject;
+
 /** An empty app. */
-public class EmptyAndroidTestApp extends AbstractAndroidTestModule implements AndroidTestModule {
+public class EmptyAndroidTestApp extends GradleProject {
 
     public EmptyAndroidTestApp() {
 
@@ -34,5 +36,10 @@ public class EmptyAndroidTestApp extends AbstractAndroidTestModule implements An
                 "</manifest>\n");
 
         addFiles(manifest);
+    }
+
+    @Override
+    public boolean containsFullBuildScript() {
+        return false;
     }
 }

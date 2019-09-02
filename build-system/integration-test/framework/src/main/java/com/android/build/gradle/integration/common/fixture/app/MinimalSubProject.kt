@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.integration.common.fixture.app
 
+import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 
 /** An empty subproject.  */
 class MinimalSubProject private constructor(val plugin: String, val packageName: String?) :
-    AbstractAndroidTestModule(),
-    AndroidTestModule {
+    GradleProject() {
 
     init {
         var content = "\napply plugin: '$plugin'\n"

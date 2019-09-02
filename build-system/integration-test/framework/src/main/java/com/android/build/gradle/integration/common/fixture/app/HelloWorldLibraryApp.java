@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.ImmutableMap;
@@ -33,7 +34,7 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
     public HelloWorldLibraryApp() {
         super(ImmutableMap.of(":app", new EmptyAndroidTestApp(), ":lib", HelloWorldApp.noBuildFile()));
 
-        AndroidTestModule app = (AndroidTestModule) getSubproject(":app");
+        GradleProject app = (GradleProject) getSubproject(":app");
         app.addFile(
                 new TestSourceFile(
                         "build.gradle",
@@ -72,7 +73,7 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
 "    </application>\n" +
 "</manifest>\n"));
 
-        AndroidTestModule lib = (AndroidTestModule) getSubproject(":lib");
+        GradleProject lib = (GradleProject) getSubproject(":lib");
         lib.addFile(
                 new TestSourceFile(
                         "build.gradle",

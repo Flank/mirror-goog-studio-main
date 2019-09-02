@@ -3,8 +3,8 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
@@ -32,8 +32,8 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class ProguardAarPackagingTest {
 
-    public static AndroidTestModule testApp = HelloWorldApp.noBuildFile();
-    public static AndroidTestModule libraryInJar = new EmptyAndroidTestApp();
+    public static GradleProject testApp = HelloWorldApp.noBuildFile();
+    public static GradleProject libraryInJar = new EmptyAndroidTestApp();
 
     static {
         TestSourceFile oldHelloWorld = testApp.getFileByName("HelloWorld.java");

@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 
@@ -33,7 +34,7 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
  *     .create();
  * </pre>
  */
-public class HelloWorldApp extends AbstractAndroidTestModule implements AndroidTestModule {
+public class HelloWorldApp extends GradleProject {
 
     public static final String APP_ID = "com.example.helloworld";
 
@@ -201,5 +202,10 @@ public class HelloWorldApp extends AbstractAndroidTestModule implements AndroidT
 
     public static HelloWorldApp forPluginWithMinSdkVersion(String plugin, int minSdkVersion) {
         return new HelloWorldApp(plugin, minSdkVersion);
+    }
+
+    @Override
+    public boolean containsFullBuildScript() {
+        return false;
     }
 }

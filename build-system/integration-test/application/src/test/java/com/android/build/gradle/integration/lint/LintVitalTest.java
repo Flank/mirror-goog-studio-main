@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.lint;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -33,7 +33,7 @@ import org.junit.Test;
 /** Checks if fatal lint errors stop the release build. */
 public class LintVitalTest {
 
-    public static final AndroidTestModule helloWorldApp = HelloWorldApp.noBuildFile();
+    public static final GradleProject helloWorldApp = HelloWorldApp.noBuildFile();
 
     @Rule
     public GradleTestProject project =
