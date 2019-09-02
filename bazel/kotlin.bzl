@@ -171,7 +171,9 @@ def kotlin_library(
         )
 
     lint_srcs = javas + kotlins
-    if lint_srcs and lint_baseline:
+    if lint_baseline:
+        if not lint_srcs:
+            fail("lint_baseline set for iml_module that has no sources")
         lint_test(
             name = name + "_lint_test",
             srcs = lint_srcs,

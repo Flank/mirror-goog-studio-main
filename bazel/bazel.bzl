@@ -556,7 +556,10 @@ def iml_module(
     )
 
     lint_srcs = srcs.javas + srcs.kotlins
-    if lint_srcs and lint_baseline:
+    if lint_baseline:
+        if not lint_srcs:
+            fail("lint_baseline set for iml_module that has no sources")
+
         kwargs = {}
         if lint_timeout:
             kwargs["timeout"] = lint_timeout
@@ -571,6 +574,8 @@ def iml_module(
             tags = ["no_windows"],
             **kwargs
         )
+    elif lint_timeout:
+        fail("lint_timeout set for iml_module that doesn't use lint (set lint_baseline to enable lint)")
 
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
     if test_srcs:
