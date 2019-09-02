@@ -17,10 +17,9 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 
-/**
- * {@code android} extension for {@code com.android.test} projects.
- */
-public class TestExtension extends BaseExtension implements TestAndroidConfig {
+/** {@code android} extension for {@code com.android.test} projects. */
+public class TestExtension extends BaseExtension
+        implements TestAndroidConfig, com.android.build.api.dsl.TestExtension {
 
     private final DefaultDomainObjectSet<ApplicationVariant> applicationVariantList
             = new DefaultDomainObjectSet<ApplicationVariant>(ApplicationVariant.class);

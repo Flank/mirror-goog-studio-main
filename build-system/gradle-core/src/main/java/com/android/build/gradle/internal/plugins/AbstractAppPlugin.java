@@ -43,15 +43,11 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
 public abstract class AbstractAppPlugin extends BasePlugin {
-    private final boolean isBaseApplication;
 
     @Inject
     public AbstractAppPlugin(
-            ToolingModelBuilderRegistry registry,
-            SoftwareComponentFactory componentFactory,
-            boolean isBaseApplication) {
+            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
         super(registry, componentFactory);
-        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
@@ -61,7 +57,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected BaseExtension createExtension(
+    protected AppExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -83,8 +79,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
                         signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo,
-                        isBaseApplication);
+                        extraModelInfo);
     }
 
     @NonNull

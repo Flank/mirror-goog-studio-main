@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,17 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
-import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
-/** The `android` extension for base feature module (application plugin).  */
-open class BaseAppModuleExtension(
+open class DynamicFeatureExtension(
     project: Project,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
@@ -39,28 +37,6 @@ open class BaseAppModuleExtension(
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo
 ) : AppExtension(
-    project,
-    projectOptions,
-    globalScope,
-    buildTypes,
-    productFlavors,
-    signingConfigs,
-    buildOutputs,
-    sourceSetManager,
-    extraModelInfo,
-    true
-), ApplicationExtension {
-
-    var dynamicFeatures: MutableSet<String> = mutableSetOf()
-
-    val bundle: BundleOptions =
-        project.objects.newInstance(
-            BundleOptions::class.java,
-            project.objects,
-            extraModelInfo.deprecationReporter
-        )
-
-    fun bundle(action: Action<BundleOptions>) {
-        action.execute(bundle)
-    }
-}
+    project, projectOptions, globalScope, buildTypes, productFlavors, signingConfigs,
+    buildOutputs, sourceSetManager, extraModelInfo, false
+), DynamicFeatureExtension

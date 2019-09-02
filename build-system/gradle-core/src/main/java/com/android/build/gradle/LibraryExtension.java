@@ -27,7 +27,8 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
  * href="https://developer.android.com/studio/projects/android-library.html">create an Android
  * library</a>.
  */
-public class LibraryExtension extends TestedExtension {
+public class LibraryExtension extends TestedExtension
+        implements com.android.build.api.dsl.LibraryExtension {
 
     private final DefaultDomainObjectSet<LibraryVariant> libraryVariantList
             = new DefaultDomainObjectSet<LibraryVariant>(LibraryVariant.class);
