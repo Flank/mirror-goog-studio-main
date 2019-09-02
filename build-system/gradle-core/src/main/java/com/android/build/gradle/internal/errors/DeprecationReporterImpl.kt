@@ -22,7 +22,6 @@ import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
 import java.io.File
 
@@ -186,17 +185,16 @@ class DeprecationReporterImpl(
     }
 
     override fun reportDeprecatedOption(
-            option: String,
-            value: String?,
-            deprecationTarget: DeprecationTarget) {
+        option: String,
+        deprecationTarget: DeprecationTarget
+    ) {
         if (suppressedOptionWarnings.contains(option)) {
             return
         }
-        if (!checkAndSet(option, value)) {
+        if (!checkAndSet(option, null)) {
             issueReporter.reportWarning(
                 Type.UNSUPPORTED_PROJECT_OPTION_USE,
                 "The option '$option' is deprecated and should not be used anymore.\n" +
-                        (if (value != null) "Use '$option=$value' to remove this warning.\n" else "") +
                         "It will be removed ${deprecationTarget.removalTime}.")
         }
     }

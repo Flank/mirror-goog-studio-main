@@ -41,18 +41,12 @@ class DeprecationReporterImplTest {
 
     @Test
     fun `test single output for deprecated options`() {
-        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, "foo", CONFIG_NAME)
-        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, "foo", CONFIG_NAME)
-        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, "bar", CONFIG_NAME)
+        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, CONFIG_NAME)
+        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, CONFIG_NAME)
 
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option 'BUILD_ONLY_TARGET_ABI' is deprecated and should not be used anymore.\n" +
-                    "Use 'BUILD_ONLY_TARGET_ABI=foo' to remove this warning.\n" +
-                    "It will be removed soon.",
-            "The option 'BUILD_ONLY_TARGET_ABI' is deprecated and should not be used anymore.\n" +
-                    "Use 'BUILD_ONLY_TARGET_ABI=bar' to remove this warning.\n" +
-                    "It will be removed soon."
-        )
+                    "It will be removed soon.")
     }
 
     @Test

@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.options.Option;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
 
@@ -93,9 +94,7 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
 
     @Override
     public void reportDeprecatedOption(
-            @NonNull String option,
-            @Nullable String value,
-            @NonNull DeprecationTarget deprecationTarget) {
+            @NotNull String option, @NotNull DeprecationTarget deprecationTarget) {
         // do nothing
     }
 
