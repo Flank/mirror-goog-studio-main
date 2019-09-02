@@ -49,6 +49,18 @@ class CompileLibraryResourcesTest {
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <TextView
+                        android:layout_x="10px"
+                        android:layout_y="110px"
+                        android:text="test"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <EditText
+                        android:layout_x="150px"
+                        android:layout_y="100px"
+                        android:width="150px"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
                         """.trimIndent()
         )
