@@ -166,7 +166,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
     override fun beforeCheckRootProject(context: Context) {
         client = context.client
         cachedApiDatabase = false
-        psiFactory = PsiElementFactory.SERVICE.getInstance(context.project.ideaProject)
+        psiFactory = PsiElementFactory.getInstance(context.project.ideaProject)
     }
 
     // ---- Implements JavaPsiScanner ----
