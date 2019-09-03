@@ -119,12 +119,12 @@ public class MavenRepository {
         return getPath(new DefaultArtifact(group, artifact, classifier, extension, version));
     }
 
-    public Path getArtifactPath(Model model, String classifier) {
+    public Path getArtifactPath(Model model, String classifier, String extension) {
         return getPath(
                 model.getGroupId(),
                 model.getArtifactId(),
                 classifier,
-                getArtifactExtension(model),
+                extension,
                 model.getVersion());
     }
 

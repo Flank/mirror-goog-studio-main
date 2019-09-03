@@ -112,7 +112,9 @@ public class RepoBuilder {
                     zipper.addFileToZip(file, out, path, false);
                 } else {
                     assert model != null;
-                    String path = mRepo.relativize(mRepo.getArtifactPath(model, classifier)).toString();
+                    String extension = Files.getFileExtension(inputFile);
+                    Path artifactPath = mRepo.getArtifactPath(model, classifier, extension);
+                    String path = mRepo.relativize(artifactPath).toString();
                     if (model.getGroupId().equals("com.android.tools.build")
                             && (VERSIONED_ARTIFACTS.contains(model.getArtifactId()))) {
                         // Inject the Plugin-Version manifest attribute into the jar.
