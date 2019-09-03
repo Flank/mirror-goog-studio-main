@@ -45,6 +45,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "android-apk",
+    srcpath_include = [
+        "tools/vendor/google/android-apk",
+    ],
+    tests = [
+        "//tools/vendor/google/android-apk:android-apk_tests",
+    ],
+)
+
+coverage_report(
     name = "databinding",
     srcpath_include = [
         "tools/adt/idea/android-lang-databinding",
@@ -218,6 +228,7 @@ coverage_report(
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/idea/updater:integration_test",
+        "//tools/vendor/google/android-apk:android-apk_tests",
         # TODO(b/140178289): too flaky for use in the coverage suite
         #"//tools/vendor/google/android-ndk:android-ndk_tests",
     ],
