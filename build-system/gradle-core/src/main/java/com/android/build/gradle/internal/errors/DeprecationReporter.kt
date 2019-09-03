@@ -40,7 +40,7 @@ interface DeprecationReporter {
             "in the future AGP versions. For more details, see " +
                     "https://d.android.com/r/studio-ui/d8-overview.html"),
         // Deprecation of disabling Desugar
-        DESUGAR_TOOL("in AGP version 3.4"),
+        DESUGAR_TOOL("soon"),
         // Deprecation of Task Access in the variant API
         TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
         DSL_USE_PROGUARD(
