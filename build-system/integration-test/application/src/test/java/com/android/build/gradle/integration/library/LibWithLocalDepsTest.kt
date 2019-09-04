@@ -18,8 +18,8 @@ package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.AarSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import org.gradle.tooling.BuildException
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -68,8 +68,7 @@ class LibWithLocalDepsTest {
     }
 
     @Test
-    fun testFailureWhenBuildingAarWithDirectLocalAarDep() {
-        expectedException.expect(BuildException::class.java)
+    fun testWarningWhenBuildingAarWithDirectLocalAarDep() {
         TestFileUtils.appendToFile(
             project.getSubproject("baseLibrary").buildFile,
             """
@@ -78,11 +77,15 @@ class LibWithLocalDepsTest {
                 }
                 """
         )
-        project.execute("clean", ":baseLibrary:assembleDebug")
+        val result = project.executor().run("clean", ":baseLibrary:assembleDebug")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains(
+                "The AAR produced by this build for the :baseLibrary project is broken.")
+        }
     }
 
     @Test
-    fun testSuccessWhenBuildingAarWithTransitiveLocalAarDep() {
+    fun testNoWarningWhenBuildingAarWithTransitiveLocalAarDep() {
         TestFileUtils.appendToFile(
             project.getSubproject("baseLibrary").buildFile,
             """
@@ -91,6 +94,9 @@ class LibWithLocalDepsTest {
                 }
                 """
         )
-        project.execute("clean", ":library:assembleDebug")
+        val result = project.executor().run("clean", ":library:assembleDebug")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).doesNotContain("The AAR produced by this build")
+        }
     }
 }

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
+import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
@@ -53,13 +54,28 @@ abstract class BundleAar : Zip(), VariantAwareTask {
     abstract val localAarDeps: ConfigurableFileCollection
 
     @get:Input
+    lateinit var projectPath: String
+        private set
+
+    private lateinit var reporter: EvalIssueReporter
+
+    @get:Input
     val hasLocalAarDeps: Boolean
         get() {
             val hasLocalAarDependencies = localAarDeps.files.isNotEmpty()
             if (hasLocalAarDependencies) {
-                throw RuntimeException(
-                    "Direct local .aar file dependencies for a library module are not supported " +
-                            "when creating an AAR for the library module."
+                reporter.reportWarning(
+                    EvalIssueReporter.Type.GENERIC,
+                    "The AAR produced by this build for the $projectPath project is broken. " +
+                            "Direct local .aar file dependencies are not supported when building " +
+                            "an AAR. The resulting AAR is broken because the classes and Android " +
+                            "resources from any local .aar file dependencies are not packaged in " +
+                            "the resulting AAR. Previous versions of the Android Gradle Plugin " +
+                            "produce broken AARs in this case too (despite not having this " +
+                            "warning), and this warning will be replaced with an error in " +
+                            "subsequent versions of the Android Gradle Plugin. The following " +
+                            "direct local .aar file dependencies caused this warning: " +
+                            localAarDeps.files.joinToString { it.absolutePath }
                 )
             }
             return hasLocalAarDependencies
@@ -175,6 +191,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)
                 }
             )
+            task.projectPath = variantScope.globalScope.project.path
+            task.reporter = variantScope.globalScope.errorHandler
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->
