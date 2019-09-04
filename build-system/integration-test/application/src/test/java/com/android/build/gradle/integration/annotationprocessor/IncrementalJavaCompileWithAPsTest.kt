@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.BuildFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.JavaSourceFileBuilder
@@ -37,7 +37,6 @@ import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assume.assumeTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -157,7 +156,7 @@ class IncrementalJavaCompileWithAPsTest(
                 )
                 addDependency(
                     dependency = "'com.android.support.constraint:constraint-layout:" +
-                            "$TEST_CONSTRAINT_LAYOUT_VERSION'"
+                            "$SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION'"
                 )
                 addDependency("compileOnly", "project('$ANNOTATIONS_MODULE')")
                 addDependency("annotationProcessor", "project('$PROCESSOR_MODULE')")

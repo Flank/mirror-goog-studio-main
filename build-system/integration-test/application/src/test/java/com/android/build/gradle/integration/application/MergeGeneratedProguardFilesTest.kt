@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.fixture.app.LayoutFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.ManifestFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -118,7 +118,7 @@ class MergeGeneratedProguardFilesTest(
 
                 dependencies {
                     implementation 'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'
-                    implementation 'com.android.support.constraint:constraint-layout:$TEST_CONSTRAINT_LAYOUT_VERSION'
+                    implementation 'com.android.support.constraint:constraint-layout:$SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION'
                     implementation project(':lib')
                     ${if(annotateMainActivity) "compileOnly project('$ANNOTAION_MODULE')" else ""}
                     ${if(annotateMainActivity) "annotationProcessor project('$ANNOTAION_MODULE')" else ""}

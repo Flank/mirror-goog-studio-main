@@ -37,7 +37,7 @@ dependencies {
     annotationProcessor 'com.example.annotationprocessor:annotationProcessor:1.0'
 }
 
-// TODO (AGP): The expected versions of several dependencies may not be available in prebuits yet,
+// TODO (AGP): The expected versions of several dependencies may not be available in prebuilts yet,
 // so we need to adjust them here. This is for testing only; in practice, the users don't need to do
 // this. This workaround can be removed once the expected versions are added to prebuilts.
 afterEvaluate {
@@ -63,7 +63,7 @@ afterEvaluate {
                 } else if (groupAndName == 'android.arch.persistence.room:runtime') {
                     useTarget 'androidx.room:room-runtime:2.0.0'
                 } else if (groupAndName == 'com.android.support.constraint:constraint-layout') {
-                    useTarget 'androidx.constraintlayout:constraintlayout:1.1.0'
+                    useTarget 'androidx.constraintlayout:constraintlayout:1.1.3'
                 }
             } else {
                 if (groupAndName == 'com.android.support:preference-v7'

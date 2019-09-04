@@ -56,7 +56,7 @@ public class AppWithAndroidTestDependencyOnLibTest {
                         + "dependencies {\n"
                         + "    implementation project(':library2')\n"
                         + "    implementation 'com.android.support.constraint:constraint-layout:"
-                        + TestVersions.TEST_CONSTRAINT_LAYOUT_VERSION
+                        + TestVersions.SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION
                         + "'\n"
                         + "    androidTestImplementation project(':library')\n"
                         + "}\n");
@@ -71,7 +71,7 @@ public class AppWithAndroidTestDependencyOnLibTest {
                         + "}\n"
                         + "dependencies {\n"
                         + "    implementation 'com.android.support.constraint:constraint-layout:"
-                        + TestVersions.TEST_CONSTRAINT_LAYOUT_VERSION
+                        + TestVersions.SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION
                         + "'\n"
                         + "}\n");
 

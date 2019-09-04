@@ -256,7 +256,10 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 minSdkVersion = "23"
                 dataBindingEnabled = true
-                addDependency(dependency = "'androidx.constraintlayout:constraintlayout:1.1.3'")
+                addDependency(
+                    dependency = "'androidx.constraintlayout:constraintlayout:" +
+                            "$ANDROIDX_CONSTRAINT_LAYOUT_VERSION'"
+                )
                 build()
             })
 

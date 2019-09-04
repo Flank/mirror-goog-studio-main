@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.EmptyGradleProject
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.options.BooleanOption
 import java.io.File
 
@@ -122,7 +122,7 @@ class EmptyActivityProjectBuilder {
                     )
                     addDependency(
                         dependency = "'com.android.support.constraint:constraint-layout:" +
-                                "$TEST_CONSTRAINT_LAYOUT_VERSION'"
+                                "$SUPPORT_LIB_CONSTRAINT_LAYOUT_VERSION'"
                     )
                 }
                 if (withUnitTest) {
