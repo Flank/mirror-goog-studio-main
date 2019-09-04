@@ -49,7 +49,7 @@
         type="string"
         constraints="layout|nonempty|unique"
         default="fragment_item_list_dialog_item"
-        suggest="${framgentToLayout(className)}_list_dialog_item"
+        suggest="${fragmentToLayout(className)}_list_dialog_item"
         name="Object content layout file name" />
 
     <parameter
