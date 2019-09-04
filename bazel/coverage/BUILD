@@ -79,6 +79,16 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "navigationpropertyinspector",
+    srcpath_include = [
+        "tools/adt/idea/naveditor/src/com/android/tools/idea/naveditor/property2",
+    ],
+    tests = [
+        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+    ],
+)
+
 # All coverage enabled tests should go here
 coverage_report(
     name = "all",
