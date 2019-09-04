@@ -117,7 +117,7 @@ public class VdPreview {
             }
         }
         if (overrideInfo.needsOverrideAlpha()) {
-            String value = XmlUtils.formatFloatAttribute(overrideInfo.getAlpha());
+            String value = XmlUtils.formatFloatValue(overrideInfo.getAlpha());
             if (setAttributeValue(root, ANDROID_ALPHA, value)) {
                 contentChanged = true;
             }
@@ -160,7 +160,7 @@ public class VdPreview {
      */
     private static boolean setDimension(
             @NonNull Element element, @NonNull String attrName, double value) {
-        String newValue = XmlUtils.formatFloatAttribute(value) + "dp";
+        String newValue = XmlUtils.formatFloatValue(value) + "dp";
         return setAttributeValue(element, attrName, newValue);
     }
 

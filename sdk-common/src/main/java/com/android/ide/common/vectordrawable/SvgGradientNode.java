@@ -17,7 +17,7 @@ package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.DecimalUtils.trimInsignificantZeros;
-import static com.android.utils.XmlUtils.formatFloatAttribute;
+import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -303,9 +303,9 @@ class SvgGradientNode extends SvgNode {
             Point2D transformedRadius = new Point2D.Double(r, 0);
             mLocalTransform.deltaTransform(radius, transformedRadius);
 
-            mVdAttributesMap.put("cx", formatFloatAttribute(transformedBounds[0]));
-            mVdAttributesMap.put("cy", formatFloatAttribute(transformedBounds[1]));
-            mVdAttributesMap.put("r", formatFloatAttribute(transformedRadius.distance(0, 0)));
+            mVdAttributesMap.put("cx", formatFloatValue(transformedBounds[0]));
+            mVdAttributesMap.put("cy", formatFloatValue(transformedBounds[1]));
+            mVdAttributesMap.put("r", formatFloatValue(transformedRadius.distance(0, 0)));
         }
 
         for (Map.Entry<String, String> entry : mVdAttributesMap.entrySet()) {
@@ -318,7 +318,7 @@ class SvgGradientNode extends SvgNode {
             if (vdValue == null) {
                 if (vectorCoordinateMap.containsKey(key)) {
                     double x = transformedBounds[vectorCoordinateMap.get(key)];
-                    vdValue = formatFloatAttribute(x);
+                    vdValue = formatFloatValue(x);
                 } else if (key.equals("spreadMethod")) {
                     if (svgValue.equals("pad")) {
                         vdValue = "clamp";
@@ -331,7 +331,7 @@ class SvgGradientNode extends SvgNode {
                         vdValue = "clamp";
                     }
                 } else if (svgValue.endsWith("%")) {
-                    vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
+                    vdValue = formatFloatValue(getGradientCoordinate(key, 0).getValue());
                 } else {
                     vdValue = svgValue;
                 }

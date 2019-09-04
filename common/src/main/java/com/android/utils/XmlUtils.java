@@ -840,7 +840,7 @@ public class XmlUtils {
      * @return the corresponding XML string for the value
      */
     @NonNull
-    public static String formatFloatAttribute(double value) {
+    public static String formatFloatValue(double value) {
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException("Invalid number: " + value);
         }

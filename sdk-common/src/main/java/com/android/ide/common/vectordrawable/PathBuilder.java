@@ -15,83 +15,217 @@
  */
 package com.android.ide.common.vectordrawable;
 
-/**
- * Builds a string for Svg file's path data.
- */
-class PathBuilder {
-  private StringBuilder mPathData = new StringBuilder();
+import static com.android.utils.XmlUtils.formatFloatValue;
 
-  private static String booleanToString(boolean flag) {
-    return flag ? "1" : "0";
-  }
+/** Builds a string for SVG file's path data. */
+public class PathBuilder {
+    private StringBuilder mPathData = new StringBuilder();
 
-  public PathBuilder absoluteMoveTo(float x, float y) {
-    mPathData.append("M").append(x).append(",").append(y);
+    private static char encodeBoolean(boolean flag) {
+        return flag ? '1' : '0';
+    }
+
+    public PathBuilder absoluteMoveTo(double x, double y) {
+        mPathData.append('M').append(formatFloatValue(x)).append(',').append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder relativeMoveTo(double x, double y) {
+        mPathData.append('m').append(formatFloatValue(x)).append(',').append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder absoluteLineTo(double x, double y) {
+        mPathData.append('L').append(formatFloatValue(x)).append(',').append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder relativeLineTo(double x, double y) {
+        mPathData.append('l').append(formatFloatValue(x)).append(',').append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder absoluteVerticalTo(double v) {
+        mPathData.append('V').append(formatFloatValue(v));
+        return this;
+    }
+
+    public PathBuilder relativeVerticalTo(double v) {
+        mPathData.append('v').append(formatFloatValue(v));
+        return this;
+    }
+
+    public PathBuilder absoluteHorizontalTo(double h) {
+        mPathData.append('H').append(formatFloatValue(h));
+        return this;
+    }
+
+    public PathBuilder relativeHorizontalTo(double h) {
+        mPathData.append('h').append(formatFloatValue(h));
+        return this;
+    }
+
+    public PathBuilder absoluteCurveTo(
+            double cp1x, double cp1y, double cp2x, double cp2y, double x, double y) {
+        mPathData
+                .append('C')
+                .append(formatFloatValue(cp1x))
+                .append(',')
+                .append(formatFloatValue(cp1y))
+                .append(',')
+                .append(formatFloatValue(cp2x))
+                .append(',')
+                .append(formatFloatValue(cp2y))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder relativeCurveTo(
+            double cp1x, double cp1y, double cp2x, double cp2y, double x, double y) {
+        mPathData
+                .append('c')
+                .append(formatFloatValue(cp1x))
+                .append(',')
+                .append(formatFloatValue(cp1y))
+                .append(',')
+                .append(formatFloatValue(cp2x))
+                .append(',')
+                .append(formatFloatValue(cp2y))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder absoluteSmoothCurveTo(double cp2x, double cp2y, double x, double y) {
+        mPathData
+                .append('S')
+                .append(formatFloatValue(cp2x))
+                .append(',')
+                .append(formatFloatValue(cp2y))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder relativeSmoothCurveTo(double cp2x, double cp2y, double x, double y) {
+        mPathData
+                .append('s')
+                .append(formatFloatValue(cp2x))
+                .append(',')
+                .append(formatFloatValue(cp2y))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder absoluteQuadraticCurveTo(double cp1x, double cp1y, double x, double y) {
+        mPathData
+                .append('Q')
+                .append(formatFloatValue(cp1x))
+                .append(',')
+                .append(formatFloatValue(cp1y))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder relativeQuadraticCurveTo(double cp1x, double cp1y, double x, double y) {
+        mPathData
+                .append('q')
+                .append(formatFloatValue(cp1x))
+                .append(',')
+                .append(formatFloatValue(cp1y))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
+
+    public PathBuilder absoluteSmoothQuadraticCurveTo(double x, double y) {
+        mPathData.append('T').append(formatFloatValue(x)).append(',').append(formatFloatValue(y));
     return this;
   }
 
-  public PathBuilder relativeMoveTo(float x, float y) {
-    mPathData.append("m").append(x).append(",").append(y);
-    return this;
-  }
+    public PathBuilder relativeSmoothQuadraticCurveTo(double x, double y) {
+        mPathData.append('t').append(formatFloatValue(x)).append(',').append(formatFloatValue(y));
+        return this;
+    }
 
-  public PathBuilder absoluteLineTo(float x, float y) {
-    mPathData.append("L").append(x).append(",").append(y);
-    return this;
-  }
+    public PathBuilder absoluteArcTo(
+            double rx,
+            double ry,
+            boolean rotation,
+            boolean largeArc,
+            boolean sweep,
+            double x,
+            double y) {
+        mPathData
+                .append('A')
+                .append(formatFloatValue(rx))
+                .append(',')
+                .append(formatFloatValue(ry))
+                .append(',')
+                .append(encodeBoolean(rotation))
+                .append(',')
+                .append(encodeBoolean(largeArc))
+                .append(',')
+                .append(encodeBoolean(sweep))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
 
-  public PathBuilder relativeLineTo(float x, float y) {
-    mPathData.append("l").append(x).append(",").append(y);
-    return this;
-  }
+    public PathBuilder relativeArcTo(
+            double rx,
+            double ry,
+            boolean rotation,
+            boolean largeArc,
+            boolean sweep,
+            double x,
+            double y) {
+        mPathData
+                .append('a')
+                .append(formatFloatValue(rx))
+                .append(',')
+                .append(formatFloatValue(ry))
+                .append(',')
+                .append(encodeBoolean(rotation))
+                .append(',')
+                .append(encodeBoolean(largeArc))
+                .append(',')
+                .append(encodeBoolean(sweep))
+                .append(',')
+                .append(formatFloatValue(x))
+                .append(',')
+                .append(formatFloatValue(y));
+        return this;
+    }
 
-  public PathBuilder absoluteVerticalTo(float v) {
-    mPathData.append("V").append(v);
-    return this;
-  }
+    public PathBuilder absoluteClose() {
+        mPathData.append('Z');
+        return this;
+    }
 
-  public PathBuilder relativeVerticalTo(float v) {
-    mPathData.append("v").append(v);
-    return this;
-  }
+    public PathBuilder relativeClose() {
+        mPathData.append('z');
+        return this;
+    }
 
-  public PathBuilder absoluteHorizontalTo(float h) {
-    mPathData.append("H").append(h);
-    return this;
-  }
-
-  public PathBuilder relativeHorizontalTo(float h) {
-    mPathData.append("h").append(h);
-    return this;
-  }
-
-  public PathBuilder absoluteArcTo(float rx, float ry, boolean rotation,
-                                   boolean largeArc, boolean sweep, float x, float y) {
-    mPathData.append("A").append(rx).append(",").append(ry).append(",")
-            .append(booleanToString(rotation)).append(",").append(booleanToString(largeArc))
-            .append(",").append(booleanToString(sweep)).append(",").append(x).append(",").append(y);
-    return this;
-  }
-
-  public PathBuilder relativeArcTo(float rx, float ry, boolean rotation,
-                                   boolean largeArc, boolean sweep, float x, float y) {
-    mPathData.append("a").append(rx).append(",").append(ry).append(",")
-            .append(booleanToString(rotation)).append(",").append(booleanToString(largeArc))
-            .append(",").append(booleanToString(sweep)).append(",").append(x).append(",").append(y);
-    return this;
-  }
-
-  public PathBuilder absoluteClose() {
-    mPathData.append("Z");
-    return this;
-  }
-
-  public PathBuilder relativeClose() {
-    mPathData.append("z");
-    return this;
-  }
-
-  public String toString() {
+    public String toString() {
     return mPathData.toString();
   }
 }

@@ -18,7 +18,7 @@ package com.android.ide.common.vectordrawable;
 import static com.android.ide.common.vectordrawable.SvgNode.CONTINUATION_INDENT;
 import static com.android.ide.common.vectordrawable.SvgNode.INDENT_UNIT;
 import static com.android.utils.PositionXmlParser.getPosition;
-import static com.android.utils.XmlUtils.formatFloatAttribute;
+import static com.android.utils.XmlUtils.formatFloatValue;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
@@ -441,23 +441,23 @@ class SvgTree {
 
         writer.write(CONTINUATION_INDENT);
         writer.write("android:width=\"");
-        writer.write(formatFloatAttribute(getWidth() * getScaleFactor()));
+        writer.write(formatFloatValue(getWidth() * getScaleFactor()));
         writer.write("dp\"");
         writer.write(System.lineSeparator());
         writer.write(CONTINUATION_INDENT);
         writer.write("android:height=\"");
-        writer.write(formatFloatAttribute(getHeight() * getScaleFactor()));
+        writer.write(formatFloatValue(getHeight() * getScaleFactor()));
         writer.write("dp\"");
         writer.write(System.lineSeparator());
 
         writer.write(CONTINUATION_INDENT);
         writer.write("android:viewportWidth=\"");
-        writer.write(formatFloatAttribute(viewportWidth));
+        writer.write(formatFloatValue(viewportWidth));
         writer.write("\"");
         writer.write(System.lineSeparator());
         writer.write(CONTINUATION_INDENT);
         writer.write("android:viewportHeight=\"");
-        writer.write(formatFloatAttribute(viewportHeight));
+        writer.write(formatFloatValue(viewportHeight));
         writer.write("\">");
         writer.write(System.lineSeparator());
 

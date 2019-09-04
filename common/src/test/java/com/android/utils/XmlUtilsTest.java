@@ -376,15 +376,15 @@ public class XmlUtilsTest extends TestCase {
     }
 
     public void testFormatFloatValue() throws Exception {
-        assertEquals("1", XmlUtils.formatFloatAttribute(1.0f));
-        assertEquals("2", XmlUtils.formatFloatAttribute(2.0f));
-        assertEquals("1.5", XmlUtils.formatFloatAttribute(1.5f));
-        assertEquals("1.5", XmlUtils.formatFloatAttribute(1.50f));
-        assertEquals("1.51", XmlUtils.formatFloatAttribute(1.51f));
-        assertEquals("1.514542", XmlUtils.formatFloatAttribute(1.514542f));
-        assertEquals("1.516542", XmlUtils.formatFloatAttribute(1.516542f));
-        assertEquals("-1.51", XmlUtils.formatFloatAttribute(-1.51f));
-        assertEquals("-1", XmlUtils.formatFloatAttribute(-1f));
+        assertEquals("1", XmlUtils.formatFloatValue(1.0f));
+        assertEquals("2", XmlUtils.formatFloatValue(2.0f));
+        assertEquals("1.5", XmlUtils.formatFloatValue(1.5f));
+        assertEquals("1.5", XmlUtils.formatFloatValue(1.50f));
+        assertEquals("1.51", XmlUtils.formatFloatValue(1.51f));
+        assertEquals("1.514542", XmlUtils.formatFloatValue(1.514542f));
+        assertEquals("1.516542", XmlUtils.formatFloatValue(1.516542f));
+        assertEquals("-1.51", XmlUtils.formatFloatValue(-1.51f));
+        assertEquals("-1", XmlUtils.formatFloatValue(-1f));
     }
 
     public void testFormatFloatValueLocale() throws Exception {
@@ -399,7 +399,7 @@ public class XmlUtilsTest extends TestCase {
             assertEquals("1,50", String.format("%.2f", 1.5f));
 
             // Ensure that the formatFloatAttribute is immune
-            assertEquals("1.5", XmlUtils.formatFloatAttribute(1.5f));
+            assertEquals("1.5", XmlUtils.formatFloatValue(1.5f));
         } finally {
             Locale.setDefault(originalDefaultLocale);
         }

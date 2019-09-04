@@ -138,9 +138,9 @@ class SvgLeafNode extends SvgNode {
             float fillOpacity = getOpacityValueFromMap(SVG_FILL_OPACITY);
             float strokeOpacity = getOpacityValueFromMap(SVG_STROKE_OPACITY);
             mVdAttributesMap.put(
-                    SVG_FILL_OPACITY, XmlUtils.formatFloatAttribute(fillOpacity * opacity));
+                    SVG_FILL_OPACITY, XmlUtils.formatFloatValue(fillOpacity * opacity));
             mVdAttributesMap.put(
-                    SVG_STROKE_OPACITY, XmlUtils.formatFloatAttribute(strokeOpacity * opacity));
+                    SVG_STROKE_OPACITY, XmlUtils.formatFloatValue(strokeOpacity * opacity));
         }
         mVdAttributesMap.remove(SVG_OPACITY);
     }
