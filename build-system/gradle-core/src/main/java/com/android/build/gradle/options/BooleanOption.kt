@@ -115,7 +115,7 @@ enum class BooleanOption(
     USE_NEW_JAR_CREATOR("android.useNewJarCreator", true),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, Option.Status.STABLE),
     USE_NEW_APK_CREATOR("android.useNewApkCreator", true),
-    EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES("android.bundle.excludeResSourcesForRelease", false),
+    EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES("android.bundle.excludeResSourcesForRelease", true),
 
     // ---------------
     // Lifecycle flags: Deprecated stage, feature is stable and we want to get rid of the ability to revert to older code path
