@@ -114,8 +114,7 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendComponen
 
   // Note: property_event is copied by value here which is not optimal.
   Agent::Instance().SubmitAgentTasks(profiler::CreateTasksToSendPayload(
-      payload_name, std::string(message.get().data(), message.length()),
-      false));
+      payload_name, std::string(message.get().data(), message.length()), true));
   Agent::Instance().SubmitAgentTasks(
       {[request, id](AgentService::Stub &stub,
                      grpc::ClientContext &ctx) mutable {
