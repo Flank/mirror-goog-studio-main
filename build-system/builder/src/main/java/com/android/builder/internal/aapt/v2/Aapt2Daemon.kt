@@ -50,29 +50,31 @@ abstract class Aapt2Daemon(
     private fun checkStarted() {
         when (state) {
             State.NEW -> {
-                // AAPT2 is supported on Windows 32-bit and 64-bit, Linux 64-bit and MacOS 64-bit.
-                if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS
-                    && !System.getProperty("os.arch").contains("64")) {
-
-                    handleError(
-                        "AAPT2 is not supported on 32-bit ${SdkConstants.currentPlatformName()}," +
-                                " see supported systems on https://developer.android.com/studio#system-requirements-a-namerequirementsa",
-                        IllegalStateException("Unsupported operating system."),
-                        false)
-                }
                 logger.verbose("%1\$s: starting", displayName)
                 try {
                     startProcess()
                 } catch (e: TimeoutException) {
                     handleError("Daemon startup timed out", e)
                 } catch (e: Exception) {
-                    var message = "Daemon startup failed"
-                    if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-                        // https://issuetracker.google.com/131883685
-                        message +=
-                                "\nPlease check if you installed the Windows Universal C Runtime."
+                    // AAPT2 is supported on Windows 32-bit and 64-bit, Linux 64-bit and MacOS 64-bit.
+                    // If it fails because of the incompatible system, inform the user of the reason.
+                    if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS
+                        && !System.getProperty("os.arch").contains("64")) {
+
+                        handleError(
+                            "AAPT2 is not supported on 32-bit ${SdkConstants.currentPlatformName()}," +
+                                    " see supported systems on https://developer.android.com/studio#system-requirements-a-namerequirementsa",
+                            IllegalStateException("Unsupported operating system."),
+                            false)
+                    } else {
+                        var message = "Daemon startup failed"
+                        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+                            // https://issuetracker.google.com/131883685
+                            message +=
+                                    "\nPlease check if you installed the Windows Universal C Runtime."
+                        }
+                        handleError(message, e)
                     }
-                    handleError(message, e)
                 }
                 state = State.RUNNING
             }
