@@ -24,7 +24,7 @@ import java.io.File
 /**
  * NdkInfo for r19.
  */
-class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
+open class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
 
     // TODO: Add metadata to the NDK to populate this list?
     // https://github.com/android-ndk/ndk/issues/966
