@@ -16,7 +16,6 @@
 
 package com.android.ddmlib;
 
-
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import java.io.IOException;
@@ -615,10 +614,12 @@ final class MonitorThread extends Thread {
         }
     }
 
-    private void displayDebugSelectedBindError(int port) {
-        String message = String.format(
-                "Could not open Selected VM debug port (%1$d). Make sure you do not have another instance of DDMS or of the eclipse plugin running. If it's being used by something else, choose a new port number in the preferences.",
-                port);
+    private static void displayDebugSelectedBindError(int port) {
+        String message =
+                "Could not open Selected VM debug port ("
+                        + port
+                        + "). Make sure you do not have another instance of Android Studio or the Android plugin running. "
+                        + "If it's being used by something else, choose a new port number in the preferences.";
 
         Log.logAndDisplay(LogLevel.ERROR, "ddms", message);
     }
