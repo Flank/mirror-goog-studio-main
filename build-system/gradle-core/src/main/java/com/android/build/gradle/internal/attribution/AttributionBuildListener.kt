@@ -37,13 +37,17 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
     TaskExecutionListener, BuildListener {
     private val taskNameToClassNameMap: MutableMap<String, String> = ConcurrentHashMap()
     private val noncacheableTasks: MutableSet<String> = Sets.newConcurrentHashSet()
+    private val outputFileToTasksMap: MutableMap<String, MutableList<String>> = ConcurrentHashMap()
 
     override fun buildFinished(buildResult: BuildResult) {
         AndroidGradlePluginAttributionData.save(
             File(outputDirPath),
-            AndroidGradlePluginAttributionData(taskNameToClassNameMap, noncacheableTasks)
+            AndroidGradlePluginAttributionData(
+                taskNameToClassNameMap,
+                noncacheableTasks,
+                outputFileToTasksMap.filter { it.value.size > 1 }
+            )
         )
-
         AttributionListenerInitializer.unregister(buildResult.gradle)
     }
 
@@ -52,6 +56,12 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
 
         if (task.javaClass.getAnnotation(CacheableTask::class.java) == null) {
             noncacheableTasks.add(task.path)
+        }
+
+        task.outputs.files.forEach { outputFile ->
+            outputFileToTasksMap.computeIfAbsent(outputFile.absolutePath) {
+                ArrayList()
+            }.add(task.path)
         }
     }
 
