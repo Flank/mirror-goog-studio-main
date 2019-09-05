@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** Testing the class file inputs for the dx. */
+/** Testing the class file inputs for the dexing. */
 public class ClassFileInputTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -180,6 +180,15 @@ public class ClassFileInputTest {
                         .map(ClassFileEntry::getRelativePath)
                         .collect(Collectors.toList());
         Truth.assertThat(relativePaths).containsExactlyElementsIn(fileNames);
+    }
+
+    @Test
+    public void checkModuleInfo() throws Exception {
+        File input = temporaryFolder.newFolder("input");
+        assertThat(new File(input, "module-info.class").createNewFile())
+                .named("successfully created module-info.class file")
+                .isTrue();
+        validateEntries(input, ImmutableList.of());
     }
 
     private void validateEntries(@NonNull File rootPath, @NonNull List<String> fileNames)

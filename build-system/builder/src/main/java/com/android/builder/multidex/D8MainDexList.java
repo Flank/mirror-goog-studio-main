@@ -17,7 +17,6 @@
 package com.android.builder.multidex;
 
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
-import static com.android.utils.PathUtils.toSystemIndependentPath;
 
 import com.android.annotations.NonNull;
 import com.android.builder.dexing.ClassFileInput;
@@ -88,7 +87,7 @@ public final class D8MainDexList {
                                                 file -> {
                                                     Path relative = program.relativize(file);
                                                     return ClassFileInput.CLASS_MATCHER.test(
-                                                            toSystemIndependentPath(relative));
+                                                            relative.toString());
                                                 })
                                         .collect(Collectors.toList());
                         command.addProgramFiles(allClasses);

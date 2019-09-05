@@ -16,7 +16,6 @@
 
 package com.android.builder.desugaring;
 
-import static com.android.utils.PathUtils.toSystemIndependentPath;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -65,7 +64,7 @@ public class DesugaringClassAnalyzer {
         } else if (Files.isRegularFile(path)) {
             if (path.toString().endsWith(SdkConstants.DOT_JAR)) {
                 return analyzeJar(path);
-            } else if (ClassFileInput.CLASS_MATCHER.test(toSystemIndependentPath(path))) {
+            } else if (ClassFileInput.CLASS_MATCHER.test(path.toString())) {
                 return ImmutableList.of(analyzeClass(path));
             } else {
                 return ImmutableList.of();
@@ -115,7 +114,7 @@ public class DesugaringClassAnalyzer {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
                         Path relative = dir.relativize(file);
-                        if (ClassFileInput.CLASS_MATCHER.test(toSystemIndependentPath(relative))) {
+                        if (ClassFileInput.CLASS_MATCHER.test(relative.toString())) {
                             data.add(analyzeClass(file));
                         }
 

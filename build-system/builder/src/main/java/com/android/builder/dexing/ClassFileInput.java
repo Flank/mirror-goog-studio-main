@@ -16,6 +16,8 @@
 
 package com.android.builder.dexing;
 
+import static com.android.utils.FileUtils.toSystemIndependentPath;
+
 import com.android.SdkConstants;
 import java.io.Closeable;
 import java.io.IOException;
@@ -34,10 +36,10 @@ import java.util.stream.Stream;
  */
 public interface ClassFileInput extends Closeable {
 
-    /** Accepts Unix-style absolute or relative path. */
+    /** Accepts Unix-style or Windows-style absolute or relative path. */
     Predicate<String> CLASS_MATCHER =
             s -> {
-                String lowerCase = s.toLowerCase(Locale.US);
+                String lowerCase = toSystemIndependentPath(s.toLowerCase(Locale.US));
                 if (!lowerCase.endsWith(SdkConstants.DOT_CLASS)) {
                     return false;
                 }

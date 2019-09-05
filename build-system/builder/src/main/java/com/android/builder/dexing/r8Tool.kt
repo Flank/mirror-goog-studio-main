@@ -186,7 +186,7 @@ fun runR8(
                 ArchiveProgramResourceProvider.fromArchive(path))
             Files.isDirectory(path) -> Files.walk(path).use { stream ->
                 stream.filter {
-                    val relativePath = toSystemIndependentPath(path.relativize(it))
+                    val relativePath = path.relativize(it).toString()
                     Files.isRegularFile(it) && ClassFileInput.CLASS_MATCHER.test(relativePath)
                 }
                     .forEach { r8CommandBuilder.addProgramFiles(it) }
