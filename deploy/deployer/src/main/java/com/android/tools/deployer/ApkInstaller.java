@@ -42,6 +42,7 @@ public class ApkInstaller {
         PATCH_SIZE_EXCEEDED,
         NO_CHANGES,
         DUMP_UNKNOWN_PACKAGE,
+        STREAM_APK_FAILED
     }
 
     private static class DeltaInstallResult {
@@ -136,7 +137,9 @@ public class ApkInstaller {
             case DUMP_FAILED:
             case DUMP_UNKNOWN_PACKAGE:
             case PATCH_SIZE_EXCEEDED:
+            case STREAM_APK_FAILED:
                 {
+                    logger.info(deltaInstallResult.status.name());
                     // Delta install could not be attempted (app not install or delta above limit or API
                     // not supported),
                     DeployMetric deltaNotPatchableMetric =
@@ -278,11 +281,24 @@ public class ApkInstaller {
             return new DeltaInstallResult(DeltaInstallStatus.UNKNOWN);
         }
 
-        DeltaInstallStatus status =
-                (res.getStatus() == Deploy.DeltaInstallResponse.Status.OK)
-                        ? DeltaInstallStatus.SUCCESS
-                        : DeltaInstallStatus.ERROR;
+        DeltaInstallStatus status = convertStatus(res.getStatus());
+
         return new DeltaInstallResult(status, res.getInstallOutput());
+    }
+
+    private static DeltaInstallStatus convertStatus(Deploy.DeltaStatus status) {
+        switch (status) {
+            case STREAM_APK_FAILED:
+                return DeltaInstallStatus.STREAM_APK_FAILED;
+            case OK:
+                return DeltaInstallStatus.SUCCESS;
+            case UNKNOWN:
+                return DeltaInstallStatus.UNKNOWN;
+            case UNRECOGNIZED:
+            case ERROR:
+                return DeltaInstallStatus.ERROR;
+        }
+        return DeltaInstallStatus.SUCCESS;
     }
 
     public static boolean canInherit(int apkCount, List<FileDiff> diff) {

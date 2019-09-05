@@ -83,7 +83,7 @@ void DeltaInstallCommand::Install() {
   int dst_fd = open(tmp_apk_path.c_str(), O_CREAT, O_WRONLY);
   if (dst_fd == -1) {
     ErrEvent("Unable to create tmp file"_s + tmp_apk_path);
-    response->set_status(proto::DeltaInstallResponse_Status_ERROR);
+    response->set_status(proto::DeltaStatus::ERROR);
     return;
   }
 
@@ -130,7 +130,7 @@ void DeltaInstallCommand::StreamInstall() {
     session_id = output;
   } else {
     ErrEvent("Unable to create session"_s + output);
-    response->set_status(proto::DeltaInstallResponse_Status_ERROR);
+    response->set_status(proto::DeltaStatus::ERROR);
     response->set_install_output(output);
     return;
   }
@@ -138,7 +138,7 @@ void DeltaInstallCommand::StreamInstall() {
   LogEvent("DeltaInstall created session: '"_s + session_id + "'");
 
   if (!SendApksToPackageManager(session_id)) {
-    response->set_status(proto::DeltaInstallResponse::ERROR);
+    response->set_status(proto::DeltaStatus::STREAM_APK_FAILED);
     return;
   }
 
@@ -151,6 +151,6 @@ void DeltaInstallCommand::StreamInstall() {
   // Since old versions of Android do not return a proper status code,
   // commit_result cannot be reliable used to determine if the installation
   // succedded.
-  response->set_status(proto::DeltaInstallResponse_Status_OK);
+  response->set_status(proto::DeltaStatus::OK);
 }
 }  // namespace deploy

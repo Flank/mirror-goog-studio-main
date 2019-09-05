@@ -142,7 +142,7 @@ public class ApkPreInstaller {
 
             // Send the deltaPreinstall request here.
             Deploy.DeltaPreinstallResponse response = installer.deltaPreinstall(info);
-            if (response.getStatus().equals(Deploy.DeltaPreinstallResponse.Status.OK)) {
+            if (response.getStatus().equals(Deploy.DeltaStatus.OK)) {
                 return response.getSessionId();
             } else {
                 throw new DeltaPreInstallException("Failed to delta pre-install on device.");

@@ -213,23 +213,20 @@ message InstallInfo {
   string package_name = 4;
 }
 
+enum DeltaStatus {
+  UNKNOWN = 0;
+  OK = 1;
+  ERROR = 2;
+  STREAM_APK_FAILED = 3;
+}
+
 message DeltaPreinstallResponse {
-  enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-  }
-  Status status = 1;
+  DeltaStatus status = 1;
   string session_id = 2;
 }
 
 message DeltaInstallResponse {
-  enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-  }
-  Status status = 1;
+  DeltaStatus status = 1;
   // The output returned by the package manager when calling
   // either "pm install" or "pm commit". Parsed to determine
   // reason upon failure.
