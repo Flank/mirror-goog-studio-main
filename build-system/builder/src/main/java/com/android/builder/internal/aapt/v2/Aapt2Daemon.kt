@@ -66,7 +66,13 @@ abstract class Aapt2Daemon(
                 } catch (e: TimeoutException) {
                     handleError("Daemon startup timed out", e)
                 } catch (e: Exception) {
-                    handleError("Daemon startup failed", e)
+                    var message = "Daemon startup failed"
+                    if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+                        // https://issuetracker.google.com/131883685
+                        message +=
+                                "\nPlease check if you installed the Windows Universal C Runtime."
+                    }
+                    handleError(message, e)
                 }
                 state = State.RUNNING
             }

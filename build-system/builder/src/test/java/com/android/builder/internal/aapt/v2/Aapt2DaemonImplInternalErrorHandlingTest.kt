@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.SdkConstants
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -98,7 +99,12 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
         }
         assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
         assertThat(exception.javaClass).isEqualTo(Aapt2InternalException::class.java)
-        assertThat(exception.message).isEqualTo("AAPT2 fake_version Daemon 'Aapt2DaemonImplTest.testBinaryThatExitsBeforeReady': Daemon startup failed\n" +
+        var message = "Daemon startup failed"
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            message +=
+                    "\nPlease check if you installed the Windows Universal C Runtime."
+        }
+        assertThat(exception.message).isEqualTo("AAPT2 fake_version Daemon 'Aapt2DaemonImplTest.testBinaryThatExitsBeforeReady': $message\n" +
                 "This should not happen under normal circumstances, please file an issue if it does.")
         assertThat(exception.cause).isNotNull()
         // The inner startup failure
