@@ -64,6 +64,28 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, int32_t command_id,
       }});
 }
 
+void EnqueueAppInspectionCrashEvent(JNIEnv *env, int32_t command_id,
+                                    jstring inspector_id,
+                                    jstring error_message) {
+  profiler::JStringWrapper id(env, inspector_id);
+  profiler::JStringWrapper message(env, error_message);
+  profiler::Agent::Instance().SubmitAgentTasks(
+      {[command_id, id, message](profiler::proto::AgentService::Stub &stub,
+                                 grpc::ClientContext &ctx) mutable {
+        profiler::proto::SendEventRequest request;
+        auto *event = request.mutable_event();
+        event->set_kind(profiler::proto::Event::APP_INSPECTION);
+        event->set_is_ended(true);
+        event->set_command_id(command_id);
+        auto *inspection_event = event->mutable_app_inspection_event();
+        auto *service_response = inspection_event->mutable_crash_event();
+        service_response->set_inspector_id(id.get().c_str());
+        service_response->set_error_message(message.get().c_str());
+        profiler::proto::EmptyResponse response;
+        return stub.SendEvent(&ctx, request, &response);
+      }});
+}
+
 }  // namespace profiler
 
 extern "C" {
@@ -79,6 +101,14 @@ Java_com_android_tools_agent_app_inspection_Responses_replySuccess(
     JNIEnv *env, jobject obj, jint command_id) {
   profiler::EnqueueAppInspectionServiceResponse(
       env, command_id, ServiceResponse::SUCCESS, nullptr);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_Responses_replyCrash(
+    JNIEnv *env, jobject obj, jint command_id, jstring inspector_id,
+    jstring error_message) {
+  profiler::EnqueueAppInspectionCrashEvent(env, command_id, inspector_id,
+                                           error_message);
 }
 
 JNIEXPORT void JNICALL

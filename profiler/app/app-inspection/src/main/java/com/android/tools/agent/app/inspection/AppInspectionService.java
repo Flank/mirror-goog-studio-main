@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.app.inspection;
 
+import static com.android.tools.agent.app.inspection.Responses.replyCrash;
 import static com.android.tools.agent.app.inspection.Responses.replyError;
 import static com.android.tools.agent.app.inspection.Responses.replySuccess;
 
@@ -99,16 +100,16 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        Inspector inspector = mInspectors.remove(inspectorId);
-        if (inspector == null) {
+        if (!mInspectors.containsKey(inspectorId)) {
             replyError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
-        inspector.onDispose();
+        doDispose(inspectorId);
         replySuccess(commandId);
     }
 
+    @SuppressWarnings("unused") // invoked via jni
     public void sendCommand(String inspectorId, int commandId, byte[] rawCommand) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
@@ -118,7 +119,29 @@ public class AppInspectionService {
             replyError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
         }
-        inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(inspectorId, commandId));
+        try {
+            inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(inspectorId, commandId));
+        } catch (Throwable t) {
+            t.printStackTrace();
+            replyCrash(
+                    commandId,
+                    inspectorId,
+                    "Inspector "
+                            + inspectorId
+                            + " crashed during sendCommand due to "
+                            + t.getMessage());
+            doDispose(inspectorId);
+        }
+    }
+
+    private void doDispose(String inspectorId) {
+        Inspector inspector = mInspectors.remove(inspectorId);
+        if (inspector != null) {
+            try {
+                inspector.onDispose();
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     private boolean failNull(String name, Object value, int commandId) {

@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.app.inspection;
 
+import static com.android.tools.app.inspection.AppInspection.ServiceResponse.Status.ERROR;
 import static com.android.tools.app.inspection.AppInspection.ServiceResponse.Status.SUCCESS;
 import static com.android.tools.profiler.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
@@ -36,7 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -81,30 +82,26 @@ public class AppInspectionTest {
                 serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)),
-                Status.ERROR);
+                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), ERROR);
         assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @Test
     public void disposeNonexistent() throws Exception {
-        assertResponseStatus(
-                serviceLayer.sendCommand(disposeInspector("test.inspector")), Status.ERROR);
+        assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), ERROR);
     }
 
     @Test
     public void createFailsWithUnknownInspectorId() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("foo", onDevicePath)), Status.ERROR);
+        assertResponseStatus(serviceLayer.sendCommand(createInspector("foo", onDevicePath)), ERROR);
     }
 
     @Test
     public void createFailsIfInspectorDexIsNonexistent() throws Exception {
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", "random_file")),
-                Status.ERROR);
+                serviceLayer.sendCommand(createInspector("test.inspector", "random_file")), ERROR);
     }
 
     @Test
@@ -122,6 +119,23 @@ public class AppInspectionTest {
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getRawEvent().getContent().toByteArray())
                 .isEqualTo(new byte[] {8, 92, 43});
+    }
+
+    @Test
+    public void handleInspectorCrashDuringSendCommand() throws Exception {
+        String inspectorId = "test.exception.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommand(createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
+        byte[] commandBytes = new byte[] {1, 2, 127};
+        assertCrashEvent(
+                serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes)),
+                inspectorId,
+                "Inspector "
+                        + inspectorId
+                        + " crashed during sendCommand due to This is an inspector exception.");
+        assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
     private static AppInspectionCommand rawCommandInspector(
@@ -155,6 +169,13 @@ public class AppInspectionTest {
     private static void assertResponseStatus(AppInspectionEvent event, Status expected) {
         assertThat(event.hasResponse()).isTrue();
         assertThat(event.getResponse().getStatus()).isEqualTo(expected);
+    }
+
+    private static void assertCrashEvent(
+            AppInspectionEvent event, String inspectorId, String message) {
+        assertThat(event.hasCrashEvent()).isTrue();
+        assertThat(event.getCrashEvent().getInspectorId()).isEqualTo(inspectorId);
+        assertThat(event.getCrashEvent().getErrorMessage()).isEqualTo(message);
     }
 
     private static void assertRawResponse(AppInspectionEvent event, byte[] responseContent) {

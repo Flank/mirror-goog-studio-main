@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.tools.agent.app.inspection;
+package test.inspector;
 
-class Responses {
-    public static native void replyError(int commandId, String errorMessage);
+import androidx.inspection.Connection;
+import androidx.inspection.InspectorFactory;
 
-    public static native void replyCrash(int commandId, String inspectorId, String errorMessage);
+public class TestExceptionInspectorFactory extends InspectorFactory<TestExceptionInspector> {
 
-    public static native void replySuccess(int commandId);
+    public TestExceptionInspectorFactory() {
+        super("test.exception.inspector");
+    }
 
-    public static native void sendEvent(
-            int commandId, byte[] eventData, int length, String inspectorId);
-
-    static void sendEvent(byte[] eventData, int length, String inspectorId) {
-        sendEvent(0, eventData, length, inspectorId);
+    @Override
+    public TestExceptionInspector createInspector(Connection connection) {
+        return new TestExceptionInspector(connection);
     }
 }

@@ -63,6 +63,7 @@ message AppInspectionEvent {
   oneof union {
     ServiceResponse response = 1;
     RawEvent raw_event = 2;
+    CrashEvent crash_event = 3;
   }
 }
 
@@ -88,4 +89,12 @@ message RawEvent {
   string inspector_id = 1;
   // An opaque serialized event, inspectors themselves define serialization format
   bytes content = 2;
+}
+
+// Sent when inspector encounters an unrecoverable error.
+message CrashEvent {
+  // inspector_id identifies an inspector that crashed
+  string inspector_id = 1;
+  // a string message about the crash
+  string error_message = 2;
 }
