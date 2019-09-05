@@ -209,11 +209,18 @@ fun findOriginalManifestFilePosition(
     try {
         val linePrefix = (mergedFilePosition.position.startLine + 1).toString() + "-->"
         manifestMergeBlameContents.forEach { line ->
-            if (line.trim().startsWith(linePrefix)) {
-                val position = line.trim().substring(linePrefix.length)
+            val trimmed = line.trim()
+            if (trimmed.startsWith(linePrefix)) {
+                var position = trimmed.substring(linePrefix.length)
+                if (position.startsWith("[")) {
+                    val closingIndex = position.indexOf("] ")
+                    if (closingIndex >= 0) {
+                        position = position.substring(closingIndex + 2)
+                    }
+                }
                 val index = position.indexOf(DOT_XML)
                 if (index != -1) {
-                    val file = position.substring(0, index + DOT_XML.length).split(" ").last()
+                    val file = position.substring(0, index + DOT_XML.length)
                     return if (file != position) {
                         val sourcePosition = position.substring(index + DOT_XML.length + 1)
                         SourceFilePosition(File(file), SourcePosition.fromString(sourcePosition))

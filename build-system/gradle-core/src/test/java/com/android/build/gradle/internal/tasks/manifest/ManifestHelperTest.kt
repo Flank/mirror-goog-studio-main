@@ -30,7 +30,19 @@ class ManifestHelperTest {
         val filePath = "/usr/src/MyApplication/app/src/main/AndroidManifest.xml"
         val mergedManifestFile =
             File("/usr/src/MyApplication/app/build/intermediates/merged_manifests/debug/AndroidManifest.xml")
+        verifyWithGivenPaths(filePath, mergedManifestFile)
+    }
 
+
+    @Test
+    fun testFindingOriginalManifestFilePositionWithSpace() {
+        val filePath = "/usr/src/[path] with space/My Application/app/src/main/AndroidManifest.xml"
+        val mergedManifestFile =
+            File("/usr/src/[path] with space/My Application/app/build/intermediates/merged_manifests/debug/AndroidManifest.xml")
+        verifyWithGivenPaths(filePath, mergedManifestFile)
+    }
+
+    private fun verifyWithGivenPaths(filePath: String, mergedManifestFile: File) {
         val outputList = """
             1<?xml version="1.0" encoding="utf-8"?>
             2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -75,9 +87,11 @@ class ManifestHelperTest {
             24-->$filePath:16:27-16:74
             25            </intent-filter>
             26        </activity>
-            27    </application>
-            28
-            29</manifest>
+            27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+            27-->[androidx.core:core:1.0.1] /usr/[path] with space/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml:22:18-22:86
+            28    </application>
+            29
+            30</manifest>
         """.trimIndent().split("\n")
         checkSourcePosition(9, outputList, filePath, SourcePosition.UNKNOWN, mergedManifestFile)
 
@@ -121,7 +135,15 @@ class ManifestHelperTest {
             mergedManifestFile
         )
 
-        var oldPos = SourceFilePosition(SourceFile(mergedManifestFile), SourcePosition(26, -1, -1))
+        checkSourcePosition(
+            27,
+            outputList,
+            "/usr/[path] with space/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml",
+            SourcePosition(21, 17, -1, 21, 85, -1),
+            mergedManifestFile
+        )
+
+        var oldPos = SourceFilePosition(SourceFile(mergedManifestFile), SourcePosition(27, -1, -1))
 
         assertThat(findOriginalManifestFilePosition(outputList, oldPos)).isEqualTo(oldPos)
 
