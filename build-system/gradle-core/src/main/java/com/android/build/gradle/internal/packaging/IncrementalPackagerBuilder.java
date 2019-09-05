@@ -34,6 +34,7 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -209,6 +210,34 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
+     * This method has a decision logic on whether to sign with v1 signature or not. Even if we have
+     * v1 signature specified it might be useless if the target or minSdk version is high enough and
+     * we sign with v2 since in that case only v2 is checked.
+     *
+     * @param v1Enabled if v1 signature is enabled by the user
+     * @param v2Enabled if v2 signature is enabled by the user
+     * @param minSdk the minimum SDK
+     * @param targetApi optional injected target Api
+     * @return if we actually sign with v1 signature
+     */
+    @VisibleForTesting
+    static boolean enableV1Signing(
+            boolean v1Enabled, boolean v2Enabled, int minSdk, @Nullable Integer targetApi) {
+        if (!v1Enabled) {
+            return false;
+        }
+
+        // If there is no v2 signature specified we have to sign with v1 even if the versions are
+        // high enough otherwise we would not have signed at all
+        if (!v2Enabled) {
+            return true;
+        }
+
+        // Case where both v1Enabled==true and v2Enabled==true
+        return (targetApi == null || targetApi < NO_V1_SDK) && minSdk < NO_V1_SDK;
+    }
+
+    /**
      * Sets the signing configuration information for the incremental packager.
      *
      * @param signingConfig the signing config; if {@code null} then the APK will not be signed
@@ -238,11 +267,12 @@ public class IncrementalPackagerBuilder {
                                     signingConfig.getKeyPassword(), error, "keyPassword"),
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
-            // V1 signature is useless if minSdk is 24+
             boolean enableV1Signing =
-                    (targetApi == null || targetApi < NO_V1_SDK)
-                            && minSdk < NO_V1_SDK
-                            && signingConfig.getV1SigningEnabled();
+                    enableV1Signing(
+                            signingConfig.getV1SigningEnabled(),
+                            signingConfig.getV2SigningEnabled(),
+                            minSdk,
+                            targetApi);
             boolean enableV2Signing =
                     (targetApi == null || targetApi >= NO_V1_SDK)
                             && signingConfig.getV2SigningEnabled();
