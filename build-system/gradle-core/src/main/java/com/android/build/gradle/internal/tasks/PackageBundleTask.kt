@@ -270,7 +270,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 InternalArtifactType.MODULE_BUNDLE, task.baseModuleZip)
 
             task.featureZips = variantScope.getArtifactFileCollection(
-                AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )

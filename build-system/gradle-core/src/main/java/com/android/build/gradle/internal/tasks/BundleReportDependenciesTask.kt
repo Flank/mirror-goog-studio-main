@@ -146,7 +146,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
             task.featureDeps = variantScope.getArtifactFileCollection(
-                AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.LIB_DEPENDENCIES
             )

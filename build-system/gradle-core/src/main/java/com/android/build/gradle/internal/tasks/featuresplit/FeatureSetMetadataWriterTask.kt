@@ -129,9 +129,9 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
             task.inputFiles = variantScope.getArtifactFileCollection(
-                AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.PROJECT,
-                AndroidArtifacts.ArtifactType.METADATA_FEATURE_DECLARATION
+                AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION
             )
             val maxNumberOfFeaturesBeforeOreo = variantScope.globalScope.projectOptions
                 .get(IntegerOption.PRE_O_MAX_NUMBER_OF_FEATURES)

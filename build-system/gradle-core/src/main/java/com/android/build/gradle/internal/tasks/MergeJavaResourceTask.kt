@@ -240,9 +240,9 @@ abstract class MergeJavaResourceTask
             if (mergeScopes.contains(FEATURES)) {
                 task.featureJavaRes =
                     variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.METADATA_JAVA_RES
+                        AndroidArtifacts.ArtifactType.REVERSE_METADATA_JAVA_RES
                     )
             }
 

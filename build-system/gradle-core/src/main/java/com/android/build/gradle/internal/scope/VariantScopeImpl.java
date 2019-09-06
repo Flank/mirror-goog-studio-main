@@ -915,9 +915,9 @@ public class VariantScopeImpl implements VariantScope {
                 return getVariantDependencies().getRuntimeClasspath();
             case ANNOTATION_PROCESSOR:
                 return getVariantDependencies().getAnnotationProcessorConfiguration();
-            case METADATA_VALUES:
+            case REVERSE_METADATA_VALUES:
                 return Preconditions.checkNotNull(
-                        getVariantDependencies().getMetadataValuesConfiguration());
+                        getVariantDependencies().getReverseMetadataValuesConfiguration());
             default:
                 throw new RuntimeException("unknown ConfigType value " + configType);
         }

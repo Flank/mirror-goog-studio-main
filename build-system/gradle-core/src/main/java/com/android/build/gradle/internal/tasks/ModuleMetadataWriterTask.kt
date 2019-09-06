@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
@@ -131,7 +131,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             if (variantScope.type.isHybrid) {
                 //if this is a feature, get the Application ID from the metadata config
                 task.metadataFromInstalledModule = variantScope.getArtifactFileCollection(
-                    METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION
+                    REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_BASE_MODULE_DECLARATION
                 )
             }
         }

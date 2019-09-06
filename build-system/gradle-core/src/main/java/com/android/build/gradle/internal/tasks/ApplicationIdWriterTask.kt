@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -95,7 +95,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             // if BASE_FEATURE get the app ID from the app module
             if (variantScope.type.isBaseModule && variantScope.type.isHybrid) {
                 task.appMetadata = variantScope.getArtifactFileCollection(
-                    METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION
+                    REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_BASE_MODULE_DECLARATION
                 )
             } else if (variantScope.type.isFeatureSplit) {
                 // if feature split, get it from the base module

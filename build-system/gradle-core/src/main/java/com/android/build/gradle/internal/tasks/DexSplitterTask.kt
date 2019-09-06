@@ -17,12 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.gradle.internal.InternalScope
-import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -126,7 +123,7 @@ abstract class DexSplitterTask : NonIncrementalTask() {
             val artifacts = variantScope.artifacts
 
             task.featureJars =
-                variantScope.getArtifactFileCollection(METADATA_VALUES, PROJECT, METADATA_CLASSES)
+                variantScope.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,

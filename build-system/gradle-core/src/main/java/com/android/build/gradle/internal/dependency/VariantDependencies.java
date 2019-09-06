@@ -21,7 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.APK_PUBLICATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 
@@ -105,7 +105,7 @@ public class VariantDependencies {
     @NonNull private final Configuration annotationProcessorConfiguration;
 
     @Nullable private final Configuration wearAppConfiguration;
-    @Nullable private final Configuration metadataValuesConfiguration;
+    @Nullable private final Configuration reverseMetadataValuesConfiguration;
 
     public static final class Builder {
         @NonNull private final Project project;
@@ -212,7 +212,8 @@ public class VariantDependencies {
 
             final Usage apiUsage = factory.named(Usage.class, Usage.JAVA_API);
             final Usage runtimeUsage = factory.named(Usage.class, Usage.JAVA_RUNTIME);
-            final Usage metadataUsage = factory.named(Usage.class, "android-meta-data");
+            final Usage reverseMetadataUsage =
+                    factory.named(Usage.class, "android-reverse-meta-data");
 
             String variantName = variantConfiguration.getFullName();
             VariantType variantType = variantConfiguration.getType();
@@ -326,7 +327,7 @@ public class VariantDependencies {
                 testedApksAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
             }
 
-            Configuration metadataValues = null;
+            Configuration reverseMetadataValues = null;
             Configuration wearApp = null;
             EnumMap<PublishedConfigType, Configuration> elements =
                     Maps.newEnumMap(PublishedConfigType.class);
@@ -454,28 +455,28 @@ public class VariantDependencies {
                 }
 
                 if (variantType.getPublishToMetadata()) {
-                    // Variant-specific metadata publishing configuration. Only published to by base
-                    // app, optional apks, and non base feature modules.
-                    Configuration metadataElements =
+                    // Variant-specific reverse metadata publishing configuration. Only published to
+                    // by base app, optional apks, and non base feature modules.
+                    Configuration reverseMetadataElements =
                             createPublishingConfig(
                                     configurations,
-                                    variantName + "MetadataElements",
-                                    "Meta-data elements for " + variantName,
+                                    variantName + "ReverseMetadataElements",
+                                    "Reverse Meta-data elements for " + variantName,
                                     buildType,
                                     publicationFlavorMap,
                                     variantNameAttr,
                                     null,
-                                    metadataUsage);
-                    elements.put(METADATA_ELEMENTS, metadataElements);
+                                    reverseMetadataUsage);
+                    elements.put(REVERSE_METADATA_ELEMENTS, reverseMetadataElements);
                 }
 
                 if (variantType.isBaseModule()) {
                     // The variant-specific configuration that will contain the non-base feature
-                    // metadata and the application metadata. It's per-variant to contain the
-                    // right attribute. It'll be used to get the applicationId and to consume
-                    // the manifest.
-                    final String metadataValuesName = variantName + "MetadataValues";
-                    metadataValues = configurations.maybeCreate(metadataValuesName);
+                    // reverse metadata and the application reverse metadata. It's per-variant to
+                    // contain the right attribute. It'll be used to get the applicationId and to
+                    // consume the manifest.
+                    final String reverseMetadataValuesName = variantName + "ReverseMetadataValues";
+                    reverseMetadataValues = configurations.maybeCreate(reverseMetadataValuesName);
 
                     if (featureList != null) {
                         DependencyHandler depHandler = project.getDependencies();
@@ -484,7 +485,7 @@ public class VariantDependencies {
                         for (String feature : featureList) {
                             Project p = project.findProject(feature);
                             if (p != null) {
-                                depHandler.add(metadataValuesName, p);
+                                depHandler.add(reverseMetadataValuesName, p);
                             } else {
                                 notFound.add(feature);
                             }
@@ -498,19 +499,23 @@ public class VariantDependencies {
                         }
                     } else {
                         //noinspection deprecation
-                        metadataValues.extendsFrom(configurations.getByName(CONFIG_NAME_FEATURE));
+                        reverseMetadataValues.extendsFrom(
+                                configurations.getByName(CONFIG_NAME_FEATURE));
                         if (variantType.isHybrid()) {
-                            metadataValues.extendsFrom(
+                            reverseMetadataValues.extendsFrom(
                                     configurations.getByName(CONFIG_NAME_APPLICATION));
                         }
                     }
 
-                    metadataValues.setDescription(
+                    reverseMetadataValues.setDescription(
                             "Metadata Values dependencies for the base Split");
-                    metadataValues.setCanBeConsumed(false);
-                    final AttributeContainer metadataAttributes = metadataValues.getAttributes();
-                    metadataAttributes.attribute(Usage.USAGE_ATTRIBUTE, metadataUsage);
-                    applyVariantAttributes(metadataAttributes, buildType, consumptionFlavorMap);
+                    reverseMetadataValues.setCanBeConsumed(false);
+                    final AttributeContainer reverseMetadataValuesAttributes =
+                            reverseMetadataValues.getAttributes();
+                    reverseMetadataValuesAttributes.attribute(
+                            Usage.USAGE_ATTRIBUTE, reverseMetadataUsage);
+                    applyVariantAttributes(
+                            reverseMetadataValuesAttributes, buildType, consumptionFlavorMap);
                 }
             }
 
@@ -529,7 +534,7 @@ public class VariantDependencies {
                     implementationConfigurations,
                     elements,
                     annotationProcessor,
-                    metadataValues,
+                    reverseMetadataValues,
                     wearApp);
         }
 
@@ -641,7 +646,7 @@ public class VariantDependencies {
             @NonNull Collection<Configuration> sourceSetImplementationConfigurations,
             @NonNull Map<PublishedConfigType, Configuration> elements,
             @NonNull Configuration annotationProcessorConfiguration,
-            @Nullable Configuration metadataValuesConfiguration,
+            @Nullable Configuration reverseMetadataValuesConfiguration,
             @Nullable Configuration wearAppConfiguration) {
         this.variantName = variantName;
         this.compileClasspath = compileClasspath;
@@ -650,7 +655,7 @@ public class VariantDependencies {
         this.sourceSetImplementationConfigurations = sourceSetImplementationConfigurations;
         this.elements = Maps.immutableEnumMap(elements);
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
-        this.metadataValuesConfiguration = metadataValuesConfiguration;
+        this.reverseMetadataValuesConfiguration = reverseMetadataValuesConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
     }
 
@@ -693,8 +698,8 @@ public class VariantDependencies {
     }
 
     @Nullable
-    public Configuration getMetadataValuesConfiguration() {
-        return metadataValuesConfiguration;
+    public Configuration getReverseMetadataValuesConfiguration() {
+        return reverseMetadataValuesConfiguration;
     }
 
     @Override

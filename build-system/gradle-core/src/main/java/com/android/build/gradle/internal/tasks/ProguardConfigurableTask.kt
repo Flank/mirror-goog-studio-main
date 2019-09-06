@@ -36,7 +36,7 @@ import org.gradle.api.tasks.TaskProvider
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PR
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.google.common.base.Preconditions
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
@@ -362,7 +361,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         private fun addFeatureProguardRules(configurationFiles: ConfigurableFileCollection) {
             configurationFiles.from(
                 variantScope.getArtifactFileCollection(
-                    METADATA_VALUES,
+                    REVERSE_METADATA_VALUES,
                     PROJECT,
                     FILTERED_PROGUARD_RULES,
                     maybeGetCodeShrinkerAttrMap(variantScope)

@@ -18,9 +18,9 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -398,7 +398,9 @@ public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
             if (variantType.isBaseModule() && variantType.isHybrid()) {
                 task.applicationIdOverride =
                         scope.getArtifactFileCollection(
-                                METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION);
+                                REVERSE_METADATA_VALUES,
+                                PROJECT,
+                                REVERSE_METADATA_BASE_MODULE_DECLARATION);
             } else if (variantType.isFeatureSplit()) {
                 // if feature split, get it from the base module
                 task.applicationIdOverride =

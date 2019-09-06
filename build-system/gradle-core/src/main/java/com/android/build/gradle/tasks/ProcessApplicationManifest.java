@@ -20,11 +20,11 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.SdkConstants;
@@ -703,12 +703,16 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 task.packageManifest =
                         getVariantScope()
                                 .getArtifactFileCollection(
-                                        METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION);
+                                        REVERSE_METADATA_VALUES,
+                                        PROJECT,
+                                        REVERSE_METADATA_BASE_MODULE_DECLARATION);
 
                 task.featureManifests =
                         getVariantScope()
                                 .getArtifactCollection(
-                                        METADATA_VALUES, PROJECT, METADATA_FEATURE_MANIFEST);
+                                        REVERSE_METADATA_VALUES,
+                                        PROJECT,
+                                        REVERSE_METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isFeatureSplit()) {
                 task.featureNameSupplier =

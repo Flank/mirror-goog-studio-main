@@ -83,9 +83,9 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
             super.configure(task)
 
             task.featureDeclarations = variantScope.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                    AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                     AndroidArtifacts.ArtifactScope.PROJECT,
-                    AndroidArtifacts.ArtifactType.METADATA_FEATURE_DECLARATION
+                    AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION
             )
         }
     }

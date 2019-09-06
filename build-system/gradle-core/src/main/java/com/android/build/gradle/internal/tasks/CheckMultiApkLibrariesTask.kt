@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.annotations.NonNull
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -105,7 +104,7 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
 
             task.featureTransitiveDeps =
                     variantScope.getArtifactCollection(
-                        AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
                     )

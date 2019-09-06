@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION
 import com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES
@@ -74,7 +74,6 @@ import com.android.builder.core.VariantTypeImpl
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 
 /**
@@ -146,12 +145,11 @@ class PublishingSpecs {
                 runtime(InternalArtifactType.APKS_FROM_BUNDLE, ArtifactType.APKS_FROM_BUNDLE)
                 runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
 
-                metadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.METADATA_BASE_MODULE_DECLARATION)
+                reverseMetadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION)
 
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
-                metadata(BUNDLE, ArtifactType.BUNDLE)
                 publish(BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
@@ -196,17 +194,17 @@ class PublishingSpecs {
                 runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
 
                 // The intermediate bundle containing only this module. Input for bundle-tool
-                metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
-                metadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
+                reverseMetadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
+                reverseMetadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
 
                 // this is only for non-base modules.
-                metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
-                metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
-                metadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.METADATA_CLASSES)
-                metadata(MERGED_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
-                metadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
-                metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
-                metadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
+                reverseMetadata(METADATA_FEATURE_DECLARATION, ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION)
+                reverseMetadata(METADATA_FEATURE_MANIFEST, ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST)
+                reverseMetadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.REVERSE_METADATA_CLASSES)
+                reverseMetadata(MERGED_JAVA_RES, ArtifactType.REVERSE_METADATA_JAVA_RES)
+                reverseMetadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
+                reverseMetadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
+                reverseMetadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // ----
@@ -293,15 +291,15 @@ class PublishingSpecs {
             }
 
             variantSpec(VariantTypeImpl.FEATURE) {
-                metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
-                metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
-                metadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.METADATA_CLASSES)
-                metadata(MERGED_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
-                metadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
-                metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
-                metadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
-                metadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
+                reverseMetadata(METADATA_FEATURE_DECLARATION, ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION)
+                reverseMetadata(METADATA_FEATURE_MANIFEST, ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST)
+                reverseMetadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.REVERSE_METADATA_CLASSES)
+                reverseMetadata(MERGED_JAVA_RES, ArtifactType.REVERSE_METADATA_JAVA_RES)
+                reverseMetadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
+                reverseMetadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
+                reverseMetadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
+                reverseMetadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
+                reverseMetadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(APP_CLASSES, ArtifactType.CLASSES)
@@ -370,7 +368,7 @@ class PublishingSpecs {
         fun output(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
         fun api(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
         fun runtime(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun metadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
+        fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
         fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
 
         fun testSpec(variantType: VariantType, action: VariantSpecBuilder.() -> Unit)
@@ -380,7 +378,8 @@ class PublishingSpecs {
 private val API_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> = ImmutableList.of(API_ELEMENTS)
 private val RUNTIME_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> = ImmutableList.of(RUNTIME_ELEMENTS)
 private val API_AND_RUNTIME_ELEMENTS: ImmutableList<PublishedConfigType> = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS)
-private val METADATA_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> = ImmutableList.of(METADATA_ELEMENTS)
+private val REVERSE_METADATA_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> = ImmutableList.of(
+    REVERSE_METADATA_ELEMENTS)
 private val API_AND_RUNTIME_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(API_PUBLICATION, RUNTIME_PUBLICATION)
 private val APK_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
     PublishedConfigType.APK_PUBLICATION)
@@ -470,8 +469,8 @@ private open class VariantSpecBuilderImpl (
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, RUNTIME_ELEMENTS_ONLY))
     }
 
-    override fun metadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
-        outputs.add(OutputSpecImpl(taskOutputType, artifactType, METADATA_ELEMENTS_ONLY))
+    override fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+        outputs.add(OutputSpecImpl(taskOutputType, artifactType, REVERSE_METADATA_ELEMENTS_ONLY))
     }
 
     override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {

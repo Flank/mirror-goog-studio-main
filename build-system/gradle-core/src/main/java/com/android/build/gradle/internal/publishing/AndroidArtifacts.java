@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.publishing;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
@@ -102,13 +102,15 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
 
     // types for metadata content.
-    private static final String TYPE_METADATA_FEATURE_DECLARATION = "android-metadata-feature-decl";
-    private static final String TYPE_METADATA_FEATURE_MANIFEST =
-            "android-metadata-feature-manifest";
-    private static final String TYPE_METADATA_BASE_DECLARATION =
-            "android-metadata-base-module-decl";
-    private static final String TYPE_METADATA_CLASSES = "android-metadata-classes";
-    private static final String TYPE_METADATA_JAVA_RES = "android-metadata-java-res";
+    private static final String TYPE_REVERSE_METADATA_FEATURE_DECLARATION =
+            "android-reverse-metadata-feature-decl";
+    private static final String TYPE_REVERSE_METADATA_FEATURE_MANIFEST =
+            "android-reverse-metadata-feature-manifest";
+    private static final String TYPE_REVERSE_METADATA_BASE_DECLARATION =
+            "android-reverse-metadata-base-module-decl";
+    private static final String TYPE_REVERSE_METADATA_CLASSES = "android-reverse-metadata-classes";
+    private static final String TYPE_REVERSE_METADATA_JAVA_RES =
+            "android-reverse-metadata-java-res";
 
     public static final String TYPE_MOCKABLE_JAR = "android-mockable-jar";
     public static final Attribute<Boolean> MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
@@ -122,7 +124,7 @@ public class AndroidArtifacts {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
         ANNOTATION_PROCESSOR("annotationProcessorClasspath", RUNTIME_ELEMENTS, false),
-        METADATA_VALUES("metadata", METADATA_ELEMENTS, false);
+        REVERSE_METADATA_VALUES("reverseMetadata", REVERSE_METADATA_ELEMENTS, false);
 
         @NonNull private final String name;
         @NonNull private final PublishedConfigType publishedTo;
@@ -155,7 +157,7 @@ public class AndroidArtifacts {
     public enum PublishedConfigType {
         API_ELEMENTS, // inter-project publishing (API)
         RUNTIME_ELEMENTS, // inter-project publishing (RUNTIME)
-        METADATA_ELEMENTS, // inter-project publishing (META-DATA)
+        REVERSE_METADATA_ELEMENTS, // inter-project publishing (REVERSE META-DATA)
         API_PUBLICATION, // Maven/SoftwareComponent AAR publishing (API)
         RUNTIME_PUBLICATION, // Maven/SoftwareComponent AAR publishing (RUNTIME)
         APK_PUBLICATION, // Maven/SoftwareComponent APK publishing
@@ -276,12 +278,12 @@ public class AndroidArtifacts {
         // publishes these files when there's multi-apk code shrinking.
         FEATURE_DEX(TYPE_FEATURE_DEX),
 
-        // Metadata artifacts
-        METADATA_FEATURE_DECLARATION(TYPE_METADATA_FEATURE_DECLARATION),
-        METADATA_FEATURE_MANIFEST(TYPE_METADATA_FEATURE_MANIFEST),
-        METADATA_BASE_MODULE_DECLARATION(TYPE_METADATA_BASE_DECLARATION),
-        METADATA_CLASSES(TYPE_METADATA_CLASSES),
-        METADATA_JAVA_RES(TYPE_METADATA_JAVA_RES),
+        // Reverse Metadata artifacts
+        REVERSE_METADATA_FEATURE_DECLARATION(TYPE_REVERSE_METADATA_FEATURE_DECLARATION),
+        REVERSE_METADATA_FEATURE_MANIFEST(TYPE_REVERSE_METADATA_FEATURE_MANIFEST),
+        REVERSE_METADATA_BASE_MODULE_DECLARATION(TYPE_REVERSE_METADATA_BASE_DECLARATION),
+        REVERSE_METADATA_CLASSES(TYPE_REVERSE_METADATA_CLASSES),
+        REVERSE_METADATA_JAVA_RES(TYPE_REVERSE_METADATA_JAVA_RES),
 
         // types for querying only. Not publishable.
         AAR(TYPE_AAR),
