@@ -188,6 +188,10 @@ void RegisterTransforms(
         {"Lcom/google/android/gms/location/FusedLocationProviderClient;",
          new GmsFusedLocationProviderClientTransform()});
   }
+
+  if (config.common().profiler_custom_event_visualization()) {
+    // TODO: transform Custom Event Visualization class to hook into user's code
+  }
 }
 
 void ProfilerInitializationWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {

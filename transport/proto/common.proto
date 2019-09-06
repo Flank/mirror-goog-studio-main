@@ -432,4 +432,6 @@ message CommonConfig {
   bool energy_profiler_enabled = 4;
   // equivalent to StudioFlags.PROFILER_UNIFIED_PIPELINE
   bool profiler_unified_pipeline = 5;
+  // equivalent to StudioFlags.PROFILER_CUSTOM_EVENT_VISUALIZATION
+  bool profiler_custom_event_visualization = 6;
 }
