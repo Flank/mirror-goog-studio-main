@@ -27,7 +27,9 @@ import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.StringConsumer.FileConsumer;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,8 +53,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     @NonNull private final CompilationMode compilationMode;
     @NonNull private final ClassFileProviderFactory bootClasspath;
     @NonNull private final ClassFileProviderFactory classpath;
+    private final boolean dexPerClass;
     private final boolean desugaring;
     @Nullable private final String libConfiguration;
+    @Nullable private final File outputKeepRule;
     @NonNull private final MessageReceiver messageReceiver;
 
     public D8DexArchiveBuilder(
@@ -60,21 +64,24 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             boolean isDebuggable,
             @NonNull ClassFileProviderFactory bootClasspath,
             @NonNull ClassFileProviderFactory classpath,
+            boolean dexPerClass,
             boolean desugaring,
             @Nullable String libConfiguration,
+            @Nullable File outputKeepRule,
             @NonNull MessageReceiver messageReceiver) {
         this.minSdkVersion = minSdkVersion;
         this.compilationMode = isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE;
         this.bootClasspath = bootClasspath;
         this.classpath = classpath;
+        this.dexPerClass = dexPerClass;
         this.desugaring = desugaring;
         this.libConfiguration = libConfiguration;
+        this.outputKeepRule = outputKeepRule;
         this.messageReceiver = messageReceiver;
     }
 
     @Override
-    public void convert(
-            @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
+    public void convert(@NonNull Stream<ClassFileEntry> input, @NonNull Path output)
             throws DexArchiveBuilderException {
         D8DiagnosticsHandler d8DiagnosticsHandler = new InterceptingDiagnosticsHandler();
         try {
@@ -92,12 +99,12 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 return;
             }
 
-            OutputMode outputMode =
-                    isIncremental ? OutputMode.DexFilePerClassFile : OutputMode.DexIndexed;
             builder.setMode(compilationMode)
                     .setMinApiLevel(minSdkVersion)
                     .setIntermediate(true)
-                    .setOutput(output, outputMode)
+                    .setOutput(
+                            output,
+                            dexPerClass ? OutputMode.DexFilePerClassFile : OutputMode.DexIndexed)
                     .setIncludeClassesChecksum(compilationMode == compilationMode.DEBUG);
 
             if (desugaring) {
@@ -106,6 +113,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
 
                 if (libConfiguration != null) {
                     builder.addSpecialLibraryConfiguration(libConfiguration);
+                    if (outputKeepRule != null) {
+                        builder.setDesugaredLibraryKeepRuleConsumer(
+                                new FileConsumer(outputKeepRule.toPath()));
+                    }
                 }
             } else {
                 builder.setDisableDesugaring(true);
