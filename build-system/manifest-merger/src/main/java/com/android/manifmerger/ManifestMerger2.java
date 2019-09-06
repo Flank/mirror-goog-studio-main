@@ -1445,7 +1445,7 @@ public class ManifestMerger2 {
          * @throws FileNotFoundException if the file handle is invalid
          */
         @SuppressWarnings("MethodMayBeStatic") // Intended for overrides outside this library
-        protected InputStream getInputStream(@NonNull File file) throws FileNotFoundException {
+        protected InputStream getInputStream(@NonNull File file) throws IOException {
             return new BufferedInputStream(new FileInputStream(file));
         }
     }
