@@ -137,32 +137,33 @@ public class ModelTest {
     }
 
     @Test
-    public void checkFlags() throws Exception {
-        {
-            AndroidProject model =
-                    project.model()
-                            .with(BooleanOption.NAMESPACED_R_CLASS, false)
-                            .with(BooleanOption.USE_NON_FINAL_RES_IDS, false)
-                            .fetchAndroidProjects()
-                            .getOnlyModel();
-            IdeAndroidGradlePluginProjectFlags flags =
-                    new IdeAndroidGradlePluginProjectFlags(model.getFlags());
-            assertThat(flags.getApplicationRClassConstantIds()).isTrue();
-            assertThat(flags.getTestRClassConstantIds()).isTrue();
-            assertThat(flags.getTransitiveRClasses()).isTrue();
-        }
-        {
-            AndroidProject model =
-                    project.model()
-                            .with(BooleanOption.NAMESPACED_R_CLASS, true)
-                            .with(BooleanOption.USE_NON_FINAL_RES_IDS, true)
-                            .fetchAndroidProjects()
-                            .getOnlyModel();
-            IdeAndroidGradlePluginProjectFlags flags =
-                    new IdeAndroidGradlePluginProjectFlags(model.getFlags());
-            assertThat(flags.getApplicationRClassConstantIds()).isFalse();
-            assertThat(flags.getTestRClassConstantIds()).isFalse();
-            assertThat(flags.getTransitiveRClasses()).isFalse();
-        }
+    public void checkFlagsNamespacedRClassOff() throws Exception {
+        AndroidProject model =
+                project.model()
+                        .with(BooleanOption.NAMESPACED_R_CLASS, false)
+                        .with(BooleanOption.USE_NON_FINAL_RES_IDS, false)
+                        .fetchAndroidProjects()
+                        .getOnlyModel();
+        IdeAndroidGradlePluginProjectFlags flags =
+                new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+        assertThat(flags.getApplicationRClassConstantIds()).isTrue();
+        assertThat(flags.getTestRClassConstantIds()).isTrue();
+        assertThat(flags.getTransitiveRClasses()).isTrue();
     }
+
+    @Test
+    public void checkFlagsNamespacedRClassOn() throws Exception {
+        AndroidProject model =
+                project.model()
+                        .with(BooleanOption.NAMESPACED_R_CLASS, true)
+                        .with(BooleanOption.USE_NON_FINAL_RES_IDS, true)
+                        .fetchAndroidProjects()
+                        .getOnlyModel();
+        IdeAndroidGradlePluginProjectFlags flags =
+                new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+        assertThat(flags.getApplicationRClassConstantIds()).isFalse();
+        assertThat(flags.getTestRClassConstantIds()).isFalse();
+        assertThat(flags.getTransitiveRClasses()).isFalse();
+    }
+
 }

@@ -18,13 +18,12 @@ package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AndroidGradlePluginProjectFlags
 import com.android.builder.model.AndroidGradlePluginProjectFlags.BooleanFlag
-import com.google.common.collect.ImmutableMap
 import java.io.Serializable
 import java.util.EnumMap
 
 /**
  * Represents flags that affect the semantic of the build in the Android Gradle Plugin
- *  that also should affect the behavior of Android Studio.
+ * that also should affect the behavior of Android Studio.
  */
 data class IdeAndroidGradlePluginProjectFlags(
     private val booleanFlagMap: EnumMap<BooleanFlag, Boolean>
@@ -70,7 +69,7 @@ data class IdeAndroidGradlePluginProjectFlags(
     val transitiveRClasses: Boolean
         get() = getBooleanFlag(BooleanFlag.TRANSITIVE_R_CLASS)
 
-    private fun getBooleanFlag(flag: BooleanFlag) : Boolean {
+    private fun getBooleanFlag(flag: BooleanFlag): Boolean {
         return booleanFlagMap[flag] ?: flag.legacyDefault
     }
 }

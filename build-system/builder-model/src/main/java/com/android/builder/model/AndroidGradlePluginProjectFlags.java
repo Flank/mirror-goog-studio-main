@@ -30,21 +30,21 @@ public interface AndroidGradlePluginProjectFlags {
      *
      * <p>Studio uses the legacy default for AGPs that do not specifiy that flag.
      *
-     * <p>Flags <strong>must</strong> never be removed from here. This is to avoid issues with the
+     * <p>Flags <strong>must</strong> never be removed from here. This is to avoid issues when the
      * current version of studio fetches models from a project that has a legacy flag set. They can
      * be marked as {@code @Deprecated} and the getter removed from {@code
      * IdeAndroidGradlePluginProjectFlags}
      */
     enum BooleanFlag {
         /**
-         * Whether the R class in applications and dynamic features are constant.
+         * Whether the R class in applications and dynamic features has constant IDs.
          *
          * <p>If they are constant they can be inlined by the java compiler and used in places that
          * require constants such as annotations and cases of switch statements.
          */
         APPLICATION_R_CLASS_CONSTANT_IDS(true),
         /**
-         * Whether the R class in instrumentation tests are constant.
+         * Whether the R class in instrumentation tests has constant IDs.
          *
          * <p>If they are constant they can be inlined by the java compiler and used in places that
          * require constants such as annotations and cases of switch statements.
