@@ -13,6 +13,7 @@ FakeJvmtiEnv::FakeJvmtiEnv() : functions_{0} {
   functions_.RedefineClasses = &RedefineClasses;
   functions_.SetVerboseFlag = &SetVerboseFlag;
   functions_.AddToBootstrapClassLoaderSearch = &AddToBootstrapClassLoaderSearch;
+  functions_.GetExtensionFunctions = &GetExtensionFunctions;
 
   functions = &functions_;
 }
@@ -76,6 +77,14 @@ jvmtiError FakeJvmtiEnv::RedefineClasses(
 jvmtiError FakeJvmtiEnv::SetVerboseFlag(jvmtiEnv* env, jvmtiVerboseFlag flag,
                                         jboolean value) {
   Log::I("JVMTI::SetVerboseFlag");
+  return JVMTI_ERROR_NONE;
+}
+
+jvmtiError FakeJvmtiEnv::GetExtensionFunctions(
+    jvmtiEnv* env, jint* extension_count_ptr,
+    jvmtiExtensionFunctionInfo** extensions) {
+  Log::I("JVMTI::GetExtensionFunctions");
+  *extension_count_ptr = 0;
   return JVMTI_ERROR_NONE;
 }
 

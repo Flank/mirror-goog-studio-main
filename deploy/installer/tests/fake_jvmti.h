@@ -59,6 +59,10 @@ class FakeJvmtiEnv : public jvmtiEnv {
   static jvmtiError SetVerboseFlag(jvmtiEnv* env, jvmtiVerboseFlag flag,
                                    jboolean value);
 
+  static jvmtiError GetExtensionFunctions(
+      jvmtiEnv* env, jint* extension_count_ptr,
+      jvmtiExtensionFunctionInfo** extensions);
+
  private:
   jvmtiInterface_1_ functions_;
 };
