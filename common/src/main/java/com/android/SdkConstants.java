@@ -1670,6 +1670,9 @@ public final class SdkConstants {
     public static final String ATTR_CONSTRAINT_LAYOUT_DESCRIPTION =
       "layoutDescription"; //$NON-NLS-1$
 
+    // MotionLayout
+    public static final String ATTR_MOTION_TARGET = "motionTarget";
+
     // AbsListView
     public static final String ATTR_LIST_SELECTOR = "listSelector";
 
