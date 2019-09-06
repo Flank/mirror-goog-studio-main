@@ -23,6 +23,8 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.StringOption
 import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
@@ -33,9 +35,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import java.nio.file.Files
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
-class ApiDesugarTest {
+class CoreLibraryDesugarTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
@@ -110,7 +114,7 @@ class ApiDesugarTest {
     }
 
     @Test
-    fun testLintHasNoWarnings() {
+    fun testLintPassesIfDesugaringEnabled() {
         project.buildFile.appendText("""
 
             android.lintOptions.abortOnError = true
@@ -122,16 +126,41 @@ class ApiDesugarTest {
     fun testLintFailsIfDesugaringDisabled() {
         project.buildFile.appendText("""
 
-            android.compileOptions.javaApiDesugaringEnabled = false
+            android.compileOptions.coreLibraryDesugaringEnabled = false
             android.lintOptions.abortOnError = true
         """.trimIndent())
-        project.executor().expectFailure().run("lintDebug")
+        val result = project.executor().expectFailure().run("lintDebug")
+        assertThat(result.failureMessage).contains(
+            "Call requires API level 24 (current min is 14): java.util.Collection#stream [NewApi]")
     }
 
     @Test
     fun testModelFetching() {
         val model = project.model().fetchAndroidProjects().onlyModel
         assertThat(model.javaCompileOptions.isCoreLibraryDesugaringEnabled).isTrue()
+    }
+
+    @Test
+    fun testKeepRulesGeneration() {
+        project.executor().run("assembleRelease")
+        val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(project.buildDir)
+        val stringBuilder = StringBuilder()
+        Files.walk(out.toPath()).use { paths ->
+           paths
+               .filter{ it.toFile().isFile }
+               .forEach { stringBuilder.append(it.toFile().readText(Charsets.UTF_8))
+           }
+        }
+        val expectedKeepRules = "-keep class j\$.util.Optional {\n" +
+                "    java.lang.Object get();\n" +
+                "}\n" +
+                "-keep class j\$.util.Collection\$-EL {\n" +
+                "    j\$.util.stream.Stream stream(java.util.Collection);\n" +
+                "}\n" +
+                "-keep class j\$.util.stream.Stream {\n" +
+                "    j\$.util.Optional findFirst();\n" +
+                "}\n"
+        assertTrue { stringBuilder.toString() == expectedKeepRules }
     }
 
     private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =

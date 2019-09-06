@@ -159,7 +159,9 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                     true,
                     bootClasspath,
                     classpath,
+                    false,
                     params.enableDesugaring,
+                    null,
                     null,
                     MessageReceiverImpl(
                         params.errorFormatMode,
@@ -171,8 +173,7 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                     classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            params.output.toPath(),
-                            false
+                            params.output.toPath()
                         )
                     }
                 }

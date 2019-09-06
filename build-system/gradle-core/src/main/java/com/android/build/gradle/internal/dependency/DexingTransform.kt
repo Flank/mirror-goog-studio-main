@@ -88,8 +88,10 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     ClassFileProviderFactory(parameters.bootClasspath.files.map(File::toPath))
                         .also { closer.register(it) },
                     ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
+                    false,
                     parameters.enableDesugaring.get(),
                     parameters.libConfiguration.orNull,
+                    null,
                     MessageReceiverImpl(
                         parameters.errorFormat.get(),
                         LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
@@ -100,8 +102,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            outputDir.toPath(),
-                            false
+                            outputDir.toPath()
                         )
                     }
                 }
