@@ -42,7 +42,8 @@ public class ApkInstaller {
         PATCH_SIZE_EXCEEDED,
         NO_CHANGES,
         DUMP_UNKNOWN_PACKAGE,
-        STREAM_APK_FAILED
+        STREAM_APK_FAILED,
+        STREAM_APK_NOT_SUPPORTED
     }
 
     private static class DeltaInstallResult {
@@ -138,6 +139,7 @@ public class ApkInstaller {
             case DUMP_UNKNOWN_PACKAGE:
             case PATCH_SIZE_EXCEEDED:
             case STREAM_APK_FAILED:
+            case STREAM_APK_NOT_SUPPORTED:
                 {
                     logger.info(deltaInstallResult.status.name());
                     // Delta install could not be attempted (app not install or delta above limit or API
@@ -297,6 +299,8 @@ public class ApkInstaller {
             case UNRECOGNIZED:
             case ERROR:
                 return DeltaInstallStatus.ERROR;
+            case STREAM_APK_NOT_SUPPORTED:
+                return DeltaInstallStatus.STREAM_APK_NOT_SUPPORTED;
         }
         return DeltaInstallStatus.SUCCESS;
     }

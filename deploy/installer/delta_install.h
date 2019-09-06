@@ -31,8 +31,6 @@ class DeltaInstallCommand : public BaseInstallCommand {
   virtual void Run();
 
  private:
-  // Install using pm install interface which requires temporary hard storage.
-  void Install();
   // Install using pm install-create, install-write, install-commit streaming
   // API where data is streamed directely to the Package Manager.
   void StreamInstall();

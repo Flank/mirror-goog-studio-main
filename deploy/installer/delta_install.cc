@@ -48,57 +48,13 @@ void DeltaInstallCommand::Run() {
   int api_level = Env::api_level();
   LogEvent("DeltaInstall found API level:" + to_string(api_level));
   if (api_level < 21) {
-    Install();
-  } else {
-    StreamInstall();
+    response->set_status(proto::DeltaStatus::STREAM_APK_NOT_SUPPORTED);
+    return;
   }
+
+  StreamInstall();
 }
 
-void DeltaInstallCommand::Install() {
-  Phase p("DeltaInstallCommand::Install");
-
-  auto response = new proto::DeltaInstallResponse();
-  workspace_.GetResponse().set_allocated_deltainstall_response(response);
-
-  if (install_info_.patchinstructions().size() != 1) {
-    ErrEvent("Illegal operation, multiple APKs not supported");
-    return;
-  }
-
-  std::string tmp_apk_path =
-      workspace_.GetTmpFolder() + to_string(GetTime()) + ".tmp.apk";
-  // Create and open tmp apk
-  int dst_fd = open(tmp_apk_path.c_str(), O_CREAT, O_WRONLY);
-  if (dst_fd == -1) {
-    ErrEvent("Unable to create tmp file"_s + tmp_apk_path);
-    response->set_status(proto::DeltaStatus::ERROR);
-    return;
-  }
-
-  // Write content of the tmp apk
-  PatchApplier patchApplier(workspace_.GetRoot());
-  bool patch_result =
-      patchApplier.ApplyPatchToFD(install_info_.patchinstructions()[0], dst_fd);
-  if (!patch_result) {
-    close(dst_fd);
-    unlink(tmp_apk_path.c_str());
-    return;
-  }
-  close(dst_fd);
-
-  // Feed tmp apk to Package Manager (and gather output)
-  std::string output;
-  PackageManager pm(workspace_);
-  std::vector<std::string> options;
-  for (const std::string& option : install_info_.options()) {
-    options.emplace_back(option);
-  }
-  pm.Install(tmp_apk_path, options, &output);
-  response->set_install_output(output);
-
-  // Clean up tmp apk
-  unlink(tmp_apk_path.c_str());
-}
 void DeltaInstallCommand::StreamInstall() {
   Phase p("DeltaInstallCommand::StreamInstall");
   proto::DeltaInstallResponse* response =
