@@ -30,6 +30,7 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
 readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
+  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 

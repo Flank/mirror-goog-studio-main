@@ -1,4 +1,5 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+load("//tools/base/bazel:utils.bzl", "flat_archive")
 
 config_setting(
     name = "windows",
@@ -49,6 +50,16 @@ cc_binary(
         "//tools/base/dynamic-layout-inspector/proto:cc_proto",
         "@skia_repo//:libskia",
     ],
+)
+
+flat_archive(
+    name = "skiaparser",
+    ext = "zip",
+    deps = {
+        "version-map.xml": "skiaparser",
+        ":skia-grpc-server": "skiaparser",
+        "source.properties": "skiaparser",
+    },
 )
 
 cc_library(

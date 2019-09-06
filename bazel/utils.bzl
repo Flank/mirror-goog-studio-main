@@ -171,13 +171,14 @@ flat_archive = rule(
             allow_empty = False,
             allow_files = True,
         ),
+        "ext": attr.string(default = "jar"),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
             executable = True,
         ),
     },
-    outputs = {"out": "%{name}.jar"},
+    outputs = {"out": "%{name}.%{ext}"},
     implementation = _flat_archive_impl,
 )
 

@@ -42,6 +42,9 @@ IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
 
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
 
+@rem copy skia parser artifact to dist dir
+copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skiaparser.zip %DISTDIR%
+
 cd %BASEDIR%\bazel-testlogs
 
 FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zip"') DO (

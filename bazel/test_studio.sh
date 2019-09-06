@@ -43,6 +43,7 @@ if [[ -d "${DIST_DIR}" ]]; then
 
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
   cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
+  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${DIST_DIR}"/bazel-testlogs
