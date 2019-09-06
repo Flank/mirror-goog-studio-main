@@ -48,6 +48,7 @@ class OperationsTest {
         MockitoAnnotations.initMocks(this)
     }
 
+    @Suppress("ClassName")
     sealed class TestArtifactType<T: FileSystemLocation>(kind: ArtifactKind<T>)
         : ArtifactType<T>(kind)  {
         override val isPublic: Boolean
@@ -138,7 +139,7 @@ class OperationsTest {
 
     @Test
     fun  testFilesCombined() {
-        val combineRequest = object: CombineRequest<RegularFile> {
+        val combineRequest = object: MultipleTransformRequest<RegularFile> {
             override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
                     where ARTIFACT_TYPE : ArtifactType<RegularFile>,
                           ARTIFACT_TYPE : ArtifactType.Transformable,
@@ -146,13 +147,13 @@ class OperationsTest {
         }
         val taskProvider = getTaskProvider<FilesTransformerTask>()
 
-        `when`(operations.combine(taskProvider,
+        `when`(operations.transformAll(taskProvider,
             FilesTransformerTask::getInputFiles,
             FilesTransformerTask::getOutputFile))
             .thenReturn(combineRequest)
 
         // actual API
-        operations.combine(taskProvider,
+        operations.transformAll(taskProvider,
             FilesTransformerTask::getInputFiles,
             FilesTransformerTask::getOutputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
@@ -160,7 +161,7 @@ class OperationsTest {
 
     @Test
     fun  testDirectoriesCombined() {
-        val combineRequest = object: CombineRequest<Directory> {
+        val combineRequest = object: MultipleTransformRequest<Directory> {
             override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
                     where ARTIFACT_TYPE : ArtifactType<Directory>,
                           ARTIFACT_TYPE : ArtifactType.Transformable,
@@ -168,13 +169,13 @@ class OperationsTest {
         }
         val taskProvider = getTaskProvider<DirectoriesTransformerTask>()
 
-        `when`(operations.combine(taskProvider,
+        `when`(operations.transformAll(taskProvider,
             DirectoriesTransformerTask::getInputDirectories,
             DirectoriesTransformerTask::getOutputDirectory))
             .thenReturn(combineRequest)
 
         // actual API
-        operations.combine(taskProvider, DirectoriesTransformerTask::getInputDirectories,
+        operations.transformAll(taskProvider, DirectoriesTransformerTask::getInputDirectories,
             DirectoriesTransformerTask::getOutputDirectory)
             .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
     }

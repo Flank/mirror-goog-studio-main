@@ -16,6 +16,7 @@
 
 package com.android.build.api.artifact.impl
 
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import java.util.concurrent.atomic.AtomicBoolean
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param T the artifact type as [FileSystemLocation] subtype for single element artifact
  * or a [List] of the same [FileSystemLocation] subtype for multiple elements artifact.
  */
-abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter<T>) {
+internal abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter<T>) {
 
     // this represent the current provider(s) for the artifact.
     internal var current = allocator()
@@ -41,7 +42,7 @@ abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter
     val final = allocator()
 
     private val needInitialProducer = AtomicBoolean(true)
-    private val hasCustomProducers = AtomicBoolean(false)
+    private val hasCustomTransformers = AtomicBoolean(false)
 
     /**
      * Specific hook for AGP providers to register the initial producer of the artifact.
@@ -69,7 +70,8 @@ abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter
      * This is very useful for [org.gradle.api.Task] that want to transform an artifact and need the
      * current version as its input while producing the final version.
      */
-    open fun getCurrent(): Provider<T>  {
+    @VisibleForTesting
+    internal fun getCurrent(): Provider<T>  {
         val property = allocator()
         property.set(current.get())
         property.disallowChanges()
@@ -78,13 +80,18 @@ abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter
 
     /**
      * Replace the current producer(s). Previous producers may still be used to produce [with]
+     *
+     * @param with the provider that will be the transformed artifact.
+     * @return the current provider for the artifact (which will be transformed)
      */
     @Synchronized
-    open fun transform(with: Provider<T>) {
-        hasCustomProducers.set(true)
+    open fun transform(with: Provider<T>): Provider<T> {
+        hasCustomTransformers.set(true)
+        val oldCurrent = current
         current = allocator()
         current.set(with)
         final.set(current.get())
+        return oldCurrent.get()
     }
 
     /**
@@ -108,7 +115,7 @@ abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter
      * Returns true if at least one custom provider is registered for this artifact.
      */
     fun hasCustomProviders(): Boolean {
-        return hasCustomProducers.get()
+        return hasCustomTransformers.get()
     }
 }
 
@@ -118,19 +125,27 @@ abstract class ArtifactContainer<T>(private val allocator: () -> PropertyAdapter
  * @param T the single element type, either [org.gradle.api.file.RegularFile] or
  * [org.gradle.api.file.Directory]
  */
-class SingleArtifactContainer<T: FileSystemLocation>(
+internal class SingleArtifactContainer<T: FileSystemLocation>(
     val allocator: () -> SinglePropertyAdapter<T>
 ) : ArtifactContainer<T>(allocator) {
 
+    private val agpProducer= allocator()
+
     init {
+        current.from(agpProducer)
         final.from(current)
     }
 
     override fun setInitialProvider(with: Provider<T>) {
         // TODO: should we make this an assertion.
         if (needInitialProducer().get()) {
-            current.set(with)
+            agpProducer.set(with)
         }
+    }
+
+    override fun disallowChanges() {
+        super.disallowChanges()
+        agpProducer.disallowChanges()
     }
 }
 /**
@@ -139,7 +154,7 @@ class SingleArtifactContainer<T: FileSystemLocation>(
  * @param T the multiple elements type, either [org.gradle.api.file.RegularFile] or
  * [org.gradle.api.file.Directory]
  */
-class MultipleArtifactContainer<T: FileSystemLocation>(
+internal class MultipleArtifactContainer<T: FileSystemLocation>(
     val allocator: () -> MultiplePropertyAdapter<T>
 ):
     ArtifactContainer<List<T>>(allocator) {

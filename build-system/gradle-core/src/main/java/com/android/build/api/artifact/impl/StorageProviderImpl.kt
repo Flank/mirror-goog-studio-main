@@ -27,59 +27,53 @@ import java.lang.RuntimeException
 class StorageProviderImpl {
 
     fun lock() {
-        fileStorage.disallowChanges()
-        directory.disallowChanges()
+        fileStorage.lock()
+        directory.lock()
     }
 
-    companion object {
-        val fileStorage = TypedStorageProvider<RegularFile>()
-        val directory= TypedStorageProvider<Directory>()
-}}
+    private val fileStorage = TypedStorageProvider<RegularFile>()
+    private val directory= TypedStorageProvider<Directory>()
 
-fun <T: FileSystemLocation> ArtifactKind<T>.storage(): TypedStorageProvider<T> {
-    @Suppress("Unchecked_cast")
-    return when(this) {
-        ArtifactKind.FILE -> StorageProviderImpl.fileStorage
-        ArtifactKind.DIRECTORY -> StorageProviderImpl.directory
-        else -> throw RuntimeException("Cannot handle $this")
-    } as TypedStorageProvider<T>
+    fun <T: FileSystemLocation> getStorage(artifactKind: ArtifactKind<T>): TypedStorageProvider<T> {
+        @Suppress("Unchecked_cast")
+        return when(artifactKind) {
+            ArtifactKind.FILE -> fileStorage
+            ArtifactKind.DIRECTORY -> directory
+            else -> throw RuntimeException("Cannot handle $this")
+        } as TypedStorageProvider<T>
+    }
 }
 
 class TypedStorageProvider<T :FileSystemLocation> {
     private val singleStorage= mutableMapOf<ArtifactType.Single,  SingleArtifactContainer<T>>()
     private val multipleStorage=  mutableMapOf<ArtifactType.Multiple,  MultipleArtifactContainer<T>>()
 
-    fun allocate(objects: ObjectFactory, artifactType: ArtifactType<T>) {
-        val storage = artifactType.kind.storage()
-        if (artifactType is ArtifactType.Multiple) {
-            storage.multipleStorage[artifactType] =
-                MultipleArtifactContainer<T> {
-                    MultiplePropertyAdapter(
-                        objects.listProperty(artifactType.kind.dataType().java))
-                }
-        } else if (artifactType is ArtifactType.Single) {
-            storage.singleStorage[artifactType] =
-                SingleArtifactContainer<T> {
-                    SinglePropertyAdapter(
+    @Synchronized
+    internal fun <ARTIFACT_TYPE> getArtifact(objects: ObjectFactory, artifactType: ARTIFACT_TYPE): SingleArtifactContainer<T> where
+        ARTIFACT_TYPE: ArtifactType.Single,
+        ARTIFACT_TYPE: ArtifactType<T> {
+
+        return singleStorage.getOrPut(artifactType) {
+            SingleArtifactContainer<T> {
+                SinglePropertyAdapter(
                     objects.property(artifactType.kind.dataType().java))
-                }
+            }
         }
     }
 
-    fun getArtifact(artifactType: ArtifactType.Single): ArtifactContainer<T> {
+    internal fun <ARTIFACT_TYPE> getArtifact(objects: ObjectFactory, artifactType: ARTIFACT_TYPE): MultipleArtifactContainer<T> where
+            ARTIFACT_TYPE: ArtifactType.Multiple,
+            ARTIFACT_TYPE: ArtifactType<T> {
 
-        return singleStorage[artifactType]
-            ?: throw RuntimeException("Cannot find ${artifactType.name()} in single storage")
+        return multipleStorage.getOrPut(artifactType) {
+            MultipleArtifactContainer<T> {
+                MultiplePropertyAdapter(
+                    objects.listProperty(artifactType.kind.dataType().java))
+            }
+        }
     }
 
-    fun getArtifact(artifactType: ArtifactType.Multiple): ArtifactContainer<List<T>> {
-
-        return multipleStorage[artifactType]
-            ?: throw RuntimeException("Cannot find ${artifactType.name()} in multiple storage")
-    }
-
-
-    fun disallowChanges() {
+    fun lock() {
         singleStorage.values.forEach { it.disallowChanges() }
         multipleStorage.values.forEach { it.disallowChanges() }
     }

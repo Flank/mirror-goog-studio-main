@@ -62,36 +62,32 @@ class StorageProviderImplTest {
     @Test
     fun singleFileAllocationTest() {
         `when`(objects.property(ArgumentMatchers.eq(RegularFile::class.java))).thenReturn(fileProperty)
-        val storage = StorageProviderImpl.fileStorage
-        storage.allocate(objects, TestTypes.SINGLE_FILE)
-        val artifact = storage.getArtifact(TestTypes.SINGLE_FILE)
+        val storage = StorageProviderImpl().getStorage(ArtifactKind.FILE)
+        val artifact = storage.getArtifact(objects, TestTypes.SINGLE_FILE)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
     }
 
     @Test
     fun singleDirectoryAllocationTest() {
         `when`(objects.property(ArgumentMatchers.eq(Directory::class.java))).thenReturn(directoryProperty)
-        val storage = StorageProviderImpl.directory
-        storage.allocate(objects, TestTypes.SINGLE_DIRECTORY)
-        val artifact = storage.getArtifact(TestTypes.SINGLE_DIRECTORY)
+        val storage = StorageProviderImpl().getStorage(ArtifactKind.DIRECTORY)
+        val artifact = storage.getArtifact(objects, TestTypes.SINGLE_DIRECTORY)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
     }
 
     @Test
     fun multipleFilesAllocationTest() {
         `when`(objects.listProperty(ArgumentMatchers.eq(RegularFile::class.java))).thenReturn(filesProperty)
-        val storage = StorageProviderImpl.fileStorage
-        storage.allocate(objects, TestTypes.MULTIPLE_FILES)
-        val artifact = storage.getArtifact(TestTypes.MULTIPLE_FILES)
+        val storage = StorageProviderImpl().getStorage(ArtifactKind.FILE)
+        val artifact = storage.getArtifact(objects, TestTypes.MULTIPLE_FILES)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
     }
 
     @Test
     fun multipleDirectoriesAllocationTest() {
         `when`(objects.listProperty(ArgumentMatchers.eq(Directory::class.java))).thenReturn(directoriesProperty)
-        val storage = StorageProviderImpl.directory
-        storage.allocate(objects, TestTypes.MULTIPLE_DIRECTORIESS)
-        val artifact = storage.getArtifact(TestTypes.MULTIPLE_DIRECTORIESS)
+        val storage = StorageProviderImpl().getStorage(ArtifactKind.DIRECTORY)
+        val artifact = storage.getArtifact(objects, TestTypes.MULTIPLE_DIRECTORIESS)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
     }
 }

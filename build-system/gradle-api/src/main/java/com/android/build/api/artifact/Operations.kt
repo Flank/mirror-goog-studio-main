@@ -19,6 +19,7 @@ package com.android.build.api.artifact
 import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -139,7 +140,7 @@ interface Operations {
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> transform(
         taskProvider: TaskProvider<TASK>,
         from: (TASK)-> Property<FILE_TYPE>,
-        into: (TASK) -> Provider<FILE_TYPE>
+        into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): TransformRequest<FILE_TYPE>
 
     /**
@@ -185,17 +186,17 @@ interface Operations {
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
-     *     Operations.combine(taskProvider, MyTask::inputFiles, MyTask::outputFile)
+     *     Operations.transformAll(taskProvider, MyTask::inputFiles, MyTask::outputFile)
      *              .on(PublicArtifactType.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return a instance of [TransformRequest] that can be used to specify the artifact type.
      */
-    fun <TASK: Task, FILE_TYPE: FileSystemLocation> combine(
+    fun <TASK: Task, FILE_TYPE: FileSystemLocation> transformAll(
         taskProvider: TaskProvider<TASK>,
         from: (TASK)-> ListProperty<FILE_TYPE>,
         into: (TASK) -> Provider<FILE_TYPE>
-    ): CombineRequest<FILE_TYPE>
+    ): MultipleTransformRequest<FILE_TYPE>
 
     /**
      * Initiates a replacement request
@@ -211,7 +212,7 @@ interface Operations {
      * providers.
      *
      * You cannot replace [ArtifactType.Multiple] artifact type, therefore you must instead combine
-     * it using the [Operations.combine] API.
+     * it using the [Operations.transformAll] API.
      *
      * Let's take a [Task] with a [org.gradle.api.file.RegularFile] output :
      *
@@ -244,7 +245,7 @@ interface Operations {
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> replace(
         taskProvider: TaskProvider<TASK>,
-        with: (TASK)-> Provider<FILE_TYPE>
+        with: (TASK)-> FileSystemLocationProperty<FILE_TYPE>
     ): ReplaceRequest<FILE_TYPE>
 }
 
@@ -268,7 +269,7 @@ interface TransformRequest<FILE_TYPE: FileSystemLocation> {
  * A transform request on a multiple [FILE_TYPE] abstraction.
  */
 @Incubating
-interface CombineRequest<FILE_TYPE: FileSystemLocation> {
+interface MultipleTransformRequest<FILE_TYPE: FileSystemLocation> {
     /**
      * Specifies the artifact type this multiple file transform request applies to.
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
