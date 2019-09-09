@@ -89,6 +89,37 @@ coverage_report(
     ],
 )
 
+# Coverage report for the split editor feature in design tools.
+# The editor covers most CUJs in both layout and navigation editors,
+# so we run both targets and exclude unrelated directories.
+coverage_report(
+    name = "spliteditor",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/lint",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/scene/draw",
+        "tools/adt/idea/designer/src/com/android/tools/idea/editors/layeredimage",
+        "tools/adt/idea/designer/src/com/android/tools/idea/sampledata",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/constraint",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/flexbox",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/leanback",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/layout3d",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/mockup",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/property",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/scene/draw",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/scout",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea",
+        "tools/adt/idea/naveditor/src/com/android/tools/idea/naveditor",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+    ],
+)
+
 # All coverage enabled tests should go here
 coverage_report(
     name = "all",
