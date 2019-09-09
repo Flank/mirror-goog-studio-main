@@ -214,6 +214,12 @@ public class DeployerException extends Exception {
         JDWP_REDEFINE_CLASSES_EXCEPTION(
                 "Exception during VM RedfineClasses", "%s", "Retry", ResolutionAction.RETRY),
 
+        ABIS_FIELD_NOT_FOUND(
+                "android.os.Build does not contain the expected ABI fields",
+                "",
+                "Retry",
+                ResolutionAction.RETRY),
+
         ATTACHAGENT_NOT_FOUND(
                 "dalvik.system.VMDebug does not contain proper attachAgent method",
                 "",
@@ -422,6 +428,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException attachAgentNotFound() {
         return new DeployerException(Error.ATTACHAGENT_NOT_FOUND, NO_ARGS, NO_ARGS);
+    }
+
+    public static DeployerException abisFieldNotFound() {
+        return new DeployerException(Error.ABIS_FIELD_NOT_FOUND, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException attachAgentException(Exception e) {
