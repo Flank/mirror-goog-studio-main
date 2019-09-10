@@ -59,12 +59,13 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.10.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.10.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
         ":com.android.tools.build_aapt2-proto",
         ":com.google.auto.value_auto-value",
+        ":com.google.auto.value_auto-value-annotations",
         ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
