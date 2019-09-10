@@ -109,9 +109,9 @@ public class ConnectedDeviceProvider extends DeviceProvider {
 
         logAdapter = new LogAdapter(iLogger);
         Log.addLogger(logAdapter);
-        DdmPreferences.setLogLevel(Log.LogLevel.VERBOSE.getStringValue());
 
         try {
+            DdmPreferences.setLogLevel(Log.LogLevel.VERBOSE.getStringValue());
             // TODO: switch to devicelib
             if (timeOut > 0) {
                 DdmPreferences.setTimeOut((int) timeOutUnit.toMillis(timeOut));
@@ -212,6 +212,7 @@ public class ConnectedDeviceProvider extends DeviceProvider {
         } catch (Throwable throwable) {
             Log.removeLogger(logAdapter);
             logAdapter = null;
+            sessionLock.unlock();
             throw throwable;
         }
     }
