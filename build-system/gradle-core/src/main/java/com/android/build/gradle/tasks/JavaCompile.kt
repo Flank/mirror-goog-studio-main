@@ -20,14 +20,15 @@ import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.INITIAL
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
+import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.getOutputDirectory
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidTargetHash
+import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Joiner
 import org.gradle.api.JavaVersion
@@ -151,16 +152,14 @@ class JavaCompileCreationAction(
             // See https://issuetracker.google.com/130531986.
             task.configureAnnotationProcessorPath(variantScope)
 
-            val separateTaskAnnotationProcessorOutputDirectory: Provider<Directory> =
+            val apSourcesOutputDir: Provider<Directory> =
                 variantScope.artifacts.getFinalProduct(AP_GENERATED_SOURCES)
 
-            val generatedSources =
-                globalScope.project.fileTree(
-                    separateTaskAnnotationProcessorOutputDirectory
-                ).builtBy(separateTaskAnnotationProcessorOutputDirectory)
+            val apSourcesFileCollection =
+                globalScope.project.fileTree(apSourcesOutputDir).builtBy(apSourcesOutputDir)
 
             // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-            Callable { listOf(variantScope.variantData.javaSources, generatedSources) }
+            Callable { listOf(variantScope.variantData.javaSources, apSourcesFileCollection) }
         } else {
             // Configure properties for annotation processing, because this task is actually
             // going to perform annotation processing (i.e., annotation processing is not done
@@ -173,6 +172,25 @@ class JavaCompileCreationAction(
             Callable { listOf(variantScope.variantData.javaSources) }
         }
         task.source = task.project.files(sourcesToCompile).asFileTree
+
+        // Some annotation processors generate files in the class output directory too, so we need
+        // to copy those classes over from the process-annotations task if that task is used.
+        if (processAnnotationsTaskCreated) {
+            val apClassesOutputDir: Provider<Directory> =
+                variantScope.artifacts.getFinalProduct(AP_GENERATED_CLASSES)
+
+            val apClassesFileCollection =
+                globalScope.project.fileTree(apClassesOutputDir).builtBy(apClassesOutputDir)
+
+            task.inputs.files(apClassesFileCollection).withPathSensitivity(PathSensitivity.RELATIVE)
+                .withPropertyName("apGeneratedClasses")
+
+            task.doLast {
+                FileUtils.copyDirectory(
+                    apClassesOutputDir.get().asFile, classesOutputDirectory.get().asFile
+                )
+            }
+        }
 
         task.options.isIncremental =
             compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
