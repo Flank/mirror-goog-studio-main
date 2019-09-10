@@ -186,9 +186,10 @@ class JavaCompileCreationAction(
                 .withPropertyName("apGeneratedClasses")
 
             task.doLast {
-                FileUtils.copyDirectory(
-                    apClassesOutputDir.get().asFile, classesOutputDirectory.get().asFile
-                )
+                val apClassesOutDir = apClassesOutputDir.get().asFile
+                if (apClassesOutDir.exists()) { // The task could be skipped
+                    FileUtils.copyDirectory(apClassesOutDir, classesOutputDirectory.get().asFile)
+                }
             }
         }
 
@@ -196,11 +197,12 @@ class JavaCompileCreationAction(
             compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
 
         val apList =
-            variantScope.artifacts.getFinalProduct<RegularFile>(ANNOTATION_PROCESSOR_LIST)
+            variantScope.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
         // Record these as inputs. They impact doFirst() below.
         task.inputs.property("__separateAnnotationProcessingFlag", separateAnnotationProcessingFlag)
         task.inputs.property("__processAnnotationsTaskCreated", processAnnotationsTaskCreated)
         task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
+            .withPropertyName("annotationProcessorList")
 
         task.handleAnnotationProcessors(
             apList,

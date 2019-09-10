@@ -845,10 +845,9 @@ class IncrementalJavaCompileWithAPsTest(
         assertThat(annotation2Class2).exists()
 
         // Check the tasks' status
-        // ProcessAnnotationsTask was executed but essentially skipped (did not produce any output)
-        // since no annotation processors are present. However, because execution has already
-        // started, its state is DID_WORK. See ProcessAnnotationTasks.compile().
-        assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
+        // Process-annotations task should be skipped since no annotation processors are present
+        // (regression test for bug 140602661).
+        assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).wasSkipped()
         assertThat(fullBuildResult.getTask(COMPILE_TASK)).didWork()
     }
 }

@@ -20,12 +20,14 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 
@@ -94,8 +96,16 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
         // investigate what it means for an annotation-processing-only task to be incremental.
         task.options.isIncremental = false
 
-        // Perform annotation processing only (but only if the user did not request -proc:none)
-        task.onlyIf { PROC_NONE !in task.options.compilerArgs }
+        // Perform annotation processing only, except when -proc:none is requested or no annotation
+        // processors are present (see bug 140602661).
+        val apList =
+            variantScope.artifacts.getFinalProduct(InternalArtifactType.ANNOTATION_PROCESSOR_LIST)
+        task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
+            .withPropertyName("annotationProcessorList")
+        task.onlyIf {
+            !(PROC_NONE in task.options.compilerArgs
+                    || readAnnotationProcessorsFromJsonFile(apList.get().asFile).isEmpty())
+        }
     }
 }
 
