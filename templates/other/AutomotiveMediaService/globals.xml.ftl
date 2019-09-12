@@ -2,7 +2,7 @@
 <globals>
     <#include "../common/globals.xml.ftl" />
 
-    <#if Mobileincluded!false>
+    <#if isNewProject!false>
         <#assign sharedModule="shared" />
         <global id="sharedModule" value="${sharedModule}" />
         <global id="serviceManifestOut" value="${escapeXmlAttribute(topOut)}/${sharedModule}/${manifestDir}" />

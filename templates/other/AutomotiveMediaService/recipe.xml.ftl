@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
-    <#if Mobileincluded!false>
+    <#if isNewProject!false>
         <merge from="root/settings.gradle.ftl"
                to="${escapeXmlAttribute(topOut)}/settings.gradle" />
         <instantiate from="root/build.gradle.ftl"
                      to="${escapeXmlAttribute(serviceProjectOut)}/build.gradle" />
-        <merge from="root/mobile-build.gradle.ftl"
-               to="${mobileProjectOut}/build.gradle" />
-        <merge from="root/automotive-build.gradle.ftl"
-               to="${automotiveProjectOut}/build.gradle" />
+	<moduleDependency name="${sharedModule}"
+                          to="${escapeXmlAttribute(automotiveProjectOut)}" />
+	<moduleDependency name="${sharedModule}"
+                          to="${escapeXmlAttribute(mobileProjectOut)}" />
+
     <#else>
         <dependency mavenUrl="com.android.support:support-media-compat:${buildApi}.+" />
     </#if>
