@@ -122,7 +122,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @NonNull
     @Incubating
     public Provider<FileCollection> getFinalArtifact(
-            @NonNull ArtifactType<FileSystemLocation> artifactType) {
+            @NonNull ArtifactType<? extends FileSystemLocation> artifactType) {
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
         return artifacts.getFinalProductAsFileCollection(artifactType);
     }
