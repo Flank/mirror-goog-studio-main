@@ -50,10 +50,7 @@ iml_module(
 
 java_library(
     name = "java_version",
-    srcs = select({
-        "//tools/base/bazel:remote_windows": ["src/windows/java/Version.java"],
-        "//conditions:default": ["//tools/base/deploy/installer:Version.java"],
-    }),
+    srcs = ["//tools/base/deploy/installer:Version.java"],
     visibility = ["//visibility:public"],
 )
 
@@ -64,7 +61,6 @@ java_library(
     ]),
     # Embed android installer in the jar (x86, x86_64, arm7, arm64)
     resources = ["//tools/base/deploy/installer:android-installer"],
-    tags = ["no_rbe_windows"],
     visibility = ["//visibility:public"],
     deps = [
         ":java_version",
@@ -88,7 +84,6 @@ java_binary(
     data = ["//tools/base/tracer:trace_agent"],
     jvm_flags = ["-javaagent:$(location //tools/base/tracer:trace_agent)"],
     main_class = "com.android.tools.deployer.DeployerRunner",
-    tags = ["no_rbe_windows"],
     runtime_deps = [
         ":tools.deployer",
         "//tools/base/ddmlib:tools.ddmlib",

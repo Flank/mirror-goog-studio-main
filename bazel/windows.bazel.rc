@@ -11,7 +11,6 @@ build:remote --extra_toolchains=@windows_toolchains//bazel_0.28.1:cc-toolchain-x
 build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows1803_as
 build:remote --host_platform=//tools/base/bazel/foundry:rbe_windows1803_as
 build:remote --platforms=//tools/base/bazel/foundry:rbe_windows1803_as
-build:remote --define=REMOTE_WINDOWS=true
 
 # required due to https://github.com/bazelbuild/bazel/issues/8614
 build:remote --java_toolchain=@windows_toolchains//bazel_0.28.1:actual_java_toolchain

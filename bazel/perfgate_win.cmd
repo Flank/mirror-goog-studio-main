@@ -32,9 +32,9 @@ CALL %SCRIPTDIR%bazel.cmd ^
  test ^
  --keep_going ^
  --config=remote ^
- --build_tag_filters=-no_rbe_windows,-no_windows ^
+ --build_tag_filters=-no_windows ^
  --invocation_id=%INVOCATIONID% ^
- --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% ^
+ --test_tag_filters=-%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json ^
  --runs_per_test=5 ^
  -- %TARGETS%

@@ -87,7 +87,6 @@ genrule(
            -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) \
            -p version=$(location :version.raw);
     """,
-    tags = ["no_rbe_windows"],
     tools = [
         "//tools/base/bazel:bin2c",
         "//tools/base/bazel:matryoshka",
