@@ -2189,7 +2189,6 @@ public final class SdkConstants {
     public static final String ANDROID_LAYOUT_RESOURCE_PREFIX = "@android:layout/"; //$NON-NLS-1$
     public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/"; //$NON-NLS-1$
     public static final String ANDROID_COLOR_RESOURCE_PREFIX = "@android:color/"; //$NON-NLS-1$
-    public static final String ANDROID_NEW_ID_PREFIX = "@android:+id/"; //$NON-NLS-1$
     public static final String ANDROID_ID_PREFIX = "@android:id/"; //$NON-NLS-1$
     public static final String ANDROID_DRAWABLE_PREFIX = "@android:drawable/"; //$NON-NLS-1$
     public static final String ANDROID_STRING_PREFIX = "@android:string/"; //$NON-NLS-1$

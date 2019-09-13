@@ -84,14 +84,6 @@ public class ResourceItem implements Comparable<ResourceItem> {
     }
 
     /**
-     * Returns whether the ID resource has been declared inline inside another resource XML file.
-     * If the resource type is not {@link ResourceType#ID}, this will always return {@code false}.
-     */
-    public boolean isDeclaredInline() {
-        return false;
-    }
-
-    /**
      * Returns a {@link ResourceValue} for this item based on the given configuration.
      * If the ResourceItem has several source files, one will be selected based on the config.
      * @param type the type of the resource. This is necessary because ResourceItem doesn't embed
@@ -212,19 +204,6 @@ public class ResourceItem implements Comparable<ResourceItem> {
         }
 
         return count;
-    }
-
-    /**
-     * Returns a formatted string usable in an XML to use for the {@link ResourceItem}.
-     * @param system Whether this is a system resource or a project resource.
-     * @return a string in the format @[type]/[name]
-     */
-    public String getXmlString(ResourceType type, boolean system) {
-        if (type == ResourceType.ID && isDeclaredInline()) {
-            return (system ? "@android:" : "@+") + type.getName() + "/" + mName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        }
-
-        return (system ? "@android:" : "@") + type.getName() + "/" + mName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Override

@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.ANDROID_NEW_ID_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
 import static com.android.SdkConstants.ANDROID_PREFIX;
@@ -27,7 +26,6 @@ import static com.android.SdkConstants.ATTR_PARENT;
 import static com.android.SdkConstants.ATTR_QUANTITY;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.TAG_ENUM;
@@ -361,10 +359,6 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
      * @return a string in the format @[type]/[name]
      */
     public String getXmlString(ResourceType type, boolean system) {
-        if (type == ResourceType.ID /* && isDeclaredInline()*/) {
-            return (system ? ANDROID_NEW_ID_PREFIX : NEW_ID_PREFIX) + "/" + getName();
-        }
-
         return (system ? ANDROID_PREFIX : PREFIX_RESOURCE_REF) + type.getName() + "/" + getName();
     }
 

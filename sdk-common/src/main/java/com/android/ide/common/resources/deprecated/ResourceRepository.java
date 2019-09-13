@@ -311,8 +311,7 @@ public abstract class ResourceRepository {
 
         // create one if there isn't one already, or if the existing one is inlined, since
         // clearly we need a non inlined one (the inline one is removed too)
-        if (item == null || item.isDeclaredInline()) {
-            ResourceItem oldItem = item;
+        if (item == null) {
             item = createResourceItem(name);
 
             Map<String, ResourceItem> map = mResourceMap.get(type);
@@ -363,10 +362,6 @@ public abstract class ResourceRepository {
             }
 
             map.put(item.getName(), item);
-
-            if (oldItem != null) {
-                map.remove(oldItem.getName());
-            }
         }
 
         return item;
@@ -877,25 +872,16 @@ public abstract class ResourceRepository {
 
     /**
      * Looks up an existing {@link ResourceItem} by {@link ResourceType} and name.
-     * Ignores inline resources.
      *
      * @param type the resource type.
      * @param name the resource name.
      * @return the existing ResourceItem or null if no match was found.
      */
     @Nullable
-    private ResourceItem findDeclaredResourceItem(@NonNull ResourceType type,
-            @NonNull String name) {
+    private ResourceItem findDeclaredResourceItem(
+            @NonNull ResourceType type, @NonNull String name) {
         Map<String, ResourceItem> map = mResourceMap.get(type);
-
-        if (map != null) {
-            ResourceItem resourceItem = map.get(name);
-            if (resourceItem != null && !resourceItem.isDeclaredInline()) {
-                return resourceItem;
-            }
-        }
-
-        return null;
+        return map != null ? map.get(name) : null;
     }
 }
 
