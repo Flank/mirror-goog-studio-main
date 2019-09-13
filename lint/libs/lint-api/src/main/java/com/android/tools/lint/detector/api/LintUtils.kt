@@ -410,6 +410,13 @@ fun isRootElement(element: Element): Boolean {
  * @param id the id to strip
  * @return the stripped id, never null
  */
+@Deprecated(
+  message = "Use ResourceUrl for parsing @id and similar strings.",
+  replaceWith = ReplaceWith(
+    expression = "ResourceUrl.parse(id)?.name",
+    imports = ["com.android.resources.ResourceUrl"]
+  )
+)
 fun stripIdPrefix(id: String?): String {
     return when {
         id == null -> ""
@@ -2233,8 +2240,11 @@ object LintUtils {
 
     @JvmStatic
     @Deprecated(
-        "Use package function instead",
-        replaceWith = ReplaceWith("com.android.tools.lint.detector.api.stripIdPrefix(id)")
+      message = "Use ResourceUrl for parsing @id and similar strings and consider the namespace used.",
+      replaceWith = ReplaceWith(
+        expression = "ResourceUrl.parse(id)",
+        imports = ["com.android.resources.ResourceUrl"]
+      )
     )
     fun stripIdPrefix(id: String?): String {
         return com.android.tools.lint.detector.api.stripIdPrefix(id)
