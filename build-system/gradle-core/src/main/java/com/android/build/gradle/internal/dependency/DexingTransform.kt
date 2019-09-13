@@ -152,7 +152,7 @@ data class DexingArtifactConfiguration(
         projectName: String,
         dependencyHandler: DependencyHandler,
         bootClasspath: FileCollection,
-        libConfiguration: String,
+        libConfiguration: Provider<String>,
         errorFormat: SyncOptions.ErrorFormatMode
     ) {
         dependencyHandler.registerTransform(getTransformClass()) { spec ->

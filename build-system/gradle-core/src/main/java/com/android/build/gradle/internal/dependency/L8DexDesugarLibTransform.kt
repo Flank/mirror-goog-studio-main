@@ -65,7 +65,7 @@ abstract class L8DexDesugarLibTransform : TransformAction<L8DexDesugarLibTransfo
 }
 
 data class DesugarLibConfiguration(
-    private val libConfiguration: String,
+    private val libConfiguration: Provider<String>,
     private val bootClasspath: FileCollection,
     private val minSdkVersion: Int) {
 

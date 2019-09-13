@@ -355,6 +355,17 @@ public class TestUtils {
     }
 
     @NonNull
+    public static Path getDesugarLibConfigJarWithVersion(String version) {
+        return getWorkspaceFile(
+                        "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/"
+                                + version
+                                + "/desugar_jdk_libs_configuration-"
+                                + version
+                                + ".jar")
+                .toPath();
+    }
+
+    @NonNull
     public static String getLatestAndroidPlatform() {
         return "android-28";
     }

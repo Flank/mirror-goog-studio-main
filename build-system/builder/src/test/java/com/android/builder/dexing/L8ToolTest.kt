@@ -21,8 +21,12 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.jar.JarFile
 
 /**
  * Sanity test to make sure we can invoke L8 successfully
@@ -33,9 +37,13 @@ class L8ToolTest {
 
     @Test
     fun testDexGeneration() {
-        val configuration = "default"
         val output = tmp.newFolder().toPath()
-        runL8(desugarJar, output, configuration, bootClasspath, 20)
+        runL8(
+            desugarJar,
+            output,
+            getFileContentFromJar(desugarConfigJar.toFile()),
+            bootClasspath,
+            20)
         assertThat(getDexFileCount(output)).isEqualTo(1)
     }
 
@@ -45,5 +53,22 @@ class L8ToolTest {
     companion object {
         val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar").toPath())
         val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.0"))
+        val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.1.0")
+    }
+
+    private fun getFileContentFromJar(file: File) : String {
+        val stringBuilder = StringBuilder()
+        JarFile(file).use { jarFile ->
+            val jarEntry = jarFile.getJarEntry("META-INF/desugar/d8/desugar.json")
+            BufferedReader(InputStreamReader(jarFile.getInputStream(jarEntry)))
+                .use { bufferedReader ->
+                    var line = bufferedReader.readLine()
+                    while (line != null) {
+                        stringBuilder.append(line)
+                        line = bufferedReader.readLine()
+                    }
+                }
+        }
+        return stringBuilder.toString()
     }
 }
