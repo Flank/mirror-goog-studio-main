@@ -550,8 +550,9 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                                     "Redundant attribute `%1$s`; already defining `%2$s` with "
                                             + "`targetSdkVersion` %3$s",
                                     name, rtl, targetSdk);
+                    LintFix fix = fix().unset(ANDROID_URI, name).autoFix().build();
                     context.report(
-                            USE_START, attribute, context.getNameLocation(attribute), message);
+                            USE_START, attribute, context.getNameLocation(attribute), message, fix);
                 }
             } else {
                 String message;
