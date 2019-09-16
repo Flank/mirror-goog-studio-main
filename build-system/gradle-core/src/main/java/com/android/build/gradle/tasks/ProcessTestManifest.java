@@ -70,6 +70,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -414,6 +415,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     @Optional
     public abstract Property<File> getTestManifestFile();
 
+    @Internal
     public File getTmpDir() {
         return tmpDir;
     }
@@ -468,6 +470,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getTestTargetMetadata() {
         return testTargetMetadata;
@@ -492,6 +495,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifests() {
         return manifests.getArtifactFiles();
     }

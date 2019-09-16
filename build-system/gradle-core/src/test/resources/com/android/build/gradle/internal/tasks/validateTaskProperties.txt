@@ -70,8 +70,5 @@ Warning: Type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lin
 Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'jniFolders' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'processedAbiResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.PackageSplitRes': property 'processedResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'manifests' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'outputScope' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'testTargetMetadata' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'tmpDir' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.RenderscriptCompile': property 'ndkConfig' is not annotated with an input or output annotation.
