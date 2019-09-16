@@ -54,9 +54,9 @@ class OperationsImpl(
             = getArtifactContainer(type).get()
 
     override fun <FILE_TYPE : FileSystemLocation, ARTIFACT_TYPE> getAll(type: ARTIFACT_TYPE): Provider<List<FILE_TYPE>>
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Multiple {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+                  ARTIFACT_TYPE : ArtifactType.Multiple
+            = getArtifactContainer(type).get()
 
     override fun <TASK : Task, FILE_TYPE : FileSystemLocation> append(
         taskProvider: TaskProvider<TASK>,
@@ -96,8 +96,23 @@ class OperationsImpl(
      * @param type requested artifact type
      * @return the [ArtifactContainer] for the passed type
      */
-    internal fun <ARTIFACT_TYPE, FILE_TYPE> getArtifactContainer(type: ARTIFACT_TYPE): ArtifactContainer<FILE_TYPE> where
+    internal fun <ARTIFACT_TYPE, FILE_TYPE> getArtifactContainer(type: ARTIFACT_TYPE): SingleArtifactContainer<FILE_TYPE> where
             ARTIFACT_TYPE : ArtifactType.Single,
+            ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+            FILE_TYPE : FileSystemLocation {
+
+        return storageProvider.getStorage(type.kind).getArtifact(objects, type)
+    }
+
+    /**
+     * Returns the [ArtifactContainer] for the passed [type]. The instance may be allocated as part
+     * of the call if there is not [ArtifactContainer] for this [type] registered yet.
+     *
+     * @param type requested artifact type
+     * @return the [ArtifactContainer] for the passed type
+     */
+    internal fun <ARTIFACT_TYPE, FILE_TYPE> getArtifactContainer(type: ARTIFACT_TYPE): MultipleArtifactContainer<FILE_TYPE> where
+            ARTIFACT_TYPE : ArtifactType.Multiple,
             ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
             FILE_TYPE : FileSystemLocation {
 
@@ -110,7 +125,7 @@ class OperationsImpl(
      * opportunities to transform or replace it.
      *
      * Therefore, we cannot rely on the usual append/replace pattern but instead use this API to
-     * be artificially put first in the list of producers for the pased [type]
+     * be artificially put first in the list of producers for the passed [type]
      *
      * @param type the artifact type being produced
      * @param taskProvider the [TaskProvider] for the task producing the artifact
@@ -132,6 +147,39 @@ class OperationsImpl(
                 if (artifactContainer.hasCustomProviders()) taskProvider.name else ""))
         }
         artifactContainer.setInitialProvider(taskProvider.flatMap { property(it) })
+    }
+
+    /**
+     * Adds an Android Gradle Plugin producer.
+     *
+     * The passed [type] must be a [ArtifactType.Multiple] that accepts more than one producer.
+     *
+     * Although conceptually the AGP producers are first to produce artifacts, we want to register
+     * them last after all custom code had the opportunity to transform or replace it.
+     *
+     * Therefore, we cannot rely on the usual append/replace pattern but instead use this API to
+     * be artificially put first in the list of producers for the passed [type]
+     *
+     * @param type the [ArtifactType.Multiple] artifact type being produced
+     * @param taskProvider the [TaskProvider] for the task producing the artifact
+     * @param property: the field reference to retrieve the output from the task
+     */
+    internal fun <ARTIFACT_TYPE, FILE_TYPE, TASK> addInitialProvider(
+        type: ARTIFACT_TYPE,
+        taskProvider: TaskProvider<TASK>,
+        property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>) where
+            ARTIFACT_TYPE : ArtifactType.Multiple,
+            ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+            FILE_TYPE : FileSystemLocation,
+            TASK: Task {
+
+        val artifactContainer = getArtifactContainer(type)
+        taskProvider.configure {
+            // since the taskProvider will execute, resolve its output path, and since there can
+            // be multiple ones, just put the task name at all times.
+            property(it).set(type.getOutputDirectory(buildDirectory, identifier, taskProvider.name))
+        }
+        artifactContainer.addInitialProvider(taskProvider.flatMap { property(it) })
     }
 }
 

@@ -160,24 +160,24 @@ internal class MultipleArtifactContainer<T: FileSystemLocation>(
     ArtifactContainer<List<T>>(allocator) {
 
     // this represent the providers from the AGP.
-    private val agpProducer = allocator()
+    private val agpProducers = allocator()
 
     init {
-        current.set(agpProducer.get())
+        current.set(agpProducers.get())
         final.set(current.get())
     }
 
     override fun setInitialProvider(with: Provider<List<T>>) {
         // in theory, we should add those first ?
-        agpProducer.addAll(with)
+        agpProducers.addAll(with)
     }
 
-    fun add(item: Provider<T>) {
-        agpProducer.add(item)
+    fun addInitialProvider(item: Provider<T>) {
+        agpProducers.add(item)
     }
 
     override fun disallowChanges() {
         super.disallowChanges()
-        agpProducer.disallowChanges()
+        agpProducers.disallowChanges()
     }
 }

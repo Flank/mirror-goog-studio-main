@@ -18,8 +18,10 @@ package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_DIRECTORIES
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_DIRECTORY
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_FILE
+import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_FILES
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_REPLACABLE_DIRECTORY
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_REPLACABLE_FILE
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY
@@ -36,12 +38,14 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class OperationsImplTest {
 
@@ -126,6 +130,94 @@ class OperationsImplTest {
         // final artifact value should be the agp producer task output
         Truth.assertThat(artifactContainer.get().get().asFile.absolutePath)
             .isEqualTo(agpProducer.get().outputFolder.asFile.get().absolutePath)
+    }
+
+    @Test
+    fun testOneAGPProviderForMultipleFileArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+        val agpProducer = project.tasks.register("agpProducer", AGPTask::class.java)
+        operations.addInitialProvider(TEST_FILES, agpProducer, AGPTask::outputFile)
+
+        val artifactContainer = operations.getArtifactContainer(TEST_FILES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        val outputFile = artifactContainer.get().get()[0]
+        Truth.assertThat(outputFile.asFile.absolutePath).contains("test_files")
+        // since multiple producer are possible, task name is provided in path even with a single registered producer
+        Truth.assertThat(outputFile.asFile.absolutePath).contains("agpProducer")
+    }
+
+    @Test
+    fun testMultipleAGPProvidersForMultipleFileArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+        val initializedTasks = AtomicInteger(0)
+        val agpProducers = mutableListOf<TaskProvider<AGPTask>>()
+        for (i in 0..2) {
+            val agpProducer = project.tasks.register("agpProducer$i", AGPTask::class.java) {
+                initializedTasks.incrementAndGet()
+            }
+            agpProducers.add(agpProducer)
+            operations.addInitialProvider(TEST_FILES, agpProducer, AGPTask::outputFile)
+        }
+
+        Truth.assertThat(initializedTasks.get()).isEqualTo(0)
+        val artifactContainer = operations.getArtifactContainer(TEST_FILES)
+        for (i in 0..2) {
+            Truth.assertThat(agpProducers[i].get().outputFile.get().asFile.absolutePath).contains("test_files")
+            // since multiple producer, task name is provided in path.
+            Truth.assertThat(agpProducers[i].get().outputFile.get().asFile.absolutePath).contains("agpProducer$i")
+        }
+        Truth.assertThat(artifactContainer.get().get()).hasSize(3)
+        Truth.assertThat(initializedTasks.get()).isEqualTo(3)
+    }
+
+    @Test
+    fun testOneAGPProviderForMultipleDirectoryArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputDirectory
+            abstract val outputDirectory: DirectoryProperty
+        }
+        val agpProducer = project.tasks.register("agpProducer", AGPTask::class.java)
+        operations.addInitialProvider(TEST_DIRECTORIES, agpProducer, AGPTask::outputDirectory)
+
+        val artifactContainer = operations.getArtifactContainer(TEST_DIRECTORIES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        val outputFile = artifactContainer.get().get()[0]
+        Truth.assertThat(outputFile.asFile.absolutePath).contains("test_directories")
+        // since multiple producer are possible, task name is provided in path even with a single registered producer
+        Truth.assertThat(outputFile.asFile.absolutePath).contains("agpProducer")
+    }
+
+    @Test
+    fun testMultipleAGPProvidersForMultipleDirectoryArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputDirectory
+            abstract val outputDirectory: DirectoryProperty
+        }
+        val initializedTasks = AtomicInteger(0)
+        val agpProducers = mutableListOf<TaskProvider<AGPTask>>()
+        for (i in 0..2) {
+            val agpProducer = project.tasks.register("agpProducer$i", AGPTask::class.java) {
+                initializedTasks.incrementAndGet()
+            }
+            agpProducers.add(agpProducer)
+            operations.addInitialProvider(TEST_DIRECTORIES, agpProducer, AGPTask::outputDirectory)
+        }
+
+        Truth.assertThat(initializedTasks.get()).isEqualTo(0)
+        val artifactContainer = operations.getArtifactContainer(TEST_DIRECTORIES)
+        for (i in 0..2) {
+            Truth.assertThat(agpProducers[i].get().outputDirectory.get().asFile.absolutePath).contains("test_directories")
+            // since multiple producer, task name is provided in path.
+            Truth.assertThat(agpProducers[i].get().outputDirectory.get().asFile.absolutePath).contains("agpProducer$i")
+        }
+        Truth.assertThat(artifactContainer.get().get()).hasSize(3)
+        Truth.assertThat(initializedTasks.get()).isEqualTo(3)
     }
 
     @Test
