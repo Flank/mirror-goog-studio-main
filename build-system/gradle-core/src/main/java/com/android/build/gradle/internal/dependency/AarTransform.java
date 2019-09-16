@@ -39,28 +39,32 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.inject.Inject;
-import org.gradle.api.artifacts.transform.ArtifactTransform;
+import org.gradle.api.artifacts.transform.InputArtifact;
+import org.gradle.api.artifacts.transform.TransformAction;
+import org.gradle.api.artifacts.transform.TransformOutputs;
+import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Input;
 
 /** Transform that returns the content of an extracted AAR folder. */
-public class AarTransform extends ArtifactTransform {
-    @NonNull private final ArtifactType targetType;
-    private final boolean sharedLibSupport;
-    private final boolean autoNamespaceDependencies;
+public abstract class AarTransform implements TransformAction<AarTransform.Parameters> {
 
-    @Inject
-    public AarTransform(
-            @NonNull ArtifactType targetType,
-            boolean sharedLibSupport,
-            boolean autoNamespaceDependencies) {
-        this.targetType = targetType;
-        this.sharedLibSupport = sharedLibSupport;
-        this.autoNamespaceDependencies = autoNamespaceDependencies;
+    public interface Parameters extends GenericTransformParameters {
+        @Input
+        Property<ArtifactType> getTargetType();
+
+        @Input
+        Property<Boolean> getSharedLibSupport();
+
+        @Input
+        Property<Boolean> getAutoNamespaceDependencies();
     }
+
+    @Classpath
+    @InputArtifact
+    public abstract Provider<FileSystemLocation> getInputArtifact();
 
     @NonNull
     public static ArtifactType[] getTransformTargets() {
@@ -101,18 +105,22 @@ public class AarTransform extends ArtifactTransform {
     }
 
     @Override
-    @NonNull
-    public List<File> transform(@NonNull File input) {
+    public void transform(@NonNull TransformOutputs transformOutputs) {
+        File input = getInputArtifact().get().getAsFile();
+        boolean autoNamespaceDependencies = getParameters().getAutoNamespaceDependencies().get();
+        ArtifactType targetType = getParameters().getTargetType().get();
         switch (targetType) {
             case CLASSES:
-                return (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
-                                || isShared(input))
-                        ? Collections.emptyList()
-                        : AarTransformUtil.getJars(input);
+                if (!AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
+                        && !isShared(input)) {
+                    AarTransformUtil.getJars(input).forEach(transformOutputs::file);
+                }
+                break;
             case NON_NAMESPACED_CLASSES:
-                return AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
-                        ? AarTransformUtil.getJars(input)
-                        : Collections.emptyList();
+                if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
+                    AarTransformUtil.getJars(input).forEach(transformOutputs::file);
+                }
+                break;
             case JAVA_RES:
             case PROCESSED_JAR:
             case JAR:
@@ -120,90 +128,110 @@ public class AarTransform extends ArtifactTransform {
                 // is not necessarily enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.
                 // For shared libraries, these are provided via SHARED_CLASSES and SHARED_JAVA_RES.
-                return isShared(input) ? Collections.emptyList() : AarTransformUtil.getJars(input);
+                if (!isShared(input)) {
+                    AarTransformUtil.getJars(input).forEach(transformOutputs::file);
+                }
+                break;
             case SHARED_CLASSES:
             case SHARED_JAVA_RES:
-                return isShared(input) ? AarTransformUtil.getJars(input) : Collections.emptyList();
+                if (isShared(input)) {
+                    AarTransformUtil.getJars(input).forEach(transformOutputs::file);
+                }
+                break;
             case LINT:
-                return listIfExists(FileUtils.join(input, FD_JARS, FN_LINT_JAR));
+                outputIfExists(FileUtils.join(input, FD_JARS, FN_LINT_JAR), transformOutputs);
+                break;
             case MANIFEST:
                 if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
-                    return Collections.emptyList();
+                    return;
                 }
+                // Return both the manifest and the extra snippet for the shared library.
+                outputIfExists(new File(input, FN_ANDROID_MANIFEST_XML), transformOutputs);
                 if (isShared(input)) {
-                    // Return both the manifest and the extra snippet for the shared library.
-                    return listIfExists(
-                            Stream.of(
-                                    new File(input, FN_ANDROID_MANIFEST_XML),
-                                    new File(input, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML)));
-                } else {
-                    return listIfExists(new File(input, FN_ANDROID_MANIFEST_XML));
+                    outputIfExists(
+                            new File(input, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML),
+                            transformOutputs);
                 }
+                break;
             case NON_NAMESPACED_MANIFEST:
                 // Non-namespaced libraries cannot be shared, so if it needs rewriting return only
                 // the manifest.
-                return (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies))
-                        ? listIfExists(new File(input, FN_ANDROID_MANIFEST_XML))
-                        : Collections.emptyList();
+                if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
+                    outputIfExists(new File(input, FN_ANDROID_MANIFEST_XML), transformOutputs);
+                }
+                break;
             case ANDROID_RES:
-                return listIfExists(new File(input, FD_RES));
+                outputIfExists(new File(input, FD_RES), transformOutputs);
+                break;
             case ASSETS:
-                return listIfExists(new File(input, FD_ASSETS));
+                outputIfExists(new File(input, FD_ASSETS), transformOutputs);
+                break;
             case JNI:
-                return listIfExists(new File(input, FD_JNI));
+                outputIfExists(new File(input, FD_JNI), transformOutputs);
+                break;
             case AIDL:
-                return listIfExists(new File(input, FD_AIDL));
+                outputIfExists(new File(input, FD_AIDL), transformOutputs);
+                break;
             case RENDERSCRIPT:
-                return listIfExists(new File(input, FD_RENDERSCRIPT));
+                outputIfExists(new File(input, FD_RENDERSCRIPT), transformOutputs);
+                break;
             case UNFILTERED_PROGUARD_RULES:
-                List<File> list =
-                        ExtractProGuardRulesTransform.performTransform(
-                                FileUtils.join(input, FD_JARS, FN_CLASSES_JAR),
-                                getOutputDirectory(),
-                                false);
-                return list.isEmpty() ? listIfExists(new File(input, FN_PROGUARD_TXT)) : list;
+                if (!ExtractProGuardRulesTransform.performTransform(
+                        FileUtils.join(input, FD_JARS, FN_CLASSES_JAR), transformOutputs, false)) {
+                    outputIfExists(new File(input, FN_PROGUARD_TXT), transformOutputs);
+                }
+                break;
             case ANNOTATIONS:
-                return listIfExists(new File(input, FN_ANNOTATIONS_ZIP));
+                outputIfExists(new File(input, FN_ANNOTATIONS_ZIP), transformOutputs);
+                break;
             case PUBLIC_RES:
-                return listIfExists(new File(input, FN_PUBLIC_TXT));
+                outputIfExists(new File(input, FN_PUBLIC_TXT), transformOutputs);
+                break;
             case COMPILE_SYMBOL_LIST:
-                return listIfExists(new File(input, FN_RESOURCE_TEXT));
+                outputIfExists(new File(input, FN_RESOURCE_TEXT), transformOutputs);
+                break;
             case RES_STATIC_LIBRARY:
-                return isShared(input)
-                        ? Collections.emptyList()
-                        : listIfExists(new File(input, FN_RESOURCE_STATIC_LIBRARY));
+                if (!isShared(input)) {
+                    outputIfExists(new File(input, FN_RESOURCE_STATIC_LIBRARY), transformOutputs);
+                }
+                break;
             case RES_SHARED_STATIC_LIBRARY:
-                return isShared(input)
-                        ? listIfExists(
-                                new File(input, SdkConstants.FN_RESOURCE_SHARED_STATIC_LIBRARY))
-                        : Collections.emptyList();
+                if (isShared(input)) {
+                    outputIfExists(
+                            new File(input, SdkConstants.FN_RESOURCE_SHARED_STATIC_LIBRARY),
+                            transformOutputs);
+                }
+                break;
             case COMPILE_ONLY_NAMESPACED_R_CLASS_JAR:
-                return listIfExists(new File(input, FN_R_CLASS_JAR));
+                outputIfExists(new File(input, FN_R_CLASS_JAR), transformOutputs);
+                break;
             case DATA_BINDING_ARTIFACT:
-                return listIfExists(
-                        new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR));
+                outputIfExists(
+                        new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR),
+                        transformOutputs);
+                break;
             case DATA_BINDING_BASE_CLASS_LOG_ARTIFACT:
-                return listIfExists(
+                outputIfExists(
                         new File(
                                 input,
-                                DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR));
+                                DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR),
+                        transformOutputs);
+                break;
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);
         }
     }
 
     private boolean isShared(@NonNull File explodedAar) {
-        return sharedLibSupport
+        return getParameters().getSharedLibSupport().get()
                 && new File(explodedAar, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML).exists();
     }
 
-    @NonNull
-    private static List<File> listIfExists(@NonNull File file) {
-        return file.exists() ? Collections.singletonList(file) : Collections.emptyList();
-    }
-
-    @NonNull
-    private static List<File> listIfExists(@NonNull Stream<File> files) {
-        return files.filter(File::exists).collect(Collectors.toList());
+    private static void outputIfExists(@NonNull File file, @NonNull TransformOutputs outputs) {
+        if (file.isDirectory()) {
+            outputs.dir(file);
+        } else if (file.isFile()) {
+            outputs.file(file);
+        }
     }
 }

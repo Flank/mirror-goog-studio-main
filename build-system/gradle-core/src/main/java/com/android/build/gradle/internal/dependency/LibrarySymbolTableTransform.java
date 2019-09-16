@@ -20,23 +20,23 @@ import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.ide.common.symbols.SymbolIo;
 import com.android.ide.common.symbols.SymbolTable;
 import com.android.ide.common.xml.AndroidManifestParser;
-import com.google.common.collect.ImmutableList;
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.artifacts.transform.ArtifactTransform;
+import org.gradle.api.artifacts.transform.InputArtifact;
+import org.gradle.api.artifacts.transform.TransformAction;
+import org.gradle.api.artifacts.transform.TransformOutputs;
+import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Classpath;
 import org.xml.sax.SAXException;
 
 /**
@@ -46,35 +46,35 @@ import org.xml.sax.SAXException;
  * <p>This means that one artifact contains all the information needed to build a {@link
  * SymbolTable} for {@link LinkApplicationAndroidResourcesTask}
  */
-public class LibrarySymbolTableTransform extends ArtifactTransform {
+public abstract class LibrarySymbolTableTransform
+        implements TransformAction<GenericTransformParameters> {
 
-    @Inject
-    public LibrarySymbolTableTransform() {}
+    @Classpath
+    @InputArtifact
+    public abstract Provider<FileSystemLocation> getInputArtifact();
 
     @Override
-    public List<File> transform(File explodedAar) {
+    public void transform(@NonNull TransformOutputs transformOutputs) {
         try {
-            Path result = transform(explodedAar.toPath(), getOutputDirectory().toPath());
-            return result != null ? ImmutableList.of(result.toFile()) : ImmutableList.of();
+            Path explodedAar = getInputArtifact().get().getAsFile().toPath();
+            transform(explodedAar, transformOutputs);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    @Nullable
-    private static Path transform(@NonNull Path explodedAar, @NonNull Path outputDirectory)
+    private static void transform(
+            @NonNull Path explodedAar, @NonNull TransformOutputs transformOutputs)
             throws IOException {
         Path manifest = explodedAar.resolve(FN_ANDROID_MANIFEST_XML);
         if (!Files.exists(manifest)) {
-            return null;
+            return;
         }
         String packageName = getPackageName(manifest);
         // May not exist in some AARs. e.g. the multidex support library.
         Path rTxt = explodedAar.resolve(FN_RESOURCE_TEXT);
-        Files.createDirectories(outputDirectory);
-        Path outputFile = outputDirectory.resolve(packageName + "-r.txt");
+        Path outputFile = transformOutputs.file(packageName + "-r.txt").toPath();
         SymbolIo.writeSymbolListWithPackageName(rTxt, packageName, outputFile);
-        return outputFile;
     }
 
     private static String getPackageName(Path manifest) throws IOException {

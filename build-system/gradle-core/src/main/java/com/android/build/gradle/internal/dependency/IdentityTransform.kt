@@ -16,22 +16,30 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.google.common.collect.ImmutableList
-import java.io.File
-import javax.inject.Inject
-import org.gradle.api.artifacts.transform.ArtifactTransform
-import java.io.FileNotFoundException
+import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.api.artifacts.transform.TransformAction
+import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Classpath
+import java.io.IOException
 
 /**
  * Transform to go from one artifact type to one or multiple other artifact types without changing
  * the artifact's contents.
  */
-class IdentityTransform @Inject constructor() : ArtifactTransform() {
+abstract class IdentityTransform : TransformAction<GenericTransformParameters> {
 
-    override fun transform(file: File): List<File> {
-        if (!file.exists()) {
-            throw FileNotFoundException(file.absolutePath)
+    @get:Classpath
+    @get:InputArtifact
+    abstract val inputArtifact: Provider<FileSystemLocation>
+
+    override fun transform(transformOutputs: TransformOutputs) {
+        val input = inputArtifact.get().asFile
+        when {
+            input.isDirectory -> transformOutputs.dir(input)
+            input.isFile -> transformOutputs.file(input)
+            else -> throw IOException("Expecting a file or a directory: ${input.canonicalPath}")
         }
-        return ImmutableList.of(file)
     }
 }

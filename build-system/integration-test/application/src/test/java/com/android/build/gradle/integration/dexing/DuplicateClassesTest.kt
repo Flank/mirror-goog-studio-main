@@ -41,7 +41,7 @@ class DuplicateClassesTest {
         TestInputsGenerator.jarWithEmptyClasses(jar1, listOf("test/A"))
 
         val jar2 = project.testDir.toPath().resolve("libs/jar2.jar")
-        TestInputsGenerator.jarWithEmptyClasses(jar2, listOf("test/A"))
+        TestInputsGenerator.jarWithEmptyClasses(jar2, listOf("test/A", "test/G"))
 
         TestFileUtils.appendToFile(
             project.buildFile,

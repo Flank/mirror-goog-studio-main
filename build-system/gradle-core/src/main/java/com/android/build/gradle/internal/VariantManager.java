@@ -620,28 +620,37 @@ public class VariantManager implements VariantModel {
         final String jetifierBlackList =
                 Strings.nullToEmpty(
                         globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
-        dependencies.registerTransform(
-                transform -> {
-                    transform.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
-                    transform.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
-                    if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            dependencies.registerTransform(
+                    transform -> {
+                        transform.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
+                        transform.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
                         transform.artifactTransform(
                                 JetifyTransform.class, config -> config.params(jetifierBlackList));
-                    } else {
-                        transform.artifactTransform(IdentityTransform.class);
-                    }
-                });
-        dependencies.registerTransform(
-                transform -> {
-                    transform.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    transform.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                    if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+                    });
+            dependencies.registerTransform(
+                    transform -> {
+                        transform.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                        transform.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
                         transform.artifactTransform(
                                 JetifyTransform.class, config -> config.params(jetifierBlackList));
-                    } else {
-                        transform.artifactTransform(IdentityTransform.class);
-                    }
-                });
+                    });
+        } else {
+            dependencies.registerTransform(
+                    IdentityTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    });
+            dependencies.registerTransform(
+                    IdentityTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                    });
+        }
 
         dependencies.registerTransform(
                 ExtractAarTransform.class,
@@ -653,24 +662,26 @@ public class VariantManager implements VariantModel {
                 });
 
         dependencies.registerTransform(
-                reg -> {
+                MockableJarTransform.class,
+                spec -> {
                     // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    reg.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
-                    reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
-                    reg.artifactTransform(
-                            MockableJarTransform.class, config -> config.params(true));
+                    spec.getParameters().getProjectName().set(project.getName());
+                    spec.getParameters().getReturnDefaultValues().set(true);
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                    spec.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
+                    spec.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
+                    spec.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
                 });
         dependencies.registerTransform(
-                reg -> {
+                MockableJarTransform.class,
+                spec -> {
                     // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    reg.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
-                    reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
-                    reg.artifactTransform(
-                            MockableJarTransform.class, config -> config.params(false));
+                    spec.getParameters().getProjectName().set(project.getName());
+                    spec.getParameters().getReturnDefaultValues().set(false);
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                    spec.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
+                    spec.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
+                    spec.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
                 });
 
         // transform to extract attr info from android.jar
@@ -695,16 +706,16 @@ public class VariantManager implements VariantModel {
                                 .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES);
         for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                        reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
-                        reg.artifactTransform(
-                                AarTransform.class,
-                                config ->
-                                        config.params(
-                                                transformTarget,
-                                                sharedLibSupport,
-                                                autoNamespaceDependencies));
+                    AarTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getTargetType().set(transformTarget);
+                        spec.getParameters().getSharedLibSupport().set(sharedLibSupport);
+                        spec.getParameters()
+                                .getAutoNamespaceDependencies()
+                                .set(autoNamespaceDependencies);
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
                     });
         }
 
@@ -777,32 +788,36 @@ public class VariantManager implements VariantModel {
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
             dependencies.registerTransform(
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                        reg.getTo().attribute(ARTIFACT_FORMAT, UNFILTERED_PROGUARD_RULES.getType());
-                        reg.artifactTransform(ExtractProGuardRulesTransform.class);
+                    ExtractProGuardRulesTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                        spec.getTo()
+                                .attribute(ARTIFACT_FORMAT, UNFILTERED_PROGUARD_RULES.getType());
                     });
         }
 
         dependencies.registerTransform(
-                reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                    reg.getTo()
+                LibrarySymbolTableTransform.class,
+                spec -> {
+                    spec.getParameters().getProjectName().set(project.getName());
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                    spec.getTo()
                             .attribute(
                                     ARTIFACT_FORMAT,
                                     ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME.getType());
-                    reg.artifactTransform(LibrarySymbolTableTransform.class);
                 });
 
         if (autoNamespaceDependencies) {
             dependencies.registerTransform(
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                        reg.getTo()
+                    LibraryDefinedSymbolTableTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                        spec.getTo()
                                 .attribute(
                                         ARTIFACT_FORMAT,
                                         ArtifactType.DEFINED_ONLY_SYMBOL_LIST.getType());
-                        reg.artifactTransform(LibraryDefinedSymbolTableTransform.class);
                     });
         }
 
@@ -811,10 +826,10 @@ public class VariantManager implements VariantModel {
         for (String classesOrResources :
                 new String[] {ArtifactType.CLASSES.getType(), ArtifactType.JAVA_RES.getType()}) {
             dependencies.registerTransform(
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                        reg.getTo().attribute(ARTIFACT_FORMAT, classesOrResources);
-                        reg.artifactTransform(IdentityTransform.class);
+                    IdentityTransform.class,
+                    spec -> {
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, classesOrResources);
                     });
         }
 

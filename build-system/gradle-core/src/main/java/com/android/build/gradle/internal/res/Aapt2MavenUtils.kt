@@ -22,25 +22,29 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.google.common.annotations.VisibleForTesting
+import com.android.Version
+import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.StringOption
-import com.android.Version
-import com.google.common.collect.ImmutableList
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Sets
 import com.google.common.io.ByteStreams
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.transform.ArtifactTransform
+import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.api.artifacts.transform.TransformAction
+import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.artifacts.ArtifactAttributes
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Classpath
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Properties
 import java.util.zip.ZipInputStream
-import javax.inject.Inject
 
 private const val TYPE_EXTRACTED_AAPT2_BINARY = "_internal-android-aapt2-binary"
 private const val AAPT2_CONFIG_NAME = "_internal_aapt2_binary"
@@ -124,13 +128,10 @@ fun getAapt2FromMavenAndVersion(project: Project): Pair<FileCollection, String> 
         )
     )
 
-    project.dependencies.registerTransform {
+    project.dependencies.registerTransform(Aapt2Extractor::class.java) {
+        it.parameters.projectName.set(project.name)
         it.from.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
-        it.to.attribute(
-            ArtifactAttributes.ARTIFACT_FORMAT,
-            TYPE_EXTRACTED_AAPT2_BINARY
-        )
-        it.artifactTransform(Aapt2Extractor::class.java)
+        it.to.attribute(ArtifactAttributes.ARTIFACT_FORMAT, TYPE_EXTRACTED_AAPT2_BINARY)
     }
 
     return Pair(getArtifactCollection(config), version)
@@ -146,9 +147,15 @@ private fun getArtifactCollection(configuration: Configuration): FileCollection 
         }
     }.artifacts.artifactFiles
 
-class Aapt2Extractor @Inject constructor() : ArtifactTransform() {
-    override fun transform(input: File): MutableList<File> {
-        val outDir = outputDirectory.toPath().resolve(input.nameWithoutExtension)
+abstract class Aapt2Extractor : TransformAction<GenericTransformParameters> {
+
+    @get:Classpath
+    @get:InputArtifact
+    abstract val inputArtifact: Provider<FileSystemLocation>
+
+    override fun transform(transformOutputs: TransformOutputs) {
+        val input = inputArtifact.get().asFile
+        val outDir = transformOutputs.dir(input.nameWithoutExtension).toPath()
         Files.createDirectories(outDir)
         ZipInputStream(input.inputStream().buffered()).use { zipInputStream ->
             while (true) {
@@ -173,7 +180,6 @@ class Aapt2Extractor @Inject constructor() : ArtifactTransform() {
                 }
             }
         }
-        return ImmutableList.of(outDir.toFile())
     }
 }
 

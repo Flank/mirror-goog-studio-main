@@ -16,47 +16,48 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import static com.android.utils.FileUtils.mkdirs;
-
-import com.android.annotations.NonNull;
 import com.android.builder.testing.MockableJarGenerator;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import javax.inject.Inject;
-import org.gradle.api.artifacts.transform.ArtifactTransform;
+import org.gradle.api.artifacts.transform.InputArtifact;
+import org.gradle.api.artifacts.transform.TransformAction;
+import org.gradle.api.artifacts.transform.TransformOutputs;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Input;
 
 /** Transform that converts an Android JAR file into a Mockable Android JAR file. */
-public class MockableJarTransform extends ArtifactTransform {
-    private final boolean returnDefaultValues;
+public abstract class MockableJarTransform
+        implements TransformAction<MockableJarTransform.Parameters> {
 
-    @Inject
-    public MockableJarTransform(boolean returnDefaultValues) {
-        this.returnDefaultValues = returnDefaultValues;
+    public interface Parameters extends GenericTransformParameters {
+        @Input
+        Property<Boolean> getReturnDefaultValues();
     }
 
-    @Override
-    @NonNull
-    public List<File> transform(@NonNull File input) {
-        File outputDir = getOutputDirectory();
+    @Classpath
+    @InputArtifact
+    public abstract Provider<FileSystemLocation> getInputArtifact();
 
-        mkdirs(outputDir);
-        File outputFile = new File(outputDir, input.getName());
+    @Override
+    public void transform(TransformOutputs transformOutputs) {
+        File input = getInputArtifact().get().getAsFile();
+        File outputFile = transformOutputs.file(input.getName());
         Logging.getLogger(MockableJarTransform.class).info(
                 "Calling mockable JAR artifact transform to create file: "
                         + outputFile.getAbsolutePath()
                         + " with input "
                         + input.getAbsolutePath());
 
-        MockableJarGenerator generator = new MockableJarGenerator(returnDefaultValues);
+        MockableJarGenerator generator =
+                new MockableJarGenerator(getParameters().getReturnDefaultValues().get());
         try {
             generator.createMockableJar(input, outputFile);
         } catch (IOException e) {
             throw new RuntimeException("Cannot create mockable android.jar", e);
         }
-
-        return ImmutableList.of(outputFile);
     }
 }

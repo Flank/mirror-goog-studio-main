@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
+import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -24,6 +28,9 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -88,15 +95,19 @@ class LibraryDefinedSymbolTableTransformTest {
 
     @Test
     fun parseAar() {
-        val transform = LibraryDefinedSymbolTableTransform()
+        val transform = object: LibraryDefinedSymbolTableTransform() {
+            override val inputArtifact: Provider<FileSystemLocation> = FakeGradleProvider(FakeGradleRegularFile(explodedAar))
 
-        val outputDir = temporaryFolder.newFolder("out")
-        transform.outputDirectory = outputDir
+            override fun getParameters(): GenericTransformParameters  = object : GenericTransformParameters {
+                override val projectName: Property<String> = FakeGradleProperty("")
+            }
+        }
 
-        val result = transform.transform(explodedAar)
+        val transformOutputs = FakeTransformOutputs(temporaryFolder)
+        transform.transform(transformOutputs)
 
-        Truth.assertThat(result).hasSize(1)
-        Truth.assertThat(result[0].name).isEqualTo("com.example.mylibrary-R-def.txt")
+        Truth.assertThat(transformOutputs.rootDir.list()).hasLength(1)
+        Truth.assertThat(transformOutputs.outputFile.name).isEqualTo("com.example.mylibrary-R-def.txt")
 
         val expected = SymbolTable.builder()
             .tablePackage("com.example.mylibrary")
@@ -121,7 +132,7 @@ class LibraryDefinedSymbolTableTransformTest {
             )
             .build()
 
-        val actual = SymbolIo.readRDef(result[0].toPath())
+        val actual = SymbolIo.readRDef(transformOutputs.outputFile.toPath())
         assertThat(actual).isEqualTo(expected)
     }
 }

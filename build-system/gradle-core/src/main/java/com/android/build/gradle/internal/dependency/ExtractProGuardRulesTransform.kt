@@ -21,7 +21,12 @@ import com.android.builder.dexing.isToolsConfigurationFile
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.mkdirs
 import com.google.common.io.ByteStreams
-import org.gradle.api.artifacts.transform.ArtifactTransform
+import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.api.artifacts.transform.TransformAction
+import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Classpath
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -38,42 +43,49 @@ fun isToolsConfigurationFile(entry: ZipEntry): Boolean {
     return !entry.isDirectory && isToolsConfigurationFile(entry.name)
 }
 
-class ExtractProGuardRulesTransform @Inject constructor() : ArtifactTransform() {
+abstract class ExtractProGuardRulesTransform @Inject constructor() :
+    TransformAction<GenericTransformParameters> {
 
-    override fun transform(jarFile: File): List<File> {
-        return performTransform(jarFile, outputDirectory)
+    @get:Classpath
+    @get:InputArtifact
+    abstract val inputArtifact: Provider<FileSystemLocation>
+
+    override fun transform(transformOutputs: TransformOutputs) {
+        performTransform(inputArtifact.get().asFile, transformOutputs)
     }
 
     companion object {
+        /** Returns true if some rules were found in the jar. */
         @JvmStatic
         fun performTransform(
             jarFile: File,
-            outputDirectory: File,
+            transformOutputs: TransformOutputs,
             extractLegacyProguardRules: Boolean = true
-        ): List<File> {
+        ): Boolean {
             ZipFile(jarFile, StandardCharsets.UTF_8).use { zipFile ->
-                zipFile
+                val entries = zipFile
                     .stream()
                     .filter { zipEntry ->
                         isToolsConfigurationFile(zipEntry)
                                 || (extractLegacyProguardRules && isProguardRule(zipEntry))
-                    }
-                    .forEach { zipEntry ->
-                        val outPath = zipEntry.name.replace('/', File.separatorChar)
-                        val outFile = FileUtils.join(outputDirectory, "lib", outPath)
-                        mkdirs(outFile.parentFile)
-                        BufferedInputStream(zipFile.getInputStream(zipEntry)).use { inFileStream ->
-                            BufferedOutputStream(outFile.outputStream()).use {
-                                ByteStreams.copy(inFileStream, it)
-                            }
+                    }.iterator()
+
+                if (!entries.hasNext()) {
+                    return false;
+                }
+                val outputDirectory = transformOutputs.dir("rules")
+                while (entries.hasNext()) {
+                    val zipEntry = entries.next()
+                    val outPath = zipEntry.name.replace('/', File.separatorChar)
+                    val outFile = FileUtils.join(outputDirectory.resolve("lib"), outPath)
+                    mkdirs(outFile.parentFile)
+                    BufferedInputStream(zipFile.getInputStream(zipEntry)).use { inFileStream ->
+                        BufferedOutputStream(outFile.outputStream()).use {
+                            ByteStreams.copy(inFileStream, it)
                         }
                     }
-
-                return if (outputDirectory.listFiles().isNotEmpty()) {
-                    listOf(outputDirectory)
-                } else {
-                    emptyList()
                 }
+                return true
             }
         }
     }

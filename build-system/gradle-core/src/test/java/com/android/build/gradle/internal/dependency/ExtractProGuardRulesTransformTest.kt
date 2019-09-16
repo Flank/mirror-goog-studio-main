@@ -16,9 +16,15 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
+import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.testutils.truth.FileSubject
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -35,50 +41,42 @@ class ExtractProGuardRulesTransformTest {
     @JvmField
     val tmp = TemporaryFolder()
 
-    private lateinit var extractTransform: ExtractProGuardRulesTransform
-
-    @Before
-    fun setUp() {
-        extractTransform = ExtractProGuardRulesTransform()
-        extractTransform.outputDirectory = tmp.newFolder()
-    }
-
     @Test
     fun testNoRules_UnrelatedFile() {
         val jarFile = createZip("bar.txt" to "hello")
+        val transformOutputs = FakeTransformOutputs(tmp)
+        createTransform(jarFile).transform(transformOutputs)
 
-        extractTransform.transform(jarFile)
-
-        assertThat(producedFileNames).isEmpty()
+        assertThat(getProducedFileNames(transformOutputs.rootDir)).isEmpty()
     }
 
     @Test
     fun testNoRules_FolderExists() {
         val jarFile = createZip("META-INF/proguard" to null)
+        val transformOutputs = FakeTransformOutputs(tmp)
+        createTransform(jarFile).transform(transformOutputs)
 
-        extractTransform.transform(jarFile)
-
-        assertThat(producedFileNames).isEmpty()
+        assertThat(getProducedFileNames(transformOutputs.rootDir)).isEmpty()
     }
 
     @Test
     fun testSingleRuleFile() {
         val jarFile = createZip("META-INF/proguard/foo.txt" to "bar")
+        val transformOutputs = FakeTransformOutputs(tmp)
+        createTransform(jarFile).transform(transformOutputs)
 
-        extractTransform.transform(jarFile)
-
-        assertThat(producedFileNames).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.txt")
-        FileSubject.assertThat(producedFile("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
+        assertThat(getProducedFileNames(transformOutputs.outputDirectory)).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.txt")
+        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
     }
 
     @Test
     fun testSingleRuleFile_startingWithSlash() {
         val jarFile = createZip("/META-INF/proguard/foo.txt" to "bar")
+        val transformOutputs = FakeTransformOutputs(tmp)
+        createTransform(jarFile).transform(transformOutputs)
 
-        extractTransform.transform(jarFile)
-
-        assertThat(producedFileNames).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.txt")
-        FileSubject.assertThat(producedFile("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
+        assertThat(getProducedFileNames(transformOutputs.outputDirectory)).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.txt")
+        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
     }
 
     @Test
@@ -86,22 +84,18 @@ class ExtractProGuardRulesTransformTest {
         val jarFile = createZip(
             "META-INF/proguard/bar.txt" to "hello",
             "META-INF/proguard/foo.pro" to "goodbye")
+        val transformOutputs = FakeTransformOutputs(tmp)
+        createTransform(jarFile).transform(transformOutputs)
 
-        extractTransform.transform(jarFile)
-
-        assertThat(producedFileNames).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.pro", "lib${slash}META-INF${slash}proguard${slash}bar.txt")
-        FileSubject.assertThat(producedFile("lib${slash}META-INF${slash}proguard${slash}foo.pro")).hasContents("goodbye")
-        FileSubject.assertThat(producedFile("lib${slash}META-INF${slash}proguard${slash}bar.txt")).hasContents("hello")
+        assertThat(getProducedFileNames(transformOutputs.outputDirectory)).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.pro", "lib${slash}META-INF${slash}proguard${slash}bar.txt")
+        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.pro")).hasContents("goodbye")
+        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}bar.txt")).hasContents("hello")
     }
 
-    private fun producedFile(relativePath: String) = extractTransform.outputDirectory
-        .walk()
-        .single { it.relativeTo(extractTransform.outputDirectory).path == relativePath }
-
-    private val producedFileNames get() = extractTransform.outputDirectory
+    private fun getProducedFileNames(rootDir: File): List<String> = rootDir
         .walk()
         .filter { !it.isDirectory }
-        .map { it.relativeTo(extractTransform.outputDirectory).path }
+        .map { it.relativeTo(rootDir).path }
         .toList()
 
     private fun createZip(vararg entries: Pair<String, String?>): File {
@@ -116,5 +110,17 @@ class ExtractProGuardRulesTransformTest {
             }
         }
         return zipFile
+    }
+
+    private fun createTransform(primaryInput: File): ExtractProGuardRulesTransform {
+        return object: ExtractProGuardRulesTransform() {
+            override val inputArtifact: Provider<FileSystemLocation> = FakeGradleProvider(FakeGradleRegularFile(primaryInput))
+
+            override fun getParameters(): GenericTransformParameters {
+                return object : GenericTransformParameters {
+                    override val projectName: Property<String> = FakeGradleProperty("")
+                }
+            }
+        }
     }
 }

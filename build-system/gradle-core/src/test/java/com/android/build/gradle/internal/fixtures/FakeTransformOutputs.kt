@@ -20,7 +20,9 @@ import org.gradle.api.artifacts.transform.TransformOutputs
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-class FakeTransformOutputs(val temporaryFolder: TemporaryFolder) : TransformOutputs {
+class FakeTransformOutputs(temporaryFolder: TemporaryFolder) : TransformOutputs {
+    val rootDir: File = temporaryFolder.newFolder()
+
     lateinit var outputDirectory: File
         private set
     lateinit var outputFile: File
@@ -28,13 +30,13 @@ class FakeTransformOutputs(val temporaryFolder: TemporaryFolder) : TransformOutp
 
     override fun file(name: Any): File {
         name as String
-        outputFile = File(temporaryFolder.newFolder(), name)
+        outputFile = rootDir.resolve(name)
         return outputFile
     }
 
     override fun dir(name: Any): File {
         name as String
-        outputDirectory = File(temporaryFolder.newFolder(), name)
+        outputDirectory = rootDir.resolve(name)
         outputDirectory.mkdirs()
         return outputDirectory
     }
