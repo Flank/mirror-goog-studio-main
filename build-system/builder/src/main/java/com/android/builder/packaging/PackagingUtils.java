@@ -29,8 +29,8 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Predicate;
+import kotlin.text.StringsKt;
 
 /**
  * Utility class for packaging.
@@ -145,9 +145,41 @@ public class PackagingUtils {
                         NativeLibrariesPackagingMode.COMPRESSED,
                         PackageEmbeddedDex.DEFAULT)
                 .stream()
-                .map(s -> "**" + s)
+                .map(PackagingUtils::toCaseInsensitiveGlob)
                 .sorted()
                 .collect(ImmutableList.toImmutableList());
+    }
+
+    private static String toCaseInsensitiveGlob(String glob) {
+        StringBuilder sb = new StringBuilder(glob.length() + 2);
+        // Users can pass extensions to the no-compress list, so we need to append '**'.
+        sb.append("**");
+        int index = 0;
+        while (index < glob.length()) {
+            int codePoint = glob.codePointAt(index);
+            int upperCodePoint = Character.toUpperCase(codePoint);
+            int lowerCodePoint = Character.toLowerCase(codePoint);
+            // If the character can be changed to upper or lower case, make sure we accept both.
+            // For example, if we encounter the char "a" it will generate "[aA]" which means that
+            // either character can be matched. For other characters, e.g. "." just the original
+            // character will be appended to the string builder.
+            boolean mixedCase = codePoint != upperCodePoint || codePoint != lowerCodePoint;
+            if (mixedCase) {
+                sb.append("[");
+            }
+            if (lowerCodePoint != codePoint) {
+                sb.appendCodePoint(lowerCodePoint);
+            }
+            sb.appendCodePoint(codePoint);
+            if (upperCodePoint != codePoint) {
+                sb.appendCodePoint(upperCodePoint);
+            }
+            if (mixedCase) {
+                sb.append("]");
+            }
+            index += Character.charCount(codePoint);
+        }
+        return sb.toString();
     }
 
     @NonNull
@@ -183,7 +215,9 @@ public class PackagingUtils {
             @NonNull Iterable<String> noCompressExtensions) {
         return name -> {
             for (String extension : noCompressExtensions) {
-                if (name.toLowerCase(Locale.US).endsWith(extension)) {
+                // Check if the name ends with any of the no-compress extensions, ignoring the case
+                // sensitivity.
+                if (StringsKt.endsWith(name, extension, true)) {
                     return true;
                 }
             }
