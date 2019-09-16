@@ -24,11 +24,11 @@ local_repository(
 http_archive(
   name = "bazel_toolchains",
   urls = [
-    "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/0.28.1.tar.gz",
-    "https://github.com/bazelbuild/bazel-toolchains/archive/0.28.1.tar.gz",
+    "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/0.29.4.tar.gz",
+    "https://github.com/bazelbuild/bazel-toolchains/archive/0.29.4.tar.gz",
   ],
-  strip_prefix = "bazel-toolchains-0.28.1",
-  sha256 = "38ec4b3cd5079d81f3643bdb4f80e54e98b1005f39aa0f5f31323a3eae06db8e",
+  strip_prefix = "bazel-toolchains-0.29.4",
+  sha256 = "ef95c8567ebf1bc7cebf77511de50d0da04a9be3b345727595e284c59a2787cf",
 )
 
 load(

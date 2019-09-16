@@ -17,31 +17,6 @@
 package(default_visibility = ["//visibility:public"])
 
 load(":windows_cc_toolchain_config.bzl", "cc_toolchain_config")
-load(
-    "@bazel_tools//tools/jdk:default_java_toolchain.bzl",
-    "default_java_toolchain",
-    "JDK8_JVM_OPTS",
-)
-
-# This is currently the same as @remote_java_tools_windows//:toolchain
-# (the default) except the prebuilt ijar and singlejar are used with
-# --config=remote, due to https://github.com/bazelbuild/bazel/issues/8614.
-# TODO: consider removing this once the above bug is fixed and we've updated
-# to a version of bazel with the fix.
-default_java_toolchain(
-    name = "actual_java_toolchain",
-    ijar = ["@remote_java_tools_windows//:ijar_prebuilt_binary"],
-    jvm_opts = JDK8_JVM_OPTS,
-    singlejar = ["@remote_java_tools_windows//:singlejar_prebuilt_or_cc_binary"],
-    source_version = "8",
-    target_version = "8",
-)
-
-toolchain(
-    name = "java_toolchain",
-    toolchain = ":actual_java_toolchain",
-    toolchain_type = "@bazel_tools//tools/jdk:toolchain_type",
-)
 
 cc_library(
     name = "malloc",
