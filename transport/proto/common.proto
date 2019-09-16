@@ -27,6 +27,7 @@ import "interaction_data.proto";
 import "layout_inspector.proto";
 import "memory_data.proto";
 import "network_data.proto";
+import "user_counter_data.proto";
 
 
 message Event {
@@ -102,6 +103,9 @@ message Event {
     // Event Profiler Prefix = 600
     INTERACTION = 601;
     VIEW = 602;
+
+    // Custom Event Visualization prefix = 700;
+    USER_COUNTERS = 701;
 
     // Demo echo event = 1000
     ECHO = 1000;
@@ -214,6 +218,9 @@ message Event {
     // Event Profiler Prefix = 600
     InteractionData interaction = 601;
     ViewData view = 602;
+
+    // Custom Event Visualization Prefix = 700;
+    UserCounterData user_counters = 701;
 
     // Echo Event Prefix = 1000
     echo.EchoData echo = 1000;
