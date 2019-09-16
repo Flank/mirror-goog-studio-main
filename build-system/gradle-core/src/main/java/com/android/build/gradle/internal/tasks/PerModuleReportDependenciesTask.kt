@@ -85,14 +85,20 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         libraries: LinkedList<Library>
     ): Integer? {
         if (moduleVersion != null) {
-            val lib = Library.newBuilder()
+            val libBuilder = Library.newBuilder()
                 .setMavenLibrary(MavenLibrary.newBuilder()
                     .setGroupId(moduleVersion.group)
                     .setArtifactId(moduleVersion.name)
                     .setVersion(moduleVersion.version)
                     .build())
-                .setDigests(Library.Digests.newBuilder().setSha256(digest))
-                .build()
+
+            // Skip setting digest for libraries without artifact.
+            if(digest != null) {
+                libBuilder.setDigests(Library.Digests.newBuilder().setSha256(digest))
+            }
+
+            val lib = libBuilder.build()
+
             var index = librariesToIndexMap.get(lib)
             if (index == null) {
                 index = Integer(libraries.size)
