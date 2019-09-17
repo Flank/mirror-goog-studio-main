@@ -59,6 +59,10 @@
     added in the same project.
     -->
     <apply plugin="androidx.navigation.safeargs" />
+    <#if generateKotlin>
+        <merge from="root://activities/common/navigation/navigation-kotlin-build.gradle.ftl"
+                 to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+    </#if>
 </#macro>
 
 <#macro addSafeArgsPluginToClasspath>
