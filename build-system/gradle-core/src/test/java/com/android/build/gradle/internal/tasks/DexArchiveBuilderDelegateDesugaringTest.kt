@@ -57,10 +57,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDesugar
 
         @Parameterized.Parameters(name = "incrementalDesugaringV2_{0}")
         @JvmStatic
-        fun parameters() = arrayOf(
-            false
-            //true // Incremental desugaring V2 is not yet supported (work in progress)
-        )
+        fun parameters() = arrayOf(true, false)
     }
 
     @Rule
@@ -68,11 +65,18 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDesugar
     var tmpDir = TemporaryFolder()
 
     private lateinit var out: Path
+    private var desugarGraphDir: Path? = null
 
     @Before
     fun setUp() {
         out = tmpDir.root.toPath().resolve("out")
         Files.createDirectories(out)
+
+        desugarGraphDir = if (withIncrementalDesugaringV2) {
+            tmpDir.root.toPath().resolve("desugarGraphDir")
+        } else {
+            null
+        }
     }
 
     private val workerExecutor: WorkerExecutor = Mockito.mock(WorkerExecutor::class.java)
@@ -489,7 +493,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDesugar
             ),
             desugarClasspathChangedClasses = emptySet(),
             incrementalDesugaringV2 = withIncrementalDesugaringV2,
-            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDesugaringV2 },
+            desugarGraphDir =  desugarGraphDir?.toFile(),
             projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,
             dexer = DexerTool.D8,

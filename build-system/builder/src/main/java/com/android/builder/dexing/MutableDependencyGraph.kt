@@ -43,11 +43,17 @@ class MutableDependencyGraph<T> : DependencyGraphUpdater<T>, Serializable {
     }
 
     override fun addEdge(dependent: T, dependency: T) {
+        check(dependent != dependency) { "Can't add an edge from a node to itself: $dependent" }
+
         dependentsMap.computeIfAbsent(dependency) { mutableSetOf() }.add(dependent)
         dependentsMap.computeIfAbsent(dependent) { mutableSetOf() }
     }
 
-    /** Removes a node and all the edges from it and to it. */
+    /**
+     * Removes a node and all the edges from it and to it.
+     *
+     * If the given node does not exist, it will be ignored.
+     */
     fun removeNode(nodeToRemove: T) {
         dependentsMap.remove(nodeToRemove)
         dependentsMap.values.forEach { it.remove(nodeToRemove) }
@@ -84,6 +90,10 @@ class MutableDependencyGraph<T> : DependencyGraphUpdater<T>, Serializable {
 /** Interface for updating a dependency graph. */
 interface DependencyGraphUpdater<T> {
 
-    /** Adds an edge from a dependent to a dependency. */
+    /**
+     * Adds an edge from a dependent to a dependency.
+     *
+     * If any of the given nodes does not yet exist, it will be added.
+     */
     fun addEdge(dependent: T, dependency: T)
 }

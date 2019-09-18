@@ -104,7 +104,7 @@ class DexArchiveBuilderTaskDelegate(
     private val desugarClasspathChangedClasses: Set<FileChange> = emptySet(),
 
     /** Whether incremental desugaring V2 is enabled. */
-    private val incrementalDesugaringV2: Boolean,
+    incrementalDesugaringV2: Boolean,
 
     /**
      * Directory containing dependency graph(s) for desugaring, not `null` iff
@@ -181,6 +181,10 @@ class DexArchiveBuilderTaskDelegate(
 
     private var inputJarHashesValues: MutableMap<File, String> = getCurrentJarInputHashes()
 
+    init {
+        check(incrementalDesugaringV2 xor (desugarGraphDir == null))
+    }
+
     /**
      * Classpath resources provider is shared between invocations, and this key uniquely identifies
      * it.
@@ -242,6 +246,7 @@ class DexArchiveBuilderTaskDelegate(
                             changedClasses: Set<FileChange>,
                             outputDir: File,
                             outputKeepRules: File?,
+                            desugarGraphDir: File?, // Not null iff impactedFiles == null
                             useAndroidBuildCache: Boolean,
                             cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?,
                             cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? ->
@@ -251,6 +256,7 @@ class DexArchiveBuilderTaskDelegate(
                             outputDir = outputDir,
                             outputKeepRules = outputKeepRules,
                             impactedFiles = impactedFiles,
+                            desugarGraphDir = desugarGraphDir,
                             bootClasspathKey = bootclasspathServiceKey!!,
                             bootClasspath = bootclasspath,
                             classpathKey = classpathServiceKey!!,
@@ -265,6 +271,7 @@ class DexArchiveBuilderTaskDelegate(
                         projectChangedClasses,
                         projectOutputDex,
                         projectOutputKeepRules,
+                        desugarGraphDir?.resolve("currentProject").takeIf { impactedFiles == null },
                         false, // useAndroidBuildCache
                         null, // cacheableDexes
                         null // cacheableKeepRules
@@ -274,6 +281,7 @@ class DexArchiveBuilderTaskDelegate(
                         subProjectChangedClasses,
                         subProjectOutputDex,
                         subProjectOutputKeepRules,
+                        desugarGraphDir?.resolve("otherProjects").takeIf { impactedFiles == null },
                         false, // useAndroidBuildCache
                         null, // cacheableDexes
                         null // cacheableKeepRules
@@ -283,6 +291,7 @@ class DexArchiveBuilderTaskDelegate(
                         mixedScopeChangedClasses,
                         mixedScopeOutputDex,
                         mixedScopeOutputKeepRules,
+                        desugarGraphDir?.resolve("mixedScopes").takeIf { impactedFiles == null },
                         false, // useAndroidBuildCache
                         null, // cacheableDexes
                         null // cacheableKeepRules
@@ -301,6 +310,7 @@ class DexArchiveBuilderTaskDelegate(
                         externalLibChangedClasses,
                         externalLibsOutputDex,
                         externalLibsOutputKeepRules,
+                        desugarGraphDir?.resolve("externalLibs").takeIf { impactedFiles == null },
                         enableCachingForExternalLibs,
                         cacheableDexes,
                         cacheableKeepRules
@@ -403,6 +413,7 @@ class DexArchiveBuilderTaskDelegate(
         outputDir: File,
         outputKeepRules: File?,
         impactedFiles: Set<File>?,
+        desugarGraphDir: File?, // Not null iff impactedFiles == null
         bootClasspathKey: ClasspathServiceKey,
         bootClasspath: List<Path>,
         classpathKey: ClasspathServiceKey,
@@ -415,6 +426,7 @@ class DexArchiveBuilderTaskDelegate(
         if (!isIncremental) {
             FileUtils.cleanOutputDir(outputDir)
             outputKeepRules?.let { FileUtils.cleanOutputDir(it) }
+            desugarGraphDir?.let { FileUtils.cleanOutputDir(it) }
         } else {
             removeChangedJarOutputs(inputFiles, inputFileChanges, outputDir)
             deletePreviousOutputsFromDirs(inputFileChanges, outputDir)
@@ -435,6 +447,7 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpathKey,
                 changedFiles = changedFiles,
                 impactedFiles = impactedFiles,
+                desugarGraphDir = desugarGraphDir,
                 outputKeepRulesDir = outputKeepRules
             )
         }
@@ -462,6 +475,7 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpathKey,
                 changedFiles = changedFiles,
                 impactedFiles = impactedFiles,
+                desugarGraphDir = desugarGraphDir,
                 cacheInfo = cacheInfo,
                 outputKeepRulesDir = outputKeepRules
             )
@@ -576,6 +590,7 @@ class DexArchiveBuilderTaskDelegate(
         classpath: ClasspathServiceKey,
         changedFiles: Set<File>,
         impactedFiles: Set<File>?,
+        desugarGraphDir: File?, // Not null iff impactedFiles == null
         cacheInfo: D8DesugaringCacheInfo,
         outputKeepRulesDir: File?
     ): DexOutputs {
@@ -589,6 +604,7 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpath,
                 changedFiles = changedFiles,
                 impactedFiles = null,
+                desugarGraphDir = desugarGraphDir,
                 outputKeepRulesDir = outputKeepRulesDir
             )
         } else {
@@ -647,6 +663,7 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpath,
                 changedFiles = setOf(),
                 impactedFiles = setOf(),
+                desugarGraphDir = null,
                 outputKeepRulesDir = outputKeepRulesDir
             )
         }
@@ -664,6 +681,7 @@ class DexArchiveBuilderTaskDelegate(
         classpath: ClasspathServiceKey,
         changedFiles: Set<File>,
         impactedFiles: Set<File>?,
+        desugarGraphDir: File?, // Not null iff impactedFiles == null
         outputKeepRulesDir: File?
     ): DexOutputs {
         inputs.getRoots().forEach { loggerWrapper.verbose("Dexing ${it.absolutePath}") }

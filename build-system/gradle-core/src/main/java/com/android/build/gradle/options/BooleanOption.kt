@@ -144,6 +144,9 @@ enum class BooleanOption(
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
+    /** Incremental dexing with desugaring using D8's new API for desugaring graph computation. */
+    ENABLE_INCREMENTAL_DESUGARING_V2("android.enableIncrementalDesugaringV2", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */

@@ -26,11 +26,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -151,6 +153,25 @@ public class DesugaringClassAnalyzer {
         reader.accept(visitor, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 
         return new DesugaringData(visitor.getPath(), visitor.getType(), visitor.getDependencies());
+    }
+
+    /**
+     * Returns the set of types that the given class references. The returned set must include
+     * direct references, and it might optionally include transitive references.
+     *
+     * <p>TODO("Remove when D8's new API for desugaring graph computation is used")
+     *
+     * @param classContents the contents of the class to compute references for
+     */
+    @NonNull
+    public static Set<String> computeDependencies(@NonNull byte[] classContents)
+            throws IOException {
+        try (InputStream classContentsInputStream = new ByteArrayInputStream(classContents)) {
+            return DesugaringClassAnalyzer.analyze(
+                            Paths.get(""), // This won't be used so a dummy path is okay
+                            classContentsInputStream)
+                    .getDependencies();
+        }
     }
 
     private static class Visitor extends ClassVisitor {

@@ -368,9 +368,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.externalLibClasses.from(externalLibraryClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
 
-            // Incremental desugaring V2 is not yet supported (work in progress)
             task.incrementalDesugaringV2.setDisallowChanges(
-                variantScope.globalScope.project.provider { false })
+                variantScope.globalScope.project.provider {
+                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2)
+                })
 
             val minSdkVersion = variantScope
                 .variantDslInfo
