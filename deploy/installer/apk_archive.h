@@ -57,7 +57,7 @@ class ApkArchive {
   // Retrieve the location of the signature block starting from Central
   // Directory Record
   Location GetSignatureLocation(size_t offset_to_cdrecord) noexcept;
-  size_t GetArchiveSize() const noexcept;
+  size_t GetArchiveSize(const std::string& path) const noexcept;
 
   // Find the End of Central Directory Record, starting from the end of the
   // file.
@@ -67,12 +67,13 @@ class ApkArchive {
   Location FindCDRecord(const uint8_t* cursor) noexcept;
 
   // Open apk and mmap it.
-  bool Prepare() noexcept;
+  bool Prepare(const std::string& path) noexcept;
 
-  std::string path_;
   uint8_t* start_;
   size_t size_;
-  int fd_;
+
+  // The file was found and properly mmaped.
+  bool ready_;
 };
 
 }  // namespace deploy

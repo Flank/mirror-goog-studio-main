@@ -30,8 +30,6 @@ class deploy::ApkArchiveTester {
  public:
   ApkArchiveTester(const ApkArchive& archive) : archive_(archive) {}
 
-  bool Prepare() noexcept { return archive_.Prepare(); }
-
   ApkArchive::Location GetCDLocation() noexcept {
     return archive_.GetCDLocation();
   }
@@ -50,7 +48,6 @@ TEST_F(InstallerTest, TestArchiveParser) {
       "tools/base/deploy/installer/tests/data/app/my.fake.app/sample.apk");
 
   ApkArchiveTester archiveTester(archive);
-  EXPECT_TRUE(archiveTester.Prepare());
 
   ApkArchive::Location cdLoc = archiveTester.GetCDLocation();
   EXPECT_TRUE(cdLoc.valid);

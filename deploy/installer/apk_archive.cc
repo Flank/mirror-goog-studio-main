@@ -28,11 +28,11 @@
 
 namespace deploy {
 
-ApkArchive::ApkArchive(const std::string& path)
-    : path_(path), start_(nullptr), size_(0), fd_(-1) {}
+ApkArchive::ApkArchive(const std::string& path) : start_(nullptr), size_(0) {
+  ready_ = Prepare(path);
+}
 
 ApkArchive::~ApkArchive() {
-  close(fd_);
   munmap(start_, size_);
 }
 
@@ -57,9 +57,9 @@ ApkArchive::Location ApkArchive::GetSignatureLocation(
   return location;
 }
 
-size_t ApkArchive::GetArchiveSize() const noexcept {
+size_t ApkArchive::GetArchiveSize(const std::string& path) const noexcept {
   struct stat st;
-  stat(path_.c_str(), &st);
+  stat(path.c_str(), &st);
   return st.st_size;
 }
 
@@ -123,45 +123,42 @@ ApkArchive::Location ApkArchive::GetCDLocation() noexcept {
   return location;
 }
 
-bool ApkArchive::Prepare() noexcept {
+bool ApkArchive::Prepare(const std::string& path) noexcept {
+  Trace traceDump("Prepare");
   // Search End of Central Directory Record
-  fd_ = open(path_.c_str(), O_RDONLY, 0);
-  if (fd_ == -1) {
-    std::cerr << "Unable to open file '" << path_ << "'" << std::endl;
+  int fd = open(path.c_str(), O_RDONLY, 0);
+  if (fd == -1) {
+    std::cerr << "Unable to open file '" << path << "'" << std::endl;
     return false;
   }
 
-  size_ = GetArchiveSize();
+  size_ = GetArchiveSize(path);
 
-  start_ = (uint8_t*)mmap(0, size_, PROT_READ, MAP_PRIVATE, fd_, 0);
+  start_ = (uint8_t*)mmap(0, size_, PROT_READ, MAP_PRIVATE, fd, 0);
   if (start_ == MAP_FAILED) {
-    std::cerr << "Unable to mmap file '" << path_ << "'" << std::endl;
+    std::cerr << "Unable to mmap file '" << path << "'" << std::endl;
     // TODO: (Valid for entire project), ALL errors must explicitly logged to
     // offer as much diagnostic information as possible.
+    close(fd);
     return false;
   }
 
+  close(fd);
   return true;
 }
 
 std::unique_ptr<std::string> ApkArchive::ReadMetadata(Location loc) const
     noexcept {
   std::unique_ptr<std::string> payload;
-  payload.reset(new std::string());
-  payload->resize(loc.size);
-  int fd = open(path_.c_str(), O_RDONLY, 0);
-  lseek(fd, loc.offset, SEEK_SET);
-  read(fd, (void*)payload->data(), loc.size);
-  close(fd);
+  payload.reset(new std::string((const char*)(start_ + loc.offset), loc.size));
   return payload;
 }
 
 Dump ApkArchive::ExtractMetadata() noexcept {
   Trace traceDump("ExtractMetadata");
-  bool readyForProcessing = Prepare();
 
   Dump dump;
-  if (!readyForProcessing) {
+  if (!ready_) {
     // TODO Log errors better than this!
     return dump;
   }
