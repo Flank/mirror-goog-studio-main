@@ -873,9 +873,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                         modelLevel,
                         modelWithFullDependency);
 
-        Set<File> additionalTestClasses = new HashSet<>();
-        additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
-        additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+        Set<File> additionalClasses = new HashSet<>();
+        additionalClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
+        additionalClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+        additionalClasses.addAll(
+                variantData
+                        .getScope()
+                        .getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH)
+                        .getFiles());
 
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
@@ -932,7 +937,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
                 scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
-                additionalTestClasses,
+                additionalClasses,
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
                 dependencies.getSecond(),

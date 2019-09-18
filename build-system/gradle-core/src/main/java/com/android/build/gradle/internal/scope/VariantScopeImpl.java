@@ -634,7 +634,24 @@ public class VariantScopeImpl implements VariantScope {
         mainCollection =
                 mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
 
+        // Add R class jars to the front of the classpath as libraries might also export
+        // compile-only classes. This behavior is verified in CompileRClassFlowTest
+        // While relying on this order seems brittle, it avoids doubling the number of
+        // files on the compilation classpath by exporting the R class separately or
+        // and is much simpler than having two different outputs from each library, with
+        // and without the R class, as AGP publishing code assumes there is exactly one
+        // artifact for each publication.
+        mainCollection = getProject().files(getCompiledRClasses(configType), mainCollection);
+
+        return mainCollection;
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getCompiledRClasses(@NonNull ConsumedConfigType configType) {
+        FileCollection mainCollection = getProject().files();
         BaseVariantData tested = getTestedVariantData();
+
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             Provider<RegularFile> namespacedRClassJar =
                     artifacts.getFinalProduct(
@@ -698,20 +715,13 @@ public class VariantScopeImpl implements VariantScope {
                     Provider<RegularFile> rJar =
                             artifacts.getFinalProduct(
                                     COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = getProject().files(mainCollection, rJar);
+                    mainCollection = getProject().files(rJar);
                 } else {
                     checkState(getType().isApk(), "Expected APK type but found: " + getType());
-                    // Add R class jars to the front of the classpath as libraries might also export
-                    // compile-only classes. This behavior is verified in CompileRClassFlowTest
-                    // While relying on this order seems brittle, it avoids doubling the number of
-                    // files on the compilation classpath by exporting the R class separately or
-                    // and is much simpler than having two different outputs from each library, with
-                    // and without the R class, as AGP publishing code assumes there is exactly one
-                    // artifact for each publication.
                     Provider<FileCollection> rJar =
                             artifacts.getFinalProductAsFileCollection(
                                     COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = getProject().files(rJar, mainCollection);
+                    mainCollection = getProject().files(rJar);
                 }
             } else { // Android test or unit test
                 if (!globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
@@ -723,7 +733,7 @@ public class VariantScopeImpl implements VariantScope {
                     } else {
                         rJar = getRJarForUnitTests();
                     }
-                    mainCollection = getProject().files(mainCollection, rJar);
+                    mainCollection = getProject().files(rJar);
                 }
             }
         }

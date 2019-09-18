@@ -16,13 +16,16 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.SdkConstants.FN_R_CLASS_JAR;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -76,6 +79,22 @@ public class ModelTest {
         assertThat(issue).hasType(SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
         assertThat(issue).hasSeverity(SyncIssue.SEVERITY_ERROR);
         assertThat(issue).hasData("foo:bar:+");
+    }
+
+    /** Regression test for bug 133326990. */
+    @Test
+    public void checkRJarIsIncludedInModel() throws Exception {
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
+
+        for (Variant variant : model.getVariants()) {
+            File rJar =
+                    new File(
+                            ArtifactTypeUtil.getOutputDir(
+                                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE,
+                                    project.getBuildDir()),
+                            variant.getName() + "/" + FN_R_CLASS_JAR);
+            assertThat(variant.getMainArtifact().getAdditionalClassesFolders()).contains(rJar);
+        }
     }
 
     /** Sanity test that makes sure no unexpected directories end up in the model. */

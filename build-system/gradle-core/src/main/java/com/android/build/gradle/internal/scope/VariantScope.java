@@ -155,6 +155,10 @@ public interface VariantScope extends TransformVariantScope {
             @NonNull ArtifactType classesType,
             @Nullable Object generatedBytecodeKey);
 
+    /** Returns the path(s) to compiled R classes (R.jar). */
+    @NonNull
+    FileCollection getCompiledRClasses(@NonNull AndroidArtifacts.ConsumedConfigType configType);
+
     @NonNull
     ArtifactCollection getJavaClasspathArtifacts(
             @NonNull AndroidArtifacts.ConsumedConfigType configType,
