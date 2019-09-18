@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="app-inspection">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT/inspection-1.0.0-20191024.120903-1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="live_sql_java_proto">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../bazel-genfiles/tools/base/experimental/live-sql-inspector/live_sql_java_proto.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="live_sql_java_proto">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../bazel-genfiles/tools/base/bazel/studio-proto.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/studio/sdk/linux/platforms/android-28/android.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/studio/sdk/darwin/platforms/android-28/android.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>

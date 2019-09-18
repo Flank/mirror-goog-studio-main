@@ -97,7 +97,6 @@ jobject CreateAppInspectionService(JNIEnv *env) {
   if (service == nullptr) {
     return nullptr;
   }
-
   auto serviceClass = env->FindClass(
       "com/android/tools/agent/app/inspection/AppInspectionService");
   jmethodID constructor_method =
@@ -106,6 +105,67 @@ jobject CreateAppInspectionService(JNIEnv *env) {
                         reinterpret_cast<jlong>(service));
 }
 
+#ifdef APP_INSPECTION_EXPERIMENT
+static std::string ConvertClass(JNIEnv *env, jclass cls) {
+  jclass classClass = env->FindClass("java/lang/Class");
+  jmethodID mid =
+      env->GetMethodID(classClass, "getCanonicalName", "()Ljava/lang/String;");
+
+  jstring strObj = (jstring)env->CallObjectMethod(cls, mid);
+
+  profiler::JStringWrapper name_wrapped(env, strObj);
+
+  std::string name = "L" + name_wrapped.get() + ";";
+
+  std::replace(name.begin(), name.end(), '.', '/');
+  return name;
+}
+
+jobjectArray FindInstances(JNIEnv *env, jlong nativePtr, jclass jclass) {
+  AppInspectionService *inspector =
+      reinterpret_cast<AppInspectionService *>(nativePtr);
+  return inspector->FindInstances(env, jclass);
+}
+
+void AddEntryTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
+                            jstring method_name) {
+  AppInspectionService *inspector =
+      reinterpret_cast<AppInspectionService *>(nativePtr);
+  profiler::JStringWrapper method_str(env, method_name);
+  std::size_t found = method_str.get().find("(");
+  if (found == std::string::npos) {
+    profiler::Log::E(
+        "Method should be in the format $method_name($signature)$return_type, "
+        "but was %s",
+        method_str.get().c_str());
+    return;
+  }
+
+  inspector->AddEntryTransform(env, ConvertClass(env, origin_class),
+                               method_str.get().substr(0, found),
+                               method_str.get().substr(found));
+}
+
+void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
+                           jstring method_name) {
+  AppInspectionService *inspector =
+      reinterpret_cast<AppInspectionService *>(nativePtr);
+  profiler::JStringWrapper method_str(env, method_name);
+  std::size_t found = method_str.get().find("(");
+  if (found == std::string::npos) {
+    profiler::Log::E(
+        "Method should be in the format $method_name($signature)$return_type, "
+        "but was %s",
+        method_str.get().c_str());
+    return;
+  }
+
+  inspector->AddExitTransform(env, ConvertClass(env, origin_class),
+                              method_str.get().substr(0, found),
+                              method_str.get().substr(found));
+}
+
+#endif
 }  // namespace profiler
 
 extern "C" {
@@ -150,6 +210,8 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegis
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
     jstring originMethod) {
 #ifdef APP_INSPECTION_EXPERIMENT
+  app_inspection::AddEntryTransformation(env, servicePtr, originClass,
+                                         originMethod);
 #else
   profiler::Log::E("REGISTER ENTRY HOOK NOT IMPLEMENTED");
 #endif
@@ -160,6 +222,8 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegis
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
     jstring originMethod) {
 #ifdef APP_INSPECTION_EXPERIMENT
+  app_inspection::AddExitTransformation(env, servicePtr, originClass,
+                                        originMethod);
 #else
   profiler::Log::E("REGISTER EXIT HOOK NOT IMPLEMENTED");
 #endif
@@ -169,10 +233,11 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeFindInstances(
     JNIEnv *env, jclass callerClass, jlong servicePtr, jclass jclass) {
 #ifdef APP_INSPECTION_EXPERIMENT
+  return app_inspection::FindInstances(env, servicePtr, jclass);
 #else
   profiler::Log::E("FIND INSTANCES NOT IMPLEMENTED");
-#endif
   auto result = env->NewObjectArray(0, jclass, NULL);
   return result;
+#endif
 }
 }

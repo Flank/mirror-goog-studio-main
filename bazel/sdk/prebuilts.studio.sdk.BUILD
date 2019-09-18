@@ -154,6 +154,7 @@ java_import(
     visibility = [
         "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/profiler/app:__pkg__",
+        "//tools/base/experimental/live-sql-inspector:__pkg__",
     ],
 )
 

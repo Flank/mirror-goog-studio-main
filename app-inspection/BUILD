@@ -23,10 +23,21 @@ cc_library(
     srcs = [
         "app_inspection_java_jni.cc",
         "app_inspection_service.cc",
-    ],
+    ] + select({
+        ":app_inspection_experimental": [
+            "void_exit_hook.cc",
+        ],
+        "//conditions:default": [],
+    }),
     hdrs = [
         "app_inspection_service.h",
-    ],
+    ] + select({
+        ":app_inspection_experimental": [
+            "app_inspection_transform.h",
+            "void_exit_hook.h",
+        ],
+        "//conditions:default": [],
+    }),
     copts = ANDROID_COPTS + [
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
@@ -41,6 +52,7 @@ cc_library(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/agent",
         "//tools/base/transport/agent:jni_wrappers",

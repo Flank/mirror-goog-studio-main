@@ -34,12 +34,16 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
 
     @Override
     public void registerEntryHook(Class<?> originClass, String originMethod, EntryHook entryHook) {
+        AppInspectionService.ExperimentalCapabilities.addEntryHook(
+                originClass, originMethod, entryHook);
         nativeRegisterEntryHook(mAppInspectionServicePtr, originClass, originMethod);
     }
 
     @Override
     public <T> void registerExitHook(
             Class<?> originClass, String originMethod, ExitHook<T> exitHook) {
+        AppInspectionService.ExperimentalCapabilities.addExitHook(
+                originClass, originMethod, exitHook);
         nativeRegisterExitHook(mAppInspectionServicePtr, originClass, originMethod);
     }
 
