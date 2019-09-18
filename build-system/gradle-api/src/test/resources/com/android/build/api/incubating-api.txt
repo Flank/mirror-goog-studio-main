@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-813cfbbef78a8b21e5d6b0ca12a5e202f48fbf03ba24ac66763e301521f6fcae
+101c26c03a12005089e4bc36db610ed0908a7959a6dc46881a31e1f8ce5032f7
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.to: void (ARTIFACT_TYPE)
@@ -40,7 +40,7 @@ com.android.build.api.artifact.BuildArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.MultipleTransformRequest
 com.android.build.api.artifact.MultipleTransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.Operations
-com.android.build.api.artifact.Operations.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.Provider<FILE_TYPE>>)
+com.android.build.api.artifact.Operations.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
 com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)

@@ -54,8 +54,8 @@ interface Operations {
      * Initiates an append request to a [ArtifactType.Multiple] artifact type.
      *
      * @param taskProvider the [TaskProvider] for the task producing an instance of [FILE_TYPE]
-     * @param with the method reference to get the [Provider] to retrieve the produced [FILE_TYPE]
-     * when needed.
+     * @param with the method reference to get the [FileSystemLocationProperty] to retrieve the
+     * produced [FILE_TYPE] when needed.
      *
      * The artifact type must be [ArtifactType.Multiple] and [ArtifactType.Appendable]
      *
@@ -92,7 +92,7 @@ interface Operations {
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> append(
         taskProvider: TaskProvider<TASK>,
-        with: (TASK)-> Provider<FILE_TYPE>
+        with: (TASK)-> FileSystemLocationProperty<FILE_TYPE>
     ): AppendRequest<FILE_TYPE>
 
     /**

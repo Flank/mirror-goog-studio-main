@@ -60,10 +60,8 @@ class OperationsImpl(
 
     override fun <TASK : Task, FILE_TYPE : FileSystemLocation> append(
         taskProvider: TaskProvider<TASK>,
-        with: (TASK) -> Provider<FILE_TYPE>
-    ): AppendRequest<FILE_TYPE> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+        with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+    ): AppendRequest<FILE_TYPE> = AppendRequestImpl(this, taskProvider, with)
 
     override fun <TASK : Task, FILE_TYPE : FileSystemLocation> transform(
         taskProvider: TaskProvider<TASK>,
@@ -131,7 +129,7 @@ class OperationsImpl(
      * @param taskProvider the [TaskProvider] for the task producing the artifact
      * @param property: the field reference to retrieve the output from the task
      */
-    fun <ARTIFACT_TYPE, FILE_TYPE, TASK> setInitialProvider(
+    internal fun <ARTIFACT_TYPE, FILE_TYPE, TASK> setInitialProvider(
         type: ARTIFACT_TYPE,
         taskProvider: TaskProvider<TASK>,
         property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>) where
@@ -186,7 +184,7 @@ class OperationsImpl(
 /**
  * Specialization of the [TransformRequest] public API with added services private to AGP.
  */
-class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>(
+internal class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>(
     private val operationsImpl: OperationsImpl,
     private val taskProvider: TaskProvider<TASK>,
     private val from: (TASK) -> Property<FILE_TYPE>,
@@ -221,14 +219,14 @@ class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>(
 /**
  * Specialization of the [ReplaceRequest] public API with added services private to AGP.
  */
-class ReplaceRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
+internal class ReplaceRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
     private val operationsImpl: OperationsImpl,
     private val taskProvider: TaskProvider<TASK>,
     private val with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
 ): ReplaceRequest<FILE_TYPE> {
-    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE) where
-            ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
-            ARTIFACT_TYPE : ArtifactType.Replaceable {
+    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
+            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+                  ARTIFACT_TYPE : ArtifactType.Replaceable {
 
         val artifactContainer = operationsImpl.getArtifactContainer(type)
         taskProvider.configure {
@@ -237,4 +235,28 @@ class ReplaceRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
         artifactContainer.replace(taskProvider.flatMap { with(it) })
     }
 
+}
+
+/**
+ * Implementation of the [AppendRequest] public API.
+ */
+internal class AppendRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
+    private val operationsImpl: OperationsImpl,
+    private val taskProvider: TaskProvider<TASK>,
+    private val with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+): AppendRequest<FILE_TYPE> {
+
+    override fun <ARTIFACT_TYPE> to(type: ARTIFACT_TYPE)
+            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+                  ARTIFACT_TYPE : ArtifactType.Appendable {
+
+        val artifactContainer = operationsImpl.getArtifactContainer(type)
+        taskProvider.configure {
+            with(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
+        }
+        // all producers of a multiple artifact type are added to the initial list (just like
+        // the AGP producers) since the transforms always operate on the complete list of added
+        // providers.
+        artifactContainer.addInitialProvider(taskProvider.flatMap { with(it) })
+    }
 }
