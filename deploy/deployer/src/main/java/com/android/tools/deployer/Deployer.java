@@ -150,7 +150,12 @@ public class Deployer {
 
         // Calculate the difference between them
         Task<List<FileDiff>> diffs =
-                runner.create(Tasks.DIFF, new ApkDiffer()::diff, dumps, newFiles);
+                runner.create(
+                        Tasks.DIFF,
+                        (dump, newApkEntries) ->
+                                new ApkDiffer().diff(dump.apkEntries, newApkEntries),
+                        dumps,
+                        newFiles);
 
         // Push and pre install the apks
         Task<String> sessionId =

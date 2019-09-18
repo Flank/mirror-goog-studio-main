@@ -264,7 +264,8 @@ public class ApkInstaller {
 
         // We use inheritance if there are more than one apks, and if the manifests
         // have not changed
-        boolean inherit = canInherit(apks.size(), new ApkDiffer().diff(dump, localEntries));
+        boolean inherit =
+                canInherit(apks.size(), new ApkDiffer().diff(dump.apkEntries, localEntries));
         builder.setInherit(inherit);
         builder.addAllPatchInstructions(patches);
         builder.setPackageName(packageName);
