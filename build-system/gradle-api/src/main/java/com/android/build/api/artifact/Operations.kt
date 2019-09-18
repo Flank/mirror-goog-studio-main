@@ -139,7 +139,7 @@ interface Operations {
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> transform(
         taskProvider: TaskProvider<TASK>,
-        from: (TASK)-> Property<FILE_TYPE>,
+        from: (TASK)-> FileSystemLocationProperty<FILE_TYPE>,
         into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): TransformRequest<FILE_TYPE>
 
@@ -195,7 +195,7 @@ interface Operations {
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> transformAll(
         taskProvider: TaskProvider<TASK>,
         from: (TASK)-> ListProperty<FILE_TYPE>,
-        into: (TASK) -> Provider<FILE_TYPE>
+        into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): MultipleTransformRequest<FILE_TYPE>
 
     /**
@@ -306,7 +306,7 @@ interface AppendRequest<FILE_TYPE: FileSystemLocation> {
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
      * [ArtifactType.Appendable] and [ArtifactType.Multiple]
      */
-    fun <ARTIFACT_TYPE> to(type: ARTIFACT_TYPE)
+    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
             where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
                   ARTIFACT_TYPE: ArtifactType.Appendable
 }

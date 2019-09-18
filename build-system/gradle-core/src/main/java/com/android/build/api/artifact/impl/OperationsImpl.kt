@@ -65,17 +65,16 @@ class OperationsImpl(
 
     override fun <TASK : Task, FILE_TYPE : FileSystemLocation> transform(
         taskProvider: TaskProvider<TASK>,
-        from: (TASK) -> Property<FILE_TYPE>,
+        from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
         into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): TransformRequest<FILE_TYPE> = TransformRequestImpl(this, taskProvider, from, into)
 
-    override fun <TASK : Task, FILE_TYPE : FileSystemLocation> transformAll(
+    override fun <TASK: Task, FILE_TYPE: FileSystemLocation> transformAll(
         taskProvider: TaskProvider<TASK>,
-        from: (TASK) -> ListProperty<FILE_TYPE>,
-        into: (TASK) -> Provider<FILE_TYPE>
-    ): MultipleTransformRequest<FILE_TYPE> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+        from: (TASK)-> ListProperty<FILE_TYPE>,
+        into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+    ): MultipleTransformRequest<FILE_TYPE> =
+        MultipleTransformRequestImpl(this, objects, taskProvider, from, into)
 
     override fun <TASK : Task, FILE_TYPE : FileSystemLocation> replace(
         taskProvider: TaskProvider<TASK>,
@@ -246,7 +245,7 @@ internal class AppendRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
     private val with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
 ): AppendRequest<FILE_TYPE> {
 
-    override fun <ARTIFACT_TYPE> to(type: ARTIFACT_TYPE)
+    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
             where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
                   ARTIFACT_TYPE : ArtifactType.Appendable {
 
@@ -259,4 +258,30 @@ internal class AppendRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
         // providers.
         artifactContainer.addInitialProvider(taskProvider.flatMap { with(it) })
     }
+}
+
+internal class MultipleTransformRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
+    private val operationsImpl: OperationsImpl,
+    private val objects: ObjectFactory,
+    private val taskProvider: TaskProvider<TASK>,
+    private val from: (TASK) -> ListProperty<FILE_TYPE>,
+    private val into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+):
+        MultipleTransformRequest<FILE_TYPE> {
+
+    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
+            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+                  ARTIFACT_TYPE : ArtifactType.Transformable,
+                  ARTIFACT_TYPE : ArtifactType.Multiple {
+        val artifactContainer = operationsImpl.getArtifactContainer(type)
+        val newList = objects.listProperty(type.kind.dataType().java)
+        val currentProviders= artifactContainer.transform(taskProvider.flatMap { newList })
+        taskProvider.configure {
+            newList.add(into(it))
+            into(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
+            from(it).set(currentProviders)
+        }
+
+    }
+
 }

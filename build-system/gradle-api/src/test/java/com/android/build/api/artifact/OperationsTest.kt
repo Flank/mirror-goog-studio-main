@@ -89,7 +89,7 @@ class OperationsTest {
 
         // actual API
         operations.append(taskProvider, FileProducerTask::getOutputFile)
-            .to(TestArtifactType.TEST_APPENDABLE_FILES)
+            .on(TestArtifactType.TEST_APPENDABLE_FILES)
     }
 
     @Test
@@ -102,7 +102,7 @@ class OperationsTest {
 
         // actual API
         operations.append(taskProvider, DirectoryProducerTask::getOutputDir)
-            .to(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+            .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
     }
 
     @Test
@@ -209,7 +209,7 @@ class OperationsTest {
     }
 
     private fun <T: FileSystemLocation> getAppendRequest()= object: AppendRequest<T> {
-        override fun <ARTIFACT_TYPE> to(type: ARTIFACT_TYPE)
+        override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
                 where ARTIFACT_TYPE : ArtifactType<T>, ARTIFACT_TYPE : ArtifactType.Appendable {}
     }
 

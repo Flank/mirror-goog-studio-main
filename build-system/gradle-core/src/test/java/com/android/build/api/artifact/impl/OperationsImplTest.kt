@@ -34,8 +34,10 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -66,7 +68,7 @@ class OperationsImplTest {
 
         object TEST_TRANSFORMABLE_FILE : TestArtifactType<RegularFile>(FILE), Single, Transformable
         object TEST_TRANSFORMABLE_FILES : TestArtifactType<RegularFile>(FILE), Multiple,
-            Transformable
+            Transformable, Appendable
 
         object TEST_TRANSFORMABLE_DIRECTORY : TestArtifactType<Directory>(DIRECTORY), Single,
             Transformable
@@ -660,7 +662,7 @@ class OperationsImplTest {
             appendTaskInitialized.set(true)
         }
         operations.append(appendTaskProvider, AppendTask::outputFile)
-            .to(TestArtifactType.TEST_APPENDABLE_FILES)
+            .on(TestArtifactType.TEST_APPENDABLE_FILES)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
@@ -707,7 +709,7 @@ class OperationsImplTest {
         for (i in 0..2) {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
             operations.append(appendTaskProvider, AppendTask::outputFile)
-                .to(TestArtifactType.TEST_APPENDABLE_FILES)
+                .on(TestArtifactType.TEST_APPENDABLE_FILES)
         }
 
         // now registers AGP provider.
@@ -743,7 +745,7 @@ class OperationsImplTest {
             appendTaskInitialized.set(true)
         }
         operations.append(appendTaskProvider, AppendTask::outputDirectory)
-            .to(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+            .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
@@ -790,7 +792,7 @@ class OperationsImplTest {
         for (i in 0..2) {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
             operations.append(appendTaskProvider, AppendTask::outputDirectory)
-                .to(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+                .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
         }
 
         // now registers AGP provider.
@@ -813,5 +815,236 @@ class OperationsImplTest {
         }
         Truth.assertThat(artifactContainer.get().get()[3].asFile.absolutePath)
             .contains("agpTaskProvider")
+    }
+
+    @Test
+    fun testMultipleAGPProvidersReplacementOnMultipleFileArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+        val initializedTasks = AtomicInteger(0)
+        val agpTaskProviders = mutableListOf<TaskProvider<AGPTask>>()
+        for (i in 0..2) {
+            val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java) {
+                initializedTasks.incrementAndGet()
+            }
+            agpTaskProviders.add(agpTaskProvider)
+            operations.addInitialProvider(
+                TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
+        }
+        Truth.assertThat(initializedTasks.get()).isEqualTo(0)
+
+        abstract class TransformMultipleTask: DefaultTask() {
+            @get:InputFiles
+            abstract val inputFiles: ListProperty<RegularFile>
+
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+
+        val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+
+        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
+            .contains("transformTask")
+        Truth.assertThat(transformTask.get().inputFiles.get()).hasSize(3)
+        for (i in 0..2) {
+            Truth.assertThat(transformTask.get().inputFiles.get()[i].asFile.absolutePath)
+                .contains("agpTaskProvider$i")
+        }
+        Truth.assertThat(transformTask.get().outputFile.get().asFile).isEqualTo(
+            artifactContainer.get().get()[0].asFile)
+    }
+
+    @Test
+    fun testSuccessiveMultipleAGPProvidersReplacementOnMultipleFileArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+        for (i in 0..2) {
+            val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java)
+            operations.addInitialProvider(
+                TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
+        }
+
+        abstract class TransformMultipleTask: DefaultTask() {
+            @get:InputFiles
+            abstract val inputFiles: ListProperty<RegularFile>
+
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+
+        val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformOneTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+
+        val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformTwoTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+
+        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
+            .contains("transformTwoTask")
+        Truth.assertThat(transformOneTask.get().inputFiles.get()).hasSize(3)
+        for (i in 0..2) {
+            Truth.assertThat(transformOneTask.get().inputFiles.get()[i].asFile.absolutePath)
+                .contains("agpTaskProvider$i")
+        }
+        Truth.assertThat(transformOneTask.get().outputFile.get().asFile.absolutePath)
+            .contains("transformOneTask")
+        Truth.assertThat(transformTwoTask.get().inputFiles.get()).hasSize(1)
+        Truth.assertThat(transformTwoTask.get().inputFiles.get()[0].asFile.absolutePath)
+            .contains("transformOneTask")
+
+        Truth.assertThat(transformTwoTask.get().outputFile.get().asFile).isEqualTo(
+            artifactContainer.get().get()[0].asFile)
+    }
+
+
+    @Test
+    fun testMultipleAGPProvidersReplacementOnMultipleDirectoryArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputDirectory
+            abstract val outputDirectory: DirectoryProperty
+        }
+        val initializedTasks = AtomicInteger(0)
+        for (i in 0..2) {
+            val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java) {
+                initializedTasks.incrementAndGet()
+            }
+            operations.addInitialProvider(
+                TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
+        }
+        Truth.assertThat(initializedTasks.get()).isEqualTo(0)
+
+        abstract class TransformMultipleTask: DefaultTask() {
+            @get:InputFiles
+            abstract val inputDirectories: ListProperty<Directory>
+
+            @get:OutputFile
+            abstract val outputDirectory: DirectoryProperty
+        }
+
+        val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformTask,
+            TransformMultipleTask::inputDirectories,
+            TransformMultipleTask::outputDirectory)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+
+        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
+            .contains("transformTask")
+        Truth.assertThat(transformTask.get().inputDirectories.get()).hasSize(3)
+        for (i in 0..2) {
+            Truth.assertThat(transformTask.get().inputDirectories.get()[i].asFile.absolutePath)
+                .contains("agpTaskProvider$i")
+        }
+        Truth.assertThat(transformTask.get().outputDirectory.get().asFile).isEqualTo(
+            artifactContainer.get().get()[0].asFile)
+    }
+
+    @Test
+    fun testSuccessiveMultipleAGPProvidersReplacementOnMultipleDirectoryArtifactType() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputDirectory
+            abstract val outputDirectory: DirectoryProperty
+        }
+        for (i in 0..2) {
+            val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java)
+            operations.addInitialProvider(
+                TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
+        }
+
+        abstract class TransformMultipleTask: DefaultTask() {
+            @get:InputFiles
+            abstract val inputDirectories: ListProperty<Directory>
+
+            @get:OutputFile
+            abstract val outputDirectory: DirectoryProperty
+        }
+
+        val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformOneTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+
+        val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformTwoTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+
+        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
+            .contains("transformTwoTask")
+        Truth.assertThat(transformOneTask.get().inputDirectories.get()).hasSize(3)
+        for (i in 0..2) {
+            Truth.assertThat(transformOneTask.get().inputDirectories.get()[i].asFile.absolutePath)
+                .contains("agpTaskProvider$i")
+        }
+        Truth.assertThat(transformOneTask.get().outputDirectory.get().asFile.absolutePath)
+            .contains("transformOneTask")
+        Truth.assertThat(transformTwoTask.get().inputDirectories.get()).hasSize(1)
+        Truth.assertThat(transformTwoTask.get().inputDirectories.get()[0].asFile.absolutePath)
+            .contains("transformOneTask")
+
+        Truth.assertThat(transformTwoTask.get().outputDirectory.get().asFile).isEqualTo(
+            artifactContainer.get().get()[0].asFile)
+    }
+
+    @Test
+    fun testLateAppendReplacementOnMultipleFileArtifactType() {
+        abstract class ProducerTask: DefaultTask() {
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+        val initializedTasks = AtomicInteger(0)
+        val agpTaskProviders = mutableListOf<TaskProvider<ProducerTask>>()
+        for (i in 0..2) {
+            val agpTaskProvider = project.tasks.register("agpTaskProvider$i", ProducerTask::class.java) {
+                initializedTasks.incrementAndGet()
+            }
+            agpTaskProviders.add(agpTaskProvider)
+            operations.addInitialProvider(
+                TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, ProducerTask::outputFile)
+        }
+        Truth.assertThat(initializedTasks.get()).isEqualTo(0)
+
+        abstract class TransformMultipleTask: DefaultTask() {
+            @get:InputFiles
+            abstract val inputFiles: ListProperty<RegularFile>
+
+            @get:OutputFile
+            abstract val outputFile: RegularFileProperty
+        }
+
+        val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
+        operations.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+
+        // now add a new producer, after the transfomrAll is called. Yet the transform should get
+        // this appended producer anyhow.
+        val lateProducer = project.tasks.register("lateProducer", ProducerTask::class.java)
+        operations.append(lateProducer, ProducerTask::outputFile).on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+
+        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        Truth.assertThat(artifactContainer.get().get()).hasSize(1)
+        Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
+            .contains("transformTask")
+        Truth.assertThat(transformTask.get().inputFiles.get()).hasSize(4)
+        for (i in 0..2) {
+            Truth.assertThat(transformTask.get().inputFiles.get()[i].asFile.absolutePath)
+                .contains("agpTaskProvider$i")
+        }
+        Truth.assertThat(transformTask.get().inputFiles.get()[3].asFile.absolutePath)
+            .contains("lateProducer")
+        Truth.assertThat(transformTask.get().outputFile.get().asFile).isEqualTo(
+            artifactContainer.get().get()[0].asFile)
     }
 }

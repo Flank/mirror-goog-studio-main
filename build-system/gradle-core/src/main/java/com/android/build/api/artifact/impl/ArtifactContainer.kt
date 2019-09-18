@@ -18,6 +18,7 @@ package com.android.build.api.artifact.impl
 
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.api.provider.Provider
 import java.util.concurrent.atomic.AtomicBoolean
 
