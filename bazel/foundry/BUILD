@@ -16,7 +16,7 @@ platform(
           }
           properties: {
             name: "dockerNetwork"
-            value: "standard"
+            value: "off"
           }
           properties: {
             name: "dockerUseURandom"
