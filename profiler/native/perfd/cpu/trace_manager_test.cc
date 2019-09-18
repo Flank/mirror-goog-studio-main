@@ -66,6 +66,30 @@ class MockBashCommandRunner final : public BashCommandRunner {
                      bool(const std::string& cmd, std::string* output));
 };
 
+class MockAtraceManager final : public AtraceManager {
+ public:
+  MockAtraceManager()
+      : AtraceManager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                      &clock_, 50,
+                      std::unique_ptr<Atrace>(new FakeAtrace(&clock_))) {}
+  MOCK_METHOD(bool, StartProfiling,
+              (const std::string&, int, int*, const std::string&, std::string*),
+              (override));
+
+ private:
+  SteadyClock clock_;
+};
+
+class MockPerfettoManager final : public PerfettoManager {
+ public:
+  MockPerfettoManager() : PerfettoManager() {}
+  MOCK_METHOD(bool, StartProfiling,
+              (const std::string&, const std::string&,
+               const perfetto::protos::TraceConfig&, const std::string&,
+               std::string*),
+              (override));
+};
+
 // A subclass of TerminationService that we want to test. The only difference is
 // it has a public constructor and destructor.
 class TestTerminationService final : public TerminationService {
@@ -224,6 +248,104 @@ TEST_F(TraceManagerTest, StopArtTraceWhenDaemonTerminated) {
   // Now, verify that a command has been issued to stop ART recording.
   EXPECT_THAT(cmd_2, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd_2, HasSubstr(kProfileStop));
+}
+
+// Define this static const data member because it "shall still be defined in a
+// namespace scope if it is odr-used ([basic.def.odr]) in the program" according
+// to C++ standard.
+const int TraceManager::kAtraceBufferSizeInMb;
+TEST_F(TraceManagerTest, AlwaysUseFixedSizeForAtrace) {
+  // Create a mock Atrace manager to capture the input parameter.
+  std::unique_ptr<AtraceManager> atrace_manager{new MockAtraceManager()};
+  int captured_buffer_size_in_mb;
+  EXPECT_CALL(*(static_cast<MockAtraceManager*>(atrace_manager.get())),
+              StartProfiling)
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<1>(&captured_buffer_size_in_mb), Return(true)));
+
+  // Initialize the device and trace manager
+  DeviceInfoHelper::SetDeviceInfo(DeviceInfo::O);  // Use Pre-P to ensure Atrace
+  profiler::proto::DaemonConfig::CpuConfig cpu_config;
+  TraceManager trace_manager{
+      &clock_,
+      cpu_config,
+      termination_service_.get(),
+      ActivityManager::Instance(),
+      std::unique_ptr<SimpleperfManager>(new SimpleperfManager(
+          std::unique_ptr<Simpleperf>(new FakeSimpleperf()))),
+      std::move(atrace_manager),
+      std::unique_ptr<PerfettoManager>(
+          new PerfettoManager(std::unique_ptr<Perfetto>(new FakePerfetto())))};
+
+  // Start a System Trace recording.
+  CpuTraceConfiguration configuration;
+  configuration.set_app_name("fake_app");
+  auto user_options = configuration.mutable_user_options();
+  user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
+  user_options->set_trace_type(CpuTraceType::ATRACE);
+
+  user_options->set_buffer_size_in_mb(21);  // set an unexpected number.
+
+  TraceStartStatus start_status;
+  trace_manager.StartProfiling(0, configuration, &start_status);
+
+  // Check the argument.
+  EXPECT_EQ(TraceManager::kAtraceBufferSizeInMb, captured_buffer_size_in_mb);
+
+  // This needs to happen otherwise the termination handler attempts to call
+  // shutdown on the TraceManager which causes a segfault.
+  termination_service_.reset(nullptr);
+}
+
+// Define this static const data member because it "shall still be defined in a
+// namespace scope if it is odr-used ([basic.def.odr]) in the program" according
+// to C++ standard.
+const int TraceManager::kPerfettoBufferSizeInMb;
+TEST_F(TraceManagerTest, AlwaysUseFixedSizeForPerfetto) {
+  // Create a mock Perfetto manager to capture the input parameter.
+  std::unique_ptr<PerfettoManager> perfetto_manager{new MockPerfettoManager()};
+  perfetto::protos::TraceConfig perfetto_config;
+  EXPECT_CALL(*(static_cast<MockPerfettoManager*>(perfetto_manager.get())),
+              StartProfiling)
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<2>(&perfetto_config), Return(true)));
+
+  // Initialize the device and trace manager
+  DeviceInfoHelper::SetDeviceInfo(DeviceInfo::P);  // Use P+ to enable Perfetto
+  profiler::proto::DaemonConfig::CpuConfig cpu_config;
+  cpu_config.set_use_perfetto(true);  // Required to use Perfetto
+  TraceManager trace_manager{
+      &clock_,
+      cpu_config,
+      termination_service_.get(),
+      ActivityManager::Instance(),
+      std::unique_ptr<SimpleperfManager>(new SimpleperfManager(
+          std::unique_ptr<Simpleperf>(new FakeSimpleperf()))),
+      std::unique_ptr<AtraceManager>(new AtraceManager(
+          std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock_, 50,
+          std::unique_ptr<Atrace>(new FakeAtrace(&clock_)))),
+      std::move(perfetto_manager)};
+
+  // Start a System Trace recording.
+  CpuTraceConfiguration configuration;
+  configuration.set_app_name("fake_app");
+  auto user_options = configuration.mutable_user_options();
+  user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
+  user_options->set_trace_type(CpuTraceType::ATRACE);
+
+  user_options->set_buffer_size_in_mb(21);  // set an unexpected number.
+
+  TraceStartStatus start_status;
+  trace_manager.StartProfiling(0, configuration, &start_status);
+
+  // Check the argument.
+  EXPECT_EQ(1, perfetto_config.buffers_size());
+  EXPECT_EQ(TraceManager::kPerfettoBufferSizeInMb * 1024,
+            perfetto_config.buffers(0).size_kb());
+
+  // This needs to happen otherwise the termination handler attempts to call
+  // shutdown on the TraceManager which causes a segfault.
+  termination_service_.reset(nullptr);
 }
 
 TEST_F(TraceManagerTest, AtraceRunsOnOWithPerfettoEnabled) {

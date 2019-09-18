@@ -67,11 +67,14 @@ class AtraceManager {
   // able to allocate. If start profiling was unsucessful this parameter is 0 or
   // the last buffer size attempted.
   // Only one instance of Atrace should be running at a time.
+  // Mark it virtual to make it easy to mock for testing.
   // TODO: Investigate if running atrace with two different application
   // names keeps the profiling unique.
-  bool StartProfiling(const std::string &app_name, int buffer_size_in_mb,
-                      int *acquired_buffer_size_kb,
-                      const std::string &trace_path, std::string *error);
+  virtual bool StartProfiling(const std::string &app_name,
+                              int buffer_size_in_mb,
+                              int *acquired_buffer_size_kb,
+                              const std::string &trace_path,
+                              std::string *error);
   profiler::proto::TraceStopStatus::Status StopProfiling(
       const std::string &app_name, bool need_result, std::string *error);
   void Shutdown();

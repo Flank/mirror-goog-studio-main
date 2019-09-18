@@ -42,6 +42,9 @@ namespace profiler {
 // of their records.
 class TraceManager final {
  public:
+  static const int kAtraceBufferSizeInMb = 32;
+  static const int kPerfettoBufferSizeInMb = 4;
+
   TraceManager(Clock* clock,
                const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
                TerminationService* termination_service)

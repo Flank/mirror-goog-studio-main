@@ -50,9 +50,12 @@ class PerfettoManager {
   // once profiling of this app is stopped. To call this method on an already
   // profiled app is a noop and returns false.
   // Only one instance of Perfetto should be running at a time.
-  bool StartProfiling(const std::string &app_name, const std::string &abi_arch,
-                      const perfetto::protos::TraceConfig &config,
-                      const std::string &trace_path, std::string *error);
+  // Mark it virtual to make it easy to mock for testing.
+  virtual bool StartProfiling(const std::string &app_name,
+                              const std::string &abi_arch,
+                              const perfetto::protos::TraceConfig &config,
+                              const std::string &trace_path,
+                              std::string *error);
 
   // Stops profiling returns true if perfetto is no longer running.
   profiler::proto::TraceStopStatus::Status StopProfiling(std::string *error);

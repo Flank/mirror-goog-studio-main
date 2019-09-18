@@ -58,6 +58,8 @@ ProfilingApp* TraceManager::StartProfiling(
     success = true;
   } else {
     const auto& user_options = configuration.user_options();
+    // Note user_options.buffer_size_in_mb() isn't used here. It applis only to
+    // ART tracing for pre-O which is not handled by the daemon.
     bool startup_profiling =
         configuration.initiation_type() == proto::INITIATED_BY_STARTUP;
     if (user_options.trace_type() == proto::CpuTraceType::SIMPLEPERF) {
@@ -70,7 +72,7 @@ ProfilingApp* TraceManager::StartProfiling(
       int acquired_buffer_size_kb = 0;
       if (UsePerfetto()) {
         // Perfetto always acquires the proper buffer size.
-        acquired_buffer_size_kb = user_options.buffer_size_in_mb() * 1024;
+        acquired_buffer_size_kb = kPerfettoBufferSizeInMb * 1024;
         // TODO: We may want to pass this in from studio for a more flexible
         // config.
         perfetto::protos::TraceConfig config =
@@ -80,9 +82,8 @@ ProfilingApp* TraceManager::StartProfiling(
             configuration.temp_path(), &error_message);
       } else {
         success = atrace_manager_->StartProfiling(
-            app_name, user_options.buffer_size_in_mb(),
-            &acquired_buffer_size_kb, configuration.temp_path(),
-            &error_message);
+            app_name, kAtraceBufferSizeInMb, &acquired_buffer_size_kb,
+            configuration.temp_path(), &error_message);
       }
     } else {
       auto mode = user_options.trace_mode() == proto::CpuTraceMode::INSTRUMENTED
