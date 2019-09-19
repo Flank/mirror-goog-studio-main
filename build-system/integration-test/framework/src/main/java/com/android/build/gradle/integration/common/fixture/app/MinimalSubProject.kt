@@ -146,5 +146,16 @@ class MinimalSubProject private constructor(
                 packageName = null
             )
         }
+
+        fun assetPack(): MinimalSubProject {
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.asset-pack",
+                addCompileAndSdkVersionToBuildFile = false,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = false,
+                packageName = null
+            )
+        }
     }
 }

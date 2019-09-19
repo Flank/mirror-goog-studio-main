@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2cab15285245a81fcb1625f07796f8a918a6a4db3e23dc041e4bbc21f47ae564
+8e51476b718635b9075d1e3a17fcb906ce2434a236d552bae117b91d6fd20b45
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -55,6 +55,10 @@ com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.AssetPackExtension
+com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
+com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
+com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildFeatures.getAidl: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
@@ -107,6 +111,9 @@ com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.A
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super TestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DynamicDelivery
+com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ExternalNativeBuild

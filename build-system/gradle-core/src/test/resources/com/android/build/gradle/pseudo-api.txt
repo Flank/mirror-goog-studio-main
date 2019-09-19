@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b255a1500dab456d34719a327f975d381530bce4a74442b0d34f8d71668f8041
+cfccee109ecc2fcb701e0b672ff2eeead320655ddbea391c1d5f461c8ba1d244
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -54,6 +54,13 @@ com.android.build.gradle.AppPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.AppPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.AppPluginKt
 com.android.build.gradle.AppPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
+com.android.build.gradle.AssetPackPlugin implements org.gradle.api.Plugin
+com.android.build.gradle.AssetPackPlugin.<init>: com.android.build.gradle.AssetPackPlugin ()
+com.android.build.gradle.AssetPackPlugin.apply: void (java.lang.Object)
+com.android.build.gradle.AssetPackPlugin.apply: void (org.gradle.api.Project)
+com.android.build.gradle.AssetPackPluginKt
+com.android.build.gradle.AssetPackPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
+com.android.build.gradle.AssetPackPluginKt.getVERSION_CHECK_PLUGIN_ID: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.gradle.BaseExtension implements com.android.build.gradle.AndroidConfig, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 com.android.build.gradle.BaseExtension.aaptOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AaptOptions>)
 com.android.build.gradle.BaseExtension.adbOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AdbOptions>)
@@ -593,6 +600,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.defaultConfig: void
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantOperations: void (java.util.List<? extends com.android.build.gradle.internal.scope.VariantScope>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantPropertiesOperations: void (java.util.List<? extends com.android.build.gradle.internal.scope.VariantScope>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.ExternalNativeBuild, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getAssetPacks: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildFeatures: com.android.build.api.dsl.ApplicationBuildFeatures ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildFeatures: com.android.build.api.dsl.BuildFeatures ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildTypes: java.util.Collection ()
@@ -627,6 +635,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariants: com.and
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariants: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AppVariant, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariants: void (org.gradle.api.Action<com.android.build.api.variant.AppVariant>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)

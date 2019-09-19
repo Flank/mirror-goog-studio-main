@@ -328,6 +328,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     // an intermediate bundle that contains only the current module
     object MODULE_BUNDLE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // directory with intermediate bundles of the asset packs for the app.
+    object ASSET_PACK_BUNDLE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // The main dex list for the bundle: InternalArtifactType<RegularFile>(FILE), Replaceable unlike the main dex list for a monolithic application: InternalArtifactType<RegularFile>(FILE), Replaceable this
     // analyzes all of the dynamic feature classes too.
     object MAIN_DEX_LIST_FOR_BUNDLE: InternalArtifactType<RegularFile>(FILE), Replaceable
@@ -416,6 +418,10 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object APK_IDE_MODEL: InternalArtifactType<RegularFile>(FILE), Replaceable
     object BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
     object APK_FROM_BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
+
+    object ASSET_PACK_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY)
+
+    object LINKED_RES_FOR_ASSET_PACK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

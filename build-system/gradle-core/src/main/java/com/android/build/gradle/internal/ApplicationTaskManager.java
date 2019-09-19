@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
+import com.android.build.gradle.internal.tasks.AssetPackPreBundleTask;
 import com.android.build.gradle.internal.tasks.BundleReportDependenciesTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.BundleToStandaloneApkTask;
@@ -49,11 +50,13 @@ import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.FinalizeBundleTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
+import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PackageBundleTask;
 import com.android.build.gradle.internal.tasks.ParseIntegrityConfigTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask;
+import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -73,15 +76,20 @@ import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -184,6 +192,10 @@ public class ApplicationTaskManager extends TaskManager {
             createValidateSigningTask(variantScope);
             // Add a task to produce the signing config file.
             taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
+
+            if (!(((BaseAppModuleExtension) extension).getAssetPacks().isEmpty())) {
+                createAssetPackTasks(variantScope);
+            }
 
             if (globalScope.getBuildFeatures().getDataBinding()) {
                 // Create a task that will package the manifest ids(the R file packages) of all
@@ -461,5 +473,56 @@ public class ApplicationTaskManager extends TaskManager {
 
     private static boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
         return !scope.getVariantData().getPublicVariantApi().isDebuggable();
+    }
+
+    private void createAssetPackTasks(@NonNull VariantScope variantScope) {
+        DependencyHandler depHandler = project.getDependencies();
+        List<String> notFound = new ArrayList<>();
+        Configuration assetPackFilesConfiguration =
+                project.getConfigurations().maybeCreate("assetPackFiles");
+        Configuration assetPackManifestConfiguration =
+                project.getConfigurations().maybeCreate("assetPackManifest");
+        boolean needToRegisterAssetPackTasks = false;
+        Set<String> assetPacks = ((BaseAppModuleExtension) extension).getAssetPacks();
+
+        for (String assetPack : assetPacks) {
+            if (project.findProject(assetPack) != null) {
+                Map<String, String> filesDependency =
+                        ImmutableMap.of("path", assetPack, "configuration", "packElements");
+                depHandler.add("assetPackFiles", depHandler.project(filesDependency));
+
+                Map<String, String> manifestDependency =
+                        ImmutableMap.of("path", assetPack, "configuration", "manifestElements");
+                depHandler.add("assetPackManifest", depHandler.project(manifestDependency));
+
+                needToRegisterAssetPackTasks = true;
+            } else {
+                notFound.add(assetPack);
+            }
+        }
+
+        if (needToRegisterAssetPackTasks) {
+            FileCollection assetPackManifest =
+                    assetPackManifestConfiguration.getIncoming().getFiles();
+            FileCollection assetFiles = assetPackFilesConfiguration.getIncoming().getFiles();
+
+            taskFactory.register(
+                    new ProcessAssetPackManifestTask.CreationAction(
+                            variantScope.getVariantData().getPublicVariantPropertiesApi(),
+                            assetPackManifest,
+                            assetPacks
+                                    .stream()
+                                    .map(
+                                            assetPackName ->
+                                                    assetPackName.replace(":", File.separator))
+                                    .collect(Collectors.toSet())));
+            taskFactory.register(new LinkManifestForAssetPackTask.CreationAction(variantScope));
+            taskFactory.register(
+                    new AssetPackPreBundleTask.CreationAction(variantScope, assetFiles));
+        }
+
+        if (!notFound.isEmpty()) {
+            getLogger().error("Unable to find matching projects for Asset Packs: " + notFound);
+        }
     }
 }
