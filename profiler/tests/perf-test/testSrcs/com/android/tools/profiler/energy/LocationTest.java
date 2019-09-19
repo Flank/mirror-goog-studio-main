@@ -66,7 +66,7 @@ public class LocationTest {
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
         myEnergyWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportStub());
+        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
         mySession = myPerfDriver.getSession();
     }
 

@@ -61,7 +61,7 @@ public class UnifiedPipelineOkHttpTest {
     @Before
     public void setup() {
         myGrpc = myPerfDriver.getGrpc();
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportStub());
+        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
     }
 
     @Test

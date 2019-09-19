@@ -116,10 +116,13 @@ perf_test(
 
 perf_test(
     name = "MemoryTest",
-    size = "small",
+    size = "medium",
     srcs = [
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
         "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
+        "testSrcs/com/android/tools/profiler/memory/UnifiedPipelineJniTest.java",
+        "testSrcs/com/android/tools/profiler/memory/UnifiedPipelineMemoryTest.java",
+        "testSrcs/com/android/tools/profiler/memory/UnifiedPipelineMemoryTestUtils.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [

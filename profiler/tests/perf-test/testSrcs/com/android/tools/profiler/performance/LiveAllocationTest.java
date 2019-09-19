@@ -16,28 +16,26 @@
 
 package com.android.tools.profiler.performance;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import com.android.tools.perflogger.Metric.MetricSample;
 import com.android.tools.perflogger.WindowDeviationAnalyzer;
-import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.memory.MemoryStubWrapper;
-import com.android.tools.profiler.proto.Memory;
-import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.regex.Pattern;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.regex.Pattern;
+
+import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.startAllocationTracking;
+import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(Parameterized.class)
 public class LiveAllocationTest {
@@ -50,11 +48,11 @@ public class LiveAllocationTest {
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(
-                new Object[][] {
-                    {1000000, 10, false, 0}, {1000000, 10, true, 1},
-                    {1000000, 10, true, 0}, {1000000, 10, true, 10},
-                    {10000, 1000, false, 0}, {10000, 1000, true, 1},
-                    {100, 100000, false, 0}, {100, 100000, true, 1},
+                new Object[][]{
+                        {1000000, 10, false, 0}, {1000000, 10, true, 1},
+                        {1000000, 10, true, 0}, {1000000, 10, true, 10},
+                        {10000, 1000, false, 0}, {10000, 1000, true, 1},
+                        {100, 100000, false, 0}, {100, 100000, true, 1},
                 });
     }
 
@@ -67,7 +65,8 @@ public class LiveAllocationTest {
             Pattern.compile("(.*)allocation_timing=(?<result>.*)");
 
     // We currently only test O+ test scenarios.
-    @Rule public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
+    @Rule
+    public final PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
 
     private long myAllocationCount;
     private long myAllocationSize;
@@ -85,16 +84,10 @@ public class LiveAllocationTest {
 
     @Test
     public void testAllocationTiming() {
-        if (myIsTracking) {
-            MemoryStubWrapper myStubWrapper =
-                    new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
-            TrackAllocationsResponse trackResponse =
-                    myStubWrapper.startAllocationTracking(myPerfDriver.getSession());
-            assertThat(trackResponse.getStatus().getStatus())
-                    .isEqualTo(Memory.TrackStatus.Status.SUCCESS);
-        }
-
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
+        if (myIsTracking) {
+            startAllocationTracking(myPerfDriver);
+        }
 
         Benchmark benchmark =
                 new Benchmark.Builder(LIVE_ALLOCATION_BENCHMARK_NAME)

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 #include "event_buffer.h"
-#include "event_writer.h"
 
+#include "event_writer.h"
 #include "utils/log.h"
 
 namespace profiler {
@@ -58,11 +58,11 @@ void EventBuffer::WriteEventsTo(EventWriter* writer) {
     }
     while (events_added_ > 0) {
       bool success = writer->Write(events_.Get(events_.size() - events_added_));
-      events_added_--;
       // If we fail to send data to a client.
       if (!success) {
         return;
       }
+      events_added_--;
     }
     events_cv_.wait_for(lock, std::chrono::milliseconds(500), [this] {
       return interrupt_write_ || events_added_ > 0;

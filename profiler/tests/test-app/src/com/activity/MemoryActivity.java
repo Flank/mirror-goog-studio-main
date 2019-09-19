@@ -35,8 +35,9 @@ public class MemoryActivity extends PerfdTestActivity {
     static class MemNoiseEntity {}
 
     static {
-        MemTestEntity TEST_ENTITY = null;
-        MemNoiseEntity NOISE_ENTITY = null;
+        // Ensure the classes are loaded.
+        Class<MemTestEntity> KLASS1 = MemTestEntity.class;
+        Class<MemNoiseEntity> KLASS2 = MemNoiseEntity.class;
     }
 
     public MemoryActivity() {

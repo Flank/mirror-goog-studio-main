@@ -68,7 +68,7 @@ public class AlarmTest {
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
         myStubWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportStub());
+        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
         mySession = myPerfDriver.getSession();
     }
 

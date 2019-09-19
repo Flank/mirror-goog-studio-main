@@ -18,6 +18,7 @@ import io.grpc.ManagedChannelBuilder;
  */
 public class GrpcUtils {
     private final ManagedChannel myChannel;
+    private final TransportServiceGrpc.TransportServiceStub myTransportAsyncStub;
     private final TransportServiceGrpc.TransportServiceBlockingStub myTransportServiceStub;
     private final ProfilerServiceGrpc.ProfilerServiceBlockingStub myProfilerServiceStub;
     private final EventServiceGrpc.EventServiceBlockingStub myEventServiceStub;
@@ -30,6 +31,7 @@ public class GrpcUtils {
     public GrpcUtils(String socket, int port, FakeAndroidDriver mockApp) {
         myChannel = connectGrpc(socket, port);
         myTransportServiceStub = TransportServiceGrpc.newBlockingStub(myChannel);
+        myTransportAsyncStub = TransportServiceGrpc.newStub(myChannel);
         myProfilerServiceStub = ProfilerServiceGrpc.newBlockingStub(myChannel);
         myEventServiceStub = EventServiceGrpc.newBlockingStub(myChannel);
         myNetworkServiceStub = NetworkServiceGrpc.newBlockingStub(myChannel);
@@ -40,6 +42,10 @@ public class GrpcUtils {
 
     public TransportServiceGrpc.TransportServiceBlockingStub getTransportStub() {
         return myTransportServiceStub;
+    }
+
+    public TransportServiceGrpc.TransportServiceStub getTransportAsyncStub() {
+        return myTransportAsyncStub;
     }
 
     public ProfilerServiceGrpc.ProfilerServiceBlockingStub getProfilerStub() {

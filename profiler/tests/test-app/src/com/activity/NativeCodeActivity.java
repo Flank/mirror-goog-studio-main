@@ -25,6 +25,10 @@ public class NativeCodeActivity extends PerfdTestActivity {
     }
 
     public static class JNITestEntity {};
+    static {
+        // Ensure the class is loaded.
+        Class<JNITestEntity> KLASS = JNITestEntity.class;
+    }
 
     List<Long> refs = new ArrayList<Long>();
 
