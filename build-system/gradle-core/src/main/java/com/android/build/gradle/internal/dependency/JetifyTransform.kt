@@ -23,14 +23,26 @@ import com.android.tools.build.jetifier.processor.Processor
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
 import org.gradle.api.artifacts.transform.ArtifactTransform
-import java.io.File
-import javax.inject.Inject
+import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.api.artifacts.transform.TransformAction
+import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 /**
  * [ArtifactTransform] to convert a third-party library that uses old support libraries into an
  * equivalent library that uses new support libraries.
  */
-class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTransform() {
+abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
+
+    interface Parameters : GenericTransformParameters {
+        @get:Input
+        val blackListOption: Property<String>
+    }
 
     companion object {
 
@@ -47,8 +59,13 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
         }
     }
 
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:InputArtifact
+    abstract val inputArtifact: Provider<FileSystemLocation>
+
     /**
-     * List of regular expressions for libraries that should not be jetified.
+     * Computes the Jetifier blacklist of type [Regex] from a string containing a comma-separated
+     * list of regular expressions. The string may be empty.
      *
      * If a library's absolute path contains a substring that matches one of the regular
      * expressions, the library won't be jetified.
@@ -56,15 +73,9 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
      * For example, if the regular expression is  "doNot.*\.jar", then "/path/to/doNotJetify.jar"
      * won't be jetified.
      */
-    private val jetifierBlackList: List<Regex> = getJetifierBlackList(blackListOption)
-
-    /**
-     * Computes the Jetifier blacklist of type [Regex] from a string containing a comma-separated
-     * list of regular expressions. The string may be empty.
-     */
     private fun getJetifierBlackList(blackListOption: String): List<Regex> {
         val blackList = mutableListOf<String>()
-        if (!blackListOption.isEmpty()) {
+        if (blackListOption.isNotEmpty()) {
             blackList.addAll(Splitter.on(",").trimResults().splitToList(blackListOption))
         }
 
@@ -74,7 +85,8 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
         return blackList.map { Regex(it) }
     }
 
-    override fun transform(aarOrJarFile: File): List<File> {
+    override fun transform(transformOutputs: TransformOutputs) {
+        val aarOrJarFile = inputArtifact.get().asFile
         Preconditions.checkArgument(
             aarOrJarFile.name.endsWith(".aar", ignoreCase = true)
                     || aarOrJarFile.name.endsWith(".jar", ignoreCase = true)
@@ -90,7 +102,8 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
          */
         // Case 1: If this is an AndroidX library, no need to jetify it
         if (jetifierProcessor.isNewDependencyFile(aarOrJarFile)) {
-            return listOf(aarOrJarFile)
+            transformOutputs.file(aarOrJarFile)
+            return
         }
 
         // Case 2: If this is an old support library, it means that it was not replaced during
@@ -98,20 +111,24 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
         // or because its AndroidX version is not yet available on remote repositories. Again, no
         // need to jetify it.
         if (jetifierProcessor.isOldDependencyFile(aarOrJarFile)) {
-            return listOf(aarOrJarFile)
+            transformOutputs.file(aarOrJarFile)
+            return
         }
+
+        val jetifierBlackList: List<Regex> = getJetifierBlackList(parameters.blackListOption.get())
 
         // Case 3: If the library is blacklisted, do not jetify it
         if (jetifierBlackList.any { it.containsMatchIn(aarOrJarFile.absolutePath) }) {
-            return listOf(aarOrJarFile)
+            transformOutputs.file(aarOrJarFile)
+            return
         }
 
         // Case 4: For the remaining libraries, let's jetify them
-        val outputFile = File(outputDirectory, "jetified-" + aarOrJarFile.name)
+        val outputFile = transformOutputs.file("jetified-${aarOrJarFile.name}")
         val result = try {
             jetifierProcessor.transform2(
                 input = setOf(FileMapping(aarOrJarFile, outputFile)),
-                copyUnmodifiedLibsAlso = false,
+                copyUnmodifiedLibsAlso = true,
                 skipLibsWithAndroidXReferences = false
             )
         } catch (exception: Exception) {
@@ -122,19 +139,9 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
             )
         }
 
-        return if (result.numberOfLibsModified == 1) {
-            check(result.librariesMap.size == 1)
-            check(result.librariesMap[aarOrJarFile] == outputFile)
-            check(outputFile.exists())
-
-            listOf(outputFile)
-        } else {
-            check(result.numberOfLibsModified == 0)
-            check(result.librariesMap.size == 1)
-            check(result.librariesMap[aarOrJarFile] == null)
-
-            listOf(aarOrJarFile)
-        }
+        check(result.librariesMap.size == 1)
+        check(result.librariesMap[aarOrJarFile] == outputFile)
+        check(outputFile.exists())
     }
 }
 

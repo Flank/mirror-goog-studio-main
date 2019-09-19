@@ -622,18 +622,20 @@ public class VariantManager implements VariantModel {
                         globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
             dependencies.registerTransform(
-                    transform -> {
-                        transform.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
-                        transform.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
-                        transform.artifactTransform(
-                                JetifyTransform.class, config -> config.params(jetifierBlackList));
+                    JetifyTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getBlackListOption().set(jetifierBlackList);
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
                     });
             dependencies.registerTransform(
-                    transform -> {
-                        transform.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                        transform.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                        transform.artifactTransform(
-                                JetifyTransform.class, config -> config.params(jetifierBlackList));
+                    JetifyTransform.class,
+                    spec -> {
+                        spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getBlackListOption().set(jetifierBlackList);
+                        spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
                     });
         } else {
             dependencies.registerTransform(
