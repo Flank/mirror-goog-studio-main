@@ -19,6 +19,7 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.idea.protobuf.ByteString;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -35,6 +36,11 @@ public class PatchSetGenerator {
     // (80 MiB) it represent (50%).
     public static final int MAX_PATCHSET_SIZE = 40 * 1024 * 1024; // 40 MiB
 
+    private ILogger logger;
+
+    public PatchSetGenerator(ILogger logger) {
+        this.logger = logger;
+    }
     public List<Deploy.PatchInstruction> generateFromEntries(
             List<ApkEntry> localEntries, List<ApkEntry> remoteEntries) {
         // Build the list of local apks.
@@ -112,7 +118,7 @@ public class PatchSetGenerator {
     }
 
     private Deploy.PatchInstruction generateDelta(Apk remoteApk, Apk localApk) throws IOException {
-        PatchGenerator.Patch patch = new PatchGenerator().generate(remoteApk, localApk);
+        PatchGenerator.Patch patch = new PatchGenerator(logger).generate(remoteApk, localApk);
         return buildPatchInstruction(
                 patch.destinationSize, patch.sourcePath, patch.instructions, patch.data);
     }
@@ -135,7 +141,8 @@ public class PatchSetGenerator {
         Deploy.PatchInstruction.Builder patchInstructionBuidler =
                 Deploy.PatchInstruction.newBuilder();
 
-        PatchGenerator.Patch patch = new PatchGenerator().generateCleanPatch(remoteApk, localApk);
+        PatchGenerator.Patch patch =
+                new PatchGenerator(logger).generateCleanPatch(remoteApk, localApk);
         patchInstructionBuidler.setSrcAbsolutePath(patch.sourcePath);
         patchInstructionBuidler.setDstFilesize(patch.destinationSize);
         return patchInstructionBuidler.build();

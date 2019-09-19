@@ -17,6 +17,7 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.tracer.Trace;
+import com.android.utils.ILogger;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -43,6 +44,12 @@ public class PatchGenerator {
             this.sourcePath = sourcePath;
             this.destinationSize = destinationSize;
         }
+    }
+
+    private ILogger logger;
+
+    public PatchGenerator(ILogger logger) {
+        this.logger = logger;
     }
 
     /**
@@ -112,27 +119,12 @@ public class PatchGenerator {
                 continue;
             }
 
-            // The entry has not changed. We can use it to declare either one or two Clean areas.
-            // Since the "extra" field is not covered by the CRC, we cannot assume anything about
-            // the content. We must mark it as dirty if it has a size above zero.
-            if (localEntry.extraLength == 0) {
-                ApkMap.Area cleanArea = new ApkMap.Area(localEntry.start, localEntry.end);
-                dirtyMap.markClean(cleanArea);
-            } else {
-                // We don't know what is inside the extra field so we need to leave it marked as
-                // dirty.
-                ApkMap.Area headerUpToName =
-                        new ApkMap.Area(
-                                localEntry.start,
-                                localEntry.payloadStart - localEntry.extraLength - 1);
-                dirtyMap.markClean(headerUpToName);
-
-                ApkMap.Area compressedDataArea =
-                        new ApkMap.Area(localEntry.payloadStart, localEntry.end);
-                dirtyMap.markClean(compressedDataArea);
-            }
+            // The entry has not changed. We can mark it a clean areas.
+            ApkMap.Area cleanArea = new ApkMap.Area(localEntry.start, localEntry.approx_end);
+            dirtyMap.markClean(cleanArea);
         }
         Trace.end();
+        logger.info("Num dirty areas %d", dirtyMap.getDirtyAreas().size());
         return dirtyMap.getDirtyAreas();
     }
 }

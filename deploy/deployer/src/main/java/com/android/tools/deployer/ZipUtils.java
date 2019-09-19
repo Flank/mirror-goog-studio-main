@@ -35,27 +35,22 @@ public class ZipUtils {
         public final long crc;
         public final String name;
         public final long start; // Offset in the archive to the Local File Header location
-        public final long end; // Offset in the archive to the last byte of the payload.
-        public final long payloadStart; // Offset in the archive to the first byte of the payload.
-        public final int extraLength; // Size of the extra field.
+
+        // Offset in the archive to the last byte of the payload we know of.
+        // Since we don't have the lfh extra size, we can only generate an index value that is
+        // "equal or before" the end of a zip entry which is good enough to mark areas as clean
+        // for delta-push to work.
+        public final long approx_end;
+
 
         // Array with all attributes of an entry in the Local File Header. Used for deltaPushing.
         public final byte[] localFileHeader;
 
-        ZipEntry(
-                long crc,
-                String name,
-                long start,
-                long end,
-                long payloadStart,
-                int extraLength,
-                byte[] localFileHeader) {
+        ZipEntry(long crc, String name, long start, long approx_end, byte[] localFileHeader) {
             this.crc = crc;
             this.name = name;
             this.start = start;
-            this.end = end;
-            this.payloadStart = payloadStart;
-            this.extraLength = extraLength;
+            this.approx_end = approx_end;
             this.localFileHeader = localFileHeader;
         }
     }
@@ -109,12 +104,11 @@ public class ZipUtils {
             fakeEntry.put(pathBytes);
 
             // Keep track of boundaries of the entry in the zip archive since those are used while
-            // deltaPushing.
-            long payloadStart = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength + extraLength;
-            long payloadSize = compression == 0 ? decompressedSize : compressedSize;
-            long end = payloadStart - 1 + payloadSize;
-            ZipEntry entry =
-                    new ZipEntry(crc, name, start, end, payloadStart, extraLength, localFileHeader);
+            // deltaPushing. Since we don't have the lfh extra size, we can only approximate the
+            // end boundary.
+            long approx_end = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength;
+            approx_end += compression == 0 ? decompressedSize : compressedSize;
+            ZipEntry entry = new ZipEntry(crc, name, start, approx_end, localFileHeader);
             entries.put(entry.name, entry);
         }
         return entries;

@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +56,8 @@ public class PatchTest {
                         .setZipEntries(localEntries.get(0).apk.zipEntries)
                         .build();
 
-        PatchGenerator.Patch patch = new PatchGenerator().generate(remoteApk, localApk);
+        ILogger logger = new NullLogger();
+        PatchGenerator.Patch patch = new PatchGenerator(logger).generate(remoteApk, localApk);
 
         // Check that the patch is small than the remote apk
         long remoteApkSize = Files.size(Paths.get(remoteApkPath));
@@ -63,7 +66,7 @@ public class PatchTest {
                 patch.data.capacity() + patch.instructions.capacity() < remoteApkSize);
 
         // Hard-coded value is specific to this test.
-        assertEquals("Patch size", patch.data.capacity() + patch.instructions.capacity(), 1458384);
+        assertEquals("Patch size", patch.data.capacity() + patch.instructions.capacity(), 1458338);
 
         // Apply patch.
         Patcher patcher = new Patcher();
