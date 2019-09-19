@@ -34,6 +34,7 @@ private fun extractValues(lines: List<String>): UsbDevice? {
     var vendorId = ""
     var productId = ""
     var deviceId = ""
+    var serialNumber: String? = null
     lines.forEach { line ->
         if (line.startsWith(NAME_KEY)) {
             name = line.substring(line.indexOf("=")+1)
@@ -45,6 +46,13 @@ private fun extractValues(lines: List<String>): UsbDevice? {
             val pidIndex = line.indexOf("PID_")
             if (pidIndex != -1) {
                 productId = "0x" + line.substring(pidIndex + 4, pidIndex + 8)
+
+                // Relevant serial numbers for devices seem to be of the format DeviceID=USB\VID_18D1&amp;PID_4EE4\HT85G1A03400
+                // where the serial number comes after product ID and a \, with no &'s
+                val afterPid = line.substring(pidIndex + 8)
+                if (afterPid.startsWith("\\") && !afterPid.contains('&')) {
+                    serialNumber = afterPid.substring(1)
+                }
             }
             deviceId = line.substring(line.indexOf("=") + 1)
               .replace("&amp;", "&")
@@ -52,7 +60,7 @@ private fun extractValues(lines: List<String>): UsbDevice? {
         }
     }
     if (name != null) {
-        return UsbDevice(name!!, productId, vendorId, null, null, deviceId)
+        return UsbDevice(name!!, productId, vendorId, null, serialNumber, deviceId)
     }
     return null
 }
@@ -67,7 +75,7 @@ class WindowsParser : OutputParser {
                 stringGroups.add(ArrayList())
             }
 
-            if (!stringGroups.isEmpty()) {
+            if (stringGroups.isNotEmpty()) {
                 stringGroups.last().add(line)
             }
         }
@@ -82,8 +90,7 @@ class WindowsParser : OutputParser {
         override fun characteristics() = setOf(Collector.Characteristics.IDENTITY_FINISH)
 
         override fun supplier() = Supplier<MutableList<MutableList<String>>> { ArrayList() }
-        override fun finisher(): Function<MutableList<MutableList<String>>, MutableList<MutableList<String>>> =
-            Function.identity<MutableList<MutableList<String>>>()
+        override fun finisher(): Function<MutableList<MutableList<String>>, MutableList<MutableList<String>>> = Function.identity()
     }
 
     override fun parse(output: InputStream): List<UsbDevice> {

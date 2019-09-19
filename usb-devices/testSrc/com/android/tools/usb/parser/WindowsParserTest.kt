@@ -17,14 +17,9 @@
 package com.android.tools.usb.parser
 
 import com.android.testutils.TestUtils
-import com.android.tools.usb.UsbDeviceCollector
-import com.android.tools.usb.UsbDeviceCollectorImpl
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import java.io.File
-import java.nio.file.Paths
 
 class WindowsParserTest {
     private lateinit var parser: OutputParser
@@ -36,7 +31,7 @@ class WindowsParserTest {
 
     @Test
     fun parseOutput() {
-        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/windows.txt");
+        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/windows.txt")
         val devices = parser.parse(file.inputStream())
 
         // There are 7 entries in the file, but 2 of them are actually duplicates
@@ -62,6 +57,10 @@ class WindowsParserTest {
 
         assertEquals("USB Composite Device", devices[1].name)
         assertEquals("VID_046D&PID_C31C\\7&315E181E&0&3", devices[1].deviceId)
+
+        assertEquals("Generic USB Hub", devices[8].name)
+        assertEquals("VID_0451&PID_8142\\MSFT207B0408594970", devices[8].deviceId)
+        assertEquals("MSFT207B0408594970", devices[8].serialNumber)
 
         assertEquals("Dev Tools (Galaxy S5)", devices[27].name)
         assertEquals("VID_04E8&PID_6860&MI_00\\7&36E6890D&0&0000", devices[27].deviceId)

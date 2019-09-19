@@ -22,7 +22,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 // see: testData/linux.txt for example: Bus 003 Device 037: ID 18d1:4ee7 Google Inc.
-private val PATTERN_STRING: String = "Bus \\d{3} Device \\d{3}: ID (\\w{4}):(\\w{4}) (.*)"
+private const val PATTERN_STRING: String = "Bus \\d{3} Device \\d{3}: ID (\\w{4}):(\\w{4}) (.*)"
 private val BUS_REGEX: Regex = Regex(PATTERN_STRING)
 private val SERIAL_REGEX = Regex("\\h*iSerial\\h+(\\S+)\\h*(\\S*)$")
 
@@ -30,7 +30,7 @@ fun createUsbDevice(line: String): UsbDevice? {
     val matcher = BUS_REGEX.matchEntire(line) ?: return null
     assert(matcher.groupValues.size == 4)
     val (_, vendorId, productId, productName) = matcher.groupValues
-    return UsbDevice(productName.trim(), "0x" + vendorId, "0x" + productId)
+    return UsbDevice(productName.trim(), "0x$vendorId", "0x$productId")
 }
 
 class LinuxParser : OutputParser {
@@ -52,8 +52,8 @@ class LinuxParser : OutputParser {
                 val matchSerial = SERIAL_REGEX.matchEntire(next)
                 if (matchSerial != null) {
                     val (_, _, iSerial) = matchSerial.groupValues
-                    if (!iSerial.isEmpty()) {
-                        curDevice = curDevice.copy(iSerial = iSerial)
+                    if (iSerial.isNotEmpty()) {
+                        curDevice = curDevice.copy(serialNumber = iSerial)
                     }
                 }
             }

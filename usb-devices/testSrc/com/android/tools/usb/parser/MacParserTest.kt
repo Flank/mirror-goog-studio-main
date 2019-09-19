@@ -21,8 +21,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import java.io.File
-import java.nio.file.Paths
 
 class MacParserTest {
     private lateinit var parser: OutputParser
@@ -34,23 +32,23 @@ class MacParserTest {
 
     @Test
     fun parseOutput() {
-        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/mac.txt");
+        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/mac.txt")
         val devices = parser.parse(file.inputStream())
         assertEquals(4, devices.size)
         assertEquals("Card Reader", devices[0].name)
         assertEquals("0x05ac", devices[0].vendorId)
         assertEquals("0x8406", devices[0].productId)
-        assertEquals("000000000820", devices[0].iSerial)
+        assertEquals("000000000820", devices[0].serialNumber)
     }
 
     @Test
     fun parseOutputWithLeadingErrors() {
-        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/mac2.txt");
+        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/mac2.txt")
         val devices = parser.parse(file.inputStream())
         assertEquals(7, devices.size)
         assertEquals("iBridge DFR brightness", devices[0].name)
         assertEquals("0x05ac", devices[0].vendorId)
         assertEquals("0x8102", devices[0].productId)
-        assertNull(devices[0].iSerial)
+        assertNull(devices[0].serialNumber)
     }
 }

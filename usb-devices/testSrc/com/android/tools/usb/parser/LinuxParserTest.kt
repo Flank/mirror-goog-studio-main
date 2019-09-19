@@ -32,18 +32,18 @@ class LinuxParserTest {
 
     @Test
     fun parseOutput() {
-        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/linux.txt");
+        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/linux.txt")
         val devices = parser.parse(file.inputStream())
         assertEquals(15, devices.size)
         val phone = devices[12]
         assertEquals("Google Inc. Nexus 4 (debug)", phone.name)
         assertEquals("0x18d1", phone.vendorId)
         assertEquals("0x4ee2", phone.productId)
-        assertEquals("84B5T15A29000460", phone.iSerial)
+        assertEquals("84B5T15A29000460", phone.serialNumber)
         val hub = devices[14]
         assertEquals("Linux Foundation 2.0 root hub", hub.name)
         assertEquals("0x1d6b", hub.vendorId)
         assertEquals("0x0002", hub.productId)
-        assertNull(hub.iSerial)
+        assertNull(hub.serialNumber)
     }
 }
