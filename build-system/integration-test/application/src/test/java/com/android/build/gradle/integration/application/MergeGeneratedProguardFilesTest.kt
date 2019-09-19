@@ -178,6 +178,11 @@ class MergeGeneratedProguardFilesTest(
                             writer.write("$KEEP_RULE");
                         } catch (IOException e) {
                         }
+                        // also generate file that should be ignored, regression test for b/140786113
+                        try (Writer writer = processingEnv.getFiler().createResource(CLASS_OUTPUT, "", "META-INF/proguard.kotlin_module").openWriter()) {
+                            writer.write("invalid keep rules file");
+                        } catch (IOException e) {
+                        }
                         return false;
                     }
                 }

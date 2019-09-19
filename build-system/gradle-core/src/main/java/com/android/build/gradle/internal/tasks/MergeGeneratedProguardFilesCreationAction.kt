@@ -17,15 +17,12 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
+import com.android.builder.dexing.isProguardRule
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
     : VariantTaskCreationAction<MergeFileTask>(variantScope) {
@@ -49,14 +46,10 @@ class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
         super.configure(task)
 
         val allClasses = variantScope.artifacts.getAllClasses()
-
-        val proguardRulesFolder = SdkConstants.PROGUARD_RULES_FOLDER.replace('/', File.separatorChar)
         val proguardFiles = allClasses.asFileTree.filter { f ->
             val baseFolders = allClasses.files
             val baseFolder = baseFolders.first { f.startsWith(it) }
-            f.toRelativeString(baseFolder)
-                .toLowerCase()
-                .startsWith(proguardRulesFolder)
+            isProguardRule(f.relativeTo(baseFolder).invariantSeparatorsPath)
         }
 
         task.inputFiles = proguardFiles
