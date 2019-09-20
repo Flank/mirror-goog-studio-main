@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "utils/device_info.h"
-#include "utils/device_info_helper.h"
-
 #include <cstdlib>
 #include <sstream>
+
+#include "utils/device_info.h"
+#include "utils/device_info_helper.h"
 
 using std::string;
 
@@ -34,6 +34,7 @@ const char* const kRelease = "ro.build.version.release";
 const char* const kSdk = "ro.build.version.sdk";
 const char* const kBuildType = "ro.build.type";
 const char* const kCharacteristics = "ro.build.characteristics";
+const char* const kAbi = "ro.product.cpu.abi";
 // API codename of a release (non preview) system image or platform.
 const char* const kCodeNameRelease = "REL";
 
@@ -50,6 +51,7 @@ DeviceInfo::DeviceInfo()
       is_user_build_(GetSystemProperty(kBuildType) == "user"),
       is_emulator_(GetSystemProperty(kCharacteristics).find("emulator") !=
                    string::npos),
+      is_64_bit_abi_(IsAbi64Bit(GetSystemProperty(kAbi))),
       // If the codename property is empty or a known fixed string ("REL"),
       // it is a release system image and feature level is the same as sdk
       // level. Otherwise, it is a preview impage, and feature level is sdk

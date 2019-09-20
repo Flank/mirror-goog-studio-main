@@ -26,6 +26,7 @@ namespace profiler {
 // A singleton class containing information about the running device.
 class DeviceInfo {
   friend class DeviceInfoHelper;
+
  public:
   static const std::string& serial() { return Instance()->serial_; }
   static const std::string& code_name() { return Instance()->code_name_; }
@@ -36,6 +37,7 @@ class DeviceInfo {
   static const bool is_user_build() { return Instance()->is_user_build_; }
   static const bool is_emulator() { return Instance()->is_emulator_; }
   static const int feature_level() { return Instance()->feature_level_; }
+  static const bool is_64_bit_abi() { return Instance()->is_64_bit_abi_; }
 
   // Special Android API levels that the profiler cares about.
   static constexpr int O = 26;  // First API where JVMTI is supported.
@@ -51,15 +53,21 @@ class DeviceInfo {
 
   std::string GetSystemProperty(const std::string& property_name) const;
 
+  static bool IsAbi64Bit(const std::string& abi_str) {
+    return abi_str.compare("x86_64") == 0 || abi_str.compare("arm64-v8a") == 0;
+  }
+
   // 'getprop' command line is far more portable than NDK APIs such as
   // __system_property_get() across API levels.
   const BashCommandRunner getprop_;
   const std::string serial_;
   const std::string code_name_;
   const std::string release_;
+  const std::string abi_;
   const int sdk_;
   const bool is_user_build_;
   const bool is_emulator_;
+  const bool is_64_bit_abi_;
   // Mutable by test via DeviceInfoHelper.
   int feature_level_;
 };

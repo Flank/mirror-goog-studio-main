@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -55,17 +56,21 @@ void StatsdSubscriber::Run() {
   for (const auto& pair : pulled_atoms_) {
     pair.second->BuildConfig(subscription_.add_pulled());
   }
-  size_t size = subscription_.ByteSize();
+  uint32_t size = subscription_.ByteSize();
   if (size == 0) {
     return;
   }
-  std::vector<char> buffer(sizeof(size) + size);
-  // First we write the proto size into the first few bytes.
-  for (size_t i = 0; i < sizeof(size); ++i) {
-    buffer[i] = size >> (i * 8);
+  std::vector<uint8_t> buffer(abi_size_in_bytes_ + size);
+  // First we write the proto size into the first [abi_size_in_bytes_] bytes.
+  if (abi_size_in_bytes_ == sizeof(uint64_t)) {
+    // ABI is 64-bit, write a 64-bit integer to fit the size.
+    uint64_t size_in_64_bits = size;
+    std::memcpy(buffer.data(), &size_in_64_bits, abi_size_in_bytes_);
+  } else {
+    std::memcpy(buffer.data(), &size, abi_size_in_bytes_);
   }
   // Then we write the proto content.
-  subscription_.SerializeToArray(buffer.data() + sizeof(size), size);
+  subscription_.SerializeToArray(buffer.data() + abi_size_in_bytes_, size);
 
   if (!runner_->Run(kStatsdArgs, string(buffer.begin(), buffer.end()),
                     &callback_, nullptr)) {
@@ -82,11 +87,11 @@ void StatsdSubscriber::Stop() {
 }
 
 void StatsdSubscriber::HandleOutput(int stdout_fd) {
-  size_t size = 0;
+  uint64_t size = 0;
   ShellData shell_data;
   std::vector<uint8_t> buffer;
   while (runner_->IsRunning()) {
-    if (read(stdout_fd, &size, sizeof(size)) == -1) {
+    if (read(stdout_fd, &size, abi_size_in_bytes_) == -1) {
       Log::E("Failed to read statsd data size: %s.", strerror(errno));
       return;
     }

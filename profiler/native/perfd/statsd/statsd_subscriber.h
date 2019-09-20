@@ -17,6 +17,7 @@
 #define PERFD_STATSD_STATSD_SUBSCRIBER_H_
 
 #include <sys/types.h>
+
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -24,6 +25,7 @@
 
 #include "pulled_atoms/pulled_atom.h"
 #include "statsd/proto/shell_config.pb.h"
+#include "utils/device_info.h"
 #include "utils/nonblocking_command_runner.h"
 
 namespace profiler {
@@ -35,7 +37,9 @@ class StatsdSubscriber {
   StatsdSubscriber(NonBlockingCommandRunner* runner)
       : runner_(runner),
         callback_(std::bind(&StatsdSubscriber::HandleOutput, this,
-                            std::placeholders::_1)) {}
+                            std::placeholders::_1)),
+        abi_size_in_bytes_(DeviceInfo::is_64_bit_abi() ? sizeof(uint64_t)
+                                                       : sizeof(uint32_t)) {}
   ~StatsdSubscriber() { Stop(); }
 
   // Singleton class (except for test code).
@@ -81,6 +85,10 @@ class StatsdSubscriber {
       pulled_atoms_;
   // Callback to handle command output on the callback thread.
   NonBlockingCommandRunner::StdoutCallback callback_;
+  // To reduce build time we opt out of x86_64 binary. However stats command
+  // reads/writes [sizeof(size_t)] bytes of data for proto size, so we need to
+  // choose the size based on device ABI.
+  uint32_t abi_size_in_bytes_;
 };
 
 }  // namespace profiler
