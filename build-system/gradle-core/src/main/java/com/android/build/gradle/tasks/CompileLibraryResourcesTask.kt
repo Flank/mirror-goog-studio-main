@@ -57,7 +57,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     @get:InputFiles
     @get:Incremental
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.ABSOLUTE) // TODO(b/141301405): use relative paths
     abstract val mergedLibraryResourcesDir: DirectoryProperty
 
     @get:Input

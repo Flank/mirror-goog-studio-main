@@ -58,7 +58,6 @@ class CacheabilityTest {
                     ":app:preBuild",
                     ":app:generateDebugResources",
                     ":app:generateDebugAssets",
-                    ":app:compileDebugSources",
                     ":app:preDebugBuild",
                     ":app:preDebugUnitTestBuild"
                 ),
@@ -67,7 +66,6 @@ class CacheabilityTest {
                     ":app:compileDebugShaders",
                     ":app:javaPreCompileDebug",
                     ":app:generateDebugResValues",
-                    ":app:mergeDebugResources",
                     ":app:compileDebugJavaWithJavac",
                     ":app:checkDebugDuplicateClasses",
                     ":app:mergeDebugShaders",
@@ -75,7 +73,6 @@ class CacheabilityTest {
                     ":app:mergeExtDexDebug",
                     ":app:mergeDebugJniLibFolders",
                     ":app:processDebugManifest",
-                    ":app:processDebugResources",
                     ":app:mainApkListPersistenceDebug",
                     ":app:validateSigningDebug",
                     ":app:createDebugCompatibleScreenManifests",
@@ -98,6 +95,8 @@ class CacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:mergeDebugResources", /* Bug 141301405 */
+                    ":app:processDebugResources", /* Bug 141301405 */
                     ":app:packageDebug" /* Bug 74595859 */
                 ),
                 SKIPPED to setOf(
@@ -105,7 +104,8 @@ class CacheabilityTest {
                     ":app:compileDebugRenderscript",
                     ":app:processDebugJavaRes",
                     ":app:assembleDebug",
-                    ":app:processDebugUnitTestJavaRes"
+                    ":app:processDebugUnitTestJavaRes",
+                    ":app:compileDebugSources"
                 ),
                 FAILED to setOf()
             )

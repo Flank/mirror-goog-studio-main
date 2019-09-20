@@ -52,7 +52,6 @@ abstract class ResourceAwareTask : IncrementalTask() {
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getLibraries() = resourcesComputer.libraries?.artifactFiles
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @Internal
     fun getResources() = resourcesComputer.resources.values
 }
