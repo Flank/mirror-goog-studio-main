@@ -83,8 +83,11 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
                 """
 
                     Multiple APKs packaging the same library can cause runtime errors.
-                    Adding the above library as a dependency of the base module will resolve this
-                    issue by packaging the library with the base APK instead.
+                    Placing each of the above libraries in its own dynamic feature and adding that
+                    feature as a dependency of modules requiring it will resolve this issue.
+                    Libraries that are always used together can be combined into a single feature
+                    module to be imported by their dependents. If a library is required by all
+                    feature modules it can be added to the base module instead.
                     """.trimIndent()
             )
             throw GradleException(output.toString())
