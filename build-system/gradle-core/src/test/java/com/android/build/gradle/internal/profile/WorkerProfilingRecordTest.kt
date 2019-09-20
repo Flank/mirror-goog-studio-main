@@ -73,10 +73,11 @@ class WorkerProfilingRecordTest {
         Truth.assertThat(workerRecord?.duration()).isEqualTo(Duration.ZERO)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testFinishedWithoutStarting() {
         testTaskRecord.addWorker("first")
         val workerRecord = testTaskRecord.get("first")
         workerRecord?.executionFinished()
+        Truth.assertThat(workerRecord?.duration()).isEqualTo(Duration.ZERO)
     }
 }

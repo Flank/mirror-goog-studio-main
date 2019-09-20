@@ -37,6 +37,7 @@ class WorkerProfilingRecord(
     private var startTime: Instant = Instant.MIN
     internal var endTime: Instant = Instant.MIN
 
+    @Synchronized
     fun isStarted() = startTime != Instant.MIN
 
     fun isFinished() = endTime != Instant.MIN
@@ -44,12 +45,13 @@ class WorkerProfilingRecord(
     fun waitTime(): Duration = if (isStarted())
         Duration.between(submissionTime, startTime) else Duration.ZERO
 
-    fun duration(): Duration = if (isFinished())
+    fun duration(): Duration = if (isStarted()&& isFinished())
         Duration.between(startTime, endTime) else Duration.ZERO
 
     /**
      * Notification that the Worker Item has started execution.
      */
+    @Synchronized
     fun executionStarted() {
         startTime = TaskProfilingRecord.clock.instant()
     }
@@ -58,17 +60,19 @@ class WorkerProfilingRecord(
      * Notification that the Worker Item has finished execution.
      */
     fun executionFinished() {
-        if (!isStarted()) {
-            throw IllegalStateException("Worker finished without being first started")
-        }
         endTime = TaskProfilingRecord.clock.instant()
     }
 
     fun fillSpanRecord(span: GradleBuildProfileSpan.Builder) {
 
+        // due to some asynchronicity, it is possible that we have not been
+        // notified of the startTime by the time this code executes, in that case,
+        // just use the end time (which we are sure to have) and duration should be
+        // effectively zero.
+        val effectiveStartTime = if (isStarted()) startTime else endTime
         // create the span for the worker item itself
         span.setThreadId(Thread.currentThread().id)
-            .setStartTimeInMs(startTime.toEpochMilli())
+            .setStartTimeInMs(effectiveStartTime.toEpochMilli())
             .setDurationInMs(duration().toMillis())
             .setType(type)
     }
