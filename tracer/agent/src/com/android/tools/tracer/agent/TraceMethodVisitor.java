@@ -41,7 +41,7 @@ class TraceMethodVisitor extends AdviceAdapter {
             String name,
             String desc,
             TraceProfile profile) {
-        super(Opcodes.ASM5, mv, access, name, desc);
+        super(Opcodes.ASM7, mv, access, name, desc);
         this.className = className;
         this.name = name;
         this.tag = buildTag(className, name, desc);
