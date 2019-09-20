@@ -5,6 +5,9 @@ build:remote --jobs=50
 
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/windows
 
+# Use prebuilt native toolchain
+build --crosstool_top=@native_toolchain//:toolchain
+
 build --extra_toolchains=@native_toolchain//:cc-toolchain-x64_windows-clang-cl
 
 build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows1803_as

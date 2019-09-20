@@ -79,9 +79,6 @@ build --javabase=//prebuilts/studio/jdk:jdk_runtime
 build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 
-# Use prebuilt native toolchain
-build --crosstool_top=@native_toolchain//:toolchain
-
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone
 build --strategy=CppLink=standalone
