@@ -1,5 +1,5 @@
 load("//:coverage.bzl", "coverage_report")
-load("//:coverage.bzl", "comp_list")
+load("//:coverage.bzl", "combine_report_definitions")
 
 # This should be a py_binary, but due to a Bazel bug
 # using a py_binary as a tool in a genrule doesn't work
