@@ -60,6 +60,5 @@ def combine_report_definitions(prefix, reports):
         name = "{}.list_all".format(prefix),
         srcs = ["{}.list".format(c) for c in reports],
         outs = ["{}/list".format(prefix)],
-        tools = [":merge_list"],
         cmd = "cat $(SRCS) >$@",
     )
