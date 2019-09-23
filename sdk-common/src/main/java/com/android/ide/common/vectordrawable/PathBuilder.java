@@ -225,6 +225,11 @@ public class PathBuilder {
         return this;
     }
 
+    /** Returns true if the PathBuilder doesn't contain any data. */
+    public boolean isEmpty() {
+        return mPathData.length() == 0;
+    }
+
     public String toString() {
     return mPathData.toString();
   }
