@@ -19,14 +19,15 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static org.junit.Assert.assertNotNull;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
 import java.io.IOException;
-import org.gradle.tooling.BuildException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -153,12 +154,10 @@ public class RenderscriptNdkTest {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "minSdkVersion 21", "minSdkVersion 20");
 
-        try {
-            checkPackagedFiles(false, false, false);
-        } catch (BuildException e) {
-            assertThat(Throwables.getStackTraceAsString(e))
-                    .contains("Api version 20 does not support 64 bit ndk compilation");
-        }
+        GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug");
+        assertNotNull(result.getException());
+        assertThat(Throwables.getRootCause(result.getException()).getMessage())
+                .contains("Api version 20 does not support 64 bit ndk compilation");
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
