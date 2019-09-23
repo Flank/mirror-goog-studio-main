@@ -1673,6 +1673,7 @@ public final class SdkConstants {
 
     // MotionLayout
     public static final String ATTR_MOTION_TARGET = "motionTarget";
+    public static final String ATTR_MOTION_WAVE_OFFSET = "waveOffset";
 
     // AbsListView
     public static final String ATTR_LIST_SELECTOR = "listSelector";
