@@ -7,14 +7,12 @@ import java.io.InputStream
 import javax.xml.XMLConstants
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLEventReader
-import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.events.Attribute
 import javax.xml.stream.events.Comment
 import javax.xml.stream.events.StartElement
-
-private val xmlInputFactory = XMLInputFactory.newFactory()
+import javax.xml.stream.events.XMLEvent
 
 /**
  * Namespace uri for the xliff:g tag in XML.
@@ -162,11 +160,15 @@ class TableExtractor(
         return false
       }
 
-      var rootStart = eventReader.nextEvent()
-      while (!rootStart.isStartElement) {
-        // ignore comments and text before the root tag
+      var rootStart: XMLEvent? = null
+      while(eventReader.hasNext()) {
         rootStart = eventReader.nextEvent()
+        // ignore comments and text before the root tag
+        if (rootStart.isStartElement) {
+          break
+        }
       }
+      rootStart ?: return true
 
       val rootName = rootStart.asStartElement().name
       if (rootName.namespaceURI != null && rootName.localPart != "resources") {

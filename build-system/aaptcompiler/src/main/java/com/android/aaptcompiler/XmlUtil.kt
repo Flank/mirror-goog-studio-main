@@ -1,7 +1,10 @@
 package com.android.aaptcompiler
 
 import com.android.SdkConstants
+import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.events.StartElement
+
+internal val xmlInputFactory = XMLInputFactory.newFactory()
 
 const val SCHEMA_PUBLIC_PREFIX = SdkConstants.URI_PREFIX
 const val SCHEMA_PRIVATE_PREFIX = "http://schemas.android.com/apk/prv/res/"
