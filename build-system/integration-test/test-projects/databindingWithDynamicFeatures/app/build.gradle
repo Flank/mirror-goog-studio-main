@@ -1,0 +1,26 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+
+
+    dynamicFeatures = [':featureA', ':featureB']
+
+    defaultConfig {
+        applicationId "android.databinding.instantappwithfeatures"
+        minSdkVersion 23
+    }
+
+    dataBinding {
+        enabled true
+    }
+}
+
+dependencies {
+    implementation "android.arch.core:runtime:1.1.0"
+    implementation "com.android.support:animated-vector-drawable:$rootProject.supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
+
+    implementation 'com.android.support.constraint:constraint-layout:' + rootProject.constraintLayoutVersion
+}
