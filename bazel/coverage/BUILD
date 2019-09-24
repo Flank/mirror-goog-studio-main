@@ -132,6 +132,23 @@ coverage_report(
     ],
 )
 
+# Coverage report for the Resource Manager and Resource Picker
+coverage_report(
+    name = "resourcemanager",
+    srcpath_exclude = [
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/README.md",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/model/DesignAssetListModel.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/sketchImporter",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/plugin/SketchImporter.kt",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
@@ -141,6 +158,7 @@ combine_report_definitions(
         "navigationeditor",
         "navigationpropertyinspector",
         "spliteditor",
+        "resourcemanager",
     ],
 )
 
