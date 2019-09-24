@@ -561,40 +561,21 @@ public class ManifestMerger2 {
             addMultiDexApplicationIfNoName(document, SdkConstants.MULTI_DEX_APPLICATION.oldName());
         }
 
-        if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
-        }
-
-        if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
-            PlaceholderEncoder.visit(document);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(document));
-        }
-
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)) {
             addFeatureSplitAttribute(document, mFeatureName);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
                 && !mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
             addTargetSandboxVersionAttribute(document);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
             addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         // These features should occur at the end of all optional features, as they are based off of
@@ -610,6 +591,17 @@ public class ManifestMerger2 {
             // if we're not making a bundletool manifest we need to prepare the feature manifest
             // now
             createStrippedFeatureManifest(document, mergingReport);
+        }
+
+        if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+        }
+
+        if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
+            PlaceholderEncoder.visit(document);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(document));
         }
     }
 
@@ -663,9 +655,6 @@ public class ManifestMerger2 {
         if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
         }
-
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
     }
 
     /**
