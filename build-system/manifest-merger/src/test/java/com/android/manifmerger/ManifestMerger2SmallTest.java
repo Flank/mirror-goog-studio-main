@@ -2414,6 +2414,39 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    @Test
+    public void testRemoveNavGraphs() throws Exception {
+        MockLog mockLog = new MockLog();
+        String libInput =
+                "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "    <application android:name=\"lib1\">\n"
+                        + "        <activity android:name=\".MainActivity\">\n"
+                        + "            <nav-graph android:value=\"@navigation/nav1\" />\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+        File libFile = TestUtils.inputAsFile("testRemoveNavGraphs", libInput);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
+                            .withFeatures(ManifestMerger2.Invoker.Feature.MAKE_AAPT_SAFE)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            // check that MERGED manifest has <nav-graph> but AAPT_SAFE manifest doesn't
+            Document mergedDoc = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList mergedNavGraphs = mergedDoc.getElementsByTagName(SdkConstants.TAG_NAV_GRAPH);
+            assertThat(mergedNavGraphs.getLength()).isEqualTo(1);
+            Document aaptDoc = parse(mergingReport.getMergedDocument(MergedManifestKind.AAPT_SAFE));
+            NodeList aaptNavGraphs = aaptDoc.getElementsByTagName(SdkConstants.TAG_NAV_GRAPH);
+            assertThat(aaptNavGraphs.getLength()).isEqualTo(0);
+        } finally {
+            assertThat(libFile.delete()).named("libFile file was deleted").isTrue();
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {

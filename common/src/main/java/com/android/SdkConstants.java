@@ -1061,6 +1061,7 @@ public final class SdkConstants {
     public static final String TAG_META_DATA = "meta-data";
     public static final String TAG_RESOURCE = "resource";
     public static final String TAG_MODULE = "module";
+    public static final String TAG_NAV_GRAPH = "nav-graph";
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources"; //$NON-NLS-1$
