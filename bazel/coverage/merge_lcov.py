@@ -16,6 +16,9 @@ def main():
             for record in contents.split("end_of_record\n"):
                 if "SF:" not in record:
                     continue
+                # if file has no instrumented lines, do not add it to lcov
+                if "DA:" not in record:
+                    continue
                 # path has a fix 38 character long prefix and a 5 character long
                 # suffix to it, which is being sliced to get the test name
                 # for example, if path is
