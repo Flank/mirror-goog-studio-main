@@ -14,7 +14,7 @@
         default="true" />
 
     <thumbs>
-        <thumb>android-project.png</thumb>
+        <thumb>android-module.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />
