@@ -332,21 +332,6 @@ class DefaultVariantTest {
     }
 
     @Test
-    fun `test feature plugin defaults to debug`() {
-        assertThat(
-            computeDefaultVariant(
-                dsl = """
-                    buildTypes {
-                        a
-                        z
-                    }
-                    """,
-                pluginType = TestProjects.Plugin.FEATURE
-            )
-        ).isEqualTo("debug")
-    }
-
-    @Test
     fun `default respects tested build type`() {
         assertThat(
             computeDefaultVariant(
@@ -382,7 +367,6 @@ class DefaultVariantTest {
         val plugin = when (pluginType) {
             TestProjects.Plugin.APP -> project.plugins.getPlugin(AppPlugin::class.java)
             TestProjects.Plugin.LIBRARY -> project.plugins.getPlugin(LibraryPlugin::class.java)
-            TestProjects.Plugin.FEATURE -> project.plugins.getPlugin(FeaturePlugin::class.java)
         }
 
         plugin.variantManager.populateVariantDataList()

@@ -76,12 +76,7 @@ import kotlin.test.fail
 @RunWith(FilterableParameterized::class)
 class MinifyFeaturesTest(
     val codeShrinker: CodeShrinker,
-    val multiApkMode: MultiApkMode,
     val apkCreatorType: ApkCreatorType) {
-
-    enum class MultiApkMode {
-        DYNAMIC_APP, INSTANT_APP
-    }
 
     companion object {
 
@@ -89,14 +84,10 @@ class MinifyFeaturesTest(
         @Parameterized.Parameters(name = "{0}, {1}, {2}")
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, APK_Z_FILE_CREATOR),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, APK_Z_FILE_CREATOR),
-                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, APK_Z_FILE_CREATOR),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, APK_Z_FILE_CREATOR),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, APK_FLINGER),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, APK_FLINGER),
-                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, APK_FLINGER),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, APK_FLINGER)
+                arrayOf(CodeShrinker.PROGUARD, APK_Z_FILE_CREATOR),
+                arrayOf(CodeShrinker.R8, APK_Z_FILE_CREATOR),
+                arrayOf(CodeShrinker.PROGUARD, APK_FLINGER),
+                arrayOf(CodeShrinker.R8, APK_FLINGER)
             )
     }
 
@@ -224,400 +215,339 @@ class MinifyFeaturesTest(
         MinimalSubProject.lib("com.example.lib3")
             .appendToBuild("android { buildTypes { minified { initWith(buildTypes.debug) }}}")
 
-    private val baseModule =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.app("com.example.baseModule")
-                    .appendToBuild(
-                        """
-                            android {
-                                dynamicFeatures = [':foo:otherFeature1', '$otherFeature2GradlePath']
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                    minified {
-                                        minifyEnabled true
-                                        useProguard ${codeShrinker == CodeShrinker.PROGUARD}
-                                        proguardFiles getDefaultProguardFile('proguard-android.txt'),
-                                                "proguard-rules.pro"
-                                    }
-                                }
-                            }
-                            """
-                    )
-            MultiApkMode.INSTANT_APP ->
-                MinimalSubProject.feature("com.example.baseModule")
-                    .appendToBuild(
-                        """
-                            android {
-                                baseFeature true
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                    minified {
-                                        minifyEnabled true
-                                        useProguard ${codeShrinker == CodeShrinker.PROGUARD}
-                                        proguardFiles getDefaultProguardFile('proguard-android.txt')
-                                        consumerProguardFiles "proguard-rules.pro"
-                                    }
-                                }
-                            }
-                            """
-                    )
-        }.let {
-            it
-                .withFile(
-                    "src/main/AndroidManifest.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                              package="com.example.baseModule">
-                            <application android:label="app_name">
-                                <activity android:name=".Main"
-                                          android:label="app_name">
-                                    <intent-filter>
-                                        <action android:name="android.intent.action.MAIN" />
-                                        <category android:name="android.intent.category.LAUNCHER" />
-                                    </intent-filter>
-                                </activity>
-                            </application>
-                        </manifest>"""
-                )
-                .withFile(
-                    "src/main/res/layout/base_main.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <LinearLayout
-                                xmlns:android="http://schemas.android.com/apk/res/android"
-                                android:orientation="vertical"
-                                android:layout_width="fill_parent"
-                                android:layout_height="fill_parent" >
-                            <TextView
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="Base"
-                                    android:id="@+id/text" />
-                            <TextView
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text=""
-                                    android:id="@+id/extraText" />
-                        </LinearLayout>"""
-                )
-                .withFile(
-                    "src/main/res/values/string.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <resources>
-                            <string name="otherFeature1">otherFeature1</string>
-                            <string name="otherFeature2">otherFeature2</string>
-                        </resources>"""
-                )
-                .withFile("src/main/resources/base_java_res.txt", "base")
-                .withFile(
-                    "src/main/java/com/example/baseModule/Main.java",
-                    """package com.example.baseModule;
-
-                        import android.app.Activity;
-                        import android.os.Bundle;
-                        import android.widget.TextView;
-
-                        import java.lang.Exception;
-                        import java.lang.RuntimeException;
-
-                        import com.example.lib1.Lib1Class;
-
-                        public class Main extends Activity {
-
-                            private int foo = 1234;
-
-                            private final StringProvider stringProvider = new StringProvider();
-
-                            private final Lib1Class lib1Class = new Lib1Class();
-
-                            /** Called when the activity is first created. */
-                            @Override
-                            public void onCreate(Bundle savedInstanceState) {
-                                super.onCreate(savedInstanceState);
-                                setContentView(R.layout.base_main);
-
-                                TextView tv = (TextView) findViewById(R.id.extraText);
-                                tv.setText(
-                                        ""
-                                                + getLib1Class().getJavaRes()
-                                                + " "
-                                                + getStringProvider().getString(foo));
-                            }
-
-                            public StringProvider getStringProvider() {
-                                return stringProvider;
-                            }
-
-                            public Lib1Class getLib1Class() {
-                                return lib1Class;
-                            }
-
-                            public void handleOnClick(android.view.View view) {
-                                // This method should be kept by the default ProGuard rules.
-                            }
-                        }"""
-                )
-                .withFile(
-                    "src/main/java/com/example/baseModule/StringProvider.java",
-                    """package com.example.baseModule;
-
-                        public class StringProvider {
-
-                            public String getString(int foo) {
-                                return Integer.toString(foo);
-                            }
-                        }"""
-                )
-                .withFile(
-                    "src/main/java/com/example/baseModule/EmptyClassToKeep.java",
-                    """package com.example.baseModule;
-                        public class EmptyClassToKeep {
-                        }"""
-                )
-                .withFile(
-                    "src/main/java/com/example/baseModule/EmptyClassToRemove.java",
-                    """package com.example.baseModule;
-                        public class EmptyClassToRemove {
-                        }"""
-                )
-                .withFile(
-                    "proguard-rules.pro",
-                    """-keep public class com.example.baseModule.EmptyClassToKeep"""
-                )
-        }
-
-    private val otherFeature1 =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.dynamicFeature("com.example.otherFeature1")
-            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.otherFeature1")
-        }.let { minimalSubProject ->
-            val proguardFilesDsl =
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> "proguardFiles"
-                    MultiApkMode.INSTANT_APP -> "consumerProguardFiles"
-                }
-            minimalSubProject
-                .appendToBuild(
-                    """
+    private val baseModule = MinimalSubProject.app("com.example.baseModule")
+        .appendToBuild(
+        """
                         android {
+                            dynamicFeatures = [':foo:otherFeature1', '$otherFeature2GradlePath']
                             buildTypes {
                                 minified.initWith(buildTypes.debug)
                                 minified {
-                                    $proguardFilesDsl "proguard-rules.pro"
+                                    minifyEnabled true
+                                    useProguard ${codeShrinker == CodeShrinker.PROGUARD}
+                                    proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                                            "proguard-rules.pro"
                                 }
                             }
                         }
-                        """
-                )
-                .withFile(
-                    "src/main/AndroidManifest.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example.otherFeature1">
+                        """)
+        .withFile(
+            "src/main/AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                      package="com.example.baseModule">
+                    <application android:label="app_name">
+                        <activity android:name=".Main"
+                                  android:label="app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>""")
+        .withFile(
+            "src/main/res/layout/base_main.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <LinearLayout
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:orientation="vertical"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" >
+                    <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Base"
+                            android:id="@+id/text" />
+                    <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:id="@+id/extraText" />
+                </LinearLayout>""")
+        .withFile(
+            "src/main/res/values/string.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <resources>
+                    <string name="otherFeature1">otherFeature1</string>
+                    <string name="otherFeature2">otherFeature2</string>
+                </resources>""")
+        .withFile("src/main/resources/base_java_res.txt", "base")
+        .withFile(
+            "src/main/java/com/example/baseModule/Main.java",
+            """package com.example.baseModule;
 
-                            <dist:module dist:onDemand="true"
-                                         dist:title="@string/otherFeature1">
-                                <dist:fusing dist:include="true"/>
-                            </dist:module>
+                import android.app.Activity;
+                import android.os.Bundle;
+                import android.widget.TextView;
 
-                            <application android:label="app_name">
-                                <activity android:name=".Main"
-                                          android:label="app_name">
-                                    <intent-filter>
-                                        <action android:name="android.intent.action.MAIN" />
-                                        <category android:name="android.intent.category.LAUNCHER" />
-                                    </intent-filter>
-                                </activity>
-                            </application>
-                        </manifest>"""
-                )
-                .withFile(
-                    "src/main/res/layout/other_main_1.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <LinearLayout
-                                xmlns:android="http://schemas.android.com/apk/res/android"
-                                android:orientation="vertical"
-                                android:layout_width="fill_parent"
-                                android:layout_height="fill_parent" >
-                            <TextView
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="Other Feature 1"
-                                    android:id="@+id/text" />
-                            <TextView
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text=""
-                                    android:id="@+id/extraText" />
-                        </LinearLayout>"""
-                )
-                .withFile("src/main/resources/other_java_res_1.txt", "other")
-                .withFile(
-                    "src/main/java/com/example/otherFeature1/Main.java",
-                    """package com.example.otherFeature1;
+                import java.lang.Exception;
+                import java.lang.RuntimeException;
 
-                        import android.app.Activity;
-                        import android.os.Bundle;
-                        import android.widget.TextView;
+                import com.example.lib1.Lib1Class;
 
-                        import java.lang.Exception;
-                        import java.lang.RuntimeException;
+                public class Main extends Activity {
 
-                        import com.example.baseModule.StringProvider;
-                        import com.example.lib2.Lib2Class;
+                    private int foo = 1234;
 
-                        public class Main extends Activity {
+                    private final StringProvider stringProvider = new StringProvider();
 
-                            private int foo = 1234;
+                    private final Lib1Class lib1Class = new Lib1Class();
 
-                            private final StringProvider stringProvider = new StringProvider();
+                    /** Called when the activity is first created. */
+                    @Override
+                    public void onCreate(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        setContentView(R.layout.base_main);
 
-                            private final Lib2Class lib2Class = new Lib2Class();
+                        TextView tv = (TextView) findViewById(R.id.extraText);
+                        tv.setText(
+                                ""
+                                        + getLib1Class().getJavaRes()
+                                        + " "
+                                        + getStringProvider().getString(foo));
+                    }
 
-                            /** Called when the activity is first created. */
-                            @Override
-                            public void onCreate(Bundle savedInstanceState) {
-                                super.onCreate(savedInstanceState);
-                                setContentView(R.layout.other_main_1);
+                    public StringProvider getStringProvider() {
+                        return stringProvider;
+                    }
 
-                                TextView tv = (TextView) findViewById(R.id.extraText);
-                                tv.setText(
-                                        ""
-                                                + getLib2Class().getJavaRes()
-                                                + " "
-                                                + getStringProvider().getString(foo));
-                            }
+                    public Lib1Class getLib1Class() {
+                        return lib1Class;
+                    }
 
-                            public StringProvider getStringProvider() {
-                                return stringProvider;
-                            }
+                    public void handleOnClick(android.view.View view) {
+                        // This method should be kept by the default ProGuard rules.
+                    }
+                }""")
+        .withFile(
+            "src/main/java/com/example/baseModule/StringProvider.java",
+            """package com.example.baseModule;
 
-                            public Lib2Class getLib2Class() {
-                                return lib2Class;
-                            }
+                public class StringProvider {
 
-                            public void handleOnClick(android.view.View view) {
-                                // This method should be kept by the default ProGuard rules.
-                            }
-                        }"""
-                )
-                .withFile(
-                    "src/main/java/com/example/otherFeature1/EmptyClassToKeep.java",
-                    """package com.example.otherFeature1;
-                        public class EmptyClassToKeep {
-                        }"""
-                )
-                .withFile(
-                    "src/main/java/com/example/otherFeature1/EmptyClassToRemove.java",
-                    """package com.example.otherFeature1;
-                        public class EmptyClassToRemove {
-                        }"""
-                )
-                .withFile(
-                    "proguard-rules.pro",
-                    """-keep public class com.example.otherFeature1.EmptyClassToKeep"""
-                )
-        }
+                    public String getString(int foo) {
+                        return Integer.toString(foo);
+                    }
+                }""")
+        .withFile(
+            "src/main/java/com/example/baseModule/EmptyClassToKeep.java",
+            """package com.example.baseModule;
+                public class EmptyClassToKeep {
+                }""")
+        .withFile(
+            "src/main/java/com/example/baseModule/EmptyClassToRemove.java",
+            """package com.example.baseModule;
+                public class EmptyClassToRemove {
+                }""")
+        .withFile(
+            "proguard-rules.pro",
+            """-keep public class com.example.baseModule.EmptyClassToKeep""")
 
-    private val otherFeature2 =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.dynamicFeature("com.example.otherFeature2")
-            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.otherFeature2")
-        }.let {
-            it
-                .appendToBuild("""
+    private val otherFeature1 = MinimalSubProject.dynamicFeature("com.example.otherFeature1")
+        .appendToBuild(
+            """
                 android {
                     buildTypes {
                         minified.initWith(buildTypes.debug)
+                        minified {
+                            proguardFiles "proguard-rules.pro"
+                        }
                     }
                 }
                 """)
-                .withFile(
-                    "src/main/AndroidManifest.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example.otherFeature2">
+        .withFile(
+            "src/main/AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:dist="http://schemas.android.com/apk/distribution"
+                    package="com.example.otherFeature1">
 
-                            <dist:module dist:onDemand="true"
-                                         dist:title="@string/otherFeature2">
-                                <dist:fusing dist:include="true"/>
-                            </dist:module>
+                    <dist:module dist:onDemand="true"
+                                 dist:title="@string/otherFeature1">
+                        <dist:fusing dist:include="true"/>
+                    </dist:module>
 
-                            <application android:label="app_name">
-                                <activity android:name=".Main"
-                                          android:label="app_name">
-                                    <intent-filter>
-                                        <action android:name="android.intent.action.MAIN" />
-                                        <category android:name="android.intent.category.LAUNCHER" />
-                                    </intent-filter>
-                                </activity>
-                            </application>
-                        </manifest>"""
-                )
-                .withFile(
-                    "src/main/res/layout/other_main_2.xml",
-                    """<?xml version="1.0" encoding="utf-8"?>
-                        <LinearLayout
-                                xmlns:android="http://schemas.android.com/apk/res/android"
-                                android:orientation="vertical"
-                                android:layout_width="fill_parent"
-                                android:layout_height="fill_parent" >
-                            <TextView
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="Other Feature 2"
-                                    android:id="@+id/text" />
-                            <TextView
-                                    android:layout_width="fill_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text=""
-                                    android:id="@+id/extraText" />
-                        </LinearLayout>"""
-                )
-                .withFile("src/main/resources/other_java_res_2.txt", "other")
-                .withFile(
-                    "src/main/java/com/example/otherFeature2/Main.java",
-                    """package com.example.otherFeature2;
+                    <application android:label="app_name">
+                        <activity android:name=".Main"
+                                  android:label="app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>""")
+        .withFile(
+            "src/main/res/layout/other_main_1.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <LinearLayout
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:orientation="vertical"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" >
+                    <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Other Feature 1"
+                            android:id="@+id/text" />
+                    <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:id="@+id/extraText" />
+                </LinearLayout>""")
+        .withFile("src/main/resources/other_java_res_1.txt", "other")
+        .withFile(
+            "src/main/java/com/example/otherFeature1/Main.java",
+            """package com.example.otherFeature1;
 
-                        import android.app.Activity;
-                        import android.os.Bundle;
-                        import android.widget.TextView;
+                import android.app.Activity;
+                import android.os.Bundle;
+                import android.widget.TextView;
 
-                        import java.lang.Exception;
-                        import java.lang.RuntimeException;
+                import java.lang.Exception;
+                import java.lang.RuntimeException;
 
-                        import com.example.baseModule.StringProvider;
+                import com.example.baseModule.StringProvider;
+                import com.example.lib2.Lib2Class;
 
-                        public class Main extends Activity {
+                public class Main extends Activity {
 
-                            private int foo = 1234;
+                    private int foo = 1234;
 
-                            private final StringProvider stringProvider = new StringProvider();
+                    private final StringProvider stringProvider = new StringProvider();
 
-                            /** Called when the activity is first created. */
-                            @Override
-                            public void onCreate(Bundle savedInstanceState) {
-                                super.onCreate(savedInstanceState);
-                                setContentView(R.layout.other_main_2);
+                    private final Lib2Class lib2Class = new Lib2Class();
 
-                                TextView tv = (TextView) findViewById(R.id.extraText);
-                                tv.setText(getStringProvider().getString(foo));
-                            }
+                    /** Called when the activity is first created. */
+                    @Override
+                    public void onCreate(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        setContentView(R.layout.other_main_1);
 
-                            public StringProvider getStringProvider() {
-                                return stringProvider;
-                            }
+                        TextView tv = (TextView) findViewById(R.id.extraText);
+                        tv.setText(
+                                ""
+                                        + getLib2Class().getJavaRes()
+                                        + " "
+                                        + getStringProvider().getString(foo));
+                    }
 
-                            public void handleOnClick(android.view.View view) {
-                                // This method should be kept by the default ProGuard rules.
-                            }
-                        }"""
-                )
+                    public StringProvider getStringProvider() {
+                        return stringProvider;
+                    }
+
+                    public Lib2Class getLib2Class() {
+                        return lib2Class;
+                    }
+
+                    public void handleOnClick(android.view.View view) {
+                        // This method should be kept by the default ProGuard rules.
+                    }
+                }""")
+        .withFile(
+            "src/main/java/com/example/otherFeature1/EmptyClassToKeep.java",
+            """package com.example.otherFeature1;
+                public class EmptyClassToKeep {
+                }""")
+        .withFile(
+            "src/main/java/com/example/otherFeature1/EmptyClassToRemove.java",
+            """package com.example.otherFeature1;
+                public class EmptyClassToRemove {
+                }""")
+        .withFile(
+        "proguard-rules.pro",
+        """-keep public class com.example.otherFeature1.EmptyClassToKeep""")
+
+    private val otherFeature2 = MinimalSubProject.dynamicFeature("com.example.otherFeature2")
+
+        .appendToBuild("""
+        android {
+            buildTypes {
+                minified.initWith(buildTypes.debug)
+            }
         }
+        """)
+        .withFile(
+            "src/main/AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:dist="http://schemas.android.com/apk/distribution"
+                    package="com.example.otherFeature2">
+
+                    <dist:module dist:onDemand="true"
+                                 dist:title="@string/otherFeature2">
+                        <dist:fusing dist:include="true"/>
+                    </dist:module>
+
+                    <application android:label="app_name">
+                        <activity android:name=".Main"
+                                  android:label="app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>""")
+        .withFile(
+            "src/main/res/layout/other_main_2.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <LinearLayout
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:orientation="vertical"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" >
+                    <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Other Feature 2"
+                            android:id="@+id/text" />
+                    <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:id="@+id/extraText" />
+                </LinearLayout>""")
+        .withFile("src/main/resources/other_java_res_2.txt", "other")
+        .withFile(
+            "src/main/java/com/example/otherFeature2/Main.java",
+            """package com.example.otherFeature2;
+
+                import android.app.Activity;
+                import android.os.Bundle;
+                import android.widget.TextView;
+
+                import java.lang.Exception;
+                import java.lang.RuntimeException;
+
+                import com.example.baseModule.StringProvider;
+
+                public class Main extends Activity {
+
+                    private int foo = 1234;
+
+                    private final StringProvider stringProvider = new StringProvider();
+
+                    /** Called when the activity is first created. */
+                    @Override
+                    public void onCreate(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        setContentView(R.layout.other_main_2);
+
+                        TextView tv = (TextView) findViewById(R.id.extraText);
+                        tv.setText(getStringProvider().getString(foo));
+                    }
+
+                    public StringProvider getStringProvider() {
+                        return stringProvider;
+                    }
+
+                    public void handleOnClick(android.view.View view) {
+                        // This method should be kept by the default ProGuard rules.
+                    }
+                }""")
 
     private val app =
         MinimalSubProject.app("com.example.app")
@@ -658,24 +588,6 @@ class MinifyFeaturesTest(
             .dependency(otherFeature2, baseModule)
             .dependency("api", lib2, lib1)
             .dependency(baseModule, lib1)
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it
-                    MultiApkMode.INSTANT_APP ->
-                        it
-                            .subproject(":app", app)
-                            .subproject(":instantApp", instantApp)
-                            .dependency(app, baseModule)
-                            .dependency(app, otherFeature1)
-                            .dependency(app, otherFeature2)
-                            .dependency(instantApp, baseModule)
-                            .dependency(instantApp, otherFeature1)
-                            .dependency(instantApp, otherFeature2)
-                            .dependency("application", baseModule, app)
-                            .dependency("feature", baseModule, otherFeature1)
-                            .dependency("feature", baseModule, otherFeature2)
-                }
-            }
             .build()
 
     @get:Rule
@@ -701,20 +613,14 @@ class MinifyFeaturesTest(
         val executor = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
 
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP -> executor.run("assembleMinified")
-            MultiApkMode.INSTANT_APP -> executor.run("app:assembleMinified", "instantApp:assembleMinified")
-        }
+        executor.run("assembleMinified")
 
         // check aapt_rules.txt merging
         val aaptProguardFile =
             FileUtils.join(
                 project.getSubproject("baseModule").intermediatesDir,
                 "aapt_proguard_file",
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> "minified"
-                    MultiApkMode.INSTANT_APP -> "minifiedFeature"
-                },
+                "minified",
                 SdkConstants.FN_AAPT_RULES)
         assertThat(aaptProguardFile).exists()
         assertThat(aaptProguardFile)
@@ -723,106 +629,67 @@ class MinifyFeaturesTest(
             FileUtils.join(
                 project.getSubproject("baseModule").intermediatesDir,
                 "merged_aapt_proguard_file",
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> "minified"
-                    MultiApkMode.INSTANT_APP -> "minifiedFeature"
-                },
+                "minified",
                 SdkConstants.FN_MERGED_AAPT_RULES)
         assertThat(mergedAaptProguardFile).exists()
         assertThat(mergedAaptProguardFile)
             .contains("-keep class com.example.lib2.FooView")
 
-        project.getSubproject("baseModule")
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                }
-            }.use { apk ->
-                assertThat(apk.file.toFile()).exists()
-                assertThat(apk).containsClass("Lcom/example/baseModule/Main;")
-                assertThat(apk).containsClass("Lcom/example/baseModule/a;")
-                assertThat(apk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/lib1/a;")
-                assertThat(apk).containsJavaResource("base_java_res.txt")
-                assertThat(apk).containsJavaResource("other_java_res_1.txt")
-                assertThat(apk).containsJavaResource("other_java_res_2.txt")
-                assertThat(apk).containsJavaResource("lib1_java_res.txt")
-                assertThat(apk).containsJavaResource("lib2_java_res.txt")
-                assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/EmptyClassToRemove;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib2/a;")
-                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
-                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
-            }
+        project.getSubproject("baseModule").getApk(apkType).use { apk ->
+            assertThat(apk.file.toFile()).exists()
+            assertThat(apk).containsClass("Lcom/example/baseModule/Main;")
+            assertThat(apk).containsClass("Lcom/example/baseModule/a;")
+            assertThat(apk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
+            assertThat(apk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
+            assertThat(apk).containsClass("Lcom/example/lib1/a;")
+            assertThat(apk).containsJavaResource("base_java_res.txt")
+            assertThat(apk).containsJavaResource("other_java_res_1.txt")
+            assertThat(apk).containsJavaResource("other_java_res_2.txt")
+            assertThat(apk).containsJavaResource("lib1_java_res.txt")
+            assertThat(apk).containsJavaResource("lib2_java_res.txt")
+            assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/EmptyClassToRemove;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib2/a;")
+            assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+            assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+        }
 
-        project.getSubproject(":foo:otherFeature1")
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                }
-            }.use { apk ->
-                assertThat(apk.file.toFile()).exists()
-                assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
-                assertThat(apk).containsClass(
-                    "Lcom/example/otherFeature1/EmptyClassToKeep;"
-                )
-                assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
-                assertThat(apk).containsClass("Lcom/example/lib2/a;")
-                assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
-                assertThat(apk).doesNotContainClass(
-                    "Lcom/example/otherFeature1/EmptyClassToRemove;"
-                )
-                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib1/Lib1Class;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib1/a;")
-                assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
-                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
-            }
+        project.getSubproject(":foo:otherFeature1").getApk(apkType).use { apk ->
+            assertThat(apk.file.toFile()).exists()
+            assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
+            assertThat(apk).containsClass(
+                "Lcom/example/otherFeature1/EmptyClassToKeep;"
+            )
+            assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
+            assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
+            assertThat(apk).containsClass("Lcom/example/lib2/a;")
+            assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
+            assertThat(apk).doesNotContainClass(
+                "Lcom/example/otherFeature1/EmptyClassToRemove;"
+            )
+            assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib1/Lib1Class;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib1/a;")
+            assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
+            assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+        }
 
-        project.getSubproject(otherFeature2GradlePath)
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                }
-            }.use { apk ->
-                assertThat(apk.file.toFile()).exists()
-                assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
-                assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
-                assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
-                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
-            }
-
-        if (multiApkMode == MultiApkMode.INSTANT_APP) {
-            project.getSubproject("app").getApk(apkType).use { apk ->
-                assertThat(apk.file.toFile()).exists()
-                assertThat(apk).containsClass("Lcom/example/baseModule/Main;")
-                assertThat(apk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
-                assertThat(apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
-                assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
-                assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
-                assertThat(apk).doesNotContainClass("Lcom/example/baseModule/EmptyClassToRemove;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
-                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
-            }
+        project.getSubproject(otherFeature2GradlePath).getApk(apkType).use { apk ->
+            assertThat(apk.file.toFile()).exists()
+            assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
+            assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
+            assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
+            assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
+            assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
         }
     }
 
     @Test
     fun testBundleIsMinified() {
-        Assume.assumeTrue(multiApkMode == MultiApkMode.DYNAMIC_APP)
         val executor = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
         executor.run("bundleMinified")
@@ -934,11 +801,7 @@ class MinifyFeaturesTest(
         val executor = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
 
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP -> executor.run("assembleMinified")
-            MultiApkMode.INSTANT_APP -> executor.run("app:assembleMinified", "instantApp:assembleMinified")
-        }
-
+        executor.run("assembleMinified")
 
         val classContent = "package example;\n" + "public class ToBeKept { }"
         val toBeKept = project.getSubproject("baseModule").mainSrcDir.toPath().resolve("example/ToBeKept.java")
@@ -977,22 +840,15 @@ class MinifyFeaturesTest(
 
         val apkType = GradleTestProject.ApkType.of("minified", true)
 
-        project.getSubproject("baseModule")
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                }
-            }.use { minified ->
-                assertThat(minified).containsClass("Lexample/ToBeKept;")
-                assertThat(minified).doesNotContainClass("Lexample/ToBeRemoved;")
-            }
+        project.getSubproject("baseModule").getApk(apkType).use { minified ->
+            assertThat(minified).containsClass("Lexample/ToBeKept;")
+            assertThat(minified).doesNotContainClass("Lexample/ToBeRemoved;")
+        }
     }
 
     /** Regression test for https://issuetracker.google.com/79090176 */
     @Test
     fun testMinifyEnabledToggling() {
-        Assume.assumeTrue(multiApkMode == MultiApkMode.DYNAMIC_APP)
         val executor = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
 

@@ -1,1 +1,0 @@
-include ':featureA', ':app', ':base', ':instantapp', ":normalModule", ":featureB"

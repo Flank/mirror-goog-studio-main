@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.testutils.AssumeUtil
 import com.android.build.gradle.options.BooleanOption
 import org.jf.dexlib2.dexbacked.DexBackedClassDef
 import org.junit.Rule
@@ -35,7 +34,6 @@ import org.objectweb.asm.Opcodes
  *
  * <pre>
  *   notNamespacedLib -->
- *   instantApp -------->
  *                         other feature  -->  base feature  -->
  *        -------------->
  *   app                                                           lib
@@ -49,13 +47,13 @@ android.defaultConfig.minSdkVersion 21
 """
 
     private val lib = MinimalSubProject.lib("com.example.lib")
-            .appendToBuild(buildScriptContent)
-            .withFile(
-                    "src/main/res/values/strings.xml",
-                    """<resources><string name="libString">Lib1 string</string></resources>""")
-            .withFile(
-                    "src/main/java/com/example/lib/Example.java",
-                    """package com.example.lib;
+        .appendToBuild(buildScriptContent)
+        .withFile(
+            "src/main/res/values/strings.xml",
+            """<resources><string name="libString">Lib1 string</string></resources>""")
+        .withFile(
+            "src/main/java/com/example/lib/Example.java",
+            """package com.example.lib;
                     public class Example {
                         public static int getLib1String() { return R.string.libString; }
                         public static int getSupportDesignString() {
@@ -68,9 +66,9 @@ android.defaultConfig.minSdkVersion 21
                         <string name="remoteDependencyString"
                             >@android.support.design:string/appbar_scrolling_view_behavior</string>
                         </resources>""")
-            .withFile(
-                    "src/main/res/drawable/dot.xml",
-                    """<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        .withFile(
+            "src/main/res/drawable/dot.xml",
+            """<vector xmlns:android="http://schemas.android.com/apk/res/android"
                         android:width="24dp"
                         android:height="24dp"
                         android:viewportWidth="24.0"
@@ -80,34 +78,34 @@ android.defaultConfig.minSdkVersion 21
                             android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"/>
                     </vector>""")
 
-    private val baseFeature = MinimalSubProject.feature("com.example.baseFeature")
-            .appendToBuild(buildScriptContent + "\nandroid.baseFeature true")
-            .withFile(
-                    "src/main/res/values/strings.xml",
-                    """<resources>
+    private val baseFeature = MinimalSubProject.lib("com.example.baseFeature")
+        .appendToBuild(buildScriptContent)
+        .withFile(
+            "src/main/res/values/strings.xml",
+            """<resources>
                         <string name="baseFeatureString">baseFeature String</string>
                         <string name="libString_from_lib">@*com.example.lib:string/libString</string>
                     </resources>""")
-            .withFile(
-                    "src/main/java/com/example/baseFeature/Example.java",
-                    """package com.example.baseFeature;
+        .withFile(
+            "src/main/java/com/example/baseFeature/Example.java",
+            """package com.example.baseFeature;
                     public class Example {
                         public static int baseFeature() { return R.string.baseFeatureString; }
                         public static int lib() { return com.example.lib.R.string.libString; }
                     }
                     """)
 
-    private val feature2 = MinimalSubProject.feature("com.example.otherFeature")
-            .appendToBuild(buildScriptContent)
-            .withFile(
-                    "src/main/res/values/strings.xml",
-                    """<resources>
+    private val feature2 = MinimalSubProject.lib("com.example.otherFeature")
+        .appendToBuild(buildScriptContent)
+        .withFile(
+            "src/main/res/values/strings.xml",
+            """<resources>
                         <string name="otherFeatureString">Other Feature String</string>
                         <string name="baseFeatureString_from_baseFeature">@*com.example.baseFeature:string/baseFeatureString</string>
                     </resources>""")
-            .withFile(
-                    "src/main/java/com/example/otherFeature/Example.java",
-                    """package com.example.otherFeature;
+        .withFile(
+            "src/main/java/com/example/otherFeature/Example.java",
+            """package com.example.otherFeature;
                     public class Example {
                         public static int otherFeature() { return R.string.otherFeatureString; }
                         public static int baseFeature() { return com.example.baseFeature.R.string.baseFeatureString; }
@@ -115,32 +113,32 @@ android.defaultConfig.minSdkVersion 21
                     """)
 
     val app = MinimalSubProject.app("com.example.app")
-            .appendToBuild(buildScriptContent)
-            .withFile(
-                    "src/main/res/values/strings.xml",
-                    """<resources>
+        .appendToBuild(buildScriptContent)
+        .withFile(
+            "src/main/res/values/strings.xml",
+            """<resources>
                         <string name="appString">App string</string>
                         <string name="libString_from_lib">@*com.example.lib:string/libString</string>
                         <string name="baseFeatureString_from_baseFeature_via_otherFeature">@*com.example.otherFeature:string/baseFeatureString_from_baseFeature</string>
                         <string name="otherFeatureString_from_otherFeature">@*com.example.otherFeature:string/otherFeatureString</string>
                     </resources>""")
-            .withFile(
-                    "src/main/java/com/example/app/Example.java",
-                    """package com.example.app;
+        .withFile(
+            "src/main/java/com/example/app/Example.java",
+            """package com.example.app;
                     public class Example {
                         public static final int APP_STRING = R.string.appString;
                         public static final int LIB1_STRING = com.example.lib.R.string.libString;
                         public static final int LIB3_STRING = com.example.otherFeature.R.string.otherFeatureString;
                     }""")
-            .withFile("src/androidTest/res/raw/text.txt", "test file")
-            .withFile(
-                    "src/androidTest/res/values/strings.xml",
-                    """<resources>
+        .withFile("src/androidTest/res/raw/text.txt", "test file")
+        .withFile(
+            "src/androidTest/res/values/strings.xml",
+            """<resources>
                         <string name="appTestString">App test string</string>
                     </resources>""")
-            .withFile(
-                    "src/androidTest/java/com/example/app/ExampleTest.java",
-                    """package com.example.app.test;
+        .withFile(
+            "src/androidTest/java/com/example/app/ExampleTest.java",
+            """package com.example.app.test;
                     public class ExampleTest {
                         public static final int TEST_STRING = R.string.appTestString;
                         public static final int APP_STRING = com.example.app.R.string.appString;
@@ -149,39 +147,31 @@ android.defaultConfig.minSdkVersion 21
                     }
                     """)
 
-    private val instantApp = MinimalSubProject.instantApp()
-
     private val notNamespacedLib = MinimalSubProject.lib("com.example.notNamespaced")
         .appendToBuild("android.defaultConfig.minSdkVersion 21\nandroid.aaptOptions.namespaced false")
         .withFile(
-                    "src/main/res/values/strings.xml",
-                    """<resources>
+            "src/main/res/values/strings.xml",
+            """<resources>
                         <string name="myString_from_lib">@string/libString_from_lib</string>
                     </resources>
                     """)
 
 
     private val testApp =
-            MultiModuleTestProject.builder()
-                    .subproject(":lib", lib)
-                    .subproject(":baseFeature", baseFeature)
-                    .subproject(":otherFeature", feature2)
-                    .subproject(":app", app)
-                    .subproject(":instantApp", instantApp)
-                    .subproject(":notNamespacedLib", notNamespacedLib)
-                    .dependency(notNamespacedLib, feature2)
-                    .dependency(app, feature2)
-                    .dependency(feature2, baseFeature)
-                    .dependency(baseFeature, lib)
-                    .dependency(app, lib)
-                    .dependency(instantApp, baseFeature)
-                    .dependency(instantApp, feature2)
-                    // Reverse dependencies for the instant app.
-                    .dependency("application", baseFeature, app)
-                    .dependency("feature", baseFeature, feature2)
-                    // Remote dependency
-                    .dependency(lib, "com.android.support:design:$SUPPORT_LIB_VERSION")
-                    .build()
+        MultiModuleTestProject.builder()
+            .subproject(":lib", lib)
+            .subproject(":baseFeature", baseFeature)
+            .subproject(":otherFeature", feature2)
+            .subproject(":app", app)
+            .subproject(":notNamespacedLib", notNamespacedLib)
+            .dependency(notNamespacedLib, feature2)
+            .dependency(app, feature2)
+            .dependency(feature2, baseFeature)
+            .dependency(baseFeature, lib)
+            .dependency(app, lib)
+            // Remote dependency
+            .dependency(lib, "com.android.support:design:$SUPPORT_LIB_VERSION")
+            .build()
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
@@ -231,21 +221,21 @@ android.defaultConfig.minSdkVersion 21
     @Test
     fun smokeTest() {
         project.executor()
-                .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
-                .run(
-                    ":lib:assembleDebug",
-                    ":lib:assembleDebugAndroidTest",
-                    ":baseFeature:assembleDebug",
-                    ":baseFeature:assembleDebugAndroidTest",
-                    ":otherFeature:bundleDebugAar",
-                    ":otherFeature:assembleDebugAndroidTest",
-                    ":notNamespacedLib:assembleDebug",
-                    ":notNamespacedLib:assembleDebugAndroidTest",
-                    ":notNamespacedLib:verifyReleaseResources",
-                    ":otherFeature:assembleDebug",
-                    ":otherFeature:assembleDebugAndroidTest",
-                    ":app:assembleDebug",
-                    ":app:assembleDebugAndroidTest")
+            .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
+            .run(
+                ":lib:assembleDebug",
+                ":lib:assembleDebugAndroidTest",
+                ":baseFeature:assembleDebug",
+                ":baseFeature:assembleDebugAndroidTest",
+                ":otherFeature:bundleDebugAar",
+                ":otherFeature:assembleDebugAndroidTest",
+                ":notNamespacedLib:assembleDebug",
+                ":notNamespacedLib:assembleDebugAndroidTest",
+                ":notNamespacedLib:verifyReleaseResources",
+                ":otherFeature:assembleDebug",
+                ":otherFeature:assembleDebugAndroidTest",
+                ":app:assembleDebug",
+                ":app:assembleDebugAndroidTest")
 
         val dotDrawablePath = "res/drawable/com.example.lib\$dot.xml"
 
@@ -256,11 +246,11 @@ android.defaultConfig.minSdkVersion 21
         assertThat(apk).containsClass("Lcom/example/app/R\$string;")
 
         assertThat(apk.getClass("Lcom/example/app/R\$string;")!!.printFields())
-                .containsExactly(
-                        "public static final I appString",
-                        "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
-                        "public static final I libString_from_lib",
-                        "public static final I otherFeatureString_from_otherFeature")
+            .containsExactly(
+                "public static final I appString",
+                "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
+                "public static final I libString_from_lib",
+                "public static final I otherFeatureString_from_otherFeature")
         assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
         assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
         assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
@@ -272,14 +262,14 @@ android.defaultConfig.minSdkVersion 21
     }
 
     private val modifierToString = mapOf(Opcodes.ACC_PUBLIC to "public",
-            Opcodes.ACC_STATIC to "static",
-            Opcodes.ACC_FINAL to "final")
+        Opcodes.ACC_STATIC to "static",
+        Opcodes.ACC_FINAL to "final")
 
     private fun modifiers(accessFlags: Int): String {
         val modifiers = ArrayList<String>()
         var runningFlags = accessFlags
         modifierToString.forEach {
-            value, string ->
+                value, string ->
             if (runningFlags and value != 0) {
                 modifiers += string
                 runningFlags = runningFlags and value.inv()

@@ -45,7 +45,6 @@ public class TestProjects {
     public enum Plugin {
         APP("com.android.application", AppPlugin.class, AppExtension.class),
         LIBRARY("com.android.library", LibraryPlugin.class, LibraryExtension.class),
-        FEATURE("com.android.feature", FeaturePlugin.class, FeatureExtension.class),
         ;
 
         @NonNull private final String pluginName;

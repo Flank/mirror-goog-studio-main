@@ -29,19 +29,7 @@ import org.junit.runners.Parameterized
 /**
  * Tests in which java resources are merged from feature and dynamic-feature modules.
  */
-@RunWith(FilterableParameterized::class)
-class DynamicFeatureJavaResTest(val multiApkMode: MultiApkMode) {
-
-    enum class MultiApkMode {
-        DYNAMIC_APP, INSTANT_APP
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun getConfigurations(): Collection<Array<MultiApkMode>> =
-            listOf(arrayOf(MultiApkMode.DYNAMIC_APP), arrayOf(MultiApkMode.INSTANT_APP))
-    }
+class DynamicFeatureJavaResTest {
 
     private val lib =
         MinimalSubProject.lib("com.example.lib")
@@ -54,14 +42,11 @@ class DynamicFeatureJavaResTest(val multiApkMode: MultiApkMode) {
                 """)
             .withFile("src/main/resources/foo.txt", "lib")
 
-    private val baseModule =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.app("com.example.baseModule")
-                    .appendToBuild(
-                        """
+    private val baseModule = MinimalSubProject.app("com.example.baseModule")
+        .appendToBuild(
+            """
                             android {
-	                            dynamicFeatures = [':feature']
+                                dynamicFeatures = [':feature']
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
                                     minified {
@@ -71,57 +56,26 @@ class DynamicFeatureJavaResTest(val multiApkMode: MultiApkMode) {
                                     }
                                 }
                             }
-                            """
-                    )
-            MultiApkMode.INSTANT_APP ->
-                MinimalSubProject.feature("com.example.baseModule")
-                    .appendToBuild(
-                        """
-                            android {
-                                baseFeature true
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                    minified {
-                                        minifyEnabled true
-                                        proguardFiles getDefaultProguardFile('proguard-android.txt')
-                                        consumerProguardFiles "proguard-rules.pro"
-                                    }
-                                }
-                            }
-                            """
-                    )
-        }.let {
-            it
-                .withFile("src/main/resources/foo.txt", "base")
-                .withFile(
-                    "src/main/java/com/example/baseModule/EmptyClassToKeep.java",
-                    """package com.example.baseModule;
-                        public class EmptyClassToKeep {
-                        }"""
-                )
-                .withFile(
-                    "proguard-rules.pro",
-                    """-keep public class com.example.baseModule.EmptyClassToKeep"""
-                )
-        }
+                            """)
+        .withFile("src/main/resources/foo.txt", "base")
+        .withFile(
+            "src/main/java/com/example/baseModule/EmptyClassToKeep.java",
+            """package com.example.baseModule;
+                public class EmptyClassToKeep {
+                }""")
+        .withFile(
+            "proguard-rules.pro",
+            """-keep public class com.example.baseModule.EmptyClassToKeep""")
 
-    private val feature =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.dynamicFeature("com.example.feature")
-            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.feature")
-        }.let {
-            it
-                .appendToBuild(
-                    """
-                        android {
-                            buildTypes {
-                                minified.initWith(buildTypes.debug)
-                            }
-                        }
-                        """
-                )
-        }
+    private val feature = MinimalSubProject.dynamicFeature("com.example.feature")
+        .appendToBuild(
+            """
+                android {
+                    buildTypes {
+                        minified.initWith(buildTypes.debug)
+                    }
+                }
+                """)
 
     private val app =
         MinimalSubProject.app("com.example.app")
@@ -145,21 +99,6 @@ class DynamicFeatureJavaResTest(val multiApkMode: MultiApkMode) {
             .subproject(":feature", feature)
             .dependency(feature, baseModule)
             .dependency(feature, lib)
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it
-                    MultiApkMode.INSTANT_APP ->
-                        it
-                            .subproject(":app", app)
-                            .subproject(":instantApp", instantApp)
-                            .dependency(app, baseModule)
-                            .dependency(app, feature)
-                            .dependency(instantApp, baseModule)
-                            .dependency(instantApp, feature)
-                            .dependency("application", baseModule, app)
-                            .dependency("feature", baseModule, feature)
-                }
-            }
             .build()
 
     @get:Rule

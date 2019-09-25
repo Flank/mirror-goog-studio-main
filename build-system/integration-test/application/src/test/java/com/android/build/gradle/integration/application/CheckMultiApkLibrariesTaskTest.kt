@@ -29,46 +29,18 @@ import org.junit.runners.Parameterized
 /**
  * Test checking for error when 2 APKs in multi-APK project package the same library
  */
-@RunWith(FilterableParameterized::class)
-class CheckMultiApkLibrariesTaskTest(val multiApkMode: MultiApkMode) {
-
-    enum class MultiApkMode {
-        DYNAMIC_APP, INSTANT_APP
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun getConfigurations(): Collection<Array<MultiApkMode>> =
-            listOf(arrayOf(MultiApkMode.DYNAMIC_APP), arrayOf(MultiApkMode.INSTANT_APP))
-    }
-
+class CheckMultiApkLibrariesTaskTest {
 
     private val lib = MinimalSubProject.lib("com.example.lib")
 
-    private val baseModule =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.app("com.example.baseModule")
-                    .appendToBuild(
-                        """
+    private val baseModule = MinimalSubProject.app("com.example.baseModule")
+        .appendToBuild(
+            """
                             android {
-	                            dynamicFeatures = [':otherFeature1', ':otherFeature2']
+                                dynamicFeatures = [':otherFeature1', ':otherFeature2']
                                 defaultConfig.minSdkVersion 14
                             }
-                            """
-                    )
-            MultiApkMode.INSTANT_APP ->
-                MinimalSubProject.feature("com.example.baseModule")
-                    .appendToBuild(
-                        """
-                            android {
-                                baseFeature true
-                                defaultConfig.minSdkVersion 14
-                            }
-                            """
-                    )
-        }
+                            """)
 
     private val otherFeature1 = createFeatureSplit("com.example.otherFeature1")
 
@@ -90,24 +62,6 @@ class CheckMultiApkLibrariesTaskTest(val multiApkMode: MultiApkMode) {
             .dependency(otherFeature2, lib)
             .dependency(otherFeature1, baseModule)
             .dependency(otherFeature2, baseModule)
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it
-                    MultiApkMode.INSTANT_APP ->
-                        it
-                            .subproject(":app", app)
-                            .subproject(":instantApp", instantApp)
-                            .dependency(app, baseModule)
-                            .dependency(app, otherFeature1)
-                            .dependency(app, otherFeature2)
-                            .dependency(instantApp, baseModule)
-                            .dependency(instantApp, otherFeature1)
-                            .dependency(instantApp, otherFeature2)
-                            .dependency("application", baseModule, app)
-                            .dependency("feature", baseModule, otherFeature1)
-                            .dependency("feature", baseModule, otherFeature2)
-                }
-            }
             .build()
 
     @get:Rule
@@ -126,17 +80,12 @@ class CheckMultiApkLibrariesTaskTest(val multiApkMode: MultiApkMode) {
         )
     }
 
-    private fun createFeatureSplit(packageName: String) =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP -> MinimalSubProject.dynamicFeature(packageName)
-            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature(packageName)
-        }.appendToBuild(
+    private fun createFeatureSplit(packageName: String) = MinimalSubProject.dynamicFeature(packageName)
+        .appendToBuild(
                 """
                     android.defaultConfig.minSdkVersion 14
                     dependencies {
                         implementation 'com.android.support:support-core-utils:' + rootProject.supportLibVersion
                     }
-                    """
-        )
-
+                    """)
 }

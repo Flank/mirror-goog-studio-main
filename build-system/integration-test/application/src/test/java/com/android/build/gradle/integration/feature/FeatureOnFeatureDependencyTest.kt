@@ -30,44 +30,17 @@ import org.junit.runners.Parameterized
 /**
  * Test checking that a dynamic-feature test can reference the base application code.
  */
-@RunWith(FilterableParameterized::class)
-class FeatureOnFeatureDependencyTest(val multiApkMode: MultiApkMode) {
+class FeatureOnFeatureDependencyTest {
 
-    enum class MultiApkMode {
-        DYNAMIC_APP, INSTANT_APP
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun getConfigurations(): Collection<Array<MultiApkMode>> =
-            listOf(arrayOf(MultiApkMode.DYNAMIC_APP), arrayOf(MultiApkMode.INSTANT_APP))
-    }
-
-    private val baseModule =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP ->
-                MinimalSubProject.app("com.example.baseModule")
-                    .appendToBuild(
-                        """
+    private val baseModule = MinimalSubProject.app("com.example.baseModule")
+        .appendToBuild(
+            """
                         android {
                             dynamicFeatures = [':feature1', ':middleFeature', ':leafFeature']
                             defaultConfig.minSdkVersion 14
                         }
                         """
-                    )
-            MultiApkMode.INSTANT_APP ->
-                MinimalSubProject.feature("com.example.baseModule")
-                    .appendToBuild(
-                        """
-                        android {
-                            baseFeature true
-                            defaultConfig.minSdkVersion 14
-                        }
-                        """
-                    )
-        }
-
+        )
     private val feature1 = createFeatureSplitWithGsonDep("com.example.feature1")
     private val middleFeature = createFeatureSplit("com.example.middleFeature")
     private val leafFeature = createFeatureSplitWithGsonDep("com.example.leafFeature")
@@ -89,27 +62,6 @@ class FeatureOnFeatureDependencyTest(val multiApkMode: MultiApkMode) {
             .dependency(leafFeature, baseModule)
             .dependency(middleFeature, feature1)
             .dependency(leafFeature, middleFeature)
-            .let {
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> it
-                    MultiApkMode.INSTANT_APP ->
-                        it
-                            .subproject(":app", app)
-                            .subproject(":instantApp", instantApp)
-                            .dependency(app, baseModule)
-                            .dependency(app, feature1)
-                            .dependency(app, middleFeature)
-                            .dependency(app, leafFeature)
-                            .dependency(instantApp, baseModule)
-                            .dependency(instantApp, feature1)
-                            .dependency(instantApp, middleFeature)
-                            .dependency(instantApp, leafFeature)
-                            .dependency("application", baseModule, app)
-                            .dependency("feature", baseModule, feature1)
-                            .dependency("feature", baseModule, middleFeature)
-                            .dependency("feature", baseModule, leafFeature)
-                }
-            }
             .build()
 
     @get:Rule
@@ -160,7 +112,7 @@ class FeatureOnFeatureDependencyTest(val multiApkMode: MultiApkMode) {
 
         val manifestFile = project.getSubproject(":leafFeature").getIntermediateFile(
             "bundle_manifest",
-            if (multiApkMode == MultiApkMode.INSTANT_APP) "debugFeature" else "debug",
+            "debug",
             "bundle-manifest",
             "AndroidManifest.xml")
 
@@ -193,16 +145,12 @@ class FeatureOnFeatureDependencyTest(val multiApkMode: MultiApkMode) {
                 }"""
             )
 
-    private fun createFeatureSplit(packageName: String) =
-        when (multiApkMode) {
-            MultiApkMode.DYNAMIC_APP -> MinimalSubProject.dynamicFeature(packageName)
-            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature(packageName)
-        }
+    private fun createFeatureSplit(packageName: String) = MinimalSubProject.dynamicFeature(packageName)
 
     private fun getMergedManifestFile(project: GradleTestProject): File {
         return project.getIntermediateFile(
             "merged_manifests",
-            if (multiApkMode == MultiApkMode.INSTANT_APP) "debugFeature" else "debug",
+            "debug",
             "AndroidManifest.xml")
     }
 }

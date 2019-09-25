@@ -424,8 +424,6 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/com.android.debug.structure.properties",
-                "META-INF/gradle-plugins/com.android.feature.properties",
-                "META-INF/gradle-plugins/com.android.instantapp.properties",
                 "META-INF/gradle-plugins/com.android.internal.application.properties",
                 "META-INF/gradle-plugins/com.android.internal.dynamic-feature.properties",
                 "META-INF/gradle-plugins/com.android.internal.library.properties",

@@ -46,7 +46,6 @@ public class AppliedPluginTest {
                     {AppPlugin.class, "android"},
                     {LibraryPlugin.class, "com.android.library"},
                     {LibraryPlugin.class, "android-library"},
-                    {FeaturePlugin.class, "com.android.feature"},
                     {TestPlugin.class, "com.android.test"},
                 });
     }
