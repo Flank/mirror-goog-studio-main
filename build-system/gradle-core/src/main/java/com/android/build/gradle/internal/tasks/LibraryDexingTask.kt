@@ -169,7 +169,7 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                 )
 
                 ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
-                    classFileInput.entries { _ -> true }.use { classesInput ->
+                    classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
                             params.output.toPath(),

@@ -47,6 +47,7 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
 import com.google.common.hash.Hashing
+import com.google.common.io.Closer
 import org.gradle.api.logging.Logging
 import org.gradle.tooling.BuildException
 import org.gradle.work.ChangeType
@@ -66,6 +67,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.ArrayList
 import java.util.function.Supplier
+import java.util.stream.Stream
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -339,52 +341,54 @@ class DexArchiveBuilderTaskDelegate(
     ): List<DexArchiveBuilderCacheHandler.CacheableItem> {
 
         val itemsToCache = mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
+        val (directoryInputs, jarInputs) = inputFiles.partition { it.isDirectory }
 
-        for (input in inputFiles) {
+        directoryInputs.forEach { loggerWrapper.verbose("Processing input %s", it.toString()) }
+        convertToDexArchive(
+            directoryInputs.toSet(),
+            true,
+            outputDir,
+            isIncremental,
+            bootClasspathKey,
+            classpathKey,
+            additionalPaths,
+            changedFiles
+        )
+
+        for (input in jarInputs) {
             loggerWrapper.verbose("Processing input %s", input.toString())
-            if (input.isDirectory) {
-                convertToDexArchive(
-                    input,
-                    outputDir,
-                    isIncremental,
-                    bootClasspathKey,
-                    classpathKey,
-                    additionalPaths,
-                    changedFiles
+
+            check(input.extension == SdkConstants.EXT_JAR) { "Expected jar, received $input" }
+
+            val cacheInfo = if (enableCaching) {
+                getD8DesugaringCacheInfo(
+                    desugarIncrementalHelper,
+                    bootClasspath,
+                    classpath,
+                    input
                 )
             } else {
-                check(input.extension == SdkConstants.EXT_JAR) { "Expected jar, received $input" }
+                DesugaringDontCache
+            }
 
-                val cacheInfo = if (enableCaching) {
-                    getD8DesugaringCacheInfo(
-                        desugarIncrementalHelper,
-                        bootClasspath,
-                        classpath,
-                        input
+            val dexArchives = processJarInput(
+                isIncremental,
+                input,
+                outputDir,
+                bootClasspathKey,
+                classpathKey,
+                additionalPaths,
+                changedFiles,
+                cacheInfo
+            )
+            if (cacheInfo != DesugaringDontCache && dexArchives.isNotEmpty()) {
+                itemsToCache.add(
+                    DexArchiveBuilderCacheHandler.CacheableItem(
+                        input,
+                        dexArchives,
+                        cacheInfo.orderedD8DesugaringDependencies
                     )
-                } else {
-                    DesugaringDontCache
-                }
-
-                val dexArchives = processJarInput(
-                    isIncremental,
-                    input,
-                    outputDir,
-                    bootClasspathKey,
-                    classpathKey,
-                    additionalPaths,
-                    changedFiles,
-                    cacheInfo
                 )
-                if (cacheInfo != DesugaringDontCache && dexArchives.isNotEmpty()) {
-                    itemsToCache.add(
-                        DexArchiveBuilderCacheHandler.CacheableItem(
-                            input,
-                            dexArchives,
-                            cacheInfo.orderedD8DesugaringDependencies
-                        )
-                    )
-                }
             }
         }
         return itemsToCache
@@ -552,7 +556,8 @@ class DexArchiveBuilderTaskDelegate(
             }
         }
         return convertToDexArchive(
-            jarInput,
+            setOf(jarInput),
+            false,
             outputDir,
             false,
             bootclasspath,
@@ -563,7 +568,8 @@ class DexArchiveBuilderTaskDelegate(
     }
 
     class DexConversionParameters(
-        internal val input: File,
+        internal val inputs: Set<File>,
+        internal val isDirectory: Boolean,
         private val bootClasspath: ClasspathServiceKey,
         private val classpath: ClasspathServiceKey,
         output: File,
@@ -585,7 +591,7 @@ class DexArchiveBuilderTaskDelegate(
         internal val output: String = output.toURI().toString()
 
         fun belongsToThisBucket(path: String): Boolean {
-            return getBucketForFile(input, path, numberOfBuckets) == buckedId
+            return getBucketForFile(isDirectory, path, numberOfBuckets) == buckedId
         }
 
         fun getDexArchiveBuilder(
@@ -650,7 +656,8 @@ class DexArchiveBuilderTaskDelegate(
     private object DesugaringDontCache : D8DesugaringCacheInfo(emptyList())
 
     private fun convertToDexArchive(
-        input: File,
+        inputs: Set<File>,
+        isDirectory: Boolean,
         outputDir: File,
         isIncremental: Boolean,
         bootClasspath: ClasspathServiceKey,
@@ -658,20 +665,25 @@ class DexArchiveBuilderTaskDelegate(
         additionalPaths: Set<File>,
         changedFiles: Set<File>
     ): List<File> {
-        loggerWrapper.verbose("Dexing %s", input.absolutePath)
+        inputs.forEach { loggerWrapper.verbose("Dexing %s", it.absolutePath) }
 
         val dexArchives = mutableListOf<File>()
         for (bucketId in 0 until numberOfBuckets) {
 
-            val preDexOutputFile = if (input.isDirectory) {
+            val preDexOutputFile = if (isDirectory) {
                 outputDir.also { FileUtils.mkdirs(it) }
             } else {
-                getOutputForJar(input, outputDir, bucketId).also { FileUtils.mkdirs(it.parentFile) }
+                check(inputs.size == 1) {
+                    "Expected a single jar, received input size ${inputs.size}" }
+
+                getOutputForJar(inputs.first(), outputDir, bucketId)
+                    .also{ FileUtils.mkdirs(it.parentFile) }
             }
 
             dexArchives.add(preDexOutputFile)
             val parameters = DexConversionParameters(
-                input,
+                inputs,
+                isDirectory,
                 bootClasspath,
                 classpath,
                 preDexOutputFile,
@@ -785,10 +797,8 @@ class DexArchiveBuilderTaskDelegate(
  * specified (both relative and absolute path work). For directories, absolute path should be
  * specified.
  */
-private fun getBucketForFile(
-    rootInput: File, path: String, numberOfBuckets: Int
-): Int {
-    if (!rootInput.isDirectory) {
+private fun getBucketForFile(isDirectory: Boolean, path: String, numberOfBuckets: Int): Int {
+    if (!isDirectory) {
         return abs(path.hashCode()) % numberOfBuckets
     } else {
         val filePath = Paths.get(path)
@@ -810,37 +820,48 @@ private fun launchProcessing(
         receiver
     )
 
-    val inputPath = dexConversionParameters.input.toPath()
+    val inputPaths = dexConversionParameters.inputs.map { it.toPath() }
 
     val hasIncrementalInfo =
-        dexConversionParameters.input.isDirectory && dexConversionParameters.isIncremental
+        dexConversionParameters.isDirectory && dexConversionParameters.isIncremental
 
-    fun toProcess(path: String): Boolean {
+    fun toProcess(rootPath: Path, path: String): Boolean {
         if (!dexConversionParameters.belongsToThisBucket(path)) return false
 
         if (!hasIncrementalInfo) {
             return true
         }
 
-        val resolved = inputPath.resolve(path).toFile()
+        val resolved = rootPath.resolve(path).toFile()
         return resolved in dexConversionParameters.additionalPaths || resolved in dexConversionParameters.changedFiles
     }
 
-    val bucketFilter = { name: String -> toProcess(name) }
-    loggerWrapper.verbose("Dexing '" + inputPath + "' to '" + dexConversionParameters.output + "'")
+    val bucketFilter = { rootPath: Path, path: String -> toProcess(rootPath, path) }
+    inputPaths.forEach {
+        loggerWrapper.verbose("Dexing '$it' to '" + dexConversionParameters.output + "'") }
 
     try {
-        ClassFileInputs.fromPath(inputPath).use { input ->
-            input.entries(bucketFilter).use { entries ->
+        Closer.create().use { closer ->
+            var classFileEntries = Stream.empty<ClassFileEntry>()
+            classFileEntries.use {
+                for (inputPath in inputPaths) {
+                    val classFileInput =
+                        ClassFileInputs.fromPath(inputPath).also { closer.register(it) }
+                    classFileEntries =
+                        Stream.concat(classFileEntries, classFileInput.entries(bucketFilter))
+                }
                 dexArchiveBuilder.convert(
-                    entries,
+                    classFileEntries,
                     Paths.get(URI(dexConversionParameters.output)),
-                    dexConversionParameters.input.isDirectory
-                )
+                    dexConversionParameters.isDirectory)
             }
         }
     } catch (ex: DexArchiveBuilderException) {
-        throw DexArchiveBuilderException("Failed to process $inputPath", ex)
+        if (dexConversionParameters.isDirectory) {
+            throw DexArchiveBuilderException("Failed to process for directories input", ex)
+        } else {
+            throw DexArchiveBuilderException("Failed to process ${inputPaths.first()}", ex)
+        }
     }
 }
 

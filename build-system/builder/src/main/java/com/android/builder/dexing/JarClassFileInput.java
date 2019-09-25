@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -55,7 +55,7 @@ final class JarClassFileInput implements ClassFileInput {
 
     @Override
     @NonNull
-    public Stream<ClassFileEntry> entries(Predicate<String> filter) {
+    public Stream<ClassFileEntry> entries(BiPredicate<Path, String> filter) {
         if (jarFile == null) {
             try {
                 jarFile = new ZipFile(rootPath.toFile());
@@ -65,13 +65,12 @@ final class JarClassFileInput implements ClassFileInput {
             }
         }
 
-        Predicate<String> newFilter = CLASS_MATCHER.and(filter);
-
         List<ZipEntry> entryList = new ArrayList<>(jarFile.size());
         Enumeration<? extends ZipEntry> entries = jarFile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry zipEntry = entries.nextElement();
-            if (newFilter.test(zipEntry.getName())) {
+            if (CLASS_MATCHER.test(zipEntry.getName())
+                    && filter.test(rootPath, zipEntry.getName())) {
                 entryList.add(zipEntry);
             }
         }

@@ -281,7 +281,7 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
     ClassFileInputs.fromPath(classesInput)
         .use { input ->
             builder.convert(
-                input.entries { p -> true },
+                input.entries { _, _ -> true },
                 output,
                 true
             )

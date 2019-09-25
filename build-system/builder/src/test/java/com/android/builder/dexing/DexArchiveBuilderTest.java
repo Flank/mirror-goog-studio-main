@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.testutils.apk.Dex;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.PathUtils;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -218,7 +217,7 @@ public class DexArchiveBuilderTest {
         Path input = writeToInput(ImmutableList.of("A"));
         ClassFileInput cfInput = ClassFileInputs.fromPath(input);
         CRC32 crc = new CRC32();
-        crc.update(cfInput.entries(Predicates.alwaysTrue()).findFirst().get().readAllBytes());
+        crc.update(cfInput.entries((x, y) -> true).findFirst().get().readAllBytes());
         String crcHexMatcher = ".*" + Long.toHexString(crc.getValue()) + ".*";
         Path output = createOutput();
 

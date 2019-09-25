@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
 final class DirectoryBasedClassFileInput implements ClassFileInput {
@@ -38,10 +38,10 @@ final class DirectoryBasedClassFileInput implements ClassFileInput {
 
     @Override
     @NonNull
-    public Stream<ClassFileEntry> entries(Predicate<String> filter) throws IOException {
-        Predicate<String> predicate = CLASS_MATCHER.and(filter);
+    public Stream<ClassFileEntry> entries(BiPredicate<Path, String> filter) throws IOException {
         return Files.walk(rootPath)
-                .filter(p -> predicate.test(p.toString()))
+                .filter(p -> CLASS_MATCHER.test(p.toString()))
+                .filter(p -> filter.test(rootPath, p.toString()))
                 .map(this::createEntryFromPath);
     }
 

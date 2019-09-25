@@ -126,7 +126,7 @@ abstract class DexFileDependenciesTask
 
 
                 ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
-                    classFileInput.entries { true }.use { classesInput ->
+                    classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
                             params.outputFile.toPath(),

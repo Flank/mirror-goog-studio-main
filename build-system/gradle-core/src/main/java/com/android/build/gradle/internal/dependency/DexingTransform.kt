@@ -97,7 +97,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                 )
 
                 ClassFileInputs.fromPath(inputFile.toPath()).use { classFileInput ->
-                    classFileInput.entries { true }.use { classesInput ->
+                    classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
                             outputDir.toPath(),

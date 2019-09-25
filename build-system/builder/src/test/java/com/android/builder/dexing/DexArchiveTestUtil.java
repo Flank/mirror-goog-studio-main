@@ -88,7 +88,7 @@ public final class DexArchiveTestUtil {
                                 new StandardOutErrMessageReceiver());
             }
 
-            dexArchiveBuilder.convert(inputs.entries(p -> true), dexArchiveOutput, true);
+            dexArchiveBuilder.convert(inputs.entries((x, y) -> true), dexArchiveOutput, true);
         }
     }
 
