@@ -256,7 +256,6 @@ coverage_report(
         "//tools/base/build-system/integration-test/native:CmakeTargetsTest",
         "//tools/base/build-system/integration-test/native:CmakeVanillaBasicProjectTest",
         "//tools/base/build-system/integration-test/native:CombinedAbiDensityPureSplits",
-        "//tools/base/build-system/integration-test/native:FeatureAndAbiPureSplitsTest",
         "//tools/base/build-system/integration-test/native:HeaderInCmakeListsTest",
         "//tools/base/build-system/integration-test/native:InjectedAbiNativeLibraryTest",
         "//tools/base/build-system/integration-test/native:NativeBuildOutputTest",
