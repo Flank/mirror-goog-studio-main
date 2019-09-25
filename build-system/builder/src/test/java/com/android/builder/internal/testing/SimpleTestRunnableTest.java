@@ -111,6 +111,38 @@ public class SimpleTestRunnableTest {
     }
 
     @Test
+    public void checkAdditionalTestOutputWith15() throws Exception {
+        testData.setTestedApplicationId("com.example.app.test");
+
+        when(deviceConnector.getApiLevel()).thenReturn(15);
+        when(deviceConnector.getName()).thenReturn("FakeDevice");
+
+        File prodApks = temporaryFolder.newFolder();
+        testedApks = new ArrayList<>();
+        testedApks.add(new File(prodApks, "app" + 1 + ".apk"));
+        File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        true,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        ImmutableList.of());
+
+        runnable.run();
+
+        verify(deviceConnector, times(0)).pullFile(anyString(), anyString());
+        verify(deviceConnector, times(0))
+                .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
+        verify(deviceConnector, times(0))
+                .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+    }
+
+    @Test
     public void checkAdditionalTestOutputWith16() throws Exception {
         testData.setTestedApplicationId("com.example.app.test");
 
