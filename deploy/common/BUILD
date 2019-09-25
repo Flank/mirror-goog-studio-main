@@ -36,6 +36,13 @@ cc_library(
     hdrs = [
         "log.h",
     ],
+    copts = select_android(
+        ["-std=c++11"],
+        [],
+    ) + select({
+        "//tools/base/bazel:host_windows": [],
+        "//conditions:default": ["-std=c++11"],
+    }),
     tags = ["no_windows"],
     visibility = ["//tools/base/deploy:__subpackages__"],
     deps = [

@@ -29,4 +29,8 @@ cc_library(
     deps = [
         "@zlib_repo//:zlib",
     ],
+    copts = select({
+        "@//tools/base/bazel:windows": [],
+        "//conditions:default": ["-std=c++11"],
+    }),
 )

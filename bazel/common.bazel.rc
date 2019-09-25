@@ -37,7 +37,6 @@ build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
 # TODO (b/141269926): this generates a warning on windows when building for host,
 # but is required when building for android.
-build --cxxopt=-std=c++11
 build --copt=-fvisibility=hidden
 
 build --define=grpc_no_ares=true

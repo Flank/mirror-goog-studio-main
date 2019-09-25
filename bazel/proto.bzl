@@ -1,6 +1,7 @@
 load(":functions.bzl", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_java_library")
 load(":utils.bzl", "java_jarjar")
+load(":android.bzl", "select_android")
 
 # Enum-like values to determine the language the gen_proto rule will compile
 # the .proto files to.
@@ -210,4 +211,5 @@ def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility 
         visibility = visibility,
         tags = tags,
         hdrs = hdrs,
+        copts = select_android(["-std=c++11"], []),
     )

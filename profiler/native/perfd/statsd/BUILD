@@ -13,6 +13,7 @@ cc_library(
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
         "-I$(GENDIR)/tools/base/transport",
+        "-std=c++11",
     ],
     tags = ["no_windows"],
     deps = [

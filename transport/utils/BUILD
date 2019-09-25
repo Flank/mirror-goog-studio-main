@@ -110,6 +110,7 @@ cc_library(
     copts = [
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
+        "-std=c++11",
     ],
     tags = ["no_windows"],
     deps = [

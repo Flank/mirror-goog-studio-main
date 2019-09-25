@@ -93,11 +93,11 @@ jni_library = rule(
 
 def select_android(android, default):
     return select({
-        "//tools/base/bazel:android_cpu_x86": android,
-        "//tools/base/bazel:android_cpu_x86_64": android,
-        "//tools/base/bazel:android_cpu_arm": android,
-        "//tools/base/bazel:android_cpu_arm_64": android,
-        "//tools/base/bazel:android_cpu_armeabi": android,
+        "@//tools/base/bazel:android_cpu_x86": android,
+        "@//tools/base/bazel:android_cpu_x86_64": android,
+        "@//tools/base/bazel:android_cpu_arm": android,
+        "@//tools/base/bazel:android_cpu_arm_64": android,
+        "@//tools/base/bazel:android_cpu_armeabi": android,
         "//conditions:default": default,
     })
 
@@ -126,6 +126,7 @@ def dex_library(name, jars = [], output = None, visibility = None, tags = [], fl
 ANDROID_COPTS = select_android(
     [
         "-fPIC",
+        "-std=c++11",
     ],
     [],
 )
