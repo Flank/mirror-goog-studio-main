@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.VariantOutput
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -50,55 +51,35 @@ class ProcessLibraryManifestTest {
 
     internal lateinit var task: ProcessLibraryManifest
 
-    @Mock lateinit var variantScope: VariantScope
-    @Mock lateinit var globalScope: GlobalScope
-    @Mock lateinit var outputScope: OutputScope
-    @Mock lateinit var variantConfiguration : GradleVariantConfiguration
-    @Mock lateinit var buildArtifactsHolder : BuildArtifactsHolder
-    @Mock lateinit var variantData : BaseVariantData
-    @Mock lateinit var mainSplit: ApkData
-    @Mock lateinit var mergedFlavor: ProductFlavor
-    @Mock lateinit var extension: BaseExtension
-    @Mock lateinit var aaptOptions: AaptOptions
-
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
-
-        `when`(variantScope.globalScope).thenReturn(globalScope)
-        `when`(variantScope.outputScope).thenReturn(outputScope)
-        `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
-        `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
-
-        `when`(variantScope.variantData).thenReturn(variantData)
-        `when`(variantScope.fullVariantName).thenReturn("fullVariantName")
-        `when`(variantScope.getTaskName(any(), any())).thenReturn("processManifest")
-        `when`(variantScope.getIncrementalDir(anyString())).thenReturn(temporaryFolder.newFolder())
-        `when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
-
-        `when`(aaptOptions.namespaced).thenReturn(false)
-
-        `when`(extension.aaptOptions).thenReturn(aaptOptions)
-
-        `when`(globalScope.extension).thenReturn(extension)
-        `when`(outputScope.mainSplit).thenReturn(mainSplit)
-        `when`(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
-        `when`(mainSplit.fullName).thenReturn("fooRelease")
 
         val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        val configAction =
-            ProcessLibraryManifest.CreationAction(variantScope)
-        val taskProvider = project.tasks.register<ProcessLibraryManifest>(
-            "fooRelease",
-            ProcessLibraryManifest::class.java
-        )
-
-        variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
-
-        configAction.preConfigure(taskProvider.name)
+        val taskProvider = project.tasks.register("fooRelease", ProcessLibraryManifest::class.java)
         task = taskProvider.get()
-        configAction.configure(task)
+
+        task.minSdkVersion.set("1")
+        task.maxSdkVersion.set(1)
+        task.targetSdkVersion.set("1")
+        task.versionCode.set(1)
+        task.versionName.set("versionName")
+        task.packageOverride.set("packageOverride")
+        task.manifestPlaceholders.set(mapOf())
+        task.mainSplit.set(
+            ApkData.of(
+                VariantOutput.OutputType.MAIN,
+                emptyList(),
+                1,
+                "",
+                "",
+                "",
+                "fooRelease",
+                "",
+                true,
+                ""
+            )
+        )
     }
 
     @Test

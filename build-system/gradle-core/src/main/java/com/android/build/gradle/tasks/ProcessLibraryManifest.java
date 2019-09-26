@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -39,19 +38,12 @@ import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
 import com.android.utils.FileUtils;
-import com.google.common.base.Preconditions;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.UncheckedIOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
-import javax.inject.Inject;
+
 import org.apache.tools.ant.BuildException;
+import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
@@ -69,15 +61,20 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.UncheckedIOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
 public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
-
-    private Supplier<String> minSdkVersion;
-    private Supplier<String> targetSdkVersion;
-    private Supplier<Integer> maxSdkVersion;
-
-    private OutputScope outputScope;
 
     private final RegularFileProperty manifestOutputFile;
     private final Property<String> packageOverride;
@@ -85,6 +82,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     private final Property<String> versionName;
     private final ListProperty<File> manifestOverlays;
     private final MapProperty<String, Object> manifestPlaceholders;
+    @VisibleForTesting final Property<ApkData> mainSplit;
 
     private boolean isNamespaced;
 
@@ -97,6 +95,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         versionName = objectFactory.property(String.class);
         manifestOverlays = objectFactory.listProperty(File.class);
         manifestPlaceholders = objectFactory.mapProperty(String.class, Object.class);
+        mainSplit = objectFactory.property(ApkData.class);
     }
 
     @OutputFile
@@ -122,9 +121,9 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             packageOverride.getOrNull(),
                             versionCode.get(),
                             versionName.getOrNull(),
-                            getMinSdkVersion(),
-                            getTargetSdkVersion(),
-                            getMaxSdkVersion(),
+                            getMinSdkVersion().getOrNull(),
+                            getTargetSdkVersion().getOrNull(),
+                            getMaxSdkVersion().getOrNull(),
                             manifestOutputFile.get().getAsFile(),
                             manifestPlaceholders.get(),
                             getReportFile().get().getAsFile(),
@@ -135,7 +134,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             aaptFriendlyManifestOutputDirectory.isPresent()
                                     ? aaptFriendlyManifestOutputDirectory.get().getAsFile()
                                     : null,
-                            outputScope.getMainSplit()));
+                            mainSplit.get()));
         }
     }
 
@@ -283,32 +282,25 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     @Override
     @Internal
     public File getAaptFriendlyManifestOutputFile() {
-        Preconditions.checkNotNull(outputScope.getMainSplit());
         return getAaptFriendlyManifestOutputDirectory().isPresent()
                 ? FileUtils.join(
                         getAaptFriendlyManifestOutputDirectory().get().getAsFile(),
-                        outputScope.getMainSplit().getDirName(),
+                        mainSplit.get().getDirName(),
                         SdkConstants.ANDROID_MANIFEST_XML)
                 : null;
     }
 
     @Input
     @Optional
-    public String getMinSdkVersion() {
-        return minSdkVersion.get();
-    }
+    public abstract Property<String> getMinSdkVersion();
 
     @Input
     @Optional
-    public String getTargetSdkVersion() {
-        return targetSdkVersion.get();
-    }
+    public abstract Property<String> getTargetSdkVersion();
 
     @Input
     @Optional
-    public Integer getMaxSdkVersion() {
-        return maxSdkVersion.get();
-    }
+    public abstract Property<Integer> getMaxSdkVersion();
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -353,7 +345,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     public String getMainSplitFullName() {
         // This information is written to the build output's metadata file, so it needs to be
         // annotated as @Input
-        return outputScope.getMainSplit().getFullName();
+        return mainSplit.get().getFullName();
     }
 
     public static class CreationAction extends VariantTaskCreationAction<ProcessLibraryManifest> {
@@ -437,29 +429,40 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 
-            task.minSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
-                                if (minSdkVersion1 == null) {
-                                    return null;
-                                }
-                                return minSdkVersion1.getApiString();
-                            });
+            Project project = getVariantScope().getGlobalScope().getProject();
+            task.getMinSdkVersion()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project,
+                                    () -> {
+                                        ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
+                                        if (minSdkVersion1 == null) {
+                                            return null;
+                                        }
+                                        return minSdkVersion1.getApiString();
+                                    }));
 
-            task.targetSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
-                                if (targetSdkVersion == null) {
-                                    return null;
-                                }
-                                return targetSdkVersion.getApiString();
-                            });
+            task.getTargetSdkVersion()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project,
+                                    () -> {
+                                        ApiVersion targetSdkVersion =
+                                                mergedFlavor.getTargetSdkVersion();
+                                        if (targetSdkVersion == null) {
+                                            return null;
+                                        }
+                                        return targetSdkVersion.getApiString();
+                                    }));
 
-            task.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
+            task.getMaxSdkVersion()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, mergedFlavor::getMaxSdkVersion));
 
-            task.outputScope = getVariantScope().getOutputScope();
+            task.mainSplit.set(
+                    TaskInputHelper.memoizeToProvider(
+                            project, getVariantScope().getOutputScope()::getMainSplit));
 
             task.isNamespaced =
                     getVariantScope()
