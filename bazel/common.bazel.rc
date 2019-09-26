@@ -31,6 +31,7 @@ test --sandbox_tmpfs_path=/tmp
 
 test:ignored --jvmopt=-Dignored.tests.only=true
 
+build --incompatible_strict_action_env # Ensures actions don't pick up env changes
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
