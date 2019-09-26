@@ -37,11 +37,6 @@ import org.gradle.api.tasks.TaskProvider
 /**
  * Task responsible for publishing the application Id.
  *
- * If the module is an application module, it publishes the value coming from the variant config.
- *
- * If the module is a feature module, it consumes the value coming from the (installed) application
- * module and republishes it.
- *
  * This task is currently used to publish the output as a text resource for others to consume.
  */
 abstract class ApplicationIdWriterTask : NonIncrementalTask() {
@@ -92,13 +87,13 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
         override fun configure(task: ApplicationIdWriterTask) {
             super.configure(task)
 
-            // if BASE_FEATURE get the app ID from the app module
-            if (variantScope.type.isBaseModule && variantScope.type.isHybrid) {
-                task.appMetadata = variantScope.getArtifactFileCollection(
-                    REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_BASE_MODULE_DECLARATION
-                )
-            } else if (variantScope.type.isFeatureSplit) {
-                // if feature split, get it from the base module
+            if (variantScope.type.isDynamicFeature) {
+                // If this is a dynamic feature, we read the value published by the base
+                // module and write it down.
+                // This is only done so that BaseVariant.getApplicationIdTextResource() can be
+                // a bit dynamic.
+                // TODO replace this with Property<String> which can be fed from the published artifact directly.
+                // b/141650037
                 task.appMetadata = variantScope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, FEATURE_APPLICATION_ID_DECLARATION
                 )

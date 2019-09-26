@@ -60,7 +60,6 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.ViewBindingOptions;
@@ -689,7 +688,7 @@ public abstract class TaskManager {
     /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
     protected static boolean packagesCustomClassDependencies(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
-        return appliesCustomClassTransforms(scope, options) && !scope.getType().isFeatureSplit();
+        return appliesCustomClassTransforms(scope, options) && !scope.getType().isDynamicFeature();
     }
 
     /** Returns whether or not custom class transforms are applied */
@@ -1035,7 +1034,7 @@ public abstract class TaskManager {
     }
 
     private static boolean generatesProguardOutputFile(VariantScope variantScope) {
-        return variantScope.getCodeShrinker() != null || variantScope.getType().isFeatureSplit();
+        return variantScope.getCodeShrinker() != null || variantScope.getType().isDynamicFeature();
     }
 
     protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>
@@ -1556,7 +1555,7 @@ public abstract class TaskManager {
     static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
         final VariantType variantType = variantScope.getVariantConfiguration().getType();
-        return !variantType.isForTesting() && !variantType.isHybrid();
+        return !variantType.isForTesting();
     }
 
     /**
@@ -1894,10 +1893,10 @@ public abstract class TaskManager {
                     });
         }
 
-        // Add a task to create merged runtime classes if this is a feature, a dynamic-feature,
+        // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
         // minification is enabled in a project with features or dynamic-features.
-        if (variantData.getType().isFeatureSplit() || variantScope.consumesFeatureJars()) {
+        if (variantData.getType().isDynamicFeature() || variantScope.consumesFeatureJars()) {
             taskFactory.register(new MergeClassesTask.CreationAction(variantScope));
         }
 
@@ -2675,7 +2674,7 @@ public abstract class TaskManager {
         } else {
             taskName =
                     StringHelper.appendCapitalized(
-                            prefix, scope.getVariantConfiguration().computeHybridVariantName());
+                            prefix, scope.getVariantConfiguration().getFullName());
         }
         return taskName;
     }
@@ -2794,8 +2793,6 @@ public abstract class TaskManager {
         final BaseExtension extension = globalScope.getExtension();
         if (extension instanceof BaseAppModuleExtension) {
             modulePaths = ((BaseAppModuleExtension) extension).getDynamicFeatures();
-        } else if (extension instanceof FeatureExtension) {
-            modulePaths = FeatureModelBuilder.getDynamicFeatures(globalScope);
         } else {
             return;
         }
@@ -3051,9 +3048,7 @@ public abstract class TaskManager {
                                     + ":"
                                     + version);
             // TODO load config name from source sets
-            if (dataBindingOptions.isEnabledForTests()
-                    || this instanceof LibraryTaskManager
-                    || this instanceof MultiTypeTaskManager) {
+            if (dataBindingOptions.isEnabledForTests() || this instanceof LibraryTaskManager) {
                 String dataBindingArtifact =
                         SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version;
                 project.getDependencies()

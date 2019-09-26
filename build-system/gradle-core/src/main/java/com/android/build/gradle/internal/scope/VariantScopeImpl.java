@@ -50,7 +50,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
@@ -306,7 +305,7 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         // TODO: support resource shrinking for multi-apk applications http://b/78119690
-        if (getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
+        if (getType().isDynamicFeature() || globalScope.hasDynamicFeatures()) {
             globalScope
                     .getErrorHandler()
                     .reportError(
@@ -459,11 +458,8 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public List<File> getConsumerProguardFilesForFeatures() {
-        final boolean hasFeaturePlugin = getProject().getPlugins().hasPlugin(FeaturePlugin.class);
-        // We include proguardFiles if we're in a dynamic-feature or feature module. For feature
-        // modules, we check for the presence of the FeaturePlugin, because we want to include
-        // proguardFiles even when we're in the library variant.
-        final boolean includeProguardFiles = hasFeaturePlugin || getType().isDynamicFeature();
+        // We include proguardFiles if we're in a dynamic-feature module.
+        final boolean includeProguardFiles = getType().isDynamicFeature();
         final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
         if (includeProguardFiles) {
             consumerProguardFiles.addAll(getExplicitProguardFiles());
@@ -787,7 +783,7 @@ public class VariantScopeImpl implements VariantScope {
         FileCollection fileCollection;
 
         if (configType == RUNTIME_CLASSPATH
-                && getType().isFeatureSplit()
+                && getType().isDynamicFeature()
                 && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
 
             FileCollection excludedDirectories =
@@ -829,7 +825,7 @@ public class VariantScopeImpl implements VariantScope {
                 computeArtifactCollection(configType, scope, artifactType, attributeMap);
 
         if (configType == RUNTIME_CLASSPATH
-                && getType().isFeatureSplit()
+                && getType().isDynamicFeature()
                 && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
 
             FileCollection excludedDirectories =
@@ -1273,9 +1269,7 @@ public class VariantScopeImpl implements VariantScope {
     public File getApkLocation() {
         String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
         File baseDirectory =
-                override != null && !getType().isHybrid()
-                        ? getProject().file(override)
-                        : getDefaultApkLocation();
+                override != null ? getProject().file(override) : getDefaultApkLocation();
 
         return new File(baseDirectory, getDirName());
     }

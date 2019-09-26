@@ -115,10 +115,7 @@ public class VariantFilter implements com.android.build.api.variant.VariantFilte
         if (name == null) {
             name =
                     VariantConfiguration.computeRegularVariantName(
-                            VariantConfiguration.computeFlavorName(flavors),
-                            buildType,
-                            type,
-                            null /* testedType */);
+                            VariantConfiguration.computeFlavorName(flavors), buildType, type);
         }
 
         return name;

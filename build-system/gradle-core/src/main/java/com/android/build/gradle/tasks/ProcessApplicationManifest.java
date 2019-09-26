@@ -111,7 +111,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private final Property<String> packageOverride;
     private final ListProperty<File> manifestOverlays;
     private final MapProperty<String, Object> manifestPlaceholders;
-    private boolean isHybridVariantType;
     private boolean isFeatureSplitVariantType;
     private String buildTypeName;
 
@@ -138,16 +137,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
             boolean isDebuggable = getOptionalFeatures().get().contains(Feature.DEBUGGABLE);
             if (moduleMetadata.getDebuggable() != isDebuggable) {
-                String moduleType = isHybridVariantType ? "Instant App Feature" : "Dynamic Feature";
                 String errorMessage =
                         String.format(
-                                "%1$s '%2$s' (build type '%3$s') %4$s debuggable,\n"
+                                "Dynamic Feature '%1$s' (build type '%2$s') %3$s debuggable,\n"
                                         + "and the corresponding build type in the base "
-                                        + "application %5$s debuggable.\n"
+                                        + "application %4$s debuggable.\n"
                                         + "Recommendation: \n"
-                                        + "   in  %6$s\n"
-                                        + "   set android.buildTypes.%3$s.debuggable = %7$s",
-                                moduleType,
+                                        + "   in  %5$s\n"
+                                        + "   set android.buildTypes.%2$s.debuggable = %6$s",
                                 getProject().getPath(),
                                 buildTypeName,
                                 isDebuggable ? "is" : "is not",
@@ -741,7 +738,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         PROJECT,
                                         REVERSE_METADATA_FEATURE_MANIFEST);
 
-            } else if (variantType.isFeatureSplit()) {
+            } else if (variantType.isDynamicFeature()) {
                 task.getFeatureName()
                         .set(
                                 TaskInputHelper.memoizeToProvider(
@@ -786,8 +783,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             TaskInputHelper.memoizeToProvider(
                                     project, config::getMainManifestFilePath));
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
-            task.isHybridVariantType = config.getType().isHybrid();
-            task.isFeatureSplitVariantType = config.getType().isFeatureSplit();
+            task.isFeatureSplitVariantType = config.getType().isDynamicFeature();
             task.buildTypeName = config.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
@@ -829,11 +825,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             VariantScope variantScope, boolean isAdvancedProfilingOn) {
         List<Feature> features = new ArrayList<>();
         VariantType variantType = variantScope.getType();
-        if (variantType.isHybrid()) {
-            features.add(Feature.TARGET_SANDBOX_VERSION);
-        }
 
-        if (variantType.isFeatureSplit()) {
+        if (variantType.isDynamicFeature()) {
             features.add(Feature.ADD_FEATURE_SPLIT_ATTRIBUTE);
             features.add(Feature.CREATE_FEATURE_MANIFEST);
             features.add(Feature.ADD_USES_SPLIT_DEPENDENCIES);
@@ -843,15 +836,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             features.add(Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST);
         }
 
-        if (variantType.isHybrid()) {
-            features.add(Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO);
-        }
+        features.add(Feature.ADD_INSTANT_APP_MANIFEST);
 
-        if (!variantType.isHybrid()) {
-            features.add(Feature.ADD_INSTANT_APP_MANIFEST);
-        }
-
-        if (variantType.isBaseModule() || variantType.isFeatureSplit()) {
+        if (variantType.isBaseModule() || variantType.isDynamicFeature()) {
             features.add(Feature.CREATE_BUNDLETOOL_MANIFEST);
         }
 

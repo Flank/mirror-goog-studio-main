@@ -165,9 +165,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Input
     val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
 
-    @get:Input
-    val hasFeatureVariantType: Property<Boolean> = objects.property(Boolean::class.java)
-
     private var debuggable: Boolean = false
 
     private lateinit var aaptOptions: AaptOptions
@@ -484,7 +481,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(variantScope.type.canHaveSplits)
-            task.hasFeatureVariantType.set(variantScope.type == VariantTypeImpl.FEATURE)
 
             task.setMergeBlameLogFolder(variantScope.resourceBlameLogDir)
 
@@ -500,7 +496,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG
                 )
 
-            if (variantType.isFeatureSplit) {
+            if (variantType.isDynamicFeature) {
                 task.resOffset.set(
                     TaskInputHelper.memoizeToProvider(
                         project,
@@ -734,14 +730,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             var proguardOutputFile: File? = null
             var mainDexListProguardOutputFile: File? = null
             if (params.generateCode) {
-                // workaround for b/74068247. Until that's fixed, if it's a namespaced feature,
-                // an extra empty dummy R.java file will be generated as well
-                packageForR =
-                    if (params.isNamespaced && params.isFeatureVariantType) {
-                        "dummy"
-                    } else {
-                        params.originalApplicationId
-                    }
+                packageForR = params.originalApplicationId
 
                 // we have to clean the source folder output in case the package name changed.
                 srcOut = params.sourceOutputDir
@@ -882,7 +871,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val variantScopeMainSplit: ApkData = task.outputScope.mainSplit
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
-        val isFeatureVariantType: Boolean = task.hasFeatureVariantType.get()
         val originalApplicationId: String? = task.originalApplicationId.get()
         val sourceOutputDir: File? = task.getSourceOutputDir()
         val textSymbolOutputFile: File? = task.textSymbolOutputFileProperty.orNull?.asFile

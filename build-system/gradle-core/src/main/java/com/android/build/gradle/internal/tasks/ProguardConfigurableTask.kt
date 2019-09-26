@@ -332,13 +332,6 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
             )
 
-            if (variantScope.type.isHybrid && variantScope.type.isBaseModule) {
-                val consumerProguardFiles = Callable<Collection<File>> {
-                    this.variantScope.consumerProguardFiles
-                }
-                configurationFiles.from(consumerProguardFiles)
-            }
-
             if (task.includeFeaturesInScopes.get()) {
                 addFeatureProguardRules(configurationFiles)
             }

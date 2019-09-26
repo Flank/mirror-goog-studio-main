@@ -23,7 +23,6 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
@@ -711,7 +710,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     private void checkSplitConfiguration() {
         String configApkUrl = "https://d.android.com/topic/instant-apps/guides/config-splits.html";
 
-        boolean isFeatureModule = project.getPlugins().hasPlugin(FeaturePlugin.class);
         boolean generatePureSplits = extension.getGeneratePureSplits();
         Splits splits = extension.getSplits();
         boolean splitsEnabled =
@@ -720,7 +718,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         || splits.getLanguage().isEnable();
 
         // The Play Store doesn't allow Pure splits
-        if (!isFeatureModule && generatePureSplits) {
+        if (generatePureSplits) {
             extraModelInfo
                     .getSyncIssueHandler()
                     .reportWarning(
@@ -729,25 +727,12 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                                     + configApkUrl);
         }
 
-        if (!isFeatureModule && !generatePureSplits && splits.getLanguage().isEnable()) {
+        if (!generatePureSplits && splits.getLanguage().isEnable()) {
             extraModelInfo
                     .getSyncIssueHandler()
                     .reportWarning(
                             Type.GENERIC,
                             "Per-language APKs are supported only when building Android Instant Apps. For more information, go to "
-                                    + configApkUrl);
-        }
-
-        if (isFeatureModule && !generatePureSplits && splitsEnabled) {
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportWarning(
-                            Type.GENERIC,
-                            "Configuration APKs targeting different device configurations are "
-                                    + "automatically built when splits are enabled for a feature module.\n"
-                                    + "To suppress this warning, remove \"generatePureSplits false\" "
-                                    + "from your build.gradle file.\n"
-                                    + "To learn more, see "
                                     + configApkUrl);
         }
     }

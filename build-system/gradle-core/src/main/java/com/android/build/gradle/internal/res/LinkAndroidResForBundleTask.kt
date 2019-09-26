@@ -278,7 +278,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.featureResourcePackages = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
-            if (variantScope.type.isFeatureSplit) {
+            if (variantScope.type.isDynamicFeature) {
                 // get the res offset supplier
                 task.resOffset.set(
                     TaskInputHelper.memoizeToProvider(

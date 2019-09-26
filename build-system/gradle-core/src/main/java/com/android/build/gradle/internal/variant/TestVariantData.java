@@ -79,18 +79,4 @@ public class TestVariantData extends ApkVariantData {
             return sb.toString();
         }
     }
-
-    @NonNull
-    @Override
-    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        if (testedVariantData.getVariantConfiguration().getType().isHybrid()) {
-            return StringHelper.appendCapitalized(
-                    prefix,
-                    getVariantConfiguration().getFullName(),
-                    TaskManager.FEATURE_SUFFIX,
-                    suffix);
-        } else {
-            return super.getTaskName(prefix, suffix);
-        }
-    }
 }

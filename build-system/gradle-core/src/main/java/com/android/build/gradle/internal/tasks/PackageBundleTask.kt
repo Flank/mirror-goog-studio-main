@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -292,13 +291,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.aaptOptionsNoCompress =
                     variantScope.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
-            if (variantScope.type.isHybrid) {
-                task.bundleOptions =
-                        ((variantScope.globalScope.extension as FeatureExtension).bundle).convert()
-            } else {
-                task.bundleOptions =
-                        ((variantScope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
-            }
+            task.bundleOptions =
+                    ((variantScope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
             task.bundleFlags = BundleFlags(
                 enableUncompressedNativeLibs = variantScope.globalScope.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]

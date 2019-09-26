@@ -1022,7 +1022,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @Nullable
         public FileCollection getFeatureDexFolder() {
-            if (!getVariantScope().getType().isFeatureSplit()) {
+            if (!getVariantScope().getType().isDynamicFeature()) {
                 return null;
             }
             return getVariantScope()

@@ -17,7 +17,6 @@ Warning: Type 'com.android.build.gradle.internal.tasks.LibraryAarJarsTask': prop
 Warning: Type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'autoFix' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'fatalOnly' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'lintOptions' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask': property 'metadataFromInstalledModule' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.NdkTask': property 'ndkConfig' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.PrepareLintJarForPublish': property 'lintChecks' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.ProcessJavaResTask': property 'variantName' is not annotated with an input or output annotation.

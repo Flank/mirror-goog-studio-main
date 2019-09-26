@@ -269,62 +269,10 @@ class PublishingSpecs {
                 }
             }
 
-            variantSpec(VariantTypeImpl.BASE_FEATURE) {
-
-                api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
-                api(METADATA_BASE_MODULE_DECLARATION,
-                        ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
-
-                api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(APP_CLASSES, ArtifactType.CLASSES)
-                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
-                api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                        ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-
-                runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                runtime(APK, ArtifactType.APK)
-
-                api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
-                api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                        ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
-
-                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
-            }
-
-            variantSpec(VariantTypeImpl.FEATURE) {
-                reverseMetadata(METADATA_FEATURE_DECLARATION, ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION)
-                reverseMetadata(METADATA_FEATURE_MANIFEST, ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST)
-                reverseMetadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.REVERSE_METADATA_CLASSES)
-                reverseMetadata(MERGED_JAVA_RES, ArtifactType.REVERSE_METADATA_JAVA_RES)
-                reverseMetadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
-                reverseMetadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
-                reverseMetadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                reverseMetadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
-                reverseMetadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
-
-                api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(APP_CLASSES, ArtifactType.CLASSES)
-                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
-                api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                    ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-
-                runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                runtime(APK, ArtifactType.APK)
-                runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)
-
-                api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
-                api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                    ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-
-                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
-            }
-
             // empty specs
             variantSpec(VariantTypeImpl.TEST_APK)
             variantSpec(VariantTypeImpl.ANDROID_TEST)
             variantSpec(VariantTypeImpl.UNIT_TEST)
-            variantSpec(VariantTypeImpl.INSTANTAPP)
 
             lock()
         }

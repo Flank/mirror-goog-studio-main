@@ -267,7 +267,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         validateVersionCodes(model);
 
-        if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isFeatureSplit)) {
+        if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isDynamicFeature)) {
             return;
         }
 
