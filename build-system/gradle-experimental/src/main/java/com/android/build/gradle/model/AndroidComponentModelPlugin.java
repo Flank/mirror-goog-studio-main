@@ -261,7 +261,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                     for (ProductFlavorCombo group : flavorGroups) {
                         if (!group.getFlavorList().isEmpty()) {
                             sources.create(
-                                    group.getName() + StringHelper.capitalize(buildType.getName()));
+                                    group.getName() + StringHelper.usLocaleCapitalize(buildType.getName()));
                         }
                     }
                 }
@@ -343,7 +343,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
             if (flavorCombo.getFlavorList().isEmpty()) {
                 return buildType.getName();
             } else {
-                return flavorCombo.getName() + StringHelper.capitalize(buildType.getName());
+                return flavorCombo.getName() + StringHelper.usLocaleCapitalize(buildType.getName());
             }
 
         }

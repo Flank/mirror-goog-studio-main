@@ -285,7 +285,7 @@ public class NdkConfiguration {
         addSourceIfExist(sourceSetMap, projectSourceSet, binary.getBuildType().getName());
         addSourceIfExist(sourceSetMap, projectSourceSet,
                 binary.getFlavor().getName()
-                        + StringHelper.capitalize(binary.getBuildType().getName()));
+                        + StringHelper.usLocaleCapitalize(binary.getBuildType().getName()));
         return sourceSetMap;
     }
 

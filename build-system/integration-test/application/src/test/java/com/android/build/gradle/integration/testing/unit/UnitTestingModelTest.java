@@ -94,10 +94,10 @@ public class UnitTestingModelTest {
             Truth.assertThat(unitTestArtifact.getName()).isEqualTo(ARTIFACT_UNIT_TEST);
             Truth.assertThat(unitTestArtifact.getAssembleTaskName()).contains("UnitTest");
             Truth.assertThat(unitTestArtifact.getAssembleTaskName())
-                    .contains(StringHelper.capitalize(variant.getName()));
+                    .contains(StringHelper.usLocaleCapitalize(variant.getName()));
             Truth.assertThat(unitTestArtifact.getCompileTaskName()).contains("UnitTest");
             Truth.assertThat(unitTestArtifact.getCompileTaskName())
-                    .contains(StringHelper.capitalize(variant.getName()));
+                    .contains(StringHelper.usLocaleCapitalize(variant.getName()));
 
             // No per-variant source code.
             Truth.assertThat(unitTestArtifact.getVariantSourceProvider()).isNull();

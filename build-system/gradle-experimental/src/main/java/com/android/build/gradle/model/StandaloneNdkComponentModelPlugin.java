@@ -163,13 +163,13 @@ public class StandaloneNdkComponentModelPlugin implements Plugin<Project> {
 
         @NonNull
         private static String getAssembleTaskName(@NonNull Named dimension) {
-            return "assemble" + StringHelper.capitalize(dimension.getName());
+            return "assemble" + StringHelper.usLocaleCapitalize(dimension.getName());
         }
 
         @NonNull
         private static String getAssembleTaskName(@NonNull List<? extends Named> dimensions) {
             return "assemble"
-                    + StringHelper.capitalize(ProductFlavorCombo.getFlavorComboName(dimensions));
+                    + StringHelper.usLocaleCapitalize(ProductFlavorCombo.getFlavorComboName(dimensions));
         }
 
         private static void createAssembleTaskForFlavorCombo(

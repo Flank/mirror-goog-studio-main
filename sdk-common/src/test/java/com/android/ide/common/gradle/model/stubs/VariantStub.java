@@ -53,7 +53,7 @@ public class VariantStub extends BaseStub implements Variant {
     public VariantStub(String name, String buildType, String... flavors) {
         this(
                 name,
-                "display" + StringHelper.capitalize(name),
+                "display" + StringHelper.usLocaleCapitalize(name),
                 new AndroidArtifactStub(),
                 Lists.newArrayList(new AndroidArtifactStub()),
                 Lists.newArrayList(new JavaArtifactStub()),

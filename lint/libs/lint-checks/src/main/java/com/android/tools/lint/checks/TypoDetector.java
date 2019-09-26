@@ -377,7 +377,7 @@ public class TypoDetector extends ResourceXmlDetector {
             sb.append('"');
 
             if (isCapitalized) {
-                replacement = StringHelper.capitalize(replacement);
+                replacement = StringHelper.usLocaleCapitalize(replacement);
             }
             sb.append(replacement);
             fixBuilder.add(

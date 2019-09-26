@@ -66,9 +66,10 @@ public class AaptOutputParserTest {
         StringBuilder sb = new StringBuilder();
         for (int i = 0, n = messages.size(); i < n; i++) {
             Message message = messages.get(i);
-            sb.append(Integer.toString(i)).append(':').append(' ');
+            sb.append(i).append(':').append(' ');
             sb.append(
-                    StringHelper.capitalize(message.getKind().toString().toLowerCase(Locale.US)))
+                            StringHelper.usLocaleCapitalize(
+                                    message.getKind().toString().toLowerCase(Locale.US)))
                     .append(':'); // INFO => Info
             sb.append(message.getText());
             if (!message.getSourceFilePositions().isEmpty() &&

@@ -91,7 +91,7 @@ public class ComponentNativeLibraryFactory implements NativeLibraryFactory {
         BaseVariantData variantData = scope.getVariantData();
 
         AndroidBinaryInternal androidBinary =
-                binaries.get(COMPONENT_NAME + StringHelper.capitalize(variantData.getName()));
+                binaries.get(COMPONENT_NAME + StringHelper.usLocaleCapitalize(variantData.getName()));
 
         if (androidBinary == null) {
             // Binaries are not created for test variants.
