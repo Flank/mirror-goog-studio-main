@@ -96,8 +96,8 @@ public class Package {
                         PrintWriter writer = new PrintWriter(outputStreamWriter)) {
                     buildFile.write(writer);
                 }
-                String before = Files.toString(build, StandardCharsets.UTF_8);
-                String after = Files.toString(tmp, StandardCharsets.UTF_8);
+                String before = Files.asCharSource(build, StandardCharsets.UTF_8).read();
+                String after = Files.asCharSource(tmp, StandardCharsets.UTF_8).read();
                 if (!before.equals(after)) {
                     if (listener.packageUpdated(name)) {
                         Files.copy(tmp, build);
