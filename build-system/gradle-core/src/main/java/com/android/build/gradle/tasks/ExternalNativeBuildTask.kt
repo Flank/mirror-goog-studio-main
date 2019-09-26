@@ -396,7 +396,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
                             val lineToSkip =
                                 if (ninjaFile.canRead()) ninjaFile.readLines().size else 0
                             val buildStartTime = Clock.systemUTC().millis()
-                            fun() {
+                            val m = fun() {
                                 generateChromeTrace(
                                     abiModel,
                                     ninjaFile,
@@ -405,6 +405,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
                                     traceFolder
                                 )
                             }
+                            m
                         }
                     }
 
