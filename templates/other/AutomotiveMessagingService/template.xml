@@ -44,7 +44,7 @@
     <execute file="recipe.xml.ftl" />
 
     <thumbs>
-        <thumb>templates-messagingService-Auto.png</thumb>
+        <thumb>automotive-messaging-service.png</thumb>
     </thumbs>
 
 </template>
