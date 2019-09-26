@@ -49,6 +49,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -64,14 +65,12 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
-import java.util.function.Supplier
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
 abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
-
     @get:Input
     var debuggable: Boolean = false
         private set
@@ -100,13 +99,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     lateinit var featureResourcePackages: FileCollection
         private set
 
-    private var resOffsetSupplier: Supplier<Int>? = null
-
-    @Suppress("MemberVisibilityCanBePrivate")
     @get:Input
     @get:Optional
-    val resOffset: Int?
-        get() = resOffsetSupplier?.get()
+    abstract val resOffset: Property<Int>
 
     @get:Input
     @get:Optional
@@ -168,7 +163,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
             debuggable = debuggable,
-            packageId = resOffset,
+            packageId = resOffset.orNull,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
             resourceDirs = ImmutableList.Builder<File>().addAll(compiledDependenciesResourcesDirs)
@@ -285,9 +280,14 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             if (variantScope.type.isFeatureSplit) {
                 // get the res offset supplier
-                task.resOffsetSupplier =
+                task.resOffset.set(
+                    TaskInputHelper.memoizeToProvider(
+                        variantScope.globalScope.project,
                         FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
-                            variantScope, task)
+                            variantScope, task
+                        )
+                    )
+                )
             }
 
             task.debuggable = config.buildType.isDebuggable

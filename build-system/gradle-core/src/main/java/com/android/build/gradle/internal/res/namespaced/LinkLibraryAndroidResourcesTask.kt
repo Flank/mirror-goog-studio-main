@@ -22,13 +22,13 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
-import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -36,6 +36,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -49,7 +50,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.function.Supplier
 
 /**
  * Task to link the resources in a library project into an AAPT2 static library.
@@ -69,8 +69,8 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional abstract val tested: RegularFileProperty
 
-    @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @Input fun getPackageForR() = packageForRSupplier.get()
+    @get:Input
+    abstract val packageForR: Property<String>
 
     @get:Input
     lateinit var aapt2Version: String
@@ -108,7 +108,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 imports = imports.build(),
                 resourceOutputApk = staticLibApk.get().asFile,
                 variantType = VariantTypeImpl.LIBRARY,
-                customPackageForR = getPackageForR(),
+                customPackageForR = packageForR.get(),
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = registerAaptService(
@@ -182,7 +182,12 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             task.aaptIntermediateDir =
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantConfiguration.dirName)
-            task.packageForRSupplier = Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
+            task.packageForR.set(
+                TaskInputHelper.memoizeToProvider(
+                    variantScope.globalScope.project,
+                    variantScope.variantConfiguration::getOriginalApplicationId
+                )
+            )
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version

@@ -26,7 +26,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -72,7 +71,6 @@ import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
-import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.utils.FileUtils;
@@ -98,7 +96,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -203,8 +200,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     private SigningConfigProvider signingConfig;
 
-    protected Supplier<AndroidVersion> minSdkVersion;
-
     @Nullable protected Collection<String> aaptOptionsNoCompress;
 
     protected OutputScope outputScope;
@@ -275,9 +270,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     }
 
     @Input
-    public int getMinSdkVersion() {
-        return this.minSdkVersion.get().getApiLevel();
-    }
+    public abstract Property<Integer> getMinSdkVersion();
 
     /*
      * We don't really use this. But this forces a full build if the native libraries or dex
@@ -543,7 +536,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             manifestDirectory = task.getManifests().get().getAsFile();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             createdBy = task.getCreatedBy().get();
-            minSdkVersion = task.getMinSdkVersion();
+            minSdkVersion = task.getMinSdkVersion().get();
             isDebuggableBuild = task.getDebugBuild();
             isJniDebuggableBuild = task.getJniDebugBuild();
             targetApi = task.getTargetApi();
@@ -882,8 +875,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     variantScope.getVariantConfiguration();
 
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
-            packageAndroidArtifact.minSdkVersion =
-                    TaskInputHelper.memoize(variantScope::getMinSdkVersion);
+            packageAndroidArtifact
+                    .getMinSdkVersion()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    globalScope.getProject(),
+                                    () -> variantScope.getMinSdkVersion().getApiLevel()));
 
             packageAndroidArtifact
                     .getResourceFiles()

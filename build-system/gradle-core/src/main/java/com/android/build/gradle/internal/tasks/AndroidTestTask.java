@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import java.io.File;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.VerificationTask;
 
 /**
@@ -25,7 +25,7 @@ import org.gradle.api.tasks.VerificationTask;
  */
 public interface AndroidTestTask extends VerificationTask {
 
-    File getResultsDir();
+    DirectoryProperty getResultsDir();
 
     boolean getTestFailed();
 }

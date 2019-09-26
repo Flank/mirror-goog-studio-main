@@ -33,10 +33,10 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -47,10 +47,8 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
 
-/**
- * Task doing test report aggregation.
- */
-public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
+/** Task doing test report aggregation. */
+public abstract class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     private final List<AndroidTestTask> subTasks = Lists.newArrayList();
 
@@ -60,27 +58,12 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     private boolean testFailed;
 
-    private Supplier<File> reportsDir;
-    private Supplier<File> resultsDir;
-
     @OutputDirectory
-    public File getReportsDir() {
-        return reportsDir.get();
-    }
-
-    public void setReportsDir(@NonNull Supplier<File> reportsDir) {
-        this.reportsDir = TaskInputHelper.memoize(reportsDir);
-    }
+    public abstract DirectoryProperty getReportsDir();
 
     @Override
     @OutputDirectory
-    public File getResultsDir() {
-        return resultsDir.get();
-    }
-
-    public void setResultsDir(@NonNull Supplier<File> resultsDir) {
-        this.resultsDir = TaskInputHelper.memoize(resultsDir);
-    }
+    public abstract DirectoryProperty getResultsDir();
 
     @Override
     @Internal // This is an output, not an input of this task
@@ -115,7 +98,9 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public List<File> getResultsDirectories() {
-        return subTasks.stream().map(AndroidTestTask::getResultsDir).collect(Collectors.toList());
+        return subTasks.stream()
+                .map(t -> t.getResultsDir().get().getAsFile())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -130,8 +115,8 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     @TaskAction
     public void createReport() throws IOException {
-        File resultsOutDir = resultsDir.get();
-        File reportOutDir = reportsDir.get();
+        File resultsOutDir = getResultsDir().get().getAsFile();
+        File reportOutDir = getResultsDir().get().getAsFile();
 
         // empty the folders
         FileUtils.cleanOutputDir(resultsOutDir);
@@ -215,20 +200,43 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
             final String subfolderName =
                     taskKind == TaskKind.CONNECTED ? "/connected/" : "/devices/";
 
-            task.resultsDir = TaskInputHelper.memoize(() -> {
-                        String dir = scope.getExtension().getTestOptions().getResultsDir();
-                        String rootLocation = dir != null && !dir.isEmpty() ?
-                                dir : defaultResultsDir;
-                        return scope.getProject().file(
-                                rootLocation + subfolderName + FD_FLAVORS_ALL);
-                    });
+            task.getResultsDir()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    scope.getProject(),
+                                    () -> {
+                                        String dir =
+                                                scope.getExtension()
+                                                        .getTestOptions()
+                                                        .getResultsDir();
+                                        String rootLocation =
+                                                dir != null && !dir.isEmpty()
+                                                        ? dir
+                                                        : defaultResultsDir;
+                                        return scope.getProject()
+                                                .getLayout()
+                                                .getProjectDirectory()
+                                                .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
+                                    }));
 
-            task.reportsDir = TaskInputHelper.memoize(() -> {
-                String dir = scope.getExtension().getTestOptions().getReportDir();
-                String rootLocation = dir != null && !dir.isEmpty() ? dir : defaultReportsDir;
-                return scope.getProject()
-                        .file(rootLocation + subfolderName + FD_FLAVORS_ALL);
-            });
+            task.getResultsDir()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    scope.getProject(),
+                                    () -> {
+                                        String dir =
+                                                scope.getExtension()
+                                                        .getTestOptions()
+                                                        .getReportDir();
+                                        String rootLocation =
+                                                dir != null && !dir.isEmpty()
+                                                        ? dir
+                                                        : defaultReportsDir;
+                                        return scope.getProject()
+                                                .getLayout()
+                                                .getProjectDirectory()
+                                                .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
+                                    }));
         }
     }
 }

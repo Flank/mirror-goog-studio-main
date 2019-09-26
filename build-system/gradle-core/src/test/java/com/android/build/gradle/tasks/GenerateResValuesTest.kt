@@ -45,7 +45,7 @@ class GenerateResValuesTest {
         val project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         val task = project.tasks.create("test", GenerateResValues::class.java)
-        task.items = ImmutableList.of(ClassFieldImpl("string", "VALUE_DEFAULT", "1"))
+        task.items.set(ImmutableList.of(ClassFieldImpl("string", "VALUE_DEFAULT", "1")))
         task.resOutputDir = testDir
 
         task.taskAction()

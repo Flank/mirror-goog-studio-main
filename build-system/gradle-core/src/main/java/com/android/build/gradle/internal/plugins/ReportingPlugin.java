@@ -23,8 +23,9 @@ import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.test.report.ReportType;
-import java.io.File;
+import com.android.utils.FileUtils;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -62,23 +63,43 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                 + "projects.");
         mergeReportsTask.setReportType(ReportType.MULTI_PROJECT);
 
-        mergeReportsTask.setResultsDir(() -> {
-            String resultsDir = extension.getResultsDir();
-            if (resultsDir == null) {
-                return new File(project.getBuildDir(), FD_ANDROID_RESULTS);
-            } else {
-                return project.file(resultsDir);
-            }
-        });
+        mergeReportsTask
+                .getResultsDir()
+                .set(
+                        TaskInputHelper.memoizeToProvider(
+                                project,
+                                () -> {
+                                    String resultsDir = extension.getResultsDir();
+                                    if (resultsDir == null) {
+                                        return project.getLayout()
+                                                .getBuildDirectory()
+                                                .dir(FD_ANDROID_RESULTS)
+                                                .get();
+                                    } else {
+                                        return project.getLayout()
+                                                .getProjectDirectory()
+                                                .dir(resultsDir);
+                                    }
+                                }));
 
-        mergeReportsTask.setReportsDir(() -> {
-            String reportsDir = extension.getReportDir();
-            if (reportsDir == null) {
-                return new File(new File(project.getBuildDir(),  FD_REPORTS), FD_ANDROID_TESTS);
-            } else {
-                return project.file(reportsDir);
-            }
-        });
+        mergeReportsTask
+                .getReportsDir()
+                .set(
+                        TaskInputHelper.memoizeToProvider(
+                                project,
+                                () -> {
+                                    String reportsDir = extension.getReportDir();
+                                    if (reportsDir == null) {
+                                        return project.getLayout()
+                                                .getBuildDirectory()
+                                                .dir(FileUtils.join(FD_REPORTS, FD_ANDROID_TESTS))
+                                                .get();
+                                    } else {
+                                        return project.getLayout()
+                                                .getProjectDirectory()
+                                                .dir(reportsDir);
+                                    }
+                                }));
 
         // gather the subprojects
         project.afterEvaluate(prj -> {

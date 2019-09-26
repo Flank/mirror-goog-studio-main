@@ -21,10 +21,13 @@ import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
-import java.util.function.Supplier;
+import javax.inject.Inject;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
@@ -39,11 +42,16 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask {
 
-    private Supplier<LayoutXmlProcessor> xmlProcessor;
+    private final Property<LayoutXmlProcessor> xmlProcessor;
 
     private boolean useAndroidX;
 
     private File emptyClassOutDir;
+
+    @Inject
+    public DataBindingExportBuildInfoTask(ObjectFactory objectFactory) {
+        xmlProcessor = objectFactory.property(LayoutXmlProcessor.class);
+    }
 
     @Input
     public boolean isUseAndroidX() {
@@ -92,7 +100,10 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
             super.configure(task);
             VariantScope variantScope = getVariantScope();
 
-            task.xmlProcessor = variantScope.getVariantData()::getLayoutXmlProcessor;
+            task.xmlProcessor.set(
+                    TaskInputHelper.memoizeToProvider(
+                            variantScope.getGlobalScope().getProject(),
+                            variantScope.getVariantData()::getLayoutXmlProcessor));
             task.useAndroidX =
                     variantScope
                             .getGlobalScope()

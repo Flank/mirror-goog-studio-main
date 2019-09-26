@@ -53,7 +53,7 @@ class FeatureNameWriterTaskTest {
     @Test
     @Throws(IOException::class)
     fun testTask() {
-        task.featureNameSupplier = Supplier { "someFeature" }
+        task.featureName.set("someFeature")
         task.doTaskAction()
         assertThat(outputFile.exists()).isTrue()
 

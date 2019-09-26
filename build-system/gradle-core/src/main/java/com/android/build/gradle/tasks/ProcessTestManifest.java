@@ -61,7 +61,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -97,18 +96,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     private boolean onlyTestApk;
 
     private File tmpDir;
-    private Supplier<String> testApplicationId;
-    private Supplier<String> testedApplicationId;
-    private Supplier<String> minSdkVersion;
-    private Supplier<String> targetSdkVersion;
-    private Supplier<String> instrumentationRunner;
-    private Supplier<Boolean> handleProfiling;
-    private Supplier<Boolean> functionalTest;
-    private Supplier<Map<String, Object>> placeholdersValues;
 
     private ArtifactCollection manifests;
-
-    private Supplier<String> testLabel;
 
     private OutputScope outputScope;
 
@@ -125,10 +114,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() throws IOException {
-        if (testedApplicationId == null && testTargetMetadata == null) {
+        if (getTestedApplicationId().getOrNull() == null && testTargetMetadata == null) {
             throw new RuntimeException("testedApplicationId and testTargetMetadata are null");
         }
-        String testedApplicationId = this.getTestedApplicationId();
+        String testedApplicationId = this.getTestedApplicationId().getOrNull();
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
                     ExistingBuildElements.from(
@@ -170,17 +159,17 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                         : Lists.newArrayList(navigationJsons);
 
         mergeManifestsForTestVariant(
-                getTestApplicationId(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
+                getTestApplicationId().get(),
+                getMinSdkVersion().get(),
+                getTargetSdkVersion().get(),
                 testedApplicationId,
-                getInstrumentationRunner(),
-                getHandleProfiling(),
-                getFunctionalTest(),
-                getTestLabel(),
+                getInstrumentationRunner().get(),
+                getHandleProfiling().get(),
+                getFunctionalTest().get(),
+                getTestLabel().getOrNull(),
                 getTestManifestFile().getOrNull(),
                 computeProviders(),
-                getPlaceholdersValues(),
+                getPlaceholdersValues().get(),
                 navJsons,
                 manifestOutputFile,
                 getTmpDir());
@@ -430,49 +419,33 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     }
 
     @Input
-    public String getTestApplicationId() {
-        return testApplicationId.get();
-    }
-    @Input
-    @Optional
-    public String getTestedApplicationId() {
-        return testedApplicationId.get();
-    }
-
-    @Input
-    public String getMinSdkVersion() {
-        return minSdkVersion.get();
-    }
-    @Input
-    public String getTargetSdkVersion() {
-        return targetSdkVersion.get();
-    }
-
-    @Input
-    public String getInstrumentationRunner() {
-        return instrumentationRunner.get();
-    }
-
-    @Input
-    public Boolean getHandleProfiling() {
-        return handleProfiling.get();
-    }
-
-    @Input
-    public Boolean getFunctionalTest() {
-        return functionalTest.get();
-    }
+    public abstract Property<String> getTestApplicationId();
 
     @Input
     @Optional
-    public String getTestLabel() {
-        return testLabel.get();
-    }
+    public abstract Property<String> getTestedApplicationId();
 
     @Input
-    public Map<String, Object> getPlaceholdersValues() {
-        return placeholdersValues.get();
-    }
+    public abstract Property<String> getMinSdkVersion();
+
+    @Input
+    public abstract Property<String> getTargetSdkVersion();
+
+    @Input
+    public abstract Property<String> getInstrumentationRunner();
+
+    @Input
+    public abstract Property<Boolean> getHandleProfiling();
+
+    @Input
+    public abstract Property<Boolean> getFunctionalTest();
+
+    @Input
+    @Optional
+    public abstract Property<String> getTestLabel();
+
+    @Input
+    public abstract Property<Map<String, Object>> getPlaceholdersValues();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -591,37 +564,53 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             "manifest",
                             getVariantScope().getDirName()));
 
-            task.minSdkVersion =
-                    TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
-
-            task.targetSdkVersion =
-                    TaskInputHelper.memoize(() -> config.getTargetSdkVersion().getApiString());
+            Project project = getVariantScope().getGlobalScope().getProject();
+            task.getMinSdkVersion()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, () -> config.getMinSdkVersion().getApiString()));
+            task.getTargetSdkVersion()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, () -> config.getTargetSdkVersion().getApiString()));
 
             task.testTargetMetadata = testTargetMetadata;
-            task.testApplicationId = TaskInputHelper.memoize(config::getTestApplicationId);
+            task.getTestApplicationId()
+                    .set(TaskInputHelper.memoizeToProvider(project, config::getTestApplicationId));
 
             // will only be used if testTargetMetadata is null.
-            task.testedApplicationId = TaskInputHelper.memoize(config::getTestedApplicationId);
+            task.getTestedApplicationId()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, config::getTestedApplicationId));
 
             VariantConfiguration testedConfig = config.getTestedConfig();
             task.onlyTestApk = testedConfig != null && testedConfig.getType().isAar();
 
-            task.instrumentationRunner = TaskInputHelper.memoize(config::getInstrumentationRunner);
-            task.handleProfiling = TaskInputHelper.memoize(config::getHandleProfiling);
-            task.functionalTest = TaskInputHelper.memoize(config::getFunctionalTest);
-            task.testLabel = TaskInputHelper.memoize(config::getTestLabel);
+            task.getInstrumentationRunner()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, config::getInstrumentationRunner));
+            task.getHandleProfiling()
+                    .set(TaskInputHelper.memoizeToProvider(project, config::getHandleProfiling));
+            task.getFunctionalTest()
+                    .set(TaskInputHelper.memoizeToProvider(project, config::getFunctionalTest));
+            task.getTestLabel()
+                    .set(TaskInputHelper.memoizeToProvider(project, config::getTestLabel));
 
             task.manifests =
                     getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            task.placeholdersValues = TaskInputHelper.memoize(config::getManifestPlaceholders);
+            task.getPlaceholdersValues()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    project, config::getManifestPlaceholders));
 
             if (!getVariantScope()
                     .getGlobalScope()
                     .getExtension()
                     .getAaptOptions()
                     .getNamespaced()) {
-                Project project = getVariantScope().getGlobalScope().getProject();
                 task.navigationJsons =
                         project.files(
                                 getVariantScope()

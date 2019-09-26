@@ -44,6 +44,8 @@ import java.util.concurrent.Callable
 import java.util.function.Supplier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -53,6 +55,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
+import javax.inject.Inject
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
@@ -72,7 +75,8 @@ abstract class RenderscriptCompile : NdkTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var importDirs: FileCollection
 
-    private lateinit var targetApi: Supplier<Int>
+    @get:Input
+    abstract val targetApi: Property<Int>
 
     @get:Input
     var isSupportMode: Boolean = false
@@ -133,11 +137,6 @@ abstract class RenderscriptCompile : NdkTask() {
         return sourceDirs.asFileTree
     }
 
-    @Input
-    fun getTargetApi(): Int? {
-        return targetApi.get()
-    }
-
     override fun doTaskAction() {
         // this is full run (always), clean the previous outputs
         val sourceDestDir = sourceOutputDir.get().asFile
@@ -161,7 +160,7 @@ abstract class RenderscriptCompile : NdkTask() {
             resDestDir,
             objDestDir,
             libDestDir,
-            getTargetApi()!!,
+            targetApi.get(),
             isDebugBuild,
             optimLevel,
             isNdkMode,
@@ -290,7 +289,11 @@ abstract class RenderscriptCompile : NdkTask() {
 
             val ndkMode = config.renderscriptNdkModeEnabled
 
-            task.targetApi = TaskInputHelper.memoize { config.renderscriptTarget }
+            task.targetApi.set(
+                TaskInputHelper.memoizeToProvider(scope.globalScope.project) {
+                    config.renderscriptTarget
+                }
+            )
 
             task.isSupportMode = config.renderscriptSupportModeEnabled
             task.useAndroidX =

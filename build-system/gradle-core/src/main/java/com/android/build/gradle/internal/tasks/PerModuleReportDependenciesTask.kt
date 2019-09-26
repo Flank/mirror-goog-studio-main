@@ -39,6 +39,7 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -72,11 +73,8 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
     @get:OutputFile
     val dependenciesList: RegularFileProperty = objectFactory.fileProperty()
 
-    private lateinit var moduleNameSupplier: Supplier<String>
-
     @get:Input
-    val moduleName: String
-        get() = moduleNameSupplier.get()
+    abstract val moduleName: Property<String>
 
     private fun convertDependencyToMavenLibrary(
         moduleVersion: ModuleVersionIdentifier?,
@@ -194,7 +192,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             directDependenciesIndices.add(index)
         }
 
-        val moduleDependency = ModuleDependencies.newBuilder().setModuleName(moduleName)
+        val moduleDependency = ModuleDependencies.newBuilder().setModuleName(moduleName.get())
         for (index in directDependenciesIndices) {
             moduleDependency.addDependencyIndex(index)
         }
@@ -240,13 +238,18 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             ).artifactFiles
 
 
-            task.moduleNameSupplier = if (variantScope.type.isBaseModule)
+            val moduleNameSupplier = if (variantScope.type.isBaseModule) {
                 Supplier { "base" }
-            else {
-                val featureName: Supplier<String> = FeatureSetMetadata.getInstance()
-                    .getFeatureNameSupplierForTask(variantScope, task)
-                Supplier { "${featureName.get()}" }
+            } else {
+                FeatureSetMetadata.getInstance().getFeatureNameSupplierForTask(variantScope, task)
             }
+
+            task.moduleName.set(
+                TaskInputHelper.memoizeToProvider(
+                    variantScope.globalScope.project,
+                    moduleNameSupplier
+                )
+            )
         }
     }
 }

@@ -44,11 +44,11 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import kotlin.Pair;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -65,8 +65,6 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
     private File resOutputDir;
 
     private File manifestFile;
-
-    private Supplier<String> mainPkgName;
 
     private int minSdkVersion;
 
@@ -128,9 +126,10 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
             File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
             Files.copy(apk, to);
 
-            generateApkData(apk, outDir, getMainPkgName(), getAapt2Executable().getSingleFile());
+            generateApkData(
+                    apk, outDir, getMainPkgName().get(), getAapt2Executable().getSingleFile());
         } else {
-            generateUnbundledWearApkData(outDir, getMainPkgName());
+            generateUnbundledWearApkData(outDir, getMainPkgName().get());
         }
 
         generateApkDataEntryInManifest(minSdkVersion, targetSdkVersion, manifestFile);
@@ -234,9 +233,7 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
     }
 
     @Input
-    public String getMainPkgName() {
-        return mainPkgName.get();
-    }
+    public abstract Property<String> getMainPkgName();
 
     @Input
     public int getMinSdkVersion() {
@@ -311,7 +308,11 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
             task.apkDirectoryFileCollection = apkFileCollection;
 
             task.manifestFile = scope.getMicroApkManifestFile();
-            task.mainPkgName = variantConfiguration::getApplicationId;
+            task.getMainPkgName()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    scope.getGlobalScope().getProject(),
+                                    variantConfiguration::getApplicationId));
             task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
 

@@ -21,11 +21,12 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import java.util.function.Supplier;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
@@ -36,7 +37,6 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
 
     @VisibleForTesting String uniqueIdentifier;
-    @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
 
     @Input
     public String getUniqueIdentifier() {
@@ -44,9 +44,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     }
 
     @Input
-    public String getApplicationId() {
-        return originalApplicationIdSupplier.get();
-    }
+    public abstract Property<String> getApplicationId();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
@@ -54,7 +52,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     @Override
     protected void doTaskAction() throws IOException {
         FeatureSplitDeclaration declaration =
-                new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId());
+                new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId().get());
         declaration.save(getOutputDirectory().get().getAsFile());
     }
 
@@ -97,8 +95,12 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
             super.configure(task);
 
             task.uniqueIdentifier = getVariantScope().getGlobalScope().getProject().getPath();
-            task.originalApplicationIdSupplier =
-                    getVariantScope().getVariantConfiguration()::getOriginalApplicationId;
+            task.getApplicationId()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    getVariantScope().getGlobalScope().getProject(),
+                                    getVariantScope().getVariantConfiguration()
+                                            ::getOriginalApplicationId));
         }
     }
 }

@@ -31,6 +31,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -55,8 +56,6 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
  */
 abstract class BundleLibraryClasses : NonIncrementalTask() {
 
-    private lateinit var toIgnoreRegExps: Supplier<List<String>>
-
     @get:OutputFile
     abstract val output: RegularFileProperty
 
@@ -74,8 +73,8 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
     @get:Input
     abstract val packageRClass: Property<Boolean>
 
-    @Input
-    fun getToIgnore() = toIgnoreRegExps.get()
+    @get:Input
+    abstract val toIgnoreRegExps: ListProperty<String>
 
     @get:Input
     lateinit var jarCreatorType: JarCreatorType
@@ -162,7 +161,12 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
                 task.classes.from(variantScope.artifacts.getFinalProduct<RegularFile>(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
             }
             // FIXME pass this as List<TextResources>
-            task.toIgnoreRegExps = TaskInputHelper.memoize(toIgnoreRegExps)
+            task.toIgnoreRegExps.set(
+                TaskInputHelper.memoizeToProvider(
+                    variantScope.globalScope.project,
+                    toIgnoreRegExps
+                )
+            )
             task.packageBuildConfig = variantScope.globalScope.extension.packageBuildConfig
             task.jarCreatorType = variantScope.jarCreatorType
         }

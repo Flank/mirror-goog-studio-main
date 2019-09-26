@@ -81,6 +81,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
@@ -118,8 +119,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     private boolean vectorSupportLibraryIsUsed;
 
     private Collection<String> generatedDensities;
-
-    private Supplier<Integer> minSdk;
 
     private String aapt2Version;
 
@@ -197,7 +196,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         List<ResourceSet> resourceSets = getConfiguredResourceSets(preprocessor);
 
         // create a new merger and populate it with the sets.
-        ResourceMerger merger = new ResourceMerger(minSdk.get());
+        ResourceMerger merger = new ResourceMerger(getMinSdk().get());
         MergingLog mergingLog = null;
         if (blameLogFolder != null) {
             FileUtils.cleanOutputDir(blameLogFolder);
@@ -302,7 +301,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // create a merger and load the known state.
-        ResourceMerger merger = new ResourceMerger(minSdk.get());
+        ResourceMerger merger = new ResourceMerger(getMinSdk().get());
         try {
             if (!merger.loadFromBlob(getIncrementalFolder(), true /*incrementalState*/)) {
                 doFullTaskAction();
@@ -465,7 +464,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
 
         return new MergeResourcesVectorDrawableRenderer(
-                minSdk.get(),
+                getMinSdk().get(),
                 vectorSupportLibraryIsUsed,
                 generatedPngsOutputDir,
                 densities,
@@ -563,9 +562,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     }
 
     @Input
-    public int getMinSdk() {
-        return minSdk.get();
-    }
+    public abstract Property<Integer> getMinSdk();
 
     @Input
     public boolean isVectorSupportLibraryUsed() {
@@ -667,13 +664,15 @@ public abstract class MergeResources extends ResourceAwareTask {
             GlobalScope globalScope = variantScope.getGlobalScope();
             BaseVariantData variantData = variantScope.getVariantData();
 
-            task.minSdk =
-                    TaskInputHelper.memoize(
-                            () ->
-                                    variantData
-                                            .getVariantConfiguration()
-                                            .getMinSdkVersion()
-                                            .getApiLevel());
+            task.getMinSdk()
+                    .set(
+                            TaskInputHelper.memoizeToProvider(
+                                    globalScope.getProject(),
+                                    () ->
+                                            variantData
+                                                    .getVariantConfiguration()
+                                                    .getMinSdkVersion()
+                                                    .getApiLevel()));
 
             Pair<FileCollection, String> aapt2AndVersion =
                     Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);

@@ -92,7 +92,6 @@ import java.io.IOException
 import java.io.Serializable
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.function.Supplier
 import java.util.regex.Pattern
 import javax.inject.Inject
 
@@ -147,7 +146,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var sharedLibraryDependencies: FileCollection? = null
         private set
 
-    private var resOffsetSupplier: (Supplier<Int>)? = null
+    @get:Optional
+    @get:Input
+    abstract val resOffset: Property<Int>
 
     @get:Input
     lateinit var multiOutputPolicy: MultiOutputPolicy
@@ -182,7 +183,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var featureResourcePackages: FileCollection? = null
         private set
 
-    private lateinit var originalApplicationId: Supplier<String?>
+    @get:Input
+    abstract val originalApplicationId: Property<String>
 
     @get:Input
     @get:Optional
@@ -217,7 +219,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     lateinit var splitList: SplitList
         private set
 
-    private lateinit var applicationId: Supplier<String?>
+    @get:Input
+    abstract val applicationId: Property<String>
 
     @get:InputFiles
     @get:Optional
@@ -416,7 +419,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.applicationId = TaskInputHelper.memoize { config.applicationId }
+            val project = variantScope.globalScope.project
+            task.applicationId.set(
+                TaskInputHelper.memoizeToProvider(project) { config.applicationId }
+            )
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
             if (variantData.type.canHaveSplits) {
@@ -456,7 +462,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.APK_LIST, task.apkList)
 
             task.outputScope = variantData.outputScope
-            task.originalApplicationId = TaskInputHelper.memoize { config.originalApplicationId }
+            task.originalApplicationId.set(
+                TaskInputHelper.memoizeToProvider(project) { config.originalApplicationId }
+            )
 
             val aaptFriendlyManifestsFilePresent = variantScope
                 .artifacts
@@ -493,8 +501,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
 
             if (variantType.isFeatureSplit) {
-                task.resOffsetSupplier = FeatureSetMetadata.getInstance()
-                    .getResOffsetSupplierForTask(variantScope, task)
+                task.resOffset.set(
+                    TaskInputHelper.memoizeToProvider(
+                        project,
+                        FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
+                            variantScope, task
+                        )
+                    )
+                )
             }
 
             task.projectBaseName = baseName!!
@@ -878,7 +892,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val aaptOptions: AaptOptions = task.aaptOptions
         val variantType: VariantType = task.type
         val debuggable: Boolean = task.getDebuggable()
-        val packageId: Int? = task.getResOffset()
+        val packageId: Int? = task.resOffset.orNull
         val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =
             task.androidJar.get().absolutePath
@@ -892,17 +906,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val useFinalIds: Boolean = task.useFinalIds
         val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
         val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile
-    }
-
-    @Input
-    fun getApplicationId(): String? {
-        return applicationId.get()
-    }
-
-    @Optional
-    @Input
-    fun getResOffset(): Int? {
-        return resOffsetSupplier?.get()
     }
 
     @Internal // sourceOutputDirProperty is already marked as @OutputDirectory
@@ -945,11 +948,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getCompiledDependenciesResources(): FileCollection? {
         return compiledDependenciesResources?.artifactFiles
-    }
-
-    @Input
-    fun getOriginalApplicationId(): String? {
-        return originalApplicationId.get()
     }
 
     private fun findPackagedResForSplit(outputFolder: File?, apkData: ApkData): File? {
