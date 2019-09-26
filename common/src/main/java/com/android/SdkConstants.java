@@ -737,6 +737,7 @@ public final class SdkConstants {
             AndroidxName.of("android.support.v4.widget.", "NestedScrollView");
     public static final AndroidxName CLASS_VIEW_PAGER =
             AndroidxName.of("android.support.v4.view.", "ViewPager");
+    public static final String CLASS_VIEW_PAGER2 = "androidx.viewpager2.widget.ViewPager2";
     public static final AndroidxName CLASS_DRAWER_LAYOUT =
             AndroidxName.of("android.support.v4.widget.", "DrawerLayout");
 
@@ -1187,6 +1188,7 @@ public final class SdkConstants {
     public static final AndroidxName NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
     public static final AndroidxName DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
     public static final AndroidxName VIEW_PAGER = CLASS_VIEW_PAGER;
+    public static final String VIEW_PAGER2 = CLASS_VIEW_PAGER2;
     public static final AndroidxName GRID_LAYOUT_V7 = CLASS_GRID_LAYOUT_V7;
     public static final AndroidxName TOOLBAR_V7 = CLASS_TOOLBAR_V7;
     public static final AndroidxName RECYCLER_VIEW = CLASS_RECYCLER_VIEW_V7;
@@ -2659,6 +2661,7 @@ public final class SdkConstants {
     public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotation:annotation";
     public static final String ANDROIDX_SUPPORT_LIB_ARTIFACT = "androidx.legacy:legacy-support-v4";
     public static final String ANDROIDX_VIEW_PAGER_LIB_ARTIFACT = "androidx.viewpager:viewpager";
+    public static final String ANDROIDX_VIEW_PAGER2_LIB_ARTIFACT = "androidx.viewpager2:viewpager2";
     public static final String ANDROIDX_APPCOMPAT_LIB_ARTIFACT = "androidx.appcompat:appcompat";
     public static final String ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT =
             "androidx.constraintlayout:constraintlayout";
