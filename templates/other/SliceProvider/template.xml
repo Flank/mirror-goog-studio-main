@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="1"
+    revision="2"
     name="Slice Provider"
     minBuildApi="28"
-    requireAndroidX="true"
+    constraints="androidx"
     description="Creates a new SliceProvider component and adds it to your Android manifest.">
 
     <parameter

@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <template
         format="5"
-        revision="5"
+        revision="6"
         name="Settings Activity"
         description="Creates a new activity that allows a user to configure application settings"
         minApi="14"
         minBuildApi="14"
-        requireAndroidX="true"
+        constraints="androidx"
         category="Activity">
 
     <category value="Activity"/>

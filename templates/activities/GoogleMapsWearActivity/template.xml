@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="5"
+    revision="6"
     name="Google Maps Wear Activity"
-    requireAndroidX="true"
+    constraints="androidx"
     minApi="23"
     minBuildApi="25"
     description="Creates an new activity with a Google Map for Wear OS">

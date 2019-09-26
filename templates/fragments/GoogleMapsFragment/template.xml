@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="1"
-    requireAndroidX="true"
+    revision="2"
+    constraints="androidx"
     name="Google Maps Fragment"
     description="Creates a new fragment with a Google Map"
     minApi="14"
