@@ -99,7 +99,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
-import org.gradle.BuildListener;
+import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -107,7 +107,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.SoftwareComponentFactory;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -345,19 +344,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         // This is will be called for each (android) projects though, so this should support
         // being called 2+ times.
         gradle.addBuildListener(
-                new BuildListener() {
-                    @Override
-                    public void buildStarted(@NonNull Gradle gradle) {}
-
-                    @Override
-                    public void settingsEvaluated(@NonNull Settings settings) {}
-
-                    @Override
-                    public void projectsLoaded(@NonNull Gradle gradle) {}
-
-                    @Override
-                    public void projectsEvaluated(@NonNull Gradle gradle) {}
-
+                new BuildAdapter() {
                     @Override
                     public void buildFinished(@NonNull BuildResult buildResult) {
                         // Do not run buildFinished for included project in composite build.

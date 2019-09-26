@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.attribution
 
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.google.common.collect.Sets
+import org.gradle.BuildAdapter
 import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.Task
@@ -34,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap
  * in showing the build attribution on the IDE side.
  */
 class AttributionBuildListener internal constructor(private val outputDirPath: String) :
-    TaskExecutionListener, BuildListener {
+    TaskExecutionListener, BuildAdapter() {
     private val taskNameToClassNameMap: MutableMap<String, String> = ConcurrentHashMap()
     private val noncacheableTasks: MutableSet<String> = Sets.newConcurrentHashSet()
     private val outputFileToTasksMap: MutableMap<String, MutableList<String>> = ConcurrentHashMap()
@@ -73,22 +74,6 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
     }
 
     override fun afterExecute(task: Task, taskState: TaskState) {
-        // nothing to do
-    }
-
-    override fun projectsLoaded(gradle: Gradle) {
-        // nothing to do
-    }
-
-    override fun buildStarted(gradle: Gradle) {
-        // nothing to do
-    }
-
-    override fun projectsEvaluated(gradle: Gradle) {
-        // nothing to do
-    }
-
-    override fun settingsEvaluated(settings: Settings) {
         // nothing to do
     }
 }
