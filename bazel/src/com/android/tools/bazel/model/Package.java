@@ -25,6 +25,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -90,7 +91,9 @@ public class Package {
             boolean keepFile = false;
             try {
                 try (FileOutputStream fileOutputStream = new FileOutputStream(tmp);
-                        PrintWriter writer = new PrintWriter(fileOutputStream)) {
+                        OutputStreamWriter outputStreamWriter =
+                                new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
+                        PrintWriter writer = new PrintWriter(outputStreamWriter)) {
                     buildFile.write(writer);
                 }
                 String before = Files.toString(build, StandardCharsets.UTF_8);
