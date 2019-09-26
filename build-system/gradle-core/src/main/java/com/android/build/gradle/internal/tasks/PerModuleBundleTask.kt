@@ -36,11 +36,14 @@ import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.JarCreator
 import com.android.utils.FileUtils
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -55,26 +58,26 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
 import java.util.function.Supplier
 import java.util.zip.Deflater
+import javax.inject.Inject
 
 /**
  * Task that zips a module's bundle elements into a zip file. This gets published
  * so that the base app can package into the bundle.
  *
  */
-abstract class PerModuleBundleTask : NonIncrementalTask() {
+abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
+    NonIncrementalTask() {
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var dexFiles: FileCollection
-        private set
+    abstract val dexFiles: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var featureDexFiles: FileCollection
-        private set
+    abstract val featureDexFiles: ConfigurableFileCollection
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -82,8 +85,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var javaResFiles: FileCollection
-        private set
+    abstract val javaResFiles: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -91,28 +93,25 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var nativeLibsFiles: FileCollection
-        private set
+    abstract val nativeLibsFiles: ConfigurableFileCollection
 
     @get:Input
     @get:Optional
     var abiFilters: Set<String>? = null
         private set
 
-    private lateinit var fileNameSupplier: Supplier<String>
+    @get:Input
+    val fileName: Property<String> = objects.property(String::class.java)
 
     @get:Input
-    val fileName: String
-        get() = fileNameSupplier.get()
-
-    @get:Input
-    lateinit var jarCreatorType: JarCreatorType
-        private set
+    val jarCreatorType: Property<JarCreatorType> = objects.property(JarCreatorType::class.java)
 
     public override fun doTaskAction() {
         FileUtils.cleanOutputDir(outputDir.get().asFile)
         val jarCreator =
-            JarCreatorFactory.make(File(outputDir.get().asFile, fileName).toPath(), jarCreatorType)
+            JarCreatorFactory.make(
+                File(outputDir.get().asFile, fileName.get()).toPath(), jarCreatorType.get()
+            )
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
@@ -203,13 +202,15 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
             super.configure(task)
 
             val artifacts = variantScope.artifacts
-            task.fileNameSupplier = if (variantScope.type.isBaseModule)
-                Supplier { "base.zip"}
+            val fileNameSupplier = if (variantScope.type.isBaseModule) Supplier { "base.zip"}
             else {
-                val featureName: Supplier<String> = FeatureSetMetadata.getInstance()
-                    .getFeatureNameSupplierForTask(variantScope, task)
-                Supplier { "${featureName.get()}.zip"}
+                val featureName: Supplier<String> =
+                    FeatureSetMetadata.getInstance().getFeatureNameSupplierForTask(
+                        variantScope, task
+                    )
+                Supplier { "${featureName.get()}.zip" }
             }
+            task.fileName.set(variantScope.globalScope.project.provider { fileNameSupplier.get() })
 
             artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
@@ -242,32 +243,35 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                     getDesugarLibDexFromTransform(variantScope)
                 }
 
-            task.dexFiles = programDexFiles.plus(desugarLibDexFile)
+            task.dexFiles.from(programDexFiles.plus(desugarLibDexFile))
 
-            task.featureDexFiles =
+            task.featureDexFiles.from(
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     mapOf(MODULE_PATH to variantScope.globalScope.project.path)
                 )
-            task.javaResFiles = if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
-                variantScope.globalScope.project.layout.files(
-                    artifacts.getFinalProduct<RegularFile>(InternalArtifactType.SHRUNK_JAVA_RES)
-                )
-            } else if (variantScope.needsMergedJavaResStream) {
-                variantScope.transformManager
-                    .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
-            } else {
-                variantScope.globalScope.project.layout.files(
-                    artifacts.getFinalProduct<RegularFile>(InternalArtifactType.MERGED_JAVA_RES)
-                )
-            }
-            task.nativeLibsFiles = getNativeLibsFiles(variantScope, packageCustomClassDependencies)
+            )
+            task.javaResFiles.from(
+                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
+                    variantScope.globalScope.project.layout.files(
+                        artifacts.getFinalProduct<RegularFile>(InternalArtifactType.SHRUNK_JAVA_RES)
+                    )
+                } else if (variantScope.needsMergedJavaResStream) {
+                    variantScope.transformManager
+                        .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
+                } else {
+                    variantScope.globalScope.project.layout.files(
+                        artifacts.getFinalProduct<RegularFile>(InternalArtifactType.MERGED_JAVA_RES)
+                    )
+                }
+            )
+            task.nativeLibsFiles.from(getNativeLibsFiles(variantScope, packageCustomClassDependencies))
 
             task.abiFilters = variantScope.variantConfiguration.supportedAbis
 
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType.set(variantScope.jarCreatorType)
         }
     }
 }
