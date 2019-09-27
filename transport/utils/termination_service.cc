@@ -33,6 +33,7 @@ void SignalHandlerSigSegv(int signal) {
     stringify << stack[i] << ",";
   }
   printf("%s\n", stringify.str().c_str());
+  Log::D(stringify.str().c_str());
   // Force flush output.
   fflush(stdout);
 

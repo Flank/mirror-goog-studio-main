@@ -232,7 +232,9 @@ void SimpleperfManager::CleanUp(
     const OnGoingProfiling &ongoing_recording) const {
   BashCommandRunner deleter("rm -f");
   deleter.Run(ongoing_recording.raw_trace_path, nullptr);
-  deleter.Run(ongoing_recording.log_file_path, nullptr);
+  // Don't delete |ongoing_recording.log_file_path| because the log is useful in
+  // debugging. Each app has at most one log file and the size of the log
+  // file should be manageable.
 }
 
 bool SimpleperfManager::ConvertRawToProto(
@@ -273,8 +275,9 @@ bool SimpleperfManager::CopyRawToTrace(
 bool SimpleperfManager::WaitForSimpleperf(
     const OnGoingProfiling &ongoing_recording, string *error) const {
   // Wait until simpleperf is done outputting collected data to the .dat file.
-  int status;
-  int wait_result = waitpid(ongoing_recording.simpleperf_pid, &status, 0);
+  int status = 0;
+  int wait_result =
+      simpleperf_->WaitForSimpleperf(ongoing_recording.simpleperf_pid, &status);
 
   if (wait_result == -1) {
     string msg = "waitpid failed with message: ";
@@ -286,7 +289,7 @@ bool SimpleperfManager::WaitForSimpleperf(
   }
 
   // Make sure simpleperf exited normally.
-  if (!WIFEXITED(status)) {
+  if (!(WIFEXITED(status) && WEXITSTATUS(status) == 0)) {
     string msg = "Simpleperf did not exit as expected. Logfile: " +
                  ongoing_recording.log_file_path;
     Log::D("%s", msg.c_str());

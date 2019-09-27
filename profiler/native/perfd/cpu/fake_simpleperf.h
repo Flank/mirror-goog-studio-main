@@ -54,6 +54,11 @@ class FakeSimpleperf final : public Simpleperf {
     return report_sample_success_;
   }
 
+  virtual int WaitForSimpleperf(int simpleperf_pid, int* status) {
+    *status = 0;
+    return simpleperf_pid;
+  }
+
   void SetEnableProfilingSuccess(bool success) {
     enable_profiling_success_ = success;
   }

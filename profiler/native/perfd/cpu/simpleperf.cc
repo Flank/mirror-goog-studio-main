@@ -18,6 +18,8 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <cstring>
 #include <sstream>
@@ -61,6 +63,10 @@ bool Simpleperf::KillSimpleperf(int simpleperf_pid, const string& pkg_name) {
   string_pid << simpleperf_pid;
   BashCommandRunner kill_simpleperf(kill_cmd, true);
   return kill_simpleperf.Run(string_pid.str(), nullptr);
+}
+
+int Simpleperf::WaitForSimpleperf(int simpleperf_pid, int* status) {
+  return waitpid(simpleperf_pid, status, 0);
 }
 
 void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
