@@ -27,7 +27,7 @@ import java.util.Objects;
  */
 @Immutable
 final class DefaultJavaCompileOptions implements JavaCompileOptions, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull
     private final String sourceCompatibility;
@@ -35,11 +35,13 @@ final class DefaultJavaCompileOptions implements JavaCompileOptions, Serializabl
     private final String targetCompatibility;
     @NonNull
     private final String encoding;
+    private final boolean coreLibraryDesugaringEnabled;
 
     DefaultJavaCompileOptions(@NonNull CompileOptions options) {
-      sourceCompatibility = options.getSourceCompatibility().toString();
-      targetCompatibility = options.getTargetCompatibility().toString();
-      encoding = options.getEncoding();
+        sourceCompatibility = options.getSourceCompatibility().toString();
+        targetCompatibility = options.getTargetCompatibility().toString();
+        encoding = options.getEncoding();
+        coreLibraryDesugaringEnabled = options.getJavaApiDesugaringEnabled() == Boolean.TRUE;
     }
 
     @NonNull
@@ -52,6 +54,11 @@ final class DefaultJavaCompileOptions implements JavaCompileOptions, Serializabl
     @Override
     public String getTargetCompatibility() {
         return targetCompatibility;
+    }
+
+    @Override
+    public boolean isCoreLibraryDesugaringEnabled() {
+        return coreLibraryDesugaringEnabled;
     }
 
     @NonNull
@@ -69,13 +76,15 @@ final class DefaultJavaCompileOptions implements JavaCompileOptions, Serializabl
             return false;
         }
         DefaultJavaCompileOptions that = (DefaultJavaCompileOptions) o;
-        return Objects.equals(sourceCompatibility, that.sourceCompatibility) &&
-                Objects.equals(targetCompatibility, that.targetCompatibility) &&
-                Objects.equals(encoding, that.encoding);
+        return Objects.equals(sourceCompatibility, that.sourceCompatibility)
+                && Objects.equals(targetCompatibility, that.targetCompatibility)
+                && Objects.equals(encoding, that.encoding)
+                && Objects.equals(coreLibraryDesugaringEnabled, that.coreLibraryDesugaringEnabled);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sourceCompatibility, targetCompatibility, encoding);
+        return Objects.hash(
+                sourceCompatibility, targetCompatibility, encoding, coreLibraryDesugaringEnabled);
     }
 }

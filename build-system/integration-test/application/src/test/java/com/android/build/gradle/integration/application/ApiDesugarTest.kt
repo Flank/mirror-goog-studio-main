@@ -28,6 +28,7 @@ import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexClassSubject
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -110,7 +111,8 @@ class ApiDesugarTest {
 
     @Test
     fun testModelFetching() {
-        project.model().fetchAndroidProjects().onlyModel
+        val model = project.model().fetchAndroidProjects().onlyModel
+        assertThat(model.javaCompileOptions.isCoreLibraryDesugaringEnabled).isTrue()
     }
 
     private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =

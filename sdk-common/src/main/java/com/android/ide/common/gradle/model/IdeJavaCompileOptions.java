@@ -23,11 +23,12 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link JavaCompileOptions}. */
 public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myEncoding;
     @NonNull private final String mySourceCompatibility;
     @NonNull private final String myTargetCompatibility;
+    private final boolean myCoreLibraryDesugaringEnabled;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -35,6 +36,7 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
         myEncoding = "";
         mySourceCompatibility = "";
         myTargetCompatibility = "";
+        myCoreLibraryDesugaringEnabled = false;
 
         myHashCode = 0;
     }
@@ -43,6 +45,9 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
         myEncoding = options.getEncoding();
         mySourceCompatibility = options.getSourceCompatibility();
         myTargetCompatibility = options.getTargetCompatibility();
+        myCoreLibraryDesugaringEnabled =
+                Objects.requireNonNull(
+                        IdeModel.copyNewProperty(options::isCoreLibraryDesugaringEnabled, false));
 
         myHashCode = calculateHashCode();
     }
@@ -66,6 +71,11 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
     }
 
     @Override
+    public boolean isCoreLibraryDesugaringEnabled() {
+        return myCoreLibraryDesugaringEnabled;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -76,7 +86,9 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
         IdeJavaCompileOptions options = (IdeJavaCompileOptions) o;
         return Objects.equals(myEncoding, options.myEncoding)
                 && Objects.equals(mySourceCompatibility, options.mySourceCompatibility)
-                && Objects.equals(myTargetCompatibility, options.myTargetCompatibility);
+                && Objects.equals(myTargetCompatibility, options.myTargetCompatibility)
+                && Objects.equals(
+                        myCoreLibraryDesugaringEnabled, options.myCoreLibraryDesugaringEnabled);
     }
 
     @Override
@@ -85,7 +97,11 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myEncoding, mySourceCompatibility, myTargetCompatibility);
+        return Objects.hash(
+                myEncoding,
+                mySourceCompatibility,
+                myTargetCompatibility,
+                myCoreLibraryDesugaringEnabled);
     }
 
     @Override
@@ -99,6 +115,9 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
                 + '\''
                 + ", myTargetCompatibility='"
                 + myTargetCompatibility
+                + '\''
+                + ", myCoreLibraryDesugaringEnabled='"
+                + myCoreLibraryDesugaringEnabled
                 + '\''
                 + "}";
     }
