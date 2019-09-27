@@ -690,7 +690,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private String findHighestSdkInstalled() {
         String highestSdk = null;
-        File folder = new File(globalScope.getSdkComponents().getSdkFolder(), "platforms");
+        File folder = new File(globalScope.getSdkComponents().getSdkDirectory(), "platforms");
         File[] listOfFiles = folder.listFiles();
 
         if (listOfFiles != null) {

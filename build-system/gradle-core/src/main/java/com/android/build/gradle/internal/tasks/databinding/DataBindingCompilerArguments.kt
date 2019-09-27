@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -167,7 +166,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(variantScope),
                 modulePackageProvider = { variantConfig.originalApplicationId },
                 minApi = variantConfig.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkComponents.getSdkFolder()!!,
+                sdkDir = globalScope.sdkComponents.getSdkDirectory(),
                 dependencyArtifactsDir =
                         artifacts.getFinalProduct(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.getFinalProduct(getLayoutInfoArtifactType(variantScope)),

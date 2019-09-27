@@ -188,7 +188,7 @@ fun tryCreateCxxModuleModel(
                             cmakeLocator.findCmakePath(
                                 global.extension.externalNativeBuild.cmake.version,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
-                                global.sdkComponents.getSdkFolder()!!,
+                                global.sdkComponents.getSdkDirectory(),
                                 Consumer { global.sdkComponents.installCmake(it) })!!
                         }
                         override val cmakeExe by lazy {

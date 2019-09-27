@@ -94,7 +94,7 @@ public abstract class LintBaseTask extends DefaultTask {
     }
 
     @Nullable protected LintOptions lintOptions;
-    @Nullable protected File sdkHome;
+    protected File sdkHome;
     protected ToolingModelBuilderRegistry toolingRegistry;
     @Nullable protected File reportsDir;
 
@@ -121,7 +121,7 @@ public abstract class LintBaseTask extends DefaultTask {
             com.android.tools.lint.gradle.api.LintExecutionRequest {
 
         @Override
-        @Nullable
+        @NonNull
         public File getSdkHome() {
             return sdkHome;
         }
@@ -420,11 +420,7 @@ public abstract class LintBaseTask extends DefaultTask {
         public void configure(@NonNull T lintTask) {
             lintTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             lintTask.lintOptions = globalScope.getExtension().getLintOptions();
-            File sdkFolder = globalScope.getSdkComponents().getSdkFolder();
-            if (sdkFolder != null) {
-                lintTask.sdkHome = sdkFolder;
-            }
-
+            lintTask.sdkHome = globalScope.getSdkComponents().getSdkDirectory();
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
             lintTask.buildToolsRevisionProvider =

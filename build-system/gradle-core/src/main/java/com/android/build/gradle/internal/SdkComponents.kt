@@ -40,7 +40,8 @@ open class SdkComponents(
     project: Project,
     private val sdkLoadStrategy: SdkLoadingStrategy,
     private val sdkHandlerSupplier: Supplier<SdkHandler>,
-    val ndkHandlerSupplier: Supplier<NdkHandler>) {
+    val ndkHandlerSupplier: Supplier<NdkHandler>,
+    private val evalIssueReporter: EvalIssueReporter) {
 
     private val projectRootDir = project.rootDir
 
@@ -92,8 +93,13 @@ open class SdkComponents(
                     project.rootDir)
             }
 
-            return SdkComponents(project, sdkLoadWithFallback, sdkHandlerSupplier, ndkHandlerSupplier)
-
+            return SdkComponents(
+                project,
+                sdkLoadWithFallback,
+                sdkHandlerSupplier,
+                ndkHandlerSupplier,
+                evalIssueReporter
+            )
         }
     }
 
@@ -140,7 +146,7 @@ open class SdkComponents(
         sdkHandlerSupplier.get().installCMake(version)
     }
 
-    fun getSdkFolder(): File? {
-        return SdkLocator.getSdkLocation(projectRootDir).directory
+    fun getSdkDirectory(): File {
+        return SdkLocator.getSdkDirectory(projectRootDir, evalIssueReporter)
     }
 }

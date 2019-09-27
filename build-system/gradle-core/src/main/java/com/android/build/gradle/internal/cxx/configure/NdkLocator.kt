@@ -438,7 +438,7 @@ fun findNdkPath(
 ): NdkLocatorRecord {
     IssueReporterLoggingEnvironment(evalIssueReporter).use {
         val properties = gradleLocalProperties(projectDir)
-        val sdkPath = SdkLocator.getSdkLocation(projectDir).directory
+        val sdkPath = SdkLocator.getSdkDirectory(projectDir, evalIssueReporter)
         return findNdkPathWithRecord(
             ndkVersionFromDsl,
             properties.getProperty(NDK_DIR_PROPERTY),

@@ -113,7 +113,7 @@ class NdkHandler(
             sideBySideLocatorRecord = record
             record.ndkFolder
         } else {
-            findNdkDirectory(projectDir)
+            findNdkDirectory(projectDir, evalIssueReporter)
         }
     }
 
@@ -259,14 +259,14 @@ class NdkHandler(
             }
         }
 
-        private fun findNdkDirectory(projectDir: File): File? {
+        private fun findNdkDirectory(projectDir: File, evalIssueReporter: EvalIssueReporter): File? {
             val localProperties = File(projectDir, FN_LOCAL_PROPERTIES)
             var properties = Properties()
             if (localProperties.isFile) {
                 properties = readProperties(localProperties)
             }
 
-            return findNdkDirectory(properties, projectDir)
+            return findNdkDirectory(properties, projectDir, evalIssueReporter)
         }
 
         /**
@@ -279,7 +279,11 @@ class NdkHandler(
          *
          * Return null if NDK directory is not found.
          */
-        private fun findNdkDirectory(properties: Properties, projectDir: File): File? {
+        private fun findNdkDirectory(
+            properties: Properties,
+            projectDir: File,
+            evalIssueReporter: EvalIssueReporter
+        ): File? {
             val ndkDirProp = properties.getProperty("ndk.dir")
             if (ndkDirProp != null) {
                 return File(ndkDirProp)
@@ -290,13 +294,11 @@ class NdkHandler(
                 return File(ndkEnvVar)
             }
 
-            val sdkFolder = SdkLocator.getSdkLocation(projectDir).directory
-            if (sdkFolder != null) {
-                // Worth checking if the NDK came bundled with the SDK
-                val ndkBundle = File(sdkFolder, SdkConstants.FD_NDK)
-                if (ndkBundle.isDirectory) {
-                    return ndkBundle
-                }
+            val sdkFolder = SdkLocator.getSdkDirectory(projectDir, evalIssueReporter)
+            // Worth checking if the NDK came bundled with the SDK
+            val ndkBundle = File(sdkFolder, SdkConstants.FD_NDK)
+            if (ndkBundle.isDirectory) {
+                return ndkBundle
             }
             return null
         }

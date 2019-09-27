@@ -899,8 +899,9 @@ public abstract class BaseExtension implements AndroidConfig {
      * href="https://developer.android.com/studio/intro/update.html#sdk-manager">Update Your Tools
      * with the SDK Manager</a>.
      */
+    @NonNull
     public File getSdkDirectory() {
-        return globalScope.getSdkComponents().getSdkFolder();
+        return globalScope.getSdkComponents().getSdkDirectory();
     }
 
     /**

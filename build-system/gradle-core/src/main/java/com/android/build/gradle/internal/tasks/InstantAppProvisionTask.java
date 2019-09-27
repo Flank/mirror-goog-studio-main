@@ -107,24 +107,22 @@ public abstract class InstantAppProvisionTask extends DefaultTask {
                                     globalScope.getProject(),
                                     () -> {
                                         File sdkFolder =
-                                                globalScope.getSdkComponents().getSdkFolder();
-                                        if (sdkFolder != null) {
-                                            LocalPackage instantAppSdk =
-                                                    AndroidSdkHandler.getInstance(sdkFolder)
-                                                            .getLocalPackage(
-                                                                    "extras;google;instantapps",
-                                                                    new ConsoleProgressIndicator());
-                                            if (instantAppSdk != null) {
-                                                return globalScope
-                                                        .getProject()
-                                                        .getObjects()
-                                                        .directoryProperty()
-                                                        .dir(
-                                                                instantAppSdk
-                                                                        .getLocation()
-                                                                        .getAbsolutePath())
-                                                        .get();
-                                            }
+                                                globalScope.getSdkComponents().getSdkDirectory();
+                                        LocalPackage instantAppSdk =
+                                                AndroidSdkHandler.getInstance(sdkFolder)
+                                                        .getLocalPackage(
+                                                                "extras;google;instantapps",
+                                                                new ConsoleProgressIndicator());
+                                        if (instantAppSdk != null) {
+                                            return globalScope
+                                                    .getProject()
+                                                    .getObjects()
+                                                    .directoryProperty()
+                                                    .dir(
+                                                            instantAppSdk
+                                                                    .getLocation()
+                                                                    .getAbsolutePath())
+                                                    .get();
                                         }
                                         return null;
                                     }));
