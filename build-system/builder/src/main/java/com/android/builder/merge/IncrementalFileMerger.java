@@ -261,16 +261,20 @@ public final class IncrementalFileMerger {
             @NonNull String path,
             @NonNull List<IncrementalFileMergerInput> inputs,
             @NonNull IncrementalFileMergerState state) {
-        List<String> prevInputNames = state.inputsFor(path);
         return inputs.stream()
-                .filter(i -> {
-                    FileStatus status = i.getFileStatus(path);
-                    if (status == null) {
-                        return prevInputNames.contains(i.getName());
-                    } else {
-                        return status != FileStatus.REMOVED;
-                    }
-                })
+                .filter(
+                        i -> {
+                            FileStatus status = i.getFileStatus(path);
+                            if (status == null) {
+                                // status == null indicates that either (1) the input doesn't
+                                // contain the given path or (2) the path's contents are unchanged.
+                                // We only include the input in the returned list if the input
+                                // actually contains the given path.
+                                return i.getAllPaths().contains(path);
+                            } else {
+                                return status != FileStatus.REMOVED;
+                            }
+                        })
                 .collect(Collectors.toList());
     }
 

@@ -238,6 +238,8 @@ public class IncrementalFileMergerTests {
         out.getCreated().clear();
 
         i0 = new IncrementalFileMergerTestInput("i0");
+        i0.add("untouched_file");
+        i0.add("touched_file_after_i1");
         IncrementalFileMergerTestInput i1 = new IncrementalFileMergerTestInput("i1");
         i1.add("touched_file_after_i1", FileStatus.NEW);
 
@@ -269,6 +271,42 @@ public class IncrementalFileMergerTests {
                                 ImmutableList.of("i0", "i1"),
                                 ImmutableList.of(i0),
                                 true));
+    }
+
+    /** Renaming inputs shouldn't affect the output. */
+    @Test
+    public void renameInputsBetweenMerges() {
+        IncrementalFileMergerTestInput i0 = new IncrementalFileMergerTestInput("i0");
+        i0.add("foo", FileStatus.NEW);
+
+        IncrementalFileMergerTestOutput out = new IncrementalFileMergerTestOutput();
+
+        IncrementalFileMergerState afterInitialState =
+                IncrementalFileMerger.merge(
+                        ImmutableList.of(i0), out, new IncrementalFileMergerState(), it -> false);
+
+        // After merging, we should see the file created in the output.
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getUpdated()).isEmpty();
+        assertThat(out.getCreated())
+                .containsExactly(new CreateParams("foo", ImmutableList.of(i0), true));
+        out.getCreated().clear();
+
+        // Now we simulate renaming i0 by creating a new input, i1.
+        IncrementalFileMergerTestInput i1 = new IncrementalFileMergerTestInput("i1");
+        i1.add("foo");
+
+        IncrementalFileMergerState afterRenameState =
+                IncrementalFileMerger.merge(
+                        ImmutableList.of(i1), out, afterInitialState, it -> false);
+
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getCreated()).isEmpty();
+        // We expect to see "i0" in the list of previous input names.
+        assertThat(out.getUpdated())
+                .containsExactly(
+                        new UpdateParams(
+                                "foo", ImmutableList.of("i0"), ImmutableList.of(i1), true));
     }
 
     private void randomTest(
