@@ -78,7 +78,7 @@ int Perfd::Initialize(Daemon* daemon) {
 
   if (daemon_config.common().energy_profiler_enabled()) {
     daemon->RegisterProfilerComponent(std::unique_ptr<EnergyProfilerComponent>(
-        new EnergyProfilerComponent(daemon->file_cache())));
+        new EnergyProfilerComponent()));
   }
 
   daemon->RegisterProfilerComponent(std::unique_ptr<GraphicsProfilerComponent>(

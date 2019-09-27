@@ -22,9 +22,8 @@ using grpc::Status;
 using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
 
-InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache,
-                                                     FileCache *file_cache)
-    : energy_cache_(*energy_cache), file_cache_(*file_cache) {}
+InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache)
+    : energy_cache_(*energy_cache) {}
 
 Status InternalEnergyServiceImpl::AddEnergyEvent(
     ServerContext *context, const AddEnergyEventRequest *request,

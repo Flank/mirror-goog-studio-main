@@ -17,6 +17,7 @@
 #define PERFD_ENERGY_PROFILER_COMPONENT_H_
 
 #include <grpc++/grpc++.h>
+
 #include "daemon/service_component.h"
 #include "perfd/energy/energy_service.h"
 #include "perfd/energy/internal_energy_service.h"
@@ -26,9 +27,8 @@ namespace profiler {
 
 class EnergyProfilerComponent final : public ServiceComponent {
  public:
-  explicit EnergyProfilerComponent(FileCache* file_cache)
-      : public_service_(&energy_cache_),
-        internal_service_(&energy_cache_, file_cache) {}
+  explicit EnergyProfilerComponent()
+      : public_service_(&energy_cache_), internal_service_(&energy_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g. Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
