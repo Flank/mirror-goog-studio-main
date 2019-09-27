@@ -5,6 +5,7 @@
     <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
 
+    <#include "../common/recipe_theme.xml.ftl" />
     <#include "../common/recipe_manifest.xml.ftl" />
 
     <copy from="root/res/drawable"

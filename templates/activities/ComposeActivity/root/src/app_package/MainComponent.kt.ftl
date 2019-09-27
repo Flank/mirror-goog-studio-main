@@ -1,9 +1,9 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-import android.widget.*
 import androidx.compose.*
+import androidx.ui.core.Text
 
 @Composable
-fun ${layoutClass} {
-    TextView(text="Hello World!")
+fun ${layoutClass}() {
+    Text(text="Hello World!")
 }

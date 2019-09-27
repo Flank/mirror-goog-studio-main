@@ -1,11 +1,13 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-import android.support.v7.app.AppCompatActivity
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
 import android.os.Bundle
+import androidx.compose.composer // BUG! Needs this, otherwise fails to compile
+import androidx.ui.core.setContent
 
 class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(${layoutClass}.createInstance(this))
+        setContent { ${layoutClass}() }
     }
 }
