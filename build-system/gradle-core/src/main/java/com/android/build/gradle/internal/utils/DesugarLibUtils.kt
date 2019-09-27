@@ -47,14 +47,9 @@ const val DESUGAR_LIB_CONFIG = "_internal-desugar-jdk-libs-config"
  * Returns a file collection which contains desugar_jdk_libs.jar
  */
 fun getDesugarLibJarFromMaven(project: Project): FileCollection {
-    val existingConfig = project.configurations.findByName(DESUGAR_LIB_CONFIGURATION_NAME)
-    if (existingConfig != null) {
-        return getArtifactCollection(existingConfig)
-    }
-    val config = createDesugarLibConfiguration(project)
-    return getArtifactCollection(config)
+    val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIGURATION_NAME)
+    return getArtifactCollection(configuration)
 }
-
 
 /**
  * Returns a file collection which contains desugar_jdk_libs.jar's dex file generated
@@ -69,8 +64,7 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
     }
 
     val project = variantScope.globalScope.project
-    val configuration = project.configurations.findByName(DESUGAR_LIB_CONFIGURATION_NAME)
-        ?: createDesugarLibConfiguration(project)
+    val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIGURATION_NAME)
     return getDesugarLibDexFromTransform(configuration)
 }
 
@@ -79,8 +73,7 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
  * desugar_jdk_libs_configuration.jar
  */
 fun getDesugarLibConfig(project: Project): Provider<String> {
-    val configuration = project.configurations.findByName(DESUGAR_LIB_CONFIG_CONFIGURATION_NAME)
-        ?: createDesugarLibConfigConfiguration(project)
+    val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIG_CONFIGURATION_NAME)
 
     registerDesugarLibConfigTransform(project)
 
@@ -98,8 +91,16 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
     }
 }
 
-private fun createDesugarLibConfiguration(project: Project): Configuration {
-    val configuration = project.configurations.create(DESUGAR_LIB_CONFIGURATION_NAME) {
+private fun getDesugaringLibConfiguration(project: Project, name: String): Configuration {
+    check(name == DESUGAR_LIB_CONFIGURATION_NAME || name == DESUGAR_LIB_CONFIG_CONFIGURATION_NAME)
+    return project.configurations.findByName(name) ?: run {
+        initDesugarLibConfigurations(project)
+        project.configurations.getByName(name)
+    }
+}
+
+private fun initDesugarLibConfigurations(project: Project) {
+    val library = project.configurations.create(DESUGAR_LIB_CONFIGURATION_NAME) {
         it.isVisible = false
         it.isTransitive = false
         it.isCanBeConsumed = false
@@ -107,16 +108,14 @@ private fun createDesugarLibConfiguration(project: Project): Configuration {
     }
 
     project.dependencies.add(
-        configuration.name,
+        library.name,
         mapOf(
             "group" to "com.android.tools",
             "name" to "desugar_jdk_libs",
             "version" to "1.0.0"
         )
     )
-    return configuration
-}
-private fun createDesugarLibConfigConfiguration(project: Project): Configuration {
+
     val configuration = project.configurations.create(DESUGAR_LIB_CONFIG_CONFIGURATION_NAME) {
         it.isVisible = false
         it.isTransitive = false
@@ -132,7 +131,6 @@ private fun createDesugarLibConfigConfiguration(project: Project): Configuration
             "version" to "0.1.0"
         )
     )
-    return configuration
 }
 
 private fun getDesugarLibDexFromTransform(configuration: Configuration): FileCollection {

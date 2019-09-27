@@ -108,6 +108,11 @@ class ApiDesugarTest {
             .hasMethodThatInvokes("getText", "Lj$/util/stream/Stream;->findFirst()Lj$/util/Optional;")
     }
 
+    @Test
+    fun testModelFetching() {
+        project.model().fetchAndroidProjects().onlyModel
+    }
+
     private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =
         dexes.find {
             AndroidArchive.checkValidClassName(className)
