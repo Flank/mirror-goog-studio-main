@@ -261,16 +261,29 @@ public final class IncrementalFileMerger {
             @NonNull String path,
             @NonNull List<IncrementalFileMergerInput> inputs,
             @NonNull IncrementalFileMergerState state) {
-        List<String> prevInputNames = state.inputsFor(path);
         return inputs.stream()
-                .filter(i -> {
-                    FileStatus status = i.getFileStatus(path);
-                    if (status == null) {
-                        return prevInputNames.contains(i.getName());
-                    } else {
-                        return status != FileStatus.REMOVED;
-                    }
-                })
+                .filter(
+                        i -> {
+                            FileStatus status = i.getFileStatus(path);
+                            if (status != null) {
+                                return status != FileStatus.REMOVED;
+                            } else {
+                                // status == null indicates that either (1) i doesn't contain the
+                                // given path or (2) the path's contents are unchanged.
+                                // We only return true if the input actually contains the given
+                                // path, but calling i.getAllPaths() is expensive, so we do some
+                                // other checks before calling it.
+                                if (state.getInputNames().isEmpty()) {
+                                    // if state.getInputNames().isEmpty() we know i doesn't contain
+                                    // the path, otherwise the status would be NEW.
+                                    return false;
+                                } else if (state.getInputNames().contains(i.getName())) {
+                                    return state.inputsFor(path).contains(i.getName());
+                                } else {
+                                    return i.getAllPaths().contains(path);
+                                }
+                            }
+                        })
                 .collect(Collectors.toList());
     }
 
