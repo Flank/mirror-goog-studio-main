@@ -110,6 +110,25 @@ class ApiDesugarTest {
     }
 
     @Test
+    fun testLintHasNoWarnings() {
+        project.buildFile.appendText("""
+
+            android.lintOptions.abortOnError = true
+        """.trimIndent())
+        project.executor().run("lintDebug")
+    }
+
+    @Test
+    fun testLintFailsIfDesugaringDisabled() {
+        project.buildFile.appendText("""
+
+            android.compileOptions.javaApiDesugaringEnabled = false
+            android.lintOptions.abortOnError = true
+        """.trimIndent())
+        project.executor().expectFailure().run("lintDebug")
+    }
+
+    @Test
     fun testModelFetching() {
         val model = project.model().fetchAndroidProjects().onlyModel
         assertThat(model.javaCompileOptions.isCoreLibraryDesugaringEnabled).isTrue()
