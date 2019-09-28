@@ -15,7 +15,3 @@ build:remote --host_platform=//tools/base/bazel/foundry:rbe_windows1803_as
 build:remote --platforms=//tools/base/bazel/foundry:rbe_windows1803_as
 
 build --compiler=clang-cl
-
-build --cxxopt=-Wno-c++98-compat
-build --cxxopt=-Wno-c++98-compat-pedantic
-build --cxxopt=-Wno-zero-as-null-pointer-constant
