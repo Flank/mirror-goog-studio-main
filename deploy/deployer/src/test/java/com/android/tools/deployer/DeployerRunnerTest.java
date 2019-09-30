@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import static com.android.tools.deployer.DeployerException.Error.CANNOT_SWAP_BEFORE_API_26;
+import static com.android.tools.deployer.DeployerException.Error.CANNOT_SWAP_RESOURCE;
 import static com.android.tools.deployer.DeployerException.Error.DUMP_UNKNOWN_PROCESS;
 import static com.android.tools.deployer.DeployerException.Error.NO_ERROR;
 import static org.junit.Assert.assertArrayEquals;
@@ -1395,7 +1396,154 @@ public class DeployerRunnerTest {
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
-                    "/system/bin/cmd package " + (device.getApi() < 28 ? "dump" : "path") + " com.example.simpleapp",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION swap",
+                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
+                    "cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
+                    "/data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
+                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Success",
+                    "COMPARE:Success",
+                    "SWAP:Success");
+        }
+    }
+
+    @Test
+    public void testCodeSwapThatFails() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File installersPath = DeployerTestUtils.prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", file);
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
+
+        String cmd =
+                "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        device.getShell().clearHistory();
+
+        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code+res.apk");
+        args =
+                new String[] {
+                    "codeswap",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+
+        if (device.getApi() < 26) {
+            assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
+            assertMetrics(runner.getMetrics()); // No metrics
+        } else {
+            assertEquals(CANNOT_SWAP_RESOURCE.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
+        }
+    }
+
+    @Test
+    public void testResourceAndCodeSwap() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File installersPath = DeployerTestUtils.prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", file);
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
+
+        String cmd =
+                "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        device.getShell().clearHistory();
+
+        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code+res.apk");
+        args =
+                new String[] {
+                    "fullswap",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+
+        if (device.getApi() < 26) {
+            assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
+            assertMetrics(runner.getMetrics()); // No metrics
+        } else {
+            assertEquals(NO_ERROR.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
