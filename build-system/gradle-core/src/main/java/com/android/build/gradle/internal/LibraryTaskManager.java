@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -289,7 +288,7 @@ public class LibraryTaskManager extends TaskManager {
         createMergeJavaResTask(variantScope);
 
         // ----- Minify next -----
-        maybeCreateJavaCodeShrinkerTransform(variantScope);
+        maybeCreateJavaCodeShrinkerTask(variantScope);
         maybeCreateResourcesShrinkerTasks(variantScope);
 
         // now add a task that will take all the classes and java resources and package them

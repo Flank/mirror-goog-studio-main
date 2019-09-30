@@ -1994,11 +1994,9 @@ public abstract class TaskManager {
 
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(variantScope);
-        CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
+        CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTask(variantScope);
         if (shrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(variantScope);
-            maybeCreateDexSplitterTask(variantScope);
-            // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
             return;
         }
 
@@ -2030,7 +2028,6 @@ public abstract class TaskManager {
         maybeCreateResourcesShrinkerTasks(variantScope);
 
         maybeCreateDexSplitterTask(variantScope);
-        // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
     }
 
     private void maybeCreateDesugarTask(
@@ -2783,12 +2780,12 @@ public abstract class TaskManager {
 
     /** Returns created shrinker type, or null if none was created. */
     @Nullable
-    protected CodeShrinker maybeCreateJavaCodeShrinkerTransform(
+    protected CodeShrinker maybeCreateJavaCodeShrinkerTask(
             @NonNull final VariantScope variantScope) {
         CodeShrinker codeShrinker = variantScope.getCodeShrinker();
 
         if (codeShrinker != null) {
-            return doCreateJavaCodeShrinkerTransform(
+            return doCreateJavaCodeShrinkerTask(
                     variantScope,
                     // No mapping in non-test modules.
                     codeShrinker);
@@ -2803,13 +2800,13 @@ public abstract class TaskManager {
      * created, or {@code null} if none was created.
      */
     @NonNull
-    protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
+    protected final CodeShrinker doCreateJavaCodeShrinkerTask(
             @NonNull final VariantScope variantScope, @NonNull CodeShrinker codeShrinker) {
-        return doCreateJavaCodeShrinkerTransform(variantScope, codeShrinker, false);
+        return doCreateJavaCodeShrinkerTask(variantScope, codeShrinker, false);
     }
 
     @NonNull
-    protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
+    protected final CodeShrinker doCreateJavaCodeShrinkerTask(
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
             Boolean isTestApplication) {
@@ -2851,6 +2848,9 @@ public abstract class TaskManager {
     @NonNull
     private TaskProvider<R8Task> createR8Task(
             @NonNull VariantScope variantScope, Boolean isTestApplication) {
+        if (variantScope.consumesFeatureJars()) {
+            publishFeatureDex(variantScope);
+        }
         return taskFactory.register(new R8Task.CreationAction(variantScope, isTestApplication));
     }
 

@@ -40,9 +40,9 @@ import com.android.tools.r8.StringConsumer
 import com.android.tools.r8.Version
 import com.android.tools.r8.origin.Origin
 import com.android.tools.r8.utils.ArchiveResourceProvider
-import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.io.ByteStreams
 import java.io.BufferedOutputStream
+import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -80,7 +80,9 @@ fun runR8(
     proguardConfig: ProguardConfig,
     mainDexListConfig: MainDexListConfig,
     messageReceiver: MessageReceiver,
-    useFullR8: Boolean = false
+    useFullR8: Boolean = false,
+    featureJars: Collection<Path>,
+    featureDexDir: Path?
 ) {
     val logger: Logger = Logger.getLogger("R8")
     if (logger.isLoggable(Level.FINE)) {
@@ -209,6 +211,24 @@ fun runR8(
     r8ProgramResourceProvider.dataResourceProviders.add(R8DataResourceProvider(dirResources))
 
     r8CommandBuilder.addProgramResourceProvider(r8ProgramResourceProvider)
+
+    for (featureJar in featureJars) {
+        if (featureDexDir == null){
+            throw RuntimeException("featureDexDir must be non-null if featureJars.isNotEmpty()")
+        }
+        r8CommandBuilder.addFeatureSplit {
+            it.addProgramResourceProvider(ArchiveProgramResourceProvider.fromArchive(featureJar))
+            it.setProgramConsumer(
+                DexIndexedConsumer.DirectoryConsumer(
+                    Files.createDirectories(
+                        File(featureDexDir.toFile(), featureJar.toFile().nameWithoutExtension)
+                            .toPath()
+                    )
+                )
+            )
+            return@addFeatureSplit it.build()
+        }
+    }
 
     ClassFileProviderFactory(libraries).use { libClasspath ->
         r8CommandBuilder.addLibraryResourceProvider(libClasspath.orderedProvider)
