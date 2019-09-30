@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
-import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
@@ -102,7 +101,6 @@ public class BazelIntegrationTestsSuite {
             try (FileLock ignored = channel.lock()) {
 
                 // do the test set up while holding the lock.
-                BazelRunfilesManifestProcessor.setUpRunfiles();
                 for (Map.Entry<String, Path> mavenRepoSource : MAVEN_REPO_SOURCES.entrySet()) {
                     unzip(mavenRepoSource.getValue(), mavenRepoSource.getKey());
                 }

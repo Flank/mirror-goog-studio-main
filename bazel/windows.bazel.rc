@@ -14,4 +14,8 @@ build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows1
 build:remote --host_platform=//tools/base/bazel/foundry:rbe_windows1803_as
 build:remote --platforms=//tools/base/bazel/foundry:rbe_windows1803_as
 
+# Create runfiles on Windows (requires "Developer Mode", but not Admin).
+# See https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10
+build --enable_runfiles
+
 build --compiler=clang-cl

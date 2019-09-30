@@ -19,7 +19,6 @@ package com.android.tools.gradle;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.gradle.benchmarkassertions.BenchmarkProjectAssertion;
 import com.android.tools.perflogger.Benchmark;
@@ -239,8 +238,6 @@ public class BenchmarkTest {
 
         BenchmarkRun benchmarkRun =
                 new BenchmarkRun(warmUps, iterations, removeUpperOutliers, removeLowerOutliers);
-
-        BazelRunfilesManifestProcessor.setUpRunfiles();
 
         Benchmark.Builder benchmarkBuilder =
                 new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle");
