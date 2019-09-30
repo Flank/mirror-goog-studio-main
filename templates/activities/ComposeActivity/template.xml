@@ -8,7 +8,7 @@
         minApi="9"
         minBuildApi="9">
 
-    <category value="Activity"/>
+    <category value="Compose"/>
     <formfactor value="Mobile"/>
 
     <parameter
