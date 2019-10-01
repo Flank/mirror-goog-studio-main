@@ -218,15 +218,20 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
      */
     val noCompressList = Objects.requireNonNull(config.options).noCompress
     if (noCompressList != null) {
-        for (noCompress in noCompressList) {
-            if (!Strings.isNullOrEmpty(noCompress)) {
-                builder.add("-0", noCompress)
-            } else {
-                // Empty sting means 'do not compress any resources'.
-                builder.add("--no-compress")
-            }
+        if (noCompressList.any { Strings.isNullOrEmpty(it)}) {
+            // Do not compress anything.
+            builder.add("--no-compress")
+        } else {
+            // Join the extensions into a regex and pass to "--no-compress-regex" flag which is
+            // non-case sensitive. We need to use "$" to mark these as extensions, and the "|" for
+            // alternations.
+            // AAPT2 will still not compress the default no-compress extensions, for example ".jpg"
+            // or ".mp3". For full list see PackagingUtils.DEFAULT_DONT_COMPRESS_EXTENSIONS.
+            val expression = "(${Joiner.on("$|").join(noCompressList)}$)"
+            builder.add("--no-compress-regex", expression)
         }
     }
+
 
     val additionalParameters = config.options.additionalParameters
     if (additionalParameters != null) {

@@ -56,7 +56,7 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
     var project = GradleTestProject.builder()
         .fromTestApp(
             MinimalSubProject.app("com.example.test")
-                .appendToBuild("android.aaptOptions.noCompress = ['.no', '.Test']")
+                .appendToBuild("android.aaptOptions.noCompress = ['.no', '.Test', 'end']")
                 .appendToBuild("android.defaultConfig.versionCode 1")
                 .withFile("src/main/resources/jres.yes", content)
                 .withFile("src/main/resources/jres.no", content)
@@ -67,6 +67,10 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .withFile("src/main/assets/a_upper.TEST", content)
                 .withFile("src/main/res/raw/r_yes.yes", content)
                 .withFile("src/main/res/raw/r_no.no", content)
+                .withFile("src/main/res/raw/r_matching.Test", content)
+                .withFile("src/main/res/raw/r_upper.TEST", content)
+                .withFile("src/main/res/raw/r_lower.test", content)
+                .withFile("src/main/res/raw/r_end_.noKeep", content)
         ).setApkCreatorType(apkCreatorType)
         .create()
 
@@ -103,6 +107,10 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
             zf.expectCompressionMethodOf("assets/a_matching.Test").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a_lower.test").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a_upper.TEST").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("res/raw/r_matching.Test").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("res/raw/r_upper.TEST").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("res/raw/r_lower.test").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("res/raw/r_end_.noKeep").isEqualTo(CompressionMethod.DEFLATE)
         }
     }
 

@@ -72,6 +72,86 @@ class AaptV2CommandBuilderTest {
             "--no-version-vectors",
             "--static-lib"
         ).inOrder()
+    }
 
+    @Test
+    fun checkNoCompressRegex() {
+        val manifestFile = temporaryFolder.newFile("AndroidManifest.xml")
+
+        val intermediateDir = temporaryFolder.newFolder("intermediates")
+        val staticLibApk = temporaryFolder.newFolder().resolve("static_lib.apk")
+        val androidJar = temporaryFolder.newFolder().resolve("android.jar")
+        val noCompress = listOf(".test", ".ęńd", "Android/res/raw/hello.world")
+
+        val request = AaptPackageConfig(
+            androidJarPath = androidJar.absolutePath,
+            manifestFile = manifestFile,
+            options = AaptOptions(noCompress, false, null),
+            staticLibrary = true,
+            resourceOutputApk = staticLibApk,
+            variantType = VariantTypeImpl.LIBRARY,
+            intermediateDir = intermediateDir
+        )
+
+        // When
+        val command = makeLinkCommand(request)
+
+        // Then
+        assertThat(command).containsExactly(
+            "-I",
+            androidJar.absolutePath,
+            "--manifest",
+            manifestFile.absolutePath,
+            "-o",
+            staticLibApk.absolutePath,
+            "--auto-add-overlay",
+            "--non-final-ids",
+            "-0",
+            "apk",
+            "--no-compress-regex",
+            "(.test$|.ęńd$|Android/res/raw/hello.world$)",
+            "--no-version-vectors",
+            "--static-lib"
+        ).inOrder()
+    }
+
+    @Test
+    fun checkNoCompressEmpty() {
+        val manifestFile = temporaryFolder.newFile("AndroidManifest.xml")
+
+        val intermediateDir = temporaryFolder.newFolder("intermediates")
+        val staticLibApk = temporaryFolder.newFolder().resolve("static_lib.apk")
+        val androidJar = temporaryFolder.newFolder().resolve("android.jar")
+        val noCompress = listOf("")
+
+        val request = AaptPackageConfig(
+            androidJarPath = androidJar.absolutePath,
+            manifestFile = manifestFile,
+            options = AaptOptions(noCompress, false, null),
+            staticLibrary = true,
+            resourceOutputApk = staticLibApk,
+            variantType = VariantTypeImpl.LIBRARY,
+            intermediateDir = intermediateDir
+        )
+
+        // When
+        val command = makeLinkCommand(request)
+
+        // Then
+        assertThat(command).containsExactly(
+            "-I",
+            androidJar.absolutePath,
+            "--manifest",
+            manifestFile.absolutePath,
+            "-o",
+            staticLibApk.absolutePath,
+            "--auto-add-overlay",
+            "--non-final-ids",
+            "-0",
+            "apk",
+            "--no-compress",
+            "--no-version-vectors",
+            "--static-lib"
+        ).inOrder()
     }
 }
