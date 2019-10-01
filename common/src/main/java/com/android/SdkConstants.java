@@ -108,8 +108,10 @@ public final class SdkConstants {
     public static final String FN_API_JAR = "api.jar"; //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public static final String FN_APK_CLASSES_DEX = "classes.dex"; //$NON-NLS-1$
-    /** Dex filename inside the APK. i.e. "classes.dex" */
+    /** Dex filename inside the APK. e.g. "classes2.dex" */
     public static final String FN_APK_CLASSES_N_DEX = "classes%d.dex"; //$NON-NLS-1$
+    /** Regex to match dex filenames inside the APK. e.g., classes.dex, classes2.dex */
+    public static final String REGEX_APK_CLASSES_DEX = "classes\\d*\\.dex"; //$NON-NLS-1$
 
     /** intermediate publishing between projects */
     public static final String FN_INTERMEDIATE_RES_JAR = "res.jar";                   //$NON-NLS-1$
