@@ -52,7 +52,7 @@ class ConstraintHandler(
                             configName,
                             "${id.group}:${id.module}:${id.version}"
                         ) { constraint ->
-                            constraint.because("$srcConfigName uses version ${id.version}")
+                            constraint.because(cacheString("$srcConfigName uses version ${id.version}"))
                             constraint.version { versionConstraint ->
                                 versionConstraint.strictly(id.version)
                             }
@@ -63,4 +63,26 @@ class ConstraintHandler(
         }
     }
 
+    companion object {
+        private val strings = mutableMapOf<String, String>()
+
+        internal fun cacheString(newString: String): String {
+            synchronized(strings) {
+                val existingString = strings[newString]
+                return if (existingString == null) {
+                    strings[newString] = newString
+                    newString
+                } else {
+                    existingString
+                }
+            }
+        }
+
+        @JvmStatic
+        fun clearCache() {
+            synchronized(strings) {
+                strings.clear()
+            }
+        }
+    }
 }
