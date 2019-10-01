@@ -42,10 +42,8 @@ namespace profiler {
 // TODO: revisit whether this is too large.
 constexpr int64_t kAllocDataCapacity = 500;
 
-MemoryCache::MemoryCache(Clock* clock, FileCache* file_cache,
-                         int32_t samples_capacity)
+MemoryCache::MemoryCache(Clock* clock, int32_t samples_capacity)
     : clock_(clock),
-      file_cache_(file_cache),
       memory_samples_(samples_capacity),
       alloc_stats_samples_(samples_capacity),
       gc_stats_samples_(samples_capacity),

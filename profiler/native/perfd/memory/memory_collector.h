@@ -16,15 +16,14 @@
 #ifndef MEMORY_COLLECTOR_H_
 #define MEMORY_COLLECTOR_H_
 
+#include <atomic>
+#include <string>
+#include <thread>
+
 #include "memory_cache.h"
 #include "memory_usage_reader_impl.h"
 #include "proto/memory.grpc.pb.h"
 #include "utils/clock.h"
-#include "utils/file_cache.h"
-
-#include <atomic>
-#include <string>
-#include <thread>
 
 namespace profiler {
 
@@ -36,8 +35,8 @@ class MemoryCollector {
       1 + Clock::s_to_ms(kSecondsToBuffer) / Clock::ns_to_ms(kSleepNs);
 
  public:
-  MemoryCollector(int32_t pid, Clock* clock, FileCache* file_cache)
-      : memory_cache_(clock, file_cache, kSamplesCount), pid_(pid) {}
+  MemoryCollector(int32_t pid, Clock* clock)
+      : memory_cache_(clock, kSamplesCount), pid_(pid) {}
   ~MemoryCollector();
 
   void Start();
