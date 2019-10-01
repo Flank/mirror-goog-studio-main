@@ -53,7 +53,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
@@ -642,7 +641,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
                 variantScope.globalScope.project.files(
-                    variantScope.artifacts.getFinalProduct<RegularFile>(
+                    variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.RES_STATIC_LIBRARY))
             )
             dependencies.add(

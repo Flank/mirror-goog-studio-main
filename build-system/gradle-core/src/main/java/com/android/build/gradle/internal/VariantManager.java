@@ -76,10 +76,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -139,6 +140,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Class to create, manage variants.
@@ -520,8 +522,8 @@ public class VariantManager implements VariantModel {
         BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
         for (PublishingSpecs.OutputSpec outputSpec :
                 variantScope.getPublishingSpec().getOutputs()) {
-            com.android.build.api.artifact.ArtifactType<? extends FileSystemLocation>
-                    buildArtifactType = outputSpec.getOutputType();
+            SingleArtifactType<? extends FileSystemLocation> buildArtifactType =
+                    outputSpec.getOutputType();
 
             // Gradle only support publishing single file.  Therefore, unless Gradle starts
             // supporting publishing multiple files, PublishingSpecs should not contain any
@@ -535,19 +537,20 @@ public class VariantManager implements VariantModel {
             }
 
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
-                Pair<Provider<String>, Provider<FileSystemLocation>> finalProduct =
-                        buildArtifactsHolder.getFinalProductWithTaskName(
-                                (com.android.build.api.artifact.ArtifactType<FileSystemLocation>)
-                                        buildArtifactType);
+                Pair<TaskProvider<?>, ? extends Provider<? extends FileSystemLocation>>
+                        finalProduct =
+                                buildArtifactsHolder.getFinalProductWithTask(buildArtifactType);
+
                 variantScope.publishIntermediateArtifact(
                         finalProduct.getSecond(),
                         finalProduct.getFirst(),
                         outputSpec.getArtifactType(),
                         outputSpec.getPublishedConfigTypes());
             } else {
-                if (buildArtifactType == AnchorOutputType.ALL_CLASSES.INSTANCE) {
+                if (buildArtifactType == InternalArtifactType.ALL_CLASSES.INSTANCE) {
                     variantScope.publishIntermediateArtifact(
-                            buildArtifactsHolder.getFinalProductAsFileCollection(buildArtifactType),
+                            buildArtifactsHolder.getFinalProductAsFileCollection(
+                                    InternalArtifactType.ALL_CLASSES.INSTANCE),
                             outputSpec.getArtifactType(),
                             outputSpec.getPublishedConfigTypes());
                 }

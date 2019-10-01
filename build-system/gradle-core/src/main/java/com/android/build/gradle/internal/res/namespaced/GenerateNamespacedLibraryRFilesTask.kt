@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
@@ -96,8 +97,8 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         override fun configure(task: GenerateNamespacedLibraryRFilesTask) {
             super.configure(task)
 
-            variantScope.artifacts.setFinalProducts(
-                InternalArtifactType.PARTIAL_R_FILES, task.partialRFiles)
+            variantScope.artifacts.setTaskInputToFinalProducts(
+                MultipleArtifactType.PARTIAL_R_FILES, task.partialRFiles)
             task.packageForR.set(
                 TaskInputHelper.memoizeToProvider(
                     variantScope.globalScope.project,

@@ -23,6 +23,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import org.gradle.api.DefaultTask;
@@ -124,6 +125,6 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     public Provider<FileCollection> getFinalArtifact(
             @NonNull ArtifactType<? extends FileSystemLocation> artifactType) {
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
-        return artifacts.getFinalProductAsFileCollection(artifactType);
+        return artifacts.getFinalProductAsFileCollection((InternalArtifactType) artifactType);
     }
 }

@@ -43,7 +43,9 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.MultipleArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.signing.SigningConfigProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
@@ -841,7 +843,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
-        @NonNull protected final ArtifactType<Directory> inputResourceFilesType;
+        @NonNull protected final SingleArtifactType<Directory> inputResourceFilesType;
         @NonNull protected final OutputScope outputScope;
         @Nullable private final com.android.builder.utils.FileCache fileCache;
         @NonNull private final ArtifactType<Directory> manifestType;
@@ -849,7 +851,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         public CreationAction(
                 @NonNull VariantScope variantScope,
-                @NonNull ArtifactType<Directory> inputResourceFilesType,
+                @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
                 @Nullable com.android.builder.utils.FileCache fileCache,
@@ -998,7 +1000,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .get()
                         .plus(getDesugarLibDexIfExists());
             } else {
-                return project.files(artifacts.getFinalProducts(InternalArtifactType.DEX.INSTANCE))
+                return project.files(artifacts.getFinalProducts(MultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists());
             }
         }

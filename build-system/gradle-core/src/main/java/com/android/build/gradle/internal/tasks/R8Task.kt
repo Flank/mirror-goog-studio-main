@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
@@ -160,13 +161,9 @@ abstract class R8Task: ProguardConfigurableTask() {
                     fileName = "shrunkClasses.jar"
                 )
             } else {
-                variantScope.artifacts.producesDir(
-                    artifactType = InternalArtifactType.DEX,
-                    operationType = BuildArtifactsHolder.OperationType.APPEND,
-                    taskProvider = taskProvider,
-                    productProvider = R8Task::outputDex,
-                    fileName = "shrunkDex"
-                )
+                variantScope.artifacts.getOperations().append(
+                    taskProvider, R8Task::outputDex
+                ).on(MultipleArtifactType.DEX)
             }
 
             variantScope.artifacts.producesFile(

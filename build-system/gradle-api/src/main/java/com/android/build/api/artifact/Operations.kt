@@ -306,7 +306,7 @@ interface AppendRequest<FILE_TYPE: FileSystemLocation> {
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
      * [ArtifactType.Appendable] and [ArtifactType.Multiple]
      */
-    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
+    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE): AppendRequest<FILE_TYPE>
             where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
                   ARTIFACT_TYPE: ArtifactType.Appendable
 }

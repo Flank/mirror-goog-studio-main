@@ -37,7 +37,6 @@ import com.google.common.collect.ArrayListMultimap
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -135,9 +134,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
                 val processedClasses = variantScope.globalScope.project.files(
-                    variantScope
-                        .artifacts
-                        .getFinalProduct(output)
+                    variantScope.artifacts.getOperations().get(output)
                 )
                     .asFileTree
                 variantScope

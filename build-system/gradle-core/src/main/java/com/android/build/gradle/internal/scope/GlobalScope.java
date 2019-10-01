@@ -96,7 +96,7 @@ public class GlobalScope implements TransformGlobalScope {
         this.buildCache = buildCache;
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
-        this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir, dslScope);
+        this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir);
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();

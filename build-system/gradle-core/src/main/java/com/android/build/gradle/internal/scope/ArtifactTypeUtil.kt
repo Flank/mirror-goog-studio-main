@@ -63,11 +63,9 @@ fun ArtifactType<*>.getOutputPath() =
  */
 fun ArtifactType<*>.getOutputDirectory(
     buildDirectory: DirectoryProperty,
-    identifier: String,
-    taskName: String?= "") = FileUtils.join(
+    vararg paths: String) = FileUtils.join(
         getOutputDir(buildDirectory.get().asFile),
-        identifier,
-        taskName
+        *paths
     )
 
 

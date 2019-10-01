@@ -210,7 +210,8 @@ class OperationsTest {
 
     private fun <T: FileSystemLocation> getAppendRequest()= object: AppendRequest<T> {
         override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
-                where ARTIFACT_TYPE : ArtifactType<T>, ARTIFACT_TYPE : ArtifactType.Appendable {}
+                where ARTIFACT_TYPE : ArtifactType<T>, ARTIFACT_TYPE : ArtifactType.Appendable = this
+
     }
 
     private fun <T: Task> getTaskProvider(): TaskProvider<T> {

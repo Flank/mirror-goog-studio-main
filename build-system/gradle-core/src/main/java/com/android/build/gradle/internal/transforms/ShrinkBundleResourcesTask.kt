@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -183,10 +184,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 variantScope
                     .artifacts
                     .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
-            } else if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.DEX)) {
+            } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
                 variantScope.globalScope.project.files(
-                    variantScope.artifacts
-                        .getFinalProductAsFileCollection(InternalArtifactType.DEX))
+                    variantScope.artifacts.getFinalProducts(MultipleArtifactType.DEX))
             } else {
                 variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
             }

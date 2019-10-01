@@ -313,16 +313,19 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             val proguardConfigFiles = Callable<Collection<File>> { variantScope.proguardFiles }
 
-            val aaptProguardFileType =
+            val aaptProguardFile =
                 if (task.includeFeaturesInScopes.get()) {
-                    InternalArtifactType.MERGED_AAPT_PROGUARD_FILE
+                    variantScope.artifacts.getOperations().get(
+                        InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
                 } else {
-                    InternalArtifactType.AAPT_PROGUARD_FILE
+                    variantScope.artifacts.getOperations().get(
+                        InternalArtifactType.AAPT_PROGUARD_FILE
+                    )
                 }
 
             val configurationFiles = task.project.files(
                 proguardConfigFiles,
-                variantScope.artifacts.getFinalProduct(aaptProguardFileType),
+                aaptProguardFile,
                 variantScope.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
                 variantScope.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,

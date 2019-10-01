@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
@@ -36,9 +37,7 @@ import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logging
@@ -180,7 +179,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             val artifacts = variantScope.artifacts
 
-            artifacts.setTaskInputToFinalProduct<Directory>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PROCESSED_RES,
                 task.uncompressedResources
             )
@@ -200,7 +199,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                     task.mappingFileSrc)
             }
 
-            artifacts.setTaskInputToFinalProduct<Directory>(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,
                 task.mergedManifests
             )
@@ -217,8 +216,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             when {
                 artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES) -> task.classes.from(
                     artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES))
-                artifacts.hasFinalProduct(InternalArtifactType.DEX) -> task.classes.from(
-                    artifacts.getFinalProductAsFileCollection(InternalArtifactType.DEX))
+                artifacts.hasFinalProducts(MultipleArtifactType.DEX) -> task.classes.from(
+                    variantScope.globalScope.project.files(
+                        artifacts.getFinalProducts(MultipleArtifactType.DEX)))
                 else -> task.classes.from(classes)
             }
         }

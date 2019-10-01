@@ -16,17 +16,12 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.Project
 import java.io.File
 
 class VariantBuildArtifactsHolder(
     project: Project,
-    private val variantName: String,
-    rootOutputDir: File,
-    dslScope: DslScope
-) : BuildArtifactsHolder(project, { rootOutputDir }) {
-
-    override fun getIdentifier() : String = variantName
-
+    variantName: String,
+    rootOutputDir: File
+) : BuildArtifactsHolder(project, { rootOutputDir }, variantName) {
 }

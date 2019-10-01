@@ -48,6 +48,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 
 /** A scope containing data for a specific variant. */
 public interface VariantScope extends TransformVariantScope {
@@ -66,9 +67,10 @@ public interface VariantScope extends TransformVariantScope {
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 
+    // TODO : remove TaskProvider as the artifact provider should be enough.un
     void publishIntermediateArtifact(
             @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull Provider<String> lastProducerTaskName,
+            @Nonnull TaskProvider lastProducerTask,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 

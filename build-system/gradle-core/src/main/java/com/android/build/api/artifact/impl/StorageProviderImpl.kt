@@ -73,6 +73,14 @@ class TypedStorageProvider<T :FileSystemLocation> {
         }
     }
 
+    internal fun <ARTIFACT_TYPE> copy(type: ARTIFACT_TYPE,
+        container: SingleArtifactContainer<T>)
+        where ARTIFACT_TYPE: ArtifactType<T>,
+              ARTIFACT_TYPE: ArtifactType.Single {
+
+       singleStorage[type] = container
+    }
+
     fun lock() {
         singleStorage.values.forEach { it.disallowChanges() }
         multipleStorage.values.forEach { it.disallowChanges() }

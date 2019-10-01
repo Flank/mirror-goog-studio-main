@@ -330,7 +330,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             val artifacts = variantScope.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)) {
-                artifacts.setTaskInputToFinalProduct<RegularFile>(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
                     task.typedefRecipe
                 )

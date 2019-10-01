@@ -22,14 +22,12 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -136,15 +134,16 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClasses>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
-                if (publishedType == PublishedConfigType.API_ELEMENTS)
-                    InternalArtifactType.COMPILE_LIBRARY_CLASSES
-                else InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
-                BuildArtifactsHolder.OperationType.APPEND,
-                taskProvider,
-                BundleLibraryClasses::output,
-                fileName = FN_CLASSES_JAR
-            )
+
+            val request = variantScope.artifacts.getOperations()
+                .setInitialProvider(taskProvider,
+                    BundleLibraryClasses::output).withName(FN_CLASSES_JAR)
+
+            if (publishedType == PublishedConfigType.API_ELEMENTS) {
+                request.on(InternalArtifactType.COMPILE_LIBRARY_CLASSES)
+            } else {
+                request.on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES)
+            }
         }
 
         override fun configure(task: BundleLibraryClasses) {
@@ -158,7 +157,7 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
                         !variantScope.globalScope.extension.aaptOptions.namespaced
             task.packageRClass.set(packageRClass)
             if (packageRClass) {
-                task.classes.from(variantScope.artifacts.getFinalProduct<RegularFile>(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+                task.classes.from(variantScope.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
             }
             // FIXME pass this as List<TextResources>
             task.toIgnoreRegExps.set(

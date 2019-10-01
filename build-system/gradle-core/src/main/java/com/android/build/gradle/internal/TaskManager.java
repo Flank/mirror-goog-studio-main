@@ -53,7 +53,6 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -87,7 +86,9 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.MultipleArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
@@ -630,8 +631,8 @@ public abstract class TaskManager {
                             AndroidArtifacts.ArtifactType.CLASSES,
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
             // now get the output type
-            com.android.build.api.artifact.ArtifactType<Directory> testedOutputType =
-                    (ArtifactType<Directory>)
+            SingleArtifactType<Directory> testedOutputType =
+                    (SingleArtifactType<Directory>)
                             Objects.requireNonNull(taskOutputSpec).getOutputType();
 
             variantScope
@@ -774,7 +775,7 @@ public abstract class TaskManager {
         /** Merge all resources with all the dependencies resources (i.e. "big merge"). */
         MERGE {
             @Override
-            public InternalArtifactType<Directory> getOutputType() {
+            public SingleArtifactType<Directory> getOutputType() {
                 return InternalArtifactType.MERGED_RES.INSTANCE;
             }
         },
@@ -783,12 +784,12 @@ public abstract class TaskManager {
          */
         PACKAGE {
             @Override
-            public InternalArtifactType<Directory> getOutputType() {
+            public SingleArtifactType<Directory> getOutputType() {
                 return InternalArtifactType.PACKAGED_RES.INSTANCE;
             }
         };
 
-        public abstract InternalArtifactType<Directory> getOutputType();
+        public abstract SingleArtifactType<Directory> getOutputType();
     }
 
     public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
@@ -903,7 +904,8 @@ public abstract class TaskManager {
     }
 
     private void createApkProcessResTask(
-            @NonNull VariantScope scope, @Nullable ArtifactType<Directory> packageOutputType) {
+            @NonNull VariantScope scope,
+            @Nullable SingleArtifactType<Directory> packageOutputType) {
 
         // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(
@@ -933,7 +935,7 @@ public abstract class TaskManager {
 
     public void createProcessResTask(
             @NonNull VariantScope scope,
-            @Nullable ArtifactType<Directory> packageOutputType,
+            @Nullable SingleArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         BaseVariantData variantData = scope.getVariantData();
@@ -980,7 +982,7 @@ public abstract class TaskManager {
 
     private void createNonNamespacedResourceTasks(
             @NonNull VariantScope scope,
-            ArtifactType<Directory> packageOutputType,
+            SingleArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
@@ -2112,8 +2114,8 @@ public abstract class TaskManager {
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask,
                             produceSeparateOutputs
-                                    ? InternalArtifactType.DEX.INSTANCE
-                                    : InternalArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
+                                    ? MultipleArtifactType.DEX.INSTANCE
+                                    : MultipleArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
 
             if (produceSeparateOutputs) {
                 DexMergingTask.CreationAction mergeProject =
@@ -2352,7 +2354,7 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        ArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
+        InternalArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
 
         Provider<Directory> manifests = variantScope.getArtifacts().getFinalProduct(manifestType);
 
@@ -3173,12 +3175,9 @@ public abstract class TaskManager {
                 scope.getGlobalScope().getProject().getTasks().named(kaptTask.getName());
 
         scope.getArtifacts()
-                .producesDir(
-                        InternalArtifactType.DATA_BINDING_ARTIFACT.INSTANCE,
-                        BuildArtifactsHolder.OperationType.TRANSFORM,
-                        kaptTaskProvider,
-                        (Task task) -> databindingArtifact,
-                        "out");
+                .getOperations()
+                .replace(kaptTaskProvider, (Task task) -> databindingArtifact)
+                .on(InternalArtifactType.DATA_BINDING_ARTIFACT.INSTANCE);
 
         // manually add the output property as a task output so Gradle can wire providers correctly
         kaptTask.getOutputs().dir(databindingArtifact);

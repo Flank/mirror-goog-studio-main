@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.options.BooleanOption
@@ -52,7 +53,7 @@ class NamespacedResourcesTaskManager(
      * TODO: Test support, Synthesize non-namespaced output.
      */
     fun createNamespacedResourceTasks(
-            packageOutputType: ArtifactType<Directory>?,
+            packageOutputType: SingleArtifactType<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
 
@@ -97,7 +98,7 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedAppProcessTask(
-            packageOutputType: ArtifactType<Directory>?,
+            packageOutputType: SingleArtifactType<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
        taskFactory.register(
@@ -113,7 +114,7 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedLibraryTestProcessResourcesTask(
-            packageOutputType: ArtifactType<Directory>?) {
+            packageOutputType: SingleArtifactType<Directory>?) {
         taskFactory.register(ProcessAndroidAppResourcesTask.CreationAction(variantScope))
         if (packageOutputType != null) {
             variantScope.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)

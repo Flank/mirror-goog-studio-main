@@ -204,7 +204,7 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
     val nativeLibs = scope.globalScope.project.files()
     // add merged project native libs
     nativeLibs.from(
-        scope.artifacts.getFinalProduct<Directory>(InternalArtifactType.MERGED_JNI_LIBS)
+        scope.artifacts.getFinalProduct(InternalArtifactType.MERGED_JNI_LIBS)
     )
     // add content of the local external native build
     val project = scope.globalScope.project
@@ -219,7 +219,7 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
     // add renderscript compilation output if support mode is enabled.
     if (scope.variantConfiguration.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
-                project.files(scope.artifacts.getFinalProduct<Directory>(RENDERSCRIPT_LIB))
+                project.files(scope.artifacts.getFinalProduct(RENDERSCRIPT_LIB))
         val rsLibs = scope.globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)

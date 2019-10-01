@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
@@ -214,22 +216,23 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
             artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
-            artifacts.setTaskInputToFinalProduct(
-                    if (variantScope.useResourceShrinker()) {
-                        InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE
-                    } else {
-                        InternalArtifactType.LINKED_RES_FOR_BUNDLE
-                    }, task.resFiles)
+            task.resFiles.set(
+                if (variantScope.useResourceShrinker()) {
+                    artifacts.getOperations().get(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
+                } else {
+                    artifacts.getOperations().get(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
+                }
+            )
 
             val programDexFiles =
                 if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
                     variantScope
                         .artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
-                } else if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.DEX)) {
+                } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
                     variantScope.globalScope.project.files(variantScope
                         .artifacts
-                        .getFinalProducts<Directory>(InternalArtifactType.DEX))
+                        .getFinalProducts(MultipleArtifactType.DEX))
                 } else {
                     variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }
@@ -256,14 +259,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.javaResFiles.from(
                 if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
                     variantScope.globalScope.project.layout.files(
-                        artifacts.getFinalProduct<RegularFile>(InternalArtifactType.SHRUNK_JAVA_RES)
+                        artifacts.getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
                 } else if (variantScope.needsMergedJavaResStream) {
                     variantScope.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {
                     variantScope.globalScope.project.layout.files(
-                        artifacts.getFinalProduct<RegularFile>(InternalArtifactType.MERGED_JAVA_RES)
+                        artifacts.getFinalProduct(InternalArtifactType.MERGED_JAVA_RES)
                     )
                 }
             )
@@ -328,9 +331,9 @@ fun getNativeLibsFiles(
 ): FileCollection {
     val nativeLibs = scope.globalScope.project.files()
     if (scope.type.isForTesting) {
-        return nativeLibs.from(scope.artifacts.getFinalProduct<Directory>(MERGED_NATIVE_LIBS))
+        return nativeLibs.from(scope.artifacts.getFinalProduct(MERGED_NATIVE_LIBS))
     }
-    nativeLibs.from(scope.artifacts.getFinalProduct<Directory>(STRIPPED_NATIVE_LIBS))
+    nativeLibs.from(scope.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS))
     if (packageCustomClassDependencies) {
         nativeLibs.from(
             scope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)

@@ -136,6 +136,7 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.TaskProvider;
 
 /** A scope containing data for a specific variant. */
 public class VariantScopeImpl implements VariantScope {
@@ -172,10 +173,7 @@ public class VariantScopeImpl implements VariantScope {
         }
         this.artifacts =
                 new VariantBuildArtifactsHolder(
-                        getProject(),
-                        getFullVariantName(),
-                        globalScope.getBuildDir(),
-                        globalScope.getDslScope());
+                        getProject(), getFullVariantName(), globalScope.getBuildDir());
         this.desugarTryWithResourcesRuntimeJar =
                 Suppliers.memoize(
                         () ->
@@ -253,7 +251,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public void publishIntermediateArtifact(
             @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull Provider<String> lastProducerTaskName,
+            @Nonnull TaskProvider lastProducerTask,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
 
@@ -267,8 +265,7 @@ public class VariantScopeImpl implements VariantScope {
                 Configuration config = variantDependency.getElements(configType);
                 Preconditions.checkNotNull(
                         config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(
-                        config, artifact, lastProducerTaskName, artifactType);
+                publishArtifactToConfiguration(config, artifact, lastProducerTask, artifactType);
             }
         }
     }
@@ -869,8 +866,8 @@ public class VariantScopeImpl implements VariantScope {
                 // was published to.
                 if (publishedConfigs.contains(configType.getPublishedTo())) {
                     // if it's the case then we add the tested artifact.
-                    final com.android.build.api.artifact.ArtifactType<? extends FileSystemLocation>
-                            taskOutputType = taskOutputSpec.getOutputType();
+                    final SingleArtifactType<? extends FileSystemLocation> taskOutputType =
+                            taskOutputSpec.getOutputType();
                     BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
                     artifacts =
                             ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(

@@ -277,13 +277,13 @@ fun getProjectJavaRes(
     scope: VariantScope
 ): FileCollection {
     val javaRes = scope.globalScope.project.files()
-    javaRes.from(scope.artifacts.getFinalProduct<Directory>(JAVA_RES))
+    javaRes.from(scope.artifacts.getFinalProduct(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
     javaRes.from(
         Callable {
             if (projectHasAnnotationProcessors(scope)) {
-                scope.artifacts.getFinalProduct<Directory>(JAVAC)
+                scope.artifacts.getFinalProduct(JAVAC)
             } else {
                 listOf<File>()
             }

@@ -4,12 +4,10 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-9702dd01ae702fc1b6ae97d680f8457a622b17d4dc2d4d7ef49ee35d3df18355
+3ed080b6600f6ede25818253edaf9186fa402fd0bb8219356995c79cb72ee049
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
-com.android.build.api.artifact.AppendRequest.on: void (ARTIFACT_TYPE)
-com.android.build.api.artifact.ArtifactConfigurationException
-com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
+com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$DIRECTORY
 com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()

@@ -67,6 +67,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
+import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
@@ -115,7 +116,7 @@ class PublishingSpecs {
      * A published output
      */
     interface OutputSpec {
-        val outputType: com.android.build.api.artifact.ArtifactType<out FileSystemLocation>
+        val outputType: SingleArtifactType<out FileSystemLocation>
         val artifactType: ArtifactType
         val publishedConfigTypes: ImmutableList<PublishedConfigType>
     }
@@ -312,11 +313,11 @@ class PublishingSpecs {
     interface VariantSpecBuilder {
         val variantType: VariantType
 
-        fun output(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun api(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun runtime(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
+        fun output(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun api(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun runtime(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun reverseMetadata(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
 
         fun testSpec(variantType: VariantType, action: VariantSpecBuilder.() -> Unit)
     }
@@ -392,7 +393,7 @@ private class VariantPublishingSpecImpl(
 }
 
 private data class OutputSpecImpl(
-        override val outputType: com.android.build.api.artifact.ArtifactType<*>,
+        override val outputType: SingleArtifactType<*>,
         override val artifactType: ArtifactType,
         override val publishedConfigTypes: ImmutableList<PublishedConfigType> = API_AND_RUNTIME_ELEMENTS) : PublishingSpecs.OutputSpec
 
@@ -404,26 +405,26 @@ private open class VariantSpecBuilderImpl (
     protected val outputs = mutableSetOf<PublishingSpecs.OutputSpec>()
     private val testingSpecs = mutableMapOf<VariantType, VariantSpecBuilderImpl>()
 
-    override fun output(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun output(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType))
     }
 
-    override fun api(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun api(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_ELEMENTS_ONLY))
     }
 
-    override fun runtime(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun runtime(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, RUNTIME_ELEMENTS_ONLY))
     }
 
-    override fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun reverseMetadata(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         if (!variantType.publishToMetadata) {
             throw RuntimeException("VariantType '$variantType' does not support metadata publishing")
         }
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, REVERSE_METADATA_ELEMENTS_ONLY))
     }
 
-    override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         throw RuntimeException("This VariantSpecBuilder does not support publish. VariantType is $variantType")
     }
 
@@ -452,14 +453,14 @@ private open class VariantSpecBuilderImpl (
 
 private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
 
-    override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
     }
 }
 
 private class AppVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
 
-    override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         if (artifactType == ArtifactType.BUNDLE) {
             outputs.add(OutputSpecImpl(taskOutputType, artifactType, AAB_PUBLICATION))
         } else {

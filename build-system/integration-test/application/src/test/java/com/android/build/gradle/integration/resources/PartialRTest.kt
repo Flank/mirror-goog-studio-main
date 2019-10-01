@@ -78,7 +78,6 @@ class PartialRTest {
             "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_strings.arsc.flat-R.txt"
         )
         val publicR = File(stringsR.parentFile, "values_public.arsc.flat-R.txt")

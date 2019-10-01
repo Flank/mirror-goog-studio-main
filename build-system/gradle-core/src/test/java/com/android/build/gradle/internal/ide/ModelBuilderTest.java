@@ -338,7 +338,7 @@ public class ModelBuilderTest {
 
         RegularFile regularFileMock = Mockito.mock(RegularFile.class);
         when(regularFileMock.getAsFile()).thenReturn(temporaryFolder.getRoot());
-        when(artifacts.<RegularFile>getFinalProduct(InternalArtifactType.AAR.INSTANCE))
+        when(artifacts.getFinalProduct(InternalArtifactType.AAR.INSTANCE))
                 .thenReturn(new FakeGradleProvider<>(regularFileMock));
 
         OutputScope outputScopeMock = Mockito.mock(OutputScope.class);

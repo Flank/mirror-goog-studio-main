@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.ArtifactKind
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.utils.appendCapitalized
-import com.google.common.base.Joiner
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import org.gradle.api.DefaultTask
@@ -51,19 +51,14 @@ typealias Report = Map<String, BuildArtifactsHolder.ProducersData>
  */
 abstract class BuildArtifactsHolder(
     private val project: Project,
-    private val rootOutputDir: () -> File
+    private val rootOutputDir: () -> File,
+    val identifier: String
 ) {
 
-    private val fileProducersMap = ProducersMap(
-        ArtifactType.FILE,
-        project.objects,
-        project.layout.buildDirectory,
-        this::getIdentifier)
-    private val directoryProducersMap = ProducersMap(
-        ArtifactType.DIRECTORY,
-        project.objects,
-        project.layout.buildDirectory,
-        this::getIdentifier)
+    private val operations= OperationsImpl(project.objects, identifier,
+        project.layout.buildDirectory)
+
+    fun getOperations(): OperationsImpl = operations
 
     // because of existing public APIs, we cannot move [AnchorOutputType.ALL_CLASSES] to Provider<>
     private val allClasses= project.files()
@@ -94,8 +89,8 @@ abstract class BuildArtifactsHolder(
      * @param targetType the supplemental [ArtifactType] the same built artifacts will also be
      * published under.
      */
-    fun <T: FileSystemLocation> republish(sourceType: ArtifactType<T>, targetType: ArtifactType<T>) {
-        getProducerMap(sourceType).republish(sourceType, targetType)
+    fun <T: FileSystemLocation> republish(sourceType: SingleArtifactType<T>, targetType: SingleArtifactType<T>) {
+        operations.republish(sourceType, targetType)
     }
 
     /**
@@ -106,7 +101,7 @@ abstract class BuildArtifactsHolder(
      * @param artifactType artifact type to copy to this holder.
      * @param from source [BuildArtifactsHolder] to copy the produced artifacts from.
      */
-    fun <T: FileSystemLocation> copy(artifactType: ArtifactType<T>, from: BuildArtifactsHolder) {
+    fun <T: FileSystemLocation> copy(artifactType: SingleArtifactType<T>, from: BuildArtifactsHolder) {
         copy(artifactType, from, artifactType)
     }
 
@@ -120,9 +115,9 @@ abstract class BuildArtifactsHolder(
      * @param originalArtifactType artifact type under which the producers are registered in the
      * source [BuildArtifactsHolder], by default is the same [artifactType]
      */
-    fun <T: FileSystemLocation> copy(artifactType: ArtifactType<T>, from: BuildArtifactsHolder, originalArtifactType: ArtifactType<T> = artifactType) {
-        getProducerMap(artifactType).copy(artifactType,
-            from.getProducerMap(originalArtifactType).getProducers(originalArtifactType))
+    fun <T: FileSystemLocation> copy(artifactType: SingleArtifactType<T>, from: BuildArtifactsHolder, originalArtifactType: SingleArtifactType<T> = artifactType) {
+        val artifactContainer = from.operations.getArtifactContainer(originalArtifactType)
+        operations.copy(artifactType, artifactContainer)
     }
 
     /**
@@ -160,24 +155,22 @@ abstract class BuildArtifactsHolder(
      * using the default location.
      * @param fileName the desired file name, must be provided.
      */
-    fun <T: Task> producesFile(
-        artifactType: ArtifactType<RegularFile>,
-        operationType: OperationType,
+    fun <T: Task, ARTIFACT_TYPE> producesFile(
+        artifactType: ARTIFACT_TYPE,
+        ternoperationType: OperationType,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> RegularFileProperty,
         buildDirectory: String? = null,
         fileName: String
-    ) {
+    ) where ARTIFACT_TYPE : ArtifactType<RegularFile>,
+            ARTIFACT_TYPE : ArtifactType.Single {
 
-        val settableProperty = project.objects.fileProperty()
-        produces(artifactType,
-            fileProducersMap,
-            operationType,
+        operations.setInitialProvider(
             taskProvider,
-            productProvider,
-            settableProperty,
-            fileName,
-            buildDirectory)
+            productProvider)
+            .atLocation(buildDirectory)
+            .withName(fileName)
+            .on(artifactType)
     }
 
     /**
@@ -188,17 +181,27 @@ abstract class BuildArtifactsHolder(
      * The passed [productProvider] returns a [Provider] which mean that the output location cannot
      * be changed and will be set by the task itself or during its configuration.
      */
-    fun <T: Task> producesFile(
-        artifactType: ArtifactType<RegularFile>,
+    fun <T: Task, ARTIFACT_TYPE> producesFile(
+        artifactType: ARTIFACT_TYPE,
         operationType: OperationType,
         taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> Provider<RegularFile>) {
+        productProvider: (T) -> Provider<RegularFile>)
+            where ARTIFACT_TYPE : ArtifactType<RegularFile>,
+                  ARTIFACT_TYPE : ArtifactType.Single {
 
-        produces(artifactType,
-            fileProducersMap,
+        val propertyProvider = { task : T ->
+            val property = project.objects.fileProperty()
+            property.set(productProvider(task))
+            property
+        }
+        producesFile(
+            artifactType,
             operationType,
             taskProvider,
-            productProvider)
+            propertyProvider,
+            "",
+            ""
+        )
     }
 
     /**
@@ -237,162 +240,76 @@ abstract class BuildArtifactsHolder(
      * @param fileName the desired directory name or empty string if no sub-directory should be
      * used.
      */
-    fun <T: Task> producesDir(
-        artifactType: ArtifactType<Directory>,
+    fun <T: Task, ARTIFACT_TYPE> producesDir(
+        artifactType: ARTIFACT_TYPE,
         operationType: OperationType,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> DirectoryProperty,
         buildDirectory: String? = null,
         fileName: String = "out"
-    ) {
+    ) where ARTIFACT_TYPE : ArtifactType<Directory>,
+            ARTIFACT_TYPE : ArtifactType.Single {
 
-        produces(artifactType,
-            directoryProducersMap,
-            operationType,
+        operations.setInitialProvider(
             taskProvider,
-            productProvider,
-            project.objects.directoryProperty(),
-            fileName,
-            buildDirectory)
+            productProvider
+        ).atLocation(buildDirectory).withName(fileName).on(artifactType)
     }
 
     // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
-    fun <T: Task> producesFile(
-        artifactType: ArtifactType<RegularFile>,
+    fun <T: Task, ARTIFACT_TYPE> producesFile(
+        artifactType: ARTIFACT_TYPE,
         operationType: OperationType,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> RegularFileProperty,
-        fileName: String = "out"
-    )= producesFile(artifactType, operationType, taskProvider, productProvider, null, fileName)
+        fileName: String = "out")
+            where ARTIFACT_TYPE : ArtifactType<RegularFile>,
+                  ARTIFACT_TYPE : ArtifactType.Single
+
+            = producesFile(artifactType, operationType, taskProvider, productProvider, null, fileName)
 
 
-    fun <T: Task> producesDir(
-        artifactType: ArtifactType<Directory>,
+    fun <T: Task, ARTIFACT_TYPE> producesDir(
+        artifactType: ARTIFACT_TYPE,
         operationType: OperationType,
         taskProvider: TaskProvider<out T>,
         propertyProvider: (T) -> DirectoryProperty,
         fileName: String = "out"
-    )= producesDir(artifactType, operationType, taskProvider, propertyProvider, null, fileName)
+    ) where ARTIFACT_TYPE : ArtifactType<Directory>,
+            ARTIFACT_TYPE : ArtifactType.Single
+            = producesDir(artifactType, operationType, taskProvider, propertyProvider, null, fileName)
 
     private val dummyTask by lazy {
 
-        project.tasks.register("dummy" + getIdentifier(), DummyTask::class.java)
+        project.tasks.register("dummy$identifier", DummyTask::class.java)
     }
 
     abstract class DummyTask: DefaultTask() {
         abstract val emptyFileProperty: RegularFileProperty
     }
 
-    fun emptyFile(artifactType: ArtifactType<RegularFile>) {
-        produces<RegularFile, DummyTask>(artifactType,
-            fileProducersMap,
-            OperationType.INITIAL,
+    fun emptyFile(artifactType: SingleArtifactType<RegularFile>) {
+        operations.setInitialProvider(
             dummyTask,
-            DummyTask::emptyFileProperty,
-            project.objects.fileProperty(),
-            "out"
-        )
+            DummyTask::emptyFileProperty
+        ).withName("out").on(artifactType)
     }
-
-    private fun <T: FileSystemLocation, U: Task> produces(artifactType: ArtifactType<T>,
-        producersMap: ProducersMap<T>,
-        operationType: OperationType,
-        taskProvider: TaskProvider<out U>,
-        productProvider: (U) -> Provider<T>) {
-
-        val producers = producersMap.getProducers(artifactType)
-        val product = taskProvider.map { productProvider(it) }
-
-        checkOperationType(operationType, artifactType, producers, taskProvider)
-        producers.add(product, taskProvider.name)
-    }
-
-    private fun <T : FileSystemLocation, U: Task> produces(artifactType: ArtifactType<T>,
-        producersMap: ProducersMap<T>,
-        operationType: OperationType,
-        taskProvider: TaskProvider<out U>,
-        productProvider: (U) -> Property<T>,
-        settableFileLocation: Property<T>,
-        fileName: String,
-        buildDirectory: String? = null) {
-
-        if (producersMap.artifactKind != artifactType.kind) {
-            val correctApiFamily = if (artifactType.kind==ArtifactType.FILE)
-                "producesFile" else "producesDir"
-            throw RuntimeException("Wrong usage of the BuildArtifacts APIs by task ${taskProvider.name}\n" +
-                    "who is trying to publish $artifactType as a ${producersMap.artifactKind} while the " +
-                    "artifact is defined as a ${artifactType.kind}\n" +
-                    "For ${artifactType.kind} use $correctApiFamily type of APIs")
-        }
-
-        val producers = producersMap.getProducers(artifactType, buildDirectory)
-        val product= taskProvider.map { productProvider(it) }
-
-        checkOperationType(operationType, artifactType, producers, taskProvider)
-        producers.add(settableFileLocation, product, taskProvider.name, fileName)
-
-        // note that this configuration block may be called immediately in case the task has
-        // already been initialized.
-        taskProvider.configure {
-
-            product.get().set(settableFileLocation)
-
-            // add a new configuration action to make sure the producers are configured even
-            // if no one injects the result. The task is being configured so it will be executed
-            // and output folders must be set correctly.
-            // this can happen when users request an intermediary task execution (instead of
-            // assemble for instance).
-            producers.resolveAllAndReturnLast()
-        }
-    }
-
-    private fun <T: FileSystemLocation> checkOperationType(operationType: OperationType,
-        artifactType: ArtifactType<T>,
-        producers: ProducersMap.Producers<T>,
-        taskProvider: TaskProvider<out Task>) {
-        when(operationType) {
-            OperationType.INITIAL -> {
-                if (!producers.isEmpty()) {
-                    val plural = producers.hasMultipleProducers()
-                    throw RuntimeException(
-                        """|Task ${taskProvider.name} is expecting to be the initial producer of
-                                |$artifactType, but the following ${if (plural) "tasks" else "task"} : ${Joiner.on(',').join(producers.map { it.taskName})}
-                                |${if (plural) "are" else "is"} already registered as ${if (plural) "producers" else "producer"}"""
-                            .trimMargin()
-                    )
-                }
-            }
-            OperationType.APPEND -> {
-            }
-            OperationType.TRANSFORM -> {
-                producers.clear()
-            }
-        }
-    }
-
-    private fun <T: FileSystemLocation> getProducerMap(artifactType: ArtifactType<T>): ProducersMap<T> {
-
-        return when(artifactType.kind) {
-            ArtifactType.FILE -> fileProducersMap as ProducersMap<T>
-            ArtifactType.DIRECTORY -> directoryProducersMap as ProducersMap<T>
-            else -> throw RuntimeException("${artifactType.kind} not handled.")
-        }
-    }
-
-    /**
-     * Returns the current produced version of an [ArtifactType]
-     *
-     * @param artifactType the identifier for the built artifact.
-     */
-    fun <T : FileSystemLocation> getCurrentProduct(artifactType: ArtifactType<T>) =
-        getProducerMap(artifactType).getProducers(artifactType).getCurrent()
 
     /**
      * Returns true if there is at least one producer for the passed [ArtifactType]
      *
      * @param artifactType the identifier for the built artifact.
      */
-    fun <T: FileSystemLocation> hasFinalProduct(artifactType: ArtifactType<T>) = getProducerMap(artifactType).hasProducers(artifactType)
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> hasFinalProduct(artifactType: ARTIFACT_TYPE)
+        where ARTIFACT_TYPE: ArtifactType<T>,
+              ARTIFACT_TYPE: ArtifactType.Single
+            = !operations.getArtifactContainer(artifactType).needInitialProducer().get()
+
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> hasFinalProducts(artifactType: ARTIFACT_TYPE)
+            where ARTIFACT_TYPE: ArtifactType<T>,
+                  ARTIFACT_TYPE: ArtifactType.Multiple
+            = !operations.getArtifactContainer(artifactType).needInitialProducer().get()
+
 
     /**
      * Returns a [Provider] of either a [Directory] or a [RegularFile] depending on the passed
@@ -415,15 +332,12 @@ abstract class BuildArtifactsHolder(
      *
      * @param artifactType the identifier for the built artifact.
      */
-    fun <T: FileSystemLocation> getFinalProduct(artifactType: ArtifactType<T>): Provider<T> {
-        val producers = getProducerMap(artifactType).getProducers(artifactType)
-        if (producers.size > 1) {
-            throw java.lang.RuntimeException(
-                """A single producer of $artifactType was requested, but the following tasks
-                    |produce it: ${Joiner.on(',').join(
-                    producers.map { it.taskName})}""".trimMargin())
-        }
-        return producers.injectable
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProduct(
+        artifactType: ARTIFACT_TYPE): Provider<T>
+        where ARTIFACT_TYPE: ArtifactType<T>,
+              ARTIFACT_TYPE: ArtifactType.Single {
+
+        return operations.get(artifactType)
     }
 
     /**
@@ -433,7 +347,10 @@ abstract class BuildArtifactsHolder(
      *
      * @param  artifactType the identifier for thje built artifact.
      */
-    fun getFinalProductAsFileCollection(artifactType: ArtifactType<out FileSystemLocation>): Provider<FileCollection> {
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProductAsFileCollection(artifactType: ARTIFACT_TYPE): Provider<FileCollection>
+        where ARTIFACT_TYPE:  ArtifactType<T>,
+              ARTIFACT_TYPE: ArtifactType.Single {
+
         return project.provider {
             if (artifactType == AnchorOutputType.ALL_CLASSES) {
                 getAllClasses()
@@ -449,7 +366,7 @@ abstract class BuildArtifactsHolder(
      * Sets a [Property] value to the final producer for the given artifact type.
      *
      * If there are more than one producer appending artifacts for the passed type, calling this
-     * method will generate an error and [setFinalProducts] should be used instead.
+     * method will generate an error and [setTaskInputToFinalProducts] should be used instead.
      *
      * The simplest way to use the mechanism is as follow :
      * <pre>
@@ -466,8 +383,10 @@ abstract class BuildArtifactsHolder(
      * @param artifactType requested artifact type
      * @param taskInputProperty the [Property] to set the final producer on.
      */
-    fun <T: FileSystemLocation> setTaskInputToFinalProduct(artifactType: ArtifactType<T>, taskInputProperty: Property<T>) {
-        val finalProduct = getFinalProduct<T>(artifactType)
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProduct(
+        artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>)
+        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
+        val finalProduct = getFinalProduct(artifactType)
         taskInputProperty.set(finalProduct)
     }
 
@@ -489,32 +408,10 @@ abstract class BuildArtifactsHolder(
      * @param artifactType requested artifact type
      * @param taskInputProperty the [ListProperty] to set the producers on.
      */
-    fun <T: FileSystemLocation> setTaskInputToFinalProducts(artifactType: ArtifactType<T>, taskInputProperty: ListProperty<T>) {
-        val finalProducts = getFinalProducts<T>(artifactType)
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProducts(artifactType: ARTIFACT_TYPE, taskInputProperty: ListProperty<T>)
+            where  ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Multiple {
+        val finalProducts = getFinalProducts(artifactType)
         taskInputProperty.set(finalProducts)
-    }
-
-    /**
-     * Sets a [ListProperty] value to all the produces for the given artifact type.
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     abstract class MyTask: Task() {
-     *          @InputFiles
-     *          abstract val inputFiles: ListProperty<RegularFile>
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
-     *          scope.artifacts.setFinalProducts(InternalArtifactTYpe.SOME_ID, it.inputFiles)
-     *     }
-     * </pre>
-     *
-     * @param artifactType requested artifact type
-     * @param receiver the [ListProperty] to set the producers on.
-     */
-    fun <T: FileSystemLocation> setFinalProducts(artifactType: ArtifactType<T>, receiver: ListProperty<T>) {
-        val finalProduct = getFinalProducts<T>(artifactType)
-        receiver.set(finalProduct)
     }
 
     /**
@@ -527,8 +424,14 @@ abstract class BuildArtifactsHolder(
      * @param artifactType the identifier for the built artifact.
      * @return a [Pair] of [Provider] for the [FileSystemLocation] and task name producing it.
      */
-    fun <T: FileSystemLocation> getFinalProductWithTaskName(artifactType: ArtifactType<T>): Pair<Provider<String>, Provider<T>> {
-        return Pair(getProducerMap(artifactType).getProducers(artifactType).lastProducerTaskName,
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProductWithTask(
+        artifactType: ARTIFACT_TYPE): Pair<TaskProvider<*>, Provider<T>>
+        where ARTIFACT_TYPE: ArtifactType<T>,
+              ARTIFACT_TYPE: ArtifactType.Single {
+        if (operations.getArtifactContainer(artifactType).lastProducerTask == null ) {
+            println("Requesting $artifactType with null last producer !")
+        }
+        return Pair(operations.getArtifactContainer(artifactType).lastProducerTask!!,
             getFinalProduct(artifactType))
     }
 
@@ -539,25 +442,16 @@ abstract class BuildArtifactsHolder(
      *
      * @param artifactType the identifier for the built artifact.
      */
-    fun <T: FileSystemLocation> getFinalProducts(artifactType: ArtifactType<T>): ListProperty<T> {
-        val producers = getProducerMap(artifactType).getProducers(artifactType)
-        return producers.getAllProducers()
-    }
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProducts(artifactType: ARTIFACT_TYPE): Provider<List<T>>
+        where  ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Multiple
+            = operations.getAll(artifactType)
 
     /**
      * Returns an appropriate task name for the variant with the given prefix.
      */
     fun getTaskName(prefix : String) : String {
-        return prefix.appendCapitalized(getIdentifier())
+        return prefix.appendCapitalized(identifier)
     }
-
-    /**
-     * Returns a identifier that will uniquely identify this artifacts holder against other holders.
-     * This can be used to create unique folder or provide unique task name for this context.
-     *
-     * @return a unique [String]
-     */
-    abstract fun getIdentifier(): String
 
     /**
      * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.
@@ -576,10 +470,8 @@ abstract class BuildArtifactsHolder(
      */
     fun getAllClasses(): FileCollection = allClasses
 
-    fun createReport(): Report =
-            fileProducersMap.entrySet().associate {
-                it.key.name() to it.value.toProducersData()
-            }
+    // TODO: Reimplement or remove feature.
+    fun createReport(): Report = mapOf()
 
     /** A data class for use with GSON. */
     data class ProducerData(

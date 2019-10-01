@@ -29,10 +29,8 @@ import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
-import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -120,22 +118,22 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.destinationDirectory.set(File(variantScope.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
             task.from(
-                variantScope.artifacts.getFinalProduct<Directory>(
+                variantScope.artifacts.getFinalProduct(
                     InternalArtifactType.AIDL_PARCELABLE
                 ),
                 prependToCopyPath(SdkConstants.FD_AIDL)
             )
-            task.from(artifacts.getFinalProduct<RegularFile>(
+            task.from(artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
             if (variantScope.globalScope.extension.dataBinding.isEnabled) {
                 task.from(
                     variantScope.globalScope.project.provider {
-                        variantScope.artifacts.getFinalProduct<Directory>(
+                        variantScope.artifacts.getFinalProduct(
                             InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
                 task.from(
-                    variantScope.artifacts.getFinalProduct<Directory>(
+                    variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                     prependToCopyPath(
                         DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
@@ -146,7 +144,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             if (!variantScope.globalScope.extension.aaptOptions.namespaced) {
                 // TODO: this should be unconditional b/69358522
                 task.from(
-                    artifacts.getFinalProduct<RegularFile>(
+                    artifacts.getFinalProduct(
                         InternalArtifactType.COMPILE_SYMBOL_LIST))
                 task.from(
                     artifacts.getFinalProduct(InternalArtifactType.PACKAGED_RES),

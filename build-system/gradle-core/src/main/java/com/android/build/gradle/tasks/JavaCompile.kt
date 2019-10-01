@@ -97,6 +97,9 @@ class JavaCompileCreationAction(
 
         variantScope.taskContainer.javacTask = taskProvider
 
+        classesOutputDirectory.set(variantScope.artifacts.getOperations()
+            .getOutputDirectory(JAVAC, "classes"))
+
         variantScope.artifacts.producesDir(
             JAVAC,
             APPEND,
@@ -104,6 +107,9 @@ class JavaCompileCreationAction(
             { classesOutputDirectory },
             fileName = "classes"
         )
+
+        annotationProcessorOutputDirectory.set(variantScope.artifacts.getOperations()
+            .getOutputDirectory(AP_GENERATED_SOURCES))
 
         // When doing annotation processing, register its output
         if (!processAnnotationsTaskCreated) {
@@ -115,8 +121,12 @@ class JavaCompileCreationAction(
             )
         }
 
-        // Data binding artifact is one of the annotation processing outputs
+        // Data binding artifact is one of the annotation processing outputs, only if kapt is not
+        // configured.
         if (variantScope.globalScope.extension.dataBinding.isEnabled) {
+            bundleArtifactFolderForDataBinding.set(variantScope.artifacts.getOperations()
+                .getOutputDirectory(DATA_BINDING_ARTIFACT))
+
             variantScope.artifacts.producesDir(
                 DATA_BINDING_ARTIFACT,
                 APPEND,

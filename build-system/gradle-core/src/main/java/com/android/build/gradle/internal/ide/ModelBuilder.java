@@ -28,7 +28,6 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -52,6 +51,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
@@ -1037,7 +1037,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             AndroidArtifacts.ArtifactType.CLASSES,
                                             AndroidArtifacts.PublishedConfigType.API_ELEMENTS);
                             // now get the output type
-                            ArtifactType<? extends FileSystemLocation> testedOutputType =
+                            SingleArtifactType<? extends FileSystemLocation> testedOutputType =
                                     taskOutputSpec.getOutputType();
 
                             return ImmutableList.of(

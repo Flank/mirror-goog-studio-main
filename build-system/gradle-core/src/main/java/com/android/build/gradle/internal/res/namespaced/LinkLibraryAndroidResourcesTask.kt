@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
@@ -152,7 +153,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             )
 
             variantScope.artifacts.setTaskInputToFinalProducts(
-                InternalArtifactType.RES_COMPILED_FLAT_FILES,
+                MultipleArtifactType.RES_COMPILED_FLAT_FILES,
                 task.inputResourcesDirectories)
             task.libraryDependencies =
                     variantScope.getArtifactFileCollection(
