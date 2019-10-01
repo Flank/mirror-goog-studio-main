@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -163,6 +164,7 @@ public class JarTestSuiteRunner extends Suite {
                     addManifestClassPath(url, urls);
                 }
             }
+            excludeClassNames.addAll(androidCoreClassNamesToExclude(name, testClasses));
             excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
         }
         return testClasses.stream().filter(c -> !excludeClassNames.contains(c.getCanonicalName())).toArray(Class<?>[]::new);
@@ -201,6 +203,66 @@ public class JarTestSuiteRunner extends Suite {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Returns the set of class names to exclude if processing the "intellij.android.core.tests"
+     * module. This is temporary on Windows only until we can re-enable all tests. The tracking bug
+     * for this temporary workaround is b/141868211.
+     */
+    private static Set<String> androidCoreClassNamesToExclude(
+            String jarFileName, List<Class<?>> testClasses) {
+        // We only process the android.core package
+        if (!"intellij.android.core.tests_test.jar".equals(jarFileName)) {
+            return Collections.emptySet();
+        }
+
+        // We only do this for Windows, as the target already pass on other plaforms
+        if (OsType.getHostOs() != OsType.WINDOWS) {
+            return Collections.emptySet();
+        }
+
+        //
+        // Exclude classes from all packages except the white-listed ones
+        //
+
+        // Set up the hard-coded white list of packages that pass tests
+        Set<String> packagesToInclude = new HashSet<>();
+        packagesToInclude.add("com.android.tools.idea.explorer");
+
+        // Compute list of classes included in the above list
+        Set<String> allClassNames =
+                testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+        Set<String> classesToInclude = new HashSet<>();
+        for (String className : allClassNames) {
+            if (isWhiteListed(packagesToInclude, className)) {
+                classesToInclude.add(className);
+            }
+        }
+
+        // The set of classes to exclude is the set of all classes minus the set of classes to
+        // include
+        allClassNames.removeAll(classesToInclude);
+        return allClassNames;
+    }
+
+    /**
+     * Returns {@code true} if the package of className is prefixed by at least one of the package
+     * prefix from the packagePrefixes set.
+     */
+    private static boolean isWhiteListed(Set<String> packagePrefixes, String className) {
+        String dottedName = className;
+        while (true) {
+            int index = dottedName.lastIndexOf(".");
+            if (index < 0) {
+                return false;
+            }
+            String packageName = dottedName.substring(0, index);
+            if (packagePrefixes.contains(packageName)) {
+                return true;
+            }
+            dottedName = packageName;
         }
     }
 
