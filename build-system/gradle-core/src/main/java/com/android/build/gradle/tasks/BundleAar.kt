@@ -61,17 +61,15 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         get() {
             val hasLocalAarDependencies = localAarDeps.files.isNotEmpty()
             if (hasLocalAarDependencies) {
-                reporter.reportWarning(
+                reporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "The AAR produced by this build for the $projectPath project is broken. " +
-                            "Direct local .aar file dependencies are not supported when building " +
-                            "an AAR. The resulting AAR is broken because the classes and Android " +
-                            "resources from any local .aar file dependencies are not packaged in " +
-                            "the resulting AAR. Previous versions of the Android Gradle Plugin " +
-                            "produce broken AARs in this case too (despite not having this " +
-                            "warning), and this warning will be replaced with an error in " +
-                            "subsequent versions of the Android Gradle Plugin. The following " +
-                            "direct local .aar file dependencies caused this warning: " +
+                    "Direct local .aar file dependencies are not supported when building an AAR. " +
+                            "The resulting AAR would be broken because the classes and Android " +
+                            "resources from any local .aar file dependencies would not be " +
+                            "packaged in the resulting AAR. Previous versions of the Android " +
+                            "Gradle Plugin produce broken AARs in this case too (despite not " +
+                            "throwing this error). The following direct local .aar file " +
+                            "dependencies of the $projectPath project caused this error: " +
                             localAarDeps.files.joinToString { it.absolutePath }
                 )
             }
