@@ -56,10 +56,10 @@ fun getDesugarLibJarFromMaven(project: Project): FileCollection {
  * by artifact transform
  */
 fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
-    val apiDesugarEnabled = variantScope.globalScope.extension.compileOptions.javaApiDesugaringEnabled
+    val libDesugarEnabled = variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
     val langDesugarEnabled = variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
             || variantScope.java8LangSupportType == VariantScope.Java8LangSupport.R8
-    if (apiDesugarEnabled == null || apiDesugarEnabled == false || !langDesugarEnabled) {
+    if (libDesugarEnabled == null || libDesugarEnabled == false || !langDesugarEnabled) {
         return variantScope.globalScope.project.files()
     }
 
@@ -104,7 +104,7 @@ private fun initDesugarLibConfigurations(project: Project) {
         it.isVisible = false
         it.isTransitive = false
         it.isCanBeConsumed = false
-        it.description = "The desugar_jdk_libs for desugaring Java Api."
+        it.description = "The desugar_jdk_libs for desugaring Core Library."
     }
 
     project.dependencies.add(
@@ -120,7 +120,7 @@ private fun initDesugarLibConfigurations(project: Project) {
         it.isVisible = false
         it.isTransitive = false
         it.isCanBeConsumed = false
-        it.description = "The desugar_jdk_libs_configuration for desugaring Java Api."
+        it.description = "The desugar_jdk_libs_configuration for desugaring Core Library."
     }
 
     project.dependencies.add(

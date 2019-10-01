@@ -135,15 +135,15 @@ fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfigura
     val minSdk = scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
     val debuggable = scope.variantConfiguration.buildType.isDebuggable
     val enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-    val enableApiDesugaring = scope.globalScope.extension.compileOptions.javaApiDesugaringEnabled
-    return DexingArtifactConfiguration(minSdk, debuggable, enableDesugaring, enableApiDesugaring)
+    val enableCoreLibraryDesugaring = scope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
+    return DexingArtifactConfiguration(minSdk, debuggable, enableDesugaring, enableCoreLibraryDesugaring)
 }
 
 data class DexingArtifactConfiguration(
     private val minSdk: Int,
     private val isDebuggable: Boolean,
     private val enableDesugaring: Boolean,
-    private val enableApiDesugaring: Boolean?
+    private val enableCoreLibraryDesugaring: Boolean?
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -165,7 +165,7 @@ data class DexingArtifactConfiguration(
                     parameters.bootClasspath.from(bootClasspath)
                 }
                 parameters.errorFormat.set(errorFormat)
-                if (enableApiDesugaring != null && enableApiDesugaring) {
+                if (enableCoreLibraryDesugaring == true) {
                     parameters.libConfiguration.set(libConfiguration)
                 }
             }

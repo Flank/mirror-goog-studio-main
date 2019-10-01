@@ -370,9 +370,9 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
             )
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.userLevelCache = userLevelCache
-            val javaApiDesugaringEnabled
-                    = variantScope.globalScope.extension.compileOptions.javaApiDesugaringEnabled
-            if (javaApiDesugaringEnabled != null && javaApiDesugaringEnabled) {
+            val coreLibraryDesugaringEnabled
+                    = variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
+            if (coreLibraryDesugaringEnabled == true) {
                 task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
             }
         }

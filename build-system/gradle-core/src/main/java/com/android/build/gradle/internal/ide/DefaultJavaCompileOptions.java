@@ -41,7 +41,7 @@ final class DefaultJavaCompileOptions implements JavaCompileOptions, Serializabl
         sourceCompatibility = options.getSourceCompatibility().toString();
         targetCompatibility = options.getTargetCompatibility().toString();
         encoding = options.getEncoding();
-        coreLibraryDesugaringEnabled = options.getJavaApiDesugaringEnabled() == Boolean.TRUE;
+        coreLibraryDesugaringEnabled = options.getCoreLibraryDesugaringEnabled() == Boolean.TRUE;
     }
 
     @NonNull
