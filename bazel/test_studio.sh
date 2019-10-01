@@ -41,11 +41,14 @@ if [[ -d "${DIST_DIR}" ]]; then
   # Generate a simple html page that redirects to the test results page.
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${DIST_DIR}"/upsalite_test_results.html
 
+  readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
+  
+  ${bin_dir}/tools/base/bazel/perfgate_logs_collector "${testlogs_dir}" "${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" "${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes.zip" "${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes.txt"
+
   cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
 
-  readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${DIST_DIR}"/bazel-testlogs
   (cd "${testlogs_dir}" && zip -R "${DIST_DIR}"/bazel-testlogs/xml_files.zip "*.xml")
 

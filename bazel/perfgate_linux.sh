@@ -41,6 +41,9 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
+  readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
+
+  ${bin_dir}/tools/base/bazel/perfgate_logs_collector "${testlogs_dir}" "${dist_dir}/bazel-${build_number}.bes" "${dist_dir}/bazel-${build_number}.bes.zip" "${dist_dir}/bazel-${build_number}.bes.txt"
 
   # Upload all test logs
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/bazel_test_logs.zip" {} \;

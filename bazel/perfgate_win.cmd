@@ -34,15 +34,21 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --config=remote ^
  --build_tag_filters=-no_windows ^
  --invocation_id=%INVOCATIONID% ^
+ --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json ^
  --runs_per_test=5 ^
- -- %TARGETS%
+ -- //tools/base/bazel:perfgate_logs_collector ^
+ %TARGETS%
+
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
 
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
+
+@rem Extract perfgate data
+%BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector.exe %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\bazel-%BUILDNUMBER%.bes.zip %DISTDIR%\bazel-%BUILDNUMBER%.bes.txt
 
 cd %BASEDIR%\bazel-testlogs
 
