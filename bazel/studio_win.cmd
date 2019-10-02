@@ -37,7 +37,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json ^
  --discard_analysis_cache ^
- -- //tools/base/bazel:perfgate_logs_collector ^
+ -- //tools/base/bazel:perfgate_logs_collector_deploy.jar ^
  %TARGETS%
 
 SET EXITCODE=%errorlevel%
@@ -52,8 +52,10 @@ echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.co
 copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skiaparser.zip %DISTDIR%
 @echo studio_win.cmd time: %time%
 
+set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
+
 @rem Extract perfgate data
-%BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector.exe %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\bazel-%BUILDNUMBER%.bes.zip %DISTDIR%\bazel-%BUILDNUMBER%.bes.txt
+%JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\bazel-%BUILDNUMBER%.bes.zip %DISTDIR%\bazel-%BUILDNUMBER%.bes.txt
 
 @echo studio_win.cmd time: %time%
 
