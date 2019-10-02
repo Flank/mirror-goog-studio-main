@@ -126,8 +126,10 @@ void SessionsManager::SendOrQueueEventsForSession(
   bool session_is_live = false;
   ProcessManager process_manager;
   int32_t pid = process_manager.GetPidForBinary(app_name);
+  Log::D("PID: %d", pid);
   if (pid >= 0) {
     for (auto it = sessions_.begin(); it != sessions_.end(); it++) {
+      Log::D("Session: %d", (*it)->IsActive());
       if ((*it)->info().pid() == pid && (*it)->IsActive()) {
         session_is_live = true;
         break;

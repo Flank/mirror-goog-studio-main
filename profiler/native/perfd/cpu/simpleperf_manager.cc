@@ -290,11 +290,13 @@ bool SimpleperfManager::WaitForSimpleperf(
 
   // Make sure simpleperf exited normally.
   if (!(WIFEXITED(status) && WEXITSTATUS(status) == 0)) {
-    string msg = "Simpleperf did not exit as expected. Logfile: " +
-                 ongoing_recording.log_file_path;
-    Log::D("%s", msg.c_str());
+    std::ostringstream msg;
+    msg << "Simpleperf did not exit as expected. Logfile: ";
+    msg << ongoing_recording.log_file_path << ". ";
+    msg << "Exit status: " << status;
+    Log::D("%s", msg.str().c_str());
     error->append("\n");
-    error->append(msg);
+    error->append(msg.str());
     return false;
   }
   return true;

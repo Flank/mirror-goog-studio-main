@@ -77,7 +77,7 @@ Status StartCpuTrace::ExecuteOn(Daemon* daemon) {
   // is already alive or queue the events to be sent when the session is
   // created.
   sessions_manager_->SendOrQueueEventsForSession(
-      daemon, capture->configuration.app_name(), events_to_send);
+      daemon, start_command.configuration().app_name(), events_to_send);
 
   return Status::OK;
 }

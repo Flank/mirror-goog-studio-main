@@ -9,7 +9,9 @@ cc_binary(
         "-Itools/base/echo-sample",
         "-I$(GENDIR)/tools/base/transport",
     ],
-    linkopts = ANDROID_LINKOPTS,
+    linkopts = ANDROID_LINKOPTS + [
+        "-ldl",  # Needed for dladdr referenced in TermincationService
+    ],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [

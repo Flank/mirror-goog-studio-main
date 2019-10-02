@@ -150,6 +150,9 @@ cc_test(
     data = [
         "//tools/base/transport/tests/testdata",
     ],
+    linkopts = [
+        "-ldl",  # Needed for dladdr referenced in TermincationService
+    ],
     linkstatic = 1,
     tags = ["no_windows"],
     deps = [
