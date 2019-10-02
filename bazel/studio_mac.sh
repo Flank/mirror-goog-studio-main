@@ -25,7 +25,7 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
         --define=meta_android_build_number=${build_number} \
         --profile=${dist_dir}/mac-profile-${build_number}.json \
         -- \
-        $(< "${script_dir}/targets")
+        //tools/base/common/...
 
 readonly bazel_status=$?
 
