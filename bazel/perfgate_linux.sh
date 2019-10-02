@@ -46,19 +46,10 @@ if [[ -d "${dist_dir}" ]]; then
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
-  ${java} -jar ${bin_dir}/tools/base/bazel/perfgate_logs_collector_deploy.jar "${testlogs_dir}" "${dist_dir}/bazel-${build_number}.bes" "${dist_dir}/bazel-${build_number}.bes.zip" "${dist_dir}/bazel-${build_number}.bes.txt"
+  ${java} -jar ${bin_dir}/tools/base/bazel/perfgate_logs_collector_deploy.jar "${testlogs_dir}" "${dist_dir}/bazel-${build_number}.bes" "${dist_dir}/perfgate_data.zip" "${dist_dir}/logs/perfgate_logs_collector.log"
 
   # Upload all test logs
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/bazel_test_logs.zip" {} \;
-
-  # Filter test logs for performance metrics upload.
-  find "${testlogs_dir}" -type f -name outputs.zip -exec zip -d {} \*.gz \;
-  # Upload perfgate performance files
-  find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/perfgate_data.zip" {} \;
-
 fi
-
-# Clean up the Bazel output directory.
-"${script_dir}/bazel" clean
 
 exit $bazel_status

@@ -55,29 +55,12 @@ copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skiaparser.zip %DIS
 set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 
 @rem Extract perfgate data
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\bazel-%BUILDNUMBER%.bes.zip %DISTDIR%\bazel-%BUILDNUMBER%.bes.txt
+%JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\perfgate_data.zip %DISTDIR%\logs\perfgate_logs_collector.log
 
 @echo studio_win.cmd time: %time%
-
-cd %BASEDIR%\bazel-testlogs
-FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zip"') DO (
-  C:\cygwin64\bin\zip.exe -ur %DISTDIR%\perfgate_data.zip %%F
-)
-
-@echo studio_win.cmd time: %time%
-
-@rem until bazel clean is fixed on windows, remove perfgate data amanually.
-CALL del /s /q outputs.zip
-@echo studio_win.cmd time: %time%
-
-@rem We must cd back into %BASEDIR% so bazel config files are properly located.
-cd %BASEDIR%
 
 :ENDSCRIPT
-@rem We will explicitly clear the Bazel cache between runs to keep data hermetic.
-@echo studio_win.cmd time: %time%
-CALL %SCRIPTDIR%bazel.cmd clean --expunge
-@rem On windows we must explicitly shut down bazel.  Otherwise file handles remain open.
+@rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.
 @echo studio_win.cmd time: %time%
 CALL %SCRIPTDIR%bazel.cmd shutdown
 @echo studio_win.cmd time: %time%

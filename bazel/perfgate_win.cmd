@@ -50,24 +50,10 @@ echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.co
 set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 
 @rem Extract perfgate data
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\bazel-%BUILDNUMBER%.bes.zip %DISTDIR%\bazel-%BUILDNUMBER%.bes.txt
-
-cd %BASEDIR%\bazel-testlogs
-
-FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zip"') DO (
-  C:\cygwin64\bin\zip.exe -ur %DISTDIR%\perfgate_data.zip %%F
-)
-
-@rem Until bazel clean is fixed on Windows, remove perfgate data manually.
-call del /s /q outputs.zip
-
-@rem We must cd back into %BASEDIR% so bazel config files are properly located.
-cd %BASEDIR%
+%JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\perfgate_data.zip %DISTDIR%\logs\perfgate_logs_collector.log
 
 :ENDSCRIPT
-@rem We will explicitly clear the Bazel cache between runs to keep data hermetic.
-CALL %SCRIPTDIR%bazel.cmd clean --expunge
-@rem On windows we must explicitly shut down bazel.  Otherwise file handles remain open.
+@rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.
 CALL %SCRIPTDIR%bazel.cmd shutdown
 @rem We also must call the kill-processes.py python script and kill all processes still open
 @rem within the src directory.  This is due to the fact go/ab builds must be removable after
