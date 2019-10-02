@@ -53,15 +53,15 @@ enum class FormFactor {
  * This interface is used by the wizard in 3 steps:
  * 1. User is presented an option to select a template, for example when creating a new Module, browsing activity gallery,
  * or choosing from the New -> X menu. Selection of the Template depends on fields like [Category], [FormFactor], etc.
- * 2. After the user selects a template, the wizards will call [Parameters] to build the UI.
+ * 2. After the user selects a template, the wizards will call [Parameter]s to build the UI.
  * 3. Recipe is executed with parameters' values supplied by the user in the UI.
  **/
 interface Template {
   /**
-   * When a [Template] is chosen by the user, the [Parameters] is used by the Wizards to build the user UI.
+   * When a [Template] is chosen by the user, the [Parameter]s are used by the Wizards to build the user UI.
    * A user provides [Parameter.value]s by interaction with the UI.
    **/
-  val parameters: Parameters
+  val parameters: Collection<Parameter<*>>
   /**
    * A template name which is also used as identified.
    *
@@ -90,7 +90,7 @@ interface Template {
   val requireAndroidX: Boolean
   val category: Category
   val formFactor: FormFactor
-  /** Recipe used to generate this [Template] output. It will be called after the user provides values for all [Parameters]. */
+  /** Recipe used to generate this [Template] output. It will be called after the user provides values for all [Parameter]s. */
   val recipe: Recipe
   /** The template will be shown only in given context. Should include all possible contexts by default. */
   val uiContexts: Collection<WizardUiContext>
@@ -104,7 +104,7 @@ interface Template {
    * Reprent absence of a [Template] (null object pattern).
    */
   companion object NoActivity: Template {
-    override val parameters: Parameters = Parameters(listOf())
+    override val parameters: Collection<Parameter<*>> = listOf()
     override val uiContexts: Collection<WizardUiContext> get() = TODO()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
     override val revision: Int = 1

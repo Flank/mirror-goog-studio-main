@@ -20,6 +20,8 @@ package com.android.tools.idea.wizard.template
  *
  * Useful when rendering UI according to templates (e.g. visibility may depend on [isNewModule]).
  * It is not passed to the template renderer, in contrast to [TemplateData].
+ *
+ * Note: it updates [Parameter.wizardParameterData] for all [consumers].
  */
 data class WizardParameterData(
   val packageName: String,
@@ -28,5 +30,10 @@ data class WizardParameterData(
    * Name of the source provider.
    * Also known as "flavor". E.g. "main", "debug" etc.
    */
-  val sourceProviderName: String
-)
+  val sourceProviderName: String,
+  private val consumers: Collection<Parameter<*>>
+) {
+  init {
+    consumers.forEach { it.wizardParameterData = this }
+  }
+}
