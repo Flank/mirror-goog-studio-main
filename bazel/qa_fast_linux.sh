@@ -18,7 +18,7 @@ config_options="--config=remote"
 readonly invocation_id="$(uuidgen)"
 
 # Run FAST Bazel tests, no tests using emulator here
-target_filters=qa_fast,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-perfgate_only
+target_filters=qa_fast,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \

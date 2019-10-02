@@ -10,7 +10,7 @@ readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
 build_tag_filters=-no_linux
-test_tag_filters=perfgate_multi_run,perfgate_only,-no_perfgate,-no_linux,-no_test_linux
+test_tag_filters=perfgate,-no_linux,-no_test_linux
 
 config_options="--config=remote"
 

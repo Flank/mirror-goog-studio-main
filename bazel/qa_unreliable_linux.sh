@@ -21,7 +21,7 @@ config_options="--config=remote"
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id_sanity_no_emu="$(uuidgen)"
 
-target_filters=qa_sanity_unreliable,-no_linux,-no_test_linux,-perfgate_only
+target_filters=qa_sanity_unreliable,-no_linux,-no_test_linux
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
@@ -49,7 +49,7 @@ fi
 readonly invocation_id_fast_no_emu="$(uuidgen)"
 
 # Run Bazel tests, which only those requiring emulator
-target_filters=qa_fast_unreliable,-no_linux,-no_test_linux,-perfgate_only
+target_filters=qa_fast_unreliable,-no_linux,-no_test_linux
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
@@ -76,7 +76,7 @@ fi
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id_sanity_emu="$(uuidgen)"
 
-target_filters=qa_sanity_unreliable_emu,-no_linux,-no_test_linux,-perfgate_only
+target_filters=qa_sanity_unreliable_emu,-no_linux,-no_test_linux
 QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
@@ -106,7 +106,7 @@ fi
 readonly invocation_id_fast_emu="$(uuidgen)"
 
 # Run Bazel tests, which only those requiring emulator
-target_filters=qa_fast_unreliable_emu,-no_linux,-no_test_linux,-perfgate_only
+target_filters=qa_fast_unreliable_emu,-no_linux,-no_test_linux
 QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \

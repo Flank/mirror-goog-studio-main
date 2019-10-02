@@ -18,7 +18,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
   config_options="--config=cloud_resultstore"
-  target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-perfgate_only,-no_crostini
+  target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
 
@@ -85,7 +85,7 @@ else #Executes normally on linux as before
   # options.
 
   # Run Bazel tests - no emulator tests should run here
-  target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-perfgate_only
+  target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
   "${script_dir}/bazel" \
     --max_idle_secs=60 \
     test \

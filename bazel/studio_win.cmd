@@ -7,7 +7,7 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
-set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only
+set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
 
 @rem The current directory the executing script is in.
 set SCRIPTDIR=%~dp0
