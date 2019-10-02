@@ -86,19 +86,12 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             variantScope.artifacts.producesFile(
-                InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
+                InternalArtifactType.BASE_MODULE_METADATA,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ModuleMetadataWriterTask::outputFile,
                 ModuleMetadata.PERSISTED_FILE_NAME
             )
-
-            if (variantScope.type.isBaseModule) {
-                variantScope.artifacts.republish(
-                    InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
-                    InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
-                )
-            }
         }
 
         override fun configure(task: ModuleMetadataWriterTask) {

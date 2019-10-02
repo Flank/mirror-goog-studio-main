@@ -126,7 +126,7 @@ class BundleInstantAppTest {
             variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
-                AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION
+                AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
             )
         ).thenReturn(FakeFileCollection(ImmutableList.of(applicationFile)))
 

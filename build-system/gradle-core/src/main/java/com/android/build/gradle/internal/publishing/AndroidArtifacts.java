@@ -96,7 +96,7 @@ public class AndroidArtifacts {
 
     // types for feature-split content.
     private static final String TYPE_FEATURE_SET_METADATA = "android-feature-all-metadata";
-    private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
+    private static final String TYPE_BASE_MODULE_METADATA = "android-base-module-metadata";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
     private static final String TYPE_FEATURE_DEX = "android-feature-dex";
     private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
@@ -108,8 +108,6 @@ public class AndroidArtifacts {
             "android-reverse-metadata-feature-decl";
     private static final String TYPE_REVERSE_METADATA_FEATURE_MANIFEST =
             "android-reverse-metadata-feature-manifest";
-    private static final String TYPE_REVERSE_METADATA_BASE_DECLARATION =
-            "android-reverse-metadata-base-module-decl";
     private static final String TYPE_REVERSE_METADATA_CLASSES = "android-reverse-metadata-classes";
     private static final String TYPE_REVERSE_METADATA_JAVA_RES =
             "android-reverse-metadata-java-res";
@@ -257,7 +255,7 @@ public class AndroidArtifacts {
         // bundle.
         LIB_DEPENDENCIES(TYPE_LIB_DEPENDENCIES),
 
-        // Feature split related artifacts.
+        // Dynamic Feature related artifacts.
 
         // file containing the metadata for the full feature set. This contains the feature names,
         // the res ID offset, both tied to the feature module path. Published by the base for the
@@ -265,9 +263,9 @@ public class AndroidArtifacts {
         FEATURE_SET_METADATA(TYPE_FEATURE_SET_METADATA),
         FEATURE_SIGNING_CONFIG(TYPE_FEATURE_SIGNING_CONFIG),
 
-        // file containing the application ID to synchronize all base + dynamic feature. This is
-        // published by the base feature and installed application module.
-        FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID),
+        // file containing the base module info (appId, versionCode, debuggable, ...).
+        // This is published by the base module and read by the dynamic feature modules
+        BASE_MODULE_METADATA(TYPE_BASE_MODULE_METADATA),
 
         // ?
         FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG),
@@ -288,7 +286,6 @@ public class AndroidArtifacts {
         // Reverse Metadata artifacts
         REVERSE_METADATA_FEATURE_DECLARATION(TYPE_REVERSE_METADATA_FEATURE_DECLARATION),
         REVERSE_METADATA_FEATURE_MANIFEST(TYPE_REVERSE_METADATA_FEATURE_MANIFEST),
-        REVERSE_METADATA_BASE_MODULE_DECLARATION(TYPE_REVERSE_METADATA_BASE_DECLARATION),
         REVERSE_METADATA_CLASSES(TYPE_REVERSE_METADATA_CLASSES),
         REVERSE_METADATA_JAVA_RES(TYPE_REVERSE_METADATA_JAVA_RES),
 

@@ -147,7 +147,6 @@ enum class VariantTypeImpl(
     BASE_APK(
         isApk = true,
         isBaseModule = true,
-        publishToMetadata = true,
         publishToRepository = true,
         publishToOtherModules = true,
         prefix = "",

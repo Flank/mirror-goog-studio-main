@@ -722,7 +722,7 @@ class DynamicAppTest {
             FileUtils.join(
                 project.getSubproject("app").buildDir,
                 "intermediates",
-                "metadata_base_module_declaration",
+                "base_module_metadata",
                 "debug",
                 "application-metadata.json")
         FileSubject.assertThat(appMetadataFile).isFile()

@@ -119,7 +119,7 @@ abstract class BundleInstantApp : NonIncrementalTask() {
             task.applicationMetadataFile = scope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
-                AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION
+                AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
             )
 
             task.apkDirectories = scope.getArtifactFileCollection(

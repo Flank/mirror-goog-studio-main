@@ -18,11 +18,10 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_NAME;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
@@ -724,13 +723,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
-                task.packageManifest =
-                        getVariantScope()
-                                .getArtifactFileCollection(
-                                        REVERSE_METADATA_VALUES,
-                                        PROJECT,
-                                        REVERSE_METADATA_BASE_MODULE_DECLARATION);
-
                 task.featureManifests =
                         getVariantScope()
                                 .getArtifactCollection(
@@ -750,9 +742,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 task.packageManifest =
                         getVariantScope()
                                 .getArtifactFileCollection(
-                                        COMPILE_CLASSPATH,
-                                        PROJECT,
-                                        FEATURE_APPLICATION_ID_DECLARATION);
+                                        COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
 
                 task.dependencyFeatureNameArtifacts =
                         getVariantScope()

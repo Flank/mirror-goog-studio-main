@@ -334,7 +334,7 @@ object AAR_LIBS_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY)
     object FEATURE_SET_METADATA: InternalArtifactType<RegularFile>(FILE)
     // file containing the module information (like its application ID) to synchronize all base
     // and dynamic feature. This is published by the base feature and installed application module.
-    object METADATA_BASE_MODULE_DECLARATION: InternalArtifactType<RegularFile>(FILE)
+    object BASE_MODULE_METADATA: InternalArtifactType<RegularFile>(FILE)
     // file containing only the application ID. It is used to synchronize all feature plugins
     // with the application module's application ID.
     object METADATA_APPLICATION_ID: InternalArtifactType<RegularFile>(FILE)
@@ -372,7 +372,6 @@ object AAR_LIBS_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY)
     // Project metadata
     object METADATA_FEATURE_DECLARATION: InternalArtifactType<Directory>(DIRECTORY)
     object METADATA_FEATURE_MANIFEST: InternalArtifactType<Directory>(DIRECTORY)
-    object METADATA_INSTALLED_BASE_DECLARATION: InternalArtifactType<RegularFile>(FILE)
     // The metadata for the library dependencies: InternalArtifactType<RegularFile>(FILE) direct and indirect: InternalArtifactType<RegularFile>(FILE) published for each module.
     object METADATA_LIBRARY_DEPENDENCIES_REPORT: InternalArtifactType<RegularFile>(FILE)
 

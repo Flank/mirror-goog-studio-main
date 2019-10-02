@@ -17,10 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -95,7 +93,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                 // TODO replace this with Property<String> which can be fed from the published artifact directly.
                 // b/141650037
                 task.appMetadata = variantScope.getArtifactFileCollection(
-                    COMPILE_CLASSPATH, PROJECT, FEATURE_APPLICATION_ID_DECLARATION
+                    COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
                 )
             } else {
                 task.applicationIdSupplier = { variantScope.variantConfiguration.applicationId }

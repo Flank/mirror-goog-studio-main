@@ -50,10 +50,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_BASE_MODULE_DECLARATION
+import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
@@ -146,8 +145,6 @@ class PublishingSpecs {
                 runtime(InternalArtifactType.APKS_FROM_BUNDLE, ArtifactType.APKS_FROM_BUNDLE)
                 runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
 
-                reverseMetadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION)
-
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
@@ -155,8 +152,7 @@ class PublishingSpecs {
 
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
-                api(METADATA_BASE_MODULE_DECLARATION,
-                    ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
+                api(BASE_MODULE_METADATA, ArtifactType.BASE_MODULE_METADATA)
                 api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
 
                 // ----
@@ -421,6 +417,9 @@ private open class VariantSpecBuilderImpl (
     }
 
     override fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+        if (!variantType.publishToMetadata) {
+            throw RuntimeException("VariantType '$variantType' does not support metadata publishing")
+        }
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, REVERSE_METADATA_ELEMENTS_ONLY))
     }
 
