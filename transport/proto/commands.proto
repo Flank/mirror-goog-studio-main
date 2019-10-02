@@ -107,7 +107,7 @@ message Command {
     layoutinspector.LayoutInspectorCommand layout_inspector = 1100;
 
     // App inspection prefix = 1200;
-    app.inspection.AppInspectionCommand androidx_inspection_command = 1200;
+    app.inspection.AppInspectionCommand app_inspection_command = 1200;
   }
 }
 
