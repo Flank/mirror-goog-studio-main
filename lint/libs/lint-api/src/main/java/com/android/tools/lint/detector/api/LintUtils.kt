@@ -411,11 +411,11 @@ fun isRootElement(element: Element): Boolean {
  * @return the stripped id, never null
  */
 @Deprecated(
-  message = "Use ResourceUrl for parsing @id and similar strings.",
-  replaceWith = ReplaceWith(
-    expression = "ResourceUrl.parse(id)?.name",
-    imports = ["com.android.resources.ResourceUrl"]
-  )
+    message = "Use ResourceUrl for parsing @id and similar strings.",
+    replaceWith = ReplaceWith(
+        expression = "ResourceUrl.parse(id)?.name",
+        imports = ["com.android.resources.ResourceUrl"]
+    )
 )
 fun stripIdPrefix(id: String?): String {
     return when {
@@ -2056,7 +2056,7 @@ fun isNumberString(s: String?): Boolean {
  * (Kotlin 0 or 1 args), or if there's some kind of error.
  */
 fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
-    Map<UExpression, PsiParameter>? {
+        Map<UExpression, PsiParameter>? {
     if (method.parameterList.parametersCount <= 1) {
         // When there is at most one parameter the mapping is easy to figure out!
         return null
@@ -2240,11 +2240,11 @@ object LintUtils {
 
     @JvmStatic
     @Deprecated(
-      message = "Use ResourceUrl for parsing @id and similar strings and consider the namespace used.",
-      replaceWith = ReplaceWith(
-        expression = "ResourceUrl.parse(id)",
-        imports = ["com.android.resources.ResourceUrl"]
-      )
+        message = "Use ResourceUrl for parsing @id and similar strings and consider the namespace used.",
+        replaceWith = ReplaceWith(
+            expression = "ResourceUrl.parse(id)",
+            imports = ["com.android.resources.ResourceUrl"]
+        )
     )
     fun stripIdPrefix(id: String?): String {
         return com.android.tools.lint.detector.api.stripIdPrefix(id)

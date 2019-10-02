@@ -19,7 +19,6 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Detector
-import org.junit.Test
 
 class LocaleDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
