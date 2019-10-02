@@ -2,44 +2,6 @@ apply plugin: 'java'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
 apply plugin: 'kotlin'
-apply plugin: 'org.jetbrains.dokka'
-
-buildscript {
-
-    repositories {
-        maven { url "$rootDir/../external/dokka/maven" }
-        jcenter()
-    }
-
-    dependencies {
-        classpath libs.dokka
-        classpath libs.kotlin_reflect
-    }
-}
-
-dokka {
-    outputFormat = 'dac'
-    outputDirectory = "$rootDir/../dokka-out/gradle-api-docs"
-    jdkVersion = 8
-
-    includeNonPublic = false
-    skipDeprecated = false
-    skipEmptyPackages = false
-    noJdkLink = true
-
-    dacRoot = "/reference/gradle"
-    classpath = [new File('$rootDir/external/gradle/gradle-5.4.1-bin.zip')]
-
-    sourceRoot {
-        path = "$rootDir/base/build-system/gradle-api/src/main/java/com/android/build/*"
-        platforms = ["JVM"]
-    }
-    externalDocumentationLink {
-        // Root URL of the generated documentation to link with. The trailing slash is required!
-        url = new URL("https://docs.gradle.org/current/javadoc/")
-        url = new URL("http://docs.oracle.com/javase/8/docs/api/")
-    }
-}
 
 configurations {
     provided
