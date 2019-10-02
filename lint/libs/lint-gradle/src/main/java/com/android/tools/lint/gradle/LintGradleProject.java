@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -393,6 +394,19 @@ public class LintGradleProject extends Project {
             return assetFolders;
         }
 
+        private void removeDuplicateFiles(List<File> files) {
+            Set<File> uniqueFiles = new LinkedHashSet<>();
+            for (File file : files) {
+                try {
+                    uniqueFiles.add(file.getCanonicalFile());
+                } catch (IOException e) {
+                    client.log(e, "IO error while getting canonical path for: %s", file);
+                }
+            }
+            files.clear();
+            files.addAll(uniqueFiles);
+        }
+
         @NonNull
         @Override
         public List<File> getJavaSourceFolders() {
@@ -400,11 +414,13 @@ public class LintGradleProject extends Project {
                 javaSourceFolders = Lists.newArrayList();
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> srcDirs = provider.getJavaDirectories();
-                    // model returns path whether or not it exists
+                    // Model returns path whether or not it exists.
                     javaSourceFolders.addAll(
                             srcDirs.stream().filter(File::exists).collect(Collectors.toList()));
                 }
                 javaSourceFolders.addAll(kotlinSourceFolders);
+                // The Kotlin source folders might overlap with the Java source folders.
+                removeDuplicateFiles(javaSourceFolders);
             }
 
             return javaSourceFolders;
