@@ -120,8 +120,7 @@ data class StringParameter(
   private val _enabled: WizardParameterData.() -> Boolean = { true },
   override val defaultValue: String,
   val constraints: List<Constraint>,
-  private val _suggest: () -> String? = { null },
-  val type: Type = Type.STRING
+  private val _suggest: () -> String? = { null }
 ) : DslParameter<String>(_visible, _enabled) {
   override var value: String = defaultValue
 
@@ -130,15 +129,6 @@ data class StringParameter(
    * Often calculated using different parameters, e.g "activity_super" layout name generated from "SuperActivity".
    */
   fun suggest() = _suggest()
-
-  /**
-   * Different [Type]s of StringParameter have different UIs.
-   */
-  enum class Type {
-    STRING,
-    LANGUAGE,
-    PACKAGE_NAME
-  }
 }
 
 /**
@@ -167,15 +157,4 @@ data class BooleanParameter(
   override val defaultValue: Boolean
 ) : DslParameter<Boolean>(_visible, _enabled) {
   override var value: Boolean = defaultValue
-}
-
-/**
- * Separator. Not passed to the render, only shows in UI.
- */
-class Separator: DslParameter<Nothing?>({true}, {true}) {
-  override val name: String = ""
-  override val defaultValue: Nothing? get() = throw UnsupportedOperationException()
-  override var value: Nothing?
-    get() = throw UnsupportedOperationException()
-    set(_) = throw UnsupportedOperationException()
 }
