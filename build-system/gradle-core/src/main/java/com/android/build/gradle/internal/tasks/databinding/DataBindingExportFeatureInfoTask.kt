@@ -30,6 +30,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -102,12 +103,8 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT)
-            task.resOffset.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project,
-                    FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(variantScope, task)
-                )
-            )
+            task.resOffset.set(variantScope.resOffset)
+            task.resOffset.disallowChanges()
         }
     }
 }

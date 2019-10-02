@@ -46,6 +46,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -103,7 +104,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         private set
 
     @get:Input
-    val fileName: Property<String> = objects.property(String::class.java)
+    abstract val fileName: Property<String>
 
     @get:Input
     val jarCreatorType: Property<JarCreatorType> = objects.property(JarCreatorType::class.java)
@@ -204,15 +205,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             super.configure(task)
 
             val artifacts = variantScope.artifacts
-            val fileNameSupplier = if (variantScope.type.isBaseModule) Supplier { "base.zip"}
-            else {
-                val featureName: Supplier<String> =
-                    FeatureSetMetadata.getInstance().getFeatureNameSupplierForTask(
-                        variantScope, task
-                    )
-                Supplier { "${featureName.get()}.zip" }
+            val fileName = if (variantScope.type.isBaseModule) {
+                variantScope.globalScope.project.provider { "base.zip" }
             }
-            task.fileName.set(variantScope.globalScope.project.provider { fileNameSupplier.get() })
+            else {
+                variantScope.getFeatureName { "$it.zip" }
+            }
+            task.fileName.set(fileName)
+            task.fileName.disallowChanges()
 
             artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)

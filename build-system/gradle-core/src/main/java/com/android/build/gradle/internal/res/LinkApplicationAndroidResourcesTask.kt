@@ -496,14 +496,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
 
             if (variantType.isDynamicFeature) {
-                task.resOffset.set(
-                    TaskInputHelper.memoizeToProvider(
-                        project,
-                        FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
-                            variantScope, task
-                        )
-                    )
-                )
+                task.resOffset.set(variantScope.resOffset)
+                task.resOffset.disallowChanges()
             }
 
             task.projectBaseName = baseName!!

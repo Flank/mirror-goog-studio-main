@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -731,13 +730,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         REVERSE_METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isDynamicFeature()) {
-                task.getFeatureName()
-                        .set(
-                                TaskInputHelper.memoizeToProvider(
-                                        project,
-                                        FeatureSetMetadata.getInstance()
-                                                .getFeatureNameSupplierForTask(
-                                                        getVariantScope(), task)));
+                task.getFeatureName().set(getVariantScope().getFeatureName());
+                task.getFeatureName().disallowChanges();
 
                 task.packageManifest =
                         getVariantScope()

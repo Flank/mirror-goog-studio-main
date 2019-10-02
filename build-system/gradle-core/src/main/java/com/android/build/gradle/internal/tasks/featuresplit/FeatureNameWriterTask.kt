@@ -20,15 +20,15 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import java.io.IOException
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import java.io.IOException
 
 /**
  * Task that writes the feature module's name to a file and publishes it.
@@ -78,13 +78,8 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
 
         override fun configure(task: FeatureNameWriterTask) {
             super.configure(task)
-
-            task.featureName.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project, FeatureSetMetadata.getInstance()
-                        .getFeatureNameSupplierForTask(variantScope, task)
-                )
-            )
+            task.featureName.set(variantScope.featureName)
+            task.featureName.disallowChanges()
         }
     }
 }

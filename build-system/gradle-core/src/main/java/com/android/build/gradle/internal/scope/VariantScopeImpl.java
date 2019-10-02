@@ -27,6 +27,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -78,6 +79,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -104,15 +106,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -1444,4 +1449,101 @@ public class VariantScopeImpl implements VariantScope {
             return ApkCreatorType.APK_Z_FILE_CREATOR;
         }
     }
+
+    private Provider<String> featureName = null;
+
+    @NonNull
+    @Override
+    public Provider<String> getFeatureName(@Nullable Function<String, String> stringTransformer) {
+        if (featureName == null || stringTransformer != null) {
+            final String gradlePath = globalScope.getProject().getPath();
+
+            final FileCollection fc =
+                    getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            PROJECT,
+                            FEATURE_SET_METADATA);
+            Provider<String> v =
+                    fc.getElements()
+                            .map(
+                                    entries -> {
+                                        FileSystemLocation file = Iterables.getOnlyElement(entries);
+                                        try {
+                                            FeatureSetMetadata featureSetMetadata =
+                                                    FeatureSetMetadata.load(file.getAsFile());
+                                            String featureName =
+                                                    featureSetMetadata.getFeatureNameFor(
+                                                            gradlePath);
+
+                                            if (featureName == null) {
+                                                throw new RuntimeException(
+                                                        String.format(
+                                                                "Failed to find feature name for %s in %s",
+                                                                gradlePath, file.getAsFile()));
+                                            }
+                                            if (stringTransformer != null) {
+                                                return stringTransformer.apply(featureName);
+                                            }
+                                            return featureName;
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+
+            if (stringTransformer == null) {
+                featureName = v;
+            }
+            return v;
+        }
+
+        return featureName;
+    }
+
+    @NonNull
+    @Override
+    public Provider<String> getFeatureName() {
+        return getFeatureName(null);
+    }
+
+    private Provider<Integer> resOffset = null;
+
+    @NonNull
+    @Override
+    public Provider<Integer> getResOffset() {
+        if (resOffset == null) {
+            final String gradlePath = globalScope.getProject().getPath();
+
+            final FileCollection fc =
+                    getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            PROJECT,
+                            FEATURE_SET_METADATA);
+
+            resOffset =
+                    fc.getElements()
+                            .map(
+                                    entries -> {
+                                        FileSystemLocation file = Iterables.getOnlyElement(entries);
+                                        try {
+                                            FeatureSetMetadata featureSetMetadata =
+                                                    FeatureSetMetadata.load(file.getAsFile());
+                                            Integer resOffset =
+                                                    featureSetMetadata.getResOffsetFor(gradlePath);
+
+                                            if (resOffset == null) {
+                                                throw new RuntimeException(
+                                                        String.format(
+                                                                "Failed to find resource offset for %s in %s",
+                                                                gradlePath, file.getAsFile()));
+                                            }
+                                            return resOffset;
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+        }
+
+        return resOffset;
+    }
+
 }

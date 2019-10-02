@@ -32,13 +32,15 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_ZIP
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_DIR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
@@ -62,8 +64,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME

@@ -279,15 +279,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
             if (variantScope.type.isDynamicFeature) {
-                // get the res offset supplier
-                task.resOffset.set(
-                    TaskInputHelper.memoizeToProvider(
-                        variantScope.globalScope.project,
-                        FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
-                            variantScope, task
-                        )
-                    )
-                )
+                task.resOffset.set(variantScope.resOffset)
+                task.resOffset.disallowChanges()
             }
 
             task.debuggable = config.buildType.isDebuggable

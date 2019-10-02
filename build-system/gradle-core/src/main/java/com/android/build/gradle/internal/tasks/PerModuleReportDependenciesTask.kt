@@ -40,6 +40,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -238,18 +239,13 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             ).artifactFiles
 
 
-            val moduleNameSupplier = if (variantScope.type.isBaseModule) {
-                Supplier { "base" }
+            val moduleName = if (variantScope.type.isBaseModule) {
+                variantScope.globalScope.project.provider { "base" }
             } else {
-                FeatureSetMetadata.getInstance().getFeatureNameSupplierForTask(variantScope, task)
+                variantScope.featureName
             }
-
-            task.moduleName.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project,
-                    moduleNameSupplier
-                )
-            )
+            task.moduleName.set(moduleName)
+            task.moduleName.disallowChanges()
         }
     }
 }

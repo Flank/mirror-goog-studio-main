@@ -35,9 +35,9 @@ class FeatureNameWriterTaskTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    lateinit internal var project: Project
-    lateinit internal var task: FeatureNameWriterTask
-    lateinit internal var outputFile: File
+    internal lateinit var project: Project
+    internal lateinit var task: FeatureNameWriterTask
+    internal lateinit var outputFile: File
 
     @Before
     @Throws(IOException::class)
