@@ -121,7 +121,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -141,7 +140,6 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.TaskProvider;
 
 /** A scope containing data for a specific variant. */
 public class VariantScopeImpl implements VariantScope {
@@ -226,37 +224,13 @@ public class VariantScopeImpl implements VariantScope {
     /**
      * Publish an intermediate artifact.
      *
-     * @param artifact FileCollection to be published.
+     * @param artifact Provider of File or FileSystemLocation to be published.
      * @param artifactType the artifact type.
      * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
      */
     @Override
     public void publishIntermediateArtifact(
-            @NonNull Provider<FileCollection> artifact,
-            @NonNull ArtifactType artifactType,
-            @NonNull Collection<PublishedConfigType> configTypes) {
-        // Create Provider so that the BuildableArtifact is not resolved until needed.
-        Provider<File> file = artifact.map(fileCollection -> fileCollection.getSingleFile());
-
-        Preconditions.checkState(!configTypes.isEmpty());
-
-        // FIXME this needs to be parameterized based on the variant's publishing type.
-        final VariantDependencies variantDependency = getVariantDependencies();
-
-        for (PublishedConfigType configType : PublishedConfigType.values()) {
-            if (configTypes.contains(configType)) {
-                Configuration config = variantDependency.getElements(configType);
-                Preconditions.checkNotNull(
-                        config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(config, file, artifact, artifactType);
-            }
-        }
-    }
-
-    @Override
-    public void publishIntermediateArtifact(
-            @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull TaskProvider lastProducerTask,
+            @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
 
@@ -270,7 +244,7 @@ public class VariantScopeImpl implements VariantScope {
                 Configuration config = variantDependency.getElements(configType);
                 Preconditions.checkNotNull(
                         config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(config, artifact, lastProducerTask, artifactType);
+                publishArtifactToConfiguration(config, artifact, artifactType);
             }
         }
     }

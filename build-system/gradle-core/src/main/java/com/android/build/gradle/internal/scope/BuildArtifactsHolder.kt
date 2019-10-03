@@ -389,27 +389,6 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * See [getFinalProducts] API.
-     *
-     * On top of returning the [Provider] of [Directory] or [RegularFile], also returns a
-     * [Provider] of [String] which represents the task name of the final producer task for the
-     * passed artifact type.
-     *
-     * @param artifactType the identifier for the built artifact.
-     * @return a [Pair] of [Provider] for the [FileSystemLocation] and task name producing it.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProductWithTask(
-        artifactType: ARTIFACT_TYPE): Pair<TaskProvider<*>, Provider<T>>
-        where ARTIFACT_TYPE: ArtifactType<T>,
-              ARTIFACT_TYPE: ArtifactType.Single {
-        if (operations.getArtifactContainer(artifactType).lastProducerTask == null ) {
-            println("Requesting $artifactType with null last producer !")
-        }
-        return Pair(operations.getArtifactContainer(artifactType).lastProducerTask!!,
-            getFinalProduct(artifactType))
-    }
-
-    /**
      * Returns a [ListProperty]s of either [Directory] or [RegularFile] depending on the
      * passed [ArtifactKind]. This possibly empty list will contain the final
      * values of the built artifacts irrespective of when this call is made.

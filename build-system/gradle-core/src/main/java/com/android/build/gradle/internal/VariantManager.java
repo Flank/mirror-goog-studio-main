@@ -140,7 +140,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Class to create, manage variants.
@@ -537,20 +536,22 @@ public class VariantManager implements VariantModel {
             }
 
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
-                Pair<TaskProvider<?>, ? extends Provider<? extends FileSystemLocation>>
-                        finalProduct =
-                                buildArtifactsHolder.getFinalProductWithTask(buildArtifactType);
+                Provider<? extends FileSystemLocation> artifact =
+                        buildArtifactsHolder.getFinalProduct(buildArtifactType);
 
                 variantScope.publishIntermediateArtifact(
-                        finalProduct.getSecond(),
-                        finalProduct.getFirst(),
+                        artifact,
                         outputSpec.getArtifactType(),
                         outputSpec.getPublishedConfigTypes());
             } else {
                 if (buildArtifactType == InternalArtifactType.ALL_CLASSES.INSTANCE) {
-                    variantScope.publishIntermediateArtifact(
+                    Provider<FileCollection> allClasses =
                             buildArtifactsHolder.getFinalProductAsFileCollection(
-                                    InternalArtifactType.ALL_CLASSES.INSTANCE),
+                                    InternalArtifactType.ALL_CLASSES.INSTANCE);
+                    Provider<File> file = allClasses.map(FileCollection::getSingleFile);
+
+                    variantScope.publishIntermediateArtifact(
+                            file,
                             outputSpec.getArtifactType(),
                             outputSpec.getPublishedConfigTypes());
                 }

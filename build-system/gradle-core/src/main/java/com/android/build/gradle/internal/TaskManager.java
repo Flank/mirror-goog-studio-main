@@ -2816,7 +2816,6 @@ public abstract class TaskManager {
             publishArtifactToConfiguration(
                     configuration,
                     file,
-                    artifact,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     attributeMap);
         }

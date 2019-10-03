@@ -46,8 +46,6 @@ internal abstract class ArtifactContainer<T>(private val allocator: () -> Proper
     private val needInitialProducer = AtomicBoolean(true)
     private val hasCustomTransformers = AtomicBoolean(false)
 
-    internal var lastProducerTask: TaskProvider<*>? = null
-
     /**
      * Specific hook for AGP providers to register the initial producer of the artifact.
      */

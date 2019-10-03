@@ -208,7 +208,6 @@ internal class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>
             // since the task will now execute, resolve its output path.
             into(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
         }
-        artifactContainer.lastProducerTask = taskProvider
     }
 }
 
@@ -229,7 +228,6 @@ internal class ReplaceRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
             with(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
         }
         artifactContainer.replace(taskProvider.flatMap { with(it) })
-        artifactContainer.lastProducerTask = taskProvider
     }
 }
 
@@ -254,7 +252,6 @@ internal class AppendRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
         // the AGP producers) since the transforms always operate on the complete list of added
         // providers.
         artifactContainer.addInitialProvider(taskProvider.flatMap { with(it) })
-        artifactContainer.lastProducerTask = taskProvider
         return this
     }
 }
@@ -326,7 +323,5 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
             from(it).set(outputAbsolutePath)
         }
         artifactContainer.setInitialProvider(taskProvider.flatMap { from(it) })
-        artifactContainer.lastProducerTask = taskProvider
     }
-
 }
