@@ -64,24 +64,6 @@ abstract class BuildArtifactsHolder(
     private val allClasses= project.files()
 
     /**
-     * Types of operation on Buildable artifact as indicated by tasks producing the artifact.
-     */
-    enum class OperationType {
-        /**
-         * Initial producer of the artifact
-         */
-        INITIAL,
-        /**
-         * Producer appends more files/directories to artifact
-         */
-        APPEND,
-        /**
-         * Producer transforms (replace) existing artifact files/directories with new ones.
-         */
-        TRANSFORM
-    }
-
-    /**
      * Republishes an [ArtifactType] under a different type. This is useful when a level of
      * indirection is used.
      *
@@ -146,8 +128,6 @@ abstract class BuildArtifactsHolder(
      * [Provider.get] method is invoked during a consumer task configuration execution for instance.
      *
      * @param artifactType the produced artifact type
-     * @param operationType the expected type of production, there can be only one
-     * [OperationType.INITIAL] but many [OperationType.APPEND] or [OperationType.TRANSFORM]
      * @param taskProvider the [TaskProvider] for the task ultimately responsible for producing the
      * artifact.
      * @param productProvider the [Provider] of the artifact [RegularFile]
@@ -157,7 +137,6 @@ abstract class BuildArtifactsHolder(
      */
     fun <T: Task, ARTIFACT_TYPE> producesFile(
         artifactType: ARTIFACT_TYPE,
-        ternoperationType: OperationType,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> RegularFileProperty,
         buildDirectory: String? = null,
@@ -183,9 +162,9 @@ abstract class BuildArtifactsHolder(
      */
     fun <T: Task, ARTIFACT_TYPE> producesFile(
         artifactType: ARTIFACT_TYPE,
-        operationType: OperationType,
         taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> Provider<RegularFile>)
+        productProvider: (T) -> Provider<RegularFile>
+    )
             where ARTIFACT_TYPE : ArtifactType<RegularFile>,
                   ARTIFACT_TYPE : ArtifactType.Single {
 
@@ -196,7 +175,6 @@ abstract class BuildArtifactsHolder(
         }
         producesFile(
             artifactType,
-            operationType,
             taskProvider,
             propertyProvider,
             "",
@@ -230,8 +208,6 @@ abstract class BuildArtifactsHolder(
      * [Provider.get] method is invoked during a consumer task configuration execution for instance.
      *
      * @param artifactType the produced artifact type
-     * @param operationType the expected type of production, there can be only one
-     * [OperationType.INITIAL] but many [OperationType.APPEND] or [OperationType.TRANSFORM]
      * @param taskProvider the [TaskProvider] for the task ultimately responsible for producing the
      * artifact.
      * @param productProvider the [Provider] of the artifact [Directory]
@@ -242,7 +218,6 @@ abstract class BuildArtifactsHolder(
      */
     fun <T: Task, ARTIFACT_TYPE> producesDir(
         artifactType: ARTIFACT_TYPE,
-        operationType: OperationType,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> DirectoryProperty,
         buildDirectory: String? = null,
@@ -259,25 +234,24 @@ abstract class BuildArtifactsHolder(
     // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
     fun <T: Task, ARTIFACT_TYPE> producesFile(
         artifactType: ARTIFACT_TYPE,
-        operationType: OperationType,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> RegularFileProperty,
-        fileName: String = "out")
+        fileName: String = "out"
+    )
             where ARTIFACT_TYPE : ArtifactType<RegularFile>,
                   ARTIFACT_TYPE : ArtifactType.Single
 
-            = producesFile(artifactType, operationType, taskProvider, productProvider, null, fileName)
+            = producesFile(artifactType, taskProvider, productProvider, null, fileName)
 
 
     fun <T: Task, ARTIFACT_TYPE> producesDir(
         artifactType: ARTIFACT_TYPE,
-        operationType: OperationType,
         taskProvider: TaskProvider<out T>,
         propertyProvider: (T) -> DirectoryProperty,
         fileName: String = "out"
     ) where ARTIFACT_TYPE : ArtifactType<Directory>,
             ARTIFACT_TYPE : ArtifactType.Single
-            = producesDir(artifactType, operationType, taskProvider, propertyProvider, null, fileName)
+            = producesDir(artifactType, taskProvider, propertyProvider, null, fileName)
 
     private val dummyTask by lazy {
 

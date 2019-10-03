@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -79,7 +78,6 @@ class BuildArtifactsHolderForFileTest {
         val taskProvider = registerRegularFileTask("final")
         newHolder.producesFile(
             LIBRARY_MANIFEST,
-            OperationType.INITIAL,
             taskProvider,
             RegularFileProducerTask::output,
             fileName = "finalFile"
@@ -100,7 +98,6 @@ class BuildArtifactsHolderForFileTest {
         val taskProvider = registerRegularFileTask("test")
         newHolder.producesFile(
             LIBRARY_MANIFEST,
-            OperationType.INITIAL,
             taskProvider,
             RegularFileProducerTask::output,
             fileName = "finalFile"

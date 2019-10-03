@@ -21,7 +21,6 @@ import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.processing.ScopedException
 import android.databinding.tool.store.LayoutInfoInput
 import android.databinding.tool.util.L
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
@@ -167,12 +166,11 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                DataBindingGenBaseClassesTask::classInfoBundleDir)
+                DataBindingGenBaseClassesTask::classInfoBundleDir
+            )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DataBindingGenBaseClassesTask::sourceOutFolder
             )

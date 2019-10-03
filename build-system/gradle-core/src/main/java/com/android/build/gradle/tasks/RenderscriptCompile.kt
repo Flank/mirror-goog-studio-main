@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT
 import com.google.common.base.Preconditions.checkNotNull
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NdkTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
@@ -41,10 +40,8 @@ import com.google.common.collect.Sets
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
-import java.util.function.Supplier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -55,7 +52,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
-import javax.inject.Inject
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
@@ -263,7 +259,6 @@ abstract class RenderscriptCompile : NdkTask() {
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_SOURCE_OUTPUT_DIR,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     RenderscriptCompile::sourceOutputDir,
                     "out"
@@ -273,7 +268,6 @@ abstract class RenderscriptCompile : NdkTask() {
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_LIB,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     RenderscriptCompile::libOutputDir,
                     "lib"

@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable
@@ -164,7 +163,6 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 artifactType = InternalArtifactType.SHRUNK_PROCESSED_RES,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = ShrinkResourcesTask::compressedResources,
                 fileName = "out"

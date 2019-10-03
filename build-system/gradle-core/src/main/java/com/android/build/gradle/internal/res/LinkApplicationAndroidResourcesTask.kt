@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -378,23 +377,24 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.processAndroidResTask = taskProvider
-            variantScope.artifacts.producesDir(InternalArtifactType.PROCESSED_RES,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.PROCESSED_RES,
                 taskProvider,
-                LinkApplicationAndroidResourcesTask::resPackageOutputFolder)
+                LinkApplicationAndroidResourcesTask::resPackageOutputFolder
+            )
 
             if (generatesProguardOutputFile(variantScope)) {
-                variantScope.artifacts.producesFile(InternalArtifactType.AAPT_PROGUARD_FILE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
+                variantScope.artifacts.producesFile(
+                    InternalArtifactType.AAPT_PROGUARD_FILE,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::proguardOutputFile,
-                    SdkConstants.FN_AAPT_RULES)
+                    SdkConstants.FN_AAPT_RULES
+                )
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
                 variantScope.artifacts.producesFile(
                     InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::mainDexListProguardOutputFile,
                     "manifest_keep.txt"
@@ -543,7 +543,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             if (variantScope.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
                 variantScope.artifacts.producesDir(
                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
                     fileName = SdkConstants.FD_RES_CLASS
@@ -553,15 +552,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     .artifacts
                     .producesFile(
                         InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
-                        BuildArtifactsHolder.OperationType.INITIAL,
                         taskProvider,
                         LinkApplicationAndroidResourcesTask::rClassOutputJar,
-                        FN_R_CLASS_JAR)
+                        FN_R_CLASS_JAR
+                    )
             }
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.RUNTIME_SYMBOL_LIST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::textSymbolOutputFileProperty,
                 SdkConstants.FN_RESOURCE_TEXT
@@ -572,7 +570,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 // in process resources for local subprojects.
                 variantScope.artifacts.producesFile(
                     InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::symbolsWithPackageNameOutputFile,
                     "package-aware-r.txt"
@@ -620,7 +617,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
                 fileName = "out"

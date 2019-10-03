@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -293,31 +292,26 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.PROJECT_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::projectOutputDex
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::subProjectOutputDex
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::externalLibsOutputDex
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::mixedScopeOutputDex
             )
             variantScope.artifacts.producesFile(
                 InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )

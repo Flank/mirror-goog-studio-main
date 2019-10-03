@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -123,7 +122,6 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.EXTRACTED_APKS,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ExtractApksTask::outputDir
             )

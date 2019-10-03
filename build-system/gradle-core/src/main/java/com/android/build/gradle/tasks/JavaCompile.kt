@@ -17,8 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.INITIAL
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -102,7 +100,6 @@ class JavaCompileCreationAction(
 
         variantScope.artifacts.producesDir(
             JAVAC,
-            APPEND,
             taskProvider,
             { classesOutputDirectory },
             fileName = "classes"
@@ -115,7 +112,6 @@ class JavaCompileCreationAction(
         if (!processAnnotationsTaskCreated) {
             variantScope.artifacts.producesDir(
                 AP_GENERATED_SOURCES,
-                INITIAL,
                 taskProvider,
                 { annotationProcessorOutputDirectory }
             )
@@ -129,7 +125,6 @@ class JavaCompileCreationAction(
 
             variantScope.artifacts.producesDir(
                 DATA_BINDING_ARTIFACT,
-                APPEND,
                 taskProvider,
                 { bundleArtifactFolderForDataBinding }
             )

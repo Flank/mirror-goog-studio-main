@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -61,7 +60,6 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 StaticLibraryManifestTask::manifestFile,
                 SdkConstants.ANDROID_MANIFEST_XML

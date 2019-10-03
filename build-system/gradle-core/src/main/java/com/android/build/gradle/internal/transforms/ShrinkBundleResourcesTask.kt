@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms
 
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
@@ -164,7 +163,6 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ShrinkBundleResourcesTask::compressedResources,
                 "shrunk-bundled-res.ap_"

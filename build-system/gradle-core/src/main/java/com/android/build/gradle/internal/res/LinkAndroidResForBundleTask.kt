@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -239,10 +238,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 LinkAndroidResForBundleTask::bundledResFile,
-                "bundled-res.ap_")
+                "bundled-res.ap_"
+            )
 
         }
 

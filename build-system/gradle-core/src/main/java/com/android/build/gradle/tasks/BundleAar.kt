@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.scope.VariantScope
@@ -91,10 +90,11 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         override fun handleProvider(taskProvider: TaskProvider<out BundleAar>) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.bundleLibraryTask = taskProvider
-            variantScope.artifacts.producesFile(InternalArtifactType.AAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.AAR,
                 taskProvider,
-                BundleAar::getArchiveFile)
+                BundleAar::getArchiveFile
+            )
         }
 
         override fun configure(task: BundleAar) {

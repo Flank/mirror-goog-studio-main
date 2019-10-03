@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -157,25 +156,21 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_PROJECT_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::projectOutput
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::subProjectOutput
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::externalLibsOutput
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::tmpDir
             )

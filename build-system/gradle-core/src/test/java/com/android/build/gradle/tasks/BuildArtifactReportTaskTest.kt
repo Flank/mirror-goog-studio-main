@@ -61,7 +61,6 @@ class BuildArtifactReportTaskTest {
 
         artifactsHolder.producesFile(
             InternalArtifactType.COMPILE_LIBRARY_CLASSES,
-            BuildArtifactsHolder.OperationType.INITIAL,
             task0,
             { output0 },
             "task0_output"
@@ -70,7 +69,6 @@ class BuildArtifactReportTaskTest {
 
         artifactsHolder.producesFile(
             InternalArtifactType.COMPILE_LIBRARY_CLASSES,
-            BuildArtifactsHolder.OperationType.APPEND,
             task1,
             { output1 },
             "task1_output"

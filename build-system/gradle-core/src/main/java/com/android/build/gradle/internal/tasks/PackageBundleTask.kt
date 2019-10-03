@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -255,7 +254,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}.aab"
             variantScope.artifacts.producesFile(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 PackageBundleTask::bundleFile,
                 bundleName

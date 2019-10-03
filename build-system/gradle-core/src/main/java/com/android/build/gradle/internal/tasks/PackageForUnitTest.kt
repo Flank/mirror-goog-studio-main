@@ -19,9 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -140,7 +138,6 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
                 .artifacts
                 .producesFile(
                     APK_FOR_LOCAL_TEST,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     PackageForUnitTest::apkForUnitTest,
                     "apk-for-local-test.ap_"

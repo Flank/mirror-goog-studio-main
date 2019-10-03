@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -240,7 +239,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar,
                 fileName = "R.jar"
@@ -248,7 +246,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_SYMBOL_LIST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 GenerateLibraryRFileTask::textSymbolOutputFileProperty,
                 SdkConstants.FN_RESOURCE_TEXT
@@ -258,7 +255,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             // process resources for local subprojects.
             variantScope.artifacts.producesFile(
                 InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile,
                 "package-aware-r.txt"

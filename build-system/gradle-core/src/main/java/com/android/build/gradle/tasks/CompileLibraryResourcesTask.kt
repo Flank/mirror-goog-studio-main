@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationS
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
@@ -341,7 +340,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.COMPILED_LOCAL_RESOURCES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
             )

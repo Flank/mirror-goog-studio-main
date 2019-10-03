@@ -15,15 +15,12 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -325,7 +322,6 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 .artifacts
                 .producesDir(
                     outputArtifactType,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     MergeSourceSetFolders::outputDir,
                     fileName = "out"
@@ -392,7 +388,6 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 .artifacts
                 .producesDir(
                     InternalArtifactType.MERGED_JNI_LIBS,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     MergeSourceSetFolders::outputDir,
                     fileName = "out"
@@ -426,7 +421,6 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 .artifacts
                 .producesDir(
                     InternalArtifactType.MERGED_SHADERS,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     MergeSourceSetFolders::outputDir,
                     fileName = "out"

@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_NAVIGATION
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
@@ -86,7 +85,6 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 artifactType = InternalArtifactType.NAVIGATION_JSON,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = ExtractDeepLinksTask::navigationJson,
                 fileName = "navigation.json"

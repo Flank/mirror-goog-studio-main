@@ -380,28 +380,24 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory,
                     "aapt");
 
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
                     InternalArtifactType.LIBRARY_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getManifestOutputFile,
                     SdkConstants.ANDROID_MANIFEST_XML);
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
@@ -410,7 +406,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getReportFile,
                     FileUtils.join(getVariantScope().getGlobalScope().getOutputsDir(), "logs")

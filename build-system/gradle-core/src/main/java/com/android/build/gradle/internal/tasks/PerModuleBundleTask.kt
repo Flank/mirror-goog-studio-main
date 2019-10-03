@@ -19,13 +19,11 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
@@ -39,10 +37,8 @@ import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.JarCreator
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -195,10 +191,11 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
         override fun handleProvider(taskProvider: TaskProvider<out PerModuleBundleTask>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(InternalArtifactType.MODULE_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.MODULE_BUNDLE,
                 taskProvider,
-                PerModuleBundleTask::outputDir)
+                PerModuleBundleTask::outputDir
+            )
         }
 
         override fun configure(task: PerModuleBundleTask) {

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -36,10 +35,10 @@ class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
         super.handleProvider(taskProvider)
         variantScope.artifacts.producesFile(
             InternalArtifactType.GENERATED_PROGUARD_FILE,
-            BuildArtifactsHolder.OperationType.INITIAL,
             taskProvider,
             MergeFileTask::outputFile,
-            SdkConstants.FN_PROGUARD_TXT)
+            SdkConstants.FN_PROGUARD_TXT
+        )
     }
 
     override fun configure(task: MergeFileTask) {

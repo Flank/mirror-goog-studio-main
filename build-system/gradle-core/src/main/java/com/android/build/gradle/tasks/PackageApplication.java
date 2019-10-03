@@ -128,7 +128,6 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.APK.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             PackageApplication::getOutputDirectory,
                             outputDirectory.getAbsolutePath(),

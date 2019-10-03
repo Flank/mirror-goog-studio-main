@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -134,7 +133,6 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 BundleReportDependenciesTask::dependenciesList,
                 "dependencies.pb"

@@ -19,13 +19,11 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -190,7 +188,6 @@ abstract class ProguardTask : ProguardConfigurableTask() {
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_JAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ProguardTask::shrunkJar,
                 "minified.jar"

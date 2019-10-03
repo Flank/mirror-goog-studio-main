@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -87,7 +86,6 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 GenerateNamespacedLibraryRFilesTask::rJarFile,
                 fileName = "R.jar"

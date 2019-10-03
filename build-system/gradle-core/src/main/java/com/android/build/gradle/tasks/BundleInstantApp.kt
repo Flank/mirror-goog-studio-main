@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.DOT_ZIP
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InstantAppOutputScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -101,7 +100,6 @@ abstract class BundleInstantApp : NonIncrementalTask() {
             scope.artifacts
                 .producesDir(
                     InternalArtifactType.INSTANTAPP_BUNDLE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     BundleInstantApp::bundleDirectory,
                     bundleDirectory.absolutePath,

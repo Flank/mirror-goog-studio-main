@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -54,7 +53,6 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.RENDERSCRIPT_HEADERS,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 PackageRenderscriptTask::headersDir,
                 "out"

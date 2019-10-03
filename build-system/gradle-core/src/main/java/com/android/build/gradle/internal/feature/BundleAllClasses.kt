@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -135,7 +134,6 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APP_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 BundleAllClasses::outputJar,
                 "classes.jar"

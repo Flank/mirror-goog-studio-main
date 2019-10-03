@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
@@ -201,7 +200,6 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 .artifacts
                 .producesFile(
                     APK_MAPPING,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProguardConfigurableTask::mappingFile,
                     "mapping.txt"

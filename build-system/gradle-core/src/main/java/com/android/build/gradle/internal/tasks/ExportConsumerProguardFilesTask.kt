@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -99,7 +98,6 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.CONSUMER_PROGUARD_DIR,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ExportConsumerProguardFilesTask::outputDir,
                 ""

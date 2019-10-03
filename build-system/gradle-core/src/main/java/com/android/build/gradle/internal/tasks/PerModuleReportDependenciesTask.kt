@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -220,7 +219,6 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                 .artifacts
                 .producesFile(
                     InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     PerModuleReportDependenciesTask::dependenciesList,
                     fileName = "dependencies.pb"

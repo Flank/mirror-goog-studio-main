@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -87,7 +86,6 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             variantScope.artifacts.producesFile(
                 InternalArtifactType.BASE_MODULE_METADATA,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ModuleMetadataWriterTask::outputFile,
                 ModuleMetadata.PERSISTED_FILE_NAME

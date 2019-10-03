@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -119,7 +118,6 @@ abstract class ParseLibraryResourcesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ParseLibraryResourcesTask::librarySymbolsFile,
                 SdkConstants.FN_R_DEF_TXT

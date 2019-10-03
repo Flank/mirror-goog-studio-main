@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -69,7 +68,6 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DataBindingMergeBaseClassLogTask::outFolder
             )

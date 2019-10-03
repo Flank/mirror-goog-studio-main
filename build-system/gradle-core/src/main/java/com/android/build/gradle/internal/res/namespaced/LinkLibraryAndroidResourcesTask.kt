@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -137,7 +136,6 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.RES_STATIC_LIBRARY,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 LinkLibraryAndroidResourcesTask::staticLibApk,
                 "res.apk"

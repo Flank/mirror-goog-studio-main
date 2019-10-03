@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
@@ -31,17 +30,14 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -160,7 +156,6 @@ abstract class MergeNativeLibsTask
 
             variantScope.artifacts.producesDir(
                 MERGED_NATIVE_LIBS,
-                BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 MergeNativeLibsTask::outputDir,
                 fileName = "out"

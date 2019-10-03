@@ -830,7 +830,6 @@ public abstract class TaskManager {
         scope.getArtifacts()
                 .producesDir(
                         mergeType.getOutputType(),
-                        BuildArtifactsHolder.OperationType.INITIAL,
                         mergeResourcesTask,
                         MergeResources::getOutputDir,
                         MoreObjects.firstNonNull(
@@ -842,7 +841,6 @@ public abstract class TaskManager {
             scope.getArtifacts()
                     .producesDir(
                             MERGED_NOT_COMPILED_RES.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             mergeResourcesTask,
                             MergeResources::getMergedNotCompiledResourcesOutputDirectory,
                             mergedNotCompiledDir.getAbsolutePath(),

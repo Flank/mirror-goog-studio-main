@@ -526,14 +526,12 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,
                     "manifest-merger-blame-"

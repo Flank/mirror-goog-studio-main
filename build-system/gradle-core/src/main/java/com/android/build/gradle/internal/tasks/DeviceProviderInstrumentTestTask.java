@@ -454,7 +454,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             .producesDir(
                                     InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
                                             .INSTANCE,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
@@ -463,7 +462,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.CODE_COVERAGE.INSTANCE,
-                                BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
@@ -477,7 +475,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     InternalArtifactType
                                             .DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT
                                             .INSTANCE,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
@@ -486,7 +483,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE,
-                                BuildArtifactsHolder.OperationType.APPEND,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());

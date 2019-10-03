@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -82,7 +81,6 @@ class BuildArtifactsHolderForDirTest {
         val taskProvider = registerDirectoryTask("final")
         newHolder.producesDir(
             MERGED_MANIFESTS,
-            OperationType.INITIAL,
             taskProvider,
             DirectoryProducerTask::output,
             fileName = "finalFile"
@@ -104,7 +102,6 @@ class BuildArtifactsHolderForDirTest {
         val taskProvider = registerDirectoryTask("test")
         newHolder.producesDir(
             MERGED_MANIFESTS,
-            OperationType.INITIAL,
             taskProvider,
             DirectoryProducerTask::output,
             fileName = "finalFile"

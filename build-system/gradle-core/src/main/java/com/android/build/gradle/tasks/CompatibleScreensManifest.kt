@@ -19,13 +19,11 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
@@ -147,7 +145,6 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 COMPATIBLE_SCREEN_MANIFEST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 CompatibleScreensManifest::outputFolder
             )

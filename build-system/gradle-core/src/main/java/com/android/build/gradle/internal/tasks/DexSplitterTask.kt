@@ -20,7 +20,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -102,7 +101,6 @@ abstract class DexSplitterTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 artifactType = InternalArtifactType.FEATURE_DEX,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = DexSplitterTask::featureDexDir,
                 fileName = ""
@@ -110,7 +108,6 @@ abstract class DexSplitterTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 artifactType = InternalArtifactType.BASE_DEX,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = DexSplitterTask::baseDexDir,
                 fileName = ""

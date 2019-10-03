@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -125,7 +124,6 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APKS_FROM_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 BundleToApkTask::outputFile,
                 "bundle.apks"

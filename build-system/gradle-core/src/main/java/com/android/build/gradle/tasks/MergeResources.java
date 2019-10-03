@@ -650,7 +650,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                             mergeType == MERGE
                                     ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE.INSTANCE
                                     : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             MergeResources::getDataBindingLayoutInfoOutFolder,
                             "out");

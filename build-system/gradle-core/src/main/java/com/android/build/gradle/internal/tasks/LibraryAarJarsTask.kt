@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -31,7 +30,6 @@ import com.android.builder.packaging.TypedefRemover
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -307,7 +305,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesFile(
                 artifactType = InternalArtifactType.AAR_MAIN_JAR,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = LibraryAarJarsTask::mainClassLocation,
                 fileName = SdkConstants.FN_CLASSES_JAR
@@ -315,7 +312,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 artifactType = InternalArtifactType.AAR_LIBS_DIRECTORY,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = LibraryAarJarsTask::localJarsLocation,
                 fileName = SdkConstants.LIBS_FOLDER

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -69,7 +68,6 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
                 .artifacts
                 .producesFile(
                     InternalArtifactType.FEATURE_NAME,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     FeatureNameWriterTask::outputFile,
                     "feature-name.txt"

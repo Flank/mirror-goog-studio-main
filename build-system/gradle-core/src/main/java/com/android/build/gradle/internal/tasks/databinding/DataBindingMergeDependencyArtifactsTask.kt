@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -89,10 +88,11 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
                 taskProvider,
-                DataBindingMergeDependencyArtifactsTask::outFolder)
+                DataBindingMergeDependencyArtifactsTask::outFolder
+            )
         }
 
         override fun configure(task: DataBindingMergeDependencyArtifactsTask) {

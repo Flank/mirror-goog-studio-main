@@ -588,21 +588,18 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesDir(
                     InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getInstantAppManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
@@ -611,14 +608,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             artifacts.producesDir(
                     InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getMetadataFeatureManifestOutputDirectory,
                     "metadata-feature");
 
             artifacts.producesDir(
                     InternalArtifactType.BUNDLE_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
@@ -627,7 +622,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ProcessApplicationManifest::getReportFile,
                             FileUtils.join(

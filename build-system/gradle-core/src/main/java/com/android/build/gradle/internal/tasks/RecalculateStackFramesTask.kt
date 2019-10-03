@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -77,7 +76,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.FIXED_STACK_FRAMES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 RecalculateStackFramesTask::outFolder
             )

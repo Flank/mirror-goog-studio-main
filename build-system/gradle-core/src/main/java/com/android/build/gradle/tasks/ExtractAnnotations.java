@@ -323,7 +323,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATIONS_ZIP.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ExtractAnnotations::getOutput,
                             SdkConstants.FN_ANNOTATIONS_ZIP);
@@ -332,7 +331,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ExtractAnnotations::getTypedefFile,
                             "typedefs.txt");

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -75,11 +74,12 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out ApplicationIdWriterTask>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(InternalArtifactType.METADATA_APPLICATION_ID,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.METADATA_APPLICATION_ID,
                 taskProvider,
                 ApplicationIdWriterTask::outputFile,
-                "application-id.txt")
+                "application-id.txt"
+            )
         }
 
         override fun configure(task: ApplicationIdWriterTask) {
