@@ -16,12 +16,10 @@
 
 package com.android.ide.common.rendering.api;
 
-
 import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.EnumSet;
 import java.util.Map;
 
 /**
@@ -32,45 +30,6 @@ import java.util.Map;
 public abstract class Bridge {
 
     public static final int API_CURRENT = 17;
-
-    /**
-     * Returns the API level of the layout library.
-     * <p>
-     * While no methods will ever be removed, some may become deprecated, and some new ones
-     * will appear.
-     * <p>All Layout libraries based on {@link Bridge} return at minimum an API level of 5.
-     */
-    public abstract int getApiLevel();
-
-    /**
-     * Returns the revision of the library inside a given (layoutlib) API level.
-     * The true revision number of the library is {@link #getApiLevel()}.{@link #getRevision()}
-     */
-    @SuppressWarnings("JavaDoc")  // javadoc pointing to itself.
-    public int getRevision() {
-        return 0;
-    }
-
-    /**
-     * Returns an {@link EnumSet} of the supported {@link Capability}.
-     *
-     * @return an {@link EnumSet} with the supported capabilities.
-     *
-     * @deprecated use {@link #supports(int)}
-     */
-    @Deprecated
-    public EnumSet<Capability> getCapabilities() {
-        return EnumSet.noneOf(Capability.class);
-    }
-
-    /**
-     * Returns true if the layout library supports the given feature.
-     *
-     * @see Features
-     */
-    public boolean supports(int feature) {
-        return false;
-    }
 
     /**
      * Initializes the Bridge object.
@@ -182,21 +141,5 @@ public abstract class Bridge {
      */
     public boolean isRtl(String locale) {
         return false;
-    }
-
-    /**
-     * Utility method returning the baseline value for a given view object. This basically returns
-     * View.getBaseline().
-     *
-     * @param viewObject the object for which to return the index.
-     *
-     * @return the baseline value or -1 if not applicable to the view object or if this layout
-     *     library does not implement this method.
-     *
-     * @deprecated use the extended ViewInfo.
-     */
-    @Deprecated
-    public Result getViewBaseline(Object viewObject) {
-        return NOT_IMPLEMENTED.createResult();
     }
 }

@@ -185,14 +185,6 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
     }
 
     /**
-     * Returns if the IDE supports the requested feature.
-     * @see Features
-     * @since API 15
-     */
-    public abstract boolean supports(
-            @MagicConstant(valuesFromClass = Features.class) int ideFeature);
-
-    /**
      * A callback to query arbitrary data. This is similar to {@link RenderParams#setFlag(SessionParams.Key,
      * Object)}. The main difference is that when using this, the IDE doesn't have to compute the
      * value in advance and thus may save on some computation.
