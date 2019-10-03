@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
+import com.android.builder.files.SerializableChange
+import com.android.builder.files.SerializableInputChanges
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -63,29 +65,36 @@ class VerifyLibraryResourcesTaskTest {
     }
 
     @Test
-    fun directoriesShouldBeIgnored() {
-        val inputs = HashMap<File, FileStatus>()
+    fun otherFilesShouldBeIgnored() {
+        val inputs = mutableListOf<SerializableChange>()
         val mergedDir = File(temporaryFolder.newFolder("merged"), "release")
         FileUtils.mkdirs(mergedDir)
 
-        val file = File(File(mergedDir, "values"), "file.xml")
+        val relativeFilePath = "values/file.xml"
+        val file = File(mergedDir, relativeFilePath)
         FileUtils.createFile(file, "content")
         assertTrue(file.exists())
-        inputs.put(file, FileStatus.NEW)
+        inputs.add(SerializableChange(file, FileStatus.NEW, relativeFilePath))
 
-        val directory = File(mergedDir, "layout")
-        FileUtils.mkdirs(directory)
-        assertTrue(directory.exists())
-        inputs.put(directory, FileStatus.NEW)
+        val invalidFilePath = "values/invalid/invalid.xml"
+        val invalidFile = File(mergedDir, invalidFilePath)
+        FileUtils.createFile(invalidFile, "content")
+        assertTrue(invalidFile.exists())
+        inputs.add(SerializableChange(invalidFile, FileStatus.NEW, invalidFilePath))
+
+        val invalidFilePath2 = "invalid.xml"
+        val invalidFile2 = File(mergedDir, invalidFilePath2)
+        FileUtils.createFile(invalidFile2, "content")
+        assertTrue(invalidFile2.exists())
+        inputs.add(SerializableChange(invalidFile2, FileStatus.NEW, invalidFilePath2))
 
         val outputDir = temporaryFolder.newFolder("output")
 
         VerifyLibraryResourcesTask.compileResources(
-            inputs,
+            SerializableInputChanges(listOf(mergedDir), inputs),
             outputDir,
             Facade,
             mock(Aapt2ServiceKey::class.java),
-            mergedDir,
             SyncOptions.ErrorFormatMode.HUMAN_READABLE,
             temporaryFolder.newFolder()
         )
@@ -94,45 +103,8 @@ class VerifyLibraryResourcesTaskTest {
         assertTrue(fileOut.exists())
 
         val dirOut = Facade.compileOutputFor(
-                CompileResourceRequest(directory, outputDir, mergedDir.name))
+                CompileResourceRequest(invalidFile, outputDir, mergedDir.name))
         assertFalse(dirOut.exists())
     }
 
-    @Test
-    fun manifestShouldNotBeCompiled() {
-        val inputs = HashMap<File, FileStatus>()
-        val mergedDir = File(temporaryFolder.newFolder("merged"), "release")
-        FileUtils.mkdirs(mergedDir)
-
-        val file = File(File(mergedDir, "values"), "file.xml")
-        FileUtils.createFile(file, "content")
-        assertTrue(file.exists())
-        inputs.put(file, FileStatus.NEW)
-
-        val manifest = File(temporaryFolder.newFolder("merged_manifest"), "AndroidManifest.xml")
-        FileUtils.createFile(manifest, "manifest content")
-        assertTrue(manifest.exists())
-        inputs.put(manifest, FileStatus.NEW)
-
-        val outputDir = temporaryFolder.newFolder("output")
-
-        VerifyLibraryResourcesTask.compileResources(
-            inputs,
-            outputDir,
-            Facade,
-            mock(Aapt2ServiceKey::class.java),
-            mergedDir,
-            SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-            temporaryFolder.newFolder()
-        )
-
-        val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
-        assertTrue(fileOut.exists())
-
-        // Real AAPT would fail trying to compile the manifest, but the fake one would just copy it
-        // so we need to check that it wasn't copied into the output directory.
-        val manifestOut = Facade.compileOutputFor(
-                CompileResourceRequest(manifest, outputDir, "merged_manifest"))
-        assertFalse(manifestOut.exists())
-    }
 }

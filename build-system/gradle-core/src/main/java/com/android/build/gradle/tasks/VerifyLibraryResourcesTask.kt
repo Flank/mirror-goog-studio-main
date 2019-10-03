@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
@@ -26,11 +27,14 @@ import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.build.gradle.internal.tasks.NewIncrementalTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.files.SerializableInputChanges
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -40,6 +44,7 @@ import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.artifacts.ArtifactCollection
@@ -58,16 +63,22 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 import java.io.File
-import java.nio.file.Files
+import java.io.Serializable
+import java.lang.RuntimeException
+import javax.inject.Inject
 
 @CacheableTask
-abstract class VerifyLibraryResourcesTask : IncrementalTask() {
+abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     @get:OutputDirectory
-    lateinit var compiledDirectory: File private set
+    lateinit var compiledDirectory: File
+        private set
 
     // Merged resources directory.
+    @get:Incremental
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDirectory: DirectoryProperty
@@ -94,7 +105,11 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
     lateinit var androidJar: Provider<File>
         private set
 
-    private var compiledDependenciesResources: ArtifactCollection? = null
+    /** A file collection of the directories containing the compiled dependencies resource files. */
+    @get:Incremental
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val compiledDependenciesResources: ConfigurableFileCollection
 
     private lateinit var mergeBlameFolder: File
 
@@ -102,80 +117,77 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    override val incremental: Boolean
-        get() = true
-
-    override fun doFullTaskAction() {
-        // Mark all files as NEW and continue with the verification.
-        val fileStatusMap = HashMap<File, FileStatus>()
-
-        inputDirectory.get().asFile.listFiles()
-                .filter { it.isDirectory}
-                .forEach { dir ->
-                    dir.listFiles()
-                            .filter { file -> Files.isRegularFile(file.toPath()) }
-                            .forEach { file -> fileStatusMap[file] = FileStatus.NEW }
-                }
-
-        FileUtils.cleanOutputDir(compiledDirectory)
-        compileAndVerifyResources(fileStatusMap)
-    }
-
-    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        compileAndVerifyResources(changedInputs)
-    }
-
-    /**
-     * Compiles and links the resources of the library.
-     *
-     * @param inputs the new, changed or modified files that need to be compiled or removed.
-     */
-    private fun compileAndVerifyResources(inputs: Map<File, FileStatus>) {
-
+    override fun doTaskAction(inputChanges: InputChanges) {
         val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles.get().asFile)
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
         val aapt2ServiceKey = registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
-        // If we're using AAPT2 we need to compile the resources into the compiled directory
-        // first as we need the .flat files for linking.
-        getWorkerFacadeWithWorkers().use { facade ->
-            compileResources(
-                inputs,
-                compiledDirectory,
-                facade,
-                aapt2ServiceKey,
-                inputDirectory.get().asFile,
-                errorFormatMode,
-                mergeBlameFolder
-            )
-            val config = getAaptPackageConfig(compiledDirectory, manifestFile)
-            val params = Aapt2ProcessResourcesRunnable.Params(
-                aapt2ServiceKey,
-                config,
-                errorFormatMode,
-                mergeBlameFolder,
-                manifestMergeBlameFile.orNull?.asFile
-            )
-            facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
-        }
+        val parameter = Params(
+            projectName = projectName,
+            owner = path,
+            androidJar = androidJar.get(),
+            aapt2ServiceKey = aapt2ServiceKey,
+            errorFormatMode = errorFormatMode,
+            inputs = inputChanges.getChangesInSerializableForm(inputDirectory),
+            manifestFile = manifestFile,
+            compiledDependenciesResources = compiledDependenciesResources.files,
+            manifestMergeBlameFile = manifestMergeBlameFile.get().asFile,
+            compiledDirectory = compiledDirectory,
+            mergeBlameFolder = mergeBlameFolder
 
+            )
+        getWorkerFacadeWithWorkers().submit(Action::class.java, parameter)
     }
 
-    private fun getAaptPackageConfig(resDir: File, manifestFile: File): AaptPackageConfig {
-        val compiledDependenciesResourcesDirs =
-            getCompiledDependenciesResources()?.reversed()?.toImmutableList()
-                ?: emptyList<File>()
+    private data class Params(
+        val projectName: String,
+        val owner: String,
+        val androidJar: File,
+        val aapt2ServiceKey: Aapt2ServiceKey,
+        val errorFormatMode: SyncOptions.ErrorFormatMode,
+        val inputs: SerializableInputChanges,
+        val manifestFile: File,
+        val compiledDependenciesResources: Iterable<File>,
+        val manifestMergeBlameFile: File?,
+        val compiledDirectory: File,
+        val mergeBlameFolder: File
+        ) : Serializable
 
-        // We're do not want to generate any files - only to make sure everything links properly.
-        return AaptPackageConfig.Builder()
-            .setManifestFile(manifestFile)
-            .addResourceDirectories(compiledDependenciesResourcesDirs)
-            .addResourceDir(resDir)
-            .setLibrarySymbolTableFiles(ImmutableSet.of())
-            .setOptions(AaptOptions(failOnMissingConfigEntry = false))
-            .setVariantType(VariantTypeImpl.LIBRARY)
-            .setAndroidTarget(androidJar.get())
-            .build()
+    /**
+     * Compiles and links the resources of the library.
+     */
+    private class Action @Inject constructor(private val params: Params) : Runnable {
+        override fun run() {
+            Workers.getSharedExecutorForAapt2(params.projectName, params.owner).use { facade ->
+                compileResources(
+                    inputs = params.inputs,
+                    outDirectory = params.compiledDirectory,
+                    workerExecutor = facade,
+                    aapt2ServiceKey = params.aapt2ServiceKey,
+                    errorFormatMode = params.errorFormatMode,
+                    mergeBlameFolder = params.mergeBlameFolder
+                )
+
+                val config = getAaptPackageConfig(
+                    compiledDependenciesResources = params.compiledDependenciesResources,
+                    androidJar = params.androidJar,
+                    resDir = params.compiledDirectory,
+                    manifestFile = params.manifestFile
+                )
+
+
+                val params = Aapt2ProcessResourcesRunnable.Params(
+                    aapt2ServiceKey = params.aapt2ServiceKey,
+                    request = config,
+                    errorFormatMode = params.errorFormatMode,
+                    mergeBlameFolder = params.mergeBlameFolder,
+                    manifestMergeBlameFile = params.manifestMergeBlameFile
+                )
+
+                facade.await() // All compilation must be done before linking.
+                facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
+            }
+        }
     }
 
     class CreationAction(
@@ -192,9 +204,8 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
             super.configure(task)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
+            task.aapt2FromMaven.fromDisallowChanges(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.incrementalFolder = variantScope.getIncrementalDir(name)
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
@@ -204,7 +215,7 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
             task.compiledDirectory = variantScope.compiledResourcesOutputDir
 
             val aaptFriendlyManifestsFilePresent = variantScope.artifacts
-                    .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
             task.taskInputType = when {
                 aaptFriendlyManifestsFilePresent ->
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
@@ -226,28 +237,32 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
             )
 
             if (variantScope.isPrecompileDependenciesResourcesEnabled) {
-                task.compiledDependenciesResources =
-                    variantScope.getArtifactCollection(
+                task.compiledDependenciesResources.fromDisallowChanges(
+                    variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
-                    )
+                    ))
             }
         }
     }
 
-    /**
-     * Returns a file collection of the directories containing the compiled dependencies resource
-     * files.
-     */
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    fun getCompiledDependenciesResources(): FileCollection? {
-        return compiledDependenciesResources?.artifactFiles
-    }
-
     companion object {
+        private fun getAaptPackageConfig(compiledDependenciesResources: Iterable<File>, androidJar: File, resDir: File, manifestFile: File): AaptPackageConfig {
+            val compiledDependenciesResourcesDirs = compiledDependenciesResources.reversed()
+
+            // We're do not want to generate any files - only to make sure everything links properly.
+            return AaptPackageConfig.Builder()
+                .setManifestFile(manifestFile)
+                .addResourceDirectories(compiledDependenciesResourcesDirs)
+                .addResourceDir(resDir)
+                .setLibrarySymbolTableFiles(ImmutableSet.of())
+                .setOptions(AaptOptions(failOnMissingConfigEntry = false))
+                .setVariantType(VariantTypeImpl.LIBRARY)
+                .setAndroidTarget(androidJar)
+                .build()
+        }
+
         /**
          * Compiles new or changed files and removes files that were compiled from the removed files.
          *
@@ -265,29 +280,32 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
         @JvmStatic
         @VisibleForTesting
         fun compileResources(
-            inputs: Map<File, FileStatus>,
+            inputs: SerializableInputChanges,
             outDirectory: File,
             workerExecutor: WorkerExecutorFacade,
             aapt2ServiceKey: Aapt2ServiceKey,
-            mergedResDirectory: File,
             errorFormatMode: SyncOptions.ErrorFormatMode,
             mergeBlameFolder: File
         ) {
 
-            for ((key, value) in inputs) {
+            for (change in inputs.changes) {
                 // Accept only files in subdirectories of the merged resources directory.
                 // Ignore files and directories directly under the merged resources directory.
-                if (key.parentFile.parentFile != mergedResDirectory) continue
-                when (value) {
+                val dirName = change.normalizedPath.substringBeforeLast('/', "")
+                if (dirName.isEmpty() || dirName.contains('/')) {
+                    continue
+                }
+
+                when (change.fileStatus) {
                     FileStatus.NEW, FileStatus.CHANGED ->
                         // If the file is NEW or CHANGED we need to compile it into the output
                         // directory. AAPT2 overwrites files in case they were CHANGED so no need to
                         // remove the corresponding file.
                         try {
                             val request = CompileResourceRequest(
-                                key,
+                                change.file,
                                 outDirectory,
-                                key.parent,
+                                dirName,
                                 isPseudoLocalize = false,
                                 isPngCrunching = false,
                                 mergeBlameFolder = mergeBlameFolder
@@ -302,14 +320,15 @@ abstract class VerifyLibraryResourcesTask : IncrementalTask() {
                                 )
                             )
                         } catch (e: Exception) {
-                            throw AaptException("Failed to compile file ${key.absolutePath}", e)
+                            throw AaptException("Failed to compile file ${change.file.absolutePath}", e)
                         }
 
                     FileStatus.REMOVED ->
                         // If the file was REMOVED we need to remove the corresponding file from the
                         // output directory.
                         FileUtils.deleteIfExists(
-                                File(outDirectory,Aapt2RenamingConventions.compilationRename(key)))
+                            File(outDirectory, Aapt2RenamingConventions.compilationRename(change.file))
+                        )
                 }
             }
             // We need to wait for the files to finish compiling before we do the link.

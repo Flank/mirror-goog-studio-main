@@ -298,22 +298,6 @@
     </issue>
 
     <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/VerifyLibraryResourcesTask.kt"
-            line="279"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/VerifyLibraryResourcesTask.kt"
-            line="279"/>
-    </issue>
-
-    <issue
         id="CommonForkJoinPool"
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
