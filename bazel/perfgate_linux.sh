@@ -26,6 +26,7 @@ readonly invocation_id="$(uuidgen)"
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --define=meta_android_build_number=${build_number} \
+  --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
   --profile=${dist_dir}/perfgate-profile-${build_number}.json \

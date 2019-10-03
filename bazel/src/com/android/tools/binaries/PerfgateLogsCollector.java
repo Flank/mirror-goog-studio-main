@@ -25,7 +25,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -42,7 +44,7 @@ public class PerfgateLogsCollector {
         String err = args[3];
 
         Map<String, BuildEventStreamProtos.NamedSetOfFiles> files = new HashMap<>();
-        Map<String, BuildEventStreamProtos.TargetComplete> completed = new HashMap<>();
+        Map<String, BuildEventStreamProtos.BuildEvent> completed = new HashMap<>();
         Map<String, File> outputZips = new HashMap<>();
         try (InputStream is = new BufferedInputStream(new FileInputStream(bes));
                 PrintStream os = new PrintStream(new FileOutputStream(err))) {
@@ -54,23 +56,31 @@ public class PerfgateLogsCollector {
                     files.put(event.getId().getNamedSet().getId(), set);
                 } else if (event.getPayloadCase()
                         == BuildEventStreamProtos.BuildEvent.PayloadCase.COMPLETED) {
-                    BuildEventStreamProtos.TargetComplete target = event.getCompleted();
-                    completed.put(event.getId().getTargetCompleted().getLabel(), target);
+                    completed.put(event.getId().getTargetCompleted().getLabel(), event);
                 } else if (event.getPayloadCase()
                         == BuildEventStreamProtos.BuildEvent.PayloadCase.TEST_RESULT) {
                     String label = event.getId().getTestResult().getLabel();
+                    final int run = event.getId().getTestResult().getRun();
                     for (BuildEventStreamProtos.File file :
                             event.getTestResult().getTestActionOutputList()) {
                         if (file.getName().equals("test.outputs__outputs.zip")) {
-                            BuildEventStreamProtos.TargetComplete targetComplete =
-                                    completed.get(label);
-                            if (targetComplete == null) {
+                            BuildEventStreamProtos.BuildEvent e = completed.get(label);
+                            if (e == null) {
                                 os.println(
                                         "Test target has outputs.zip, but "
                                                 + label
                                                 + " not completed.");
                                 continue;
                             }
+                            Set<Integer> runs = new HashSet<>();
+                            for (BuildEventStreamProtos.BuildEventId id : e.getChildrenList()) {
+                                if (id.getIdCase() == BuildEventStreamProtos.BuildEventId.IdCase.TEST_RESULT) {
+                                    if (id.getTestResult().getRun() > 0) {
+                                        runs.add(id.getTestResult().getRun());
+                                    }
+                                }
+                            }
+                            BuildEventStreamProtos.TargetComplete targetComplete = e.getCompleted();
                             for (BuildEventStreamProtos.OutputGroup outputGroup :
                                     targetComplete.getOutputGroupList()) {
                                 for (BuildEventStreamProtos.BuildEventId.NamedSetOfFilesId id :
@@ -83,17 +93,33 @@ public class PerfgateLogsCollector {
                                                 id.getId(), label);
                                         continue;
                                     }
+
+                                    Set<String> candidates = new HashSet<>();
+                                    boolean found = false;
                                     for (BuildEventStreamProtos.File aFile : set.getFilesList()) {
                                         String logPath = aFile.getName();
                                         if (logPath.endsWith(".exe")) {
                                             logPath = logPath.substring(0, logPath.length() - 4);
                                         }
+                                        if (logPath.endsWith(".sh")) {
+                                            logPath = logPath.substring(0, logPath.length() - 3);
+                                        }
+                                        if (runs.size() > 1) {
+                                            logPath = logPath + String.format("/run_%d_of_%d", run, runs.size());
+                                        }
                                         String rel = logPath + "/test.outputs/outputs.zip";
+                                        candidates.add(rel);
                                         final File candidate = new File(logs, rel);
                                         if (candidate.exists()) {
                                             outputZips.put(rel, candidate);
-                                        } else {
-                                            os.printf("Cannot find: %s\n", candidate.getAbsolutePath());
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!found) {
+                                        os.printf("Cannot find output.zip for %s, tried:\n", label);
+                                        for (String candidate : candidates) {
+                                            os.println("  " + candidate);
                                         }
                                     }
                                 }
