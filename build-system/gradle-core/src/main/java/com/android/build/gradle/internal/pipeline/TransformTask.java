@@ -576,7 +576,12 @@ public abstract class TransformTask extends StreamBasedTask {
             task.outputStream = outputStream;
             task.setVariantName(variantName);
             task.recorder = recorder;
-            task.getOutputs().cacheIf(t -> transform.isCacheable());
+            task.getOutputs()
+                    .cacheIf(
+                            "Transform "
+                                    + transform.getClass().getName()
+                                    + " declares itself as cacheable",
+                            t -> transform.isCacheable());
             task.registerConsumedAndReferencedStreamInputs();
         }
     }
