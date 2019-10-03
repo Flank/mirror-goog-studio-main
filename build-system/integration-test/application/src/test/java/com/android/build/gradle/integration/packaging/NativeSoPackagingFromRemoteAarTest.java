@@ -92,16 +92,6 @@ public class NativeSoPackagingFromRemoteAarTest {
                 .run("library:clean", "library:uploadArchives");
 
         execute("app:clean", "app:assembleDebug");
-
-        // build and deploy version 2.0-SNAPSHOT of the library (with an extra .so file)
-        createOriginalSoFile(libDir, "main", "liblibrary3.so", "library3:abcdefg");
-        TestFileUtils.searchAndReplace(libProject.getBuildFile(), "1.0-SNAPSHOT", "2.0-SNAPSHOT");
-        project.executor()
-                .withArgument("--configure-on-demand")
-                .run("library:clean", "library:uploadArchives");
-        // remove the added .so file and revert the version to 1.0-SNAPSHOT
-        FileUtils.delete(FileUtils.join(libDir, "src", "main", "jniLibs", "x86", "liblibrary3.so"));
-        TestFileUtils.searchAndReplace(libProject.getBuildFile(), "2.0-SNAPSHOT", "1.0-SNAPSHOT");
     }
 
     private static void createOriginalSoFile(
@@ -161,23 +151,6 @@ public class NativeSoPackagingFromRemoteAarTest {
 
             checkApk(appProject, "liblibrary2.so", "new content");
         });
-    }
-
-    /**
-     * Regression test for Issue 141536986. This test ensures that updating the version of an
-     * external dependency doesn't cause some of the native libraries to be removed from the APK.
-     */
-    @Test
-    public void testChangingAarVersionInApp() throws Exception {
-        doTest(
-                appProject,
-                project -> {
-                    project.replaceInFile("build.gradle", "1.0-SNAPSHOT", "2.0-SNAPSHOT");
-                    execute("app:assembleDebug");
-                    checkApk(appProject, "liblibrary.so", "library:abcd");
-                    checkApk(appProject, "liblibrary2.so", "library2:abcdef");
-                    checkApk(appProject, "liblibrary3.so", "library3:abcdefg");
-                });
     }
 
     /**
