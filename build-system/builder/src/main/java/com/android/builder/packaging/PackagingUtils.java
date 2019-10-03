@@ -48,6 +48,9 @@ public class PackagingUtils {
                     ".m4a", ".m4v", ".3gp", ".3gpp", ".3g2", ".3gpp2", ".amr", ".awb", ".wma",
                     ".wmv", ".webm", ".mkv");
 
+    /** Set of characters that need to be escaped when creating an ECMAScript regular expression. */
+    public static final ImmutableSet<Character> ECMA_SCRIPT_ESCAPABLE_CHARACTERS =
+            ImmutableSet.of('^', '$', '\\', '.', '*', '+', '?', '(', ')', '[', ']', '{', '}', '|');
 
     /**
      * Checks a file to make sure it should be packaged as standard resources.
@@ -145,37 +148,71 @@ public class PackagingUtils {
                         NativeLibrariesPackagingMode.COMPRESSED,
                         PackageEmbeddedDex.DEFAULT)
                 .stream()
-                .map(PackagingUtils::toCaseInsensitiveGlob)
+                .map(PackagingUtils::toCaseInsensitiveGlobForBundle)
                 .sorted()
                 .collect(ImmutableList.toImmutableList());
     }
 
-    private static String toCaseInsensitiveGlob(String glob) {
-        StringBuilder sb = new StringBuilder(glob.length() + 2);
-        // Users can pass extensions to the no-compress list, so we need to append '**'.
-        sb.append("**");
+    private static String toCaseInsensitiveGlobForBundle(String glob) {
+        return toCaseInsensitiveGlob(glob, "**", "[", "", "]", ImmutableList.of());
+    }
+
+    @NonNull
+    public static List<String> getNoCompressForAapt(
+            @NonNull Collection<String> aaptOptionsNoCompress) {
+        return aaptOptionsNoCompress
+                .stream()
+                .map(PackagingUtils::toCaseInsensitiveGlobForAapt)
+                .sorted()
+                .collect(ImmutableList.toImmutableList());
+    }
+
+    private static String toCaseInsensitiveGlobForAapt(String glob) {
+        return toCaseInsensitiveGlob(glob, "", "(", "|", ")", ECMA_SCRIPT_ESCAPABLE_CHARACTERS);
+    }
+
+    private static String toCaseInsensitiveGlob(
+            String glob,
+            String prefix,
+            String alternativesStart,
+            String alternativesSeparator,
+            String alternativesEnd,
+            Collection<Character> escapableCharacters) {
+        // The bundle expects the format of "foo.bar" into "**[fF][oO][[oO].[bB][aA][rR]".
+        // Aapt expects the format of "foo.bar" into "(f|F)(o|O)(o|O).(b|B)(a|A)(r|R)".
+        StringBuilder sb = new StringBuilder(glob.length() + prefix.length());
+
+        // Users can pass extensions to the no-compress list, so we need to append '**' for the
+        // bundle. Aapt already expects them to be extensions and does not support '**'.
+        sb.append(prefix);
+
         int index = 0;
         while (index < glob.length()) {
             int codePoint = glob.codePointAt(index);
             int upperCodePoint = Character.toUpperCase(codePoint);
             int lowerCodePoint = Character.toLowerCase(codePoint);
             // If the character can be changed to upper or lower case, make sure we accept both.
-            // For example, if we encounter the char "a" it will generate "[aA]" which means that
-            // either character can be matched. For other characters, e.g. "." just the original
-            // character will be appended to the string builder.
+            // For example, if we encounter the char "a" it will generate "[aA]" or "(a|A)" which
+            // means that either character can be matched. For other characters, e.g. "." just the
+            // original character will be appended to the string builder.
             boolean mixedCase = codePoint != upperCodePoint || codePoint != lowerCodePoint;
             if (mixedCase) {
-                sb.append("[");
+                sb.append(alternativesStart);
             }
             if (lowerCodePoint != codePoint) {
                 sb.appendCodePoint(lowerCodePoint);
+                sb.append(alternativesSeparator);
+            }
+            if (escapableCharacters.contains(glob.charAt(index))) {
+                sb.append('\\');
             }
             sb.appendCodePoint(codePoint);
             if (upperCodePoint != codePoint) {
+                sb.append(alternativesSeparator);
                 sb.appendCodePoint(upperCodePoint);
             }
             if (mixedCase) {
-                sb.append("]");
+                sb.append(alternativesEnd);
             }
             index += Character.charCount(codePoint);
         }

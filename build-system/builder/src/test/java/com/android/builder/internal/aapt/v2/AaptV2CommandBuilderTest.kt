@@ -81,7 +81,7 @@ class AaptV2CommandBuilderTest {
         val intermediateDir = temporaryFolder.newFolder("intermediates")
         val staticLibApk = temporaryFolder.newFolder().resolve("static_lib.apk")
         val androidJar = temporaryFolder.newFolder().resolve("android.jar")
-        val noCompress = listOf(".test", ".ęńd", "Android/res/raw/hello.world")
+        val noCompress = listOf(".test?", ".ęńd", "Android/res/raw/hello.world")
 
         val request = AaptPackageConfig(
             androidJarPath = androidJar.absolutePath,
@@ -96,6 +96,11 @@ class AaptV2CommandBuilderTest {
         // When
         val command = makeLinkCommand(request)
 
+        val dotTestExtensionRegex = "(\\.(t|T)(e|E)(s|S)(t|T)\\?\$)"
+        val dotEndRegex = "(\\.(ę|Ę)(ń|Ń)(d|D)\$)"
+        val fullPathRegex = "((a|A)(n|N)(d|D)(r|R)(o|O)(i|I)(d|D)/(r|R)(e|E)(s|S)/" +
+                "(r|R)(a|A)(w|W)/(h|H)(e|E)(l|L)(l|L)(o|O)\\.(w|W)(o|O)(r|R)(l|L)(d|D)\$)"
+
         // Then
         assertThat(command).containsExactly(
             "-I",
@@ -109,7 +114,7 @@ class AaptV2CommandBuilderTest {
             "-0",
             "apk",
             "--no-compress-regex",
-            "(.test$|.ęńd$|Android/res/raw/hello.world$)",
+            "($fullPathRegex|$dotTestExtensionRegex|$dotEndRegex)",
             "--no-version-vectors",
             "--static-lib"
         ).inOrder()

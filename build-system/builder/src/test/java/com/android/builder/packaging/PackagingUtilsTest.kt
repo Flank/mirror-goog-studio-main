@@ -119,7 +119,21 @@ class PackagingUtilsTest {
         // PL -> EN mapping should not be accepted.
         matchers.assertThatTest("file.koncowka").isFalse()
         matchers.assertThatTest("file.KONCOWKA").isFalse()
+    }
 
+    @Test
+    fun testGetNoCompressGlobsForAapt() {
+        // Just check the different format for AAPT, and that it doesn't contain the default no
+        // compress extensions (since AAPT already has them included by default).
+        val matchers =
+            PackagingUtils.getNoCompressForAapt(listOf(".end", ".ąĘ", "Android/foo.bar", ".a(b)c?"))
+        val expected = listOf(
+            "(a|A)(n|N)(d|D)(r|R)(o|O)(i|I)(d|D)/(f|F)(o|O)(o|O)\\.(b|B)(a|A)(r|R)",
+            "\\.(a|A)\\((b|B)\\)(c|C)\\?",
+            "\\.(e|E)(n|N)(d|D)",
+            "\\.(ą|Ą)(ę|Ę)"
+        )
+        assertThat(matchers).containsExactlyElementsIn(expected)
     }
 
 

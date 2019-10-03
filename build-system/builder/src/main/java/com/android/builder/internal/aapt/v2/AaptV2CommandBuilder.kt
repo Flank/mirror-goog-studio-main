@@ -22,6 +22,7 @@ import com.android.SdkConstants
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptUtils
+import com.android.builder.packaging.PackagingUtils
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
@@ -227,8 +228,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
             // alternations.
             // AAPT2 will still not compress the default no-compress extensions, for example ".jpg"
             // or ".mp3". For full list see PackagingUtils.DEFAULT_DONT_COMPRESS_EXTENSIONS.
-            val expression = "(${Joiner.on("$|").join(noCompressList)}$)"
-            builder.add("--no-compress-regex", expression)
+            builder.add("--no-compress-regex", getNoCompressRegex(noCompressList))
         }
     }
 
@@ -341,4 +341,8 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     }
 
     return builder.build()
+}
+
+private fun getNoCompressRegex(noCompressList: Collection<String>) : String {
+    return "((${Joiner.on("$)|(").join(PackagingUtils.getNoCompressForAapt(noCompressList))}$))"
 }
