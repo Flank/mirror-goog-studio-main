@@ -16,8 +16,13 @@
 
 package com.android.testutils;
 
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 
 @RunWith(JarTestSuiteRunner.class)
 public class JarTestSuite {
+    @BeforeClass
+    public static void setUp() {
+        BazelRunfilesManifestProcessor.setUpRunfiles();
+    }
 }
