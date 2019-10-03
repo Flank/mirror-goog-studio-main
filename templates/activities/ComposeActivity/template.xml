@@ -52,7 +52,7 @@
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
         <!-- default thumbnail is required -->
-        <thumb>template_bottom_navigation_activity.png</thumb>
+        <thumb>template_compose_blank_activity.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl"/>
