@@ -29,20 +29,14 @@ import org.jetbrains.uast.UDeclarationsExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
-import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
-import org.jetbrains.uast.USwitchClauseExpression
-import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
-import org.jetbrains.uast.java.JavaUIfExpression
-import org.jetbrains.uast.kotlin.KotlinUSwitchEntry
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -213,51 +207,6 @@ abstract class DataFlowAnalyzer(
     protected fun addVariableReference(node: UVariable) {
         (node.sourcePsi as? PsiVariable)?.let { references.add(it) }
         (node.javaPsi as? PsiVariable)?.let { references.add(it) }
-    }
-
-    override fun afterVisitSwitchClauseExpression(node: USwitchClauseExpression) {
-        if (node is KotlinUSwitchEntry) {
-            for (expression in node.body.expressions) {
-                if (instances.contains(expression)) {
-                    val switch = node.getParentOfType<USwitchExpression>()
-                    if (switch != null) {
-                        instances.add(switch)
-                        break
-                    }
-                }
-            }
-        }
-
-        super.afterVisitSwitchClauseExpression(node)
-    }
-
-    override fun afterVisitIfExpression(node: UIfExpression) {
-        if (node !is JavaUIfExpression) { // Does not apply to Java
-            val thenExpression = node.thenExpression
-            val elseExpression = node.elseExpression
-            if (thenExpression != null && instances.contains(thenExpression)) {
-                instances.add(node)
-            } else if (elseExpression != null && instances.contains(elseExpression)) {
-                instances.add(node)
-            } else {
-                if (thenExpression is UBlockExpression) {
-                    thenExpression.expressions.lastOrNull()?.let {
-                        if (instances.contains(it)) {
-                            instances.add(node)
-                        }
-                    }
-                }
-                if (elseExpression is UBlockExpression) {
-                    elseExpression.expressions.lastOrNull()?.let {
-                        if (instances.contains(it)) {
-                            instances.add(node)
-                        }
-                    }
-                }
-            }
-        }
-
-        super.afterVisitIfExpression(node)
     }
 
     override fun afterVisitBinaryExpression(node: UBinaryExpression) {

@@ -861,60 +861,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
-    fun testDatabaseCleanupKotlinAssignments() {
-        // Regression test for
-        // https://issuetracker.google.com/141889131
-        // "false positive warning about cursor that doesn't get closed"
-        lint().files(
-            kotlin(
-                """
-                package test.pkg
-
-                import android.app.Activity
-                import android.net.Uri
-                import android.os.Bundle
-
-                class Test : Activity() {
-                    fun testIf(uri: Uri, projection: Array<String>, bundle: Bundle) {
-                        val query =
-                        if (true)
-                            if (false) {
-                                contentResolver.query(uri, projection, bundle, null)
-                            } else {
-                                contentResolver.query(uri, projection, bundle, null)
-                            }
-                        else
-                            if (true) {
-                                val x = 5
-                                contentResolver.query(uri, projection, bundle, null)
-                            } else
-                                contentResolver.query(uri, projection, bundle, null)
-                        query?.close()
-                    }
-
-                    fun testWhen(uri: Uri, projection: Array<String>, bundle: Bundle) {
-                        val query =
-                            when {
-                                true -> when {
-                                    false -> contentResolver.query(uri, projection, bundle, null)
-                                    else -> contentResolver.query(uri, projection, bundle, null)
-                                }
-                                true -> {
-                                    val x = 5
-                                    contentResolver.query(uri, projection, bundle, null)
-                                }
-                                else -> {
-                                    contentResolver.query(uri, projection, bundle, null)
-                                }
-                            }
-                        query?.close()
-                    }
-                }
-                """
-            ).indented()
-        ).run().expectClean()
-    }
-
     fun testDatabaseCursorReassignment() {
         lint().files(
             java(
