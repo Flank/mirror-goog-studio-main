@@ -128,7 +128,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar:///private/var/tmp/_bazel_estebandlc/b62c10d5ba5cf97545b95d085881cf8e/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/third_party/bazel-bes/libbes_proto.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../bazel-bin/tools/base/third_party/bazel-bes/libbes_proto.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
