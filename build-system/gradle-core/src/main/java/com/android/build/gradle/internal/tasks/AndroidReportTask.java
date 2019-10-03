@@ -202,41 +202,47 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
 
             task.getResultsDir()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    scope.getProject(),
-                                    () -> {
-                                        String dir =
-                                                scope.getExtension()
-                                                        .getTestOptions()
-                                                        .getResultsDir();
-                                        String rootLocation =
-                                                dir != null && !dir.isEmpty()
-                                                        ? dir
-                                                        : defaultResultsDir;
-                                        return scope.getProject()
-                                                .getLayout()
-                                                .getProjectDirectory()
-                                                .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
-                                    }));
+                            scope.getProject()
+                                    .provider(
+                                            () -> {
+                                                String dir =
+                                                        scope.getExtension()
+                                                                .getTestOptions()
+                                                                .getResultsDir();
+                                                String rootLocation =
+                                                        dir != null && !dir.isEmpty()
+                                                                ? dir
+                                                                : defaultResultsDir;
+                                                return scope.getProject()
+                                                        .getLayout()
+                                                        .getProjectDirectory()
+                                                        .dir(
+                                                                rootLocation
+                                                                        + subfolderName
+                                                                        + FD_FLAVORS_ALL);
+                                            }));
 
             task.getResultsDir()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    scope.getProject(),
-                                    () -> {
-                                        String dir =
-                                                scope.getExtension()
-                                                        .getTestOptions()
-                                                        .getReportDir();
-                                        String rootLocation =
-                                                dir != null && !dir.isEmpty()
-                                                        ? dir
-                                                        : defaultReportsDir;
-                                        return scope.getProject()
-                                                .getLayout()
-                                                .getProjectDirectory()
-                                                .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
-                                    }));
+                            scope.getProject()
+                                    .provider(
+                                            () -> {
+                                                String dir =
+                                                        scope.getExtension()
+                                                                .getTestOptions()
+                                                                .getReportDir();
+                                                String rootLocation =
+                                                        dir != null && !dir.isEmpty()
+                                                                ? dir
+                                                                : defaultReportsDir;
+                                                return scope.getProject()
+                                                        .getLayout()
+                                                        .getProjectDirectory()
+                                                        .dir(
+                                                                rootLocation
+                                                                        + subfolderName
+                                                                        + FD_FLAVORS_ALL);
+                                            }));
         }
     }
 }

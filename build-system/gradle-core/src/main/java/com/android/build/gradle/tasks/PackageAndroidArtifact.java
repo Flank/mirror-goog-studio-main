@@ -51,7 +51,6 @@ import com.android.build.gradle.internal.signing.SigningConfigProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -880,9 +879,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getMinSdkVersion()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    globalScope.getProject(),
-                                    () -> variantScope.getMinSdkVersion().getApiLevel()));
+                            globalScope
+                                    .getProject()
+                                    .provider(() -> variantScope.getMinSdkVersion().getApiLevel()));
+            packageAndroidArtifact.getMinSdkVersion().disallowChanges();
 
             packageAndroidArtifact
                     .getResourceFiles()

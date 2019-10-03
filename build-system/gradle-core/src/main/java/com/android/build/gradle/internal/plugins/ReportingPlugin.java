@@ -23,7 +23,6 @@ import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.utils.FileUtils;
 import javax.inject.Inject;
@@ -66,8 +65,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         mergeReportsTask
                 .getResultsDir()
                 .set(
-                        TaskInputHelper.memoizeToProvider(
-                                project,
+                        project.provider(
                                 () -> {
                                     String resultsDir = extension.getResultsDir();
                                     if (resultsDir == null) {
@@ -85,8 +83,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         mergeReportsTask
                 .getReportsDir()
                 .set(
-                        TaskInputHelper.memoizeToProvider(
-                                project,
+                        project.provider(
                                 () -> {
                                     String reportsDir = extension.getReportDir();
                                     if (reportsDir == null) {

@@ -17,14 +17,13 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
+import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
@@ -93,13 +92,15 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
         public void configure(@NonNull FeatureSplitDeclarationWriterTask task) {
             super.configure(task);
 
-            task.uniqueIdentifier = getVariantScope().getGlobalScope().getProject().getPath();
+            final VariantScope variantScope = getVariantScope();
+            final Project project = variantScope.getGlobalScope().getProject();
+            task.uniqueIdentifier = project.getPath();
             task.getApplicationId()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    getVariantScope().getGlobalScope().getProject(),
-                                    getVariantScope().getVariantConfiguration()
+                            project.provider(
+                                    variantScope.getVariantConfiguration()
                                             ::getOriginalApplicationId));
+            task.getApplicationId().disallowChanges();
         }
     }
 }

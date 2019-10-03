@@ -21,7 +21,6 @@ import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
@@ -101,9 +100,11 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
             VariantScope variantScope = getVariantScope();
 
             task.xmlProcessor.set(
-                    TaskInputHelper.memoizeToProvider(
-                            variantScope.getGlobalScope().getProject(),
-                            variantScope.getVariantData()::getLayoutXmlProcessor));
+                    variantScope
+                            .getGlobalScope()
+                            .getProject()
+                            .provider(variantScope.getVariantData()::getLayoutXmlProcessor));
+            task.xmlProcessor.disallowChanges();
             task.useAndroidX =
                     variantScope
                             .getGlobalScope()

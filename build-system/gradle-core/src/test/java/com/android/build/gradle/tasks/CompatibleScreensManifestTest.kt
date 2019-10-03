@@ -111,7 +111,7 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(mainApk))
 
         task.variantName = "variant"
-        task.minSdkVersion = task.project.provider { "22" }
+        task.minSdkVersion.set("22" )
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
 
         task.taskAction()
@@ -138,7 +138,7 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(splitApk))
 
         task.variantName = "variant"
-        task.minSdkVersion = task.project.provider { "22" }
+        task.minSdkVersion.set("22")
         task.screenSizes = ImmutableSet.of("xhdpi")
 
         task.taskAction()
@@ -170,7 +170,7 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(splitApk))
 
         task.variantName = "variant"
-        task.minSdkVersion = task.project.provider { null }
+        task.minSdkVersion.set(task.project.provider { null })
         task.screenSizes = ImmutableSet.of("xhdpi")
 
         task.taskAction()
@@ -208,7 +208,7 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(xhdpiSplit, xxhdpiSplit))
 
         task.variantName = "variant"
-        task.minSdkVersion = task.project.provider { "23" }
+        task.minSdkVersion.set("23")
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
 
         task.taskAction()

@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolTable
@@ -98,11 +97,11 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             variantScope.artifacts.setTaskInputToFinalProducts(
                 MultipleArtifactType.PARTIAL_R_FILES, task.partialRFiles)
             task.packageForR.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project,
+                variantScope.globalScope.project.provider(
                     variantScope.variantConfiguration::getOriginalApplicationId
                 )
             )
+            task.packageForR.disallowChanges()
         }
     }
 }

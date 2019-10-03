@@ -17,7 +17,6 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.ResValueGenerator
 import com.android.builder.model.ClassField
@@ -25,12 +24,12 @@ import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Lists
 import org.gradle.api.provider.ListProperty
-import java.io.File
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 @CacheableTask
 abstract class GenerateResValues : NonIncrementalTask() {
@@ -94,10 +93,9 @@ abstract class GenerateResValues : NonIncrementalTask() {
         override fun configure(task: GenerateResValues) {
             super.configure(task)
 
-            task.items.set(
-                TaskInputHelper.memoizeToProvider(variantScope.globalScope.project) {
-                    variantScope.variantConfiguration.resValues
-                })
+            task.items.set(variantScope.globalScope.project.provider {
+                variantScope.variantConfiguration.resValues
+            })
 
             task.resOutputDir = variantScope.generatedResOutputDir
         }

@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
@@ -181,12 +180,12 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             task.aaptIntermediateDir =
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantConfiguration.dirName)
-            task.packageForR.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project,
-                    variantScope.variantConfiguration::getOriginalApplicationId
-                )
-            )
+
+            task.packageForR.set(variantScope.globalScope.project.provider(
+                variantScope.variantConfiguration::getOriginalApplicationId
+            ))
+            task.packageForR.disallowChanges()
+
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version

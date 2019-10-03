@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.manifmerger.ManifestMerger2;
@@ -542,6 +541,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         @Override
         public void configure(@NonNull final ProcessTestManifest task) {
             super.configure(task);
+            Project project = task.getProject();
 
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getVariantScope().getVariantConfiguration();
@@ -549,10 +549,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
             // non-null file that does not exist.
-            task.getTestManifestFile()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    task.getProject(), config::getMainManifestIfExists));
+            task.getTestManifestFile().set(project.provider(config::getMainManifestIfExists));
+            task.getTestManifestFile().disallowChanges();
+
             task.outputScope = getVariantScope().getOutputScope();
 
             task.setTmpDir(
@@ -562,47 +561,39 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             "manifest",
                             getVariantScope().getDirName()));
 
-            Project project = getVariantScope().getGlobalScope().getProject();
             task.getMinSdkVersion()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, () -> config.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> config.getMinSdkVersion().getApiString()));
+            task.getMinSdkVersion().disallowChanges();
             task.getTargetSdkVersion()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, () -> config.getTargetSdkVersion().getApiString()));
+                    .set(project.provider(() -> config.getTargetSdkVersion().getApiString()));
+            task.getTargetSdkVersion().disallowChanges();
 
             task.testTargetMetadata = testTargetMetadata;
-            task.getTestApplicationId()
-                    .set(TaskInputHelper.memoizeToProvider(project, config::getTestApplicationId));
+            task.getTestApplicationId().set(project.provider(config::getTestApplicationId));
+            task.getTestApplicationId().disallowChanges();
 
             // will only be used if testTargetMetadata is null.
-            task.getTestedApplicationId()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, config::getTestedApplicationId));
+            task.getTestedApplicationId().set(project.provider(config::getTestedApplicationId));
+            task.getTestedApplicationId().disallowChanges();
 
             VariantConfiguration testedConfig = config.getTestedConfig();
             task.onlyTestApk = testedConfig != null && testedConfig.getType().isAar();
 
-            task.getInstrumentationRunner()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, config::getInstrumentationRunner));
-            task.getHandleProfiling()
-                    .set(TaskInputHelper.memoizeToProvider(project, config::getHandleProfiling));
-            task.getFunctionalTest()
-                    .set(TaskInputHelper.memoizeToProvider(project, config::getFunctionalTest));
-            task.getTestLabel()
-                    .set(TaskInputHelper.memoizeToProvider(project, config::getTestLabel));
+            task.getInstrumentationRunner().set(project.provider(config::getInstrumentationRunner));
+            task.getInstrumentationRunner().disallowChanges();
+
+            task.getHandleProfiling().set(project.provider(config::getHandleProfiling));
+            task.getHandleProfiling().disallowChanges();
+            task.getFunctionalTest().set(project.provider(config::getFunctionalTest));
+            task.getFunctionalTest().disallowChanges();
+            task.getTestLabel().set(project.provider(config::getTestLabel));
+            task.getTestLabel().disallowChanges();
 
             task.manifests =
                     getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            task.getPlaceholdersValues()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, config::getManifestPlaceholders));
+            task.getPlaceholdersValues().set(project.provider(config::getManifestPlaceholders));
+            task.getPlaceholdersValues().disallowChanges();
 
             if (!getVariantScope()
                     .getGlobalScope()

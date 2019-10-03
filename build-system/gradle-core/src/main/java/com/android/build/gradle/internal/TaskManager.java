@@ -126,7 +126,6 @@ import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
@@ -1296,8 +1295,7 @@ public abstract class TaskManager {
 
         scope.getTaskContainer()
                 .setExternalNativeJsonGenerator(
-                        TaskInputHelper.memoizeToProvider(
-                                project, () -> ExternalNativeJsonGenerator.create(module, scope)));
+                        project.provider(() -> ExternalNativeJsonGenerator.create(module, scope)));
     }
 
     public void createExternalNativeBuildTasks(@NonNull VariantScope scope) {

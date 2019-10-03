@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -680,36 +679,35 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             task.getMinSdkVersion()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project,
+                            project.provider(
                                     () -> {
                                         ApiVersion minSdk =
                                                 config.getMergedFlavor().getMinSdkVersion();
                                         return minSdk == null ? null : minSdk.getApiString();
                                     }));
+            task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project,
+                            project.provider(
                                     () -> {
                                         ApiVersion targetSdk =
                                                 config.getMergedFlavor().getTargetSdkVersion();
                                         return targetSdk == null ? null : targetSdk.getApiString();
                                     }));
+            task.getTargetSdkVersion().disallowChanges();
 
             task.getMaxSdkVersion()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, config.getMergedFlavor()::getMaxSdkVersion));
+                    .set(project.provider(config.getMergedFlavor()::getMaxSdkVersion));
+            task.getMaxSdkVersion().disallowChanges();
 
             task.getOptionalFeatures()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project,
+                            project.provider(
                                     () ->
                                             getOptionalFeatures(
                                                     getVariantScope(), isAdvancedProfilingOn)));
+            task.getOptionalFeatures().disallowChanges();
 
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.APK_LIST.INSTANCE, task.getApkList());
@@ -754,13 +752,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
             task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));
-            task.getMainManifest()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, config::getMainManifestFilePath));
+            task.manifestPlaceholders.disallowChanges();
+            task.getMainManifest().set(project.provider(config::getMainManifestFilePath));
+            task.getMainManifest().disallowChanges();
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
+            task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = config.getType().isDynamicFeature();
             task.buildTypeName = config.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline

@@ -32,11 +32,9 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Blocks;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -665,13 +663,15 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.getMinSdk()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    globalScope.getProject(),
-                                    () ->
-                                            variantData
-                                                    .getVariantConfiguration()
-                                                    .getMinSdkVersion()
-                                                    .getApiLevel()));
+                            globalScope
+                                    .getProject()
+                                    .provider(
+                                            () ->
+                                                    variantData
+                                                            .getVariantConfiguration()
+                                                            .getMinSdkVersion()
+                                                            .getApiLevel()));
+            task.getMinSdk().disallowChanges();
 
             Pair<FileCollection, String> aapt2AndVersion =
                     Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);

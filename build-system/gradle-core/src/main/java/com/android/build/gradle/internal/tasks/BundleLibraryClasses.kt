@@ -161,10 +161,7 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
             }
             // FIXME pass this as List<TextResources>
             task.toIgnoreRegExps.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project,
-                    toIgnoreRegExps
-                )
+                variantScope.globalScope.project.provider(toIgnoreRegExps::get)
             )
             task.packageBuildConfig = variantScope.globalScope.extension.packageBuildConfig
             task.jarCreatorType = variantScope.jarCreatorType

@@ -28,9 +28,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -104,10 +102,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    lateinit var versionName: Provider<String?> private set
+    abstract val versionName: Property<String?>
 
     @get:Input
-    lateinit var versionCode: Provider<Int?> private set
+    abstract val versionCode: Property<Int?>
 
     @get:OutputDirectory
     lateinit var incrementalFolder: File
@@ -256,12 +254,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            task.versionCode = TaskInputHelper.memoizeToProvider(task.project) {
-                config.versionCode
-            }
-            task.versionName = TaskInputHelper.memoizeToProvider(task.project) {
-                config.versionName
-            }
+            task.versionCode.set(task.project.provider { config.versionCode })
+            task.versionCode.disallowChanges()
+            task.versionName.set(task.project.provider { config.versionName })
+            task.versionName.disallowChanges()
 
             task.mainSplit = variantData.outputScope.mainSplit
 

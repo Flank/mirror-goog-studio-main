@@ -75,10 +75,9 @@ abstract class CheckManifest : NonIncrementalTask() {
             super.configure(task)
 
             task.manifestRequired = variantScope.variantConfiguration.isManifestFileRequired
-            task.manifestFile =
-                TaskInputHelper.memoizeToProvider(task.project) {
-                    variantScope.variantConfiguration.mainManifestFilePath
-                }
+            task.manifestFile = task.project.provider {
+                variantScope.variantConfiguration.mainManifestFilePath
+            }
         }
     }
 }

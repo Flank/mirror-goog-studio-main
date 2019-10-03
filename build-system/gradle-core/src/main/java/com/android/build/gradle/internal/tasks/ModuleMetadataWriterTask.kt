@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -41,7 +41,8 @@ import org.gradle.api.tasks.TaskProvider
  */
 abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
-    @get:Input lateinit var applicationId: Provider<String> private set
+    @get:Input
+    abstract val applicationId: Property<String>
 
     private lateinit var outputScope: OutputScope
 
@@ -97,9 +98,10 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
             // default value of the app ID to publish. This may get overwritten by something
             // coming from an application module.
-            task.applicationId = TaskInputHelper.memoizeToProvider(task.project) {
+            task.applicationId.set(task.project.provider {
                 variantScope.variantConfiguration.applicationId
-            }
+            })
+            task.applicationId.disallowChanges()
 
             task.outputScope = variantScope.variantData.outputScope
 

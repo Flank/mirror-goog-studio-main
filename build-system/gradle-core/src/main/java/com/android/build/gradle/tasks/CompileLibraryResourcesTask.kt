@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
@@ -372,11 +371,12 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 variantScope.variantData.variantConfiguration.mergedFlavor.vectorDrawables
             task.generatedDensities = vectorDrawablesOptions.generatedDensities ?: emptySet()
             task.vectorSupportLibraryIsUsed = vectorDrawablesOptions.useSupportLibrary ?: false
-            task.minSdk.set(
-                TaskInputHelper.memoizeToProvider(variantScope.globalScope.project) {
-                    variantScope.variantData.variantConfiguration.minSdkVersion.apiLevel
-                }
-            )
+
+            task.minSdk.set(variantScope.globalScope.project.provider {
+                variantScope.variantData.variantConfiguration.minSdkVersion.apiLevel
+            })
+            task.minSdk.disallowChanges()
+
             task.generatedPngsOutputDir =
                 FileUtils.join(
                     variantScope.globalScope.generatedDir,

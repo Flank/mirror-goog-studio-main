@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.builder.model.ApiVersion;
@@ -38,10 +37,17 @@ import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
 import com.android.utils.FileUtils;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.UncheckedIOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import javax.inject.Inject;
 import org.apache.tools.ant.BuildException;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
@@ -60,17 +66,6 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.UncheckedIOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
 
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
@@ -427,8 +422,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             Project project = getVariantScope().getGlobalScope().getProject();
             task.getMinSdkVersion()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project,
+                            project.provider(
                                     () -> {
                                         ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
                                         if (minSdkVersion1 == null) {
@@ -436,11 +430,11 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                                         }
                                         return minSdkVersion1.getApiString();
                                     }));
+            task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project,
+                            project.provider(
                                     () -> {
                                         ApiVersion targetSdkVersion =
                                                 mergedFlavor.getTargetSdkVersion();
@@ -449,15 +443,13 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                                         }
                                         return targetSdkVersion.getApiString();
                                     }));
+            task.getTargetSdkVersion().disallowChanges();
 
-            task.getMaxSdkVersion()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, mergedFlavor::getMaxSdkVersion));
+            task.getMaxSdkVersion().set(project.provider(mergedFlavor::getMaxSdkVersion));
+            task.getMaxSdkVersion().disallowChanges();
 
-            task.mainSplit.set(
-                    TaskInputHelper.memoizeToProvider(
-                            project, getVariantScope().getOutputScope()::getMainSplit));
+            task.mainSplit.set(project.provider(getVariantScope().getOutputScope()::getMainSplit));
+            task.mainSplit.disallowChanges();
 
             task.isNamespaced =
                     getVariantScope()
@@ -466,15 +458,18 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             .getAaptOptions()
                             .getNamespaced();
             task.versionName.set(task.getProject().provider(config::getVersionName));
+            task.versionName.disallowChanges();
             task.versionCode.set(task.getProject().provider(config::getVersionCode));
+            task.versionCode.disallowChanges();
             task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));
-            task.getMainManifest()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    task.getProject(), config::getMainManifestFilePath));
+            task.manifestPlaceholders.disallowChanges();
+            task.getMainManifest().set(project.provider(config::getMainManifestFilePath));
+            task.getMainManifest().disallowChanges();
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
+            task.manifestOverlays.disallowChanges();
         }
     }
 }

@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.BuildConfigGenerator
 import com.android.builder.model.ClassField
@@ -27,7 +26,6 @@ import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import java.io.File
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -37,6 +35,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 @CacheableTask
 abstract class GenerateBuildConfig : NonIncrementalTask() {
@@ -199,47 +198,39 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             val variantConfiguration = variantData.variantConfiguration
 
             val project = variantScope.globalScope.project
-            task.buildConfigPackageName.set(
-                TaskInputHelper.memoizeToProvider(project) {
-                    variantConfiguration.originalApplicationId
-                }
-            )
+            task.buildConfigPackageName.set(project.provider {
+                variantConfiguration.originalApplicationId
+            })
+            task.buildConfigPackageName.disallowChanges()
 
-            task.appPackageName.set(
-                TaskInputHelper.memoizeToProvider(project) {
-                    variantConfiguration.applicationId.takeUnless {
-                        variantConfiguration.type.isAar
-                    }
+            task.appPackageName.set(project.provider {
+                variantConfiguration.applicationId.takeUnless {
+                    variantConfiguration.type.isAar
                 }
-            )
+            })
+            task.appPackageName.disallowChanges()
 
-            task.versionName.set(
-                TaskInputHelper.memoizeToProvider(project) { variantConfiguration.versionName })
-            task.versionCode.set(
-                TaskInputHelper.memoizeToProvider(project) { variantConfiguration.versionCode })
+            task.versionName.set(project.provider { variantConfiguration.versionName })
+            task.versionName.disallowChanges()
+            task.versionCode.set(project.provider { variantConfiguration.versionCode })
+            task.versionCode.disallowChanges()
 
-            task.debuggable.set(
-                TaskInputHelper.memoizeToProvider(project) {
-                    variantConfiguration.buildType.isDebuggable
-                }
-            )
+            task.debuggable.set(project.provider { variantConfiguration.buildType.isDebuggable })
+            task.debuggable.disallowChanges()
 
             task.buildTypeName = variantConfiguration.buildType.name
 
             // no need to memoize, variant configuration does that already.
             task.flavorName.set(project.provider { variantConfiguration.flavorName })
+            task.flavorName.disallowChanges()
 
-            task.flavorNamesWithDimensionNames.set(
-                TaskInputHelper.memoizeToProvider(project) {
-                    variantConfiguration.flavorNamesWithDimensionNames
-                }
-            )
+            task.flavorNamesWithDimensionNames.set(project.provider {
+                variantConfiguration.flavorNamesWithDimensionNames
+            })
+            task.flavorNamesWithDimensionNames.disallowChanges()
 
-            task.items.set(
-                TaskInputHelper.memoizeToProvider(project) {
-                    variantConfiguration.buildConfigItems
-                }
-            )
+            task.items.set(project.provider { variantConfiguration.buildConfigItems })
+            task.items.disallowChanges()
 
             task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
 

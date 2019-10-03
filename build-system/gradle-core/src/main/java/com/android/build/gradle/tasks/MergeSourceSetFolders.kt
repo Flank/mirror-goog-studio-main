@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.BuilderConstants
@@ -338,11 +337,12 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.assetsDirectories }
-            task.assetSets.set(
-                TaskInputHelper.memoizeToProvider(variantScope.globalScope.project) {
-                    variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
-                }
-            )
+
+            task.assetSets.set(variantScope.globalScope.project.provider {
+                variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
+            })
+            task.assetSets.disallowChanges()
+
             task.sourceFolderInputs.from(Callable { variantConfig.getSourceFiles(assetDirFunction) })
 
             scope.artifacts.setTaskInputToFinalProduct(
@@ -401,11 +401,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.jniLibsDirectories }
-            task.assetSets.set(
-                TaskInputHelper.memoizeToProvider(variantScope.globalScope.project) {
-                    variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
-                }
-            )
+            task.assetSets.set(variantScope.globalScope.project.provider {
+                variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
+            })
+            task.assetSets.disallowChanges()
             task.sourceFolderInputs.from(Callable { variantConfig.getSourceFiles(assetDirFunction) })
         }
     }
@@ -433,11 +432,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val variantConfig = variantData.variantConfiguration
 
             val assetDirFunction = Function<SourceProvider, Collection<File>> { it.shadersDirectories }
-            task.assetSets.set(
-                TaskInputHelper.memoizeToProvider(variantScope.globalScope.project) {
-                    variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
-                }
-            )
+            task.assetSets.set(variantScope.globalScope.project.provider {
+                variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
+            })
+            task.assetSets.disallowChanges()
             task.sourceFolderInputs.from(Callable { variantConfig.getSourceFiles(assetDirFunction) })
         }
     }

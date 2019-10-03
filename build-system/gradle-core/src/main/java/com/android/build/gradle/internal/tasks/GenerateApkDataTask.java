@@ -310,9 +310,10 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
             task.manifestFile = scope.getMicroApkManifestFile();
             task.getMainPkgName()
                     .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    scope.getGlobalScope().getProject(),
-                                    variantConfiguration::getApplicationId));
+                            scope.getGlobalScope()
+                                    .getProject()
+                                    .provider(variantConfiguration::getApplicationId));
+            task.getMainPkgName().disallowChanges();
             task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
 

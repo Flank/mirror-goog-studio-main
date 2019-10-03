@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
@@ -41,7 +40,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -83,13 +81,15 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE) abstract val dependencies: ConfigurableFileCollection
 
-    @get:Input lateinit var packageForR: Provider<String> private set
+    @get:Input
+    abstract val packageForR: Property<String>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: FileCollection
         private set
 
-    @get:Input lateinit var applicationId: Provider<String> private set
+    @get:Input
+    abstract val applicationId: Property<String>
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -269,9 +269,10 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             task.platformAttrRTxt = variantScope.globalScope.platformAttrs
 
-            task.applicationId = TaskInputHelper.memoizeToProvider(task.project) {
+            task.applicationId.set(task.project.provider {
                 variantScope.variantData.variantConfiguration.applicationId
-            }
+            })
+            task.applicationId.disallowChanges()
 
             if (!projectOptions[BooleanOption.NAMESPACED_R_CLASS]) {
                 // Only include the dependency symbol tables when not using namespaced R classes.
@@ -288,9 +289,10 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 ))
             }
 
-            task.packageForR = TaskInputHelper.memoizeToProvider(task.project) {
+            task.packageForR.set(task.project.provider {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
-            }
+            })
+            task.packageForR.disallowChanges()
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)

@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -35,7 +34,9 @@ import org.gradle.api.tasks.TaskProvider
 @CacheableTask
 abstract class StaticLibraryManifestTask : NonIncrementalTask() {
 
-    @get:Input abstract val packageName: Property<String>
+    @get:Input
+    abstract val packageName: Property<String>
+
     @get:OutputFile abstract val manifestFile: RegularFileProperty
 
     override fun doTaskAction() {
@@ -68,12 +69,10 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
 
         override fun configure(task: StaticLibraryManifestTask) {
             super.configure(task)
-            task.packageName.set(
-                TaskInputHelper.memoizeToProvider(
-                    variantScope.globalScope.project,
-                    variantScope.variantConfiguration::getOriginalApplicationId
-                )
-            )
+            task.packageName.set(variantScope.globalScope.project.provider(
+                variantScope.variantConfiguration::getOriginalApplicationId
+            ))
+            task.packageName.disallowChanges()
         }
     }
 }

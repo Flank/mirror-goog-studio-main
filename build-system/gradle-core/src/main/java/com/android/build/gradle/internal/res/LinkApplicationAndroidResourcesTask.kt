@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-
 import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
@@ -41,7 +40,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -416,9 +414,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.aapt2Version = aapt2Version
 
             val project = variantScope.globalScope.project
-            task.applicationId.set(
-                TaskInputHelper.memoizeToProvider(project) { config.applicationId }
-            )
+            task.applicationId.set(project.provider { config.applicationId })
+            task.applicationId.disallowChanges()
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
             if (variantData.type.canHaveSplits) {
@@ -458,9 +455,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.APK_LIST, task.apkList)
 
             task.outputScope = variantData.outputScope
-            task.originalApplicationId.set(
-                TaskInputHelper.memoizeToProvider(project) { config.originalApplicationId }
-            )
+            task.originalApplicationId.set(project.provider { config.originalApplicationId })
+            task.originalApplicationId.disallowChanges()
 
             val aaptFriendlyManifestsFilePresent = variantScope
                 .artifacts
