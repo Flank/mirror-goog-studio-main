@@ -273,9 +273,7 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
         true,
         ClassFileProviderFactory(emptyList()),
         ClassFileProviderFactory(emptyList()),
-        true,
         false,
-        null,
         null,
         NoOpMessageReceiver()
     )
@@ -284,7 +282,8 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
         .use { input ->
             builder.convert(
                 input.entries { _, _ -> true },
-                output
+                output,
+                true
             )
         }
 }

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.MessageReceiver;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -29,7 +28,7 @@ import java.util.stream.Stream;
  * dex archive. This class contains the logic for reading the class files from the input, {@link
  * ClassFileInput}, and writing the output to a {@link DexArchive}. Implementation of conversion
  * from the class files to dex files is left to the sub-classes. To trigger the conversion, create
- * an instance of this class, and invoke {@link #convert(Stream, Path)}.
+ * an instance of this class, and invoke {@link #convert(Stream, Path, boolean)}.
  */
 public abstract class DexArchiveBuilder {
 
@@ -46,20 +45,16 @@ public abstract class DexArchiveBuilder {
             boolean isDebug,
             @NonNull ClassFileProviderFactory bootClasspath,
             @NonNull ClassFileProviderFactory classpath,
-            boolean dexPerClass,
             boolean desugaring,
             @Nullable String libConfiguration,
-            @Nullable File outputKeepRule,
             @NonNull MessageReceiver messageReceiver) {
         return new D8DexArchiveBuilder(
                 minSdkVersion,
                 isDebug,
                 bootClasspath,
                 classpath,
-                dexPerClass,
                 desugaring,
                 libConfiguration,
-                outputKeepRule,
                 messageReceiver);
     }
 
@@ -67,6 +62,7 @@ public abstract class DexArchiveBuilder {
      * Converts the specified input, and writes it to the output dex archive. If dex archive does
      * not exist, it will be created. If it exists, entries will be added or replaced.
      */
-    public abstract void convert(@NonNull Stream<ClassFileEntry> input, @NonNull Path output)
+    public abstract void convert(
+            @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
             throws DexArchiveBuilderException;
 }

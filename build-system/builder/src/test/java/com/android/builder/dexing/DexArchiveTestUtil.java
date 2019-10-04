@@ -84,13 +84,11 @@ public final class DexArchiveTestUtil {
                                 new ClassFileProviderFactory(Collections.emptyList()),
                                 new ClassFileProviderFactory(Collections.emptyList()),
                                 true,
-                                true,
-                                null,
                                 null,
                                 new StandardOutErrMessageReceiver());
             }
 
-            dexArchiveBuilder.convert(inputs.entries((x, y) -> true), dexArchiveOutput);
+            dexArchiveBuilder.convert(inputs.entries((x, y) -> true), dexArchiveOutput, true);
         }
     }
 

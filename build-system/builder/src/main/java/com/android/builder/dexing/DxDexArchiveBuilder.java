@@ -47,7 +47,8 @@ class DxDexArchiveBuilder extends DexArchiveBuilder {
     }
 
     @Override
-    public void convert(@NonNull Stream<ClassFileEntry> input, @NonNull Path output)
+    public void convert(
+            @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
             throws DexArchiveBuilderException {
         Iterator<ClassFileEntry> iterator = input.iterator();
         if (!iterator.hasNext()) {

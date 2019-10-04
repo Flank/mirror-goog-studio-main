@@ -115,9 +115,7 @@ abstract class DexFileDependenciesTask
                     params.debuggable,
                     ClassFileProviderFactory(bootClasspath).also { closer.register(it) },
                     ClassFileProviderFactory(classpath).also { closer.register(it) },
-                    false,
                     true,
-                    null,
                     null,
                     MessageReceiverImpl(
                         errorFormatMode = params.errorFormatMode,
@@ -130,7 +128,8 @@ abstract class DexFileDependenciesTask
                     classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            params.outputFile.toPath()
+                            params.outputFile.toPath(),
+                            false
                         )
                     }
                 }

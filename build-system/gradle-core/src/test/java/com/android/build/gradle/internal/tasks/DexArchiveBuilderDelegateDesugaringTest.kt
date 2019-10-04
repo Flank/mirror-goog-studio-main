@@ -469,13 +469,9 @@ class DexArchiveBuilderDelegateDesugaringTest {
             workerExecutor = workerExecutor,
 
             projectOutputDex = projectOutput,
-            projectOutputKeepRules = null,
             subProjectOutputDex = tmpDir.newFolder(),
-            subProjectOutputKeepRules = null,
             externalLibsOutputDex = tmpDir.newFolder(),
-            externalLibsOutputKeepRules = null,
             mixedScopeOutputDex = tmpDir.newFolder(),
-            mixedScopeOutputKeepRules = null,
             dexer = DexerTool.D8,
             libConfiguration = libConfiguration
         )
