@@ -93,15 +93,6 @@ public class RenderSession {
     }
 
     /**
-     * Returns true if the current image alpha channel is relevant.
-     *
-     * @return whether the image alpha channel is relevant.
-     */
-    public boolean isAlphaChannelImage() {
-        return true;
-    }
-
-    /**
      * Returns the map of View Cookie → properties (attribute name, attribute value) for all the
      * views that have a view cookie.
      */
@@ -202,146 +193,7 @@ public class RenderSession {
     }
 
     /**
-     * Sets the value of a given property on a given object.
-     * <p>
-     * This does nothing more than change the property. To render the scene in its new state, a
-     * call to {@link #render()} is required.
-     * <p>
-     * Any amount of actions can be taken on the scene before {@link #render()} is called.
-     *
-     * @param objectView
-     * @param propertyName
-     * @param propertyValue
-     *
-     * @return a {@link Result} indicating the status of the action.
-     *
-     * @throws IllegalArgumentException if the view object is not an android.view.View
-     */
-    public Result setProperty(Object objectView, String propertyName, String propertyValue) {
-        return NOT_IMPLEMENTED.createResult();
-    }
-
-    /**
-     * returns the value of a given property on a given object.
-     * <p>
-     * This returns a {@link Result} object. If the operation of querying the object for its
-     * property was successful (check {@link Result#isSuccess()}), then the property value
-     * is set in the result and can be accessed through {@link Result#getData()}.
-     *
-     * @param objectView
-     * @param propertyName
-     *
-     * @return a {@link Result} indicating the status of the action.
-     *
-     * @throws IllegalArgumentException if the view object is not an android.view.View
-     */
-    public Result getProperty(Object objectView, String propertyName) {
-        return NOT_IMPLEMENTED.createResult();
-    }
-
-    /**
-     * Inserts a new child in a ViewGroup object, and renders the result.
-     * <p>
-     * The child is first inflated and then added to its new parent, at the given <var>index</var>
-     * position. If the <var>index</var> is -1 then the child is added at the end of the parent.
-     * <p>
-     * If an animation listener is passed then the rendering is done asynchronously and the
-     * result is sent to the listener.
-     * If the listener is null, then the rendering is done synchronously.
-     * <p>
-     * The child stays in the view hierarchy after the rendering is done. To remove it call
-     * {@link #removeChild(Object, IAnimationListener)}
-     * <p>
-     * The returned {@link Result} object will contain the android.view.View object for
-     * the newly inflated child. It is accessible through {@link Result#getData()}.
-     *
-     * @param parentView the parent View object to receive the new child.
-     * @param childXml an {@link ILayoutPullParser} containing the content of the new child,
-     *             including ViewGroup.LayoutParams attributes.
-     * @param index the index at which position to add the new child into the parent. -1 means at
-     *             the end.
-     * @param listener an optional {@link IAnimationListener}.
-     *
-     * @return a {@link Result} indicating the status of the action.
-     */
-    public Result insertChild(Object parentView, ILayoutPullParser childXml, int index,
-            IAnimationListener listener) {
-        return NOT_IMPLEMENTED.createResult();
-    }
-
-    /**
-     * Move a new child to a different ViewGroup object.
-     * <p>
-     * The child is first removed from its current parent, and then added to its new parent, at the
-     * given <var>index</var> position. In case the <var>parentView</var> is the current parent of
-     * <var>childView</var> then the index must be the value with the <var>childView</var> removed
-     * from its parent. If the <var>index</var> is -1 then the child is added at the end of
-     * the parent.
-     * <p>
-     * If an animation listener is passed then the rendering is done asynchronously and the
-     * result is sent to the listener.
-     * If the listener is null, then the rendering is done synchronously.
-     * <p>
-     * The child stays in the view hierarchy after the rendering is done. To remove it call
-     * {@link #removeChild(Object, IAnimationListener)}
-     * <p>
-     * The returned {@link Result} object will contain the android.view.ViewGroup.LayoutParams
-     * object created from the <var>layoutParams</var> map if it was non <code>null</code>.
-     *
-     * @param parentView the parent View object to receive the child. Can be the current parent
-     *             already.
-     * @param childView the view to move.
-     * @param index the index at which position to add the new child into the parent. -1 means at
-     *             the end.
-     * @param layoutParams an optional map of new ViewGroup.LayoutParams attribute. If non null,
-     *             then the current layout params of the view will be removed and a new one will
-     *             be inflated and set with the content of the map.
-     * @param listener an optional {@link IAnimationListener}.
-     *
-     * @return a {@link Result} indicating the status of the action.
-     */
-    public Result moveChild(Object parentView, Object childView, int index,
-            Map<String, String> layoutParams, IAnimationListener listener) {
-        return NOT_IMPLEMENTED.createResult();
-    }
-
-    /**
-     * Removes a child from a ViewGroup object.
-     * <p>
-     * This does nothing more than change the layout. To render the scene in its new state, a
-     * call to {@link #render()} is required.
-     * <p>
-     * Any amount of actions can be taken on the scene before {@link #render()} is called.
-     *
-     * @param childView the view object to remove from its parent
-     * @param listener an optional {@link IAnimationListener}.
-     *
-     * @return a {@link Result} indicating the status of the action.
-     */
-    public Result removeChild(Object childView, IAnimationListener listener) {
-        return NOT_IMPLEMENTED.createResult();
-    }
-
-    /**
-     * Starts playing an given animation on a given object.
-     * <p>
-     * The animation playback is asynchronous and the rendered frame is sent vi the
-     * <var>listener</var>.
-     *
-     * @param targetObject the view object to animate
-     * @param animationName the name of the animation (res/anim) to play.
-     * @param listener the listener callback.
-     *
-     * @return a {@link Result} indicating the status of the action.
-     */
-    public Result animate(Object targetObject, String animationName,
-            boolean isFrameworkAnimation, IAnimationListener listener) {
-        return NOT_IMPLEMENTED.createResult();
-    }
-
-    /**
      * Sets the current system time in nanos.
-     * <p>Calls to this method must check that layoutlib supports {@link Features#SYSTEM_TIME}
      */
     public void setSystemTimeNanos(long nanos) {
         throw new UnsupportedOperationException(
@@ -350,7 +202,6 @@ public class RenderSession {
 
     /**
      * Sets the system boot time in nanos.
-     * <p>Calls to this method must check that layoutlib supports {@link Features#SYSTEM_TIME}
      */
     public void setSystemBootTimeNanos(long nanos) {
         throw new UnsupportedOperationException(
@@ -360,7 +211,6 @@ public class RenderSession {
     /**
      * Sets the time for which the next frame will be selected. The time is the elapsed time from
      * the current system nanos time.
-     * <p>Calls to this method must check that layoutlib supports {@link Features#SYSTEM_TIME}
      */
     public void setElapsedFrameTimeNanos(long nanos) {
         throw new UnsupportedOperationException(
