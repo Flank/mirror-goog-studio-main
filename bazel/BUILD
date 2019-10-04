@@ -105,7 +105,7 @@ java_library(
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools/idea/.idea/libraries:jetbrains-annotations-java5",
-        "//tools/idea/build/lib:jps",
+        "//tools/idea/.idea/libraries:jps-build-script-dependencies-bootstrap",
     ],
 )
 
