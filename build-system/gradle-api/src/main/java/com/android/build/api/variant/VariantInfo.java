@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
  *
  * <p>Immutable, no access to tasks
  */
+@Deprecated
 public interface VariantInfo {
 
     /** Returns the name of the variant. This is composed of the build types and flavors */

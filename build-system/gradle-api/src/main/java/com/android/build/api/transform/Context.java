@@ -28,6 +28,7 @@ import org.gradle.workers.WorkerExecutor;
  * <p>
  * This gives access to a limited amount of context when the transform is run.
  */
+@Deprecated
 public interface Context {
 
     /**
