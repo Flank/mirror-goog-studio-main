@@ -29,7 +29,7 @@ namespace deploy {
 
 namespace {
 
-int InitAddr(const std::string& socket_name, struct sockaddr_un* addr) {
+socklen_t InitAddr(const std::string& socket_name, struct sockaddr_un* addr) {
   addr->sun_family = AF_UNIX;
 #ifdef __APPLE__
   // Mac does not support abstract sockets, use a named one for testing
@@ -37,10 +37,17 @@ int InitAddr(const std::string& socket_name, struct sockaddr_un* addr) {
   strncpy(addr->sun_path, name.c_str(), sizeof(addr->sun_path) - 1);
   return SUN_LEN(addr);
 #else
-  // Abstract sockets start with a null terminator.
+  // Abstract socket paths start with a null terminator and don't need to
+  // include an ending null.
   addr->sun_path[0] = '\0';
-  strncpy(addr->sun_path + 1, socket_name.c_str(), sizeof(addr->sun_path) - 2);
-  return sizeof(*addr);
+  addr->sun_path[1] = '\0';
+
+  // Make sure we account for the fact that strncat adds a null terminator so we
+  // don't overflow the buffer. We don't count this null terminator when
+  // returning the length of the address struct.
+  strncat(addr->sun_path + 1, socket_name.c_str(), sizeof(addr->sun_path) - 2);
+  return sizeof(sa_family_t) +
+         std::min(socket_name.size() + 1, sizeof(addr->sun_path) - 1);
 #endif  // __APPLE__
 }
 
