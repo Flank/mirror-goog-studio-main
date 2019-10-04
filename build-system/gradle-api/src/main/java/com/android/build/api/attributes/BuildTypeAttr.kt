@@ -14,5 +14,19 @@
  * limitations under the License.
  */
 
-/** Attributes used in the variant aware dependency management of Gradle. */
-package com.android.build.api.attributes;
+package com.android.build.api.attributes
+
+import org.gradle.api.attributes.Attribute
+
+/**
+ * Type for the attribute holding BuildType information.
+ *
+ *
+ * There should only be one build type attribute associated to each [ ] object. The key should be [.ATTRIBUTE].
+ */
+interface BuildTypeAttr : org.gradle.api.Named {
+    companion object {
+        @JvmStatic
+        val ATTRIBUTE: Attribute<BuildTypeAttr> = Attribute.of(BuildTypeAttr::class.java)
+    }
+}

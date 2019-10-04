@@ -14,18 +14,5 @@
  * limitations under the License.
  */
 
-package com.android.build.api.attributes;
-
-import org.gradle.api.Named;
-
-/**
- * Type for the attribute holding ProductFlavor information.
- *
- * <p>There can be more than one attribute associated to each {@link
- * org.gradle.api.artifacts.Configuration} object, where each represents a different flavor
- * dimension.
- *
- * <p>The key should be created with <code>Attribute.of(dimensionName, ProductFlavorAttr.class)
- * </code>
- */
-public interface ProductFlavorAttr extends Named {}
+/** Attributes used in the variant aware dependency management of Gradle.  */
+package com.android.build.api.attributes

@@ -934,7 +934,7 @@ public class VariantManager implements VariantModel {
 
         if (!alternateMap.isEmpty()) {
             AttributeMatchingStrategy<BuildTypeAttr> buildTypeStrategy =
-                    schema.attribute(BuildTypeAttr.ATTRIBUTE);
+                    schema.attribute(BuildTypeAttr.getATTRIBUTE());
 
             buildTypeStrategy
                     .getCompatibilityRules()

@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.api.attributes;
+package com.android.build.api.attributes
 
-import org.gradle.api.attributes.Attribute;
+import org.gradle.api.Named
 
 /**
- * Type for the attribute holding BuildType information.
+ * Type for the attribute holding ProductFlavor information.
  *
- * <p>There should only be one build type attribute associated to each {@link
- * org.gradle.api.artifacts.Configuration} object. The key should be {@link #ATTRIBUTE}.
+ *
+ * There can be more than one attribute associated to each [ ] object, where each represents a different flavor
+ * dimension.
+ *
+ *
+ * The key should be created with `Attribute.of(dimensionName, ProductFlavorAttr.class)
+` *
  */
-public interface BuildTypeAttr extends org.gradle.api.Named {
-
-    Attribute<BuildTypeAttr> ATTRIBUTE = Attribute.of(BuildTypeAttr.class);
-}
+interface ProductFlavorAttr : Named

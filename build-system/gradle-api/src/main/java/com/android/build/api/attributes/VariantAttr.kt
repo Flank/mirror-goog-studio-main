@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.api.attributes;
+package com.android.build.api.attributes
 
-import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.Attribute
 
 /**
  * Type for the attribute holding the variant name information.
  *
- * <p>The key should be {@link #ATTRIBUTE}.
+ *
+ * The key should be [.ATTRIBUTE].
  */
-public interface VariantAttr extends org.gradle.api.Named {
-
-    Attribute<VariantAttr> ATTRIBUTE = Attribute.of(VariantAttr.class);
+interface VariantAttr : org.gradle.api.Named {
+    companion object {
+        @JvmStatic
+        val ATTRIBUTE: Attribute<VariantAttr> = Attribute.of(VariantAttr::class.java)
+    }
 }
