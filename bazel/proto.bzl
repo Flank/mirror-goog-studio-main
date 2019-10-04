@@ -125,8 +125,13 @@ def java_proto_library(
         visibility = None,
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
+        protoc_grpc_version = None,
         proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
         **kwargs):
+    # Targets that require grpc support should specify the version of protoc-gen-grpc-java plugin.
+    if grpc_support and not protoc_grpc_version:
+        fail("grpc support was requested, but the version of grpc java protoc plugin was not specified")
+
     srcs_name = name + "_srcs"
     outs = [srcs_name + ".srcjar"]
     _gen_proto_rule(
@@ -138,15 +143,13 @@ def java_proto_library(
         proto_include_version = protoc_version,
         protoc = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/" + protoc_version + ":exe",
         grpc_plugin =
-            "@//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.3:exe" if grpc_support else None,
+            "@//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/" + protoc_grpc_version + ":exe" if grpc_support else None,
         target_language = proto_languages.JAVA,
         visibility = visibility,
     )
 
     java_deps = list(java_deps)
     java_deps += proto_java_runtime_library
-    if grpc_support:
-        java_deps += ["@//tools/base/third_party:io.grpc_grpc-all"]
 
     if pom:
         maven_java_library(
@@ -170,9 +173,11 @@ def android_java_proto_library(
         name,
         srcs = None,
         grpc_support = False,
+        protoc_grpc_version = None,
+        java_deps = [],
         visibility = None):
     internal_name = "_" + name + "_internal"
-    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support)
+    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support, protoc_grpc_version = protoc_grpc_version, java_deps = java_deps)
     java_jarjar(
         name = name,
         srcs = [":" + internal_name],
