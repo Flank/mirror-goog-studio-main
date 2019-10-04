@@ -37,7 +37,8 @@ fun runL8(
     output: Path,
     libConfiguration: String,
     libraries: Collection<Path>,
-    minSdkVersion: Int
+    minSdkVersion: Int,
+    keepRules: List<Path>?
 ) {
     val logger: Logger = Logger.getLogger("L8")
     if (logger.isLoggable(Level.FINE)) {
@@ -46,6 +47,7 @@ fun runL8(
         logger.fine("Special library configuration: $libConfiguration")
         logger.fine("Library classes: $libraries")
         logger.fine("Min Api level: $minSdkVersion")
+        keepRules?.forEach { logger.fine("Keep rules: $it") }
     }
     FileUtils.cleanOutputDir(output.toFile())
 
@@ -69,13 +71,16 @@ fun runL8(
         }
     }
 
-    val l8Command = L8Command.builder()
+    val l8CommandBuilder = L8Command.builder()
         .addProgramFiles(inputClasses)
         .setProgramConsumer(programConsumer)
         .addSpecialLibraryConfiguration(libConfiguration)
         .addLibraryFiles(libraries)
         .setMinApiLevel(minSdkVersion)
-        .build()
 
-    L8.run(l8Command, MoreExecutors.newDirectExecutorService())
+    if (keepRules != null) {
+        l8CommandBuilder.addProguardConfigurationFiles(keepRules)
+    }
+
+    L8.run(l8CommandBuilder.build(), MoreExecutors.newDirectExecutorService())
 }

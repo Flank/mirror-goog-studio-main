@@ -28,9 +28,13 @@ class FakeTransformOutputs(temporaryFolder: TemporaryFolder) : TransformOutputs 
     lateinit var outputFile: File
         private set
 
-    override fun file(name: Any): File {
-        name as String
-        outputFile = rootDir.resolve(name)
+    override fun file(path: Any): File {
+        if (path is File) {
+            outputFile = path
+        } else {
+            path as String
+            outputFile = rootDir.resolve(path)
+        }
         return outputFile
     }
 

@@ -109,6 +109,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
+import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeClassesTask;
@@ -190,6 +191,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.model.BuildType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
@@ -2039,6 +2041,8 @@ public abstract class TaskManager {
                 new DexArchiveBuilderTask.CreationAction(
                         dexOptions, enableDexingArtifactTransform, userLevelCache, variantScope));
 
+        maybeCreateDexDesugarLibTask(variantScope, enableDexingArtifactTransform);
+
         createDexMergingTasks(variantScope, dexingType, enableDexingArtifactTransform);
     }
 
@@ -3184,6 +3188,29 @@ public abstract class TaskManager {
     private void maybeCreateCheckDuplicateClassesTask(@NonNull VariantScope variantScope) {
         if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
             taskFactory.register(new CheckDuplicateClassesTask.CreationAction(variantScope));
+        }
+    }
+
+    private void maybeCreateDexDesugarLibTask(
+            @NonNull VariantScope variantScope, boolean enableDexingArtifactTransform) {
+        Boolean coreLibraryDesugaringEnabled =
+                variantScope
+                        .getGlobalScope()
+                        .getExtension()
+                        .getCompileOptions()
+                        .getCoreLibraryDesugaringEnabled();
+        boolean separateFileDependenciesDexingTask =
+                variantScope.getJava8LangSupportType() == Java8LangSupport.D8
+                        && enableDexingArtifactTransform;
+        BuildType buildType = variantScope.getVariantConfiguration().getBuildType();
+        if (coreLibraryDesugaringEnabled != null
+                && coreLibraryDesugaringEnabled
+                && (!buildType.isDebuggable() || buildType.isMinifyEnabled())) {
+            taskFactory.register(
+                    new L8DexDesugarLibTask.CreationAction(
+                            variantScope,
+                            enableDexingArtifactTransform,
+                            separateFileDependenciesDexingTask));
         }
     }
 }

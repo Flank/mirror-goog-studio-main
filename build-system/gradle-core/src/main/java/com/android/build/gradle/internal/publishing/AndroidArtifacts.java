@@ -51,6 +51,8 @@ public class AndroidArtifacts {
     private static final String TYPE_NON_NAMESPACED_CLASSES = "non-namespaced-android-classes";
     private static final String TYPE_SHARED_CLASSES = "android-shared-classes";
     private static final String TYPE_DEX = "android-dex";
+    private static final String TYPE_DEX_AND_KEEP_RULES = "android-dex-and-keep-rules";
+    private static final String TYPE_KEEP_RULES = "android-keep-rules";
     private static final String TYPE_JAVA_RES = "android-java-res";
     private static final String TYPE_SHARED_JAVA_RES = "android-shared-java-res";
     private static final String TYPE_MANIFEST = "android-manifest";
@@ -194,6 +196,11 @@ public class AndroidArtifacts {
         PROCESSED_JAR(TYPE_PROCESSED_JAR),
         // published dex folder for bundle
         DEX(TYPE_DEX),
+        // dex and keep rules(shrinking desugar_jdk_libs), a folder with a subfolder named dex
+        // which contains dex files, and with a file named keep_rules
+        DEX_AND_KEEP_RULES(TYPE_DEX_AND_KEEP_RULES),
+        // a file named keep_rules for shrinking desugar_jdk_libs
+        KEEP_RULES(TYPE_KEEP_RULES),
 
         // manifest is published to both to compare and detect provided-only library dependencies.
         MANIFEST(TYPE_MANIFEST),

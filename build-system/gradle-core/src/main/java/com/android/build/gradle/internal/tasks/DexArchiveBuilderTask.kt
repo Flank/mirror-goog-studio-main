@@ -288,7 +288,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS
             )
-
             coreLibraryDesugaringEnabled =
                 variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
         }

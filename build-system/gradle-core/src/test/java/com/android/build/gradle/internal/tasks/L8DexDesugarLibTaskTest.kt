@@ -14,52 +14,63 @@
  * limitations under the License.
  */
 
-package com.android.builder.dexing
+package com.android.build.gradle.internal.tasks
 
 import com.android.testutils.TestUtils
-import com.google.common.truth.Truth.assertThat
+import com.android.testutils.truth.DexSubject
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.jar.JarFile
-import com.android.testutils.truth.FileSubject.assertThat
 
-/**
- * Sanity test to make sure we can invoke L8 successfully
- */
-class L8ToolTest {
+class L8DexDesugarLibTaskTest {
+
     @get:Rule
     val tmp = TemporaryFolder()
 
     @Test
-    fun testDexGeneration() {
-        val output = tmp.newFolder().toPath()
-        runL8(
+    fun testShrinking() {
+        val output = tmp.newFolder().resolve("out")
+        val input = tmp.newFolder().toPath()
+
+        val keepRulesFile1 = input.toFile().resolve("keep_rules").also { file ->
+            file.bufferedWriter().use {
+                it.write("-keep class j$.util.stream.Stream {*;}")
+            }
+        }
+        val keepRulesFile2 = input.toFile().resolve("dir/keep_rules").also { file ->
+            file.parentFile.mkdirs()
+            file.bufferedWriter().use {
+                it.write("-keep class j$.util.Optional {*;}")
+            }
+        }
+
+        val params = L8DexParams(
             desugarJar,
             output,
-            getFileContentFromJar(desugarConfigJar),
+            getDesugarLibConfigContent(desugarConfigJar),
             bootClasspath,
             20,
-            null)
-        assertThat(getDexFileCount(output)).isEqualTo(1)
-        assertThat(output.toFile().resolve("classes1000.dex")).exists()
+            setOf(keepRulesFile1, keepRulesFile2)
+        )
+        L8DexRunnable(params).run()
+
+        val dexFile = output.resolve("classes1000.dex")
+        DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/stream/Stream;")
+        DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/Optional;")
+        DexSubject.assertThatDex(dexFile).doesNotContainClasses("Lj$/time/LocalTime;")
     }
 
-    private fun getDexFileCount(dir: Path): Long =
-        Files.list(dir).filter { it.toString().endsWith(".dex") }.count()
-
     companion object {
-        val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar").toPath())
-        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.1"))
+        val bootClasspath = TestUtils.getPlatformFile("android.jar")
+        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.1").toFile())
         val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.5.0").toFile()
     }
 
-    private fun getFileContentFromJar(file: File): String {
+    private fun getDesugarLibConfigContent(file: File) : String {
         val stringBuilder = StringBuilder()
         JarFile(file).use { jarFile ->
             val jarEntry = jarFile.getJarEntry("META-INF/desugar/d8/desugar.json")
