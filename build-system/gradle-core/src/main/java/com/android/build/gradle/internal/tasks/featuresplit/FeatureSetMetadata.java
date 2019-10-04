@@ -45,18 +45,25 @@ public class FeatureSetMetadata {
     /** Base module or application module resource ID */
     @VisibleForTesting public static final int BASE_ID = 0x7F;
 
+    private final File sourceFile;
     private final Set<FeatureInfo> featureSplits;
     private final Integer maxNumberOfSplitsBeforeO;
 
     public FeatureSetMetadata(Integer maxNumberOfSplitsBeforeO) {
         this.maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO;
         featureSplits = new HashSet<>();
+        sourceFile = null;
     }
 
-    private FeatureSetMetadata(Set<FeatureInfo> featureSplits) {
+    private FeatureSetMetadata(@NonNull Set<FeatureInfo> featureSplits, @NonNull File sourceFile) {
         this.maxNumberOfSplitsBeforeO =
                 Integer.max(MAX_NUMBER_OF_SPLITS_BEFORE_O, featureSplits.size());
         this.featureSplits = ImmutableSet.copyOf(featureSplits);
+        this.sourceFile = sourceFile;
+    }
+
+    public File getSourceFile() {
+        return sourceFile;
     }
 
     public void addFeatureSplit(
@@ -128,7 +135,7 @@ public class FeatureSetMetadata {
         Type typeToken = new TypeToken<HashSet<FeatureInfo>>() {}.getType();
         try (FileReader fileReader = new FileReader(input)) {
             Set<FeatureInfo> featureIds = gson.fromJson(fileReader, typeToken);
-            return new FeatureSetMetadata(featureIds);
+            return new FeatureSetMetadata(featureIds, input);
         }
     }
 

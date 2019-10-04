@@ -200,19 +200,18 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
         override fun configure(task: PerModuleBundleTask) {
             super.configure(task)
-
             val artifacts = variantScope.artifacts
-            val fileName = if (variantScope.type.isBaseModule) {
-                variantScope.globalScope.project.provider { "base.zip" }
+
+            if (variantScope.type.isBaseModule) {
+                task.fileName.set("base.zip")
+            } else {
+                task.fileName.set(variantScope.featureName.map { "$it.zip" })
             }
-            else {
-                variantScope.getFeatureName { "$it.zip" }
-            }
-            task.fileName.set(fileName)
             task.fileName.disallowChanges()
 
             artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
+
             task.resFiles.set(
                 if (variantScope.useResourceShrinker()) {
                     artifacts.getOperations().get(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
@@ -220,6 +219,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     artifacts.getOperations().get(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
                 }
             )
+            task.resFiles.disallowChanges()
 
             val programDexFiles =
                 if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
@@ -272,6 +272,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.abiFilters = variantScope.variantConfiguration.supportedAbis
 
             task.jarCreatorType.set(variantScope.jarCreatorType)
+            task.jarCreatorType.disallowChanges()
         }
     }
 }

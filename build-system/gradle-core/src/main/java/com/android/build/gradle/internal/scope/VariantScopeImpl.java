@@ -117,7 +117,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -1424,59 +1423,60 @@ public class VariantScopeImpl implements VariantScope {
         }
     }
 
-    private Provider<String> featureName = null;
+    private Provider<FeatureSetMetadata> featureSetProvider = null;
 
     @NonNull
-    @Override
-    public Provider<String> getFeatureName(@Nullable Function<String, String> stringTransformer) {
-        if (featureName == null || stringTransformer != null) {
-            final String gradlePath = globalScope.getProject().getPath();
-
-            final FileCollection fc =
+    private Provider<FeatureSetMetadata> getFeatureSetProvider() {
+        if (featureSetProvider == null) {
+            FileCollection fc =
                     getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             PROJECT,
                             FEATURE_SET_METADATA);
-            Provider<String> v =
+            featureSetProvider =
                     fc.getElements()
                             .map(
                                     entries -> {
                                         FileSystemLocation file = Iterables.getOnlyElement(entries);
                                         try {
-                                            FeatureSetMetadata featureSetMetadata =
-                                                    FeatureSetMetadata.load(file.getAsFile());
-                                            String featureName =
-                                                    featureSetMetadata.getFeatureNameFor(
-                                                            gradlePath);
-
-                                            if (featureName == null) {
-                                                throw new RuntimeException(
-                                                        String.format(
-                                                                "Failed to find feature name for %s in %s",
-                                                                gradlePath, file.getAsFile()));
-                                            }
-                                            if (stringTransformer != null) {
-                                                return stringTransformer.apply(featureName);
-                                            }
-                                            return featureName;
+                                            return FeatureSetMetadata.load(file.getAsFile());
                                         } catch (IOException e) {
                                             throw new RuntimeException(e);
                                         }
                                     });
 
-            if (stringTransformer == null) {
-                featureName = v;
-            }
-            return v;
         }
 
-        return featureName;
+        return featureSetProvider;
     }
+
+    private Provider<String> featureName = null;
 
     @NonNull
     @Override
     public Provider<String> getFeatureName() {
-        return getFeatureName(null);
+        if (featureName == null) {
+            final String gradlePath = globalScope.getProject().getPath();
+
+            featureName =
+                    getFeatureSetProvider()
+                            .map(
+                                    featureSetMetadata -> {
+                                        String featureName =
+                                                featureSetMetadata.getFeatureNameFor(gradlePath);
+
+                                        if (featureName == null) {
+                                            throw new RuntimeException(
+                                                    String.format(
+                                                            "Failed to find feature name for %s in %s",
+                                                            gradlePath,
+                                                            featureSetMetadata.getSourceFile()));
+                                        }
+                                        return featureName;
+                                    });
+        }
+
+        return featureName;
     }
 
     private Provider<Integer> resOffset = null;
@@ -1487,33 +1487,21 @@ public class VariantScopeImpl implements VariantScope {
         if (resOffset == null) {
             final String gradlePath = globalScope.getProject().getPath();
 
-            final FileCollection fc =
-                    getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            PROJECT,
-                            FEATURE_SET_METADATA);
-
             resOffset =
-                    fc.getElements()
+                    getFeatureSetProvider()
                             .map(
-                                    entries -> {
-                                        FileSystemLocation file = Iterables.getOnlyElement(entries);
-                                        try {
-                                            FeatureSetMetadata featureSetMetadata =
-                                                    FeatureSetMetadata.load(file.getAsFile());
-                                            Integer resOffset =
-                                                    featureSetMetadata.getResOffsetFor(gradlePath);
+                                    featureSetMetadata -> {
+                                        Integer resOffset =
+                                                featureSetMetadata.getResOffsetFor(gradlePath);
 
-                                            if (resOffset == null) {
-                                                throw new RuntimeException(
-                                                        String.format(
-                                                                "Failed to find resource offset for %s in %s",
-                                                                gradlePath, file.getAsFile()));
-                                            }
-                                            return resOffset;
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
+                                        if (resOffset == null) {
+                                            throw new RuntimeException(
+                                                    String.format(
+                                                            "Failed to find resource offset for %s in %s",
+                                                            gradlePath,
+                                                            featureSetMetadata.getSourceFile()));
                                         }
+                                        return resOffset;
                                     });
         }
 

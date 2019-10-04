@@ -314,14 +314,8 @@ public interface VariantScope extends TransformVariantScope {
     /**
      * Returns a {@link Provider} for the name of the feature.
      *
-     * <p>When called without a transformer, repeated calls will return the same Provider.
-     *
-     * @param stringTransformer an optional string transformer.
      * @return the provider
      */
-    @NonNull
-    Provider<String> getFeatureName(@Nullable Function<String, String> stringTransformer);
-
     @NonNull
     Provider<String> getFeatureName();
 

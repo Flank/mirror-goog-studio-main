@@ -237,12 +237,11 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             ).artifactFiles
 
 
-            val moduleName = if (variantScope.type.isBaseModule) {
-                variantScope.globalScope.project.provider { "base" }
+            if (variantScope.type.isBaseModule) {
+                task.moduleName.set("base")
             } else {
-                variantScope.featureName
+                task.moduleName.set(variantScope.featureName)
             }
-            task.moduleName.set(moduleName)
             task.moduleName.disallowChanges()
         }
     }
