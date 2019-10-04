@@ -209,11 +209,12 @@ private fun compileFile(
   // TODO(b/139297538): Diagnostics
   //logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
   pathData.file.inputStream().use {
-    val resourceFile = ResourceFile()
-    resourceFile.name =
-      ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name)
-    resourceFile.configuration = pathData.config
-    resourceFile.source = pathData.source
+    val resourceFile = ResourceFile(
+      ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name),
+      pathData.config,
+      pathData.source,
+      ResourceFile.Type.Unknown
+    )
 
     val container = Container(outputFile.outputStream(), 1)
     container.addFileEntry(it, resourceFile)
