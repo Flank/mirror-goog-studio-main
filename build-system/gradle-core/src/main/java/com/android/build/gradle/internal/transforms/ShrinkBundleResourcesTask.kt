@@ -184,7 +184,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                     .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
             } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
                 variantScope.globalScope.project.files(
-                    variantScope.artifacts.getFinalProducts(MultipleArtifactType.DEX))
+                    variantScope.artifacts.getOperations().getAll(MultipleArtifactType.DEX))
             } else {
                 variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
             }

@@ -1000,7 +1000,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .get()
                         .plus(getDesugarLibDexIfExists());
             } else {
-                return project.files(artifacts.getFinalProducts(MultipleArtifactType.DEX.INSTANCE))
+                return project.files(
+                                artifacts.getOperations().getAll(MultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists());
             }
         }

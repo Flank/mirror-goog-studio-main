@@ -120,47 +120,6 @@ class BuildArtifactsHolderForDirTest {
                 "finalFile"))
     }
 
-    @Test
-    fun finalProducersLocation() {
-        val newHolder = TestBuildArtifactsHolder(
-            project,
-            "test",
-            ::root
-        )
-        val firstProvider : TaskProvider<out Task>
-        val secondProvider : TaskProvider<out Task>
-
-        firstProvider = registerDirectoryTask("first")
-        newHolder.getOperations().append(firstProvider, DirectoryProducerTask::output)
-            .on(MultipleArtifactType.DEX)
-
-        secondProvider = registerDirectoryTask("second")
-        newHolder.getOperations().append(secondProvider, DirectoryProducerTask::output)
-                .on(MultipleArtifactType.DEX)
-
-        val finalArtifactFiles: Provider<List<Directory>> = newHolder.getFinalProducts(MultipleArtifactType.DEX)
-        assertThat(finalArtifactFiles.get()).hasSize(2)
-        var outputFile = finalArtifactFiles.get()[0].asFile
-        var relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactTypeToString(MultipleArtifactType.DEX),
-                "test",
-                firstProvider.name))
-
-        outputFile = finalArtifactFiles.get()[1].asFile
-        relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactTypeToString(MultipleArtifactType.DEX),
-                "test",
-                secondProvider.name))
-    }
-
     private fun registerDirectoryTask(taskName: String) =
         project.tasks.register(taskName, DirectoryProducerTask::class.java) {
             initializedTasks[taskName] = it

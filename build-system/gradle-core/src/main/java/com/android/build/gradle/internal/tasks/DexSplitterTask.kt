@@ -135,8 +135,7 @@ abstract class DexSplitterTask : NonIncrementalTask() {
                     task.mainDexList)
 
             task.inputDirs.from(
-                artifacts
-                    .getFinalProducts(MultipleArtifactType.DEX)
+                artifacts.getOperations().getAll(MultipleArtifactType.DEX)
             )
         }
     }

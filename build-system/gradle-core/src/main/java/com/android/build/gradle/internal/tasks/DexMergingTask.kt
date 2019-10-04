@@ -269,7 +269,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 // be dex'ed in a task, so we need to fetch the output directly.
                                 // Otherwise, it will be in the dex'ed in the dex builder transform.
                                 files.from(
-                                    testedVariantData.scope.artifacts.getFinalProducts(
+                                    testedVariantData.scope.artifacts.getOperations().getAll(
                                         MultipleArtifactType.DEX
                                     )
                                 )
@@ -290,7 +290,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 // we merge external dex in a separate task
                                 if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.EXTERNAL_LIBS_DEX)) {
                                     variantScope.globalScope.project.files(
-                                        variantScope.artifacts.getFinalProducts(
+                                        variantScope.artifacts.getOperations().getAll(
                                             MultipleArtifactType.EXTERNAL_LIBS_DEX
                                         )
                                     )

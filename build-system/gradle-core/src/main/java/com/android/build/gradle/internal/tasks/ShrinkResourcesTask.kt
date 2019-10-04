@@ -216,7 +216,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                     artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES))
                 artifacts.hasFinalProducts(MultipleArtifactType.DEX) -> task.classes.from(
                     variantScope.globalScope.project.files(
-                        artifacts.getFinalProducts(MultipleArtifactType.DEX)))
+                        artifacts.getOperations().getAll(MultipleArtifactType.DEX)))
                 else -> task.classes.from(classes)
             }
         }

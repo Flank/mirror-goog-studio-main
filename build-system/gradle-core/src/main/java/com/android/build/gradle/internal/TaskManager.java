@@ -1432,9 +1432,6 @@ public abstract class TaskManager {
                 variantScope.getTaskContainer().getProcessJavaResourcesTask(),
                 testedVariantScope.getTaskContainer().getProcessJavaResourcesTask());
 
-        // Empty R class jar. TODO: Resources support for unit tests?
-        artifacts.emptyFile(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE);
-
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, variantScope);

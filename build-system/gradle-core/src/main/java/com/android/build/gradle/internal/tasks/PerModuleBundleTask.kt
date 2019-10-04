@@ -229,7 +229,8 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
                     variantScope.globalScope.project.files(variantScope
                         .artifacts
-                        .getFinalProducts(MultipleArtifactType.DEX))
+                        .getOperations()
+                        .getAll(MultipleArtifactType.DEX))
                 } else {
                     variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }

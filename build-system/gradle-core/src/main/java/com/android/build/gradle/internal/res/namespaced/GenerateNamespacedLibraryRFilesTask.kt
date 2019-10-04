@@ -94,8 +94,8 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         override fun configure(task: GenerateNamespacedLibraryRFilesTask) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProducts(
-                MultipleArtifactType.PARTIAL_R_FILES, task.partialRFiles)
+            task.partialRFiles.set(variantScope.artifacts.getOperations().getAll(
+                MultipleArtifactType.PARTIAL_R_FILES))
             task.packageForR.set(
                 variantScope.globalScope.project.provider(
                     variantScope.variantConfiguration::getOriginalApplicationId

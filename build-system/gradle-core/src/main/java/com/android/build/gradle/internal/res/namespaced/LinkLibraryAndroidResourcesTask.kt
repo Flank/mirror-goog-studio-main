@@ -149,9 +149,9 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 task.manifestFile
             )
 
-            variantScope.artifacts.setTaskInputToFinalProducts(
-                MultipleArtifactType.RES_COMPILED_FLAT_FILES,
-                task.inputResourcesDirectories)
+            task.inputResourcesDirectories.set(
+                variantScope.artifacts.getOperations().getAll(
+                    MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

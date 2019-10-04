@@ -20,10 +20,8 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.utils.appendCapitalized
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
@@ -32,7 +30,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -53,7 +50,7 @@ typealias Report = Map<String, BuildArtifactsHolder.ProducersData>
 abstract class BuildArtifactsHolder(
     private val project: Project,
     private val rootOutputDir: () -> File,
-    val identifier: String
+    identifier: String
 ) {
 
     private val operations= OperationsImpl(project.objects, identifier,
@@ -124,7 +121,7 @@ abstract class BuildArtifactsHolder(
      *
      * </pre>
      *
-     * Consumers should use [getFinalProduct] or [getFinalProducts] to get a [Provider] instance
+     * Consumers should use [getFinalProduct] or [OperationsImpl.getAll] to get a [Provider] instance
      * for registered products which ensures that [Task]s don't get initialized until the
      * [Provider.get] method is invoked during a consumer task configuration execution for instance.
      *
@@ -204,7 +201,7 @@ abstract class BuildArtifactsHolder(
      *
      * </pre>
      *
-     * Consumers should use [getFinalProduct] or [getFinalProducts] to get a [Provider] instance
+     * Consumers should use [getFinalProduct] or [OperationsImpl.getAll] to get a [Provider] instance
      * for registered products which ensures that [Task]s don't get initialized until the
      * [Provider.get] method is invoked during a consumer task configuration execution for instance.
      *
@@ -254,22 +251,6 @@ abstract class BuildArtifactsHolder(
             ARTIFACT_TYPE : ArtifactType.Single
             = producesDir(artifactType, taskProvider, propertyProvider, null, fileName)
 
-    private val dummyTask by lazy {
-
-        project.tasks.register("dummy$identifier", DummyTask::class.java)
-    }
-
-    abstract class DummyTask: DefaultTask() {
-        abstract val emptyFileProperty: RegularFileProperty
-    }
-
-    fun emptyFile(artifactType: SingleArtifactType<RegularFile>) {
-        operations.setInitialProvider(
-            dummyTask,
-            DummyTask::emptyFileProperty
-        ).withName("out").on(artifactType)
-    }
-
     /**
      * Returns true if there is at least one producer for the passed [ArtifactType]
      *
@@ -290,9 +271,6 @@ abstract class BuildArtifactsHolder(
      * Returns a [Provider] of either a [Directory] or a [RegularFile] depending on the passed
      * [ArtifactKind]. The [Provider] will represent the final value of the built artifact
      * irrespective of when this call is made.
-     *
-     * If there are more than one producer appending artifacts for the passed type, calling this
-     * method will generate an error and [getFinalProducts] should be used instead.
      *
      * The simplest way to use the mechanism is as follow :
      * <pre>
@@ -363,48 +341,6 @@ abstract class BuildArtifactsHolder(
         where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
         val finalProduct = getFinalProduct(artifactType)
         taskInputProperty.setDisallowChanges(finalProduct)
-    }
-
-    /**
-     * Sets a [ListProperty] value to all producers for the given artifact type.
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     abstract class MyTask: Task() {
-     *          @InputFiles
-     *          abstract val inputFiles: ListProperty<RegularFile>
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
-     *          scope.artifacts.setTaskInputToFinalProducts(InternalArtifactTYpe.SOME_ID, it.inputFiles)
-     *     }
-     * </pre>
-     *
-     * @param artifactType requested artifact type
-     * @param taskInputProperty the [ListProperty] to set the producers on.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProducts(artifactType: ARTIFACT_TYPE, taskInputProperty: ListProperty<T>)
-            where  ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Multiple {
-        val finalProducts = getFinalProducts(artifactType)
-        taskInputProperty.setDisallowChanges(finalProducts)
-    }
-
-    /**
-     * Returns a [ListProperty]s of either [Directory] or [RegularFile] depending on the
-     * passed [ArtifactKind]. This possibly empty list will contain the final
-     * values of the built artifacts irrespective of when this call is made.
-     *
-     * @param artifactType the identifier for the built artifact.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProducts(artifactType: ARTIFACT_TYPE): Provider<List<T>>
-        where  ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Multiple
-            = operations.getAll(artifactType)
-
-    /**
-     * Returns an appropriate task name for the variant with the given prefix.
-     */
-    fun getTaskName(prefix : String) : String {
-        return prefix.appendCapitalized(identifier)
     }
 
     /**
