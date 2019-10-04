@@ -24,6 +24,7 @@ import java.util.Collection;
  * An invocation object used to pass of pertinent information for a
  * {@link Transform#transform(TransformInvocation)} call.
  */
+@Deprecated
 public interface TransformInvocation {
 
     /**
