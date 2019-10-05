@@ -52,7 +52,7 @@ build:cloud_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-sourc
 build:cloud_resultstore --project_id=908081808034
 build:cloud_resultstore --tls_enabled=true
 build:cloud_resultstore --auth_enabled=true
-build:cloud_resultstore --auth_credentials=tools/vendor/adt_infra_internal/.android-studio-alphasource.json
+build:cloud_resultstore --auth_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
 
 build:remote_common --config=cloud_resultstore
 
