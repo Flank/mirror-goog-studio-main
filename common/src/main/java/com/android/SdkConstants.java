@@ -1679,6 +1679,9 @@ public final class SdkConstants {
     // MotionLayout
     public static final String ATTR_MOTION_TARGET = "motionTarget";
     public static final String ATTR_MOTION_WAVE_OFFSET = "waveOffset";
+    public static final String ATTR_MOTION_TARGET_ID = "targetId";
+    public static final String ATTR_MOTION_TOUCH_ANCHOR_ID = "touchAnchorId";
+    public static final String ATTR_MOTION_TOUCH_REGION_ID = "touchRegionId";
 
     // AbsListView
     public static final String ATTR_LIST_SELECTOR = "listSelector";
