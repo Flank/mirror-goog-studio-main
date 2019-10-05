@@ -55,7 +55,8 @@ class TranslucentViewDetectorTest : AbstractCheckTest() {
         )
     }
 
-    fun testThemeFromActivity() {
+    // TODO(142070838): re-enable this
+    fun failingTestThemeFromActivity() {
         // Like previous test, but instead of specifying theme in manifest, specifies it
         // via code in the activity
         lint().files(

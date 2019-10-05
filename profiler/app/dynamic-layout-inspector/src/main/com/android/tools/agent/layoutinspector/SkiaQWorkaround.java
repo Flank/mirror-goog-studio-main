@@ -122,7 +122,13 @@ class SkiaQWorkaround {
                 mQueue.removeLast();
                 needsInvoke = false;
             }
-            picture.writeToStream(mByteStream);
+            try {
+                Picture.class
+                        .getDeclaredMethod("writeToStream", OutputStream.class)
+                        .invoke(picture, mByteStream);
+            } catch (Exception e) {
+                // shouldn't happen
+            }
             mQueue.add(mByteStream.toByteArray());
             mByteStream.reset();
             mLock.unlock();
