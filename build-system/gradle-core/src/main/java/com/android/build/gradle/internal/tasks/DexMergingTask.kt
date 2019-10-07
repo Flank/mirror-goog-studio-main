@@ -318,10 +318,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
             return when (action) {
                 DexMergingAction.MERGE_LIBRARY_PROJECTS ->
                     when {
-                        variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel < 23 -> {
-                            task.outputs.cacheIf { getAllRegularFiles(task.dexFiles.files).size < LIBRARIES_MERGING_THRESHOLD }
+                        variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel < 23 ->
                             LIBRARIES_MERGING_THRESHOLD
-                        }
                         else -> LIBRARIES_M_PLUS_MAX_THRESHOLD
                     }
                 else -> 0
