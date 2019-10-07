@@ -17,8 +17,21 @@
 package com.android.build.gradle.internal.utils
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 
 fun ConfigurableFileCollection.fromDisallowChanges(vararg arg: Any) {
     from(*arg)
+    disallowChanges()
+}
+
+fun <T> Property<T>.setDisallowChanges(value: Provider<T>) {
+    set(value)
+    disallowChanges()
+}
+
+fun <T> ListProperty<T>.setDisallowChanges(value: Provider<List<T>>) {
+    set(value)
     disallowChanges()
 }

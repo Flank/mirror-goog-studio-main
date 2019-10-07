@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.scope
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.appendCapitalized
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
@@ -361,7 +362,7 @@ abstract class BuildArtifactsHolder(
         artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>)
         where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
         val finalProduct = getFinalProduct(artifactType)
-        taskInputProperty.set(finalProduct)
+        taskInputProperty.setDisallowChanges(finalProduct)
     }
 
     /**
@@ -385,7 +386,7 @@ abstract class BuildArtifactsHolder(
     fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProducts(artifactType: ARTIFACT_TYPE, taskInputProperty: ListProperty<T>)
             where  ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Multiple {
         val finalProducts = getFinalProducts(artifactType)
-        taskInputProperty.set(finalProducts)
+        taskInputProperty.setDisallowChanges(finalProducts)
     }
 
     /**
