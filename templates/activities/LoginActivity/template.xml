@@ -31,8 +31,10 @@
         id="activityTitle"
         name="Title"
         type="string"
+        visibility="false"
         constraints="nonempty"
         default="Sign in"
+        suggest="${activityClass}"
         help="The name of the activity." />
 
     <parameter

@@ -41,9 +41,10 @@
         id="activityTitle"
         name="Title"
         type="string"
+        visibility="false"
         constraints="nonempty"
         default="Title"
-        suggest="${activityClass} Title"
+        suggest="${activityClass}"
         help="The name of the activity. For launcher activities, the application title." />
 
     <parameter
