@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class InstallOptions {
@@ -60,10 +61,19 @@ public final class InstallOptions {
         }
 
         // Sets a string of user-specified installation flags to be passed to the installer.
-        public Builder setUserInstallOptions(String userSpecifiedFlags) {
-            if (userSpecifiedFlags != null && !userSpecifiedFlags.isEmpty()) {
-                flags.add(userSpecifiedFlags);
+        public Builder setUserInstallOptions(String[] userSpecifiedFlags) {
+            if (userSpecifiedFlags == null) {
+                return this;
             }
+            flags.addAll(Arrays.asList(userSpecifiedFlags));
+            return this;
+        }
+
+        public Builder setUserInstallOptions(String userSpecifiedFlag) {
+            if (userSpecifiedFlag == null) {
+                return this;
+            }
+            flags.add(userSpecifiedFlag);
             return this;
         }
 
