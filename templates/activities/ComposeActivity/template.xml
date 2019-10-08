@@ -4,9 +4,9 @@
         revision="1"
         name="Compose Activity"
         description="Creates a new activity with Compose"
-        constraints="kotlin"
-        minApi="9"
-        minBuildApi="9">
+        constraints="androidx|kotlin"
+        minApi="21"
+        minBuildApi="21">
 
     <category value="Compose"/>
     <formfactor value="Mobile"/>
