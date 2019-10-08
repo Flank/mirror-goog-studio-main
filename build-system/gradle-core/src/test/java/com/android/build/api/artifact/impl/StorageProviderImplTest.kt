@@ -61,7 +61,7 @@ class StorageProviderImplTest {
 
     @Test
     fun singleFileAllocationTest() {
-        `when`(objects.property(ArgumentMatchers.eq(RegularFile::class.java))).thenReturn(fileProperty)
+        `when`(objects.fileProperty()).thenReturn(fileProperty)
         val storage = StorageProviderImpl().getStorage(ArtifactKind.FILE)
         val artifact = storage.getArtifact(objects, TestTypes.SINGLE_FILE)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
@@ -69,7 +69,7 @@ class StorageProviderImplTest {
 
     @Test
     fun singleDirectoryAllocationTest() {
-        `when`(objects.property(ArgumentMatchers.eq(Directory::class.java))).thenReturn(directoryProperty)
+        `when`(objects.directoryProperty()).thenReturn(directoryProperty)
         val storage = StorageProviderImpl().getStorage(ArtifactKind.DIRECTORY)
         val artifact = storage.getArtifact(objects, TestTypes.SINGLE_DIRECTORY)
         Truth.assertThat(artifact.getCurrent().isPresent).isFalse()
