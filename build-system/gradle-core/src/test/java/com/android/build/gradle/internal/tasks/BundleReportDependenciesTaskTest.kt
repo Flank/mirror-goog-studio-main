@@ -148,9 +148,9 @@ class BundleReportDependenciesTaskTest {
                     .setLibraryIndex(1)
                     .build())
             .build()
-        baseAppDeps.writeDelimitedTo(FileOutputStream(baseDepsFile))
-        featureDep1.writeDelimitedTo(FileOutputStream(feature1File))
-        featureDep2.writeDelimitedTo(FileOutputStream(feature2File))
+        baseAppDeps.writeTo(FileOutputStream(baseDepsFile))
+        featureDep1.writeTo(FileOutputStream(feature1File))
+        featureDep2.writeTo(FileOutputStream(feature2File))
         val expected = AppDependencies.newBuilder()
             .addLibrary(lib1)
             .addLibrary(lib2)
@@ -190,7 +190,7 @@ class BundleReportDependenciesTaskTest {
         task.featureDeps = featureDeps
 
         task.doTaskAction()
-        val allDeps = AppDependencies.parseDelimitedFrom(FileInputStream(task.dependenciesList.get().asFile))
+        val allDeps = AppDependencies.parseFrom(FileInputStream(task.dependenciesList.get().asFile))
         assertThat(allDeps).isEqualTo(expected)
     }
 }
