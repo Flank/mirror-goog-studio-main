@@ -712,6 +712,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
         @Override
         protected Resource declareResource(ResourceType type, String name, Node node) {
+            if (name.isEmpty()) {
+                return null;
+            }
             LintResource resource = (LintResource) super.declareResource(type, name, node);
             if (context != null) {
                 resource.setDeclared(context.getProject().getReportIssues());
