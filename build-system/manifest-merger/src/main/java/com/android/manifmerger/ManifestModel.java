@@ -439,8 +439,6 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                 AttributeModel.newModel(SdkConstants.ATTR_NAME),
                 AttributeModel.newModel("protectionLevel")
                         .setDefaultValue("normal")
-                        // TODO : this will need to be populated from
-                        // sdk/platforms/android-19/data/res/values.attrs_manifest.xml
                         .setOnReadValidator(
                                 new SeparatedValuesValidator(
                                         SdkConstants.VALUE_DELIMITER_PIPE,
@@ -457,7 +455,17 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                                         "verifier",
                                         "preinstalled",
                                         "setup",
-                                        "ephemeral"))),
+                                        "ephemeral",
+                                        "instant",
+                                        "runtime",
+                                        "oem",
+                                        "vendorPrivileged",
+                                        "textClassifier",
+                                        "wellbeing",
+                                        "documenter",
+                                        "configurator",
+                                        "incidentReportApprover",
+                                        "appPredictor"))),
 
         /**
          * Permission-tree (contained in manifest).
