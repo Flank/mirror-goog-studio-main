@@ -177,6 +177,7 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   }
 
   command << " --exit-with-parent";
+  command << " --log-to-android-buffer";
 
   return command.str();
 }
