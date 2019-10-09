@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -47,14 +48,17 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @NonNull protected final TaskContainer taskContainer;
     @NonNull protected final DeprecationReporter deprecationReporter;
     @NonNull protected final ApkData apkData;
+    @NonNull protected final VariantOutputImpl variantOutput;
 
     protected BaseVariantOutputImpl(
             @NonNull ApkData apkData,
             @NonNull TaskContainer taskContainer,
-            @NonNull DeprecationReporter deprecationReporter) {
+            @NonNull DeprecationReporter deprecationReporter,
+            @NonNull VariantOutputImpl variantOutput) {
         this.apkData = apkData;
         this.taskContainer = taskContainer;
         this.deprecationReporter = deprecationReporter;
+        this.variantOutput = variantOutput;
     }
 
     @NonNull

@@ -22,6 +22,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -696,6 +697,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
+        // notify our properties that configuration is over for us.
+        GradleProperty.Companion.endOfEvaluation();
     }
 
     private String findHighestSdkInstalled() {

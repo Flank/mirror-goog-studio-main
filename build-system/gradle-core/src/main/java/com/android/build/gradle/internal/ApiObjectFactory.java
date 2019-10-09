@@ -21,6 +21,7 @@ import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
+import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
@@ -124,7 +125,7 @@ public class ApiObjectFactory {
         try {
             // Only add the variant API object to the domain object set once it's been fully
             // initialized.
-            extension.addVariant(variantApi);
+            extension.addVariant(variantApi, variantData.getScope());
         } catch (Throwable t) {
             // Adding variant to the collection will trigger user-supplied callbacks
             throw new ExternalApiUsageException(t);
@@ -154,9 +155,15 @@ public class ApiObjectFactory {
                 .getApkDatas()
                 .forEach(
                         apkData -> {
-                            apkData.setVersionCode(config.getVersionCodeSerializableSupplier());
+                            // set the version on the new api variant object.
+                            VariantOutputImpl variantOutput =
+                                    variantData.getPublicVariantApi().addVariantOutput(apkData);
+                            apkData.setVariantOutput(variantOutput);
+
                             apkData.setVersionName(config.getVersionNameSerializableSupplier());
-                            variantData.variantOutputFactory.create(apkData);
+                            // pass the new api variant output object so the override method can
+                            // delegate to the new location.
+                            variantData.variantOutputFactory.create(apkData, variantOutput);
                         });
     }
 }

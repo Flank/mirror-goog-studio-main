@@ -254,7 +254,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            task.versionCode.set(task.project.provider { config.versionCode })
+            val mainSplit = variantData.publicVariantApi.outputs.getMainSplit()
+            // check the variant API property first (if there is one) in case the variant
+            // output version has been overridden, otherwise use the variant configuration
+            task.versionCode.set(mainSplit?.versionCode
+                ?: task.project.provider(config::getVersionCode))
             task.versionCode.disallowChanges()
             task.versionName.set(task.project.provider { config.versionName })
             task.versionName.disallowChanges()

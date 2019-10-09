@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-3a350bdb53214bda5a7cb2d0a29a7add06b6e0358a9b79a520f504d4cc1a7d25
+a85f23bba64b0d8ed9064c357b139c10e42979f05c6c963e4bb153186826010e
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -52,9 +52,22 @@ com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.BuildFeatures.getJetpackCompose: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.setJetpackCompose: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.Variant
+com.android.build.api.variant.Variant.getName: java.lang.String ()
+com.android.build.api.variant.Variant.getOperations: com.android.build.api.artifact.Operations ()
+com.android.build.api.variant.Variant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()
 com.android.build.api.variant.VariantInfo.getFullVariantName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo.isTest: boolean ()
+com.android.build.api.variant.VariantOutput
+com.android.build.api.variant.VariantOutput$FilterType
+com.android.build.api.variant.VariantOutput$FilterType.valueOf: com.android.build.api.variant.VariantOutput$FilterType (java.lang.String)
+com.android.build.api.variant.VariantOutput$FilterType.values: com.android.build.api.variant.VariantOutput$FilterType[] ()
+com.android.build.api.variant.VariantOutput$OutputType
+com.android.build.api.variant.VariantOutput$OutputType.valueOf: com.android.build.api.variant.VariantOutput$OutputType (java.lang.String)
+com.android.build.api.variant.VariantOutput$OutputType.values: com.android.build.api.variant.VariantOutput$OutputType[] ()
+com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()
+com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()

@@ -343,6 +343,8 @@ public class JarContentsTest {
                 "com/android/build/api/",
                 "com/android/build/api/artifact/",
                 "com/android/build/api/artifact/impl/",
+                "com/android/build/api/variant/",
+                "com/android/build/api/variant/impl/",
                 "com/android/build/gradle/",
                 "com/android/build/gradle/api/",
                 "com/android/build/gradle/external/",

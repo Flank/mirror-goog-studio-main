@@ -11,6 +11,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
 import com.google.common.collect.Lists;
 import java.util.Collection;
@@ -86,7 +87,7 @@ public class LibraryExtension extends TestedExtension {
     }
 
     @Override
-    public void addVariant(BaseVariant variant) {
+    public void addVariant(BaseVariant variant, VariantScope variantScope) {
         libraryVariantList.add((LibraryVariant) variant);
     }
 

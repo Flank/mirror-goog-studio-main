@@ -17,8 +17,12 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantOutputImpl
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Test
+import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
@@ -62,15 +66,6 @@ class ApkDataTest {
                 assertThat(mainApkData).isLessThan(apkData)
             }
         }
-    }
-
-    @Test
-    fun testVersionCodePrecedence() {
-        val apkData1 = constructApkData()
-        val apkData2 = constructApkData()
-        apkData1.setVersionCode { 0 }
-        apkData2.setVersionCode { 1 }
-        assertThat(apkData1).isLessThan(apkData2)
     }
 
     @Test
@@ -118,13 +113,17 @@ class ApkDataTest {
     @Test
     fun testSerialization() {
         val originalApkData = constructApkData()
-        originalApkData.setVersionCode { 42 }
+        val variantOutputMock: VariantOutputImpl = Mockito.mock(VariantOutputImpl::class.java)
+        val versionCodeMock: Property<*> = Mockito.mock(Property::class.java)
+        `when`(variantOutputMock.versionCode).thenReturn(versionCodeMock as Property<Int>)
+        `when`(versionCodeMock.get()).thenReturn(42)
+        originalApkData.variantOutput = variantOutputMock
+
         originalApkData.setVersionName { "foo" }
 
         val bytes = serialize(originalApkData)
         val rebuiltApkData = deserialize(bytes)
 
-        assertThat(originalApkData).isEqualTo(rebuiltApkData)
         assertThat(rebuiltApkData.versionCode).isEqualTo(42)
         assertThat(rebuiltApkData.versionName).isEqualTo("foo")
     }

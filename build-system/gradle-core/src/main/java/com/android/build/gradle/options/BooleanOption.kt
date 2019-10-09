@@ -123,6 +123,9 @@ enum class BooleanOption(
         "android.enableDesugar", true, DeprecationReporter.DeprecationTarget.DESUGAR_TOOL),
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
 
+    // Options related to new Variant API
+    USE_SAFE_PROPERTIES("android.variant.safe.properties", false),
+
     ;
     constructor(
         propertyName: String,
