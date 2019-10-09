@@ -11,26 +11,7 @@ apply plugin: 'com.android.application'
 
 <@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName hasTests=true canHaveCpp=true canUseProguard=isApplicationProject||isLibraryProject />
 
-<#if isCompose!false>
-android {
-    Configuration kotlinPluginConfiguration = configurations.create("kotlinPlugin")
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { compile ->
-        compile.dependsOn(kotlinPluginConfiguration)
-        compile.doFirst {
-            kotlinOptions {
-                useIR = true
-                freeCompilerArgs = [
-                        "-Xplugin=$<#-- -->{kotlinPluginConfiguration.files.first()}"
-                ]
-            }
-        }
-    }
-}
-</#if>
 dependencies {
-<#if isCompose!false>
-    kotlinPlugin "androidx.compose:compose-compiler:+"
-</#if>
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
     <#if !improvedTestDeps>
     ${getConfigurationName("androidTestCompile")}('${resolveDependency("com.android.support.test.espresso:espresso-core:+")}', {
