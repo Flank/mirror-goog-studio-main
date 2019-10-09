@@ -55,8 +55,8 @@ class L8ToolTest {
 
     companion object {
         val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar").toPath())
-        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.0"))
-        val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.1.0")
+        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.1"))
+        val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.5.0")
     }
 
     private fun getFileContentFromJar(file: File): String {
