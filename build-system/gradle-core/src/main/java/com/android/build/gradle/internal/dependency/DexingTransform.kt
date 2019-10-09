@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
@@ -50,7 +51,7 @@ import java.io.File
 import java.nio.file.Path
 
 abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Parameters> {
-    interface Parameters: GenericTransformParameters {
+    interface Parameters : GenericTransformParameters {
         @get:Input
         val minSdkVersion: Property<Int>
         @get:Input
@@ -83,18 +84,24 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
             Closer.create().use { closer ->
 
                 val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-                    parameters.minSdkVersion.get(),
-                    parameters.debuggable.get(),
-                    ClassFileProviderFactory(parameters.bootClasspath.files.map(File::toPath))
-                        .also { closer.register(it) },
-                    ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
-                    false,
-                    parameters.enableDesugaring.get(),
-                    parameters.libConfiguration.orNull,
-                    null,
-                    MessageReceiverImpl(
-                        parameters.errorFormat.get(),
-                        LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
+                    DexParameters(
+                        minSdkVersion = parameters.minSdkVersion.get(),
+                        debuggable = parameters.debuggable.get(),
+                        dexPerClass = false,
+                        withDesugaring = parameters.enableDesugaring.get(),
+                        desugarBootclasspath = ClassFileProviderFactory(
+                            parameters.bootClasspath.files.map(File::toPath)
+                        )
+                            .also { closer.register(it) },
+                        desugarClasspath = ClassFileProviderFactory(computeClasspathFiles()).also {
+                            closer.register(it)
+                        },
+                        coreLibDesugarConfig = parameters.libConfiguration.orNull,
+                        coreLibDesugarOutputKeepRuleFile = null,
+                        messageReceiver = MessageReceiverImpl(
+                            parameters.errorFormat.get(),
+                            LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
+                        )
                     )
                 )
 
@@ -136,8 +143,14 @@ fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfigura
     val minSdk = scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
     val debuggable = scope.variantConfiguration.buildType.isDebuggable
     val enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-    val enableCoreLibraryDesugaring = scope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
-    return DexingArtifactConfiguration(minSdk, debuggable, enableDesugaring, enableCoreLibraryDesugaring)
+    val enableCoreLibraryDesugaring =
+        scope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
+    return DexingArtifactConfiguration(
+        minSdk,
+        debuggable,
+        enableDesugaring,
+        enableCoreLibraryDesugaring
+    )
 }
 
 data class DexingArtifactConfiguration(

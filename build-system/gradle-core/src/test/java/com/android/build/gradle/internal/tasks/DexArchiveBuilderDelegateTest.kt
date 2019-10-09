@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.dexing.DexParameters
+import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
@@ -634,7 +636,6 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
     ): DexArchiveBuilderTaskDelegate {
         return DexArchiveBuilderTaskDelegate(
             isIncremental = isIncremental,
-            androidJarClasspath = emptySet(),
             projectClasses = projectClasses,
             projectChangedClasses = projectChanges,
             subProjectClasses = emptySet(),
@@ -652,23 +653,28 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
             mixedScopeOutputDex = tmpDir.newFolder(),
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = tmpDir.newFile(),
-            desugaringClasspathClasses = desugaringClasspath,
             desugaringClasspathChangedClasses = emptySet(),
-            errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-            minSdkVersion = minSdkVersion,
             dexer = dexerTool,
             useGradleWorkers = false,
-            inBufferSize = 10,
-            outBufferSize = 10,
-            isDebuggable = isDebuggable,
-            java8LangSupportType = java8Desugaring,
             projectVariant = "myVariant",
             numberOfBuckets = numberOfBuckets,
-            isDxNoOptimizeFlagPresent = false,
-            libConfiguration = libConfiguration,
             messageReceiver = NoOpMessageReceiver(),
             userLevelCache = userCache.takeIf { withCache },
-            workerExecutor = workerExecutor
+            workerExecutor = workerExecutor,
+            dexParams = DexParameters(
+                minSdkVersion = minSdkVersion,
+                debuggable = isDebuggable,
+                withDesugaring = (java8Desugaring == VariantScope.Java8LangSupport.D8),
+                desugarBootclasspath = emptyList(),
+                desugarClasspath = desugaringClasspath.toList(),
+                coreLibDesugarConfig = libConfiguration,
+                errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
+            ),
+            dxDexParams = DxDexParameters(
+                inBufferSize = 10,
+                outBufferSize = 10,
+                dxNoOptimizeFlagPresent = false
+            )
         )
     }
 

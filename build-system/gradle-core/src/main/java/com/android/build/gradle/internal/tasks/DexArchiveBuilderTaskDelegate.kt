@@ -19,11 +19,12 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
+import com.android.build.gradle.internal.dexing.DexParameters
+import com.android.build.gradle.internal.dexing.DxDexParameters
+import com.android.build.gradle.internal.dexing.DexParametersForWorkers
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
-import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.ClassFileEntry
 import com.android.builder.dexing.ClassFileInputs
@@ -76,10 +77,10 @@ import kotlin.math.abs
  * inputs in the task, the delegate instance is configured. Main processing happens in [doProcess].
  */
 class DexArchiveBuilderTaskDelegate(
+    // Whether incremental information is available
     isIncremental: Boolean,
 
-    private val androidJarClasspath: Set<File>,
-
+    // Input class files
     private val projectClasses: Set<File>,
     private val projectChangedClasses: Set<FileChange> = emptySet(),
 
@@ -92,6 +93,7 @@ class DexArchiveBuilderTaskDelegate(
     private val mixedScopeClasses: Set<File>,
     private val mixedScopeChangedClasses: Set<FileChange> = emptySet(),
 
+    // Output directories for dex files and keep rules
     private val projectOutputDex: File,
     private val projectOutputKeepRules: File?,
 
@@ -103,40 +105,36 @@ class DexArchiveBuilderTaskDelegate(
 
     private val mixedScopeOutputDex: File,
     private val mixedScopeOutputKeepRules: File?,
-    private val inputJarHashesFile: File,
 
-    private val desugaringClasspathClasses: Set<File>,
+    // Dex parameters
+    private val dexParams: DexParameters,
+    private val dxDexParams: DxDexParameters,
+
+    // Incremental info
     private val desugaringClasspathChangedClasses: Set<FileChange> = emptySet(),
 
-    private val errorFormatMode: SyncOptions.ErrorFormatMode,
-    private val minSdkVersion: Int,
-    private val dexer: DexerTool,
-    private val useGradleWorkers: Boolean,
-    private val inBufferSize: Int,
-    private val outBufferSize: Int,
-    private val isDebuggable: Boolean,
-    private val java8LangSupportType: VariantScope.Java8LangSupport,
+    // Other info
     projectVariant: String,
+    private val inputJarHashesFile: File,
+    private val dexer: DexerTool,
     private val numberOfBuckets: Int,
-    private val isDxNoOptimizeFlagPresent: Boolean,
-    private val libConfiguration: String?,
-    private var messageReceiver: MessageReceiver,
+    private val useGradleWorkers: Boolean,
+    private val workerExecutor: WorkerExecutor,
     private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool(),
     userLevelCache: FileCache? = null,
-
-    private val workerExecutor: WorkerExecutor
+    private var messageReceiver: MessageReceiver
 ) {
     //(b/141854812) Temporarily disable incremental support when core library desugaring enabled in release build
     private val isIncremental =
         isIncremental && projectOutputKeepRules == null && subProjectOutputKeepRules == null
-            && externalLibsOutputKeepRules == null && mixedScopeOutputKeepRules == null
+                && externalLibsOutputKeepRules == null && mixedScopeOutputKeepRules == null
 
     private val cacheHandler: DexArchiveBuilderCacheHandler =
         DexArchiveBuilderCacheHandler(
             userLevelCache,
-            isDxNoOptimizeFlagPresent,
-            minSdkVersion,
-            isDebuggable,
+            dxDexParams.dxNoOptimizeFlagPresent,
+            dexParams.minSdkVersion,
+            dexParams.debuggable,
             dexer
         )
 
@@ -168,11 +166,11 @@ class DexArchiveBuilderTaskDelegate(
                 subProjectClasses,
                 externalLibClasses,
                 mixedScopeClasses,
-                desugaringClasspathClasses
+                dexParams.desugarClasspath
             ),
             Supplier { changedFiles.mapTo(HashSet<Path>(changedFiles.size)) { it.toPath() } },
             executor
-        ).takeIf { java8LangSupportType == VariantScope.Java8LangSupport.D8 }
+        ).takeIf { dexParams.withDesugaring }
 
     private var inputJarHashesValues: MutableMap<File, String> = getCurrentJarInputHashes()
 
@@ -196,7 +194,7 @@ class DexArchiveBuilderTaskDelegate(
     }
 
     fun doProcess() {
-        if (isDxNoOptimizeFlagPresent) {
+        if (dxDexParams.dxNoOptimizeFlagPresent) {
             loggerWrapper.warning(DefaultDexOptions.OPTIMIZE_WARNING)
         }
 
@@ -219,8 +217,9 @@ class DexArchiveBuilderTaskDelegate(
             desugarIncrementalHelper?.additionalPaths?.map { it.toFile() }?.toSet()
                 ?: emptySet()
 
-        val classpath = getClasspath(java8LangSupportType)
-        val bootclasspath = getBootClasspath(androidJarClasspath, java8LangSupportType)
+        val classpath = getClasspath(dexParams.withDesugaring)
+        val bootclasspath =
+            getBootClasspath(dexParams.desugarBootclasspath, dexParams.withDesugaring)
 
         var bootclasspathServiceKey: ClasspathServiceKey? = null
         var classpathServiceKey: ClasspathServiceKey? = null
@@ -250,17 +249,27 @@ class DexArchiveBuilderTaskDelegate(
                             bootclasspath,
                             classpathServiceKey!!,
                             classpath,
-                            enableCaching = useAndroidBuildCache)
+                            enableCaching = useAndroidBuildCache
+                        )
                     }
-                    processInputType(projectClasses, projectOutputDex, projectOutputKeepRules, false)
                     processInputType(
-                        subProjectClasses, subProjectOutputDex, subProjectOutputKeepRules, false)
+                        projectClasses,
+                        projectOutputDex,
+                        projectOutputKeepRules,
+                        false
+                    )
                     processInputType(
-                        mixedScopeClasses, mixedScopeOutputDex, mixedScopeOutputKeepRules, false)
+                        subProjectClasses, subProjectOutputDex, subProjectOutputKeepRules, false
+                    )
+                    processInputType(
+                        mixedScopeClasses, mixedScopeOutputDex, mixedScopeOutputKeepRules, false
+                    )
                     // TODO (b/141460382) Enable external libs caching when core library desugaring is enabled in release build
                     val enableCachingForExternalLibs = externalLibsOutputKeepRules == null
-                    val cacheableItems = processInputType(externalLibClasses, externalLibsOutputDex,
-                        externalLibsOutputKeepRules, enableCachingForExternalLibs)
+                    val cacheableItems = processInputType(
+                        externalLibClasses, externalLibsOutputDex,
+                        externalLibsOutputKeepRules, enableCachingForExternalLibs
+                    )
 
                     // all work items have been submitted, now wait for completion.
                     if (useGradleWorkers) {
@@ -423,7 +432,7 @@ class DexArchiveBuilderTaskDelegate(
         classpath: List<Path>,
         jarInput: File
     ): D8DesugaringCacheInfo {
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+        if (!dexParams.withDesugaring) {
             return DesugaringNoInfoCache
         }
         desugarIncrementalHelper as DesugarIncrementalHelper
@@ -595,27 +604,18 @@ class DexArchiveBuilderTaskDelegate(
     }
 
     class DexConversionParameters(
+        internal val isIncremental: Boolean,
         internal val inputs: Set<File>,
         internal val isDirectory: Boolean,
-        internal val dexPerClass: Boolean,
-        private val bootClasspath: ClasspathServiceKey,
-        private val classpath: ClasspathServiceKey,
         output: File,
-        private val numberOfBuckets: Int,
-        private val buckedId: Int,
-        private val minSdkVersion: Int,
-        private val isDxNoOptimizeFlagPresent: Boolean,
-        private val inBufferSize: Int,
-        private val outBufferSize: Int,
-        private val dexer: DexerTool,
-        private val isDebuggable: Boolean,
-        internal val isIncremental: Boolean,
-        private val java8LangSupportType: VariantScope.Java8LangSupport,
-        private val libConfiguration: String?,
-        internal val outputKeepRule: File?,
-        internal val additionalPaths: Set<File>,
+        internal val dexParams: DexParametersForWorkers,
+        internal val dexPerClass: Boolean,
+        private val dxDexParams: DxDexParameters,
         internal val changedFiles: Set<File>,
-        internal val errorFormatMode: SyncOptions.ErrorFormatMode
+        internal val additionalPaths: Set<File>,
+        private val dexer: DexerTool,
+        private val numberOfBuckets: Int,
+        private val buckedId: Int
     ) : Serializable {
         internal val output: String = output.toURI().toString()
 
@@ -632,30 +632,32 @@ class DexArchiveBuilderTaskDelegate(
             val dexArchiveBuilder: DexArchiveBuilder
             when (dexer) {
                 DexerTool.DX -> {
-                    val optimizedDex = !isDxNoOptimizeFlagPresent
-                    val dxContext = DxContext(outStream, errStream)
                     val config = DexArchiveBuilderConfig(
-                        dxContext,
-                        optimizedDex,
-                        inBufferSize,
-                        minSdkVersion,
+                        DxContext(outStream, errStream),
+                        !dxDexParams.dxNoOptimizeFlagPresent, // optimizedDex
+                        dxDexParams.inBufferSize,
+                        dexParams.minSdkVersion,
                         DexerTool.DX,
-                        outBufferSize,
+                        dxDexParams.outBufferSize,
                         DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx()
                     )
 
                     dexArchiveBuilder = DexArchiveBuilder.createDxDexBuilder(config)
                 }
                 DexerTool.D8 -> dexArchiveBuilder = DexArchiveBuilder.createD8DexBuilder(
-                    minSdkVersion,
-                    isDebuggable,
-                    INSTANCE.getService(bootClasspath).service,
-                    INSTANCE.getService(classpath).service,
-                    dexPerClass,
-                    java8LangSupportType == VariantScope.Java8LangSupport.D8,
-                    libConfiguration,
-                    outputKeepRule,
-                    messageReceiver
+                    com.android.builder.dexing.DexParameters(
+                        minSdkVersion = dexParams.minSdkVersion,
+                        debuggable = dexParams.debuggable,
+                        dexPerClass = dexPerClass,
+                        withDesugaring = dexParams.withDesugaring,
+                        desugarBootclasspath =
+                                INSTANCE.getService(dexParams.desugarBootclasspath).service,
+                        desugarClasspath = INSTANCE.getService(dexParams.desugarClasspath).service,
+                        coreLibDesugarConfig = dexParams.coreLibDesugarConfig,
+                        coreLibDesugarOutputKeepRuleFile =
+                                dexParams.coreLibDesugarOutputKeepRuleFile,
+                        messageReceiver = messageReceiver
+                    )
                 )
                 else -> throw AssertionError("Unknown dexer type: " + dexer.name)
             }
@@ -673,7 +675,7 @@ class DexArchiveBuilderTaskDelegate(
                     System.out,
                     System.err,
                     MessageReceiverImpl(
-                        dexConversionParameters.errorFormatMode,
+                        dexConversionParameters.dexParams.errorFormatMode,
                         Logging.getLogger(DexArchiveBuilderTaskDelegate::class.java)
                     )
                 )
@@ -735,27 +737,18 @@ class DexArchiveBuilderTaskDelegate(
 
             dexArchives.add(preDexOutputFile)
             val parameters = DexConversionParameters(
+                isIncremental,
                 inputs,
                 isDirectory,
-                dexPerClass,
-                bootClasspath,
-                classpath,
                 preDexOutputFile,
-                numberOfBuckets,
-                bucketId,
-                minSdkVersion,
-                isDxNoOptimizeFlagPresent,
-                inBufferSize,
-                outBufferSize,
-                dexer,
-                isDebuggable,
-                isIncremental,
-                java8LangSupportType,
-                libConfiguration,
-                outputKeepRuleFile,
-                additionalPaths,
+                dexParams.toDexParametersForWorkers(bootClasspath, classpath, outputKeepRuleFile),
+                dexPerClass,
+                dxDexParams,
                 changedFiles,
-                errorFormatMode
+                additionalPaths,
+                dexer,
+                numberOfBuckets,
+                bucketId
             )
 
             if (useGradleWorkers) {
@@ -801,8 +794,8 @@ class DexArchiveBuilderTaskDelegate(
         return dexArchives
     }
 
-    private fun getClasspath(java8LangSupportType: VariantScope.Java8LangSupport): List<Path> {
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+    private fun getClasspath(withDesugaring: Boolean): List<Path> {
+        if (!withDesugaring) {
             return emptyList()
         }
 
@@ -811,21 +804,21 @@ class DexArchiveBuilderTaskDelegate(
                     subProjectClasses.size +
                     externalLibClasses.size +
                     mixedScopeClasses.size +
-                    desugaringClasspathClasses.size
+                    dexParams.desugarClasspath.size
         ).also { list ->
             list.addAll(projectClasses.map { it.toPath() })
             list.addAll(subProjectClasses.map { it.toPath() })
             list.addAll(externalLibClasses.map { it.toPath() })
             list.addAll(mixedScopeClasses.map { it.toPath() })
-            list.addAll(desugaringClasspathClasses.map { it.toPath() })
+            list.addAll(dexParams.desugarClasspath.map { it.toPath() })
         }
     }
 
     private fun getBootClasspath(
-        androidJarClasspath: Set<File>,
-        java8LangSupportType: VariantScope.Java8LangSupport
+        androidJarClasspath: List<File>,
+        withDesugaring: Boolean
     ): List<Path> {
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+        if (!withDesugaring) {
             return emptyList()
         }
         return androidJarClasspath.map { it.toPath() }
@@ -886,7 +879,7 @@ private fun launchProcessing(
     fun toProcess(rootPath: Path, path: String): Boolean {
         val inputPath = Paths.get(path)
         // The inputPath could be relative path for jar input and absolute path for directory input
-        val relativePath = if(inputPath.isAbsolute) rootPath.relativize(inputPath) else inputPath
+        val relativePath = if (inputPath.isAbsolute) rootPath.relativize(inputPath) else inputPath
         if (!dexConversionParameters.belongsToThisBucket(relativePath.toString())) return false
 
         if (!hasIncrementalInfo) {
@@ -899,7 +892,8 @@ private fun launchProcessing(
 
     val bucketFilter = { rootPath: Path, path: String -> toProcess(rootPath, path) }
     inputPaths.forEach {
-        loggerWrapper.verbose("Dexing '$it' to '" + dexConversionParameters.output + "'") }
+        loggerWrapper.verbose("Dexing '$it' to '" + dexConversionParameters.output + "'")
+    }
 
     try {
         Closer.create().use { closer ->
@@ -913,7 +907,8 @@ private fun launchProcessing(
                 }
                 dexArchiveBuilder.convert(
                     classFileEntries,
-                    Paths.get(URI(dexConversionParameters.output)))
+                    Paths.get(URI(dexConversionParameters.output))
+                )
             }
         }
     } catch (ex: DexArchiveBuilderException) {
