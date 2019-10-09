@@ -51,7 +51,7 @@ fun RecipeExecutor.generateBasicActivity(
   secondFragmentLayoutName: String
 ) {
   val (projectData, srcOut, resOut) = moduleData
-  val buildApi = moduleData.projectTemplateData.buildApi
+  val buildApi = moduleData.apis.buildApi!!
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   if (useAndroidX) {
@@ -73,7 +73,7 @@ fun RecipeExecutor.generateBasicActivity(
   addDependency("com.android.support:appcompat-v7:$buildApi.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   applyPlugin("androidx.navigation.safeargs")
-  save(fragmentSimpleXml(projectData.androidXSupport, moduleData.isNew), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
+  save(fragmentSimpleXml(useAndroidX, moduleData.isNew), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
   if (moduleData.isNew) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
   }

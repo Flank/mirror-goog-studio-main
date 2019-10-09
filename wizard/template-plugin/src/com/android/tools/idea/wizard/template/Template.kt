@@ -1,7 +1,5 @@
 package com.android.tools.idea.wizard.template
 
-import java.io.File
-
 typealias Recipe = RecipeExecutor.(TemplateData) -> Unit
 
 /**

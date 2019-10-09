@@ -38,23 +38,23 @@ enum class Language(val string: String, val extension: String) {
   Kotlin("Kotlin", "kt")
 }
 
+data class ApiTemplateData(
+  val minApi: String,
+  val minApiLevel: Version,
+  val buildApi: Version?,
+  val targetApi: Version,
+  /** Not null only if it is unreleased yet API. */
+  val targetApiString: String?,
+  val buildApiString: String?,
+  val buildApiRevision: Int?
+)
 
 // TODO: pack version data in separate class, possibly similar to AndroidVersionsInfo.VersionItem
 data class ProjectTemplateData(
-  val minApi: String,
-  val minApiLevel: Version,
-  val buildApi: Version,
   val androidXSupport: Boolean,
-  val targetApi: Version,
-  /**
-   * Not null only if it is unreleased yet API.
-   */
-  val targetApiString: String?,
-  val buildApiString: String,
-  val buildApiRevision: Int,
   val gradlePluginVersion: GradlePluginVersion,
   val javaVersion: JavaVersion?,
-  val sdkDir: File,
+  val sdkDir: File?,
   val language: Language,
   val kotlinVersion: String,
   val buildToolsVersion: Revision,
@@ -99,7 +99,8 @@ data class ModuleTemplateData(
   /**
    * Info about base feature. Only present in dynamic feature project.
    */
-  val baseFeature: BaseFeature?
+  val baseFeature: BaseFeature?,
+  val apis: ApiTemplateData
 ): TemplateData() {
   val isDynamic: Boolean
     get() = baseFeature != null

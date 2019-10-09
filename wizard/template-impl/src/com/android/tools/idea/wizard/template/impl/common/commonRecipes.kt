@@ -89,29 +89,29 @@ fun RecipeExecutor.generateManifest(
 }
 
 fun RecipeExecutor.generateSimpleLayout(
-  data: ModuleTemplateData, activityClass: String, simpleLayoutName: String, excludeMenu: Boolean, packageName: PackageName,
+  moduleData: ModuleTemplateData, activityClass: String, simpleLayoutName: String, excludeMenu: Boolean, packageName: PackageName,
   menuName: String? = null, openLayout: Boolean = true
 ) {
   if (menuName == null) {
-    require(!data.isNew || excludeMenu)
+    require(!moduleData.isNew || excludeMenu)
   }
-  val projectData = data.projectTemplateData
-  val buildApi = projectData.buildApi
-  val resOut = data.resDir
+  val projectData = moduleData.projectTemplateData
+  val buildApi = moduleData.apis.buildApi
+  val resOut = moduleData.resDir
   addDependency("com.android.support:appcompat-v7:$buildApi.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   // TODO(qumeric): check if we sometimes need to pass appBarLayoutName
   val simpleLayout = simpleLayoutXml(
-    data.isNew, false, projectData.androidXSupport, data.packageName, activityClass, null
+    moduleData.isNew, false, projectData.androidXSupport, moduleData.packageName, activityClass, null
   )
 
   val layoutFile = resOut.resolve("layout/$simpleLayoutName.xml")
 
   save(simpleLayout, layoutFile)
 
-  if (data.isNew && !excludeMenu) {
-    generateSimpleMenu(packageName, activityClass, data.resDir, menuName!!)
+  if (moduleData.isNew && !excludeMenu) {
+    generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName!!)
   }
 
   if (openLayout) {
@@ -180,7 +180,7 @@ fun RecipeExecutor.generateAppBar(
   packageName: String,
   simpleLayoutName: String,
   appBarLayoutName: String,
-  buildApi: Int = moduleData.projectTemplateData.buildApi,
+  buildApi: Int = moduleData.apis.buildApi!!,
   resDir: File = moduleData.resDir,
   baseFeatureResOut: File? = moduleData.baseFeature?.resDir,
   themesData: ThemesData = moduleData.themesData,

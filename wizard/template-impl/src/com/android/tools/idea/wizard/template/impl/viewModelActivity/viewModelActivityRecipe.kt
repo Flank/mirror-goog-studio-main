@@ -40,7 +40,8 @@ fun RecipeExecutor.viewModelActivityRecipe(
   fragmentPackage: String) {
 
   val (projectData, srcOut, resOut, _) = moduleData
-  val buildApi = moduleData.projectTemplateData.buildApi
+  val apis = moduleData.apis
+  val buildApi = apis.buildApi!!
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
