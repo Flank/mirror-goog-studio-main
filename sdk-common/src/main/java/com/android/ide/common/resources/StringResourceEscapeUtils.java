@@ -44,14 +44,18 @@ final class StringResourceEscapeUtils {
     private static final Pattern ESCAPED_HEXADECIMAL_REFERENCE =
             Pattern.compile(HEXADECIMAL_ESCAPE + "(\\p{XDigit}+);");
 
-    private StringResourceEscapeUtils() {}
+    @NonNull
+    static SAXParserFactory createSaxParserFactory() {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        XmlUtils.configureSaxFactory(factory, false, false);
 
-    static void parse(@NonNull String string, @NonNull ContentHandler handler) throws SAXException {
+        return factory;
+    }
+
+    static void parse(@NonNull String string, @NonNull SAXParserFactory factory, @NonNull ContentHandler handler) throws SAXException {
         XMLReader reader;
 
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            XmlUtils.configureSaxFactory(factory, false, false);
             SAXParser parser = XmlUtils.createSaxParser(factory);
             reader = parser.getXMLReader();
             reader.setContentHandler(handler);

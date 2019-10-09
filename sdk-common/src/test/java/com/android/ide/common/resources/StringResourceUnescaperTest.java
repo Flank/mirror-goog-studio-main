@@ -144,7 +144,7 @@ public final class StringResourceUnescaperTest {
     @Test
     public void unescapeCharacterDataInvalidXml() {
         try {
-            StringResourceUnescaper.unescapeCharacterData("<");
+            new StringResourceUnescaper().unescapeCharacterData("<");
             fail();
         } catch (IllegalArgumentException exception) {
             // Expected
@@ -179,6 +179,6 @@ public final class StringResourceUnescaperTest {
 
     private static void assertUnescapedXmlEquals(
             @NonNull String expectedUnescapedXml, @NonNull String xml) {
-        assertEquals(expectedUnescapedXml, StringResourceUnescaper.unescapeCharacterData(xml));
+        assertEquals(expectedUnescapedXml, new StringResourceUnescaper().unescapeCharacterData(xml));
     }
 }

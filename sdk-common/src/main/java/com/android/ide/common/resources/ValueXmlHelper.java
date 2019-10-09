@@ -275,7 +275,7 @@ public class ValueXmlHelper {
      */
     @NonNull
     public static String unescapeResourceStringAsXml(@NonNull String xml) {
-        return StringResourceUnescaper.unescapeCharacterData(xml);
+        return new StringResourceUnescaper().unescapeCharacterData(xml);
     }
 
     /**
@@ -362,6 +362,6 @@ public class ValueXmlHelper {
      */
     @NonNull
     public static String escapeResourceStringAsXml(@NonNull String xml) {
-        return StringResourceEscaper.escapeCharacterData(xml);
+        return new StringResourceEscaper().escapeCharacterData(xml);
     }
 }

@@ -143,7 +143,7 @@ public final class StringResourceEscaperTest {
     @Test
     public void escapeCharacterDataInvalidXml() {
         try {
-            StringResourceEscaper.escapeCharacterData("<");
+            new StringResourceEscaper().escapeCharacterData("<");
             fail();
         } catch (IllegalArgumentException exception) {
             // Expected
@@ -177,7 +177,7 @@ public final class StringResourceEscaperTest {
     }
 
     private static void assertEscapedXmlEquals(String expectedEscapedXml, String xml) {
-        assertEquals(expectedEscapedXml, StringResourceEscaper.escapeCharacterData(xml));
+        assertEquals(expectedEscapedXml, new StringResourceEscaper().escapeCharacterData(xml));
     }
 
     @Test
