@@ -20,14 +20,6 @@
             help="The name of the activity class to create"/>
 
     <parameter
-            id="layoutClass"
-            name="Frontend/Layout Name"
-            type="string"
-            constraints="class|unique|nonempty"
-            default="SimpleComposable"
-            help="The name of the frontend component/layout to create for the activity"/>
-
-    <parameter
             id="activityTitle"
             name="Title"
             type="string"
