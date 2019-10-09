@@ -50,7 +50,7 @@ public final class StringResourceUnescaper {
     @NonNull
     private static String unescapeLeadingQuestionMarkOrAtSign(@NonNull String xml) {
         if (xml.startsWith("\\?") || xml.startsWith("\\@")) {
-            return xml.substring(1, xml.length());
+            return xml.substring(1);
         } else {
             return xml;
         }

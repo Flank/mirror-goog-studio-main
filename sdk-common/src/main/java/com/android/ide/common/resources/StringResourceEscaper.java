@@ -91,11 +91,13 @@ final class StringResourceEscaper {
 
     @NonNull
     private static Escaper buildEscaper(boolean escapeApostrophes, boolean escapeMarkupDelimiters) {
-        Escapers.Builder builder = Escapers.builder()
-                .addEscape('"', "\\\"")
-                .addEscape('\\', "\\\\")
-                .addEscape('\n', "\\n")
-                .addEscape('\t', "\\t");
+        @SuppressWarnings("UnstableApiUsage")
+        Escapers.Builder builder =
+                Escapers.builder()
+                        .addEscape('"', "\\\"")
+                        .addEscape('\\', "\\\\")
+                        .addEscape('\n', "\\n")
+                        .addEscape('\t', "\\t");
 
         if (escapeApostrophes) {
             builder.addEscape('\'', "\\'");
