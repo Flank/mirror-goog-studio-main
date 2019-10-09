@@ -148,70 +148,16 @@ coverage_report(
     ],
 )
 
-# Coverage report for Layout Editor
-layouteditor_excludes = [
-    # Layout3D is not used
-    "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/layout3d",
-
-    # Mockup Editor is not used
-    "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/mockup",
-
-    # Flexbox is not enabled
-    "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/flexbox",
-]
-
-layouteditor_includes = [
-    "tools/adt/idea/compose-designer/src",
-    "tools/adt/idea/designer/src/",
-    "tools/adt/idea/android/src/com/android/tools/idea/rendering",
-    "tools/adt/idea/android/src/com/android/tools/idea/sampledata",
-]
-
-layouteditor_tests = [
-    "//tools/adt/idea/android:intellij.android.core.tests_tests",
-    "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
-    "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-    "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
-    "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
-    "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
-    "//tools/base/layoutlib-api:tools.tests",
-]
-
-coverage_report(
-    name = "layouteditor",
-    srcpath_exclude = layouteditor_excludes,
-    srcpath_include = layouteditor_includes,
-    tests = layouteditor_tests,
-)
-
-# Coverage report for Design Tools
-coverage_report(
-    name = "designtools",
-    srcpath_exclude = layouteditor_excludes,
-    srcpath_include = layouteditor_includes + [
-        "tools/adt/idea/naveditor/src/",
-        "tools/adt/idea/layout-inspector/src/",
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
-    ],
-    tests = layouteditor_tests + [
-        "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
-        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
-    ],
-)
-
 combine_report_definitions(
     prefix = "comps",
     reports = [
         "all",
         "android-apk",
         "databinding",
-        "designtools",
         "navigationeditor",
         "navigationpropertyinspector",
         "spliteditor",
         "resourcemanager",
-        "layouteditor",
     ],
 )
 
