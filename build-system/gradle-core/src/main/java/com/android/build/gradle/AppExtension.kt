@@ -1,90 +1,90 @@
-package com.android.build.gradle;
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.api.ApplicationVariant;
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.dependency.SourceSetManager;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.options.ProjectOptions;
-import org.gradle.api.DomainObjectSet;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
+package com.android.build.gradle
+
+import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.VariantScope
+import org.gradle.api.DomainObjectSet
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Project
 
 /**
- * The {@code android} extension for application plugins.
- *
- * <p>For the base application, see {@link
- * com.android.build.gradle.internal.dsl.BaseAppModuleExtension}, which is superseded by {@link
- * com.android.build.api.dsl.ApplicationExtension}
- *
- * <p>For dynamic features see {@link
- * com.android.build.gradle.internal.dsl.DynamicFeatureExtension}, which is superseded by {@link
- * com.android.build.api.dsl.DynamicFeatureExtension}
+ * AppExtension is used directly by build.gradle.kts when configuring project so adding generics
+ * declaration is not possible.
  */
-public class AppExtension extends TestedExtension {
-
-    private final DomainObjectSet<ApplicationVariant> applicationVariantList;
-
-    public AppExtension(
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
-            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull SourceSetManager sourceSetManager,
-            @NonNull ExtraModelInfo extraModelInfo,
-            boolean isBaseModule) {
-        super(
-                project,
-                projectOptions,
-                globalScope,
-                buildTypes,
-                productFlavors,
-                signingConfigs,
-                buildOutputs,
-                sourceSetManager,
-                extraModelInfo,
-                isBaseModule);
-        applicationVariantList = project.getObjects().domainObjectSet(ApplicationVariant.class);
-    }
-
+open class AppExtension(
+        project: Project,
+        projectOptions: ProjectOptions,
+        globalScope: GlobalScope,
+        buildTypes: NamedDomainObjectContainer<BuildType>,
+        productFlavors: NamedDomainObjectContainer<ProductFlavor>,
+        signingConfigs: NamedDomainObjectContainer<SigningConfig>,
+        buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
+        sourceSetManager: SourceSetManager,
+        extraModelInfo: ExtraModelInfo,
+        isBaseModule: Boolean
+) : TestedExtension(
+        project,
+        projectOptions,
+        globalScope,
+        buildTypes,
+        productFlavors,
+        signingConfigs,
+        buildOutputs,
+        sourceSetManager,
+        extraModelInfo,
+        isBaseModule
+) {
     /**
-     * Returns a collection of <a
-     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a> that
+     * Returns a collection of [build variants](https://developer.android.com/studio/build/build-variants.html) that
      * the app project includes.
      *
-     * <p>To process elements in this collection, you should use the <a
-     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
-     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
-     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * To process elements in this collection, you should use the
+     * [`all`](https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all-org.gradle.api.Action-)
+     * iterator. That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the `each` iterator, using `all`
      * processes future elements as the plugin creates them.
      *
-     * <p>The following sample iterates through all <code>applicationVariants</code> elements to <a
-     * href="https://developer.android.com/studio/build/manifest-build-variables.html">inject a
-     * build variable into the manifest</a>:
+     * The following sample iterates through all `applicationVariants` elements to
+     * [inject a build variable into the manifest](https://developer.android.com/studio/build/manifest-build-variables.html):
      *
-     * <pre>
-     * android.applicationVariants.all { variant -&gt;
+     * ```
+     * android.applicationVariants.all { variant ->
      *     def mergedFlavor = variant.getMergedFlavor()
      *     // Defines the value of a build variable you can use in the manifest.
      *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com/${variant.versionName}"]
      * }
-     * </pre>
+     * ```
      */
-    public DomainObjectSet<ApplicationVariant> getApplicationVariants() {
-        return applicationVariantList;
-    }
+    val applicationVariants: DomainObjectSet<ApplicationVariant> =
+        project.objects.domainObjectSet(ApplicationVariant::class.java)
 
-    @Override
-    public void addVariant(BaseVariant variant, VariantScope variantScope) {
-        applicationVariantList.add((ApplicationVariant) variant);
+
+
+    override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
+        applicationVariants.add(variant as ApplicationVariant)
     }
 }

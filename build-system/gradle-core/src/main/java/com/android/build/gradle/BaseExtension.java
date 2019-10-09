@@ -843,7 +843,7 @@ public abstract class BaseExtension implements AndroidConfig {
         resourcePrefix = prefix;
     }
 
-    public abstract void addVariant(BaseVariant variant, VariantScope variantScope);
+    public abstract void addVariant(@NonNull BaseVariant variant, @NonNull VariantScope variantScope);
 
     public void registerArtifactType(@NonNull String name,
             boolean isTest,
