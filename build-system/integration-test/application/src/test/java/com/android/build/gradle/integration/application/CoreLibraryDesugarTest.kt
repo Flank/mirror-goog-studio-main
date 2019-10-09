@@ -28,9 +28,11 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.desugar.resources.ClassWithDesugarApi
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.StringOption
+import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexClassSubject
@@ -180,16 +182,9 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
-    fun testKeepRulesGeneration() {
+    fun testKeepRulesGenerationFromAppProject() {
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
-        val stringBuilder = StringBuilder()
-        Files.walk(out.toPath()).use { paths ->
-            paths
-                .filter{ it.toFile().isFile }
-                .forEach { stringBuilder.append(it.toFile().readText(Charsets.UTF_8))
-                }
-        }
         val expectedKeepRules = "-keep class j\$.util.Optional {\n" +
                 "    java.lang.Object get();\n" +
                 "}\n" +
@@ -199,7 +194,44 @@ class CoreLibraryDesugarTest {
                 "-keep class j\$.util.stream.Stream {\n" +
                 "    j\$.util.Optional findFirst();\n" +
                 "}\n"
-        assertTrue { stringBuilder.toString() == expectedKeepRules }
+        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
+    }
+
+    @Test
+    fun testKeepRulesGenerationFromFileDependencies() {
+        val fileDependencyName = "withDesugarApi.jar"
+        addFileDependency(fileDependencyName)
+
+        app.buildFile.appendText("""
+
+            dependencies {
+                implementation files('$fileDependencyName')
+            }
+        """.trimIndent())
+
+        project.executor().run("app:assembleRelease")
+        val out = InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
+            .getOutputDir(app.buildDir)
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
+                "    j\$.time.LocalTime MIDNIGHT;\n" +
+                "}\n"
+        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
+    }
+
+    private fun addFileDependency(name: String) {
+        val fileLib = app.file(name).toPath()
+        TestInputsGenerator.pathWithClasses(fileLib, listOf(ClassWithDesugarApi::class.java))
+    }
+
+    private fun collectKeepRulesUnderDirectory(dir: File) : String {
+        val stringBuilder = StringBuilder()
+        Files.walk(dir.toPath()).use { paths ->
+            paths
+                .filter{ it.toFile().isFile }
+                .forEach { stringBuilder.append(it.toFile().readText(Charsets.UTF_8))
+                }
+        }
+        return stringBuilder.toString()
     }
 
     private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =

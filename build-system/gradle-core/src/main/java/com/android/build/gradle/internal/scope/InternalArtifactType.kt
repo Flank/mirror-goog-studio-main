@@ -107,6 +107,7 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object DESUGAR_LIB_SUBPROJECT_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY)
     object DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY)
     object DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY)
+    object DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // --- java res ---
     // java processing output
