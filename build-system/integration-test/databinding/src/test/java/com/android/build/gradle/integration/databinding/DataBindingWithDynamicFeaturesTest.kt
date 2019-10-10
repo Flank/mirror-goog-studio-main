@@ -21,14 +21,46 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Apk
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
+/**
+ * <pre>
+ * This test builds dynamic features modules and a library module with databinding enabled,
+ * and checks the correctness of the apks.
+ *
+ * Diagram:
+ *  +------------------>-------------+
+ *  |                                |
+ * app <-+--<-- featureA ------>-----+-----> libraryModule
+ *       |
+ *       +--<-- featureB
+ *
+ * More explicitly
+ * featureA and featureB depend on app
+ * app and featureA depend on the libraryModule
+ *
+ * </pre>
+ */
+
 @RunWith(FilterableParameterized::class)
 class DataBindingWithDynamicFeaturesTest(private val useAndroidX : Boolean) {
+    companion object {
+        @Parameterized.Parameters(name = "useAndroidX_{0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+
+        data class DataBindingClass(private val support : String, private val androidX : String) {
+            fun get(useAndroidX: Boolean) = if(useAndroidX) {
+                androidX
+            } else {
+                support
+            }
+        }
+    }
+
     @Rule
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
@@ -55,7 +87,7 @@ class DataBindingWithDynamicFeaturesTest(private val useAndroidX : Boolean) {
         val featureAClasses = listOf(
                 bindingClass(FEATURE_A, FEATURE_A_ACTIVITY),
                 bindingClass(FEATURE_A, FEATURE_A_ACTIVITY_IMPL),
-                brClass(NORMAL_MODULE),
+                brClass(LIBRARY_MODULE),
                 brClass(FEATURE_A))
 
         val featureBClasses = listOf(
@@ -91,43 +123,35 @@ class DataBindingWithDynamicFeaturesTest(private val useAndroidX : Boolean) {
     }
 
     private fun brClass(pkg: String): String {
-        return "L${pkg.split(".").joinToString("/")}/BR;"
+        return "L${packageToDir(pkg)}/BR;"
     }
 
     private fun bindingClass(pkg: String, klass: String): String {
-        return "L${pkg.split(".").joinToString("/")}/databinding/$klass;"
+        return "L${packageToDir(pkg)}/databinding/$klass;"
     }
 
-    companion object {
-        const val BASE = "com.example.app"
-        const val FEATURE_A = "com.example.featureA"
-        const val FEATURE_B = "com.example.featureB"
-        val MERGED_MAPPER = DataBindingClass(
+    private fun packageToDir(pkg: String): String {
+        return pkg.split(".").joinToString("/")
+    }
+
+    private val PROJECT_PACKAGE = "com.example"
+    private val BASE = "$PROJECT_PACKAGE.app"
+    private val FEATURE_A = "$PROJECT_PACKAGE.featureA"
+    private val FEATURE_B = "$PROJECT_PACKAGE.featureB"
+    private val MERGED_MAPPER = DataBindingClass(
             support = "Landroid/databinding/DataBinderMapperImpl;",
             androidX = "Landroidx/databinding/DataBinderMapperImpl;")
-        val DATA_BINDING_COMPONENT = DataBindingClass(
+    private val DATA_BINDING_COMPONENT = DataBindingClass(
             support = "Landroid/databinding/DataBindingComponent;",
             androidX = "Landroidx/databinding/DataBindingComponent;")
-        const val NORMAL_MODULE = "com.example.normalModule"
-        const val FEATURE_A_ACTIVITY = "ActivityMainBinding"
-        const val FEATURE_A_ACTIVITY_IMPL = "ActivityMainBindingImpl"
-        const val FEATURE_B_ACTIVITY = "FeatureBMainBinding"
-        const val FEATURE_B_ACTIVITY_IMPL = "FeatureBMainBindingImpl"
-        const val BASE_ACTIVITY = "AppLayoutBinding"
-        const val BASE_ACTIVITY_IMPL = "AppLayoutBindingImpl"
-        val BASE_ADAPTERS = DataBindingClass(
+    private val LIBRARY_MODULE = "$PROJECT_PACKAGE.libraryModule"
+    private val FEATURE_A_ACTIVITY = "ActivityMainBinding"
+    private val FEATURE_A_ACTIVITY_IMPL = "ActivityMainBindingImpl"
+    private val FEATURE_B_ACTIVITY = "FeatureBMainBinding"
+    private val FEATURE_B_ACTIVITY_IMPL = "FeatureBMainBindingImpl"
+    private val BASE_ACTIVITY = "AppLayoutBinding"
+    private val BASE_ACTIVITY_IMPL = "AppLayoutBindingImpl"
+    private val BASE_ADAPTERS = DataBindingClass(
             support = "com.android.databinding.library.baseAdapters",
             androidX = "androidx.databinding.library.baseAdapters")
-        @Parameterized.Parameters(name = "useAndroidX_{0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-
-        data class DataBindingClass(private val support : String, private val androidX : String) {
-            fun get(useAndroidX: Boolean) = if(useAndroidX) {
-                androidX
-            } else {
-                support
-            }
-        }
-    }
 }

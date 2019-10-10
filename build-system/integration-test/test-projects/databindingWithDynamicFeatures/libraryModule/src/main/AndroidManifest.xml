@@ -16,7 +16,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.normalModule">
+    package="com.example.libraryModule">
 
     <application
         android:allowBackup="true"
