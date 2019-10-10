@@ -536,9 +536,9 @@ public class Project {
     }
 
     /**
-     * Returns the list of output folders for class files
+     * Returns the list of output folders or jars for class files.
      *
-     * @return a list of output folders to search for .class files
+     * @return a list of output folders or jars to search for .class files
      */
     @NonNull
     public List<File> getJavaClassFolders() {
