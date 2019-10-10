@@ -27,6 +27,7 @@ import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.JarFile
+import com.android.testutils.truth.FileSubject.assertThat
 
 /**
  * Sanity test to make sure we can invoke L8 successfully
@@ -43,8 +44,10 @@ class L8ToolTest {
             output,
             getFileContentFromJar(desugarConfigJar.toFile()),
             bootClasspath,
-            20)
+            20
+        )
         assertThat(getDexFileCount(output)).isEqualTo(1)
+        assertThat(output.toFile().resolve("classes1000.dex")).exists()
     }
 
     private fun getDexFileCount(dir: Path): Long =
@@ -56,7 +59,7 @@ class L8ToolTest {
         val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.1.0")
     }
 
-    private fun getFileContentFromJar(file: File) : String {
+    private fun getFileContentFromJar(file: File): String {
         val stringBuilder = StringBuilder()
         JarFile(file).use { jarFile ->
             val jarEntry = jarFile.getJarEntry("META-INF/desugar/d8/desugar.json")

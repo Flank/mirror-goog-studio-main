@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.desugar
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.AndroidArchive.checkValidClassName
@@ -61,6 +62,20 @@ class L8DexDesugarTest {
             getDexWithDesugarClass(desugarClass, apk.allDexes)
                 ?: fail("Failed to find the dex with desugar lib classes")
         assertThat(desugarLibDex).doesNotContainClasses(normalClass)
+    }
+
+    @Test
+    fun testLegacyMultidexMainDexIsNotDesugarLib() {
+        project.buildFile.appendText(
+            """
+
+            android.defaultConfig.minSdkVersion = 19
+        """.trimIndent()
+        )
+        project.executor().run("assembleDebug")
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertThatApk(apk).doesNotContainMainClass(desugarClass)
+        assertThatApk(apk).hasSecondaryClass(desugarClass)
     }
 
     @Test
