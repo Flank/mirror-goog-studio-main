@@ -20,6 +20,6 @@ import com.android.build.api.dsl.BuildFeatures
 
 open class BuildFeaturesImpl : BuildFeatures {
     override var compose: Boolean? = null
-
     override var buildConfig: Boolean? = null
+    override var dataBinding: Boolean? = null
 }

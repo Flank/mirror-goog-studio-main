@@ -123,7 +123,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
             task.from(artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
-            if (variantScope.globalScope.extension.dataBinding.isEnabled) {
+            if (variantScope.globalScope.buildFeatures.dataBinding) {
                 task.from(
                     variantScope.globalScope.project.provider {
                         variantScope.artifacts.getFinalProduct(

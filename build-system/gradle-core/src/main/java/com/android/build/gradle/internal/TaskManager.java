@@ -62,7 +62,6 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.api.ViewBindingOptions;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -84,6 +83,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -2307,9 +2307,9 @@ public abstract class TaskManager {
     }
 
     private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
-        boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
+        final BuildFeatureValues features = variantScope.getGlobalScope().getBuildFeatures();
         boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
-        if (!dataBindingEnabled && !viewBindingEnabled) {
+        if (!features.getDataBinding() && !viewBindingEnabled) {
             return;
         }
         final BaseVariantData variantData = variantScope.getVariantData();
@@ -2338,8 +2338,9 @@ public abstract class TaskManager {
     }
 
     protected void createDataBindingTasksIfNecessary(@NonNull VariantScope scope) {
-        boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
+        final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
         boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
+        boolean dataBindingEnabled = features.getDataBinding();
         if (!dataBindingEnabled && !viewBindingEnabled) {
             return;
         }
@@ -3085,13 +3086,12 @@ public abstract class TaskManager {
     }
 
     public void addBindingDependenciesIfNecessary(
-            ViewBindingOptions viewBindingOptions,
+            boolean viewBindingEnabled,
+            boolean dataBindingEnabled,
             DataBindingOptions dataBindingOptions,
             List<VariantScope> variantScopes) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         boolean useAndroidX = projectOptions.get(BooleanOption.USE_ANDROID_X);
-        boolean viewBindingEnabled = viewBindingOptions.isEnabled();
-        boolean dataBindingEnabled = dataBindingOptions.isEnabled();
 
         if (viewBindingEnabled) {
             String version =

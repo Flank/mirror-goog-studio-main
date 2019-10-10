@@ -50,7 +50,7 @@ class BuildFileBuilder {
         }
 
         if (dataBindingEnabled) {
-            contents.append("\n\nandroid.dataBinding.enabled = true")
+            contents.append("\n\nandroid.buildFeatures.dataBinding = true")
         }
 
         if (!dependencies.isEmpty()) {

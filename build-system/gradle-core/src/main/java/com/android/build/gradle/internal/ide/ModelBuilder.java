@@ -1150,7 +1150,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         GlobalScope globalScope = variantData.getScope().getGlobalScope();
 
-        boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
+        boolean isDataBindingEnabled = globalScope.getBuildFeatures().getDataBinding();
         boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
         boolean addBindingSources =
                 (isDataBindingEnabled || isViewBindingEnabled)

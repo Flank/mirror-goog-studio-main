@@ -17,10 +17,11 @@
 package com.android.build.gradle.internal.scope
 
 /**
- * Allows access to the final values of [com.android.build.api.BuildFeatures] taking into
+ * Allows access to the final values of [com.android.build.api.dsl.BuildFeatures] taking into
  * account default values coming via [com.android.build.gradle.options.BooleanOption]
  */
 interface BuildFeatureValues {
     val jetpackCompose: Boolean
     val buildConfig: Boolean
+    val dataBinding: Boolean
 }

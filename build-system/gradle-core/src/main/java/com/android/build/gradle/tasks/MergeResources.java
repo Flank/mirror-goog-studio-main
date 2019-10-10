@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Blocks;
@@ -728,7 +729,8 @@ public abstract class MergeResources extends ResourceAwareTask {
                 task.generatedPngsOutputDir = variantScope.getGeneratedPngsOutputDir();
             }
 
-            boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
+            final BuildFeatureValues features = globalScope.getBuildFeatures();
+            final boolean isDataBindingEnabled = features.getDataBinding();
             boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.

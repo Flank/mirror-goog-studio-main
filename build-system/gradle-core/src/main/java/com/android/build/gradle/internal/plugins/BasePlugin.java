@@ -664,7 +664,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         // must run this after scopes are created so that we can configure kotlin
         // kapt tasks
         taskManager.addBindingDependenciesIfNecessary(
-                extension.getViewBinding(),
+                extension.getViewBinding().isEnabled(),
+                globalScope.getBuildFeatures().getDataBinding(),
                 extension.getDataBinding(),
                 variantManager.getVariantScopes());
 

@@ -38,11 +38,23 @@ interface BuildFeatures {
      *
      * Setting the value to null resets to the default value.
      *
-     * The default value can be set with the gradle property android.defaults.buildfeatures.buildconfig
-     * This affects all modules.
-     * Default value is true
+     * You can override the default for this for all projects in your build by adding the line
+     *     android.defaults.buildfeatures.buildconfig=true
+     * in the gradle.properties file at the root project of your build.
      *
      * More information about this feature at: TBD
      */
     var buildConfig: Boolean?
+
+    /**
+     * Flag to enable Data Binding.
+     * Setting the value to null resets to the default value.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     android.defaults.buildfeatures.databinding=true
+     * in the gradle.properties file at the root project of your build.
+     *
+     * More information about this feature at: TBD
+     */
+    var dataBinding: Boolean?
 }

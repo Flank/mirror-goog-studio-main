@@ -33,4 +33,7 @@ class BuildFeatureValuesImpl(
 
     override val buildConfig: Boolean
         get() = dslBuildFeatures.buildConfig ?: projectOptions[BooleanOption.BUILD_FEATURE_BUILDCONFIG]
+
+    override val dataBinding: Boolean
+        get() = dslBuildFeatures.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
 }

@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -635,9 +636,9 @@ public abstract class BaseVariantData {
             }
 
             BaseExtension extension = scope.getGlobalScope().getExtension();
-            boolean isDataBindingEnabled = extension.getDataBinding().isEnabled();
+            final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
             boolean isViewBindingEnabled = extension.getViewBinding().isEnabled();
-            if (isDataBindingEnabled || isViewBindingEnabled) {
+            if (features.getDataBinding() || isViewBindingEnabled) {
                 if (scope.getTaskContainer().getDataBindingExportBuildInfoTask() != null) {
                     sourceSets.add(
                             project.fileTree(scope.getClassOutputForDataBinding())

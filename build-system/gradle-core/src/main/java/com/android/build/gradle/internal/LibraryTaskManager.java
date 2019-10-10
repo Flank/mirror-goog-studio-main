@@ -491,7 +491,7 @@ public class LibraryTaskManager extends TaskManager {
     @NonNull
     private Supplier<List<String>> excludeDataBindingClassesIfNecessary(
             @NonNull VariantScope variantScope) {
-        if (!extension.getDataBinding().isEnabled()) {
+        if (!globalScope.getBuildFeatures().getDataBinding()) {
             return Collections::emptyList;
         }
 

@@ -20,5 +20,4 @@ interface ViewBindingOptions {
 
     /** Whether to enable view binding.  */
     var isEnabled: Boolean
-
 }

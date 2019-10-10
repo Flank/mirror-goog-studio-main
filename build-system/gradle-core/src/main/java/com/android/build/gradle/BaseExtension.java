@@ -245,10 +245,16 @@ public abstract class BaseExtension implements AndroidConfig {
         jacoco = objectFactory.newInstance(JacocoOptions.class);
         adbOptions = objectFactory.newInstance(AdbOptions.class);
         splits = objectFactory.newInstance(Splits.class, objectFactory);
-        dataBinding = objectFactory.newInstance(DataBindingOptions.class);
         viewBinding = objectFactory.newInstance(ViewBindingOptionsImpl.class);
         buildFeatures = objectFactory.newInstance(BuildFeaturesImpl.class);
         composeOptions = objectFactory.newInstance(ComposeOptionsImpl.class);
+
+        dataBinding =
+                objectFactory.newInstance(
+                        DataBindingOptions.class,
+                        buildFeatures,
+                        projectOptions,
+                        globalScope.getDslScope());
 
         // Create the "special" configuration for test buddy APKs. It will be resolved by the test
         // running task, so that we can install all the found APKs before running tests.
