@@ -90,8 +90,6 @@ class DynamicFeatureJavaResTest {
                 }
                 """)
 
-    private val instantApp = MinimalSubProject.instantApp()
-
     private val testApp =
         MultiModuleTestProject.builder()
             .subproject(":lib", lib)

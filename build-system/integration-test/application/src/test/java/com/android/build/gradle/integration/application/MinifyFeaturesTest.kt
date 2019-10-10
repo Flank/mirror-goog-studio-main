@@ -559,15 +559,6 @@ class MinifyFeaturesTest(
                 }
                 """)
 
-    private val instantApp = MinimalSubProject.instantApp()
-        .appendToBuild("""
-            android {
-                buildTypes {
-                    minified
-                }
-            }
-        """.trimIndent())
-
     private val testApp =
         MultiModuleTestProject.builder()
             .subproject(":lib1", lib1)
