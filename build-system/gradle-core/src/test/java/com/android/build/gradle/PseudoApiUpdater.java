@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api;
+package com.android.build.gradle;
 
 import java.io.IOException;
 
-/**
- * Updates the stable API file. Simply run inside Intellij to update the stable API file.
- */
-public class StableApiUpdater {
+public class PseudoApiUpdater {
 
-    public static void main(String... args) throws IOException {
-        String dirPath =
-                "tools/base/build-system/gradle-api/src/test/resources/com/android/build/api";
-        StableApiTest.getStableApiTester().updateFile(dirPath);
-        StableApiTest.getIncubatingApiTester().updateFile(dirPath);
+    public static void main(String[] args) throws IOException {
+        PseudoApiChangesTest.getApiTester()
+                .updateFile(
+                        "tools/base/build-system/gradle-core/src/test/resources/com/android/build/gradle");
     }
 }
