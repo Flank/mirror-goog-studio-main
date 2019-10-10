@@ -102,6 +102,7 @@ public class JarContentsTest {
                 "com/android/build/api/",
                 "com/android/build/api/artifact/",
                 "com/android/build/api/attributes/",
+                "com/android/build/api/dsl/",
                 "com/android/build/api/transform/",
                 "com/android/build/api/variant/",
                 "com/android/build/gradle/",
