@@ -66,7 +66,8 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @NonNull
     @Override
     public File getOutputFile() {
-        PackageAndroidArtifact packageAndroidArtifact = getPackageApplication();
+        PackageAndroidArtifact packageAndroidArtifact =
+                taskContainer.getPackageAndroidTask().getOrNull();
         if (packageAndroidArtifact != null) {
             return new File(
                     packageAndroidArtifact.getOutputDirectory().get().getAsFile(),
