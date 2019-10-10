@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle
 
 /**
  * User configuration settings for 'com.android.test' project.
  */
-public interface TestAndroidConfig extends AndroidConfig {
+interface TestAndroidConfig : AndroidConfig {
 
     /**
      * Returns the Gradle path of the project that this test project tests.
      */
-    String getTargetProjectPath();
+    val targetProjectPath: String?
 
     /**
      * Returns the variant of the tested project.
@@ -33,6 +33,6 @@ public interface TestAndroidConfig extends AndroidConfig {
      *
      * @deprecated This is deprecated, test module can now test all flavors.
      */
-    @Deprecated
-    String getTargetVariant();
+    @Deprecated("The test project now tests all flavors")
+    val targetVariant: String
 }

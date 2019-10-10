@@ -1,29 +1,29 @@
-package com.android.build.gradle;
+package com.android.build.gradle
 
-import com.android.annotations.NonNull;
-import com.android.build.api.variant.LibraryVariantProperties;
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.LibraryVariant;
-import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.dependency.SourceSetManager;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.LibraryVariantData;
-import com.android.build.gradle.options.ProjectOptions;
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import org.gradle.api.Action;
-import org.gradle.api.DomainObjectSet;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
-import org.gradle.api.internal.DefaultDomainObjectSet;
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.api.LibraryVariant
+import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.ProjectOptions
+import com.google.common.collect.Lists
+import org.gradle.api.Action
+import org.gradle.api.DomainObjectSet
+import org.gradle.api.Incubating
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Project
+import org.gradle.api.internal.DefaultDomainObjectSet
+import java.util.Collections
 
 /**
  * The {@code android} extension for {@code com.android.library} projects.
@@ -32,107 +32,81 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
  * href="https://developer.android.com/studio/projects/android-library.html">create an Android
  * library</a>.
  */
-public class LibraryExtension extends TestedExtension
-        implements com.android.build.api.dsl.LibraryExtension {
+open class LibraryExtension(
+    project: Project,
+    projectOptions: ProjectOptions,
+    globalScope: GlobalScope,
+    buildTypes: NamedDomainObjectContainer<BuildType>,
+    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
+    signingConfigs: NamedDomainObjectContainer<SigningConfig>,
+    buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
+    sourceSetManager: SourceSetManager,
+    extraModelInfo: ExtraModelInfo
+) : TestedExtension(
+    project,
+    projectOptions,
+    globalScope,
+    buildTypes,
+    productFlavors,
+    signingConfigs,
+    buildOutputs,
+    sourceSetManager,
+    extraModelInfo,
+    false
+), com.android.build.api.dsl.LibraryExtension {
 
-    private final DomainObjectSet<LibraryVariant> libraryVariantList;
+    private val libraryVariantList: DomainObjectSet<LibraryVariant> =
+        project.objects.domainObjectSet(LibraryVariant::class.java)
 
-    private Collection<String> aidlPackageWhiteList = null;
+    private var _packageBuildConfig = true
 
-    private List<Action<com.android.build.api.variant.LibraryVariant>> variantActionList =
-            new ArrayList<>();
-    private List<Action<LibraryVariantProperties>> variantPropertiesActionList = new ArrayList<>();
-
-
-    public LibraryExtension(
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull GlobalScope globalScope,
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
-            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull SourceSetManager sourceSetManager,
-            @NonNull ExtraModelInfo extraModelInfo) {
-        super(
-                project,
-                projectOptions,
-                globalScope,
-                buildTypes,
-                productFlavors,
-                signingConfigs,
-                buildOutputs,
-                sourceSetManager,
-                extraModelInfo,
-                false);
-        libraryVariantList = project.getObjects().domainObjectSet(LibraryVariant.class);
-    }
+    private var _aidlPackageWhiteList: MutableCollection<String>? = null
 
     /**
-     * Returns a collection of <a
-     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a> that
-     * the library project includes.
+     * Returns a collection of
+     * [build variants](https://developer.android.com/studio/build/build-variants.html)
+     * that the library project includes.
      *
-     * <p>To process elements in this collection, you should use the <a
-     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
-     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
-     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * To process elements in this collection, you should use
+     * [`all`](https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all-org.gradle.api.Action-).
+     * That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the `each` iterator, using `all`
      * processes future elements as the plugin creates them.
      *
-     * <p>The following sample iterates through all <code>libraryVariants</code> elements to <a
-     * href="https://developer.android.com/studio/build/manifest-build-variables.html">inject a
-     * build variable into the manifest</a>:
+     * The following sample iterates through all `libraryVariants` elements to
+     * [inject a build variable into the manifest](https://developer.android.com/studio/build/manifest-build-variables.html):
      *
-     * <pre>
-     * android.libraryVariants.all { variant -&gt;
+     * ```
+     * android.libraryVariants.all { variant ->
      *     def mergedFlavor = variant.getMergedFlavor()
      *     // Defines the value of a build variable you can use in the manifest.
      *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com"]
      * }
-     * </pre>
+     * ```
      */
-    public DefaultDomainObjectSet<LibraryVariant> getLibraryVariants() {
-        return (DefaultDomainObjectSet<LibraryVariant>) libraryVariantList;
+    val libraryVariants: DefaultDomainObjectSet<LibraryVariant>
+        get() = libraryVariantList as DefaultDomainObjectSet<LibraryVariant>
+
+    override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
+        libraryVariantList.add(variant as LibraryVariant)
     }
 
-    @Override
-    public void addVariant(BaseVariant variant, VariantScope variantScope) {
-        libraryVariantList.add((LibraryVariant) variant);
-        LibraryVariantData variantData = (LibraryVariantData) variantScope.getVariantData();
-        for (Action<com.android.build.api.variant.LibraryVariant> action : variantActionList) {
-            action.execute(
-                    (com.android.build.api.variant.LibraryVariant)
-                            variantData.getPublicVariantApi());
+    override var aidlPackageWhiteList: MutableCollection<String>?
+        get() = _aidlPackageWhiteList
+        set(value) = value?.let { aidlPackageWhiteList(*it.toTypedArray()) } ?: Unit
+
+    fun aidlPackageWhiteList(vararg aidlFqcns: String) {
+        if (_aidlPackageWhiteList == null) {
+            _aidlPackageWhiteList = Lists.newArrayList()
         }
-        for (Action<LibraryVariantProperties> action : variantPropertiesActionList) {
-            action.execute((LibraryVariantProperties) variantData.getPublicVariantPropertiesApi());
-        }
+        Collections.addAll(_aidlPackageWhiteList!!, *aidlFqcns)
     }
 
-    public void aidlPackageWhiteList(String ... aidlFqcns) {
-        if (aidlPackageWhiteList == null) {
-            aidlPackageWhiteList = Lists.newArrayList();
-        }
-        Collections.addAll(aidlPackageWhiteList, aidlFqcns);
+    override fun onVariants(action: Action<com.android.build.api.variant.LibraryVariant>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    public void setAidlPackageWhiteList(Collection<String> aidlPackageWhiteList) {
-        this.aidlPackageWhiteList = Lists.newArrayList(aidlPackageWhiteList);
+    override fun onVariantsProperties(action: Action<LibraryVariantProperties>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-    @Override
-    public Collection<String> getAidlPackageWhiteList() {
-        return aidlPackageWhiteList;
-    }
-
-    @Override
-    public void onVariants(@NonNull Action<com.android.build.api.variant.LibraryVariant> action) {
-        variantActionList.add(action);
-    }
-
-    @Override
-    public void onVariantsProperties(@NonNull Action<LibraryVariantProperties> action) {
-        variantPropertiesActionList.add(action);
-    }
-
 }

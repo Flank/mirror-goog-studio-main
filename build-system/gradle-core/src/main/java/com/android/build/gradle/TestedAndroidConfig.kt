@@ -14,34 +14,29 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.api.TestVariant;
-import com.android.build.gradle.api.UnitTestVariant;
-import org.gradle.api.DomainObjectSet;
+import com.android.build.gradle.api.TestVariant
+import com.android.build.gradle.api.UnitTestVariant
+import org.gradle.api.DomainObjectSet
 
 /**
  * User configuration settings for android plugin with test component.
  */
-public interface TestedAndroidConfig extends AndroidConfig {
+interface TestedAndroidConfig : AndroidConfig {
 
-    /** Return the name of the BuildType for testing. */
-    @NonNull
-    @Override
-    String getTestBuildType();
+    /** The name of the BuildType for testing. */
+    override val testBuildType: String
 
     /**
-     * Returns the list of (Android) test variants. Since the collections is built after evaluation,
-     * it should be used with Gradle's <code>all</code> iterator to process future items.
+     * The list of (Android) test variants. Since the collections is built after evaluation,
+     * it should be used with Gradle's `all` iterator to process future items.
      */
-    @NonNull
-    DomainObjectSet<TestVariant> getTestVariants();
+    val testVariants: DomainObjectSet<TestVariant>
 
     /**
-     * Returns the list of (Android) test variants. Since the collections is built after evaluation,
-     * it should be used with Gradle's <code>all</code> iterator to process future items.
+     * The list of (Android) test variants. Since the collections is built after evaluation,
+     * it should be used with Gradle's `all` iterator to process future items.
      */
-    @NonNull
-    DomainObjectSet<UnitTestVariant> getUnitTestVariants();
+    val unitTestVariants: DomainObjectSet<UnitTestVariant>
 }

@@ -52,7 +52,7 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
 
     init {
         val compileSdkVersion = variantScope.globalScope.extension.compileSdkVersion
-        if (isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
+        if (compileSdkVersion != null && isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
             throw RuntimeException(
                 "compileSdkVersion '$compileSdkVersion' requires JDK 1.8 or later to compile."
             )

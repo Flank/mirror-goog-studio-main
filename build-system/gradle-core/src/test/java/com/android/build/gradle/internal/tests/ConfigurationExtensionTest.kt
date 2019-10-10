@@ -243,25 +243,25 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
                 .build()
         android = project.extensions.getByType(pluginType.extensionClass) as BaseExtension
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
-        android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION)
+        android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
         plugin = project.plugins.getPlugin(pluginType.pluginClass) as BasePlugin
 
         // manually call the DSL to configure the project.
         android.flavorDimensions("api", "mode")
 
-        android.getProductFlavors().createAndConfig("demo") {
+        android.productFlavors.createAndConfig("demo") {
             setDimension("mode")
         }
 
-        android.getProductFlavors().createAndConfig("full") {
+        android.productFlavors.createAndConfig("full") {
             setDimension("mode")
         }
 
-        android.getProductFlavors().createAndConfig("mnc") {
+        android.productFlavors.createAndConfig("mnc") {
             setDimension("api")
         }
 
-        android.getProductFlavors().createAndConfig("lollipop") {
+        android.productFlavors.createAndConfig("lollipop") {
             setDimension("api")
         }
 

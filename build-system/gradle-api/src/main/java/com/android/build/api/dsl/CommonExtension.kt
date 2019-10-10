@@ -29,8 +29,18 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface CommonExtension<VariantT: Variant<VariantPropertiesT>, VariantPropertiesT: VariantProperties> {
+    /**
+     * Registers an [Action] to be executed on each [Variant] of the project.
+     *
+     * @param action an [Action] taking a [Variant] as a parameter.
+     */
     fun onVariants(action: Action<VariantT>)
 
+    /**
+     * Registers an [Action] to be executed on each [VariantProperties] of the project.
+     *
+     * @param action an [Action] taking a [VariantProperties] as a parameter.
+     */
     fun onVariantsProperties(action: Action<VariantPropertiesT>)
 
     // TODO(b/140406102)
