@@ -15,3 +15,6 @@ apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
+tasks.getByName("sourcesJar") {
+    from zipTree("../../../../../prebuilts/tools/common/lint-psi/kotlin-compiler/kotlin-compiler-sources.jar")
+}
