@@ -64,7 +64,6 @@ maven_java_library(
     exports = [],
     runtime_deps = [
         ":com.android.tools.build_aapt2-proto",
-        ":com.google.auto.value_auto-value",
         ":com.google.auto.value_auto-value-annotations",
         ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
@@ -1385,7 +1384,6 @@ maven_java_library(
         ":org.jetbrains.kotlin_kotlin-stdlib",
         ":org.jetbrains.kotlinx_kotlinx-coroutines-core",
     ],
-    runtime_deps = [":org.jetbrains.kotlin_kotlin-reflect"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1496,7 +1494,10 @@ maven_java_library(
     name = "org.jetbrains.kotlinx_kotlinx-coroutines-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.2.1:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
+    exports = [
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+        ":org.jetbrains.kotlin_kotlin-stdlib-common",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
