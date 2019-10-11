@@ -107,7 +107,17 @@ public class Deployer {
                     runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
             // Update the database
-            runner.create(Tasks.CACHE, splitter::cache, entries);
+            runner.create(
+                    Tasks.CACHE,
+                    entryList -> {
+                        for (ApkEntry file : entryList) {
+                            if (file.name.endsWith(".dex")) {
+                                splitter.cache(splitter.split(file, null));
+                            }
+                        }
+                        return true;
+                    },
+                    entries);
 
             runner.runAsync();
             return result;
@@ -138,7 +148,8 @@ public class Deployer {
         // Inputs
         Task<List<String>> paths = runner.create(argPaths);
         Task<Boolean> restart = runner.create(argRestart);
-        Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
+        Task<CachedDexSplitter> splitter =
+                runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
 
         // Get the list of files from the local apks
         Task<List<ApkEntry>> newFiles =
@@ -180,11 +191,17 @@ public class Deployer {
 
         List<Task<?>> tasks = runner.run();
 
-        // Update the database with the entire new apk. In the normal case this should
-        // be a no-op because the dexes that were modified were extracted at comparison time.
-        // However if the compare task doesn't get to execute we still update the database.
-        // Note we artificially block this task until swap is done.
-        runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
+        // Update the database with the classes that were changed. Note we artificially block this
+        // task until swap is done.
+        runner.create(
+                Tasks.CACHE,
+                (split, dex) -> {
+                    split.cache(dex.modifiedClasses);
+                    split.cache(dex.newClasses);
+                    return true;
+                },
+                splitter,
+                toSwap);
 
         // Wait only for swap to finish
         runner.runAsync();

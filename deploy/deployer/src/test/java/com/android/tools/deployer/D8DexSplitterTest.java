@@ -58,7 +58,7 @@ public class D8DexSplitterTest {
 
     /** Do a typical split, cache and diff operation without encoded checksum. */
     @Test
-    public void testSplitWithoutD8EncodeChecksum() {
+    public void testSplitWithoutD8EncodeChecksum() throws Exception {
         Class target = SimpleJavaClass.class;
 
         // Split it once, simulating a database cache on deploy
@@ -84,7 +84,7 @@ public class D8DexSplitterTest {
 
     /** Do a typical split, cache and diff operation with encoded checksum. */
     @Test
-    public void testSplitWithD8EncodeChecksum() {
+    public void testSplitWithD8EncodeChecksum() throws Exception {
         Class target = SimpleJavaClass.class;
 
         // Split it once, simulating a database cache on deploy

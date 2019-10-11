@@ -28,6 +28,8 @@ import com.android.tools.tracer.Trace;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +44,8 @@ public class D8DexSplitter implements DexSplitter {
 
     /** @param keepCode Needs to be threadsafe. */
     @Override
-    public Collection<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) {
+    public Collection<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode)
+            throws DeployerException {
         try (Trace ignored = Trace.begin("split " + dex.name)) {
             D8Command.Builder newBuilder = D8Command.builder();
             DexConsumer consumer = new DexConsumer(dex, keepCode);
@@ -57,7 +60,14 @@ public class D8DexSplitter implements DexSplitter {
         }
     }
 
-    protected byte[] readDex(ApkEntry dex) {
+    protected byte[] readDex(ApkEntry dex) throws DeployerException {
+        // TODO: Calling the splitter on a remote APK is going to crash. Checking path == null isn't
+        //  going to work as that gives the remote path of the APK. The File.exists() check is a
+        //  temp fix. See b/135202430.
+        if (dex.apk.path == null || Files.notExists(Paths.get(dex.apk.path))) {
+            throw DeployerException.remoteApkNotFound();
+        }
+
         // TODO Check if opening the file several times matters
         try (ZipFile file = new ZipFile(dex.apk.path)) {
             ZipEntry entry = file.getEntry(dex.name);

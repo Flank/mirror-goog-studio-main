@@ -1601,6 +1601,8 @@ public class DeployerRunnerTest {
         assertEquals(expected, actual);
     }
 
+    private static void assertCached(ApkFileDatabase db) {}
+
     public void assertInstalled(String packageName, File... files) throws IOException {
         assertArrayEquals(new String[] {packageName}, device.getApps().toArray());
         List<String> paths = device.getAppPaths(packageName);
