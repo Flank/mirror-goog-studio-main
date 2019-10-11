@@ -40,10 +40,7 @@ class BuildArtifactReportTaskTest {
     val temporaryFolder = TemporaryFolder()
     private lateinit var project : Project
     private lateinit var artifactsHolder: BuildArtifactsHolder
-    private val dslScope = DslScopeImpl(
-            FakeEvalIssueReporter(throwOnError = true),
-            FakeDeprecationReporter(),
-            FakeObjectFactory())
+
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()

@@ -20,9 +20,10 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.gradle.options.ProjectOptions
 
 class BuildFeatureValuesImpl(
-    private val dslBuildFeatures: BuildFeatures,
     private val projectOptions: ProjectOptions
 ) : BuildFeatureValues {
+    lateinit var dslBuildFeatures: BuildFeatures
+
     // add new flags here with computation:
     // dslFeatures.flagX ?: projectOptions[BooleanOption.FlagX]
 

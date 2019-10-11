@@ -58,6 +58,7 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.profile.RecordingBuildListener;
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -315,7 +316,11 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         DslScopeImpl dslScope =
                 new DslScopeImpl(
-                        syncIssueHandler, extraModelInfo.getDeprecationReporter(), objectFactory);
+                        syncIssueHandler,
+                        extraModelInfo.getDeprecationReporter(),
+                        objectFactory,
+                        project.getLogger(),
+                        new BuildFeatureValuesImpl(projectOptions));
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
@@ -436,6 +441,10 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo);
+
+        // link the extension buildFeature to the BuildFeatureValues in DslScope
+        ((BuildFeatureValuesImpl) globalScope.getDslScope().getBuildFeatures())
+                .setDslBuildFeatures(extension.getBuildFeatures());
 
         globalScope.setExtension(extension);
 
