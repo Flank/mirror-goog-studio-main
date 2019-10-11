@@ -17,22 +17,16 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import javax.inject.Inject;
 import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.model.ObjectFactory;
 
 /** DSL object for the defaultConfig object. */
 @SuppressWarnings({"WeakerAccess", "unused"}) // Exposed in the DSL.
 public class DefaultConfig extends BaseFlavor {
     @Inject
     public DefaultConfig(
-            @NonNull String name,
-            @NonNull Project project,
-            @NonNull ObjectFactory objectFactory,
-            @NonNull DeprecationReporter deprecationReporter,
-            @NonNull Logger logger) {
-        super(name, project, objectFactory, deprecationReporter, logger);
+            @NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
+        super(name, project, dslScope);
     }
 }

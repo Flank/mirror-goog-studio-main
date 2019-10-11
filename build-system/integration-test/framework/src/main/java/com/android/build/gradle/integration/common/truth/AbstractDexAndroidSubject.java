@@ -97,6 +97,7 @@ public class AbstractDexAndroidSubject<
     private DexBackedClassDef getMainClass(@NonNull String className) throws IOException {
         Optional<Dex> classesDex = actual().getMainDexFile();
         if (!classesDex.isPresent()) {
+            fail("has main dex file");
             return null;
         }
         return classesDex.get().getClasses().get(className);

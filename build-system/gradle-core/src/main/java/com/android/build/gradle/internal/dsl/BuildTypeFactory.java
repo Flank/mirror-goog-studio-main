@@ -17,8 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -28,24 +27,20 @@ public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
 
     @NonNull private final ObjectFactory objectFactory;
     @NonNull private final Project project;
-    @NonNull private final EvalIssueReporter issueReporter;
-    @NonNull private final DeprecationReporter deprecationReporter;
+    @NonNull private DslScope dslScope;
 
     public BuildTypeFactory(
             @NonNull ObjectFactory objectFactory,
             @NonNull Project project,
-            @NonNull EvalIssueReporter issueReporter,
-            @NonNull DeprecationReporter deprecationReporter) {
+            @NonNull DslScope dslScope) {
         this.objectFactory = objectFactory;
         this.project = project;
-        this.issueReporter = issueReporter;
-        this.deprecationReporter = deprecationReporter;
+        this.dslScope = dslScope;
     }
 
     @NonNull
     @Override
     public BuildType create(@NonNull String name) {
-        return objectFactory.newInstance(
-                BuildType.class, name, project, objectFactory, issueReporter, deprecationReporter);
+        return objectFactory.newInstance(BuildType.class, name, project, dslScope);
     }
 }

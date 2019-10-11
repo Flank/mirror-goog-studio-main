@@ -56,6 +56,11 @@ enum class BooleanOption(
     ENABLE_STUDIO_VERSION_CHECK("android.injected.studio.version.check", true, Option.Status.STABLE),
 
     // ---------------
+    // FEATURE Default Values
+    // This is a PUBLIC API.
+    BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, Option.Status.STABLE),
+
+    // ---------------
     // Lifecycle flags: Experimental stage, not yet enabled by default
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),

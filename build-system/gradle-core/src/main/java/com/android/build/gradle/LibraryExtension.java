@@ -33,8 +33,6 @@ public class LibraryExtension extends TestedExtension
     private final DefaultDomainObjectSet<LibraryVariant> libraryVariantList
             = new DefaultDomainObjectSet<LibraryVariant>(LibraryVariant.class);
 
-    private boolean packageBuildConfig = true;
-
     private Collection<String> aidlPackageWhiteList = null;
 
     public LibraryExtension(
@@ -90,26 +88,6 @@ public class LibraryExtension extends TestedExtension
     @Override
     public void addVariant(BaseVariant variant, VariantScope variantScope) {
         libraryVariantList.add((LibraryVariant) variant);
-    }
-
-    public void packageBuildConfig(boolean value) {
-        if (!value) {
-            LoggingUtil.displayDeprecationWarning(logger, project,
-                    "Support for not packaging BuildConfig is deprecated.");
-        }
-
-        packageBuildConfig = value;
-    }
-
-    @Deprecated
-    public void setPackageBuildConfig(boolean value) {
-        // Remove when users stop requiring this setting.
-        packageBuildConfig(value);
-    }
-
-    @Override
-    public Boolean getPackageBuildConfig() {
-        return packageBuildConfig;
     }
 
     public void aidlPackageWhiteList(String ... aidlFqcns) {

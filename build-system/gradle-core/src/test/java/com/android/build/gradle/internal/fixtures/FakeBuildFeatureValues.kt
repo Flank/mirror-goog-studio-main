@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.fixtures
 
-/**
- * Allows access to the final values of [com.android.build.api.BuildFeatures] taking into
- * account default values coming via [com.android.build.gradle.options.BooleanOption]
- */
-interface BuildFeatureValues {
-    val jetpackCompose: Boolean
-    val buildConfig: Boolean
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+
+class FakeBuildFeatureValues(
+    override val jetpackCompose: Boolean = false,
+    override val buildConfig: Boolean = true) : BuildFeatureValues {
 }

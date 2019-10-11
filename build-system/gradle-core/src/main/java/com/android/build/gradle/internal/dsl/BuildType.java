@@ -19,16 +19,15 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
@@ -72,13 +71,12 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     @NonNull private final Project project;
+    @NonNull private DslScope dslScope;
     @NonNull private final NdkOptions ndkConfig;
     @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
     @NonNull
     private final com.android.build.gradle.internal.dsl.JavaCompileOptions javaCompileOptions;
     @NonNull private final ShaderOptions shaderOptions;
-    @NonNull private final EvalIssueReporter issueReporter;
-    @NonNull private final DeprecationReporter deprecationReporter;
     @NonNull private final PostProcessingBlock postProcessingBlock;
 
     @Nullable private PostProcessingConfiguration postProcessingConfiguration;
@@ -91,17 +89,12 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     private final Property<Boolean> isDefault;
 
     @Inject
-    public BuildType(
-            @NonNull String name,
-            @NonNull Project project,
-            @NonNull ObjectFactory objectFactory,
-            @NonNull EvalIssueReporter issueReporter,
-            @NonNull DeprecationReporter deprecationReporter) {
+    public BuildType(@NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
         super(name);
         this.project = project;
-        this.issueReporter = issueReporter;
-        this.deprecationReporter = deprecationReporter;
+        this.dslScope = dslScope;
 
+        ObjectFactory objectFactory = dslScope.getObjectFactory();
         javaCompileOptions =
                 objectFactory.newInstance(
                         com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
@@ -112,25 +105,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
         postProcessingBlock = objectFactory.newInstance(PostProcessingBlock.class, project);
         isDefault = objectFactory.property(Boolean.class).convention(false);
-    }
-
-    @VisibleForTesting
-    BuildType(
-            @NonNull String name,
-            @NonNull Project project,
-            @NonNull EvalIssueReporter issueReporter,
-            @NonNull DeprecationReporter deprecationReporter) {
-
-        super(name);
-        this.project = project;
-        this.issueReporter = issueReporter;
-        this.deprecationReporter = deprecationReporter;
-        javaCompileOptions = new com.android.build.gradle.internal.dsl.JavaCompileOptions();
-        shaderOptions = new ShaderOptions();
-        ndkConfig = new NdkOptions();
-        externalNativeBuildOptions = new ExternalNativeBuildOptions();
-        postProcessingBlock = new PostProcessingBlock(project);
-        isDefault = project.getObjects().property(Boolean.class).convention(false);
     }
 
     private ImmutableList<String> matchingFallbacks;
@@ -324,7 +298,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     String.format(
                             "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
                             getName(), name, alreadyPresent.getValue(), value);
-            issueReporter.reportWarning(Type.GENERIC, message);
+            dslScope.getIssueReporter().reportWarning(Type.GENERIC, message);
         }
         addBuildConfigField(new ClassFieldImpl(type, name, value));
     }
@@ -350,7 +324,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     String.format(
                             "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
                             getName(), name, alreadyPresent.getValue(), value);
-            issueReporter.reportWarning(Type.GENERIC, message);
+            dslScope.getIssueReporter().reportWarning(Type.GENERIC, message);
         }
         addResValue(new ClassFieldImpl(type, name, value));
     }
@@ -601,8 +575,9 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     public void setUseProguard(boolean useProguard) {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard");
         if (dslChecksEnabled.get()) {
-            deprecationReporter.reportObsoleteUsage(
-                    "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD);
+            dslScope.getDeprecationReporter()
+                    .reportObsoleteUsage(
+                            "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD);
         }
     }
 
@@ -689,7 +664,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                 default:
                     throw new AssertionError("Unknown value " + used);
             }
-            issueReporter.reportError(Type.GENERIC, message, methodName);
+            dslScope.getIssueReporter().reportError(Type.GENERIC, message, methodName);
         }
     }
 

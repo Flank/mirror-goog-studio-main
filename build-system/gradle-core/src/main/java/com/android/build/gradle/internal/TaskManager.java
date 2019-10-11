@@ -951,11 +951,13 @@ public abstract class TaskManager {
     }
 
     public void createBuildConfigTask(@NonNull VariantScope scope) {
-        TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
-                taskFactory.register(new GenerateBuildConfig.CreationAction(scope));
+        if (scope.getGlobalScope().getBuildFeatures().getBuildConfig()) {
+            TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
+                    taskFactory.register(new GenerateBuildConfig.CreationAction(scope));
 
-        TaskFactoryUtils.dependsOn(
-                scope.getTaskContainer().getSourceGenTask(), generateBuildConfigTask);
+            TaskFactoryUtils.dependsOn(
+                    scope.getTaskContainer().getSourceGenTask(), generateBuildConfigTask);
+        }
     }
 
     public void createGenerateResValuesTask(

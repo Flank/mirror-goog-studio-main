@@ -299,7 +299,6 @@ public class LibraryTaskManager extends TaskManager {
         taskFactory.register(
                 new LibraryAarJarsTask.CreationAction(
                         variantScope,
-                        extension.getPackageBuildConfig(),
                         excludeDataBindingClassesIfNecessary(variantScope)));
 
 

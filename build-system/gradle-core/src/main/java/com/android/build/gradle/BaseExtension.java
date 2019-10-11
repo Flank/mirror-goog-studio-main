@@ -228,9 +228,7 @@ public abstract class BaseExtension implements AndroidConfig, CommonExtension {
                         DefaultConfig.class,
                         BuilderConstants.MAIN,
                         project,
-                        objectFactory,
-                        extraModelInfo.getDeprecationReporter(),
-                        project.getLogger());
+                        globalScope.getDslScope());
 
         aaptOptions =
                 objectFactory.newInstance(
@@ -1032,12 +1030,6 @@ public abstract class BaseExtension implements AndroidConfig, CommonExtension {
     @Override
     public TestOptions getTestOptions() {
         return testOptions;
-    }
-
-    // For compatibility with LibraryExtension.
-    @Override
-    public Boolean getPackageBuildConfig() {
-        throw new GradleException("packageBuildConfig is not supported.");
     }
 
     @Override

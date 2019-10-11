@@ -602,9 +602,6 @@ public interface AndroidConfig {
     /** build outputs for all variants */
     Collection<BaseVariantOutput> getBuildOutputs();
 
-    /** Whether to package build config class file. */
-    Boolean getPackageBuildConfig();
-
     /** Aidl files to package in the aar. */
     Collection<String> getAidlPackageWhiteList();
 

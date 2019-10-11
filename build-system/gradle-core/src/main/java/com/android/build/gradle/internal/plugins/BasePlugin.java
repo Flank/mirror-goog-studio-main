@@ -399,19 +399,12 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
                 project.container(
                         BuildType.class,
-                        new BuildTypeFactory(
-                                objectFactory,
-                                project,
-                                extraModelInfo.getSyncIssueHandler(),
-                                extraModelInfo.getDeprecationReporter()));
+                        new BuildTypeFactory(objectFactory, project, globalScope.getDslScope()));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
                         new ProductFlavorFactory(
-                                objectFactory,
-                                project,
-                                extraModelInfo.getDeprecationReporter(),
-                                project.getLogger()));
+                                objectFactory, project, globalScope.getDslScope()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,

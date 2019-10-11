@@ -21,8 +21,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues;
+import com.android.build.gradle.internal.fixtures.FakeLogger;
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.internal.plugins.AppPlugin;
+import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.sdklib.SdkVersionInfo;
@@ -40,12 +45,18 @@ public class BuildTypeTest {
 
     private EvalIssueReporter issueReporter;
     private DeprecationReporter deprecationReporter;
+    private DslScope dslScope =
+            new DslScopeImpl(
+                    new NoOpIssueReporter(),
+                    new NoOpDeprecationReporter(),
+                    new FakeObjectFactory(),
+                    new FakeLogger(),
+                    new FakeBuildFeatureValues());
+
 
     @Before
     public void setUp() throws Exception {
         project = ProjectBuilder.builder().build();
-        issueReporter = new NoOpIssueReporter();
-        deprecationReporter = new NoOpDeprecationReporter();
     }
 
     @Test
@@ -74,14 +85,9 @@ public class BuildTypeTest {
     public void testInitWith() {
         CopyOfTester.assertAllGettersCalled(
                 BuildType.class,
-                new BuildType("original", project, issueReporter, deprecationReporter),
+                new BuildType("original", project, dslScope),
                 original -> {
-                    BuildType copy =
-                            new BuildType(
-                                    original.getName(),
-                                    project,
-                                    issueReporter,
-                                    deprecationReporter);
+                    BuildType copy = new BuildType(original.getName(), project, dslScope);
                     copy.initWith(original);
 
                     // Manually call getters that don't need to be copied.

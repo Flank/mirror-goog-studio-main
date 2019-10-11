@@ -264,6 +264,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     @Override
     public void validateModel(@NonNull VariantModel model) {
+        super.validateModel(model);
 
         validateVersionCodes(model);
 
