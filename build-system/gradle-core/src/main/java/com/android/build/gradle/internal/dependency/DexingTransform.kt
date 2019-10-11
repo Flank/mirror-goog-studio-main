@@ -156,13 +156,14 @@ fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfigura
     val minSdk = scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
     val debuggable = scope.variantConfiguration.buildType.isDebuggable
     val enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-    val enableCoreLibraryDesugaring =
-        scope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
+    val enableCoreLibraryDesugaring = scope.isCoreLibraryDesugaringEnabled
+    val needsShrinkDesugarLibrary = scope.needsShrinkDesugarLibrary
     return DexingArtifactConfiguration(
         minSdk,
         debuggable,
         enableDesugaring,
-        enableCoreLibraryDesugaring
+        enableCoreLibraryDesugaring,
+        needsShrinkDesugarLibrary
     )
 }
 
@@ -170,7 +171,8 @@ data class DexingArtifactConfiguration(
     private val minSdk: Int,
     private val isDebuggable: Boolean,
     private val enableDesugaring: Boolean,
-    private val enableCoreLibraryDesugaring: Boolean?
+    private val enableCoreLibraryDesugaring: Boolean,
+    private val needsShrinkDesugarLibrary: Boolean
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -192,12 +194,12 @@ data class DexingArtifactConfiguration(
                     parameters.bootClasspath.from(bootClasspath)
                 }
                 parameters.errorFormat.set(errorFormat)
-                if (enableCoreLibraryDesugaring == true) {
+                if (enableCoreLibraryDesugaring) {
                     parameters.libConfiguration.set(libConfiguration)
                 }
             }
             spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.PROCESSED_JAR.type)
-            if (enableCoreLibraryDesugaring == true && !isDebuggable) {
+            if (needsShrinkDesugarLibrary) {
                 spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX_AND_KEEP_RULES.type)
             } else {
                 spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)

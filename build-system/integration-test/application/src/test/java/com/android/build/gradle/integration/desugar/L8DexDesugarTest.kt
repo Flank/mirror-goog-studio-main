@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.desugar
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
@@ -45,17 +46,14 @@ class L8DexDesugarTest {
     fun setUp() {
         project.buildFile.appendText(
             """
-            android.defaultConfig.multiDexEnabled = true
-            android.defaultConfig.minSdkVersion = 21
             android.compileOptions.coreLibraryDesugaringEnabled = true
-            android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
-            android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
         """.trimIndent()
         )
     }
 
     @Test
     fun testNativeMultiDexWithoutKeepRule() {
+        normalSetUp()
         project.executor().run("assembleDebug")
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         val desugarLibDex: Dex =
@@ -66,6 +64,7 @@ class L8DexDesugarTest {
 
     @Test
     fun testLegacyMultidexMainDexIsNotDesugarLib() {
+        normalSetUp()
         project.buildFile.appendText(
             """
 
@@ -80,6 +79,7 @@ class L8DexDesugarTest {
 
     @Test
     fun testNativeMultiDexWithoutKeepRuleBundle() {
+        normalSetUp()
         project.executor().run("bundleDebug")
         val outputModels = project.model().fetchContainer(AppBundleProjectBuildOutput::class.java)
         val outputAppModel = outputModels.rootBuildModelMap[":"] ?: fail("Failed to get app model")
@@ -93,6 +93,81 @@ class L8DexDesugarTest {
                     ?: fail("Failed to find the dex with desugar lib classes")
             assertThat(desugarLibDex).doesNotContainClasses(normalClass)
         }
+    }
+
+    /**
+     * Java 8 language desugaring is always required for core library desugaring.
+     */
+    @Test
+    fun testLangDesugarPrerequisite() {
+        project.buildFile.appendText(
+            """
+
+            android.defaultConfig.minSdkVersion = 21
+        """.trimIndent()
+        )
+        // check error message in debug build
+        val debugResult = project.executor().expectFailure().run("assembleDebug")
+        TruthHelper.assertThat(debugResult.failureMessage).contains(
+            "In order to use core library desugaring, please enable java 8 language desugaring " +
+                    "with D8 or R8."
+        )
+        // check error message in release build
+        val releaseResult = project.executor().expectFailure().run("clean", "assembleRelease")
+        TruthHelper.assertThat(releaseResult.failureMessage).contains(
+            "In order to use core library desugaring, please enable java 8 language desugaring " +
+                    "with D8 or R8."
+        )
+
+        project.buildFile.appendText(
+            """
+
+            android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
+            android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
+        """.trimIndent()
+        )
+        project.executor().run("assembleRelease")
+    }
+
+    /**
+     * MultidexEnabled is required for core library desugaring when minSdkVersion is less than 21.
+     */
+    @Test
+    fun testMultidexEnabledPrerequisite() {
+        project.buildFile.appendText(
+            """
+
+            android.defaultConfig.minSdkVersion = 19
+            android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
+            android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
+        """.trimIndent()
+        )
+
+        val result = project.executor().expectFailure().run("assembleDebug")
+        TruthHelper.assertThat(result.failureMessage).contains(
+            "In order to use core library desugaring, please enable multidex."
+        )
+
+        project.buildFile.appendText(
+            """
+
+            android.defaultConfig.multiDexEnabled = true
+        """.trimIndent()
+        )
+        project.executor().run("assembleDebug")
+    }
+
+    private fun normalSetUp() {
+        project.buildFile.appendText(
+            """
+
+            android.defaultConfig.minSdkVersion = 21
+            android.defaultConfig.multiDexEnabled = true
+            android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
+            android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
+        """.trimIndent()
+        )
+
     }
 
     private fun getDexWithDesugarClass(desugarClass: String, dexes: Collection<Dex>) : Dex? =

@@ -220,7 +220,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         private val externalLibraryClasses: FileCollection
         private val mixedScopeClasses: FileCollection
         private val desugaringClasspathClasses: FileCollection
-        private val coreLibraryDesugaringEnabled: Boolean?
 
         init {
             val classesFilter =
@@ -288,8 +287,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS
             )
-            coreLibraryDesugaringEnabled =
-                variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
         }
 
         override val type: Class<DexArchiveBuilderTask> = DexArchiveBuilderTask::class.java
@@ -322,10 +319,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )
-            // Keep rules are not needed in debug build as desugar_jdk_libs would not be shrinked
-            if (coreLibraryDesugaringEnabled == true &&
-                !variantScope.variantConfiguration.buildType.isDebuggable
-            ) {
+            if (variantScope.needsShrinkDesugarLibrary) {
                 variantScope.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
                     taskProvider,
@@ -398,7 +392,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             )
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.userLevelCache = userLevelCache
-            if (coreLibraryDesugaringEnabled == true) {
+            if (variantScope.isCoreLibraryDesugaringEnabled) {
                 task.dexParams.coreLibDesugarConfig
                     .set(getDesugarLibConfig(variantScope.globalScope.project))
             }

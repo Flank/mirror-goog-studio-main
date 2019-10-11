@@ -89,7 +89,10 @@ data class DesugarLibConfiguration(
 }
 
 fun getDesugarLibConfigurations(scopes: Collection<VariantScope>): Set<DesugarLibConfiguration> {
-    return scopes.map { getDesugarLibConfiguration(it) }.toSet()
+    return scopes
+        .filter { it.isCoreLibraryDesugaringEnabled }
+        .map { getDesugarLibConfiguration(it) }
+        .toSet()
 }
 
 private fun getDesugarLibConfiguration(scope: VariantScope): DesugarLibConfiguration {

@@ -38,7 +38,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.attributes.Attribute;
@@ -111,6 +110,11 @@ public interface VariantScope extends TransformVariantScope {
     boolean getNeedsMainDexListForBundle();
 
     boolean isTestOnly();
+
+    boolean isCoreLibraryDesugaringEnabled();
+
+    /** Returns if we need to shrink desugar_jdk_libs when desugaring Core Library. */
+    boolean getNeedsShrinkDesugarLibrary();
 
     @NonNull
     VariantType getType();

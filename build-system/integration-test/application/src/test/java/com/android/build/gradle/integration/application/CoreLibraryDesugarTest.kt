@@ -89,6 +89,7 @@ class CoreLibraryDesugarTest {
                         coreLibraryDesugaringEnabled true
                     }
                 }
+                android.defaultConfig.multiDexEnabled = true
                 dependencies {
                     implementation project("$LIBRARY_MODULE")
                 }
@@ -125,6 +126,7 @@ class CoreLibraryDesugarTest {
                         targetCompatibility JavaVersion.VERSION_1_8
                         coreLibraryDesugaringEnabled true
                     }
+                    android.defaultConfig.multiDexEnabled = true
                 }
             """.trimIndent()
         )

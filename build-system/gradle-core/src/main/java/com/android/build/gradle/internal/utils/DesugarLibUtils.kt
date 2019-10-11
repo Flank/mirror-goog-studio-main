@@ -56,10 +56,7 @@ fun getDesugarLibJarFromMaven(project: Project): FileCollection {
  * by artifact transform
  */
 fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
-    val libDesugarEnabled = variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
-    val langDesugarEnabled = variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-            || variantScope.java8LangSupportType == VariantScope.Java8LangSupport.R8
-    if (libDesugarEnabled == null || libDesugarEnabled == false || !langDesugarEnabled) {
+    if (!variantScope.isCoreLibraryDesugaringEnabled) {
         return variantScope.globalScope.project.files()
     }
 

@@ -166,9 +166,6 @@ abstract class DexFileDependenciesTask
         override val name: String = variantScope.getTaskName("desugar", "FileDependencies")
         override val type = DexFileDependenciesTask::class.java
 
-        private val coreLibraryDesugaringEnabled =
-            variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
-
         override fun handleProvider(taskProvider: TaskProvider<out DexFileDependenciesTask>) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
@@ -178,9 +175,7 @@ abstract class DexFileDependenciesTask
                 fileName = "out"
             )
 
-            if (coreLibraryDesugaringEnabled == true
-                && !variantScope.variantConfiguration.buildType.isDebuggable
-            ) {
+            if (variantScope.needsShrinkDesugarLibrary) {
                 variantScope.artifacts.getOperations()
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
@@ -213,7 +208,7 @@ abstract class DexFileDependenciesTask
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
 
-            if (coreLibraryDesugaringEnabled == true) {
+            if (variantScope.isCoreLibraryDesugaringEnabled) {
                 task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
             }
         }
