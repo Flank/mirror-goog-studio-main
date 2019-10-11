@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scr
 import com.android.tools.idea.wizard.template.impl.activities.settingsActivity.settingsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.tabbedActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.viewModelActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -33,5 +34,5 @@ import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
-    fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate)
+    fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerTemplate)
 }

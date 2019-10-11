@@ -17,39 +17,90 @@ package com.android.tools.idea.wizard.template.impl.activities.common.navigation
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.RecipeExecutor
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.res.layout.fragmentFirstWithSafeargsXml
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.res.layout.fragmentFirstXml
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.res.layout.fragmentSecondXml
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.res.values.navigationStringsXml
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.firstFragmentJava
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.firstFragmentKt
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.firstFragmentWithSafeArgsJava
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.firstFragmentWithSafeArgsKt
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.secondFragmentJava
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.secondFragmentKt
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.viewModelJava
+import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.viewModelKt
 import com.android.tools.idea.wizard.template.underscoreToCamelCase
 import java.io.File
 
-// TODO(qumeric)
 fun RecipeExecutor.saveFragmentAndViewModel(
-  fragmentPrefix: String,
-  withSafeArgs: Boolean = false,
   resOut: File,
   srcOut: File,
-  language: Language
+  language: Language,
+  packageName: String,
+  fragmentPrefix: String,
+  useAndroidX: Boolean = true,
+  withSafeArgs: Boolean = false
 ) {
-  val navFragmentPrefix = fragmentPrefix
+  val firstFragmentPrefix = "${fragmentPrefix}_first"
+  val firstFragmentLayoutName = "fragment_$firstFragmentPrefix"
   val firstFragmentClass = "${underscoreToCamelCase(fragmentPrefix)}Fragment"
-  val navViewModelClass = "${underscoreToCamelCase(navFragmentPrefix)}ViewModel"
+
+  val secondFragmentPrefix = "${fragmentPrefix}_second"
+  val secondFragmentLayoutName = "fragment_$secondFragmentPrefix"
+  // TODO(qumeric): check if it is correct?
+  val secondFragmentClass = "${underscoreToCamelCase(secondFragmentPrefix)}Fragment"
+
+  val viewModelClass = "${underscoreToCamelCase(fragmentPrefix)}ViewModel"
 
   val inputDir = File("root://activities/common/navigation/src")
 
-  if (withSafeArgs) {
-    val secondFragmentPrefix = "${fragmentPrefix}_second"
-    val secondFragmentClass = "${underscoreToCamelCase(secondFragmentPrefix)}Fragment"
-    val secondFragmentLayoutName = "fragment_${secondFragmentPrefix}"
+  val generateKotlin = language == Language.Kotlin
 
-    //save(fragment_second, resOut.resolve("layout/${secondFragmentLayoutName}.xml"))
-    //save(SecondFragment, srcOut.resolve("ui/${fragmentPrefix}/${secondFragmentClass}.${language.extension}"))
-    //save(fragment_first_with_safeargs, resOut.resolve("layout/fragment_${fragmentPrefix}.xml"))
-    //save(FirstFragmentWithSafeArgs, srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${language.extension}"))
-  //} else {
-    //save(fragment_first, resOut.resolve("layout/fragment_${fragmentPrefix}.xml"))
-    //save(FirstFragment, srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${language.extension}"))
+  if (withSafeArgs) {
+    save(
+      fragmentSecondXml(packageName, fragmentPrefix, secondFragmentClass, useAndroidX),
+      resOut.resolve("layout/${secondFragmentLayoutName}.xml")
+    )
+    save(
+      if (generateKotlin)
+        secondFragmentKt(packageName, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName, fragmentPrefix, useAndroidX)
+          else
+        secondFragmentJava(packageName, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName, fragmentPrefix, useAndroidX),
+      srcOut.resolve("ui/${fragmentPrefix}/${secondFragmentClass}.${language.extension}")
+    )
+    save(
+      fragmentFirstWithSafeargsXml(packageName, fragmentPrefix, firstFragmentClass, useAndroidX),
+      resOut.resolve("layout/fragment_${fragmentPrefix}.xml")
+    )
+    save(
+      if (generateKotlin)
+        firstFragmentWithSafeArgsKt(packageName, fragmentPrefix, firstFragmentClass, secondFragmentClass, viewModelClass, useAndroidX)
+        else
+      firstFragmentWithSafeArgsJava(packageName, fragmentPrefix, firstFragmentClass, secondFragmentClass, viewModelClass, useAndroidX),
+      srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${language.extension}")
+    )
+  } else {
+    save(
+      fragmentFirstXml(packageName, fragmentPrefix, firstFragmentClass, useAndroidX),
+      resOut.resolve("layout/fragment_${fragmentPrefix}.xml")
+    )
+    save(
+      if (generateKotlin)
+        firstFragmentKt(packageName, firstFragmentClass, fragmentPrefix, viewModelClass, useAndroidX)
+          else
+        firstFragmentJava(packageName, firstFragmentClass, fragmentPrefix, viewModelClass, useAndroidX),
+      srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${language.extension}")
+    )
   }
 
-  //save(ViewModel, srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}ViewModel.${language.extension}"))
-  //mergeXml(File("values/strings.xml", resOut.resolve("values/strings.xml"))
+  save(
+    if (generateKotlin)
+      viewModelKt(packageName, fragmentPrefix, viewModelClass, useAndroidX)
+        else
+      viewModelJava(packageName, fragmentPrefix, viewModelClass, useAndroidX),
+    srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}ViewModel.${language.extension}")
+  )
+  mergeXml(navigationStringsXml(fragmentPrefix, secondFragmentClass), resOut.resolve("values/strings.xml"))
 }
 
 fun RecipeExecutor.navigationDependencies(
@@ -65,9 +116,8 @@ fun RecipeExecutor.navigationDependencies(
     addDependency("android.arch.navigation:navigation-ui-ktx:+")
   }
   /*
-  navigation-ui depends on the stable version of design library. This is to remove the
-  lint warning for the generated project may not use the same version of the support
-  library.
+  navigation-ui depends on the stable version of design library.
+  This is to remove the lint warning for the generated project may not use the same version of the support library.
   */
   if (!useAndroidX) {
     addDependency("com.android.support:design:${buildApi}.+")
@@ -75,9 +125,7 @@ fun RecipeExecutor.navigationDependencies(
 }
 
 fun RecipeExecutor.addSafeArgsPlugin(generateKotlin: Boolean, moduleOut: File) {
-  /*
-  Only use the Java version of the plugin to avoid Java and Kotlin version of the plugins are added in the same project.
-  */
+  // Only use the Java version of the plugin to avoid Java and Kotlin version of the plugins are added in the same project.
   applyPlugin("androidx.navigation.safeargs")
   if (generateKotlin) {
     requireJavaVersion("1.8", true)

@@ -102,7 +102,7 @@ fun RecipeExecutor.generateBasicActivity(
       packageName, useAndroidX, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName
     )
     Language.Kotlin -> firstFragmentKt(
-      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName
+      packageName, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName, useAndroidX
     )
   }
   val secondFragmentClassContent = when (projectData.language) {
