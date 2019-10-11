@@ -17,7 +17,6 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -53,7 +52,7 @@ public class ApplicationDumper {
      *  The returned process ids are in the form of a map of [package name --> list of packages], as
      *  there may be multiple instrumentation target packages.
      */
-    public Dump dump(List<ApkEntry> apkEntries) throws DeployerException {
+    public Dump dump(List<Apk> apks) throws DeployerException {
         // The name of the package being swapped (the one that will actually be installed).
         String packageName = null;
 
@@ -62,21 +61,17 @@ public class ApplicationDumper {
         // other packages.
         HashSet<String> targetPackages = new HashSet<>();
 
-        // In an ideal world, our model structure would allow us to obtain this from the Apk
-        // object(s) directly; however, we currently must iterate over every entry, retrieve its
-        // parent Apk, and check the package name/target packages. We cannot simply use the first
-        // Apk we see, as we may have been passed the contents of a split.
-        for (ApkEntry entry : apkEntries) {
+        for (Apk apk : apks) {
             if (packageName == null) {
-                packageName = entry.apk.packageName;
+                packageName = apk.packageName;
             }
 
-            if (!entry.apk.packageName.equals(packageName)) {
+            if (!apk.packageName.equals(packageName)) {
                 // This is intentionally a swap failure, not a dump failure; we just discover it during dump.
                 throw DeployerException.swapMultiplePackages();
             }
 
-            targetPackages.addAll(entry.apk.targetPackages);
+            targetPackages.addAll(apk.targetPackages);
         }
 
         ArrayList<String> packagesToDump = new ArrayList<>();
@@ -98,43 +93,42 @@ public class ApplicationDumper {
             throw DeployerException.unknownPackage(response.getFailedPackage());
         }
 
-        return new Dump(
-                GetApkEntries(response.getPackages(0)), GetPids(response), GetArch(response));
+        return new Dump(GetApks(response.getPackages(0)), GetPids(response), GetArch(response));
     }
 
     public static class Dump {
-        public final List<ApkEntry> apkEntries;
+        public final List<Apk> apks;
         public final Map<String, List<Integer>> packagePids;
         public final Deploy.Arch arch;
 
-        public Dump(
-                List<ApkEntry> apkEntries,
-                Map<String, List<Integer>> packagePids,
-                Deploy.Arch arch) {
-            this.apkEntries = apkEntries;
+        public Dump(List<Apk> apks, Map<String, List<Integer>> packagePids, Deploy.Arch arch) {
+            this.apks = apks;
             this.packagePids = packagePids;
             this.arch = arch;
         }
     }
 
-    private static List<ApkEntry> GetApkEntries(Deploy.PackageDump packageDump) {
-        List<ApkEntry> dumps = new ArrayList<>();
+    private static List<Apk> GetApks(Deploy.PackageDump packageDump) {
+        List<Apk> dumps = new ArrayList<>();
         for (Deploy.ApkDump dump : packageDump.getApksList()) {
             ByteBuffer cd = dump.getCd().asReadOnlyByteBuffer();
             ByteBuffer signature = dump.getSignature().asReadOnlyByteBuffer();
             HashMap<String, ZipUtils.ZipEntry> zipEntries = ZipUtils.readZipEntries(cd);
             cd.rewind();
             String digest = ZipUtils.digest(signature.remaining() != 0 ? signature : cd);
-            Apk apk =
+
+            Apk.Builder builder =
                     Apk.builder()
                             .setName(dump.getName())
                             .setChecksum(digest)
                             .setPath(dump.getAbsolutePath())
-                            .setZipEntries(zipEntries)
-                            .build();
+                            .setZipEntries(zipEntries);
+
             for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-                dumps.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
+                builder.addApkEntry(entry.getKey(), entry.getValue().crc);
             }
+
+            dumps.add(builder.build());
         }
         return dumps;
     }

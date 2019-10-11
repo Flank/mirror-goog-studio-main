@@ -17,7 +17,7 @@
 package com.android.tools.deployer;
 
 import com.android.sdklib.AndroidVersion;
-import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
@@ -103,11 +103,11 @@ public class Deployer {
             CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
 
             // Parse the apks
-            Task<List<ApkEntry>> entries =
+            Task<List<Apk>> apkList =
                     runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
             // Update the database
-            runner.create(Tasks.CACHE, splitter::cache, entries);
+            runner.create(Tasks.CACHE, splitter::cache, apkList);
 
             runner.runAsync();
             return result;
@@ -141,7 +141,7 @@ public class Deployer {
         Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
 
         // Get the list of files from the local apks
-        Task<List<ApkEntry>> newFiles =
+        Task<List<Apk>> newFiles =
                 runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
         // Get the list of files from the installed app
@@ -152,8 +152,7 @@ public class Deployer {
         Task<List<FileDiff>> diffs =
                 runner.create(
                         Tasks.DIFF,
-                        (dump, newApkEntries) ->
-                                new ApkDiffer().diff(dump.apkEntries, newApkEntries),
+                        (dump, newApks) -> new ApkDiffer().diff(dump.apks, newApks),
                         dumps,
                         newFiles);
 

@@ -17,8 +17,10 @@ package com.android.tools.deployer.model;
 
 import com.android.tools.deployer.ZipUtils;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Apk {
     public final String name;
@@ -30,6 +32,9 @@ public class Apk {
     // intended to instrument. The code in the APK will run in these packages' processes. This is
     // most common in the form of an instrumented unit test run from studio.
     public final List<String> targetPackages;
+
+    public final List<ApkEntry> apkEntries;
+
     // TODO: This should either be in the ApkEntry loosely connected to this Apk
     //       or we change the model and have a list of ApkEntry in the APK since
     //       we spend
@@ -41,12 +46,18 @@ public class Apk {
             String path,
             String packageName,
             List<String> targetPackages,
+            List<ApkEntry> apkEntries,
             HashMap<String, ZipUtils.ZipEntry> zipEntries) {
         this.name = name;
         this.checksum = checksum;
         this.path = path;
         this.packageName = packageName;
         this.targetPackages = targetPackages;
+        this.apkEntries =
+                apkEntries
+                        .stream()
+                        .map(e -> new ApkEntry(e.name, e.checksum, this))
+                        .collect(Collectors.toList());
         this.zipEntries = zipEntries;
     }
 
@@ -60,6 +71,7 @@ public class Apk {
         private String path;
         private String packageName;
         private List<String> targetPackages;
+        private List<ApkEntry> apkEntries;
         private HashMap<String, ZipUtils.ZipEntry> zipEntries;
 
         public Builder() {
@@ -68,6 +80,7 @@ public class Apk {
             this.path = "";
             this.packageName = "";
             this.targetPackages = null;
+            this.apkEntries = new ArrayList<>();
             this.zipEntries = null;
         }
 
@@ -96,6 +109,11 @@ public class Apk {
             return this;
         }
 
+        public Builder addApkEntry(String name, long checksum) {
+            this.apkEntries.add(new ApkEntry(name, checksum, null));
+            return this;
+        }
+
         public Builder setZipEntries(HashMap<String, ZipUtils.ZipEntry> zipEntries) {
             this.zipEntries = zipEntries;
             return this;
@@ -103,8 +121,10 @@ public class Apk {
 
         public Apk build() {
             targetPackages = targetPackages == null ? ImmutableList.of() : targetPackages;
+            apkEntries = apkEntries == null ? ImmutableList.of() : apkEntries;
             zipEntries = zipEntries == null ? new HashMap<>() : zipEntries;
-            return new Apk(name, checksum, path, packageName, targetPackages, zipEntries);
+            return new Apk(
+                    name, checksum, path, packageName, targetPackages, apkEntries, zipEntries);
         }
     }
 }

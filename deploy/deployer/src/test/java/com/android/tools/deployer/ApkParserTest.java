@@ -55,7 +55,8 @@ public class ApkParserTest {
     @Test
     public void testApkId() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
-        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
+        List<ApkEntry> files =
+                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
         String apk = "74eaa38f4d4d8619c7bb886289f84efe1fce7ce3";
         assertEquals(7, files.size());
         assertApkEntryEquals(apk, "META-INF/CERT.SF", 0x45E32198L, files.get(0));
@@ -70,7 +71,8 @@ public class ApkParserTest {
     @Test
     public void testApkArchiveV2Map() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "v2_signed.apk");
-        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getAbsolutePath()));
+        List<ApkEntry> files =
+                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
         String apk = "6b1dc4b97ab0dbb66afc33868c700d6f665eeb13";
         assertEquals(494, files.size());
         // Check a few files
@@ -90,7 +92,8 @@ public class ApkParserTest {
     @Test
     public void testApkArchiveApkDumpdMatchCrcs() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
-        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
+        List<ApkEntry> files =
+                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
 
         String apk = "b236acae47f2b2163e9617021c4e1adc7a0c197b";
         assertEquals(277, files.size());
@@ -107,7 +110,8 @@ public class ApkParserTest {
     @Test
     public void testApkArchiveApkNonV2SignedDumpdMatchDigest() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "nonsigned_app/base.apk");
-        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
+        List<ApkEntry> files =
+                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
 
         String apk = "e5c64a6b8f51198331aefcb7ff695e7faebbd80a";
         assertEquals(494, files.size());
@@ -128,8 +132,7 @@ public class ApkParserTest {
     @Test
     public void testGetApkInstrumentation() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "instrument.apk");
-        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getAbsolutePath()));
-        Apk apk = files.get(0).apk;
+        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0);
         assertEquals("com.example.android.basicgesturedetect.test", apk.packageName);
         assertEquals(1, apk.targetPackages.size());
         assertEquals("com.example.android.basicgesturedetect", apk.targetPackages.get(0));

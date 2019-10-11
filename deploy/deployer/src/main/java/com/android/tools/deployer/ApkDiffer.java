@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer;
 
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
 import java.util.ArrayList;
@@ -24,12 +25,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ApkDiffer {
+    public List<FileDiff> diff(List<Apk> oldApks, List<Apk> newApks) throws DeployerException {
+        List<ApkEntry> oldFiles = new ArrayList<>();
+        Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();
+        groupFiles(oldApks, oldFiles, oldMap);
 
-    public List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
-            throws DeployerException {
-
-        Map<String, Map<String, ApkEntry>> oldMap = groupFiles(oldFiles);
-        Map<String, Map<String, ApkEntry>> newMap = groupFiles(newFiles);
+        List<ApkEntry> newFiles = new ArrayList<>();
+        Map<String, Map<String, ApkEntry>> newMap = new HashMap<>();
+        groupFiles(newApks, newFiles, newMap);
 
         if (newMap.size() != oldMap.size()) {
             throw DeployerException.apkCountMismatch();
@@ -62,12 +65,15 @@ public class ApkDiffer {
         return diffs;
     }
 
-    public Map<String, Map<String, ApkEntry>> groupFiles(List<ApkEntry> oldFiles) {
-        Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();
-        for (ApkEntry file : oldFiles) {
-            Map<String, ApkEntry> map = oldMap.computeIfAbsent(file.apk.name, k -> new HashMap<>());
-            map.put(file.name, file);
+    private static void groupFiles(
+            List<Apk> apks, List<ApkEntry> entries, Map<String, Map<String, ApkEntry>> map) {
+        for (Apk apk : apks) {
+            map.putIfAbsent(apk.name, new HashMap<>());
+            Map<String, ApkEntry> innerMap = map.get(apk.name);
+            for (ApkEntry entry : apk.apkEntries) {
+                innerMap.putIfAbsent(entry.name, entry);
+                entries.add(entry);
+            }
         }
-        return oldMap;
     }
 }

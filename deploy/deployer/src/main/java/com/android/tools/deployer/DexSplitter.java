@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import java.util.Collection;
@@ -24,10 +25,12 @@ import java.util.function.Predicate;
 public interface DexSplitter {
     Collection<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) throws DeployerException;
 
-    default boolean cache(List<ApkEntry> dexes) throws DeployerException {
-        for (ApkEntry file : dexes) {
-            if (file.name.endsWith(".dex")) {
-                split(file, null);
+    default boolean cache(List<Apk> apks) throws DeployerException {
+        for (Apk apk : apks) {
+            for (ApkEntry file : apk.apkEntries) {
+                if (file.name.endsWith(".dex")) {
+                    split(file, null);
+                }
             }
         }
         return true;

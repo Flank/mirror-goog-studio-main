@@ -18,9 +18,8 @@ package com.android.tools.deployer;
 import static org.junit.Assert.*;
 
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.Test;
@@ -29,38 +28,51 @@ public class ApkDifferTest {
 
   @Test
   public void testNoDiff() throws DeployerException {
-    ApkDiffer differ = new ApkDiffer();
+        Apk before =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
 
-    List<ApkEntry> before = new ArrayList<>();
-        Apk apk0 = Apk.builder().setName("apk.apk").setChecksum("abcd").build();
-    before.add(new ApkEntry("dex0", 0x01, apk0));
+        Apk after =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("efgh")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
 
-    List<ApkEntry> after = new ArrayList<>();
-        Apk apk1 = Apk.builder().setName("apk.apk").setChecksum("efgh").build();
-    after.add(new ApkEntry("dex0", 0x01, apk1));
+        List<FileDiff> diff = checkDiffs(before, after);
+        assertTrue(diff.isEmpty());
 
-        List<FileDiff> diff = differ.diff(before, after);
-    assertTrue(diff.isEmpty());
-
-        diff = differ.diff(after, before);
-    assertTrue(diff.isEmpty());
+        diff = checkDiffs(after, before);
+        assertTrue(diff.isEmpty());
   }
 
   @Test
   public void testMoreApks() {
-    ApkDiffer differ = new ApkDiffer();
+        Apk apk1 =
+                Apk.builder()
+                        .setName("apk1.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
 
-    List<ApkEntry> before = new ArrayList<>();
-        Apk apk1 = Apk.builder().setName("apk1.apk").setChecksum("abcd").build();
-    before.add(new ApkEntry("dex0", 0x01, apk1));
-        Apk apk2 = Apk.builder().setName("apk2.apk").setChecksum("abcd").build();
-    before.add(new ApkEntry("dex0", 0x01, apk2));
+        Apk apk2 =
+                Apk.builder()
+                        .setName("apk2.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
 
-    List<ApkEntry> after = new ArrayList<>();
-        Apk apk3 = Apk.builder().setName("apk1.apk").setChecksum("efgh").build();
-    after.add(new ApkEntry("dex0", 0x01, apk3));
+        Apk apk3 =
+                Apk.builder()
+                        .setName("apk1.apk")
+                        .setChecksum("efgh")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
     try {
-            differ.diff(before, after);
+            checkDiffs(ImmutableList.of(apk1, apk2), ImmutableList.of(apk3));
             fail("Diff should have thrown an exception");
     }
     catch (DeployerException e) {
@@ -69,7 +81,7 @@ public class ApkDifferTest {
 
     // Diff in the other direction
     try {
-            differ.diff(after, before);
+            checkDiffs(ImmutableList.of(apk3), ImmutableList.of(apk1, apk2));
             fail("Diff should have thrown an exception");
     }
     catch (DeployerException e) {
@@ -79,18 +91,23 @@ public class ApkDifferTest {
 
   @Test
   public void testDifferentNames() {
-    ApkDiffer differ = new ApkDiffer();
+        Apk before =
+                Apk.builder()
+                        .setName("apk1.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
 
-    List<ApkEntry> before = new ArrayList<>();
-        Apk apk1 = Apk.builder().setName("apk1.apk").setChecksum("abcd").build();
-    before.add(new ApkEntry("dex0", 0x01, apk1));
+        Apk after =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("dex0", 0x01)
+                        .build();
 
-    List<ApkEntry> after = new ArrayList<>();
-        Apk apk2 = Apk.builder().setName("apk.apk").setChecksum("abcd").build();
-    after.add(new ApkEntry("dex0", 0x01, apk2));
     try {
-            differ.diff(before, after);
-      fail("Diff should't have thrown an exception");
+            checkDiffs(before, after);
+            fail("Diff should have thrown an exception");
     }
     catch (DeployerException e) {
             assertEquals(DeployerException.Error.DIFFERENT_APK_NAMES, e.getError());
@@ -98,8 +115,8 @@ public class ApkDifferTest {
 
     // Diff in the other direction
     try {
-            differ.diff(after, before);
-      fail("Diff should't have thrown an exception");
+            checkDiffs(after, before);
+            fail("Diff should have thrown an exception");
     }
     catch (DeployerException e) {
             assertEquals(DeployerException.Error.DIFFERENT_APK_NAMES, e.getError());
@@ -109,54 +126,68 @@ public class ApkDifferTest {
 
   @Test
   public void testModified() throws DeployerException {
-    ApkDiffer differ = new ApkDiffer();
+        Apk apk1 =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("dex0", 0x00)
+                        .addApkEntry("dex1", 0x01)
+                        .addApkEntry("dex2", 0x02)
+                        .addApkEntry("dex3", 0x03)
+                        .build();
 
-    List<ApkEntry> before = new ArrayList<>();
-        Apk apk1 = Apk.builder().setName("apk.apk").setChecksum("abcd").build();
-    before.add(new ApkEntry("dex0", 0x00, apk1));
-    before.add(new ApkEntry("dex1", 0x01, apk1));
-    before.add(new ApkEntry("dex2", 0x02, apk1));
-    before.add(new ApkEntry("dex3", 0x03, apk1));
+        Apk apk2 =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("efgh")
+                        .addApkEntry("dex1", 0x01)
+                        .addApkEntry("dex2", 0x12)
+                        .addApkEntry("dex3", 0x13)
+                        .addApkEntry("dex4", 0x04)
+                        .build();
 
-    List<ApkEntry> after = new ArrayList<>();
-        Apk apk2 = Apk.builder().setName("apk.apk").setChecksum("efgh").build();
-    after.add(new ApkEntry("dex1", 0x01, apk2));
-    after.add(new ApkEntry("dex2", 0x12, apk2));
-    after.add(new ApkEntry("dex3", 0x13, apk2));
-    after.add(new ApkEntry("dex4", 0x04, apk2));
+        List<FileDiff> diff = checkDiffs(apk1, apk2);
+        assertEquals(4, diff.size());
+        diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.name));
+        assertEquals(FileDiff.Status.CREATED, diff.get(0).status);
+        ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex4", 0x04, diff.get(0).newFile);
 
-        List<FileDiff> diff = differ.diff(before, after);
-    assertEquals(4, diff.size());
-    diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.name));
-    assertEquals(FileDiff.Status.CREATED, diff.get(0).status);
-    ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex4", 0x04, diff.get(0).newFile);
+        assertEquals(FileDiff.Status.DELETED, diff.get(1).status);
+        ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex0", 0x00, diff.get(1).oldFile);
 
-    assertEquals(FileDiff.Status.DELETED, diff.get(1).status);
-    ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex0", 0x00, diff.get(1).oldFile);
+        assertEquals(FileDiff.Status.MODIFIED, diff.get(2).status);
+        ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex2", 0x02, diff.get(2).oldFile);
+        ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex2", 0x12, diff.get(2).newFile);
 
-    assertEquals(FileDiff.Status.MODIFIED, diff.get(2).status);
-    ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex2", 0x02, diff.get(2).oldFile);
-    ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex2", 0x12, diff.get(2).newFile);
-
-    assertEquals(FileDiff.Status.MODIFIED, diff.get(3).status);
-    ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex3", 0x03, diff.get(3).oldFile);
-    ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex3", 0x13, diff.get(3).newFile);
+        assertEquals(FileDiff.Status.MODIFIED, diff.get(3).status);
+        ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex3", 0x03, diff.get(3).oldFile);
+        ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex3", 0x13, diff.get(3).newFile);
 
         // Diff in the other direction
-        diff = differ.diff(after, before);
-    diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.name));
-    assertEquals(FileDiff.Status.CREATED, diff.get(0).status);
-    ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex0", 0x00, diff.get(0).newFile);
+        diff = checkDiffs(apk2, apk1);
+        diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.name));
+        assertEquals(FileDiff.Status.CREATED, diff.get(0).status);
+        ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex0", 0x00, diff.get(0).newFile);
 
-    assertEquals(FileDiff.Status.MODIFIED, diff.get(1).status);
-    ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex2", 0x12, diff.get(1).oldFile);
-    ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex2", 0x02, diff.get(1).newFile);
+        assertEquals(FileDiff.Status.MODIFIED, diff.get(1).status);
+        ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex2", 0x12, diff.get(1).oldFile);
+        ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex2", 0x02, diff.get(1).newFile);
 
-    assertEquals(FileDiff.Status.MODIFIED, diff.get(2).status);
-    ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex3", 0x13, diff.get(2).oldFile);
-    ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex3", 0x03, diff.get(2).newFile);
+        assertEquals(FileDiff.Status.MODIFIED, diff.get(2).status);
+        ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex3", 0x13, diff.get(2).oldFile);
+        ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex3", 0x03, diff.get(2).newFile);
 
-    assertEquals(FileDiff.Status.DELETED, diff.get(3).status);
-    ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex4", 0x04, diff.get(3).oldFile);
+        assertEquals(FileDiff.Status.DELETED, diff.get(3).status);
+        ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex4", 0x04, diff.get(3).oldFile);
+    }
+
+    private static List<FileDiff> checkDiffs(Apk before, Apk after) throws DeployerException {
+        return checkDiffs(ImmutableList.of(before), ImmutableList.of(after));
+    }
+
+    private static List<FileDiff> checkDiffs(List<Apk> before, List<Apk> after)
+            throws DeployerException {
+        ApkDiffer differ = new ApkDiffer();
+        return differ.diff(before, after);
   }
 }

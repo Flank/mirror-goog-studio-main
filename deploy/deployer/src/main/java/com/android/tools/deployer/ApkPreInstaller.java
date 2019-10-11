@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import com.android.annotations.Trace;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -71,18 +70,18 @@ public class ApkPreInstaller {
      */
     @Trace
     public String preinstall(
-            ApplicationDumper.Dump remoteContent, List<ApkEntry> localContent, List<FileDiff> diffs)
+            ApplicationDumper.Dump remoteContent, List<Apk> localContent, List<FileDiff> diffs)
             throws DeployerException {
         // Build the list of local apks.
         HashMap<String, Apk> localApks = new HashMap<>();
-        for (ApkEntry file : localContent) {
-            localApks.put(file.apk.name, file.apk);
+        for (Apk file : localContent) {
+            localApks.put(file.name, file);
         }
 
         // Build the list of remote apks.
         HashMap<String, Apk> remoteApks = new HashMap<>();
-        for (ApkEntry file : remoteContent.apkEntries) {
-            remoteApks.put(file.apk.name, file.apk);
+        for (Apk file : remoteContent.apks) {
+            remoteApks.put(file.name, file);
         }
 
         // Make sure all apks have the same package name and extract it.

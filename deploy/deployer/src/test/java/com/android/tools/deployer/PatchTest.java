@@ -15,12 +15,10 @@
  */
 package com.android.tools.deployer;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 import com.google.common.collect.Lists;
@@ -40,21 +38,11 @@ public class PatchTest {
     public void testPatch() throws DeployerException, IOException {
         String remoteApkPath = TestUtils.getWorkspaceFile(BASE + "remote.apk").getAbsolutePath();
         List<String> remoteApks = Lists.newArrayList(remoteApkPath);
-        List<ApkEntry> remoteEntries = new ApkParser().parsePaths(remoteApks);
-        Apk remoteApk =
-                Apk.builder()
-                        .setPath(remoteApkPath)
-                        .setZipEntries(remoteEntries.get(0).apk.zipEntries)
-                        .build();
+        Apk remoteApk = new ApkParser().parsePaths(remoteApks).get(0);
 
         String localApkPath = TestUtils.getWorkspaceFile(BASE + "local.apk").getAbsolutePath();
         List<String> localApks = Lists.newArrayList(localApkPath);
-        List<ApkEntry> localEntries = new ApkParser().parsePaths(localApks);
-        Apk localApk =
-                Apk.builder()
-                        .setPath(localApkPath)
-                        .setZipEntries(localEntries.get(0).apk.zipEntries)
-                        .build();
+        Apk localApk = new ApkParser().parsePaths(localApks).get(0);
 
         ILogger logger = new NullLogger();
         PatchGenerator.Patch patch = new PatchGenerator(logger).generate(remoteApk, localApk);

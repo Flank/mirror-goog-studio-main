@@ -54,9 +54,13 @@ public class ApplicationDumperTest {
         Installer installer = Mockito.mock(Installer.class);
         Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
-        ApkEntry entry = new ApkEntry("", 0, Apk.builder().setPackageName("package").build());
+        Apk dumpApk = Apk.builder().setPackageName("package").addApkEntry("", 0).build();
         List<ApkEntry> files =
-                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).apkEntries;
+                new ApplicationDumper(installer)
+                        .dump(ImmutableList.of(dumpApk))
+                        .apks
+                        .get(0)
+                        .apkEntries;
 
         String apk = "b236acae47f2b2163e9617021c4e1adc7a0c197b";
         assertEquals(277, files.size());
@@ -86,9 +90,13 @@ public class ApplicationDumperTest {
         Installer installer = Mockito.mock(Installer.class);
         Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
-        ApkEntry entry = new ApkEntry("", 0, Apk.builder().setPackageName("package").build());
+        Apk dumpApk = Apk.builder().setPackageName("package").addApkEntry("", 0).build();
         List<ApkEntry> files =
-                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).apkEntries;
+                new ApplicationDumper(installer)
+                        .dump(ImmutableList.of(dumpApk))
+                        .apks
+                        .get(0)
+                        .apkEntries;
 
         String apk = "e5c64a6b8f51198331aefcb7ff695e7faebbd80a";
         assertEquals(494, files.size());
@@ -125,16 +133,15 @@ public class ApplicationDumperTest {
         Installer installer = Mockito.mock(Installer.class);
         Mockito.when(installer.dump(ImmutableList.of("instrument", "target"))).thenReturn(response);
 
-        ApkEntry entry =
-                new ApkEntry(
-                        "",
-                        0,
-                        Apk.builder()
-                                .setPackageName("instrument")
-                                .setTargetPackages(ImmutableList.of("target"))
-                                .build());
+        Apk dumpApk =
+                Apk.builder()
+                        .setPackageName("instrument")
+                        .setTargetPackages(ImmutableList.of("target"))
+                        .addApkEntry("", 0)
+                        .build();
+
         Map<String, List<Integer>> pids =
-                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).packagePids;
+                new ApplicationDumper(installer).dump(ImmutableList.of(dumpApk)).packagePids;
         assertEquals(ImmutableList.of(1, 2), pids.get("target"));
         assertEquals(ImmutableList.of(3, 4), pids.get("instrument"));
     }

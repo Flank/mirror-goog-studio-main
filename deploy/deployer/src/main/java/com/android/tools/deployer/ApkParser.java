@@ -17,7 +17,6 @@ package com.android.tools.deployer;
 
 import com.android.SdkConstants;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.tracer.Trace;
 import com.google.devrel.gmscore.tools.apk.arsc.*;
 import java.io.File;
@@ -64,11 +63,11 @@ public class ApkParser {
     /** A class to manipulate .apk files. */
     public ApkParser() {}
 
-    public List<ApkEntry> parsePaths(List<String> paths) throws DeployerException {
+    public List<Apk> parsePaths(List<String> paths) throws DeployerException {
         try (Trace ignored = Trace.begin("parseApks")) {
-            List<ApkEntry> newFiles = new ArrayList<>();
+            List<Apk> newFiles = new ArrayList<>();
             for (String apkPath : paths) {
-                newFiles.addAll(parse(apkPath));
+                newFiles.add(parse(apkPath));
             }
             return newFiles;
         } catch (IOException e) {
@@ -86,7 +85,7 @@ public class ApkParser {
         return apkDetails;
     }
 
-    private List<ApkEntry> parse(String apkPath) throws IOException, DeployerException {
+    private Apk parse(String apkPath) throws IOException, DeployerException {
         File file = new File(apkPath);
         String absolutePath = file.getAbsolutePath();
         String digest;
@@ -101,21 +100,20 @@ public class ApkParser {
         }
         ApkDetails apkDetails = getApkDetails(absolutePath);
 
-        List<ApkEntry> files = new ArrayList<>();
-        Apk apk =
+        Apk.Builder builder =
                 Apk.builder()
                         .setName(apkDetails.fileName)
                         .setChecksum(digest)
                         .setPath(absolutePath)
                         .setPackageName(apkDetails.packageName)
                         .setTargetPackages(apkDetails.targetPackages)
-                        .setZipEntries(zipEntries)
-                        .build();
+                        .setZipEntries(zipEntries);
 
         for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-            files.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
+            builder.addApkEntry(entry.getKey(), entry.getValue().crc);
         }
-        return files;
+
+        return builder.build();
     }
 
     public static void findSignatureLocation(FileChannel channel, ApkArchiveMap map) {
