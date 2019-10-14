@@ -87,6 +87,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.PathSensitive;
@@ -421,19 +422,18 @@ public abstract class ExternalNativeJsonGenerator {
      */
     abstract String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException;
 
-    /**
-     * @return the native build system that is used to generate the JSON.
-     */
+    /** @return the native build system that is used to generate the JSON. */
+    @Input
     @NonNull
     public abstract NativeBuildSystem getNativeBuildSystem();
 
-    /**
-     * @return a map of Abi to STL shared object (.so files) that should be copied.
-     */
+    /** @return a map of Abi to STL shared object (.so files) that should be copied. */
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     @NonNull
     abstract Map<Abi, File> getStlSharedObjectFiles();
 
     /** @return the variant name for this generator */
+    @Input
     @NonNull
     public String getVariantName() {
         return variant.getVariantName();
@@ -536,6 +536,7 @@ public abstract class ExternalNativeJsonGenerator {
         }
     }
 
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     @NonNull
     public CxxVariantModel getVariant() {
         return this.variant;

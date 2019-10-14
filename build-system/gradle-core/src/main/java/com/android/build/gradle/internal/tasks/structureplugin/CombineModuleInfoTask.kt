@@ -29,6 +29,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
 
 open class CombineModuleInfoTask : DefaultTask() {
 
@@ -43,6 +44,7 @@ open class CombineModuleInfoTask : DefaultTask() {
         internal set
 
     // output
+    @get:OutputFile
     lateinit var outputProvider: Provider<RegularFile>
         private set
 

@@ -51,6 +51,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.GradleException
 import org.gradle.api.Task
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
@@ -88,10 +89,12 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
         )
 
     // Exposed in Variants API
+    @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val objFolder: File
         get() = File(generator.get().objFolder)
 
     // Exposed in Variants API
+    @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val soFolder: File
         get() = File(generator.get().soFolder)
 

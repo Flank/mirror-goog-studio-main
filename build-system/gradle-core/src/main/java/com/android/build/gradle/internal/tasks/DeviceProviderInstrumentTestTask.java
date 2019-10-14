@@ -29,7 +29,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -321,6 +320,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         this.installOptions = installOptions;
     }
 
+    @Internal
     public DeviceProvider getDeviceProvider() {
         return deviceProvider;
     }
@@ -329,6 +329,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         this.deviceProvider = deviceProvider;
     }
 
+    @Internal
     public AbstractTestDataImpl getTestData() {
         return testData;
     }

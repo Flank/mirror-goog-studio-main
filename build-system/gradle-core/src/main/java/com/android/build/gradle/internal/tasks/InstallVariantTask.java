@@ -54,6 +54,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -216,6 +217,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     @InputFiles
     public abstract DirectoryProperty getApkDirectory();
 
+    @Internal("This task is always executed")
     public BaseVariantData getVariantData() {
         return variantData;
     }

@@ -37,6 +37,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
         return outDirectory.get().asFile
     }
 
+    @get:Internal
     override lateinit var variantName: String
 
     /** Configuration Action for a process*JavaRes tasks.  */

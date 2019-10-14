@@ -108,6 +108,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         super(objectFactory);
     }
 
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     public OutputScope getOutputScope() {
         return outputScope;
     }

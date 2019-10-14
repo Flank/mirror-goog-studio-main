@@ -76,6 +76,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 public abstract class LintBaseTask extends DefaultTask {
@@ -98,6 +99,7 @@ public abstract class LintBaseTask extends DefaultTask {
     protected ToolingModelBuilderRegistry toolingRegistry;
     @Nullable protected File reportsDir;
 
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     @Nullable
     public LintOptions getLintOptions() {
         return lintOptions;

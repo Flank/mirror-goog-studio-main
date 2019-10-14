@@ -30,14 +30,18 @@ import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 open class GatherModuleInfoTask : DefaultTask() {
     private lateinit var sourceProjectName : String
+
+    @get:OutputFile
     lateinit var outputProvider : Provider<RegularFile>
         private set
+
     private var moduleDataHolder = ModuleInfo()
 
     @TaskAction
