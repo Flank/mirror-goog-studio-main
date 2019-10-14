@@ -19,4 +19,5 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.BuildFeatures
 
 open class BuildFeaturesImpl : BuildFeatures {
+    override var jetpackCompose: Boolean? = null
 }

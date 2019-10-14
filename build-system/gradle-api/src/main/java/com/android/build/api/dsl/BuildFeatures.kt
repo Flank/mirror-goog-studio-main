@@ -23,4 +23,13 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface BuildFeatures {
+    /**
+     * Flag to enable Jetpack Compose
+     * Setting the value to null resets to the default value
+     *
+     * Default value is false.
+     *
+     * More information available about this feature at: TBD
+     **/
+    var jetpackCompose: Boolean?
 }

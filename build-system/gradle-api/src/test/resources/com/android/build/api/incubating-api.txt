@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5de3cb44fbe96c3d4029db0fa063a53ec6045cf2e27446108fd75e3e613994f4
+3a350bdb53214bda5a7cb2d0a29a7add06b6e0358a9b79a520f504d4cc1a7d25
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -49,6 +49,8 @@ com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.BuildFeatures.getJetpackCompose: java.lang.Boolean ()
+com.android.build.api.dsl.BuildFeatures.setJetpackCompose: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()

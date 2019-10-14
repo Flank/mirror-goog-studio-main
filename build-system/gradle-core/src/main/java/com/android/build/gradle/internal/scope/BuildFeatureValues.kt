@@ -21,4 +21,5 @@ package com.android.build.gradle.internal.scope
  * account default values coming via [com.android.build.gradle.options.BooleanOption]
  */
 interface BuildFeatureValues {
+    val jetpackCompose: Boolean
 }
