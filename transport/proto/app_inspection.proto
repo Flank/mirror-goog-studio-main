@@ -15,7 +15,7 @@
  */
 syntax = "proto3";
 
-package app.inspection;
+package app_inspection;
 option java_package = "com.android.tools.app.inspection";
 option java_outer_classname = "AppInspection";
 

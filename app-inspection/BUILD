@@ -22,6 +22,10 @@ cc_library(
     name = "jni",
     srcs = [
         "app_inspection_java_jni.cc",
+        "app_inspection_service.cc",
+    ],
+    hdrs = [
+        "app_inspection_service.h",
     ],
     copts = ANDROID_COPTS + [
         # TODO: Remove dependency when agent.h no longer includes
@@ -37,6 +41,7 @@ cc_library(
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/agent",
         "//tools/base/transport/agent:jni_wrappers",
+        "//tools/base/transport/agent:jvmti_helper",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
     ],

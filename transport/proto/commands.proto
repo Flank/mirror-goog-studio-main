@@ -106,8 +106,8 @@ message Command {
     // Layout editor starts at 1100;
     layoutinspector.LayoutInspectorCommand layout_inspector = 1100;
 
-    // App inspection prefix = 1200;
-    app.inspection.AppInspectionCommand app_inspection_command = 1200;
+    // App inspection prefix = 1200
+    app_inspection.AppInspectionCommand app_inspection_command = 1200;
   }
 }
 
