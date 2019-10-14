@@ -47,7 +47,7 @@ cc_binary(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/dynamic-layout-inspector/proto:cc_proto",
+        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_cc_proto",
         "@skia_repo//:libskia",
     ],
 )
