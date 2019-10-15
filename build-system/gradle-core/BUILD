@@ -42,6 +42,7 @@ kotlin_library(
     deps = [
         ":jacoco.core_neverlink",
         ":jacoco.report_neverlink",
+        ":jetbrains.kotlin-gradle-plugin_neverlink",
         "//tools/analytics-library/crash:tools.analytics-crash",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
@@ -101,6 +102,12 @@ maven_java_library(
     name = "jacoco.report_neverlink",
     neverlink = 1,
     exports = ["//tools/base/third_party:org.jacoco_org.jacoco.report"],
+)
+
+maven_java_library(
+    name = "jetbrains.kotlin-gradle-plugin_neverlink",
+    # TODO fix kotlin_library rule so neverlink = 1 can be added here
+    exports = ["//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin"],
 )
 
 maven_pom(
