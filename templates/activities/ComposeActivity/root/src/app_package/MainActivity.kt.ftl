@@ -10,7 +10,9 @@ import androidx.ui.tooling.preview.Preview
 class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { DefaultPreview() }
+        setContent {
+            Greeting("Android")
+        }
     }
 }
 
