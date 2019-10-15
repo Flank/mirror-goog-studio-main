@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a85f23bba64b0d8ed9064c357b139c10e42979f05c6c963e4bb153186826010e
+e40228d75a97a5dc1556c710558e14d99aef1876bf84707c231f2cfcfc621b0a
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -44,6 +44,10 @@ com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provid
 com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
+com.android.build.api.artifact.PublicArtifactType
+com.android.build.api.artifact.PublicArtifactType$APK
+com.android.build.api.artifact.PublicArtifactType.<init>: com.android.build.api.artifact.PublicArtifactType<T> (com.android.build.api.artifact.ArtifactKind, kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.PublicArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ReplaceRequest
 com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest

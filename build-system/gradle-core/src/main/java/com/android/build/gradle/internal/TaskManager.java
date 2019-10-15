@@ -53,6 +53,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -2395,6 +2396,12 @@ public abstract class TaskManager {
                         null);
 
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
+
+        // republish APK to the external world.
+        variantScope.getArtifacts().republish(
+                InternalArtifactType.APK.INSTANCE,
+                PublicArtifactType.APK.INSTANCE
+        );
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
