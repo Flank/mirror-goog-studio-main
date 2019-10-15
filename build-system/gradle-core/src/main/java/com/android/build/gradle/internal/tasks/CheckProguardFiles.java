@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 public abstract class CheckProguardFiles extends NonIncrementalTask {
 
@@ -61,6 +63,7 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public List<File> getProguardFiles() {
         return proguardFiles;
     }

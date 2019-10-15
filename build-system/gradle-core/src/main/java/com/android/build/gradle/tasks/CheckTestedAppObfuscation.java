@@ -26,12 +26,15 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /** Task to check if Proguard needs to be enabled for test plugin. */
 public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
     FileCollection mappingFile;
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getMappingFile() {
         return mappingFile;
     }

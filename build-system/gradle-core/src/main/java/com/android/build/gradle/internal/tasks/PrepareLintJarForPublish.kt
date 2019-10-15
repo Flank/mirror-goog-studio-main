@@ -26,6 +26,8 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
@@ -39,7 +41,9 @@ import javax.inject.Inject
  * publish, we have to do this.
  */
 abstract class PrepareLintJarForPublish : DefaultTask() {
-    @get:InputFiles lateinit var lintChecks: FileCollection
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var lintChecks: FileCollection
         private set
     @get:OutputFile abstract val outputLintJar: RegularFileProperty
 

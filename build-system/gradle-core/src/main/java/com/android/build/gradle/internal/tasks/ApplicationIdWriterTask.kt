@@ -29,6 +29,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
 /**
@@ -45,6 +47,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
     val applicationId get() = applicationIdSupplier()
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
     var appMetadata: FileCollection? = null
         private set

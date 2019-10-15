@@ -25,8 +25,11 @@ import com.android.builder.utils.FileCache
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
@@ -35,15 +38,15 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     @get:OutputDirectory
     abstract val outFolder: DirectoryProperty
 
-    @get:InputFiles
+    @get:Classpath
     lateinit var bootClasspath: FileCollection
         private set
 
-    @get:InputFiles
+    @get:Classpath
     lateinit var classesToFix: FileCollection
         private set
 
-    @get:InputFiles
+    @get:Classpath
     lateinit var referencedClasses: FileCollection
         private set
 

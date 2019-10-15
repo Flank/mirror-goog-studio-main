@@ -51,9 +51,11 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     abstract val compressedResources: RegularFileProperty
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val uncompressedResources: RegularFileProperty
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var dex: FileCollection
         private set
 
@@ -66,10 +68,12 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     abstract val resourceDir: DirectoryProperty
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val mappingFileSrc: RegularFileProperty
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val mergedManifests: DirectoryProperty
 
     private lateinit var mainSplit: ApkData

@@ -62,6 +62,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         private set
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val apkBundle: RegularFileProperty
 
     init {

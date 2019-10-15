@@ -36,6 +36,8 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -67,11 +69,13 @@ public abstract class InstantAppProvisionTask extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public Provider<File> getAdbExe() {
         return adbExecutableProvider;
     }
 
     @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public abstract DirectoryProperty getInstantAppSdk();
 

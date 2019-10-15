@@ -544,6 +544,7 @@ public abstract class ExternalNativeJsonGenerator {
 
     @NonNull
     @InputFile
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public File getMakefile() {
         return variant.getModule().getMakeFile();
     }

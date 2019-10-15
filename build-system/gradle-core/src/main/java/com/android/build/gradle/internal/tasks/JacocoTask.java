@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -29,8 +28,8 @@ import java.io.UncheckedIOException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -43,12 +42,12 @@ public abstract class JacocoTask extends AndroidVariantTask {
     private JacocoTaskDelegate delegate;
     private WorkerExecutorFacade.IsolationMode isolationMode;
 
-    @InputFiles
+    @Classpath
     public FileCollection getJacocoAntTaskConfiguration() {
         return jacocoAntTaskConfiguration;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getInputClasses() {
         return inputClasses;
     }

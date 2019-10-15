@@ -34,6 +34,8 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /** Task sending APKs out to a {@link TestServer} */
 public abstract class TestServerTask extends NonIncrementalTask {
@@ -68,9 +70,11 @@ public abstract class TestServerTask extends NonIncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getTestApks();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     @NonNull
     public abstract DirectoryProperty getTestedApks();

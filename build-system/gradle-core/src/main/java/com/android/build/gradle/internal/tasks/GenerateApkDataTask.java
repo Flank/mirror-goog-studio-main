@@ -55,6 +55,8 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Task to generate micro app data res file. */
@@ -227,6 +229,7 @@ public abstract class GenerateApkDataTask extends NonIncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getApkFileCollection() {
         return apkDirectoryFileCollection;
