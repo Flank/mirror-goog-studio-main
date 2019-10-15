@@ -17,7 +17,6 @@
 package com.android.tools.agent.layoutinspector;
 
 import android.view.View;
-import android.view.ViewDebug;
 import android.view.ViewGroup;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -84,8 +83,6 @@ public class LayoutInspectorService {
                     }
                 };
 
-        final Method startCaptureMethod = getStartCaptureMethod();
-
         // Stop a running capture:
         onStopLayoutInspectorCommand();
 
@@ -96,9 +93,11 @@ public class LayoutInspectorService {
                         try {
                             synchronized (lock) {
                                 captureClosable =
-                                        (AutoCloseable)
-                                                startCaptureMethod.invoke(
-                                                        null, root, executor, callable);
+                                        SkiaQWorkaround.startRenderingCommandsCapture(
+                                                root, executor, callable);
+                                // TODO: The above should be
+                                // ViewDebug.startRenderingCommandsCapture(...) once it's fixed.
+
                             }
                             root.invalidate();
                             root.getViewTreeObserver()
@@ -131,16 +130,6 @@ public class LayoutInspectorService {
             Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
             List<View> views = (List<View>) getViewsMethod.invoke(null);
             return views.isEmpty() ? null : views.get(0);
-        } catch (Throwable e) {
-            sendErrorMessage(e);
-            return null;
-        }
-    }
-
-    private Method getStartCaptureMethod() {
-        try {
-            return ViewDebug.class.getMethod(
-                    "startRenderingCommandsCapture", View.class, Executor.class, Callable.class);
         } catch (Throwable e) {
             sendErrorMessage(e);
             return null;
