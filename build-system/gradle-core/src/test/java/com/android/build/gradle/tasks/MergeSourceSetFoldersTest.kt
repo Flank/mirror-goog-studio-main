@@ -39,7 +39,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.util.function.Supplier
 
 class MergeSourceSetFoldersTest {
 
@@ -48,7 +47,6 @@ class MergeSourceSetFoldersTest {
 
     private lateinit var project: Project
     private lateinit var task: MergeSourceSetFolders
-    private lateinit var folderSets: MutableList<AssetSet>
 
     @Before
     @Throws(IOException::class)
@@ -57,16 +55,13 @@ class MergeSourceSetFoldersTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         task = project.tasks.create("test", MergeSourceSetFolders::class.java)
-
-        folderSets = Lists.newArrayList()
-        task.assetSetSupplier = Supplier { folderSets }
     }
 
     @Test
     @Throws(Exception::class)
     fun singleSetWithSingleFile() {
         val file = File("src/main")
-        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file)
 
         assertThat(task.computeAssetSetList()).containsExactly(mainSet)
     }
@@ -76,7 +71,7 @@ class MergeSourceSetFoldersTest {
     fun singleSetWithMultiFiles() {
         val file = File("src/main")
         val file2 = File("src/main2")
-        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2)
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file, file2)
 
         assertThat(task.computeAssetSetList()).containsExactly(mainSet)
     }
@@ -85,10 +80,10 @@ class MergeSourceSetFoldersTest {
     @Throws(Exception::class)
     fun twoSetsWithSingleFile() {
         val file = File("src/main")
-        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file)
 
         val file2 = File("src/debug")
-        val debugSet = createAssetSet(folderSets, "debug", file2)
+        val debugSet = createAssetSet("debug", file2)
 
         assertThat(task.computeAssetSetList()).containsExactly(mainSet, debugSet)
     }
@@ -97,7 +92,7 @@ class MergeSourceSetFoldersTest {
     @Throws(Exception::class)
     fun singleSetWithDependency() {
         val file = File("src/main")
-        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file)
 
         val file2 = File("foo/bar/1.0")
         val librarySets = setupLibraryDependencies(file2, ":path")
@@ -110,7 +105,7 @@ class MergeSourceSetFoldersTest {
     @Throws(Exception::class)
     fun singleSetWithRenderscript() {
         val file = File("src/main")
-        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file)
 
         val shaderFile = temporaryFolder.newFile("shader")
         task.shadersOutputDir.set(shaderFile)
@@ -125,10 +120,10 @@ class MergeSourceSetFoldersTest {
     fun everything() {
         val file = File("src/main")
         val file2 = File("src/main2")
-        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2)
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file, file2)
 
         val debugFile = File("src/debug")
-        val debugSet = createAssetSet(folderSets, "debug", debugFile)
+        val debugSet = createAssetSet("debug", debugFile)
 
         val libFile = File("foo/bar/1.0")
         val libFile2 = File("foo/bar/2.0")
@@ -153,13 +148,12 @@ class MergeSourceSetFoldersTest {
     }
 
     private fun createAssetSet(
-        folderSets: MutableList<AssetSet>?,
         name: String,
         vararg files: File
     ): AssetSet {
         val mainSet = AssetSet(name)
         mainSet.addSources(Arrays.asList(*files))
-        folderSets?.add(mainSet)
+        task.assetSets.add(mainSet)
         return mainSet
     }
 

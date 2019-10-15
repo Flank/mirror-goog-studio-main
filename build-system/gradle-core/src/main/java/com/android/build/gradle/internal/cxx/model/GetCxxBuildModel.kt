@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.cxx.services.createBuildModelServiceRegistry
 import com.android.build.gradle.internal.cxx.services.runFinishListeners
 import com.google.common.annotations.VisibleForTesting
+import org.gradle.BuildAdapter
 import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.initialization.Settings
@@ -46,11 +47,7 @@ fun getCxxBuildModel(gradle: Gradle): CxxBuildModel = synchronized(GetCxxBuildMo
 
         fun Gradle.findRoot(): Gradle = parent?.findRoot() ?: this
         val rootGradle = gradle.findRoot()
-        rootGradle.addBuildListener(object : BuildListener {
-            override fun settingsEvaluated(ignored: Settings) {}
-            override fun projectsLoaded(ignored: Gradle) {}
-            override fun buildStarted(ignored: Gradle) {}
-            override fun projectsEvaluated(ignored: Gradle) {}
+        rootGradle.addBuildListener(object : BuildAdapter() {
             override fun buildFinished(ignored: BuildResult) {
                 try {
                     model.runFinishListeners()

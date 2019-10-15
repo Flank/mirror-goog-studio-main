@@ -58,7 +58,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             * uses APIs that have recently changed behavior to prevent background tasks from \
             consuming memory and battery excessively.
 
-            Generally, you should be using `JobScheduler` or `GcmNetworkManager` instead.
+            Generally, you should be using `WorkManager` instead.
 
             For more details on how to update your code, please see \
             http://developer.android.com/preview/features/background-optimization.html
@@ -86,7 +86,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             val message = "Declaring a broadcastreceiver for " +
                     "`android.net.conn.CONNECTIVITY_CHANGE` is deprecated for apps targeting " +
                     "N and higher. In general, apps should not rely on this broadcast and " +
-                    "instead use `JobScheduler` or `GCMNetworkManager`."
+                    "instead use `WorkManager`."
             context.report(ISSUE, element, context.getValueLocation(attr), message)
         }
 
@@ -107,7 +107,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
         ) {
             val message = "Use of `$name` is deprecated for all apps starting " +
                     "with the N release independent of the target SDK. Apps should not " +
-                    "rely on these broadcasts and instead use `JobScheduler`"
+                    "rely on these broadcasts and instead use `WorkManager`"
             context.report(ISSUE, element, context.getValueLocation(attr), message)
         }
     }

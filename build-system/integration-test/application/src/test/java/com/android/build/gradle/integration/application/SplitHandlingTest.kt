@@ -19,15 +19,12 @@ package com.android.build.gradle.integration.application
 import com.android.build.VariantOutput
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
@@ -35,19 +32,12 @@ import java.io.IOException
 /**
  * Integration test that test resConfig(s) settings with full or pure splits.
  */
-@RunWith(FilterableParameterized::class)
-class SplitHandlingTest(private val pureSplit: Boolean) {
+class SplitHandlingTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
-                .fromTestProject("combinedDensityAndLanguagePureSplits")
+                .fromTestProject("combinedDensityAndLanguageSplits")
                 .create()
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "pureSplits_{0}")
-        fun data() = listOf(true, false)
-    }
 
     /**
      * It is not allowed to have density based splits and resConfig(s) with a density restriction.
@@ -61,8 +51,6 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                + "    defaultConfig {\n"
                + "        resConfig \"xxhdpi\"\n"
                + "    }\n"
-               + "    generatePureSplits " + pureSplit + "\n"
-               + "    \n"
                + "    splits {\n"
                + "        density {\n"
                + "            enable true\n"
@@ -96,8 +84,6 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                         + "    defaultConfig {\n"
                         + "        resConfigs \"fr\", \"de\"\n"
                         + "    }\n"
-                        + "    generatePureSplits " + pureSplit + "\n"
-                        + "    \n"
                         + "    splits {\n"
                         + "        density {\n"
                         + "            enable true\n"
@@ -123,20 +109,11 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 null,
                 FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
                 .forEach { output ->
-                    when(output.apkData.type) {
-                        VariantOutput.OutputType.SPLIT -> {
-                            val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
-                            // no language splits.
-                            assertThat(languageFilter).isNull()
-                        }
-                        VariantOutput.OutputType.MAIN, VariantOutput.OutputType.FULL_SPLIT -> {
-                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
-                            assertThat(manifestContent).contains("fr")
-                            assertThat(manifestContent).contains("de")
-                            assertThat(manifestContent).doesNotContain("en")
+                    val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                    assertThat(manifestContent).contains("fr")
+                    assertThat(manifestContent).contains("de")
+                    assertThat(manifestContent).doesNotContain("en")
 
-                        }
-                    }
                 }
     }
 
@@ -155,8 +132,6 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                         + "    defaultConfig {\n"
                         + "        resConfig \"es\"\n"
                         + "    }\n"
-                        + "    generatePureSplits " + pureSplit + "\n"
-                        + "    \n"
                         + "    splits {\n"
                         + "        language {\n"
                         + "            enable true\n"
@@ -179,25 +154,11 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 null,
                 FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
                 .forEach { output ->
-            when(output.apkData.type) {
-                VariantOutput.OutputType.SPLIT -> {
-                    val manifestContent = ApkSubject.getConfigurations(output.outputPath)
-                    val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
-                    if (languageFilter != null) {
-                        for (language in languageFilter.split(",")) {
-                            assertThat(manifestContent).contains(language)
-                        }
-                    }
-                }
-                VariantOutput.OutputType.MAIN, VariantOutput.OutputType.FULL_SPLIT  -> {
                     val manifestContent = ApkSubject.getConfigurations(output.outputPath)
                     assertThat(manifestContent).contains("es")
                     assertThat(manifestContent).doesNotContain("fr")
                     assertThat(manifestContent).doesNotContain("de")
-
                 }
-            }
-        }
     }
 
     /**
@@ -210,8 +171,6 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
         TestFileUtils.appendToFile(
                 project.buildFile,
                 "android {\n"
-                        + "    generatePureSplits " + pureSplit + "\n"
-                        + "    \n"
                         + "    splits {\n"
                         + "        language {\n"
                         + "            enable true\n"
@@ -235,15 +194,6 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
                 .forEach { output ->
                     when(output.apkData.type) {
-                        VariantOutput.OutputType.SPLIT -> {
-                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
-                            val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
-                            if (languageFilter != null) {
-                                for (language in languageFilter.split(",")) {
-                                    assertThat(manifestContent).contains(language)
-                                }
-                            }
-                        }
                         VariantOutput.OutputType.MAIN -> {
                             val manifestContent = ApkSubject.getConfigurations(output.outputPath)
                             // all remaining languages are packaged in the main APK.

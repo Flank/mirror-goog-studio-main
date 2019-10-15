@@ -22,6 +22,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import java.lang.RuntimeException
 
 class StorageProviderImpl {
@@ -31,8 +32,12 @@ class StorageProviderImpl {
         directory.lock()
     }
 
-    private val fileStorage = TypedStorageProvider<RegularFile>()
-    private val directory= TypedStorageProvider<Directory>()
+    private val fileStorage = TypedStorageProvider<RegularFile> {
+        objectFactory -> objectFactory.fileProperty()
+    }
+    private val directory= TypedStorageProvider<Directory> {
+        objectFactory -> objectFactory.directoryProperty()
+    }
 
     fun <T: FileSystemLocation> getStorage(artifactKind: ArtifactKind<T>): TypedStorageProvider<T> {
         @Suppress("Unchecked_cast")
@@ -44,7 +49,7 @@ class StorageProviderImpl {
     }
 }
 
-class TypedStorageProvider<T :FileSystemLocation> {
+class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator: (ObjectFactory) -> Property<T>) {
     private val singleStorage= mutableMapOf<ArtifactType.Single,  SingleArtifactContainer<T>>()
     private val multipleStorage=  mutableMapOf<ArtifactType.Multiple,  MultipleArtifactContainer<T>>()
 
@@ -55,8 +60,7 @@ class TypedStorageProvider<T :FileSystemLocation> {
 
         return singleStorage.getOrPut(artifactType) {
             SingleArtifactContainer<T> {
-                SinglePropertyAdapter(
-                    objects.property(artifactType.kind.dataType().java))
+                SinglePropertyAdapter(propertyAllocator(objects))
             }
         }
     }
@@ -71,6 +75,14 @@ class TypedStorageProvider<T :FileSystemLocation> {
                     objects.listProperty(artifactType.kind.dataType().java))
             }
         }
+    }
+
+    internal fun <ARTIFACT_TYPE> copy(type: ARTIFACT_TYPE,
+        container: SingleArtifactContainer<T>)
+        where ARTIFACT_TYPE: ArtifactType<T>,
+              ARTIFACT_TYPE: ArtifactType.Single {
+
+       singleStorage[type] = container
     }
 
     fun lock() {

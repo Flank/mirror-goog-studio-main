@@ -25,16 +25,15 @@ import java.util.Collection;
 public interface VariantOutput {
 
     /** An object representing the lack of filter. */
-    @Deprecated String NO_FILTER = null;
+    String NO_FILTER = null;
 
     /**
-     * Type of package file, either the main APK or a pure split APK file containing resources for a
+     * Type of package file, either the main APK or a full split APK file containing resources for a
      * particular split dimension.
      */
     enum OutputType {
         MAIN,
-        FULL_SPLIT,
-        SPLIT
+        FULL_SPLIT
     }
 
     /**
@@ -43,7 +42,6 @@ public interface VariantOutput {
     String MAIN = OutputType.MAIN.name();
 
     String FULL_SPLIT = OutputType.FULL_SPLIT.name();
-    String SPLIT = OutputType.SPLIT.name();
 
     /** Split dimension type */
     enum FilterType {

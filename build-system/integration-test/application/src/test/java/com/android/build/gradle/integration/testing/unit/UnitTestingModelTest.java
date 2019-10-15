@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.testing.unit;
 
+import static com.android.SdkConstants.FN_R_CLASS_JAR;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -23,6 +24,8 @@ import static java.util.stream.Collectors.toList;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
@@ -71,6 +74,13 @@ public class UnitTestingModelTest {
         for (Variant variant : model.getVariants()) {
             Truth.assertThat(variant.getMainArtifact().getAdditionalClassesFolders())
                     .containsExactly(
+                            new File(
+                                    ArtifactTypeUtil.getOutputDir(
+                                            InternalArtifactType
+                                                    .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                                                    .INSTANCE,
+                                            project.getSubproject("app").getBuildDir()),
+                                    variant.getName() + "/" + FN_R_CLASS_JAR),
                             project.file("app/build/tmp/kotlin-classes/" + variant.getName()));
 
             List<JavaArtifact> unitTestArtifacts =
@@ -84,10 +94,10 @@ public class UnitTestingModelTest {
             Truth.assertThat(unitTestArtifact.getName()).isEqualTo(ARTIFACT_UNIT_TEST);
             Truth.assertThat(unitTestArtifact.getAssembleTaskName()).contains("UnitTest");
             Truth.assertThat(unitTestArtifact.getAssembleTaskName())
-                    .contains(StringHelper.capitalize(variant.getName()));
+                    .contains(StringHelper.usLocaleCapitalize(variant.getName()));
             Truth.assertThat(unitTestArtifact.getCompileTaskName()).contains("UnitTest");
             Truth.assertThat(unitTestArtifact.getCompileTaskName())
-                    .contains(StringHelper.capitalize(variant.getName()));
+                    .contains(StringHelper.usLocaleCapitalize(variant.getName()));
 
             // No per-variant source code.
             Truth.assertThat(unitTestArtifact.getVariantSourceProvider()).isNull();

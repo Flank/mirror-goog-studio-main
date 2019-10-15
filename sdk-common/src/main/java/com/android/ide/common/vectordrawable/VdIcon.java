@@ -50,8 +50,23 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
     /** Common prefix for most of the vector icons */
     private static final String ICON_PREFIX = "ic_";
 
+    /** Common prefix for material icons */
+    private static final String FILLED_PREFIX = "baseline_";
+
+    /** Common prefix for material icons */
+    private static final String OUTLINE_PREFIX = "outline_";
+
+    /** Common prefix for material icons */
+    private static final String ROUND_PREFIX = "round_";
+
+    /** Common prefix for material icons */
+    private static final String SHARP_PREFIX = "sharp_";
+
+    /** Common prefix for material icons */
+    private static final String TWO_TONE_PREFIX = "twotone_";
+
     /** Common suffix for most of the vector icons */
-    private static final String ICON_SUFFIX = "_black_24dp.xml";
+    private static final String ICON_SUFFIX = "_24.xml";
 
     /** Distance between the icon and the label */
     public static final int LABEL_GAP = 10;
@@ -128,13 +143,23 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
             // "ic_supervisor_account_black_24dp.xml" into "supervisor account"
             int begin = 0;
             if (mName.startsWith(ICON_PREFIX)) {
-                begin = 3;
+                begin = ICON_PREFIX.length();
+            } else if (mName.startsWith(FILLED_PREFIX)) {
+                begin = FILLED_PREFIX.length();
+            } else if (mName.startsWith(OUTLINE_PREFIX)) {
+                begin = OUTLINE_PREFIX.length();
+            } else if (mName.startsWith(ROUND_PREFIX)) {
+                begin = ROUND_PREFIX.length();
+            } else if (mName.startsWith(SHARP_PREFIX)) {
+                begin = SHARP_PREFIX.length();
+            } else if (mName.startsWith(TWO_TONE_PREFIX)) {
+                begin = TWO_TONE_PREFIX.length();
             }
+
             int end = mName.length();
             if (mName.endsWith(ICON_SUFFIX)) {
                 end -= ICON_SUFFIX.length();
-            }
-            else if (mName.endsWith(DOT_XML)) {
+            } else if (mName.endsWith(DOT_XML)) {
                 end -= DOT_XML.length();
             }
             mDisplayName = mName.substring(begin, end).replace('_', ' ');

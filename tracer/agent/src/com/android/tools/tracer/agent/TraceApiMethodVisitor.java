@@ -31,7 +31,7 @@ class TraceApiMethodVisitor extends GeneratorAdapter implements Opcodes {
             new HashSet<>(Arrays.asList("begin", "end", "flush", "start", "addVmArgs"));
 
     public TraceApiMethodVisitor(MethodVisitor mv, int access, String name, String desc) {
-        super(Opcodes.ASM5, mv, access, name, desc);
+        super(Opcodes.ASM7, mv, access, name, desc);
         this.name = name;
         this.desc = desc;
     }

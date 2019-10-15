@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -100,7 +99,6 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APK_ZIP,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ApkZipPackagingTask::apkZipFile,
                 "apks.zip"

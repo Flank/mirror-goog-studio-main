@@ -5,6 +5,7 @@ iml_module(
     name = "studio.intellij.android.wizardTemplate.impl",
     srcs = ["src"],
     iml_files = ["intellij.android.wizardTemplate.impl.iml"],
+    resources = ["res"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [

@@ -22,14 +22,6 @@ import java.io.File
 
 class GlobalBuildArtifactsHolder(
     project: Project,
-    rootOutputDir: () -> File,
-    dslScope: DslScope) : BuildArtifactsHolder(project, rootOutputDir) {
-
-    /**
-     * Returns a identifier that will uniquely identify this artifacts holder against other holders.
-     * This can be used to create unique folder or provide unique task name for this context.
-     *
-     * @return a unique [String]
-     */
-    override fun getIdentifier() = "global"
+    rootOutputDir: () -> File)
+    : BuildArtifactsHolder(project, rootOutputDir, "global") {
 }

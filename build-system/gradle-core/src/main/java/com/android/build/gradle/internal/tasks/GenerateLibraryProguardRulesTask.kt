@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -108,11 +107,12 @@ abstract class GenerateLibraryProguardRulesTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryProguardRulesTask>) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesFile(InternalArtifactType.AAPT_PROGUARD_FILE,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.AAPT_PROGUARD_FILE,
                 taskProvider,
                 GenerateLibraryProguardRulesTask::proguardOutputFile,
-                SdkConstants.FN_AAPT_RULES)
+                SdkConstants.FN_AAPT_RULES
+            )
         }
 
         override fun configure(task:GenerateLibraryProguardRulesTask) {

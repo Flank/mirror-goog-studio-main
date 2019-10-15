@@ -16,20 +16,18 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.google.common.annotations.VisibleForTesting
-import java.io.IOException
-import java.util.function.Supplier
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import java.io.IOException
 
 /**
  * Task that writes the feature module's name to a file and publishes it.
@@ -41,21 +39,15 @@ import org.gradle.api.tasks.TaskProvider
  */
 abstract class FeatureNameWriterTask : NonIncrementalTask() {
 
-    @VisibleForTesting
-    @Internal
-    lateinit var featureNameSupplier: Supplier<String>
-        internal set
-
     @get:Input
-    val featureName: String
-        get() = featureNameSupplier.get()
+    abstract val featureName: Property<String>
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
     @Throws(IOException::class)
     public override fun doTaskAction() {
-        FileUtils.write(outputFile.asFile.get(), featureName)
+        FileUtils.write(outputFile.asFile.get(), featureName.get())
     }
 
     class CreationAction(variantScope: VariantScope) :
@@ -76,7 +68,6 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
                 .artifacts
                 .producesFile(
                     InternalArtifactType.FEATURE_NAME,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     FeatureNameWriterTask::outputFile,
                     "feature-name.txt"
@@ -85,9 +76,8 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
 
         override fun configure(task: FeatureNameWriterTask) {
             super.configure(task)
-
-            task.featureNameSupplier = FeatureSetMetadata.getInstance()
-                .getFeatureNameSupplierForTask(variantScope, task)
+            task.featureName.set(variantScope.featureName)
+            task.featureName.disallowChanges()
         }
     }
 }

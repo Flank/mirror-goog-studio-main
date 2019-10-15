@@ -66,7 +66,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarat
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -222,15 +221,6 @@ public class ApplicationTaskManager extends TaskManager {
 
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(variantScope));
 
-        if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
-            if (extension.getBuildToolsRevision().getMajor() < 21) {
-                throw new RuntimeException(
-                        "Pure splits can only be used with buildtools 21 and later");
-            }
-
-            createSplitTasks(variantScope);
-        }
-
         createPackagingTask(variantScope);
 
         maybeCreateLintVitalTask(
@@ -271,8 +261,8 @@ public class ApplicationTaskManager extends TaskManager {
         GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
         final VariantType variantType = variantConfiguration.getType();
 
-        // feature split or AIA modules do not have their own install tasks
-        if (variantType.isFeatureSplit() || variantType.isHybrid()) {
+        // dynamic feature modules do not have their own install tasks
+        if (variantType.isDynamicFeature()) {
             return;
         }
 
@@ -366,7 +356,7 @@ public class ApplicationTaskManager extends TaskManager {
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         final VariantType variantType = variantConfiguration.getType();
 
-        if (!variantType.isHybrid() && variantType.isBaseModule()) {
+        if (variantType.isBaseModule()) {
             Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
 
             if (!Boolean.TRUE.equals(unbundledWearApp)
@@ -396,6 +386,7 @@ public class ApplicationTaskManager extends TaskManager {
             taskFactory.register(new ModuleMetadataWriterTask.CreationAction(variantScope));
         }
 
+        // TODO b/141650037 - Only the base App should create this task.
         TaskProvider<? extends Task> applicationIdWriterTask =
                 taskFactory.register(new ApplicationIdWriterTask.CreationAction(variantScope));
 
@@ -403,6 +394,7 @@ public class ApplicationTaskManager extends TaskManager {
         // this builds the dependencies from the task, and its output is the textResource.
         variantScope.getVariantData().applicationIdTextResource =
                 resources.fromFile(applicationIdWriterTask);
+
     }
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {

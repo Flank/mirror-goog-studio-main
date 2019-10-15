@@ -118,7 +118,7 @@ public class PackageAndroidArtifactTest {
                         new BuildOutput(
                                 InternalArtifactType.APK.INSTANCE,
                                 ApkData.of(
-                                        VariantOutput.OutputType.SPLIT,
+                                        VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
                                                         VariantOutput.FilterType.DENSITY,
@@ -128,7 +128,7 @@ public class PackageAndroidArtifactTest {
                         new BuildOutput(
                                 InternalArtifactType.APK.INSTANCE,
                                 ApkData.of(
-                                        VariantOutput.OutputType.SPLIT,
+                                        VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
                                                         VariantOutput.FilterType.LANGUAGE, "fr")),
@@ -137,7 +137,7 @@ public class PackageAndroidArtifactTest {
                         new BuildOutput(
                                 InternalArtifactType.APK.INSTANCE,
                                 ApkData.of(
-                                        VariantOutput.OutputType.SPLIT,
+                                        VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
                                                         VariantOutput.FilterType.LANGUAGE, "en")),
@@ -163,7 +163,7 @@ public class PackageAndroidArtifactTest {
                         new BuildOutput(
                                 InternalArtifactType.APK.INSTANCE,
                                 ApkData.of(
-                                        VariantOutput.OutputType.SPLIT,
+                                        VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
                                                         VariantOutput.FilterType.LANGUAGE, "en")),

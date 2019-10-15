@@ -108,8 +108,10 @@ public final class SdkConstants {
     public static final String FN_API_JAR = "api.jar"; //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public static final String FN_APK_CLASSES_DEX = "classes.dex"; //$NON-NLS-1$
-    /** Dex filename inside the APK. i.e. "classes.dex" */
+    /** Dex filename inside the APK. e.g. "classes2.dex" */
     public static final String FN_APK_CLASSES_N_DEX = "classes%d.dex"; //$NON-NLS-1$
+    /** Regex to match dex filenames inside the APK. e.g., classes.dex, classes2.dex */
+    public static final String REGEX_APK_CLASSES_DEX = "classes\\d*\\.dex"; //$NON-NLS-1$
 
     /** intermediate publishing between projects */
     public static final String FN_INTERMEDIATE_RES_JAR = "res.jar";                   //$NON-NLS-1$
@@ -737,6 +739,7 @@ public final class SdkConstants {
             AndroidxName.of("android.support.v4.widget.", "NestedScrollView");
     public static final AndroidxName CLASS_VIEW_PAGER =
             AndroidxName.of("android.support.v4.view.", "ViewPager");
+    public static final String CLASS_VIEW_PAGER2 = "androidx.viewpager2.widget.ViewPager2";
     public static final AndroidxName CLASS_DRAWER_LAYOUT =
             AndroidxName.of("android.support.v4.widget.", "DrawerLayout");
 
@@ -1060,6 +1063,7 @@ public final class SdkConstants {
     public static final String TAG_META_DATA = "meta-data";
     public static final String TAG_RESOURCE = "resource";
     public static final String TAG_MODULE = "module";
+    public static final String TAG_NAV_GRAPH = "nav-graph";
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources"; //$NON-NLS-1$
@@ -1187,6 +1191,7 @@ public final class SdkConstants {
     public static final AndroidxName NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
     public static final AndroidxName DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
     public static final AndroidxName VIEW_PAGER = CLASS_VIEW_PAGER;
+    public static final String VIEW_PAGER2 = CLASS_VIEW_PAGER2;
     public static final AndroidxName GRID_LAYOUT_V7 = CLASS_GRID_LAYOUT_V7;
     public static final AndroidxName TOOLBAR_V7 = CLASS_TOOLBAR_V7;
     public static final AndroidxName RECYCLER_VIEW = CLASS_RECYCLER_VIEW_V7;
@@ -1277,6 +1282,7 @@ public final class SdkConstants {
     public static final String ATTR_REQUIRED = "required";
     public static final String ATTR_ON_DEMAND = "onDemand";
     public static final String MANIFEST_ATTR_TITLE = "title";
+    public static final String ATTR_TARGET_ACTIVITY = "targetActivity";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";
@@ -1674,6 +1680,9 @@ public final class SdkConstants {
     // MotionLayout
     public static final String ATTR_MOTION_TARGET = "motionTarget";
     public static final String ATTR_MOTION_WAVE_OFFSET = "waveOffset";
+    public static final String ATTR_MOTION_TARGET_ID = "targetId";
+    public static final String ATTR_MOTION_TOUCH_ANCHOR_ID = "touchAnchorId";
+    public static final String ATTR_MOTION_TOUCH_REGION_ID = "touchRegionId";
 
     // AbsListView
     public static final String ATTR_LIST_SELECTOR = "listSelector";
@@ -2187,7 +2196,6 @@ public final class SdkConstants {
     public static final String ANDROID_LAYOUT_RESOURCE_PREFIX = "@android:layout/"; //$NON-NLS-1$
     public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/"; //$NON-NLS-1$
     public static final String ANDROID_COLOR_RESOURCE_PREFIX = "@android:color/"; //$NON-NLS-1$
-    public static final String ANDROID_NEW_ID_PREFIX = "@android:+id/"; //$NON-NLS-1$
     public static final String ANDROID_ID_PREFIX = "@android:id/"; //$NON-NLS-1$
     public static final String ANDROID_DRAWABLE_PREFIX = "@android:drawable/"; //$NON-NLS-1$
     public static final String ANDROID_STRING_PREFIX = "@android:string/"; //$NON-NLS-1$
@@ -2659,6 +2667,7 @@ public final class SdkConstants {
     public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotation:annotation";
     public static final String ANDROIDX_SUPPORT_LIB_ARTIFACT = "androidx.legacy:legacy-support-v4";
     public static final String ANDROIDX_VIEW_PAGER_LIB_ARTIFACT = "androidx.viewpager:viewpager";
+    public static final String ANDROIDX_VIEW_PAGER2_LIB_ARTIFACT = "androidx.viewpager2:viewpager2";
     public static final String ANDROIDX_APPCOMPAT_LIB_ARTIFACT = "androidx.appcompat:appcompat";
     public static final String ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT =
             "androidx.constraintlayout:constraintlayout";

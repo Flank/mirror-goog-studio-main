@@ -16,18 +16,15 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
-import com.google.common.base.Preconditions.checkNotNull
-import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NdkTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.internal.compiler.DirectoryWalker
@@ -36,14 +33,12 @@ import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.sdklib.BuildToolInfo
 import com.android.utils.FileUtils
+import com.google.common.base.Preconditions.checkNotNull
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.Callable
-import java.util.function.Supplier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -53,6 +48,9 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
+import java.io.IOException
+import java.util.concurrent.Callable
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
@@ -72,7 +70,8 @@ abstract class RenderscriptCompile : NdkTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var importDirs: FileCollection
 
-    private lateinit var targetApi: Supplier<Int>
+    @get:Input
+    abstract val targetApi: Property<Int>
 
     @get:Input
     var isSupportMode: Boolean = false
@@ -133,11 +132,6 @@ abstract class RenderscriptCompile : NdkTask() {
         return sourceDirs.asFileTree
     }
 
-    @Input
-    fun getTargetApi(): Int? {
-        return targetApi.get()
-    }
-
     override fun doTaskAction() {
         // this is full run (always), clean the previous outputs
         val sourceDestDir = sourceOutputDir.get().asFile
@@ -161,7 +155,7 @@ abstract class RenderscriptCompile : NdkTask() {
             resDestDir,
             objDestDir,
             libDestDir,
-            getTargetApi()!!,
+            targetApi.get(),
             isDebugBuild,
             optimLevel,
             isNdkMode,
@@ -264,7 +258,6 @@ abstract class RenderscriptCompile : NdkTask() {
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_SOURCE_OUTPUT_DIR,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     RenderscriptCompile::sourceOutputDir,
                     "out"
@@ -274,7 +267,6 @@ abstract class RenderscriptCompile : NdkTask() {
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_LIB,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     RenderscriptCompile::libOutputDir,
                     "lib"
@@ -290,7 +282,10 @@ abstract class RenderscriptCompile : NdkTask() {
 
             val ndkMode = config.renderscriptNdkModeEnabled
 
-            task.targetApi = TaskInputHelper.memoize { config.renderscriptTarget }
+            task.targetApi.set(scope.globalScope.project.provider {
+                config.renderscriptTarget
+            })
+            task.targetApi.disallowChanges()
 
             task.isSupportMode = config.renderscriptSupportModeEnabled
             task.useAndroidX =

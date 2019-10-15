@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.FeatureExtension
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -93,13 +93,12 @@ class ParseIntegrityConfigTaskTest {
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantScope {
         val variantType = Mockito.mock(VariantType::class.java)
-        val extension = Mockito.mock(FeatureExtension::class.java)
+        val extension = Mockito.mock(BaseAppModuleExtension::class.java)
         val globalScope = Mockito.mock(GlobalScope::class.java)
         val variantScope = Mockito.mock(VariantScope::class.java)
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
 
-        Mockito.`when`(variantType.isHybrid).thenReturn(true)
         Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
@@ -110,5 +109,4 @@ class ParseIntegrityConfigTaskTest {
 
         return variantScope
     }
-
 }

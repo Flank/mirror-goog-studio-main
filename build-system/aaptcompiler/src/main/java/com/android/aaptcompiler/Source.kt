@@ -16,7 +16,7 @@
 
 package com.android.aaptcompiler
 
-class Source(var path: String, private var line: Int? = null, private var archive: String? = null) {
+class Source(var path: String, var line: Int? = null, private var archive: String? = null) {
   override fun toString(): String {
     var s = path
     if (archive != null) {

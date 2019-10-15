@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
@@ -201,7 +200,6 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 .artifacts
                 .producesFile(
                     APK_MAPPING,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProguardConfigurableTask::mappingFile,
                     "mapping.txt"
@@ -313,16 +311,19 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             val proguardConfigFiles = Callable<Collection<File>> { variantScope.proguardFiles }
 
-            val aaptProguardFileType =
+            val aaptProguardFile =
                 if (task.includeFeaturesInScopes.get()) {
-                    InternalArtifactType.MERGED_AAPT_PROGUARD_FILE
+                    variantScope.artifacts.getOperations().get(
+                        InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
                 } else {
-                    InternalArtifactType.AAPT_PROGUARD_FILE
+                    variantScope.artifacts.getOperations().get(
+                        InternalArtifactType.AAPT_PROGUARD_FILE
+                    )
                 }
 
             val configurationFiles = task.project.files(
                 proguardConfigFiles,
-                variantScope.artifacts.getFinalProduct(aaptProguardFileType),
+                aaptProguardFile,
                 variantScope.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
                 variantScope.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
@@ -331,13 +332,6 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     maybeGetCodeShrinkerAttrMap(variantScope)
                 )
             )
-
-            if (variantScope.type.isHybrid && variantScope.type.isBaseModule) {
-                val consumerProguardFiles = Callable<Collection<File>> {
-                    this.variantScope.consumerProguardFiles
-                }
-                configurationFiles.from(consumerProguardFiles)
-            }
 
             if (task.includeFeaturesInScopes.get()) {
                 addFeatureProguardRules(configurationFiles)

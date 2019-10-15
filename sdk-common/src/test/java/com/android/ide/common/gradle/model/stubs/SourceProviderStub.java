@@ -85,6 +85,33 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myShadersDirectories = Lists.newArrayList(shadersDirectory);
     }
 
+    public SourceProviderStub(
+            @NonNull String name,
+            @NonNull File manifestFile,
+            @NonNull Collection<File> javaDirectories,
+            @NonNull Collection<File> resourcesDirectories,
+            @NonNull Collection<File> aidlDirectories,
+            @NonNull Collection<File> renderscriptDirectories,
+            @NonNull Collection<File> cDirectories,
+            @NonNull Collection<File> cppDirectories,
+            @NonNull Collection<File> resDirectories,
+            @NonNull Collection<File> assetsDirectories,
+            @NonNull Collection<File> jniLibsDirectories,
+            @NonNull Collection<File> shadersDirectories) {
+        myName = name;
+        myManifestFile = manifestFile;
+        myJavaDirectories = Lists.newArrayList(javaDirectories);
+        myResourcesDirectories = Lists.newArrayList(resourcesDirectories);
+        myAidlDirectories = Lists.newArrayList(aidlDirectories);
+        myRenderscriptDirectories = Lists.newArrayList(renderscriptDirectories);
+        myCDirectories = Lists.newArrayList(cDirectories);
+        myCppDirectories = Lists.newArrayList(cppDirectories);
+        myResDirectories = Lists.newArrayList(resDirectories);
+        myAssetsDirectories = Lists.newArrayList(assetsDirectories);
+        myJniLibsDirectories = Lists.newArrayList(jniLibsDirectories);
+        myShadersDirectories = Lists.newArrayList(shadersDirectories);
+    }
+
     @Override
     @NonNull
     public String getName() {

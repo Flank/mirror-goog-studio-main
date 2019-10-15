@@ -32,13 +32,15 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_ZIP
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_DIR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
@@ -50,10 +52,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_BASE_MODULE_DECLARATION
+import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
@@ -63,11 +64,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
+import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
@@ -116,7 +116,7 @@ class PublishingSpecs {
      * A published output
      */
     interface OutputSpec {
-        val outputType: com.android.build.api.artifact.ArtifactType<out FileSystemLocation>
+        val outputType: SingleArtifactType<out FileSystemLocation>
         val artifactType: ArtifactType
         val publishedConfigTypes: ImmutableList<PublishedConfigType>
     }
@@ -146,8 +146,6 @@ class PublishingSpecs {
                 runtime(InternalArtifactType.APKS_FROM_BUNDLE, ArtifactType.APKS_FROM_BUNDLE)
                 runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
 
-                reverseMetadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION)
-
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
@@ -155,8 +153,7 @@ class PublishingSpecs {
 
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
-                api(METADATA_BASE_MODULE_DECLARATION,
-                    ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
+                api(BASE_MODULE_METADATA, ArtifactType.BASE_MODULE_METADATA)
                 api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
 
                 // ----
@@ -269,62 +266,10 @@ class PublishingSpecs {
                 }
             }
 
-            variantSpec(VariantTypeImpl.BASE_FEATURE) {
-
-                api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
-                api(METADATA_BASE_MODULE_DECLARATION,
-                        ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
-
-                api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(APP_CLASSES, ArtifactType.CLASSES)
-                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
-                api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                        ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-
-                runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                runtime(APK, ArtifactType.APK)
-
-                api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
-                api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                        ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
-
-                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
-            }
-
-            variantSpec(VariantTypeImpl.FEATURE) {
-                reverseMetadata(METADATA_FEATURE_DECLARATION, ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION)
-                reverseMetadata(METADATA_FEATURE_MANIFEST, ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST)
-                reverseMetadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.REVERSE_METADATA_CLASSES)
-                reverseMetadata(MERGED_JAVA_RES, ArtifactType.REVERSE_METADATA_JAVA_RES)
-                reverseMetadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
-                reverseMetadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
-                reverseMetadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                reverseMetadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
-                reverseMetadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
-
-                api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(APP_CLASSES, ArtifactType.CLASSES)
-                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
-                api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                    ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-
-                runtime(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
-                runtime(APK, ArtifactType.APK)
-                runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)
-
-                api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
-                api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                    ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-
-                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
-            }
-
             // empty specs
             variantSpec(VariantTypeImpl.TEST_APK)
             variantSpec(VariantTypeImpl.ANDROID_TEST)
             variantSpec(VariantTypeImpl.UNIT_TEST)
-            variantSpec(VariantTypeImpl.INSTANTAPP)
 
             lock()
         }
@@ -368,11 +313,11 @@ class PublishingSpecs {
     interface VariantSpecBuilder {
         val variantType: VariantType
 
-        fun output(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun api(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun runtime(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
-        fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType)
+        fun output(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun api(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun runtime(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun reverseMetadata(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
+        fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
 
         fun testSpec(variantType: VariantType, action: VariantSpecBuilder.() -> Unit)
     }
@@ -448,7 +393,7 @@ private class VariantPublishingSpecImpl(
 }
 
 private data class OutputSpecImpl(
-        override val outputType: com.android.build.api.artifact.ArtifactType<*>,
+        override val outputType: SingleArtifactType<*>,
         override val artifactType: ArtifactType,
         override val publishedConfigTypes: ImmutableList<PublishedConfigType> = API_AND_RUNTIME_ELEMENTS) : PublishingSpecs.OutputSpec
 
@@ -460,23 +405,26 @@ private open class VariantSpecBuilderImpl (
     protected val outputs = mutableSetOf<PublishingSpecs.OutputSpec>()
     private val testingSpecs = mutableMapOf<VariantType, VariantSpecBuilderImpl>()
 
-    override fun output(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun output(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType))
     }
 
-    override fun api(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun api(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_ELEMENTS_ONLY))
     }
 
-    override fun runtime(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun runtime(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, RUNTIME_ELEMENTS_ONLY))
     }
 
-    override fun reverseMetadata(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun reverseMetadata(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
+        if (!variantType.publishToMetadata) {
+            throw RuntimeException("VariantType '$variantType' does not support metadata publishing")
+        }
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, REVERSE_METADATA_ELEMENTS_ONLY))
     }
 
-    override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         throw RuntimeException("This VariantSpecBuilder does not support publish. VariantType is $variantType")
     }
 
@@ -505,14 +453,14 @@ private open class VariantSpecBuilderImpl (
 
 private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
 
-    override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
     }
 }
 
 private class AppVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
 
-    override fun publish(taskOutputType: com.android.build.api.artifact.ArtifactType<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         if (artifactType == ArtifactType.BUNDLE) {
             outputs.add(OutputSpecImpl(taskOutputType, artifactType, AAB_PUBLICATION))
         } else {

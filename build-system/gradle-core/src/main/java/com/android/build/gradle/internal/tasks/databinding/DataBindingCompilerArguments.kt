@@ -17,17 +17,16 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -167,7 +166,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(variantScope),
                 modulePackageProvider = { variantConfig.originalApplicationId },
                 minApi = variantConfig.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkComponents.getSdkFolder()!!,
+                sdkDir = globalScope.sdkComponents.getSdkDirectory(),
                 dependencyArtifactsDir =
                         artifacts.getFinalProduct(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.getFinalProduct(getLayoutInfoArtifactType(variantScope)),

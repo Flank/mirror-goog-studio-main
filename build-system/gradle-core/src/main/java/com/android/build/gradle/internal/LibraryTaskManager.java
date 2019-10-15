@@ -410,7 +410,6 @@ public class LibraryTaskManager extends TaskManager {
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.PUBLIC_RES.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             MergeResources::getPublicFile,
                             FN_PUBLIC_TXT);

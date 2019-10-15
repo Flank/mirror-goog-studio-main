@@ -18,8 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -196,18 +195,15 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out CompileSourceSetResources>) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
-                InternalArtifactType.PARTIAL_R_FILES,
-                BuildArtifactsHolder.OperationType.APPEND,
+            variantScope.artifacts.getOperations().append(
                 taskProvider,
-                CompileSourceSetResources::partialRDirectory)
+                CompileSourceSetResources::partialRDirectory
+            ).on(MultipleArtifactType.PARTIAL_R_FILES)
 
-            variantScope.artifacts.producesDir(
-                InternalArtifactType.RES_COMPILED_FLAT_FILES,
-                BuildArtifactsHolder.OperationType.APPEND,
+            variantScope.artifacts.getOperations().append(
                 taskProvider,
                 CompileSourceSetResources::outputDirectory
-            )
+            ).on(MultipleArtifactType.RES_COMPILED_FLAT_FILES)
         }
 
         override fun configure(task: CompileSourceSetResources) {

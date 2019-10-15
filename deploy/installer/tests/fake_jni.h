@@ -58,6 +58,8 @@ class FakeJNIEnv : public JNIEnv {
   static void CallVoidMethodA(JNIEnv* env, jobject obj, jmethodID methodID,
                               const jvalue* args);
 
+  static jobject GetObjectField(JNIEnv* env, jobject obj, jfieldID fid);
+
   static jfieldID GetFieldID(JNIEnv* env, jclass clazz, const char* name,
                              const char* sig);
 

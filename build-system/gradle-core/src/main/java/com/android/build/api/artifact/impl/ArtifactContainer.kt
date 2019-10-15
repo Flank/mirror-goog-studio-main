@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -139,7 +140,7 @@ internal class SingleArtifactContainer<T: FileSystemLocation>(
 
     override fun setInitialProvider(with: Provider<T>) {
         // TODO: should we make this an assertion.
-        if (needInitialProducer().get()) {
+        if (needInitialProducer().compareAndSet(true, false)) {
             agpProducer.set(with)
         }
     }
@@ -169,11 +170,13 @@ internal class MultipleArtifactContainer<T: FileSystemLocation>(
     }
 
     override fun setInitialProvider(with: Provider<List<T>>) {
+        needInitialProducer().set(false)
         // in theory, we should add those first ?
         agpProducers.addAll(with)
     }
 
     fun addInitialProvider(item: Provider<T>) {
+        needInitialProducer().set(false)
         agpProducers.add(item)
     }
 

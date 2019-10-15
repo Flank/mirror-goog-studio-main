@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -66,7 +65,6 @@ abstract class CheckManifest : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.CHECK_MANIFEST_RESULT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 CheckManifest::fakeOutputDir,
                 "out"
@@ -77,10 +75,9 @@ abstract class CheckManifest : NonIncrementalTask() {
             super.configure(task)
 
             task.manifestRequired = variantScope.variantConfiguration.isManifestFileRequired
-            task.manifestFile =
-                TaskInputHelper.memoizeToProvider(task.project) {
-                    variantScope.variantConfiguration.mainManifestFilePath
-                }
+            task.manifestFile = task.project.provider {
+                variantScope.variantConfiguration.mainManifestFilePath
+            }
         }
     }
 }

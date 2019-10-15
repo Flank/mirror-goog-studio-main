@@ -19,7 +19,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -140,16 +139,15 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ProcessAndroidAppResourcesTask::rClassSource,
                 fileName = "out"
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.PROCESSED_RES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-               ProcessAndroidAppResourcesTask::resourceApUnderscoreDirectory)
+                ProcessAndroidAppResourcesTask::resourceApUnderscoreDirectory
+            )
         }
 
         override fun configure(task: ProcessAndroidAppResourcesTask) {

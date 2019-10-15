@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<template
+        format="5"
+        revision="1"
+        name="Compose Activity"
+        description="Creates a new activity with Compose"
+        constraints="kotlin"
+        minApi="9"
+        minBuildApi="9">
+
+    <category value="Compose"/>
+    <formfactor value="Mobile"/>
+
+    <parameter
+            id="activityClass"
+            name="Activity Name"
+            type="string"
+            constraints="class|unique|nonempty"
+            default="MainActivity"
+            help="The name of the activity class to create"/>
+
+    <parameter
+            id="layoutClass"
+            name="Frontend/Layout Name"
+            type="string"
+            constraints="class|unique|nonempty"
+            default="SimpleComposable"
+            help="The name of the frontend component/layout to create for the activity"/>
+
+    <parameter
+            id="activityTitle"
+            name="Title"
+            type="string"
+            constraints="nonempty"
+            default="My Compose App"
+            help="The name of the activity. For launcher activities, the application title."/>
+
+    <parameter
+            id="packageName"
+            name="Package name"
+            type="string"
+            constraints="package"
+            default="com.mycompany.myapp"/>
+
+    <parameter
+        id="isLauncher"
+        name="Launcher Activity"
+        type="boolean"
+        default="false"
+        help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"/>
+
+    <!-- 128x128 thumbnails relative to template.xml -->
+    <thumbs>
+        <!-- default thumbnail is required -->
+        <thumb>template_compose_blank_activity.png</thumb>
+    </thumbs>
+
+    <globals file="globals.xml.ftl"/>
+    <execute file="recipe.xml.ftl"/>
+
+</template>

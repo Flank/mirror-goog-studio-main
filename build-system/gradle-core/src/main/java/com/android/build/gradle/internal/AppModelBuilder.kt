@@ -27,8 +27,6 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 
 /**
  * [ModelBuilder] class created by [AppPlugin]. It needs to be put in a separate file to work around
@@ -74,8 +72,8 @@ class AppModelBuilder(
             val artifacts = variantScope.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.BUNDLE)) {
-                val bundleFile = artifacts.getFinalProduct<RegularFile>(InternalArtifactType.BUNDLE)
-                val apkFolder = artifacts.getFinalProduct<Directory>(InternalArtifactType.EXTRACTED_APKS)
+                val bundleFile = artifacts.getFinalProduct(InternalArtifactType.BUNDLE)
+                val apkFolder = artifacts.getFinalProduct(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
                             variantScope.fullVariantName, bundleFile.get().asFile, apkFolder.get().asFile))

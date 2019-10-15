@@ -17,19 +17,19 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.ResValueGenerator
 import com.android.builder.model.ClassField
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Lists
-import java.io.File
-import java.util.function.Supplier
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 @CacheableTask
 abstract class GenerateResValues : NonIncrementalTask() {
@@ -41,18 +41,13 @@ abstract class GenerateResValues : NonIncrementalTask() {
 
     // ----- PRIVATE TASK API -----
 
-    @get:Internal //handled by getItemValues()
-    var items: List<Any>
-        get() = itemsSupplier.get()
-        set(value) {
-            itemsSupplier = Supplier { value }
-        }
-
-    private lateinit var itemsSupplier: Supplier<List<Any>>
+    @VisibleForTesting
+    @get:Internal("handled by getItemValues()")
+    internal abstract val items: ListProperty<Any>
 
     @Input
     fun getItemValues(): List<String> {
-        val resolvedItems = items
+        val resolvedItems = items.get()
         val list = Lists.newArrayListWithCapacity<String>(resolvedItems.size * 3)
 
         for (item in resolvedItems) {
@@ -70,7 +65,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
 
     override fun doTaskAction() {
         val folder = resOutputDir
-        val resolvedItems = items
+        val resolvedItems = items.get()
 
         // Always clean up the directory before use.
         FileUtils.cleanOutputDir(folder)
@@ -98,7 +93,9 @@ abstract class GenerateResValues : NonIncrementalTask() {
         override fun configure(task: GenerateResValues) {
             super.configure(task)
 
-            task.itemsSupplier = TaskInputHelper.memoize { variantScope.variantConfiguration.resValues }
+            task.items.set(variantScope.globalScope.project.provider {
+                variantScope.variantConfiguration.resValues
+            })
 
             task.resOutputDir = variantScope.generatedResOutputDir
         }

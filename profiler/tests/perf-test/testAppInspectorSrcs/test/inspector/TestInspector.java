@@ -22,11 +22,8 @@ import java.util.Arrays;
 
 public class TestInspector extends Inspector {
 
-    private final Connection connection;
-
     TestInspector(Connection connection) {
         super(connection);
-        this.connection = connection;
         System.out.println("TEST INSPECTOR CREATED");
     }
 
@@ -38,7 +35,7 @@ public class TestInspector extends Inspector {
     @Override
     public void onReceiveCommand(byte[] bytes, Inspector.CommandCallback commandCallback) {
         System.out.println("TEST INSPECTOR " + Arrays.toString(bytes));
-        connection.sendEvent(new byte[] {8, 92, 43});
+        getConnection().sendEvent(new byte[] {8, 92, 43});
         commandCallback.reply(bytes);
     }
 }

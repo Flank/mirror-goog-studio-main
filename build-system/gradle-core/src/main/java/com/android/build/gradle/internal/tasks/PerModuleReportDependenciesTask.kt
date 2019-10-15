@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -39,6 +38,8 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -72,11 +73,8 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
     @get:OutputFile
     val dependenciesList: RegularFileProperty = objectFactory.fileProperty()
 
-    private lateinit var moduleNameSupplier: Supplier<String>
-
     @get:Input
-    val moduleName: String
-        get() = moduleNameSupplier.get()
+    abstract val moduleName: Property<String>
 
     private fun convertDependencyToMavenLibrary(
         moduleVersion: ModuleVersionIdentifier?,
@@ -194,7 +192,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             directDependenciesIndices.add(index)
         }
 
-        val moduleDependency = ModuleDependencies.newBuilder().setModuleName(moduleName)
+        val moduleDependency = ModuleDependencies.newBuilder().setModuleName(moduleName.get())
         for (index in directDependenciesIndices) {
             moduleDependency.addDependencyIndex(index)
         }
@@ -204,7 +202,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             .addModuleDependencies(moduleDependency.build())
             .build()
 
-        appDependencies.writeDelimitedTo(FileOutputStream(dependenciesList.get().asFile))
+        appDependencies.writeTo(FileOutputStream(dependenciesList.get().asFile))
     }
 
 
@@ -221,7 +219,6 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                 .artifacts
                 .producesFile(
                     InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     PerModuleReportDependenciesTask::dependenciesList,
                     fileName = "dependencies.pb"
@@ -240,13 +237,12 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             ).artifactFiles
 
 
-            task.moduleNameSupplier = if (variantScope.type.isBaseModule)
-                Supplier { "base" }
-            else {
-                val featureName: Supplier<String> = FeatureSetMetadata.getInstance()
-                    .getFeatureNameSupplierForTask(variantScope, task)
-                Supplier { "${featureName.get()}" }
+            if (variantScope.type.isBaseModule) {
+                task.moduleName.set("base")
+            } else {
+                task.moduleName.set(variantScope.featureName)
             }
+            task.moduleName.disallowChanges()
         }
     }
 }

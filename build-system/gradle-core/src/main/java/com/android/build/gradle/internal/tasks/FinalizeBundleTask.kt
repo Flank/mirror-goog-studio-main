@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -135,7 +134,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             if (apkLocationOverride == null) {
                 variantScope.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
                     bundleName
@@ -143,13 +141,11 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             } else {
                 variantScope.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
                     FileUtils.join(
                         variantScope.globalScope.project.file(apkLocationOverride),
-                        variantScope.variantConfiguration.dirName).absolutePath
-                    ,
+                        variantScope.variantConfiguration.dirName).absolutePath,
                     bundleName
                 )
             }

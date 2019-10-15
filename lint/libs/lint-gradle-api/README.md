@@ -179,19 +179,22 @@ Lint tries two different ways to compute the class path:
 
 ### Class Loader Lifecycle
 
-When you run lint on a project with many modules, each Gradle module
-will invoke lint. Therefore, we don't want to construct and initialize
-the lint classes for each and every invocation (they're quite
-significant - intellij-core.jar is 13 MB and the kotlin-compiler jar
-is 18 MB, for example.)
+There is only one Lint class loader created by ReflectiveLintRunner,
+and it exists for the entire lifetime of the Gradle daemon.
 
-Therefore, the class loader is cached by the ReflectiveLintRunner
-companion object. When the class loader is constructed, it's handed a
-Gradle instance, so it registers a BuildCompletionListener, and when
-the build is done (which will be invoked when **all** projects are
-done, not after each one has been built) it will dispose and clear the
-class loader. This ensures that a Gradle daemon doesn't hang on to the
-PSI machinery forever; it's initialized for each new build job.
+Parallel invocations of Lint also share the same LintCoreApplicationEnvironment
+(in order to share caches). However, we don't want the Gradle daemon to hang on
+to PSI machinery forever. So, we dispose the LintCoreApplicationEnvironment
+at the end of the build via a BuildCompletionListener (which will be invoked when
+**all** projects are done, not after each one has been built). Lint code must still
+be diligent to avoid leaking memory via static fields.
+
+Historical note: we used to destroy the Lint class loader after each
+build invocation. However, the class loaders were leaked by intellij-core code
+in various ways (JNI globals, thread-local variables), so in practice the class
+loaders were never GC'd. Plus, Lint invocations in a warm Gradle daemon were
+slowed down by having to reload classes again. We avoid both of these issues by
+just holding on to a single Lint class loader forever.
 
 
 ### Complications

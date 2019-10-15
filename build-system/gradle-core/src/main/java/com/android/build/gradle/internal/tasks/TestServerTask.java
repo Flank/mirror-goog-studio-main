@@ -123,7 +123,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
                     "Uploads APKs for Build \'"
                             + variantName
                             + "\' to Test Server \'"
-                            + StringHelper.capitalize(testServer.getName())
+                            + StringHelper.usLocaleCapitalize(testServer.getName())
                             + "\'.");
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
 

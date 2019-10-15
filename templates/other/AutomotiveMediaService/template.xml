@@ -43,7 +43,7 @@
     <execute file="recipe.xml.ftl" />
 
     <thumbs>
-        <thumb>templates-mediaService-Auto.png</thumb>
+        <thumb>automotive-media-service.png</thumb>
     </thumbs>
 
 </template>

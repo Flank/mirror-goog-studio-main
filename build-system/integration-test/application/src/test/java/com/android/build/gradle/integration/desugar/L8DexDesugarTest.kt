@@ -46,7 +46,7 @@ class L8DexDesugarTest {
             """
             android.defaultConfig.multiDexEnabled = true
             android.defaultConfig.minSdkVersion = 21
-            android.compileOptions.javaApiDesugaringEnabled = true
+            android.compileOptions.coreLibraryDesugaringEnabled = true
             android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
             android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
         """.trimIndent()

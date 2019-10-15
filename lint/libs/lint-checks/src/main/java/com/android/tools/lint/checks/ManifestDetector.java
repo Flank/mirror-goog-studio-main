@@ -1149,9 +1149,11 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
                 String message =
                         String.format(
-                                "%1$s name `%2$s` is not unique "
-                                        + "(appears in both `%3$s` and `%4$s`)",
-                                StringHelper.capitalize(humanReadableName), base, prevName, name);
+                                "%1$s name `%2$s` is not unique (appears in both `%3$s` and `%4$s`)",
+                                StringHelper.usLocaleCapitalize(humanReadableName),
+                                base,
+                                prevName,
+                                name);
                 context.report(UNIQUE_PERMISSION, element, location, message);
             }
 

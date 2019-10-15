@@ -599,9 +599,7 @@ public class ManifestMerger2 {
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
-            PlaceholderEncoder.visit(document);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(document));
+            createAaptSafeManifest(document, mergingReport);
         }
     }
 
@@ -684,6 +682,21 @@ public class ManifestMerger2 {
 
         mergingReport.setMergedDocument(
                 MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(featureManifest));
+    }
+
+    /**
+     * Creates a manifest suitable for use with AAPT by (1) substituting placeholders to an AAPT
+     * friendly encoding and (2) removing any <nav-graph> tags. Saves the modified manifest as part
+     * of the merging report. Does not mutate the passed in document.
+     */
+    private void createAaptSafeManifest(
+            @NonNull Document document, @NonNull MergingReport.Builder mergingReport)
+            throws MergeFailureException {
+        Document clonedDocument = cloneDocument(document);
+        PlaceholderEncoder.visit(clonedDocument);
+        removeNavGraphs(clonedDocument);
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(clonedDocument));
     }
 
     /**
@@ -1075,6 +1088,43 @@ public class ManifestMerger2 {
             return (Document) domResult.getNode();
         } catch (Exception e) {
             throw new MergeFailureException(e);
+        }
+    }
+
+    /**
+     * Removes all {@link com.android.SdkConstants#TAG_NAV_GRAPH} elements from the document. Useful
+     * when creating an aapt friendly manifest.
+     *
+     * @param document the document to clean
+     */
+    public static void removeNavGraphs(@NonNull Document document) {
+        removeNavGraphs(document.getDocumentElement());
+    }
+
+    /**
+     * Recursively removes all {@link com.android.SdkConstants#TAG_NAV_GRAPH} elements.
+     *
+     * @param element the element to recursively clean
+     */
+    private static void removeNavGraphs(@NonNull Element element) {
+        if (SdkConstants.TAG_NAV_GRAPH.equals(element.getTagName())) {
+            // Delete the entire node
+            element.getParentNode().removeChild(element);
+            return;
+        }
+
+        // make a copy of the element children since we will be removing some during
+        // this process, we don't want side effects.
+        NodeList childNodes = element.getChildNodes();
+        ImmutableList.Builder<Element> childElements = ImmutableList.builder();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node node = childNodes.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                childElements.add((Element) node);
+            }
+        }
+        for (Element childElement : childElements.build()) {
+            removeNavGraphs(childElement);
         }
     }
 

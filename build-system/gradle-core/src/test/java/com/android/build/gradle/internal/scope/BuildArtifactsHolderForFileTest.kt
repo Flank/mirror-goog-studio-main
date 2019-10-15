@@ -18,25 +18,20 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.test.fail
 
 /**
  * Test for [BuildArtifactsHolder]
@@ -83,84 +78,14 @@ class BuildArtifactsHolderForFileTest {
         val taskProvider = registerRegularFileTask("final")
         newHolder.producesFile(
             LIBRARY_MANIFEST,
-            OperationType.INITIAL,
             taskProvider,
             RegularFileProducerTask::output,
             fileName = "finalFile"
         )
 
-        val files = newHolder.getCurrentProduct(LIBRARY_MANIFEST)
-        assertThat(files).isNotNull()
-        assertThat(files?.isPresent)
-        assertThat(files?.get()?.asFile?.name).isEqualTo("finalFile")
-
         // now get final version.
         val finalVersion = newHolder.getFinalProduct(LIBRARY_MANIFEST)
         assertThat(finalVersion.get().asFile.name).isEqualTo("finalFile")
-    }
-
-    @Test
-    fun appendProducerTest() {
-        val newHolder = TestBuildArtifactsHolder(
-            project,
-            "test",
-            ::root
-        )
-        val task1Provider = registerRegularFileTask("original")
-        newHolder.producesFile(
-            LIBRARY_MANIFEST,
-            OperationType.INITIAL,
-            task1Provider,
-            RegularFileProducerTask::output,
-            fileName = "initialFile"
-        )
-
-        val task2Provider = registerRegularFileTask("original2")
-
-        try {
-            newHolder.producesFile(
-                LIBRARY_MANIFEST,
-                OperationType.INITIAL,
-                task2Provider,
-                RegularFileProducerTask::output,
-                fileName = "initialFile2"
-            )
-            fail("2 initial providers should fail.")
-        } catch(e:RuntimeException) {
-            // fine we were expecting this.
-        }
-
-        try {
-            newHolder.producesFile(
-                LIBRARY_MANIFEST,
-                OperationType.APPEND,
-                task2Provider,
-                RegularFileProducerTask::output,
-                fileName = "appended"
-            )
-        } catch(e:RuntimeException) {
-            // fine we were expecting this.
-        }
-
-        var files: ListProperty<RegularFile> = newHolder.getFinalProducts(LIBRARY_MANIFEST)
-        assertThat(files).isNotNull()
-        assertThat(files.get()).hasSize(2)
-
-        newHolder.producesFile(
-            LIBRARY_MANIFEST,
-            OperationType.TRANSFORM,
-            task2Provider,
-            RegularFileProducerTask::output,
-            fileName = "replaced"
-        )
-
-        files= newHolder.getFinalProducts(LIBRARY_MANIFEST)
-        assertThat(files).isNotNull()
-        assertThat(files.get()).hasSize(1)
-
-        assertThat(initializedTasks).hasSize(2)
-
-        assertThat(files.get()[0].asFile.name).isEqualTo("replaced")
     }
 
     @Test
@@ -173,7 +98,6 @@ class BuildArtifactsHolderForFileTest {
         val taskProvider = registerRegularFileTask("test")
         newHolder.producesFile(
             LIBRARY_MANIFEST,
-            OperationType.INITIAL,
             taskProvider,
             RegularFileProducerTask::output,
             fileName = "finalFile"
@@ -190,60 +114,6 @@ class BuildArtifactsHolderForFileTest {
                 artifactTypeToString(LIBRARY_MANIFEST),
                 "test",
                 "finalFile"))
-    }
-
-    @Test
-    fun finalProducersLocation() {
-        val newHolder = TestBuildArtifactsHolder(
-            project,
-            "test",
-            ::root
-        )
-        val firstProvider : TaskProvider<out Task>
-        val secondProvider : TaskProvider<out Task>
-
-        firstProvider = registerRegularFileTask("first")
-        newHolder.producesFile(
-            LIBRARY_MANIFEST,
-            OperationType.INITIAL,
-            firstProvider,
-            RegularFileProducerTask::output,
-            fileName = "firstFile"
-        )
-
-        secondProvider = registerRegularFileTask("second")
-        newHolder.producesFile(
-            LIBRARY_MANIFEST,
-            OperationType.APPEND,
-            secondProvider,
-            RegularFileProducerTask::output,
-            fileName = "secondFile"
-        )
-
-
-        val finalArtifactFiles: ListProperty<RegularFile> = newHolder.getFinalProducts(LIBRARY_MANIFEST)
-        assertThat(finalArtifactFiles.get()).hasSize(2)
-        var outputFile = finalArtifactFiles.get()[0].asFile
-        var relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactTypeToString(LIBRARY_MANIFEST),
-                "test",
-                firstProvider.name,
-                "firstFile"))
-
-        outputFile = finalArtifactFiles.get()[1].asFile
-        relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactTypeToString(LIBRARY_MANIFEST),
-                "test",
-                secondProvider.name,
-                "secondFile"))
     }
 
     private fun registerRegularFileTask(taskName: String) =

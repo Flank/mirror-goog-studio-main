@@ -286,7 +286,7 @@ open class BasicModuleModelMock {
         doReturn(sdkComponents).`when`(global).sdkComponents
         doReturn(projectOptions).`when`(global).projectOptions
 
-        doReturn(sdkDir).`when`(sdkComponents).getSdkFolder()
+        doReturn(sdkDir).`when`(sdkComponents).getSdkDirectory()
         doReturn(false).`when`(projectOptions)
             .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
         doReturn(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION.defaultValue).`when`(projectOptions)

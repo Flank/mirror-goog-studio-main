@@ -15,6 +15,7 @@
  */
 #include "utils/termination_service.h"
 
+#include <dlfcn.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sstream>
@@ -25,14 +26,24 @@ namespace profiler {
 
 void SignalHandlerSigSegv(int signal) {
   const int MAX_SIZE = 20;
-  std::vector<std::uintptr_t> stack = GetBacktrace(MAX_SIZE);
+  std::vector<uintptr_t> stack = GetBacktrace(MAX_SIZE);
   // printf so this can be printed on a single line.
-  printf("Perfd Segmentation Fault: ");
   std::stringstream stringify;
+  stringify << "Perfd Segmentation Fault: ";
   for (int i = 0; i < stack.size(); i++) {
-    stringify << stack[i] << ",";
+    Dl_info info;
+    if (dladdr(reinterpret_cast<void*>(stack[i]), &info)) {
+      // This line attempts to conver a virtual pointer to a program counter
+      // address having a PC address allows us to run addr2line resolving the
+      // stack symbol.
+      stringify << stack[i] - reinterpret_cast<uintptr_t>(info.dli_fbase);
+    } else {
+      stringify << stack[i];
+    }
+    stringify << ",";
   }
   printf("%s\n", stringify.str().c_str());
+  Log::E("%s", stringify.str().c_str());
   // Force flush output.
   fflush(stdout);
 

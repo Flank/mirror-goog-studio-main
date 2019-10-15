@@ -74,7 +74,7 @@ class ServiceLayer implements Runnable {
         Commands.Command command =
                 Commands.Command.newBuilder()
                         .setType(Commands.Command.CommandType.APP_INSPECTION)
-                        .setAndroidxInspectionCommand(appInspectionCommand)
+                        .setAppInspectionCommand(appInspectionCommand)
                         .setStreamId(1234)
                         .setPid(pid)
                         .setCommandId(commandId)

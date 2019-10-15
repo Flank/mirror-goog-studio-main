@@ -43,7 +43,7 @@ class AppInspectionAgentCommand {
               jni_env->CallStaticObjectMethod(service_class, instance_method);
 
           int32_t command_id = command->command_id();
-          auto& app_command = command->androidx_inspection_command();
+          auto& app_command = command->app_inspection_command();
           if (app_command.has_create_inspector_command()) {
             auto& create_inspector = app_command.create_inspector_command();
             jstring inspector_id =

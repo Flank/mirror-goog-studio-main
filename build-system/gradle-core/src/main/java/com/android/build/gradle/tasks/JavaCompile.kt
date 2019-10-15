@@ -17,8 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.INITIAL
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -97,29 +95,36 @@ class JavaCompileCreationAction(
 
         variantScope.taskContainer.javacTask = taskProvider
 
+        classesOutputDirectory.set(variantScope.artifacts.getOperations()
+            .getOutputDirectory(JAVAC, "classes"))
+
         variantScope.artifacts.producesDir(
             JAVAC,
-            APPEND,
             taskProvider,
             { classesOutputDirectory },
             fileName = "classes"
         )
 
+        annotationProcessorOutputDirectory.set(variantScope.artifacts.getOperations()
+            .getOutputDirectory(AP_GENERATED_SOURCES))
+
         // When doing annotation processing, register its output
         if (!processAnnotationsTaskCreated) {
             variantScope.artifacts.producesDir(
                 AP_GENERATED_SOURCES,
-                INITIAL,
                 taskProvider,
                 { annotationProcessorOutputDirectory }
             )
         }
 
-        // Data binding artifact is one of the annotation processing outputs
+        // Data binding artifact is one of the annotation processing outputs, only if kapt is not
+        // configured.
         if (variantScope.globalScope.extension.dataBinding.isEnabled) {
+            bundleArtifactFolderForDataBinding.set(variantScope.artifacts.getOperations()
+                .getOutputDirectory(DATA_BINDING_ARTIFACT))
+
             variantScope.artifacts.producesDir(
                 DATA_BINDING_ARTIFACT,
-                APPEND,
                 taskProvider,
                 { bundleArtifactFolderForDataBinding }
             )

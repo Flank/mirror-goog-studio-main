@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers.preferWorkers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -102,12 +103,10 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out LibraryDexingTask>) {
             super.handleProvider(taskProvider)
-            scope.artifacts.producesDir(
-                InternalArtifactType.DEX,
-                BuildArtifactsHolder.OperationType.APPEND,
+            scope.artifacts.getOperations().append(
                 taskProvider,
                 LibraryDexingTask::output
-            )
+            ).on(MultipleArtifactType.DEX)
         }
 
         override fun configure(task: LibraryDexingTask) {
@@ -160,7 +159,9 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                     true,
                     bootClasspath,
                     classpath,
+                    false,
                     params.enableDesugaring,
+                    null,
                     null,
                     MessageReceiverImpl(
                         params.errorFormatMode,
@@ -169,11 +170,10 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                 )
 
                 ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
-                    classFileInput.entries { _ -> true }.use { classesInput ->
+                    classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            params.output.toPath(),
-                            false
+                            params.output.toPath()
                         )
                     }
                 }

@@ -9,6 +9,9 @@ iml_module(
         "//tools/base/deploy/installer:android-installer",
     ],
     iml_files = ["android.sdktools.deployer.iml"],
+    tags = [
+        "no_mac",
+    ],
     test_coverage = True,
     test_data = glob(["src/test/resource/**"]) + select({
         "//tools/base/bazel:windows": [],
@@ -112,9 +115,10 @@ coverage_java_test(
         "-Ddashboards.enabled=true",
     ],
     tags = [
+        "no_mac",
         "no_rbe_windows",
-        "no_test_windows",
-    ],  # b/116693861
+        "no_test_windows",  # b/116693861
+    ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":java_version",

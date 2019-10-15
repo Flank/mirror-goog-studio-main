@@ -89,24 +89,6 @@ fun String.usLocaleCapitalize(): String {
 }
 
 /**
- * Returns this string capitalized.
- *
- * This is unlikely to be what you need. Prefer to use [String.appendCapitalized], [StringBuilder.appendCapitalized] or [String.capitalizeAndAppend].
- *
- * @param word the word to be capitalized
- * @return the capitalized word.
- */
-@Deprecated(
-    message = "Replaced by usLocaleCapitalize() to avoid conflict with " +
-            "the kotlin standard library method of the same name.",
-    replaceWith = ReplaceWith(
-        expression = "this.usLocaleCapitalize()",
-        imports = ["com.android.utils.usLocaleCapitalize"]
-    )
-)
-fun String.capitalize(): String = this.usLocaleCapitalize()
-
-/**
  * Returns this string decapitalized, with US locale.
  */
 fun String.usLocaleDecapitalize(): String {

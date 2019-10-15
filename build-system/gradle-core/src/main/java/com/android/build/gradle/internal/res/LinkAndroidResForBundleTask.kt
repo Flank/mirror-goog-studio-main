@@ -24,14 +24,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -49,6 +46,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -64,14 +62,12 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
-import java.util.function.Supplier
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
 abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
-
     @get:Input
     var debuggable: Boolean = false
         private set
@@ -100,20 +96,16 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     lateinit var featureResourcePackages: FileCollection
         private set
 
-    private var resOffsetSupplier: Supplier<Int>? = null
-
-    @Suppress("MemberVisibilityCanBePrivate")
     @get:Input
     @get:Optional
-    val resOffset: Int?
-        get() = resOffsetSupplier?.get()
+    abstract val resOffset: Property<Int>
 
     @get:Input
     @get:Optional
-    lateinit var versionName: Provider<String?> private set
+    abstract val versionName: Property<String?>
 
     @get:Input
-    lateinit var versionCode: Provider<Int?> private set
+    abstract val versionCode: Property<Int?>
 
     @get:OutputDirectory
     lateinit var incrementalFolder: File
@@ -168,7 +160,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
             debuggable = debuggable,
-            packageId = resOffset,
+            packageId = resOffset.orNull,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
             resourceDirs = ImmutableList.Builder<File>().addAll(compiledDependenciesResourcesDirs)
@@ -244,10 +236,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 LinkAndroidResForBundleTask::bundledResFile,
-                "bundled-res.ap_")
+                "bundled-res.ap_"
+            )
 
         }
 
@@ -262,12 +254,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            task.versionCode = TaskInputHelper.memoizeToProvider(task.project) {
-                config.versionCode
-            }
-            task.versionName = TaskInputHelper.memoizeToProvider(task.project) {
-                config.versionName
-            }
+            task.versionCode.set(task.project.provider { config.versionCode })
+            task.versionCode.disallowChanges()
+            task.versionName.set(task.project.provider { config.versionName })
+            task.versionName.disallowChanges()
 
             task.mainSplit = variantData.outputScope.mainSplit
 
@@ -283,11 +273,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.featureResourcePackages = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
-            if (variantScope.type.isFeatureSplit) {
-                // get the res offset supplier
-                task.resOffsetSupplier =
-                        FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
-                            variantScope, task)
+            if (variantScope.type.isDynamicFeature) {
+                task.resOffset.set(variantScope.resOffset)
+                task.resOffset.disallowChanges()
             }
 
             task.debuggable = config.buildType.isDebuggable

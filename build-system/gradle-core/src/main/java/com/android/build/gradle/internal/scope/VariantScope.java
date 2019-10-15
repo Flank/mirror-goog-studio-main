@@ -38,14 +38,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import javax.annotation.Nonnull;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
@@ -62,13 +61,7 @@ public interface VariantScope extends TransformVariantScope {
     PublishingSpecs.VariantSpec getPublishingSpec();
 
     void publishIntermediateArtifact(
-            @NonNull Provider<FileCollection> artifact,
-            @NonNull ArtifactType artifactType,
-            @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
-
-    void publishIntermediateArtifact(
-            @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull Provider<String> lastProducerTaskName,
+            @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 
@@ -154,6 +147,10 @@ public interface VariantScope extends TransformVariantScope {
             @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull ArtifactType classesType,
             @Nullable Object generatedBytecodeKey);
+
+    /** Returns the path(s) to compiled R classes (R.jar). */
+    @NonNull
+    FileCollection getCompiledRClasses(@NonNull AndroidArtifacts.ConsumedConfigType configType);
 
     @NonNull
     ArtifactCollection getJavaClasspathArtifacts(
@@ -313,4 +310,15 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     ApkCreatorType getApkCreatorType();
+
+    /**
+     * Returns a {@link Provider} for the name of the feature.
+     *
+     * @return the provider
+     */
+    @NonNull
+    Provider<String> getFeatureName();
+
+    @NonNull
+    Provider<Integer> getResOffset();
 }

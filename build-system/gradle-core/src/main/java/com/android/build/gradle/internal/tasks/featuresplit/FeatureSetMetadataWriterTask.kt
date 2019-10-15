@@ -19,7 +19,6 @@
 package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -116,7 +115,6 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.FEATURE_SET_METADATA,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 FeatureSetMetadataWriterTask::outputFile,
                 FeatureSetMetadata.OUTPUT_FILE_NAME

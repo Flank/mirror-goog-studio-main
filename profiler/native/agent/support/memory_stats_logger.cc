@@ -265,8 +265,7 @@ void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
                                         int32_t sampling_num_interval) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     Agent::Instance().SubmitAgentTasks(
-        {[timestamp, sampling_num_interval](AgentService::Stub& stub,
-                                            ClientContext& ctx) {
+        {[sampling_num_interval](AgentService::Stub& stub, ClientContext& ctx) {
           SendEventRequest request;
           auto* event = request.mutable_event();
           event->set_pid(getpid());

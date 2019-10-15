@@ -109,7 +109,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     private DeviceProvider deviceProvider;
     private final DirectoryProperty coverageDir;
     private File reportsDir;
-    private File resultsDir;
     private FileCollection buddyApks;
     private FileCollection testTargetManifests;
     private ProcessExecutor processExecutor;
@@ -153,7 +152,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     throw new InvalidUserDataException(message);
                 });
 
-        File resultsOutDir = getResultsDir();
+        File resultsOutDir = getResultsDir().get().getAsFile();
         FileUtils.cleanOutputDir(resultsOutDir);
 
         final File additionalTestOutputDir;
@@ -281,13 +280,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     @Override
     @OutputDirectory
-    public File getResultsDir() {
-        return resultsDir;
-    }
-
-    public void setResultsDir(File resultsDir) {
-        this.resultsDir = resultsDir;
-    }
+    public abstract DirectoryProperty getResultsDir();
 
     @Optional
     @OutputDirectory
@@ -461,7 +454,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             .producesDir(
                                     InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
                                             .INSTANCE,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
@@ -470,7 +462,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.CODE_COVERAGE.INSTANCE,
-                                BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
@@ -484,7 +475,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     InternalArtifactType
                                             .DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT
                                             .INSTANCE,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
@@ -493,7 +483,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE,
-                                BuildArtifactsHolder.OperationType.APPEND,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
@@ -612,7 +601,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
                         FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
             }
-            task.resultsDir = project.file(rootLocation + subFolder);
+            task.getResultsDir().set(new File(rootLocation + subFolder));
 
             rootLocation = scope.getGlobalScope().getExtension().getTestOptions().getReportDir();
             if (rootLocation == null) {

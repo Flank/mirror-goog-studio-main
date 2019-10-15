@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_AAR
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.VariantScope
@@ -127,7 +126,6 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 artifactType = artifactType,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = LibraryJniLibsTask::outputDirectory,
                 fileName = SdkConstants.FD_JNI

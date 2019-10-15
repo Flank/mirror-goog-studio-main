@@ -80,9 +80,13 @@ class ReflectiveLintRunner {
     )
 
     companion object {
-        var loader: DelegatingClassLoader? = null
+        // There should only be one Lint class loader, and it should
+        // exist for the entire lifetime of the Gradle daemon.
+        private var loader: DelegatingClassLoader? = null
+
         private var buildCompletionListenerRegistered = false
 
+        @Synchronized
         private fun getLintClassLoader(gradle: Gradle, lintClassPath: Set<File>): ClassLoader {
             var l = loader
             if (l == null) {
@@ -92,6 +96,10 @@ class ReflectiveLintRunner {
                 loader = l
             }
 
+            // There can be multiple Lint tasks running in parallel, and we would like them
+            // to share the same LintCoreApplicationEnvironment (in order to share caches).
+            // Thus we do not dispose the LintCoreApplicationEnvironment until the entire
+            // Gradle invocation finishes.
             if (!buildCompletionListenerRegistered) {
                 buildCompletionListenerRegistered = true
                 gradle.addListener(BuildCompletionListener {

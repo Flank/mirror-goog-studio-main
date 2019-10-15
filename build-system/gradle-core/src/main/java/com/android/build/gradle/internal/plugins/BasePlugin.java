@@ -23,7 +23,6 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
@@ -41,6 +40,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
+import com.android.build.gradle.internal.dependency.ConstraintHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -99,7 +99,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
-import org.gradle.BuildListener;
+import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -107,7 +107,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.SoftwareComponentFactory;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -345,19 +344,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         // This is will be called for each (android) projects though, so this should support
         // being called 2+ times.
         gradle.addBuildListener(
-                new BuildListener() {
-                    @Override
-                    public void buildStarted(@NonNull Gradle gradle) {}
-
-                    @Override
-                    public void settingsEvaluated(@NonNull Settings settings) {}
-
-                    @Override
-                    public void projectsLoaded(@NonNull Gradle gradle) {}
-
-                    @Override
-                    public void projectsEvaluated(@NonNull Gradle gradle) {}
-
+                new BuildAdapter() {
                     @Override
                     public void buildFinished(@NonNull BuildResult buildResult) {
                         // Do not run buildFinished for included project in composite build.
@@ -368,6 +355,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         Workers.INSTANCE.shutdown();
                         sdkComponents.unload();
                         SdkLocator.resetCache();
+                        ConstraintHandler.clearCache();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
                                 project.getPath(),
@@ -703,7 +691,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private String findHighestSdkInstalled() {
         String highestSdk = null;
-        File folder = new File(globalScope.getSdkComponents().getSdkFolder(), "platforms");
+        File folder = new File(globalScope.getSdkComponents().getSdkDirectory(), "platforms");
         File[] listOfFiles = folder.listFiles();
 
         if (listOfFiles != null) {
@@ -722,7 +710,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     private void checkSplitConfiguration() {
         String configApkUrl = "https://d.android.com/topic/instant-apps/guides/config-splits.html";
 
-        boolean isFeatureModule = project.getPlugins().hasPlugin(FeaturePlugin.class);
         boolean generatePureSplits = extension.getGeneratePureSplits();
         Splits splits = extension.getSplits();
         boolean splitsEnabled =
@@ -731,7 +718,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         || splits.getLanguage().isEnable();
 
         // The Play Store doesn't allow Pure splits
-        if (!isFeatureModule && generatePureSplits) {
+        if (generatePureSplits) {
             extraModelInfo
                     .getSyncIssueHandler()
                     .reportWarning(
@@ -740,25 +727,12 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                                     + configApkUrl);
         }
 
-        if (!isFeatureModule && !generatePureSplits && splits.getLanguage().isEnable()) {
+        if (!generatePureSplits && splits.getLanguage().isEnable()) {
             extraModelInfo
                     .getSyncIssueHandler()
                     .reportWarning(
                             Type.GENERIC,
                             "Per-language APKs are supported only when building Android Instant Apps. For more information, go to "
-                                    + configApkUrl);
-        }
-
-        if (isFeatureModule && !generatePureSplits && splitsEnabled) {
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportWarning(
-                            Type.GENERIC,
-                            "Configuration APKs targeting different device configurations are "
-                                    + "automatically built when splits are enabled for a feature module.\n"
-                                    + "To suppress this warning, remove \"generatePureSplits false\" "
-                                    + "from your build.gradle file.\n"
-                                    + "To learn more, see "
                                     + configApkUrl);
         }
     }

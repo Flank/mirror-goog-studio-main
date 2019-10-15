@@ -47,18 +47,29 @@ final class OkHttpAdapter extends ClassVisitor implements Opcodes {
             super(ASM5, mv);
         }
 
+        /**
+         * Looks for a callsite to the non-parameter constructor ("<init>") of two specific classes,
+         * When one is found, inserts a call into our interceptor after the constructor call.
+         */
         @Override
         public void visitMethodInsn(
                 int opcode, String owner, String name, String desc, boolean itf) {
+            // Our interceptor takes "this" as the only parameter. Because the constructors we are
+            // looking for take no as-written parameter, it's guaranteed that "this" is on top of stack
+            // before they are invoked. Therefore, we
+            //
+            //  (1) dup                     // duplicate "this" on top of the stack
+            //  (2) invoke "<init>"         // will pop the stack, eating one "this"
+            //  (3) invoke our interceptor  // will eat the other "this"
             if (owner.equals(OKHTTP3_BUILDER_CLASS) && isConstructor(opcode, name, desc) && !itf) {
-                super.visitMethodInsn(opcode, owner, name, desc, itf);
                 super.visitInsn(DUP);
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
                 invoke(OKHTTP3_WRAPPER, "addInterceptorToBuilder", "(Ljava/lang/Object;)V");
             } else if (owner.equals(OKHTTP2_CLIENT_CLASS)
                     && isConstructor(opcode, name, desc)
                     && !itf) {
-                super.visitMethodInsn(opcode, owner, name, desc, itf);
                 super.visitInsn(DUP);
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
                 invoke(OKHTTP2_WRAPPER, "addInterceptorToClient", "(Ljava/lang/Object;)V");
             } else {
                 super.visitMethodInsn(opcode, owner, name, desc, itf);

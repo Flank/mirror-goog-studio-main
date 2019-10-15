@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -29,9 +28,7 @@ import com.android.builder.utils.SynchronizedFile
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions.checkState
 import org.gradle.api.InvalidUserDataException
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -144,7 +141,6 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ValidateSigningTask::dummyOutputDirectory
             )

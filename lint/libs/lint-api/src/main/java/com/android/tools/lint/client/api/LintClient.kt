@@ -1008,7 +1008,8 @@ abstract class LintClient {
         // anyway and override the getDesugaring method above; this is the default
         // handling.)
         val version = project.gradleModelVersion ?: return Desugaring.DEFAULT
-        return getGradleDesugaring(version, getLanguageLevel(project, JDK_1_7))
+        return getGradleDesugaring(
+            version, getLanguageLevel(project, JDK_1_7), project.isCoreLibraryDesugaringEnabled)
     }
 
     /**
@@ -1882,7 +1883,8 @@ abstract class LintClient {
         @JvmStatic
         fun getGradleDesugaring(
             version: GradleVersion,
-            languageLevel: LanguageLevel?
+            languageLevel: LanguageLevel?,
+            coreLibraryDesugaringEnabled: Boolean
         ): Set<Desugaring> {
             // Desugar runs if the Gradle plugin is 2.4.0 alpha 8 or higher...
             if (!version.isAtLeast(2, 4, 0, "alpha", 8, true)) {
@@ -1892,8 +1894,11 @@ abstract class LintClient {
             // ... *and* the language level is at least 1.8
             // NO: Try with resources applies to JDK_1_7, though in Gradle we don't
             // kick in until Java 8!
-            return if (languageLevel != null && languageLevel.isAtLeast(JDK_1_8))
-                Desugaring.DEFAULT else Desugaring.NONE
+            return when {
+                languageLevel == null || languageLevel.isLessThan(JDK_1_8) -> Desugaring.NONE
+                coreLibraryDesugaringEnabled -> Desugaring.FULL
+                else -> Desugaring.DEFAULT
+            }
         }
 
         /**

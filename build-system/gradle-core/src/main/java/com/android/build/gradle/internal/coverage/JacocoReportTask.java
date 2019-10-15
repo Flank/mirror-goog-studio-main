@@ -35,7 +35,7 @@ import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.Configuration;
@@ -72,7 +72,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
     private FileCollection jacocoClasspath;
 
     private FileCollection classFileCollection;
-    private Supplier<FileCollection> sourceFolders;
+    private FileCollection sourceFolders;
 
     private File reportDir;
     private String reportName;
@@ -107,7 +107,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getSourceFolders() {
-        return sourceFolders.get();
+        return sourceFolders;
     }
 
     @Input
@@ -220,7 +220,14 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.classFileCollection = testedScope.getArtifacts().getAllClasses();
 
             task.sourceFolders =
-                    () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage();
+                    scope.getGlobalScope()
+                            .getProject()
+                            .files(
+                                    (Callable)
+                                            () ->
+                                                    testedScope
+                                                            .getVariantData()
+                                                            .getJavaSourceFoldersForCoverage());
 
             task.setReportDir(testedScope.getCoverageReportDir());
         }

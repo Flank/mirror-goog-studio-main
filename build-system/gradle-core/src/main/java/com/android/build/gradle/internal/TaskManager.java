@@ -47,22 +47,18 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTI
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.ViewBindingOptions;
@@ -71,7 +67,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
-import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
@@ -87,12 +82,13 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.MultipleArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
@@ -130,7 +126,6 @@ import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
@@ -154,7 +149,6 @@ import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
@@ -165,14 +159,12 @@ import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
-import com.android.build.gradle.tasks.CopyOutputs;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
-import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.JavaCompileCreationAction;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
@@ -184,8 +176,6 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
-import com.android.build.gradle.tasks.PackageSplitAbi;
-import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAnnotationsTask;
 import com.android.build.gradle.tasks.ProcessAnnotationsTaskCreationAction;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
@@ -207,7 +197,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -641,8 +630,8 @@ public abstract class TaskManager {
                             AndroidArtifacts.ArtifactType.CLASSES,
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
             // now get the output type
-            com.android.build.api.artifact.ArtifactType<Directory> testedOutputType =
-                    (ArtifactType<Directory>)
+            SingleArtifactType<Directory> testedOutputType =
+                    (SingleArtifactType<Directory>)
                             Objects.requireNonNull(taskOutputSpec).getOutputType();
 
             variantScope
@@ -699,7 +688,7 @@ public abstract class TaskManager {
     /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
     protected static boolean packagesCustomClassDependencies(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
-        return appliesCustomClassTransforms(scope, options) && !scope.getType().isFeatureSplit();
+        return appliesCustomClassTransforms(scope, options) && !scope.getType().isDynamicFeature();
     }
 
     /** Returns whether or not custom class transforms are applied */
@@ -785,7 +774,7 @@ public abstract class TaskManager {
         /** Merge all resources with all the dependencies resources (i.e. "big merge"). */
         MERGE {
             @Override
-            public InternalArtifactType<Directory> getOutputType() {
+            public SingleArtifactType<Directory> getOutputType() {
                 return InternalArtifactType.MERGED_RES.INSTANCE;
             }
         },
@@ -794,12 +783,12 @@ public abstract class TaskManager {
          */
         PACKAGE {
             @Override
-            public InternalArtifactType<Directory> getOutputType() {
+            public SingleArtifactType<Directory> getOutputType() {
                 return InternalArtifactType.PACKAGED_RES.INSTANCE;
             }
         };
 
-        public abstract InternalArtifactType<Directory> getOutputType();
+        public abstract SingleArtifactType<Directory> getOutputType();
     }
 
     public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
@@ -840,7 +829,6 @@ public abstract class TaskManager {
         scope.getArtifacts()
                 .producesDir(
                         mergeType.getOutputType(),
-                        BuildArtifactsHolder.OperationType.INITIAL,
                         mergeResourcesTask,
                         MergeResources::getOutputDir,
                         MoreObjects.firstNonNull(
@@ -852,7 +840,6 @@ public abstract class TaskManager {
             scope.getArtifacts()
                     .producesDir(
                             MERGED_NOT_COMPILED_RES.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             mergeResourcesTask,
                             MergeResources::getMergedNotCompiledResourcesOutputDirectory,
                             mergedNotCompiledDir.getAbsolutePath(),
@@ -914,7 +901,8 @@ public abstract class TaskManager {
     }
 
     private void createApkProcessResTask(
-            @NonNull VariantScope scope, @Nullable ArtifactType<Directory> packageOutputType) {
+            @NonNull VariantScope scope,
+            @Nullable SingleArtifactType<Directory> packageOutputType) {
 
         // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(
@@ -944,7 +932,7 @@ public abstract class TaskManager {
 
     public void createProcessResTask(
             @NonNull VariantScope scope,
-            @Nullable ArtifactType<Directory> packageOutputType,
+            @Nullable SingleArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         BaseVariantData variantData = scope.getVariantData();
@@ -991,7 +979,7 @@ public abstract class TaskManager {
 
     private void createNonNamespacedResourceTasks(
             @NonNull VariantScope scope,
-            ArtifactType<Directory> packageOutputType,
+            SingleArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
@@ -1045,7 +1033,7 @@ public abstract class TaskManager {
     }
 
     private static boolean generatesProguardOutputFile(VariantScope variantScope) {
-        return variantScope.getCodeShrinker() != null || variantScope.getType().isFeatureSplit();
+        return variantScope.getCodeShrinker() != null || variantScope.getType().isDynamicFeature();
     }
 
     protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>
@@ -1061,58 +1049,6 @@ public abstract class TaskManager {
                 sourceArtifactType,
                 baseName,
                 isLibrary());
-    }
-
-    /**
-     * Creates the split resources packages task if necessary. AAPT will produce split packages for
-     * all --split provided parameters. These split packages should be signed and moved unchanged to
-     * the FULL_APK build output directory.
-     */
-    public void createSplitResourcesTasks(@NonNull VariantScope scope) {
-        BaseVariantData variantData = scope.getVariantData();
-
-        checkState(
-                variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
-                "Can only create split resources tasks for pure splits.");
-
-        taskFactory.register(new PackageSplitRes.CreationAction(scope));
-    }
-
-    public void createSplitAbiTasks(@NonNull VariantScope scope) {
-        BaseVariantData variantData = scope.getVariantData();
-
-        checkState(
-                variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
-                "split ABI tasks are only compatible with pure splits.");
-
-        Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
-        if (filters.isEmpty()) {
-            return;
-        }
-
-        List<ApkData> fullApkDatas =
-                variantData.getOutputScope().getSplitsByType(OutputFile.OutputType.FULL_SPLIT);
-        if (!fullApkDatas.isEmpty()) {
-            throw new RuntimeException(
-                    "In release 21 and later, there cannot be full splits and pure splits, "
-                            + "found "
-                            + Joiner.on(",").join(fullApkDatas)
-                            + " and abi filters "
-                            + Joiner.on(",").join(filters));
-        }
-
-        // first create the ABI specific split FULL_APK resources.
-        taskFactory.register(new GenerateSplitAbiRes.CreationAction(scope));
-
-        // then package those resources with the appropriate JNI libraries.
-        taskFactory.register(
-                new PackageSplitAbi.CreationAction(
-                        scope, packagesCustomClassDependencies(scope, projectOptions)));
-    }
-
-    public void createSplitTasks(@NonNull VariantScope variantScope) {
-        createSplitResourcesTasks(variantScope);
-        createSplitAbiTasks(variantScope);
     }
 
     /**
@@ -1359,8 +1295,7 @@ public abstract class TaskManager {
 
         scope.getTaskContainer()
                 .setExternalNativeJsonGenerator(
-                        TaskInputHelper.memoizeToProvider(
-                                project, () -> ExternalNativeJsonGenerator.create(module, scope)));
+                        project.provider(() -> ExternalNativeJsonGenerator.create(module, scope)));
     }
 
     public void createExternalNativeBuildTasks(@NonNull VariantScope scope) {
@@ -1497,9 +1432,6 @@ public abstract class TaskManager {
                 variantScope.getTaskContainer().getProcessJavaResourcesTask(),
                 testedVariantScope.getTaskContainer().getProcessJavaResourcesTask());
 
-        // Empty R class jar. TODO: Resources support for unit tests?
-        artifacts.emptyFile(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE);
-
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, variantScope);
@@ -1618,7 +1550,7 @@ public abstract class TaskManager {
     static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
         final VariantType variantType = variantScope.getVariantConfiguration().getType();
-        return !variantType.isForTesting() && !variantType.isHybrid();
+        return !variantType.isForTesting();
     }
 
     /**
@@ -1956,10 +1888,10 @@ public abstract class TaskManager {
                     });
         }
 
-        // Add a task to create merged runtime classes if this is a feature, a dynamic-feature,
+        // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
         // minification is enabled in a project with features or dynamic-features.
-        if (variantData.getType().isFeatureSplit() || variantScope.consumesFeatureJars()) {
+        if (variantData.getType().isDynamicFeature() || variantScope.consumesFeatureJars()) {
             taskFactory.register(new MergeClassesTask.CreationAction(variantScope));
         }
 
@@ -2175,8 +2107,8 @@ public abstract class TaskManager {
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask,
                             produceSeparateOutputs
-                                    ? InternalArtifactType.DEX.INSTANCE
-                                    : InternalArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
+                                    ? MultipleArtifactType.DEX.INSTANCE
+                                    : MultipleArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
 
             if (produceSeparateOutputs) {
                 DexMergingTask.CreationAction mergeProject =
@@ -2415,28 +2347,11 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        ArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
-
-        final boolean splitsArePossible =
-                variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
+        InternalArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
 
         Provider<Directory> manifests = variantScope.getArtifacts().getFinalProduct(manifestType);
 
-        // this is where the final APKs will be located.
-        File finalApkLocation = variantScope.getApkLocation();
-        // if we are not dealing with possible splits, we can generate in the final folder
-        // directly.
-        File outputDirectory =
-                splitsArePossible
-                        ? variantScope.getFullApkPackagesOutputDirectory()
-                        : finalApkLocation;
-
-        ArtifactType<Directory> taskOutputType =
-                splitsArePossible
-                        ? InternalArtifactType.FULL_APK.INSTANCE
-                        : InternalArtifactType.APK.INSTANCE;
-
-        ArtifactType<Directory> resourceFilesInputType =
+        InternalArtifactType resourceFilesInputType =
                 variantScope.useResourceShrinker()
                         ? InternalArtifactType.SHRUNK_PROCESSED_RES.INSTANCE
                         : InternalArtifactType.PROCESSED_RES.INSTANCE;
@@ -2454,13 +2369,12 @@ public abstract class TaskManager {
                 taskFactory.register(
                         new PackageApplication.CreationAction(
                                 variantScope,
-                                outputDirectory,
+                                variantScope.getApkLocation(),
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,
                                 variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
-                                taskOutputType,
                                 packagesCustomClassDependencies(variantScope, projectOptions)),
                         null,
                         task -> {
@@ -2478,14 +2392,6 @@ public abstract class TaskManager {
                         null);
 
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
-
-        if (splitsArePossible) {
-
-            TaskProvider<CopyOutputs> copyOutputsTask =
-                    taskFactory.register(
-                            new CopyOutputs.CreationAction(variantScope, finalApkLocation));
-            TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), copyOutputsTask);
-        }
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
@@ -2763,7 +2669,7 @@ public abstract class TaskManager {
         } else {
             taskName =
                     StringHelper.appendCapitalized(
-                            prefix, scope.getVariantConfiguration().computeHybridVariantName());
+                            prefix, scope.getVariantConfiguration().getFullName());
         }
         return taskName;
     }
@@ -2882,8 +2788,6 @@ public abstract class TaskManager {
         final BaseExtension extension = globalScope.getExtension();
         if (extension instanceof BaseAppModuleExtension) {
             modulePaths = ((BaseAppModuleExtension) extension).getDynamicFeatures();
-        } else if (extension instanceof FeatureExtension) {
-            modulePaths = FeatureModelBuilder.getDynamicFeatures(globalScope);
         } else {
             return;
         }
@@ -2907,7 +2811,6 @@ public abstract class TaskManager {
             publishArtifactToConfiguration(
                     configuration,
                     file,
-                    artifact,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     attributeMap);
         }
@@ -3139,9 +3042,7 @@ public abstract class TaskManager {
                                     + ":"
                                     + version);
             // TODO load config name from source sets
-            if (dataBindingOptions.isEnabledForTests()
-                    || this instanceof LibraryTaskManager
-                    || this instanceof MultiTypeTaskManager) {
+            if (dataBindingOptions.isEnabledForTests() || this instanceof LibraryTaskManager) {
                 String dataBindingArtifact =
                         SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version;
                 project.getDependencies()
@@ -3266,12 +3167,9 @@ public abstract class TaskManager {
                 scope.getGlobalScope().getProject().getTasks().named(kaptTask.getName());
 
         scope.getArtifacts()
-                .producesDir(
-                        InternalArtifactType.DATA_BINDING_ARTIFACT.INSTANCE,
-                        BuildArtifactsHolder.OperationType.TRANSFORM,
-                        kaptTaskProvider,
-                        (Task task) -> databindingArtifact,
-                        "out");
+                .getOperations()
+                .replace(kaptTaskProvider, (Task task) -> databindingArtifact)
+                .on(InternalArtifactType.DATA_BINDING_ARTIFACT.INSTANCE);
 
         // manually add the output property as a task output so Gradle can wire providers correctly
         kaptTask.getOutputs().dir(databindingArtifact);

@@ -18,11 +18,10 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_NAME;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
@@ -43,9 +42,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -70,7 +67,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.GradleException;
@@ -103,27 +99,19 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 @CacheableTask
 public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
-    private Supplier<String> minSdkVersion;
-    private Supplier<String> targetSdkVersion;
-    private Supplier<Integer> maxSdkVersion;
     private ArtifactCollection manifests;
     private ArtifactCollection featureManifests;
     private FileCollection dependencyFeatureNameArtifacts;
     private FileCollection microApkManifest;
     private FileCollection packageManifest;
-    private Supplier<EnumSet<Feature>> optionalFeatures;
 
     private final Property<String> packageOverride;
     private final ListProperty<File> manifestOverlays;
     private final MapProperty<String, Object> manifestPlaceholders;
-    private boolean isHybridVariantType;
     private boolean isFeatureSplitVariantType;
     private String buildTypeName;
 
     private FileCollection navigationJsons;
-
-    // supplier to read the file above to get the feature name for the current project.
-    @Nullable private Supplier<String> featureNameSupplier = null;
 
     @Inject
     public ProcessApplicationManifest(ObjectFactory objectFactory) {
@@ -144,18 +132,16 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         ModuleMetadata moduleMetadata = null;
         if (packageManifest != null && !packageManifest.isEmpty()) {
             moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
-            boolean isDebuggable = optionalFeatures.get().contains(Feature.DEBUGGABLE);
+            boolean isDebuggable = getOptionalFeatures().get().contains(Feature.DEBUGGABLE);
             if (moduleMetadata.getDebuggable() != isDebuggable) {
-                String moduleType = isHybridVariantType ? "Instant App Feature" : "Dynamic Feature";
                 String errorMessage =
                         String.format(
-                                "%1$s '%2$s' (build type '%3$s') %4$s debuggable,\n"
+                                "Dynamic Feature '%1$s' (build type '%2$s') %3$s debuggable,\n"
                                         + "and the corresponding build type in the base "
-                                        + "application %5$s debuggable.\n"
+                                        + "application %4$s debuggable.\n"
                                         + "Recommendation: \n"
-                                        + "   in  %6$s\n"
-                                        + "   set android.buildTypes.%3$s.debuggable = %7$s",
-                                moduleType,
+                                        + "   in  %5$s\n"
+                                        + "   set android.buildTypes.%2$s.debuggable = %6$s",
                                 getProject().getPath(),
                                 buildTypeName,
                                 isDebuggable ? "is" : "is not",
@@ -214,7 +200,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             manifestOverlays.get(),
                             computeFullProviderList(compatibleScreenManifestForSplit),
                             navJsons,
-                            getFeatureName(),
+                            getFeatureName().getOrNull(),
                             moduleMetadata == null
                                     ? packageOverride.getOrNull()
                                     : moduleMetadata.getApplicationId(),
@@ -224,9 +210,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             moduleMetadata == null
                                     ? apkData.getVersionName()
                                     : moduleMetadata.getVersionName(),
-                            getMinSdkVersion(),
-                            getTargetSdkVersion(),
-                            getMaxSdkVersion(),
+                            getMinSdkVersion().getOrNull(),
+                            getTargetSdkVersion().getOrNull(),
+                            getMaxSdkVersion().getOrNull(),
                             manifestOutputFile.getAbsolutePath(),
                             // no aapt friendly merged manifest file necessary for applications.
                             null /* aaptFriendlyManifestOutputFile */,
@@ -237,7 +223,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                     : null,
                             ManifestMerger2.MergeType.APPLICATION,
                             manifestPlaceholders.get(),
-                            getOptionalFeatures(),
+                            getOptionalFeatures().get(),
                             getDependencyFeatureNames(),
                             getReportFile().get().getAsFile(),
                             LoggerWrapper.getLogger(ProcessApplicationManifest.class));
@@ -468,32 +454,28 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
     @Input
     @Optional
-    public String getMinSdkVersion() {
-        return minSdkVersion.get();
-    }
+    public abstract Property<String> getMinSdkVersion();
 
     @Input
     @Optional
-    public String getTargetSdkVersion() {
-        return targetSdkVersion.get();
-    }
+    public abstract Property<String> getTargetSdkVersion();
 
     @Input
     @Optional
-    public Integer getMaxSdkVersion() {
-        return maxSdkVersion.get();
-    }
+    public abstract Property<Integer> getMaxSdkVersion();
 
     /** Not an input, see {@link #getOptionalFeaturesString()}. */
     @Internal
-    public EnumSet<Feature> getOptionalFeatures() {
-        return optionalFeatures.get();
-    }
+    public abstract Property<EnumSet<Feature>> getOptionalFeatures();
 
     /** Synthetic input for {@link #getOptionalFeatures()} */
     @Input
     public List<String> getOptionalFeaturesString() {
-        return getOptionalFeatures().stream().map(Enum::toString).collect(Collectors.toList());
+        return getOptionalFeatures()
+                .get()
+                .stream()
+                .map(Enum::toString)
+                .collect(Collectors.toList());
     }
 
     @InputFiles
@@ -547,9 +529,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
     @Input
     @Optional
-    public String getFeatureName() {
-        return featureNameSupplier != null ? featureNameSupplier.get() : null;
-    }
+    public abstract Property<String> getFeatureName();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -607,21 +587,18 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesDir(
                     InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getInstantAppManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
@@ -630,14 +607,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             artifacts.producesDir(
                     InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getMetadataFeatureManifestOutputDirectory,
                     "metadata-feature");
 
             artifacts.producesDir(
                     InternalArtifactType.BUNDLE_MANIFEST.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
@@ -646,7 +621,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ProcessApplicationManifest::getReportFile,
                             FileUtils.join(
@@ -703,40 +677,43 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
 
-            task.minSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                ApiVersion minSdk = config.getMergedFlavor().getMinSdkVersion();
-                                return minSdk == null ? null : minSdk.getApiString();
-                            });
+            task.getMinSdkVersion()
+                    .set(
+                            project.provider(
+                                    () -> {
+                                        ApiVersion minSdk =
+                                                config.getMergedFlavor().getMinSdkVersion();
+                                        return minSdk == null ? null : minSdk.getApiString();
+                                    }));
+            task.getMinSdkVersion().disallowChanges();
 
-            task.targetSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                ApiVersion targetSdk =
-                                        config.getMergedFlavor().getTargetSdkVersion();
-                                return targetSdk == null ? null : targetSdk.getApiString();
-                            });
+            task.getTargetSdkVersion()
+                    .set(
+                            project.provider(
+                                    () -> {
+                                        ApiVersion targetSdk =
+                                                config.getMergedFlavor().getTargetSdkVersion();
+                                        return targetSdk == null ? null : targetSdk.getApiString();
+                                    }));
+            task.getTargetSdkVersion().disallowChanges();
 
-            task.maxSdkVersion =
-                    TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
+            task.getMaxSdkVersion()
+                    .set(project.provider(config.getMergedFlavor()::getMaxSdkVersion));
+            task.getMaxSdkVersion().disallowChanges();
 
-            task.optionalFeatures =
-                    TaskInputHelper.memoize(
-                            () -> getOptionalFeatures(getVariantScope(), isAdvancedProfilingOn));
+            task.getOptionalFeatures()
+                    .set(
+                            project.provider(
+                                    () ->
+                                            getOptionalFeatures(
+                                                    getVariantScope(), isAdvancedProfilingOn)));
+            task.getOptionalFeatures().disallowChanges();
 
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.APK_LIST.INSTANCE, task.getApkList());
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
-                task.packageManifest =
-                        getVariantScope()
-                                .getArtifactFileCollection(
-                                        REVERSE_METADATA_VALUES,
-                                        PROJECT,
-                                        REVERSE_METADATA_BASE_MODULE_DECLARATION);
-
                 task.featureManifests =
                         getVariantScope()
                                 .getArtifactCollection(
@@ -744,17 +721,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         PROJECT,
                                         REVERSE_METADATA_FEATURE_MANIFEST);
 
-            } else if (variantType.isFeatureSplit()) {
-                task.featureNameSupplier =
-                        FeatureSetMetadata.getInstance()
-                                .getFeatureNameSupplierForTask(getVariantScope(), task);
+            } else if (variantType.isDynamicFeature()) {
+                task.getFeatureName().set(getVariantScope().getFeatureName());
+                task.getFeatureName().disallowChanges();
 
                 task.packageManifest =
                         getVariantScope()
                                 .getArtifactFileCollection(
-                                        COMPILE_CLASSPATH,
-                                        PROJECT,
-                                        FEATURE_APPLICATION_ID_DECLARATION);
+                                        COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
 
                 task.dependencyFeatureNameArtifacts =
                         getVariantScope()
@@ -778,15 +752,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
             task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));
-            task.getMainManifest()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    project, config::getMainManifestFilePath));
+            task.manifestPlaceholders.disallowChanges();
+            task.getMainManifest().set(project.provider(config::getMainManifestFilePath));
+            task.getMainManifest().disallowChanges();
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
-            task.isHybridVariantType = config.getType().isHybrid();
-            task.isFeatureSplitVariantType = config.getType().isFeatureSplit();
+            task.manifestOverlays.disallowChanges();
+            task.isFeatureSplitVariantType = config.getType().isDynamicFeature();
             task.buildTypeName = config.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
@@ -828,11 +802,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             VariantScope variantScope, boolean isAdvancedProfilingOn) {
         List<Feature> features = new ArrayList<>();
         VariantType variantType = variantScope.getType();
-        if (variantType.isHybrid()) {
-            features.add(Feature.TARGET_SANDBOX_VERSION);
-        }
 
-        if (variantType.isFeatureSplit()) {
+        if (variantType.isDynamicFeature()) {
             features.add(Feature.ADD_FEATURE_SPLIT_ATTRIBUTE);
             features.add(Feature.CREATE_FEATURE_MANIFEST);
             features.add(Feature.ADD_USES_SPLIT_DEPENDENCIES);
@@ -842,15 +813,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             features.add(Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST);
         }
 
-        if (variantType.isHybrid()) {
-            features.add(Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO);
-        }
+        features.add(Feature.ADD_INSTANT_APP_MANIFEST);
 
-        if (!variantType.isHybrid()) {
-            features.add(Feature.ADD_INSTANT_APP_MANIFEST);
-        }
-
-        if (variantType.isBaseModule() || variantType.isFeatureSplit()) {
+        if (variantType.isBaseModule() || variantType.isDynamicFeature()) {
             features.add(Feature.CREATE_BUNDLETOOL_MANIFEST);
         }
 

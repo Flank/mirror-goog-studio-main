@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -67,7 +66,6 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DUPLICATE_CLASSES_CHECK,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 CheckDuplicateClassesTask::dummyOutputDirectory
             )

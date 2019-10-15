@@ -16,15 +16,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.model.SourceProvider
-import com.google.common.collect.ImmutableList
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.internal.file.copy.DestinationRootCopySpec
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import java.io.File
@@ -63,7 +58,6 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
                 .artifacts
                 .producesDir(
                     InternalArtifactType.JAVA_RES,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessJavaResTask::outDirectory
                 )

@@ -32,11 +32,9 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Blocks;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -81,6 +79,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
@@ -118,8 +117,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     private boolean vectorSupportLibraryIsUsed;
 
     private Collection<String> generatedDensities;
-
-    private Supplier<Integer> minSdk;
 
     private String aapt2Version;
 
@@ -197,7 +194,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         List<ResourceSet> resourceSets = getConfiguredResourceSets(preprocessor);
 
         // create a new merger and populate it with the sets.
-        ResourceMerger merger = new ResourceMerger(minSdk.get());
+        ResourceMerger merger = new ResourceMerger(getMinSdk().get());
         MergingLog mergingLog = null;
         if (blameLogFolder != null) {
             FileUtils.cleanOutputDir(blameLogFolder);
@@ -302,7 +299,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // create a merger and load the known state.
-        ResourceMerger merger = new ResourceMerger(minSdk.get());
+        ResourceMerger merger = new ResourceMerger(getMinSdk().get());
         try {
             if (!merger.loadFromBlob(getIncrementalFolder(), true /*incrementalState*/)) {
                 doFullTaskAction();
@@ -465,7 +462,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
 
         return new MergeResourcesVectorDrawableRenderer(
-                minSdk.get(),
+                getMinSdk().get(),
                 vectorSupportLibraryIsUsed,
                 generatedPngsOutputDir,
                 densities,
@@ -563,9 +560,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     }
 
     @Input
-    public int getMinSdk() {
-        return minSdk.get();
-    }
+    public abstract Property<Integer> getMinSdk();
 
     @Input
     public boolean isVectorSupportLibraryUsed() {
@@ -653,7 +648,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                             mergeType == MERGE
                                     ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE.INSTANCE
                                     : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             MergeResources::getDataBindingLayoutInfoOutFolder,
                             "out");
@@ -667,13 +661,17 @@ public abstract class MergeResources extends ResourceAwareTask {
             GlobalScope globalScope = variantScope.getGlobalScope();
             BaseVariantData variantData = variantScope.getVariantData();
 
-            task.minSdk =
-                    TaskInputHelper.memoize(
-                            () ->
-                                    variantData
-                                            .getVariantConfiguration()
-                                            .getMinSdkVersion()
-                                            .getApiLevel());
+            task.getMinSdk()
+                    .set(
+                            globalScope
+                                    .getProject()
+                                    .provider(
+                                            () ->
+                                                    variantData
+                                                            .getVariantConfiguration()
+                                                            .getMinSdkVersion()
+                                                            .getApiLevel()));
+            task.getMinSdk().disallowChanges();
 
             Pair<FileCollection, String> aapt2AndVersion =
                     Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);

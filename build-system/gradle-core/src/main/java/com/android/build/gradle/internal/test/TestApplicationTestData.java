@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -26,9 +25,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -96,77 +93,18 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
 
     @NonNull
     @Override
-    public ImmutableList<File> getTestedApks(
-            @NonNull ProcessExecutor processExecutor,
-            @Nullable File splitSelectExe,
-            @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull ILogger logger) throws ProcessException {
+    public List<File> getTestedApks(
+            @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger)
+            throws ProcessException {
 
-        // use a Set to remove duplicate entries.
-        ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
+        if (testedApksDir == null) {
+            return ImmutableList.of();
+        }
         // retrieve all the published files.
         BuildElements testedApkFiles =
                 ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, testedApksDir);
 
-        // if we have more than one, that means pure splits are in the equation.
-        if (testedApkFiles.size() > 1 && splitSelectExe != null) {
-            List<String> testedSplitApksPath = getSplitApks(testedApkFiles);
-            selectedApks.addAll(
-                    SplitOutputMatcher.computeBestOutput(
-                            processExecutor,
-                            splitSelectExe,
-                            deviceConfigProvider,
-                            getMainApk(testedApkFiles),
-                            testedSplitApksPath));
-        } else {
-            // if we have only one or no split-select tool available, just install them all
-            // it's not efficient but it's correct.
-            if (testedApkFiles.size() > 1) {
-                logger.warning("split-select tool unavailable, all split APKs will be installed");
-            }
-            selectedApks.addAll(
-                    testedApkFiles
-                            .stream()
-                            .map(BuildOutput::getOutputFile)
-                            .collect(Collectors.toList()));
-        }
-        return selectedApks.build();
+        return testedApkFiles.stream().map(BuildOutput::getOutputFile).collect(Collectors.toList());
     }
 
-    @NonNull
-    private static List<String> getSplitApks(BuildElements builtArtifacts) {
-        return builtArtifacts
-                .stream()
-                .filter(
-                        splitOutput ->
-                                splitOutput.getApkData().getType()
-                                        == VariantOutput.OutputType.SPLIT)
-                .map(splitOutput -> splitOutput.getOutputFile().getAbsolutePath())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Retrieve the main APK from the list of APKs published by the tested configuration. There can
-     * be multiple split APKs along the main APK returned by the configuration.
-     *
-     * @return the tested main APK
-     */
-    @NonNull
-    private static File getMainApk(BuildElements builtArtifacts) {
-
-        Optional<File> mainApk =
-                builtArtifacts
-                        .stream()
-                        .filter(
-                                splitOutput ->
-                                        splitOutput.getApkData().getType()
-                                                != VariantOutput.OutputType.SPLIT)
-                        .map(BuildOutput::getOutputFile)
-                        .findFirst();
-
-        if (mainApk.isPresent()) {
-            return mainApk.get();
-        }
-        throw new RuntimeException("Cannot retrieve main APK");
-    }
 }

@@ -124,10 +124,15 @@ public class ApkPreInstaller {
 
             Deploy.InstallInfo.Builder pushRequestBuilder = Deploy.InstallInfo.newBuilder();
             List<Deploy.PatchInstruction> patches =
-                    new PatchSetGenerator().generateFromPairs(pairs);
+                    new PatchSetGenerator(logger).generateFromPairs(pairs);
             if (patches.isEmpty()) {
                 return "<SKIPPED-INSTALLATION>";
             }
+
+            for (Deploy.PatchInstruction patch : patches) {
+                logger.info("Patch size %d", patch.getSerializedSize());
+            }
+
             pushRequestBuilder.addAllPatchInstructions(patches);
 
             boolean inherit = ApkInstaller.canInherit(localApks.size(), diffs);

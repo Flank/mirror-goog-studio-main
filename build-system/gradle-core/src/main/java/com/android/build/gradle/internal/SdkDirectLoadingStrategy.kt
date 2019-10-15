@@ -87,7 +87,7 @@ class SdkDirectLoadingStrategy(
     }
 
     private fun loadSdkComponents(targetHash: String, buildToolRevision: Revision): DirectLoadComponents? {
-        val sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet)
+        val sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet, evalIssueReporter)
         if (sdkLocation.type == SdkType.MISSING) {
             return null
         }

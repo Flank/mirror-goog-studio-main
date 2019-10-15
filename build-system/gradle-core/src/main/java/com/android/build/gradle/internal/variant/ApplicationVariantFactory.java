@@ -21,7 +21,6 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput.FilterType;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -50,7 +49,6 @@ import com.android.utils.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -93,7 +91,6 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         Set<String> densities = variant.getFilters(OutputFile.FilterType.DENSITY);
         Set<String> abis = variant.getFilters(OutputFile.FilterType.ABI);
-        Set<String> languages = variant.getFilters(OutputFile.FilterType.LANGUAGE);
 
         checkSplitsConflicts(variant, abis);
 
@@ -103,21 +100,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         }
 
         OutputFactory outputFactory = variant.getOutputFactory();
-
-        switch (variant.getMultiOutputPolicy()) {
-            case MULTI_APK:
-                populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
-                break;
-            case SPLITS:
-                populatePureSplitsOutputs(
-                        abis,
-                        densities,
-                        languages,
-                        outputFactory,
-                        variantConfiguration,
-                        includeMainApk);
-                break;
-        }
+        populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
 
         restrictEnabledOutputs(variantConfiguration, variant.getOutputScope().getApkDatas());
     }
@@ -169,38 +152,6 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         ImmutableList.of(Pair.of(OutputFile.FilterType.DENSITY, density)));
             }
         }
-    }
-
-    private void populatePureSplitsOutputs(
-            Set<String> abis,
-            Set<String> densities,
-            Set<String> languages,
-            OutputFactory outputFactory,
-            GradleVariantConfiguration variantConfiguration,
-            boolean includeMainApk) {
-        // Pure splits always have a main apk.
-        if (includeMainApk) {
-            outputFactory.addMainApk();
-        }
-
-        Iterable<ApkData> producedApks =
-                Iterables.concat(
-                        generateApkDataFor(FilterType.ABI, abis, outputFactory),
-                        generateApkDataFor(FilterType.DENSITY, densities, outputFactory),
-                        generateApkDataFor(FilterType.LANGUAGE, languages, outputFactory));
-
-        producedApks.forEach(
-                apk -> {
-                    apk.setVersionCode(variantConfiguration.getVersionCodeSerializableSupplier());
-                    apk.setVersionName(variantConfiguration.getVersionNameSerializableSupplier());
-                });
-    }
-
-    private ImmutableList<ApkData> generateApkDataFor(
-            FilterType filterType, Set<String> filters, OutputFactory outputFactory) {
-        return filters.stream()
-                .map(f -> outputFactory.addConfigurationSplit(filterType, f))
-                .collect(ImmutableList.toImmutableList());
     }
 
     private void checkSplitsConflicts(
@@ -316,7 +267,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         validateVersionCodes(model);
 
-        if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isFeatureSplit)) {
+        if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isDynamicFeature)) {
             return;
         }
 

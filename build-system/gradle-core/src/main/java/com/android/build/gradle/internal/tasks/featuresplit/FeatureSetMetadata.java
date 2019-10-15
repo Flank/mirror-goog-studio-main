@@ -16,14 +16,9 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit;
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -35,14 +30,10 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
-import org.gradle.api.Task;
-import org.gradle.api.file.FileCollection;
 
 /** Container for all the feature split metadata. */
 public class FeatureSetMetadata {
@@ -50,32 +41,29 @@ public class FeatureSetMetadata {
     public static final Integer MAX_NUMBER_OF_SPLITS_BEFORE_O = 50;
     public static final Integer MAX_NUMBER_OF_SPLITS_STARTING_IN_O = 127;
 
-    public interface SupplierProvider {
-        @NonNull
-        Supplier<String> getFeatureNameSupplierForTask(
-                @NonNull VariantScope variantScope, @NonNull Task task);
-
-        @NonNull
-        Supplier<Integer> getResOffsetSupplierForTask(
-                @NonNull VariantScope variantScope, @NonNull Task task);
-    }
-
     @VisibleForTesting static final String OUTPUT_FILE_NAME = "feature-metadata.json";
     /** Base module or application module resource ID */
     @VisibleForTesting public static final int BASE_ID = 0x7F;
 
+    private final File sourceFile;
     private final Set<FeatureInfo> featureSplits;
     private final Integer maxNumberOfSplitsBeforeO;
 
     public FeatureSetMetadata(Integer maxNumberOfSplitsBeforeO) {
         this.maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO;
         featureSplits = new HashSet<>();
+        sourceFile = null;
     }
 
-    private FeatureSetMetadata(Set<FeatureInfo> featureSplits) {
+    private FeatureSetMetadata(@NonNull Set<FeatureInfo> featureSplits, @NonNull File sourceFile) {
         this.maxNumberOfSplitsBeforeO =
                 Integer.max(MAX_NUMBER_OF_SPLITS_BEFORE_O, featureSplits.size());
         this.featureSplits = ImmutableSet.copyOf(featureSplits);
+        this.sourceFile = sourceFile;
+    }
+
+    public File getSourceFile() {
+        return sourceFile;
     }
 
     public void addFeatureSplit(
@@ -147,75 +135,7 @@ public class FeatureSetMetadata {
         Type typeToken = new TypeToken<HashSet<FeatureInfo>>() {}.getType();
         try (FileReader fileReader = new FileReader(input)) {
             Set<FeatureInfo> featureIds = gson.fromJson(fileReader, typeToken);
-            return new FeatureSetMetadata(featureIds);
-        }
-    }
-
-    public static SupplierProvider getInstance() {
-        return INSTANCE;
-    }
-
-    private static final SupplierProvider INSTANCE = new SupplierProviderImpl();
-
-    private static class SupplierProviderImpl implements SupplierProvider {
-        @NonNull
-        @Override
-        public Supplier<String> getFeatureNameSupplierForTask(
-                @NonNull VariantScope variantScope, @NonNull Task task) {
-            final FileCollection fc =
-                    variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            PROJECT,
-                            FEATURE_SET_METADATA);
-
-            // make the task depends on the file collection so that it runs after the file we need
-            // as been created.
-            // The file collection however is not an input so that we only re-run the task if the
-            // one feature name we care about has changed.
-            task.dependsOn(fc);
-
-            final String gradlePath = task.getProject().getPath();
-
-            return TaskInputHelper.memoize(
-                    () -> {
-                        try {
-                            FeatureSetMetadata featureSetMetadata =
-                                    FeatureSetMetadata.load(fc.getSingleFile());
-                            return featureSetMetadata.getFeatureNameFor(gradlePath);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
-        }
-
-        @NonNull
-        @Override
-        public Supplier<Integer> getResOffsetSupplierForTask(
-                @NonNull VariantScope variantScope, @NonNull Task task) {
-            final FileCollection fc =
-                    variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            PROJECT,
-                            FEATURE_SET_METADATA);
-
-            // make the task depends on the file collection so that it runs after the file we need
-            // as been created.
-            // The file collection however is not an input so that we only re-run the task if the
-            // one feature name we care about has changed.
-            task.dependsOn(fc);
-
-            final String gradlePath = task.getProject().getPath();
-
-            return TaskInputHelper.memoize(
-                    () -> {
-                        try {
-                            FeatureSetMetadata featureSetMetadata =
-                                    FeatureSetMetadata.load(fc.getSingleFile());
-                            return featureSetMetadata.getResOffsetFor(gradlePath);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+            return new FeatureSetMetadata(featureIds, input);
         }
     }
 

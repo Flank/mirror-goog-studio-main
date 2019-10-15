@@ -20,8 +20,8 @@ import com.android.build.api.transform.Format
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
@@ -154,24 +154,18 @@ abstract class R8Task: ProguardConfigurableTask() {
             if (variantType.isAar) {
                 variantScope.artifacts.producesFile(
                     artifactType = InternalArtifactType.SHRUNK_CLASSES,
-                    operationType = BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider = taskProvider,
                     productProvider = R8Task::outputClasses,
                     fileName = "shrunkClasses.jar"
                 )
             } else {
-                variantScope.artifacts.producesDir(
-                    artifactType = InternalArtifactType.DEX,
-                    operationType = BuildArtifactsHolder.OperationType.APPEND,
-                    taskProvider = taskProvider,
-                    productProvider = R8Task::outputDex,
-                    fileName = "shrunkDex"
-                )
+                variantScope.artifacts.getOperations().append(
+                    taskProvider, R8Task::outputDex
+                ).on(MultipleArtifactType.DEX)
             }
 
             variantScope.artifacts.producesFile(
                 artifactType = InternalArtifactType.SHRUNK_JAVA_RES,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = R8Task::outputResources,
                 fileName = "shrunkJavaRes.jar"
@@ -182,7 +176,6 @@ abstract class R8Task: ProguardConfigurableTask() {
                     .artifacts
                     .producesFile(
                         InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
-                        BuildArtifactsHolder.OperationType.INITIAL,
                         taskProvider,
                         R8Task::mainDexListOutput,
                         "mainDexList.txt"

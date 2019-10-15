@@ -18,16 +18,14 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.BuildConfigGenerator
 import com.android.builder.model.ClassField
 import com.android.utils.FileUtils
-import com.google.common.base.Strings
 import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty
-import java.io.File
-import java.util.function.Supplier
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -37,6 +35,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 @CacheableTask
 abstract class GenerateBuildConfig : NonIncrementalTask() {
@@ -48,65 +47,40 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- PRIVATE TASK API -----
 
-    private lateinit var buildConfigPackageNameSupplier: Supplier<String>
-
-    private lateinit var appPackageNameSupplier: Supplier<String>
-
-    private lateinit var isDebuggableSupplier: Supplier<Boolean>
-
-    private lateinit var flavorNameSupplier: Supplier<String>
-
-    private lateinit var flavorNamesWithDimensionNamesSupplier: Supplier<List<String>>
-
     @get:Input
     lateinit var buildTypeName: String
-
-    private lateinit var versionNameSupplier: Supplier<String?>
-
-    private lateinit var versionCodeSupplier: Supplier<Int>
-
-    private lateinit var itemsSupplier: Supplier<List<Any>>
 
     @get:Input
     var isLibrary: Boolean = false
         private set
 
     @get:Input
-    val buildConfigPackageName: String
-        get() = buildConfigPackageNameSupplier.get()
+    abstract val buildConfigPackageName: Property<String>
 
     @get:Input
     @get:Optional
-    val appPackageName: String?
-        get() = if (isLibrary) {
-            null
-        } else appPackageNameSupplier.get()
+    abstract val appPackageName: Property<String>
 
     @get:Input
-    val isDebuggable: Boolean
-        get() = isDebuggableSupplier.get()
+    abstract val debuggable: Property<Boolean>
 
     @get:Input
-    val flavorName: String
-        get() = flavorNameSupplier.get()
+    abstract val flavorName: Property<String>
 
     @get:Input
-    val flavorNamesWithDimensionNames: List<String>
-        get() = flavorNamesWithDimensionNamesSupplier.get()
+    abstract val flavorNamesWithDimensionNames: ListProperty<String>
 
     @get:Input
     @get:Optional
-    val versionName: String?
-        get() = versionNameSupplier.get()
+    abstract val versionName: Property<String>
 
     @get:Input
-    val versionCode: Int
-        get() = versionCodeSupplier.get()
+    abstract val versionCode: Property<Int>
 
     val itemValues: List<String>
         @Input
         get() {
-            val resolvedItems = items
+            val resolvedItems = items.get()
             val list = Lists.newArrayListWithCapacity<String>(resolvedItems.size * 3)
 
             for (item in resolvedItems) {
@@ -123,8 +97,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         }
 
     @get:Internal // handled by getItemValues()
-    val items: List<Any>
-        get() = itemsSupplier.get()
+    abstract val items: ListProperty<Any>
 
     @get:InputFiles
     @get:Optional
@@ -139,7 +112,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
         val generator = BuildConfigGenerator(
             sourceOutputDir,
-            buildConfigPackageName
+            buildConfigPackageName.get()
         )
 
         // Hack (see IDEA-100046): We want to avoid reporting "condition is always true"
@@ -151,7 +124,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         // map.put(PH_DEBUG, Boolean.toString(mDebug));
 
         generator.addField(
-            "boolean", "DEBUG", if (isDebuggable) "Boolean.parseBoolean(\"true\")" else "false"
+            "boolean", "DEBUG", if (debuggable.get()) "Boolean.parseBoolean(\"true\")" else "false"
         )
 
         if (isLibrary) {
@@ -159,34 +132,34 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 .addField(
                     "String",
                     "LIBRARY_PACKAGE_NAME",
-                    '"'.toString() + buildConfigPackageName + '"'.toString()
+                    '"'.toString() + buildConfigPackageName.get() + '"'.toString()
                 )
                 .addDeprecatedField(
                     "String",
                     "APPLICATION_ID",
-                    '"'.toString() + buildConfigPackageName + '"'.toString(),
+                    '"'.toString() + buildConfigPackageName.get() + '"'.toString(),
                     "@deprecated APPLICATION_ID is misleading in libraries. For the library package name use LIBRARY_PACKAGE_NAME"
                 )
         } else {
             generator.addField(
                 "String",
                 "APPLICATION_ID",
-                '"'.toString() + appPackageName + '"'.toString()
+                '"'.toString() + appPackageName.get() + '"'.toString()
             )
         }
 
         generator
             .addField("String", "BUILD_TYPE", '"'.toString() + buildTypeName + '"'.toString())
-            .addField("String", "FLAVOR", '"'.toString() + flavorName + '"'.toString())
-            .addField("int", "VERSION_CODE", Integer.toString(versionCode))
+            .addField("String", "FLAVOR", '"'.toString() + flavorName.get() + '"'.toString())
+            .addField("int", "VERSION_CODE", Integer.toString(versionCode.get()))
             .addField(
                 "String",
                 "VERSION_NAME",
-                '"'.toString() + Strings.nullToEmpty(versionName) + '"'.toString()
+                '"'.toString() + versionName.getOrElse("") + '"'.toString()
             )
-            .addItems(items)
+            .addItems(items.get())
 
-        val flavors = flavorNamesWithDimensionNames
+        val flavors = flavorNamesWithDimensionNames.get()
         val count = flavors.size
         if (count > 1) {
             var i = 0
@@ -224,27 +197,40 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             val variantConfiguration = variantData.variantConfiguration
 
-            task.buildConfigPackageNameSupplier =
-                TaskInputHelper.memoize { variantConfiguration.originalApplicationId }
+            val project = variantScope.globalScope.project
+            task.buildConfigPackageName.set(project.provider {
+                variantConfiguration.originalApplicationId
+            })
+            task.buildConfigPackageName.disallowChanges()
 
-            task.appPackageNameSupplier =
-                TaskInputHelper.memoize { variantConfiguration.applicationId }
+            task.appPackageName.set(project.provider {
+                variantConfiguration.applicationId.takeUnless {
+                    variantConfiguration.type.isAar
+                }
+            })
+            task.appPackageName.disallowChanges()
 
-            task.versionNameSupplier = TaskInputHelper.memoize { variantConfiguration.versionName }
-            task.versionCodeSupplier = TaskInputHelper.memoize { variantConfiguration.versionCode }
+            task.versionName.set(project.provider { variantConfiguration.versionName })
+            task.versionName.disallowChanges()
+            task.versionCode.set(project.provider { variantConfiguration.versionCode })
+            task.versionCode.disallowChanges()
 
-            task.isDebuggableSupplier =
-                TaskInputHelper.memoize { variantConfiguration.buildType.isDebuggable }
+            task.debuggable.set(project.provider { variantConfiguration.buildType.isDebuggable })
+            task.debuggable.disallowChanges()
 
             task.buildTypeName = variantConfiguration.buildType.name
 
             // no need to memoize, variant configuration does that already.
-            task.flavorNameSupplier = Supplier { variantConfiguration.flavorName }
+            task.flavorName.set(project.provider { variantConfiguration.flavorName })
+            task.flavorName.disallowChanges()
 
-            task.flavorNamesWithDimensionNamesSupplier =
-                TaskInputHelper.memoize { variantConfiguration.flavorNamesWithDimensionNames }
+            task.flavorNamesWithDimensionNames.set(project.provider {
+                variantConfiguration.flavorNamesWithDimensionNames
+            })
+            task.flavorNamesWithDimensionNames.disallowChanges()
 
-            task.itemsSupplier = TaskInputHelper.memoize { variantConfiguration.buildConfigItems }
+            task.items.set(project.provider { variantConfiguration.buildConfigItems })
+            task.items.disallowChanges()
 
             task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
 

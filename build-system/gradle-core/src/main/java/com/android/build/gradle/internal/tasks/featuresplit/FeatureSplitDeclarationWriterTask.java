@@ -17,15 +17,15 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import java.util.function.Supplier;
+import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
@@ -36,7 +36,6 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
 
     @VisibleForTesting String uniqueIdentifier;
-    @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
 
     @Input
     public String getUniqueIdentifier() {
@@ -44,9 +43,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     }
 
     @Input
-    public String getApplicationId() {
-        return originalApplicationIdSupplier.get();
-    }
+    public abstract Property<String> getApplicationId();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
@@ -54,7 +51,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     @Override
     protected void doTaskAction() throws IOException {
         FeatureSplitDeclaration declaration =
-                new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId());
+                new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId().get());
         declaration.save(getOutputDirectory().get().getAsFile());
     }
 
@@ -86,7 +83,6 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.METADATA_FEATURE_DECLARATION.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             FeatureSplitDeclarationWriterTask::getOutputDirectory,
                             "out");
@@ -96,9 +92,15 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
         public void configure(@NonNull FeatureSplitDeclarationWriterTask task) {
             super.configure(task);
 
-            task.uniqueIdentifier = getVariantScope().getGlobalScope().getProject().getPath();
-            task.originalApplicationIdSupplier =
-                    getVariantScope().getVariantConfiguration()::getOriginalApplicationId;
+            final VariantScope variantScope = getVariantScope();
+            final Project project = variantScope.getGlobalScope().getProject();
+            task.uniqueIdentifier = project.getPath();
+            task.getApplicationId()
+                    .set(
+                            project.provider(
+                                    variantScope.getVariantConfiguration()
+                                            ::getOriginalApplicationId));
+            task.getApplicationId().disallowChanges();
         }
     }
 }

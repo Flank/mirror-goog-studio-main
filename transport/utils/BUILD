@@ -110,6 +110,7 @@ cc_library(
     copts = [
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
+        "-std=c++11",
     ],
     tags = ["no_windows"],
     deps = [
@@ -148,6 +149,9 @@ cc_test(
     ],
     data = [
         "//tools/base/transport/tests/testdata",
+    ],
+    linkopts = [
+        "-ldl",  # Needed for dladdr referenced in TermincationService
     ],
     linkstatic = 1,
     tags = ["no_windows"],

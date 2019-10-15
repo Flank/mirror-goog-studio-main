@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.transforms
 
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -163,7 +163,6 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ShrinkBundleResourcesTask::compressedResources,
                 "shrunk-bundled-res.ap_"
@@ -183,10 +182,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 variantScope
                     .artifacts
                     .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
-            } else if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.DEX)) {
+            } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
                 variantScope.globalScope.project.files(
-                    variantScope.artifacts
-                        .getFinalProductAsFileCollection(InternalArtifactType.DEX))
+                    variantScope.artifacts.getOperations().getAll(MultipleArtifactType.DEX))
             } else {
                 variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
             }

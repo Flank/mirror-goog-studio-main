@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
+import com.android.builder.errors.EvalIssueReporter
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import java.io.File
@@ -137,13 +138,24 @@ object SdkLocator {
     private var cachedSdkLocation: SdkLocation? = null
 
     @JvmStatic
-    fun getSdkLocation(projectRootDir: File): SdkLocation {
-        return getSdkLocation(SdkLocationSourceSet(projectRootDir))
+    fun getSdkDirectory(projectRootDir: File, evalIssueReporter: EvalIssueReporter): File {
+        val sdkLocation = getSdkLocation(SdkLocationSourceSet(projectRootDir), evalIssueReporter)
+        return if (sdkLocation.type == SdkType.MISSING) {
+            // This error should have been reported earlier when SdkLocation was created, so we can
+            // just return a dummy file here as it won't be used anyway.
+            File(projectRootDir, "missingSdkDirectory")
+        } else {
+            sdkLocation.directory
+                ?: error("Directory must not be null when type = ${sdkLocation.type}")
+        }
     }
 
     @JvmStatic
     @Synchronized
-    fun getSdkLocation(sourceSet: SdkLocationSourceSet): SdkLocation {
+    fun getSdkLocation(
+        sourceSet: SdkLocationSourceSet,
+        evalIssueReporter: EvalIssueReporter
+    ): SdkLocation {
         cachedSdkLocationKey?.let {
             if (it == sourceSet) {
                 return cachedSdkLocation!!
@@ -158,7 +170,19 @@ object SdkLocator {
         }
 
         SdkLocation(null, SdkType.MISSING).let {
+            // Update the cache first, so that even if we fail below with a runtime error, the cache
+            // is still updated and the error message will be displayed only once (even in parallel
+            // builds).
             updateCache(it, sourceSet)
+
+            val filePath =
+                File(sourceSet.projectRoot, SdkConstants.FN_LOCAL_PROPERTIES).absolutePath
+            val message =
+                "SDK location not found. Define location with an ANDROID_SDK_ROOT environment" +
+                        " variable or by setting the sdk.dir path in your project's local" +
+                        " properties file at '$filePath'."
+            evalIssueReporter.reportError(EvalIssueReporter.Type.SDK_NOT_SET, message, filePath)
+
             return it
         }
     }

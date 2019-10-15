@@ -18,7 +18,6 @@ syntax = "proto3";
 package profiler.proto;
 
 import "common.proto";
-import "energy.proto";
 
 // RPC services to send data to perfd.
 service InternalEnergyService {

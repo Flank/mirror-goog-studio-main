@@ -156,7 +156,7 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
   /**
    * Starts a Span (tag) with the given name.
    * <p> The name is expected to be of the form:
-   * "tag_name;attr1=value;attr2=value;"
+   * "tag_name;attr1=value;attr2=value"
    * <p> Which is how Spans are encoded in the ResStringPool. A corresponding call to
    * [endSpan] is needed to close the span.
    */

@@ -24,9 +24,7 @@ internal class TestBuildArtifactsHolder(
     project: Project,
     val variantName: String,
     val rootOutputDir: () -> File
-) : BuildArtifactsHolder(project, rootOutputDir) {
-
-    override fun getIdentifier() = variantName
+) : BuildArtifactsHolder(project, rootOutputDir, variantName) {
 
     /** Return the expected location of a generated file given the task name and file name. */
     internal fun file(artifactType: InternalArtifactType<*>, taskName : String, filename : String) =

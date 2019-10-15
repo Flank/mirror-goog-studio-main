@@ -36,7 +36,6 @@ import org.gradle.api.attributes.Attribute
 fun publishArtifactToConfiguration(
     configuration: Configuration,
     file: Any,
-    builtBy: Any,
     artifactType: AndroidArtifacts.ArtifactType,
     attributeMap: Map<Attribute<String>, String>? = null
 ) {
@@ -51,7 +50,6 @@ fun publishArtifactToConfiguration(
                     file
                 ) { artifact ->
                     artifact.type = type
-                    artifact.builtBy(builtBy)
                 }
                 variant.attributes.let { container ->
                     attributeMap?.keys?.forEach { key ->

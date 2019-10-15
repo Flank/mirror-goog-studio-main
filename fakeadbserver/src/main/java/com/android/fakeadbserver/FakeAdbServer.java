@@ -129,11 +129,13 @@ public final class FakeAdbServer implements AutoCloseable {
         return mServerSocket.getLocalPort();
     }
 
-    /**
-     * This method allows for the caller thread to wait until the server shuts down.
-     */
-    public void awaitServerTermination() throws InterruptedException {
-        mMainServerThreadExecutor.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
+    /** This method allows for the caller thread to wait until the server shuts down. */
+    public boolean awaitServerTermination() throws InterruptedException {
+        return mMainServerThreadExecutor.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
+    }
+
+    public boolean awaitServerTermination(long time, TimeUnit unit) throws InterruptedException {
+        return mMainServerThreadExecutor.awaitTermination(time, unit);
     }
 
     /**

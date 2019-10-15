@@ -24,7 +24,6 @@
 #include "proto/memory.pb.h"
 #include "utils/circular_buffer.h"
 #include "utils/clock.h"
-#include "utils/file_cache.h"
 
 namespace profiler {
 
@@ -35,8 +34,7 @@ class MemoryCache {
   static const int64_t kUnfinishedTimestamp = LLONG_MAX;
 
   // TODO consider configuring cache sizes independently.
-  explicit MemoryCache(Clock* clock, FileCache* file_cache,
-                       int32_t samples_capacity);
+  explicit MemoryCache(Clock* clock, int32_t samples_capacity);
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveAllocStatsSample(const proto::MemoryData::AllocStatsSample& sample);
@@ -68,7 +66,6 @@ class MemoryCache {
 
  private:
   Clock* clock_;
-  FileCache* file_cache_;
 
   CircularBuffer<proto::MemoryData::MemorySample> memory_samples_;
   CircularBuffer<proto::MemoryData::AllocStatsSample> alloc_stats_samples_;

@@ -56,7 +56,10 @@ public interface BaseArtifact {
     @NonNull
     File getClassesFolder();
 
-    /** Folders with additional classes registered by third-party plugins like Kotlin. */
+    /**
+     * Folders or jars containing additional classes (e.g., R.jar or those registered by third-party
+     * plugins like Kotlin).
+     */
     @NonNull
     Set<File> getAdditionalClassesFolders();
 

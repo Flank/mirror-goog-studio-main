@@ -4,12 +4,10 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-9702dd01ae702fc1b6ae97d680f8457a622b17d4dc2d4d7ef49ee35d3df18355
+dcb2af43eb8a53f00c3b2554d42acc6305e30151670d1b97a4de254f25bfb5f6
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
-com.android.build.api.artifact.AppendRequest.on: void (ARTIFACT_TYPE)
-com.android.build.api.artifact.ArtifactConfigurationException
-com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
+com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$DIRECTORY
 com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()
@@ -50,49 +48,6 @@ com.android.build.api.artifact.ReplaceRequest
 com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
-com.android.build.api.sourcesets.AndroidSourceDirectorySet
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.getFilter: org.gradle.api.tasks.util.PatternFilterable ()
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceDirectoryTrees: java.util.List<org.gradle.api.file.ConfigurableFileTree> ()
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceFiles: org.gradle.api.file.FileTree ()
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSrcDirs: java.util.Set<java.io.File> ()
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.setSrcDirs: void (java.lang.Iterable<?>)
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.srcDir: void (java.lang.Object)
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.srcDirs: void (java.lang.Object[])
-com.android.build.api.sourcesets.AndroidSourceFile
-com.android.build.api.sourcesets.AndroidSourceFile.getSrcFile: java.io.File ()
-com.android.build.api.sourcesets.AndroidSourceFile.setSrcFile: void (java.io.File)
-com.android.build.api.sourcesets.AndroidSourceFile.srcFile: com.android.build.api.sourcesets.AndroidSourceFile (java.lang.Object)
-com.android.build.api.sourcesets.AndroidSourceSet
-com.android.build.api.sourcesets.AndroidSourceSet.aidl: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.assets: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.getAidl: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getAnnotationProcessorConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getApiConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getAssets: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getCompileConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getCompileOnlyConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getImplementationConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getJava: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getJni: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getJniLibs: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getManifest: com.android.build.api.sourcesets.AndroidSourceFile ()
-com.android.build.api.sourcesets.AndroidSourceSet.getPackageConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getProvidedConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getRenderscript: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getRes: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getResources: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getRuntimeOnlyConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.getShaders: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
-com.android.build.api.sourcesets.AndroidSourceSet.getWearAppConfigurationName: java.lang.String ()
-com.android.build.api.sourcesets.AndroidSourceSet.java: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.jni: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.jniLibs: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.manifest: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceFile>)
-com.android.build.api.sourcesets.AndroidSourceSet.renderscript: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.res: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.resources: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.sourcesets.AndroidSourceSet.setRoot: com.android.build.api.sourcesets.AndroidSourceSet (java.lang.String)
-com.android.build.api.sourcesets.AndroidSourceSet.shaders: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()

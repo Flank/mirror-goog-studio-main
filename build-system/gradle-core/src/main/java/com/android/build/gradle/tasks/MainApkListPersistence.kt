@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -68,7 +67,6 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APK_LIST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 MainApkListPersistence::outputFile,
                 fileName = SdkConstants.FN_APK_LIST

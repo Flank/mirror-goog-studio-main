@@ -20,16 +20,18 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
         --config=cloud_resultstore \
         --invocation_id=${invocation_id} \
         --build_tag_filters=-no_mac \
-        --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only \
+        --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate \
         --tool_tag=${script_name} \
         --define=meta_android_build_number=${build_number} \
         --profile=${dist_dir}/mac-profile-${build_number}.json \
         -- \
-        $(< "${script_dir}/targets")
+	//tools/base/... \
+	-//tools/base/build-system/...
 
 readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
+  readonly bin_dir="$("${script_dir}"/bazel info bazel-bin)"
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi

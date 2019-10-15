@@ -266,12 +266,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public String getFullName() {
         if (mFullName == null) {
-            mFullName =
-                    computeRegularVariantName(
-                            getFlavorName(),
-                            mBuildType,
-                            mType,
-                            mTestedConfig == null ? null : mTestedConfig.getType());
+            mFullName = computeRegularVariantName(getFlavorName(), mBuildType, mType);
         }
 
         return mFullName;
@@ -285,9 +280,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * side will be called the same as for library plugins, while the feature side will add
      * 'feature' to the name.
      *
-     * <p>Using {@link #computeHybridVariantName()} will always put 'aar' in the library variant
-     * names (for feature plugins), making it different from the library plugin.
-     *
      * @param flavorName the flavor name, as computed by {@link #computeFlavorName(List)}
      * @param buildType the build type
      * @param type the variant type
@@ -295,10 +287,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public static <B extends BuildType> String computeRegularVariantName(
-            @NonNull String flavorName,
-            @NonNull B buildType,
-            @NonNull VariantType type,
-            @Nullable VariantType testedType) {
+            @NonNull String flavorName, @NonNull B buildType, @NonNull VariantType type) {
         StringBuilder sb = new StringBuilder();
 
         if (!flavorName.isEmpty()) {
@@ -308,58 +297,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             sb.append(buildType.getName());
         }
 
-        if (type.isHybrid()) {
-            //noinspection ConstantConditions
-            StringHelper.appendCapitalized(sb, type.getHybridName());
-        }
-
         if (type.isTestComponent()) {
-            if (testedType != null && testedType.isHybrid()) {
-                sb.append("Feature");
-            }
             sb.append(type.getSuffix());
         }
         return sb.toString();
     }
-
-    /**
-     * Returns the full, unique name of the variant in camel case (starting with a lower case),
-     * including BuildType, Flavors and Test (if applicable).
-     *
-     * <p>This is the full hybrid version even for variants that are not hybrid (ie LIBRARY are not
-     * considered hybrid but they share with FEATURE, so this will return a different name than
-     * {@link #computeRegularVariantName(String, BuildType, VariantType, VariantType)}.)
-     *
-     * <p>This should only be used to differentiate the assemble task name.
-     *
-     * @return the name of the variant
-     */
-    @NonNull
-    public String computeHybridVariantName() {
-        StringBuilder sb = new StringBuilder();
-
-        String flavorName = getFlavorName();
-        if (!flavorName.isEmpty()) {
-            sb.append(flavorName);
-            StringHelper.appendCapitalized(sb, mBuildType.getName());
-        } else {
-            sb.append(mBuildType.getName());
-        }
-
-        if (mType.isTestComponent()) {
-            VariantType testedType = mTestedConfig == null ? null : mTestedConfig.getType();
-            if (testedType != null && testedType.isHybrid()) {
-                //noinspection ConstantConditions
-                StringHelper.appendCapitalized(sb, testedType.getHybridName());
-            }
-            sb.append(mType.getSuffix());
-        } else {
-            //noinspection ConstantConditions
-            StringHelper.appendCapitalized(sb, mType.getHybridName());
-        }
-        return sb.toString();
-    }
-
 
     /**
      * Returns a full name that includes the given splits name.
@@ -498,10 +440,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public Collection<String> getDirectorySegments() {
         if (mDirSegments == null) {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-            if (mType.isHybrid()) {
-                builder.add("feature");
-            }
 
             if (mType.isTestComponent()) {
                 builder.add(mType.getPrefix());
@@ -1427,7 +1365,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @Nullable
     public SigningConfig getSigningConfig() {
-        if (mType.isFeatureSplit()) {
+        if (mType.isDynamicFeature()) {
             return null;
         }
         if (mSigningConfigOverride != null) {

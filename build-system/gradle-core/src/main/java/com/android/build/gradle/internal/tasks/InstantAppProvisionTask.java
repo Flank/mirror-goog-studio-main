@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
@@ -30,26 +29,26 @@ import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to provision connected devices for Instant App. All the connected devices are provisioned.
  */
-public class InstantAppProvisionTask extends DefaultTask {
-
-    private Supplier<File> instantAppSdk;
+public abstract class InstantAppProvisionTask extends DefaultTask {
 
     private Provider<File> adbExecutableProvider;
 
     @TaskAction
     public void provisionDevices() throws ProvisionException, DeviceException, ExecutionException {
-        if (instantAppSdk.get() == null) {
+        File instantAppSdk = getInstantAppSdk().get().getAsFile();
+        if (instantAppSdk == null) {
             throw new GradleException("No Instant App Sdk found.");
         }
 
@@ -62,7 +61,7 @@ public class InstantAppProvisionTask extends DefaultTask {
                         adbExecutableProvider.get(), 0, new LoggerWrapper(getLogger()));
 
         InstantAppProvisioner provisioner =
-                new InstantAppProvisioner(instantAppSdk.get(), deviceProvider, getLogger());
+                new InstantAppProvisioner(instantAppSdk, deviceProvider, getLogger());
 
         provisioner.provisionDevices();
     }
@@ -73,10 +72,8 @@ public class InstantAppProvisionTask extends DefaultTask {
     }
 
     @InputDirectory
-    @Nullable
-    public File getInstantAppSdk() {
-        return instantAppSdk.get();
-    }
+    @Optional
+    public abstract DirectoryProperty getInstantAppSdk();
 
     public static class CreationAction extends TaskCreationAction<InstantAppProvisionTask> {
 
@@ -104,22 +101,35 @@ public class InstantAppProvisionTask extends DefaultTask {
 
             task.adbExecutableProvider = globalScope.getSdkComponents().getAdbExecutableProvider();
 
-            task.instantAppSdk =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                File sdkFolder = globalScope.getSdkComponents().getSdkFolder();
-                                if (sdkFolder != null) {
-                                    LocalPackage instantAppSdk =
-                                            AndroidSdkHandler.getInstance(sdkFolder)
-                                                    .getLocalPackage(
-                                                            "extras;google;instantapps",
-                                                            new ConsoleProgressIndicator());
-                                    if (instantAppSdk != null) {
-                                        return instantAppSdk.getLocation();
-                                    }
-                                }
-                                return null;
-                            });
+            task.getInstantAppSdk()
+                    .set(
+                            globalScope
+                                    .getProject()
+                                    .provider(
+                                            () -> {
+                                                File sdkFolder =
+                                                        globalScope
+                                                                .getSdkComponents()
+                                                                .getSdkDirectory();
+                                                LocalPackage instantAppSdk =
+                                                        AndroidSdkHandler.getInstance(sdkFolder)
+                                                                .getLocalPackage(
+                                                                        "extras;google;instantapps",
+                                                                        new ConsoleProgressIndicator());
+                                                if (instantAppSdk != null) {
+                                                    return globalScope
+                                                            .getProject()
+                                                            .getObjects()
+                                                            .directoryProperty()
+                                                            .dir(
+                                                                    instantAppSdk
+                                                                            .getLocation()
+                                                                            .getAbsolutePath())
+                                                            .get();
+                                                }
+                                                return null;
+                                            }));
+            task.getInstantAppSdk().disallowChanges();
         }
     }
 }

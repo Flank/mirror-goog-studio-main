@@ -42,37 +42,24 @@ interface VariantType {
     val isBaseModule: Boolean
 
     /**
-     * Returns true if the variant is a feature split/optional module.
-     */
-    val isFeatureSplit: Boolean
-
-    /**
-     * Returns true if the variant is a dual-type. This is only valid for BASE_FEATURE/FEATURE.
-     * The library component of a feature returns false.
-     */
-    val isHybrid: Boolean
-
-    /**
-     * Returns true if the variant is a dynamic feature i.e. an optional apk. [isFeatureSplit]
-     * differs from this property as it will be true for feature splits, while this property will
-     * be false for those.
+     * Returns true if the variant is a dynamic feature i.e. an optional apk.
      */
     val isDynamicFeature: Boolean
-
-    /**
-     * Returns true if the variant is a instant app feature split.
-     *
-     * This does not include instant app base features.
-     *
-     * [isFeatureSplit] differs from this property as it will be true for dynamic app features,
-     * while this property will be false for those.
-     */
-    val isInstantAppFeatureSplit: Boolean
 
     /**
      * Returns true if the variant publishes artifacts to meta-data.
      */
     val publishToMetadata: Boolean
+
+    /**
+     * Returns true if the variant publishes artifacts to external repositories.
+     */
+    val publishToRepository: Boolean
+
+    /**
+     * Returns true if the variant publishes artifacts to other modules
+     */
+    val publishToOtherModules: Boolean
 
     /**
      * Returns true if this is the test component of the module.
@@ -117,12 +104,6 @@ interface VariantType {
     /** Whether this variant can have split outputs.  */
     val canHaveSplits: Boolean
 
-    val consumeType: String
-    val publishType: String?
-
-    /** the name of the hybrid sub-type */
-    val hybridName: String?
-
     val name: String
 
     companion object {
@@ -145,20 +126,14 @@ interface VariantType {
     }
 }
 
-// TODO: synchronize with AndroidTypeAttr somehow. Probably move this to gradle-core with new API/DSL...
-const val ATTR_APK = "Apk"
-const val ATTR_AAR = "Aar"
-const val ATTR_FEATURE = "Feature"
-const val ATTR_PUBLICATION = "Publication"
-
 enum class VariantTypeImpl(
     override val isAar: Boolean = false,
     override val isApk: Boolean = false,
     override val isBaseModule: Boolean = false,
-    override val isHybrid: Boolean = false,
     override val isDynamicFeature: Boolean = false,
-    override val isInstantAppFeatureSplit: Boolean = false,
     override val publishToMetadata: Boolean = false,
+    override val publishToRepository: Boolean = false,
+    override val publishToOtherModules: Boolean = false,
     override val isForTesting: Boolean = false,
     override val prefix: String,
     override val suffix: String,
@@ -167,86 +142,42 @@ enum class VariantTypeImpl(
     override val artifactType: Int,
     override val isExportDataBindingClassList: Boolean = false,
     override val analyticsVariantType: GradleBuildVariant.VariantType,
-    override val canHaveSplits: Boolean = false,
-    private val consumeTypeOptional: String?,
-    override val publishType: String?,
-    override val hybridName: String? = null
+    override val canHaveSplits: Boolean = false
 ): VariantType {
     BASE_APK(
         isApk = true,
         isBaseModule = true,
-        publishToMetadata = true,
+        publishToRepository = true,
+        publishToOtherModules = true,
         prefix = "",
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
-        canHaveSplits = true,
-        consumeTypeOptional = ATTR_AAR,
-        publishType = ATTR_APK
+        canHaveSplits = true
     ),
     OPTIONAL_APK(
         isApk = true,
         isDynamicFeature = true,
         publishToMetadata = true,
+        publishToOtherModules = true,
         prefix = "",
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         analyticsVariantType = GradleBuildVariant.VariantType.OPTIONAL_APK,
-        canHaveSplits = true,
-        consumeTypeOptional = ATTR_APK,
-        publishType = ATTR_APK),
-    BASE_FEATURE(
-        isApk = true,
-        isBaseModule = true,
-        isHybrid = true,
-        prefix = "",
-        suffix = "",
-        artifactName = AndroidProject.ARTIFACT_MAIN,
-        artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
-        canHaveSplits = true,
-        consumeTypeOptional = ATTR_AAR,
-        publishType = ATTR_FEATURE,
-        hybridName = "feature"
-    ),
-    FEATURE(
-        isApk = true,
-        isInstantAppFeatureSplit = true,
-        isHybrid = true,
-        publishToMetadata = true,
-        prefix = "",
-        suffix = "",
-        artifactName = AndroidProject.ARTIFACT_MAIN,
-        artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
-        canHaveSplits = true,
-        consumeTypeOptional = ATTR_FEATURE,
-        publishType = ATTR_FEATURE,
-        hybridName = "feature"
-    ),
+        canHaveSplits = true),
     LIBRARY(
         isAar = true,
+        publishToRepository = true,
+        publishToOtherModules = true,
         prefix = "",
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         isExportDataBindingClassList = true,
         analyticsVariantType = GradleBuildVariant.VariantType.LIBRARY,
-        canHaveSplits = true,
-        consumeTypeOptional = ATTR_AAR,
-        publishType = ATTR_AAR,
-        hybridName = "aar"), // aar is a non hybrid but has a hybrid name to differentiate from (BASE_)FEATURE.
-    INSTANTAPP(
-        prefix = "",
-        suffix = "",
-        artifactName = AndroidProject.ARTIFACT_MAIN,
-        artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.INSTANTAPP,
-        consumeTypeOptional = ATTR_FEATURE,
-        publishType = null
-    ),
+        canHaveSplits = true),
     TEST_APK(
         isApk = true,
         isForTesting = true,
@@ -254,9 +185,7 @@ enum class VariantTypeImpl(
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.TEST_APK,
-        consumeTypeOptional = ATTR_APK,
-        publishType = null),
+        analyticsVariantType = GradleBuildVariant.VariantType.TEST_APK),
     ANDROID_TEST(
         isApk = true,
         isForTesting = true,
@@ -265,9 +194,7 @@ enum class VariantTypeImpl(
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_ANDROID_TEST,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.ANDROID_TEST,
-        consumeTypeOptional = null,
-        publishType = null),
+        analyticsVariantType = GradleBuildVariant.VariantType.ANDROID_TEST),
     UNIT_TEST(
         isForTesting = true,
         prefix = VariantType.UNIT_TEST_PREFIX,
@@ -275,16 +202,8 @@ enum class VariantTypeImpl(
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_UNIT_TEST,
         artifactType = ArtifactMetaData.TYPE_JAVA,
-        analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST,
-        consumeTypeOptional = null,
-        publishType = null);
-
-    override val isFeatureSplit: Boolean
-        get() = isInstantAppFeatureSplit || isDynamicFeature
+        analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST);
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK
-
-    override val consumeType: String
-        get() = consumeTypeOptional ?: throw RuntimeException("Unsupported consumeType for VariantType: ${this.name}")
 }

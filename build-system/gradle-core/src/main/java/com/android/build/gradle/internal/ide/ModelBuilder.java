@@ -28,9 +28,7 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -53,6 +51,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
@@ -666,19 +665,16 @@ public class ModelBuilder<Extension extends BaseExtension>
         final GlobalScope globalScope = variantScope.getGlobalScope();
         final Project project = globalScope.getProject();
 
-        final boolean hasFeaturePlugin = project.getPlugins().hasPlugin(FeaturePlugin.class);
-        final boolean isBaseFeature =
-                hasFeaturePlugin && globalScope.getExtension().getBaseFeature();
+        // We check for default files unless it's a base module, which can include default files.
+        boolean isBaseModule = variantScope.getType().isBaseModule();
+        boolean isDynamicFeature = variantScope.getType().isDynamicFeature();
 
-        // We check for default files unless it's a base feature, which can include default files.
-        if (!isBaseFeature) {
+        if (!isBaseModule) {
             List<File> consumerProguardFiles = variantScope.getConsumerProguardFilesForFeatures();
 
-            boolean isDynamicFeature = variantScope.getType().isDynamicFeature();
             ExportConsumerProguardFilesTask.checkProguardFiles(
                     project,
                     isDynamicFeature,
-                    hasFeaturePlugin,
                     consumerProguardFiles,
                     errorMessage ->
                             extraModelInfo
@@ -873,9 +869,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                         modelLevel,
                         modelWithFullDependency);
 
-        Set<File> additionalTestClasses = new HashSet<>();
-        additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
-        additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+        Set<File> additionalClasses = new HashSet<>();
+        additionalClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
+        additionalClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+        additionalClasses.addAll(
+                variantData
+                        .getScope()
+                        .getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH)
+                        .getFiles());
 
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
@@ -932,7 +933,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
                 scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
-                additionalTestClasses,
+                additionalClasses,
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
                 dependencies.getSecond(),
@@ -990,14 +991,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         switch (variantType) {
             case BASE_APK:
             case OPTIONAL_APK:
-            case BASE_FEATURE:
-            case FEATURE:
             case TEST_APK:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(
-                                InternalArtifactType.APK.INSTANCE,
-                                InternalArtifactType.ABI_PACKAGED_SPLIT.INSTANCE,
-                                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT.INSTANCE),
+                        ImmutableList.of(InternalArtifactType.APK.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 ApkData mainApkInfo =
@@ -1041,7 +1037,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             AndroidArtifacts.ArtifactType.CLASSES,
                                             AndroidArtifacts.PublishedConfigType.API_ELEMENTS);
                             // now get the output type
-                            ArtifactType<? extends FileSystemLocation> testedOutputType =
+                            SingleArtifactType<? extends FileSystemLocation> testedOutputType =
                                     taskOutputSpec.getOutputType();
 
                             return ImmutableList.of(
@@ -1063,7 +1059,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                     .iterator()
                                                     .next()));
                         };
-            case INSTANTAPP:
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
         }
@@ -1078,8 +1073,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         switch (variantType) {
             case BASE_APK:
             case OPTIONAL_APK:
-            case BASE_FEATURE:
-            case FEATURE:
             case ANDROID_TEST:
             case TEST_APK:
                 return new BuildOutputsSupplier(
@@ -1098,7 +1091,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         new File(
                                                 variantData.getScope().getManifestOutputDirectory(),
                                                 SdkConstants.ANDROID_MANIFEST_XML))));
-            case INSTANTAPP:
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
         }

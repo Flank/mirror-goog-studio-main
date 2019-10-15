@@ -65,7 +65,7 @@ class DependenciesReportTest {
         FileSubject.assertThat(bundle).exists()
         ZipFile(bundle).use {
             val dependenciesFile = it.getEntry("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
-            val deps = AppDependencies.parseDelimitedFrom(it.getInputStream(dependenciesFile))
+            val deps = AppDependencies.parseFrom(it.getInputStream(dependenciesFile))
             val mavenLib = deps.libraryList.stream()
                 .filter { library -> library.hasMavenLibrary() }
                 .filter { library -> library.mavenLibrary.groupId.equals("androidx.core") &&

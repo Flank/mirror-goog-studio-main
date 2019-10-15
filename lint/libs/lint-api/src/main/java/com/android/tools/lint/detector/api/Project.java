@@ -160,6 +160,7 @@ public class Project {
     protected GradleVersion gradleVersion;
     protected MavenCoordinates mavenCoordinates = null;
     protected Set<Desugaring> desugaring;
+    protected Boolean coreLibraryDesugaringEnabled;
     private Map<String, String> superClassMap;
     private ResourceVisibilityLookup resourceVisibility;
     private Revision buildToolsRevision;
@@ -225,6 +226,19 @@ public class Project {
     /** Returns true if the given desugaring operation is in effect for this project. */
     public boolean isDesugaring(Desugaring type) {
         return getDesugaring().contains(type);
+    }
+
+    public boolean isCoreLibraryDesugaringEnabled() {
+        if (coreLibraryDesugaringEnabled == null) {
+            IdeAndroidProject projectModel = getGradleProjectModel();
+            if (projectModel != null) {
+                coreLibraryDesugaringEnabled =
+                        projectModel.getJavaCompileOptions().isCoreLibraryDesugaringEnabled();
+            } else {
+                coreLibraryDesugaringEnabled = false;
+            }
+        }
+        return coreLibraryDesugaringEnabled;
     }
 
     /** Returns the corresponding IDE project. */

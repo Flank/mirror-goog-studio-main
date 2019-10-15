@@ -69,7 +69,6 @@ coverage_java_test(
     jvm_flags = ["-Dtest.suite.jar=NativeBinarySizeTest.jar"],
     tags = [
         "no_windows",
-        "perfgate_multi_run",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -172,9 +171,6 @@ perf_test(
     size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java",
-    ],
-    tags = [
-        "perfgate_multi_run",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [

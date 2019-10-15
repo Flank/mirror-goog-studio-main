@@ -39,4 +39,7 @@ public interface JavaCompileOptions {
      */
     @NonNull
     String getTargetCompatibility();
+
+    /** @return true if core library desugaring is enabled, false otherwise. */
+    boolean isCoreLibraryDesugaringEnabled();
 }

@@ -176,7 +176,7 @@ public class ClassFileInputTest {
         }
         List<String> relativePaths =
                 ClassFileInputs.fromPath(jarFile.toPath())
-                        .entries(p -> true)
+                        .entries((x, y) -> true)
                         .map(ClassFileEntry::getRelativePath)
                         .collect(Collectors.toList());
         Truth.assertThat(relativePaths).containsExactlyElementsIn(fileNames);
@@ -195,7 +195,7 @@ public class ClassFileInputTest {
             throws IOException {
         List<String> filesRead =
                 ClassFileInputs.fromPath(rootPath.toPath())
-                        .entries(path -> true)
+                        .entries((x, y) -> true)
                         .map(ClassFileEntry::getRelativePath)
                         .collect(Collectors.toList());
 

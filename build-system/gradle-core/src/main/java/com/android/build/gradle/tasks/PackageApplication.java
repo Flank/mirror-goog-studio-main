@@ -20,7 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.utils.FileCache;
@@ -83,18 +85,16 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
     public static class CreationAction
             extends PackageAndroidArtifact.CreationAction<PackageApplication> {
 
-        private final ArtifactType<Directory> expectedOutputType;
         private final File outputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
-                @NonNull ArtifactType<Directory> inputResourceFilesType,
+                @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
                 @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
-                @NonNull ArtifactType<Directory> expectedOutputType,
                 boolean packageCustomClassDependencies) {
             super(
                     packagingScope,
@@ -104,7 +104,6 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                     fileCache,
                     outputScope,
                     packageCustomClassDependencies);
-            this.expectedOutputType = expectedOutputType;
             this.outputDirectory = outputDirectory;
         }
 
@@ -128,8 +127,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
-                            expectedOutputType,
-                            BuildArtifactsHolder.OperationType.INITIAL,
+                            InternalArtifactType.APK.INSTANCE,
                             taskProvider,
                             PackageApplication::getOutputDirectory,
                             outputDirectory.getAbsolutePath(),
@@ -139,7 +137,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         @Override
         protected void finalConfigure(PackageApplication task) {
             super.finalConfigure(task);
-            task.expectedOutputType = expectedOutputType;
+            task.expectedOutputType = InternalArtifactType.APK.INSTANCE;
         }
     }
 }

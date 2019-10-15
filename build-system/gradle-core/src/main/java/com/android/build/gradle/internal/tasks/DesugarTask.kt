@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -37,7 +36,6 @@ import com.google.common.collect.ArrayListMultimap
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -135,9 +133,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
                 val processedClasses = variantScope.globalScope.project.files(
-                    variantScope
-                        .artifacts
-                        .getFinalProduct(output)
+                    variantScope.artifacts.getOperations().get(output)
                 )
                     .asFileTree
                 variantScope
@@ -160,25 +156,21 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_PROJECT_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::projectOutput
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::subProjectOutput
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::externalLibsOutput
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DesugarTask::tmpDir
             )

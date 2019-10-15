@@ -20,8 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeatureExtension;
-import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.plugins.AppPlugin;

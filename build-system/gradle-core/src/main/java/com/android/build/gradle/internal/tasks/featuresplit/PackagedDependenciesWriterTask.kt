@@ -20,7 +20,6 @@ import org.gradle.api.Action
 import com.android.build.api.attributes.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -132,7 +131,6 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.PACKAGED_DEPENDENCIES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 PackagedDependenciesWriterTask::outputFile,
                 "deps.txt"

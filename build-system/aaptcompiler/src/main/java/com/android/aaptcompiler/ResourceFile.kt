@@ -16,8 +16,6 @@
 
 package com.android.aaptcompiler
 
-import com.android.resources.ResourceType
-
 class ResourceFile {
     lateinit var name :ResourceName
     lateinit var configuration: ConfigDescription
@@ -43,9 +41,9 @@ class ResourceFile {
 }
 
 data class ResourceName(
-    val pck: String?,
-    val type: ResourceType = ResourceType.RAW,
-    val entry: String? = null): Comparable<ResourceName> {
+  val pck: String?,
+  val type: AaptResourceType = AaptResourceType.RAW,
+  val entry: String? = null): Comparable<ResourceName> {
 
   override fun compareTo(other: ResourceName): Int {
     val pckCompare = when {
@@ -63,19 +61,22 @@ data class ResourceName(
       return typeCompare
     }
 
-    val entryCompare = when {
-      entry === other.pck -> 0
+    return when {
+      entry === other.entry -> 0
       entry == null -> -1
       other.entry == null -> 1
       else -> entry.compareTo(other.entry)
     }
-    return entryCompare
   }
 
   override fun toString() : String {
-        val maybePck = if (pck != null && pck.isNotEmpty()) "$pck:" else ""
-        return "$maybePck${type.getName()}/$entry"
+        val maybePck = if (!pck.isNullOrEmpty()) "$pck:" else ""
+        return "$maybePck${type.tagName}/$entry"
     }
+
+  companion object {
+    val EMPTY = ResourceName("", AaptResourceType.RAW, "")
+  }
 }
 
 class SourcedResourceName(val name: ResourceName, val line: Int)

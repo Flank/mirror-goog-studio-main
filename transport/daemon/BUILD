@@ -52,6 +52,9 @@ cc_test(
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
     ],
+    linkopts = [
+        "-ldl",  # Needed for dladdr referenced in TermincationService
+    ],
     linkstatic = 1,
     tags = ["no_windows"],
     deps = [
@@ -71,6 +74,9 @@ cc_test(
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
+    ],
+    linkopts = [
+        "-ldl",  # Needed for dladdr referenced in TermincationService
     ],
     linkstatic = 1,
     tags = [

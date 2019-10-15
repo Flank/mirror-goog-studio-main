@@ -18,18 +18,20 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -37,7 +39,9 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -51,6 +55,10 @@ abstract class DexFileDependenciesTask
 
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
+
+    @get:Optional
+    @get:OutputFile
+    val outputKeepRules: RegularFileProperty = objectFactory.fileProperty()
 
     @get:Classpath
     val classes: ConfigurableFileCollection = objectFactory.fileCollection()
@@ -67,6 +75,10 @@ abstract class DexFileDependenciesTask
 
     @get:Input
     val debuggable: Property<Boolean> = objectFactory.property(Boolean::class.java)
+
+    @get:Optional
+    @get:Input
+    val libConfiguration: Property<String> = objectFactory.property(String::class.java)
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -87,7 +99,9 @@ abstract class DexFileDependenciesTask
                        classpath = totalClasspath,
                        input = input,
                        outputFile = outDir.resolve("${index}_${input.name}"),
-                       errorFormatMode = errorFormatMode
+                       errorFormatMode = errorFormatMode,
+                       libConfiguration = libConfiguration.orNull,
+                       outputKeepRules = outputKeepRules.asFile.orNull
                    )
                )
            }
@@ -101,7 +115,9 @@ abstract class DexFileDependenciesTask
         val classpath: Collection<File>,
         val input: File,
         val outputFile: File,
-        val errorFormatMode: SyncOptions.ErrorFormatMode
+        val errorFormatMode: SyncOptions.ErrorFormatMode,
+        val libConfiguration: String?,
+        val outputKeepRules: File?
     ) : Serializable
 
     class DexFileDependenciesWorkerAction @Inject constructor(private val params: DexFileDependenciesWorkerActionParams) :
@@ -116,8 +132,10 @@ abstract class DexFileDependenciesTask
                     params.debuggable,
                     ClassFileProviderFactory(bootClasspath).also { closer.register(it) },
                     ClassFileProviderFactory(classpath).also { closer.register(it) },
+                    false,
                     true,
-                    null,
+                    params.libConfiguration,
+                    params.outputKeepRules,
                     MessageReceiverImpl(
                         errorFormatMode = params.errorFormatMode,
                         logger = Logging.getLogger(DexFileDependenciesWorkerAction::class.java)
@@ -126,11 +144,10 @@ abstract class DexFileDependenciesTask
 
 
                 ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
-                    classFileInput.entries { true }.use { classesInput ->
+                    classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            params.outputFile.toPath(),
-                            false
+                            params.outputFile.toPath()
                         )
                     }
                 }
@@ -143,15 +160,24 @@ abstract class DexFileDependenciesTask
         override val name: String = variantScope.getTaskName("desugar", "FileDependencies")
         override val type = DexFileDependenciesTask::class.java
 
+        private val coreLibraryDesugaringEnabled =
+            variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
+
         override fun handleProvider(taskProvider: TaskProvider<out DexFileDependenciesTask>) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 artifactType = InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = DexFileDependenciesTask::outputDirectory,
                 fileName = "out"
             )
+
+            if (coreLibraryDesugaringEnabled == true
+                && !variantScope.variantConfiguration.buildType.isDebuggable) {
+                variantScope.artifacts.getOperations()
+                    .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
+                    .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
+            }
         }
 
         override fun configure(task: DexFileDependenciesTask) {
@@ -179,6 +205,10 @@ abstract class DexFileDependenciesTask
             }
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
+
+            if (coreLibraryDesugaringEnabled == true) {
+                task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
+            }
         }
     }
 }

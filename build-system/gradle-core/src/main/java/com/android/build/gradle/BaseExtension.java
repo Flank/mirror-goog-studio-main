@@ -816,7 +816,7 @@ public abstract class BaseExtension implements AndroidConfig {
     @Incubating
     @Override
     public boolean getGeneratePureSplits() {
-        return generatePureSplits;
+        return false;
     }
 
     public void resourcePrefix(String prefix) {
@@ -899,8 +899,9 @@ public abstract class BaseExtension implements AndroidConfig {
      * href="https://developer.android.com/studio/intro/update.html#sdk-manager">Update Your Tools
      * with the SDK Manager</a>.
      */
+    @NonNull
     public File getSdkDirectory() {
-        return globalScope.getSdkComponents().getSdkFolder();
+        return globalScope.getSdkComponents().getSdkDirectory();
     }
 
     /**
@@ -956,15 +957,9 @@ public abstract class BaseExtension implements AndroidConfig {
     // ---------------
     // TEMP for compatibility
 
-    // by default, we do not generate pure splits
-    boolean generatePureSplits = false;
-
-    public void generatePureSplits(boolean flag) {
-        setGeneratePureSplits(flag);
-    }
-
     public void setGeneratePureSplits(boolean flag) {
-        this.generatePureSplits = flag;
+        logger.warn(
+                "generatePureSplits is deprecated and has no effect anymore. Use bundletool to generate configuration splits.");
     }
 
     /** {@inheritDoc} */

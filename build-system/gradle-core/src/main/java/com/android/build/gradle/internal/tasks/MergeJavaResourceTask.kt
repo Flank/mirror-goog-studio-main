@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
@@ -34,7 +33,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CL
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -204,7 +202,6 @@ abstract class MergeJavaResourceTask
 
             variantScope.artifacts.producesFile(
                 MERGED_JAVA_RES,
-                BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 MergeJavaResourceTask::outputFile,
                 fileName = "out.jar"
@@ -277,13 +274,13 @@ fun getProjectJavaRes(
     scope: VariantScope
 ): FileCollection {
     val javaRes = scope.globalScope.project.files()
-    javaRes.from(scope.artifacts.getFinalProduct<Directory>(JAVA_RES))
+    javaRes.from(scope.artifacts.getFinalProduct(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
     javaRes.from(
         Callable {
             if (projectHasAnnotationProcessors(scope)) {
-                scope.artifacts.getFinalProduct<Directory>(JAVAC)
+                scope.artifacts.getFinalProduct(JAVAC)
             } else {
                 listOf<File>()
             }

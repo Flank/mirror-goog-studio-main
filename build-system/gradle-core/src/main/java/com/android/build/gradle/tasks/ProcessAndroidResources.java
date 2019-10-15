@@ -56,6 +56,6 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
     }
 
     protected static boolean generatesProguardOutputFile(VariantScope variantScope) {
-        return variantScope.getCodeShrinker() != null || variantScope.getType().isFeatureSplit();
+        return variantScope.getCodeShrinker() != null || variantScope.getType().isDynamicFeature();
     }
 }

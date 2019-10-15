@@ -71,12 +71,12 @@ public class CompileOptionsTest {
     }
 
     @Test
-    public void javaApiDesugaringEnabledTest() {
+    public void coreLibraryDesugaringEnabledTest() {
         CompileOptions options = new CompileOptions();
 
-        assertEquals(null, options.getJavaApiDesugaringEnabled());
+        assertEquals(null, options.getCoreLibraryDesugaringEnabled());
 
-        options.setJavaApiDesugaringEnabled(true);
-        assertEquals(true, options.getJavaApiDesugaringEnabled());
+        options.setCoreLibraryDesugaringEnabled(true);
+        assertEquals(true, options.getCoreLibraryDesugaringEnabled());
     }
 }

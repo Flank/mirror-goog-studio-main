@@ -34,9 +34,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
-import org.gradle.BuildListener;
+import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 
 /**
@@ -154,19 +153,7 @@ public final class BuildSessionImpl implements BuildSession {
             rootGradle = rootGradle.getParent();
         }
         rootGradle.addBuildListener(
-                new BuildListener() {
-                    @Override
-                    public void buildStarted(@NonNull Gradle gradle) {}
-
-                    @Override
-                    public void settingsEvaluated(@NonNull Settings settings) {}
-
-                    @Override
-                    public void projectsLoaded(@NonNull Gradle gradle) {}
-
-                    @Override
-                    public void projectsEvaluated(@NonNull Gradle gradle) {}
-
+                new BuildAdapter() {
                     @Override
                     public void buildFinished(@NonNull BuildResult buildResult) {
                         BuildSessionImpl.this.buildFinished();

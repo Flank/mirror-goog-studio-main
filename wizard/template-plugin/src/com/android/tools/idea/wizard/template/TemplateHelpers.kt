@@ -14,10 +14,49 @@
  * limitations under the License.
  */
 package com.android.tools.idea.wizard.template
-
+import com.android.support.AndroidxNameUtils
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.CaseFormat
 import com.google.common.base.Strings.emptyToNull
+import com.android.tools.idea.wizard.template.AssetNameConverter.Type
+
+data class GradleVersion(val major: Int, val minor: Int, val micro: Int) {
+  operator fun compareTo(other: GradleVersion) = when {
+    this == other -> 0
+    this.major > other.major -> 1
+    this.minor > other.minor -> 1
+    this.micro > other.micro -> 1
+    else -> -1
+  }
+}
+
+// TODO(qumeric): make more reliable (add validation etc.)
+private fun String.toGradleVersion(): GradleVersion {
+  val (major, minor, micro) = this.split(".")
+  return GradleVersion(major.toInt(), minor.toInt(), micro.toInt())
+}
+
+fun compareVersions(l: String, r: String): Int = l.toGradleVersion().compareTo(r.toGradleVersion())
+
+/** Converts an Activity class name into a suitable layout name. */
+fun activityToLayout(activityName: String, layoutName: String? = null): String =
+  if (activityName.isNotEmpty())
+    AssetNameConverter(Type.ACTIVITY, activityName)
+      .overrideLayoutPrefix(layoutName)
+      .getValue(Type.LAYOUT)
+  else
+    ""
+
+/** Similar to [camelCaseToUnderlines], but strips off common class suffixes such as "Activity", "Fragment", etc. */
+fun classToResource(name: String): String =
+  if (name.isNotEmpty())
+    AssetNameConverter(Type.CLASS_NAME, name).getValue(Type.RESOURCE)
+  else ""
+
+fun camelCaseToUnderlines(string: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, string)
+
+fun escapeKotlinIdentifier(identifier: String): String =
+  identifier.split(".").joinToString(".") { if (it in kotlinKeywords) "`$it`" else it }
 
 /**
  * Creates a Java class name out of the given string, if possible.
@@ -31,6 +70,14 @@ fun extractClassName(string: String): String? {
   return emptyToNull(javaIdentifier.usLocaleCapitalize())
 }
 
-fun camelCaseToUnderlines(string: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, string)
+fun layoutToActivity(name: String): String = AssetNameConverter(Type.LAYOUT, name).getValue(Type.ACTIVITY)
+
+fun getMaterialComponentName(oldName: String, useMaterial2: Boolean): String =
+  if (useMaterial2) AndroidxNameUtils.getNewName(oldName) else oldName
+
+// From https://github.com/JetBrains/kotlin/blob/master/core/descriptors/src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
+private val kotlinKeywords = listOf(
+  "package", "as", "typealias", "class", "this", "super", "val", "var", "fun", "for", "null", "true", "false", "is", "in",
+  "throw", "return", "break", "continue", "object", "if", "try", "else", "while", "do", "when", "interface", "typeof")
 
 fun underlinesToCamelCase(string: String): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)

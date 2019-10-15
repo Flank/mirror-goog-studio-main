@@ -243,7 +243,7 @@ MemoryCollector* MemoryServiceImpl::GetCollector(
     // Use the forward version of pair to avoid defining a move constructor.
     auto emplace_result = collectors_.emplace(
         std::piecewise_construct, std::forward_as_tuple(session.pid()),
-        std::forward_as_tuple(session.pid(), clock_, file_cache_));
+        std::forward_as_tuple(session.pid(), clock_));
     assert(emplace_result.second);
     got = emplace_result.first;
   }

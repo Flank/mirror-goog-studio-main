@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="5"
+    revision="6"
     name="Google AdMob Ads Activity"
-    requireAndroidX="true"
+    constraints="androidx"
     minApi="14"
     minBuildApi="14"
     description="Creates an activity with AdMob Ad fragment.">

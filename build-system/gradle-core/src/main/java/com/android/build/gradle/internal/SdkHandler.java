@@ -42,7 +42,6 @@ import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -156,7 +155,8 @@ public class SdkHandler {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         AndroidSdkHandler sdk =
                 AndroidSdkHandler.getInstance(
-                        SdkLocator.getSdkLocation(sdkLocationSourceSet).getDirectory());
+                        SdkLocator.getSdkLocation(sdkLocationSourceSet, evalIssueReporter)
+                                .getDirectory());
         LocalPackage platformToolsPackage =
                 sdk.getLatestLocalPackageForPrefix(
                         SdkConstants.FD_PLATFORM_TOOLS, null, true, progress);
@@ -191,7 +191,8 @@ public class SdkHandler {
     @Nullable
     private synchronized SdkLoader getSdkLoader() {
         if (sdkLoader == null) {
-            SdkLocation sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet);
+            SdkLocation sdkLocation =
+                    SdkLocator.getSdkLocation(sdkLocationSourceSet, evalIssueReporter);
 
             switch (sdkLocation.getType()) {
                 case TEST: // Fallthrough
@@ -202,18 +203,7 @@ public class SdkHandler {
                     sdkLoader = PlatformLoader.getLoader(sdkLocation.getDirectory());
                     break;
                 case MISSING:
-                    String filePath =
-                            new File(
-                                            sdkLocationSourceSet.getProjectRoot(),
-                                            SdkConstants.FN_LOCAL_PROPERTIES)
-                                    .getAbsolutePath();
-                    String message =
-                            "SDK location not found. Define location with an ANDROID_SDK_ROOT environment "
-                                    + "variable or by setting the sdk.dir path in your project's local "
-                                    + "properties file at '"
-                                    + filePath
-                                    + "'.";
-                    evalIssueReporter.reportError(Type.SDK_NOT_SET, message, filePath);
+                    // This error should have been reported earlier when SdkLocation was created
             }
         }
 
@@ -222,7 +212,8 @@ public class SdkHandler {
 
     public synchronized void unload() {
         if (sdkLoader != null) {
-            SdkLocation sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet);
+            SdkLocation sdkLocation =
+                    SdkLocator.getSdkLocation(sdkLocationSourceSet, evalIssueReporter);
 
             switch (sdkLocation.getType()) {
                 case TEST: // Intended falloff

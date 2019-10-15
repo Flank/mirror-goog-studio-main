@@ -26,7 +26,7 @@ class TraceClassVisitor extends ClassVisitor {
     private final TraceProfile profile;
 
     public TraceClassVisitor(ClassWriter writer, String className, TraceProfile profile) {
-        super(Opcodes.ASM5, writer);
+        super(Opcodes.ASM7, writer);
         this.className = className;
         this.profile = profile;
     }

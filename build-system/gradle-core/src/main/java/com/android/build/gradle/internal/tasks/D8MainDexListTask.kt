@@ -24,7 +24,6 @@ import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -185,19 +184,14 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out D8MainDexListTask>) {
             super.handleProvider(taskProvider)
-            val outputType =
-                if (includeDynamicFeatures) {
-                    InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE
-                } else {
-                    InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
-                }
-            variantScope.artifacts.producesFile(
-                outputType,
-                BuildArtifactsHolder.OperationType.INITIAL,
-                taskProvider,
-                D8MainDexListTask::output,
-                "mainDexList.txt"
-            )
+            val request = variantScope.artifacts.getOperations().setInitialProvider(
+                taskProvider, D8MainDexListTask::output
+            ).withName("mainDexList.txt")
+            if (includeDynamicFeatures) {
+                request.on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+            } else {
+                request.on(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
+            }
         }
 
         override fun configure(task: D8MainDexListTask) {

@@ -37,13 +37,13 @@ function build_apk() {
   OBJ=$(mktemp -d ./mkapk.obj.XXXXXX)
 
   sed  "s/%VERSION/$VERSION/" $MANIFEST > $GEN_SRC/AndroidManifest.xml
-  sed  -e "s/%PACKAGE/$PACKAGE/" -i "" $GEN_SRC/AndroidManifest.xml
-  sed  -e "s/%SPLIT/$SPLIT/" -i "" $GEN_SRC/AndroidManifest.xml
+  sed  -e "s/%PACKAGE/$PACKAGE/" -i $GEN_SRC/AndroidManifest.xml
+  sed  -e "s/%SPLIT/$SPLIT/" -i $GEN_SRC/AndroidManifest.xml
 
   if [ "$HAS_RESOURCES" = "true" ]; then
     $AAPT2 compile --no-crunch -o $FLATS res/layout/activity_main.xml
     mkdir -p $GEN_SRC/res/values
-    sed  "s/%STRING/STRING/" res/values/strings.xml > $GEN_SRC/res/values/strings.xml
+    sed  "s/%STRING/$STRING/" res/values/strings.xml > $GEN_SRC/res/values/strings.xml
     $AAPT2 compile --no-crunch -o $FLATS $GEN_SRC/res/values/strings.xml
     echo "AAPT2 linking (and create R.java) ..."
     $AAPT2 link -o $BIN/base.apk --java $GEN_SRC --manifest $GEN_SRC/AndroidManifest.xml -I $PLATFORM $FLATS/*

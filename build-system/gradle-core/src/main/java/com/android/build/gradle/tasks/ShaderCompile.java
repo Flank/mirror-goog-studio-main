@@ -215,7 +215,6 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.SHADER_ASSETS.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ShaderCompile::getOutputDir,
                             "out");

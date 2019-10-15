@@ -134,7 +134,6 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         context.report(STRING_LOCALE, node, location, message, quickfixData)
     }
 
-
     private fun checkFormat(
         context: JavaContext,
         method: PsiMethod,

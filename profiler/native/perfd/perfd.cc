@@ -15,7 +15,9 @@
  */
 
 #include "perfd/perfd.h"
+
 #include <cstring>
+
 #include "daemon/daemon.h"
 #include "perfd/commands/begin_session.h"
 #include "perfd/commands/end_session.h"
@@ -60,9 +62,8 @@ int Perfd::Initialize(Daemon* daemon) {
       new CpuProfilerComponent(daemon->clock(), daemon->file_cache(),
                                daemon_config.cpu(), &trace_manager)));
 
-  daemon->RegisterProfilerComponent(
-      std::unique_ptr<MemoryProfilerComponent>(new MemoryProfilerComponent(
-          daemon->clock(), daemon->file_cache(), &heap_dumper)));
+  daemon->RegisterProfilerComponent(std::unique_ptr<MemoryProfilerComponent>(
+      new MemoryProfilerComponent(daemon->clock(), &heap_dumper)));
 
   std::unique_ptr<EventProfilerComponent> event_component(
       new EventProfilerComponent(daemon->clock()));
@@ -78,7 +79,7 @@ int Perfd::Initialize(Daemon* daemon) {
 
   if (daemon_config.common().energy_profiler_enabled()) {
     daemon->RegisterProfilerComponent(std::unique_ptr<EnergyProfilerComponent>(
-        new EnergyProfilerComponent(daemon->file_cache())));
+        new EnergyProfilerComponent()));
   }
 
   daemon->RegisterProfilerComponent(std::unique_ptr<GraphicsProfilerComponent>(

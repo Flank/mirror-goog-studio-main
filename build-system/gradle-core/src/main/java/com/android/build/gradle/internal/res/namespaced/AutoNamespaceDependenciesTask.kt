@@ -22,9 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -425,14 +423,13 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.NAMESPACED_CLASSES_JAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputClassesJar,
-                "namespaced-classes.jar")
+                "namespaced-classes.jar"
+            )
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputRClassesJar,
                 "namespaced-R.jar"
@@ -440,13 +437,12 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                AutoNamespaceDependenciesTask::outputStaticLibraries)
+                AutoNamespaceDependenciesTask::outputStaticLibraries
+            )
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.NAMESPACED_MANIFESTS,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputRewrittenManifests
             )

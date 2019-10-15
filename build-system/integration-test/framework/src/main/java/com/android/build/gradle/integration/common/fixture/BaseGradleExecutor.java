@@ -239,7 +239,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");
         if (!Strings.isNullOrEmpty(debugIntegrationTest)) {
-            jvmArguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006");
+            String serverArg = debugIntegrationTest.equalsIgnoreCase("socket-listen") ? "n" : "y";
+            jvmArguments.add(
+                    String.format(
+                            "-agentlib:jdwp=transport=dt_socket,server=%s,suspend=y,address=5006",
+                            serverArg));
         }
 
         if (JacocoAgent.isJacocoEnabled()) {

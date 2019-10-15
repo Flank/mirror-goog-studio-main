@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -117,7 +116,6 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 artifactType = InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
-                operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
                 productProvider = MergeClassesTask::outputFile,
                 fileName = if (variantScope.type.isBaseModule) {

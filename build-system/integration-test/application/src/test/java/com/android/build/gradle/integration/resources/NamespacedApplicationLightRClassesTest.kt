@@ -100,7 +100,6 @@ class NamespacedApplicationLightRClassesTest {
                 "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_strings.arsc.flat-R.txt")).exists()
 
         assertThat(
@@ -108,7 +107,6 @@ class NamespacedApplicationLightRClassesTest {
                 "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_strings.arsc.flat-R.txt")).contains("lib_string")
 
         assertThat(
@@ -116,7 +114,6 @@ class NamespacedApplicationLightRClassesTest {
                 "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_public.arsc.flat-R.txt")).exists()
 
         assertThat(
@@ -124,7 +121,6 @@ class NamespacedApplicationLightRClassesTest {
                 "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_public.arsc.flat-R.txt")).contains("lib_string")
 
         // Application resources
@@ -163,7 +159,6 @@ class NamespacedApplicationLightRClassesTest {
                 "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_strings.arsc.flat-R.txt")).exists()
 
         assertThat(
@@ -171,7 +166,6 @@ class NamespacedApplicationLightRClassesTest {
                 "partial_r_files",
                 "debug",
                 "compileMainResourcesForDebug",
-                "out",
                 "values_strings.arsc.flat-R.txt")).contains("app_string")
     }
 }

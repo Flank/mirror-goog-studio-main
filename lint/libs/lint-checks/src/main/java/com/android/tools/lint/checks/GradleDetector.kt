@@ -61,7 +61,6 @@ import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
 import com.android.utils.appendCapitalized
-import com.android.utils.capitalize
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Joiner
@@ -517,8 +516,8 @@ open class GradleDetector : Detector(), GradleScanner {
         APK("apk", "runtimeOnly"),
         ;
 
-        private val deprecatedSuffix: String = deprecatedName.capitalize()
-        private val replacementSuffix: String = replacementName.capitalize()
+        private val deprecatedSuffix: String = deprecatedName.usLocaleCapitalize()
+        private val replacementSuffix: String = replacementName.usLocaleCapitalize()
 
         fun matches(configurationName: String): Boolean {
             return configurationName == deprecatedName || configurationName.endsWith(

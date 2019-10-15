@@ -19,16 +19,13 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.resources.Density
 import com.android.utils.FileUtils
@@ -36,6 +33,7 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -69,7 +67,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    lateinit var minSdkVersion: Provider<String?> internal set
+    abstract val minSdkVersion: Property<String?>
 
     override fun doTaskAction() {
 
@@ -129,7 +127,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
     private fun convert(density: String, vararg densitiesToConvert: Density): String {
         for (densityToConvert in densitiesToConvert) {
             if (densityToConvert.resourceValue == density) {
-                return Integer.toString(densityToConvert.dpiValue)
+                return densityToConvert.dpiValue.toString()
             }
         }
         return density
@@ -147,7 +145,6 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 COMPATIBLE_SCREEN_MANIFEST,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 CompatibleScreensManifest::outputFolder
             )
@@ -162,10 +159,11 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
                 task.apkList)
 
             val config = variantScope.variantConfiguration
-            task.minSdkVersion = TaskInputHelper.memoizeToProvider(task.project) {
+            task.minSdkVersion.set(task.project.provider {
                 val minSdk = config.mergedFlavor.minSdkVersion
                 minSdk?.apiString
-            }
+            })
+            task.minSdkVersion.disallowChanges()
         }
     }
 }

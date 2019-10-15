@@ -21,7 +21,6 @@ import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -108,7 +107,6 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.LIBRARY_JAVA_RES,
-                BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 BundleLibraryJavaRes::output,
                 FN_INTERMEDIATE_RES_JAR

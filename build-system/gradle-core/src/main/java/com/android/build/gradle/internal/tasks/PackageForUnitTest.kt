@@ -17,11 +17,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -39,7 +38,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -58,7 +56,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val mergedAssets: ListProperty<Directory>
+    abstract val mergedAssets: DirectoryProperty
 
     @get:OutputFile
     abstract val apkForUnitTest: RegularFileProperty
@@ -73,24 +71,23 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         val uri = URI.create("jar:" + apkForUnitTest.toURI())
         FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { apkFs ->
             val apkAssetsPath = apkFs.getPath("/assets")
-            for (mergedAsset in mergedAssets.get()) {
-                val mergedAssetsPath = mergedAsset.asFile.toPath()
-                Files.walkFileTree(mergedAssetsPath, object : SimpleFileVisitor<Path>() {
-                    @Throws(IOException::class)
-                    override fun visitFile(
-                        path: Path,
-                        basicFileAttributes: BasicFileAttributes
-                    ): FileVisitResult {
-                        val relativePath = PathUtils.toSystemIndependentPath(
-                            mergedAssetsPath.relativize(path)
-                        )
-                        val destPath = apkAssetsPath.resolve(relativePath)
-                        Files.createDirectories(destPath.parent)
-                        Files.copy(path, destPath)
-                        return FileVisitResult.CONTINUE
-                    }
-                })
-            }
+            val mergedAsset= mergedAssets.get()
+            val mergedAssetsPath = mergedAsset.asFile.toPath()
+            Files.walkFileTree(mergedAssetsPath, object : SimpleFileVisitor<Path>() {
+                @Throws(IOException::class)
+                override fun visitFile(
+                    path: Path,
+                    basicFileAttributes: BasicFileAttributes
+                ): FileVisitResult {
+                    val relativePath = PathUtils.toSystemIndependentPath(
+                        mergedAssetsPath.relativize(path)
+                    )
+                    val destPath = apkAssetsPath.resolve(relativePath)
+                    Files.createDirectories(destPath.parent)
+                    Files.copy(path, destPath)
+                    return FileVisitResult.CONTINUE
+                }
+            })
         }
     }
 
@@ -141,7 +138,6 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
                 .artifacts
                 .producesFile(
                     APK_FOR_LOCAL_TEST,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     PackageForUnitTest::apkForUnitTest,
                     "apk-for-local-test.ap_"
@@ -152,7 +148,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             super.configure(task)
             val artifacts = variantScope.artifacts
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
-            artifacts.setTaskInputToFinalProducts(MERGED_ASSETS, task.mergedAssets)
+            artifacts.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
         }
     }
 }

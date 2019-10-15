@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -40,7 +39,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.manifmerger.ManifestMerger2;
@@ -62,7 +60,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -98,18 +95,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     private boolean onlyTestApk;
 
     private File tmpDir;
-    private Supplier<String> testApplicationId;
-    private Supplier<String> testedApplicationId;
-    private Supplier<String> minSdkVersion;
-    private Supplier<String> targetSdkVersion;
-    private Supplier<String> instrumentationRunner;
-    private Supplier<Boolean> handleProfiling;
-    private Supplier<Boolean> functionalTest;
-    private Supplier<Map<String, Object>> placeholdersValues;
 
     private ArtifactCollection manifests;
-
-    private Supplier<String> testLabel;
 
     private OutputScope outputScope;
 
@@ -126,30 +113,21 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() throws IOException {
-        if (testedApplicationId == null && testTargetMetadata == null) {
+        if (getTestedApplicationId().getOrNull() == null && testTargetMetadata == null) {
             throw new RuntimeException("testedApplicationId and testTargetMetadata are null");
         }
-        String testedApplicationId = this.getTestedApplicationId();
+        String testedApplicationId = this.getTestedApplicationId().getOrNull();
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
                     ExistingBuildElements.from(
                             MERGED_MANIFESTS.INSTANCE, testTargetMetadata.getSingleFile());
 
-            java.util.Optional<BuildOutput> mainSplit =
-                    manifestOutputs
-                            .stream()
-                            .filter(
-                                    output ->
-                                            output.getApkData().getType()
-                                                    != VariantOutput.OutputType.SPLIT)
-                            .findFirst();
-
-            if (mainSplit.isPresent()) {
-                testedApplicationId =
-                        mainSplit.get().getProperties().get(BuildOutputProperty.PACKAGE_ID);
-            } else {
-                throw new RuntimeException("cannot find main APK");
+            if (manifestOutputs.isEmpty()) {
+                throw new RuntimeException("Cannot find merged manifest, please file a bug.");
             }
+
+            BuildOutput mainSplit = manifestOutputs.iterator().next();
+            testedApplicationId = mainSplit.getProperties().get(BuildOutputProperty.PACKAGE_ID);
         }
         // TODO : LOAD FROM APK_LIST...
         List<ApkData> apkDatas = outputScope.getApkDatas();
@@ -180,17 +158,17 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                         : Lists.newArrayList(navigationJsons);
 
         mergeManifestsForTestVariant(
-                getTestApplicationId(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
+                getTestApplicationId().get(),
+                getMinSdkVersion().get(),
+                getTargetSdkVersion().get(),
                 testedApplicationId,
-                getInstrumentationRunner(),
-                getHandleProfiling(),
-                getFunctionalTest(),
-                getTestLabel(),
+                getInstrumentationRunner().get(),
+                getHandleProfiling().get(),
+                getFunctionalTest().get(),
+                getTestLabel().getOrNull(),
                 getTestManifestFile().getOrNull(),
                 computeProviders(),
-                getPlaceholdersValues(),
+                getPlaceholdersValues().get(),
                 navJsons,
                 manifestOutputFile,
                 getTmpDir());
@@ -440,49 +418,33 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     }
 
     @Input
-    public String getTestApplicationId() {
-        return testApplicationId.get();
-    }
-    @Input
-    @Optional
-    public String getTestedApplicationId() {
-        return testedApplicationId.get();
-    }
-
-    @Input
-    public String getMinSdkVersion() {
-        return minSdkVersion.get();
-    }
-    @Input
-    public String getTargetSdkVersion() {
-        return targetSdkVersion.get();
-    }
-
-    @Input
-    public String getInstrumentationRunner() {
-        return instrumentationRunner.get();
-    }
-
-    @Input
-    public Boolean getHandleProfiling() {
-        return handleProfiling.get();
-    }
-
-    @Input
-    public Boolean getFunctionalTest() {
-        return functionalTest.get();
-    }
+    public abstract Property<String> getTestApplicationId();
 
     @Input
     @Optional
-    public String getTestLabel() {
-        return testLabel.get();
-    }
+    public abstract Property<String> getTestedApplicationId();
 
     @Input
-    public Map<String, Object> getPlaceholdersValues() {
-        return placeholdersValues.get();
-    }
+    public abstract Property<String> getMinSdkVersion();
+
+    @Input
+    public abstract Property<String> getTargetSdkVersion();
+
+    @Input
+    public abstract Property<String> getInstrumentationRunner();
+
+    @Input
+    public abstract Property<Boolean> getHandleProfiling();
+
+    @Input
+    public abstract Property<Boolean> getFunctionalTest();
+
+    @Input
+    @Optional
+    public abstract Property<String> getTestLabel();
+
+    @Input
+    public abstract Property<Map<String, Object>> getPlaceholdersValues();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -563,14 +525,12 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ManifestProcessorTask::getManifestOutputDirectory,
                     "");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
@@ -581,6 +541,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         @Override
         public void configure(@NonNull final ProcessTestManifest task) {
             super.configure(task);
+            Project project = task.getProject();
 
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getVariantScope().getVariantConfiguration();
@@ -588,10 +549,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
             // non-null file that does not exist.
-            task.getTestManifestFile()
-                    .set(
-                            TaskInputHelper.memoizeToProvider(
-                                    task.getProject(), config::getMainManifestIfExists));
+            task.getTestManifestFile().set(project.provider(config::getMainManifestIfExists));
+            task.getTestManifestFile().disallowChanges();
+
             task.outputScope = getVariantScope().getOutputScope();
 
             task.setTmpDir(
@@ -601,37 +561,45 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             "manifest",
                             getVariantScope().getDirName()));
 
-            task.minSdkVersion =
-                    TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
-
-            task.targetSdkVersion =
-                    TaskInputHelper.memoize(() -> config.getTargetSdkVersion().getApiString());
+            task.getMinSdkVersion()
+                    .set(project.provider(() -> config.getMinSdkVersion().getApiString()));
+            task.getMinSdkVersion().disallowChanges();
+            task.getTargetSdkVersion()
+                    .set(project.provider(() -> config.getTargetSdkVersion().getApiString()));
+            task.getTargetSdkVersion().disallowChanges();
 
             task.testTargetMetadata = testTargetMetadata;
-            task.testApplicationId = TaskInputHelper.memoize(config::getTestApplicationId);
+            task.getTestApplicationId().set(project.provider(config::getTestApplicationId));
+            task.getTestApplicationId().disallowChanges();
 
             // will only be used if testTargetMetadata is null.
-            task.testedApplicationId = TaskInputHelper.memoize(config::getTestedApplicationId);
+            task.getTestedApplicationId().set(project.provider(config::getTestedApplicationId));
+            task.getTestedApplicationId().disallowChanges();
 
             VariantConfiguration testedConfig = config.getTestedConfig();
             task.onlyTestApk = testedConfig != null && testedConfig.getType().isAar();
 
-            task.instrumentationRunner = TaskInputHelper.memoize(config::getInstrumentationRunner);
-            task.handleProfiling = TaskInputHelper.memoize(config::getHandleProfiling);
-            task.functionalTest = TaskInputHelper.memoize(config::getFunctionalTest);
-            task.testLabel = TaskInputHelper.memoize(config::getTestLabel);
+            task.getInstrumentationRunner().set(project.provider(config::getInstrumentationRunner));
+            task.getInstrumentationRunner().disallowChanges();
+
+            task.getHandleProfiling().set(project.provider(config::getHandleProfiling));
+            task.getHandleProfiling().disallowChanges();
+            task.getFunctionalTest().set(project.provider(config::getFunctionalTest));
+            task.getFunctionalTest().disallowChanges();
+            task.getTestLabel().set(project.provider(config::getTestLabel));
+            task.getTestLabel().disallowChanges();
 
             task.manifests =
                     getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            task.placeholdersValues = TaskInputHelper.memoize(config::getManifestPlaceholders);
+            task.getPlaceholdersValues().set(project.provider(config::getManifestPlaceholders));
+            task.getPlaceholdersValues().disallowChanges();
 
             if (!getVariantScope()
                     .getGlobalScope()
                     .getExtension()
                     .getAaptOptions()
                     .getNamespaced()) {
-                Project project = getVariantScope().getGlobalScope().getProject();
                 task.navigationJsons =
                         project.files(
                                 getVariantScope()

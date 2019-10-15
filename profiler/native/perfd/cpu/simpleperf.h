@@ -65,6 +65,9 @@ class Simpleperf {
   // |pkg_name| represents the process name currently being profiled.
   virtual bool KillSimpleperf(int simpleperf_pid, const std::string& pkg_name);
 
+  // A wrapper of waitpid system call, being virtual to make testing easier.
+  virtual int WaitForSimpleperf(int simpleperf_pid, int* status);
+
   // Invokes `simpleperf report-sample` passing |input_path| as input file and
   // |output_path| as the protobuf output file. Adds the command output to
   // |output| and return true on success. The |abi_arch| determines the

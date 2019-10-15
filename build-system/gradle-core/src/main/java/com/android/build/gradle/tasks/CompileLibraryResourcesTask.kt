@@ -22,11 +22,9 @@ import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationS
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
@@ -41,6 +39,7 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileType
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -61,7 +60,6 @@ import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
-import java.util.function.Supplier
 import javax.inject.Inject
 
 @CacheableTask
@@ -121,12 +119,8 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     private lateinit var resourcePreprocessor: ResourcePreprocessor
 
-    private lateinit var minSdk: Supplier<Int>
-
-    @Input
-    fun getMinSdk(): Int {
-        return minSdk.get()
-    }
+    @get:Input
+    abstract val minSdk: Property<Int>
 
     override fun doTaskAction(inputChanges: InputChanges) {
         if (generatedDensities.isEmpty()) {
@@ -345,7 +339,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.COMPILED_LOCAL_RESOURCES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
             )
@@ -378,9 +371,12 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 variantScope.variantData.variantConfiguration.mergedFlavor.vectorDrawables
             task.generatedDensities = vectorDrawablesOptions.generatedDensities ?: emptySet()
             task.vectorSupportLibraryIsUsed = vectorDrawablesOptions.useSupportLibrary ?: false
-            task.minSdk = TaskInputHelper.memoize {
+
+            task.minSdk.set(variantScope.globalScope.project.provider {
                 variantScope.variantData.variantConfiguration.minSdkVersion.apiLevel
-            }
+            })
+            task.minSdk.disallowChanges()
+
             task.generatedPngsOutputDir =
                 FileUtils.join(
                     variantScope.globalScope.generatedDir,

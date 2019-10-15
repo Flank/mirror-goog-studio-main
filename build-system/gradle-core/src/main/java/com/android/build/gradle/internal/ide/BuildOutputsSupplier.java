@@ -100,14 +100,13 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
                                 file));
             }
         } else {
-            VariantOutput.OutputType fileOutputType =
-                    taskOutputType == InternalArtifactType.AAR.INSTANCE
-                                    || taskOutputType == InternalArtifactType.APK.INSTANCE
-                            ? VariantOutput.OutputType.MAIN
-                            : VariantOutput.OutputType.SPLIT;
             outputs.add(
                     new EarlySyncBuildOutput(
-                            taskOutputType, fileOutputType, ImmutableList.of(), 0, file));
+                            taskOutputType,
+                            VariantOutput.OutputType.MAIN,
+                            ImmutableList.of(),
+                            0,
+                            file));
         }
     }
 

@@ -19,7 +19,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -55,7 +54,6 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
 
         variantScope.artifacts.producesDir(
             AP_GENERATED_SOURCES,
-            BuildArtifactsHolder.OperationType.INITIAL,
             taskProvider,
             { sourcesOutputDir }
         )
@@ -63,7 +61,6 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
         // Some annotation processors generate files in the class output directory too.
         variantScope.artifacts.producesDir(
             AP_GENERATED_CLASSES,
-            BuildArtifactsHolder.OperationType.INITIAL,
             taskProvider,
             { classesOutputDir }
         )

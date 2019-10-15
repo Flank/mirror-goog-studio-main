@@ -51,7 +51,6 @@ coverage_report(
     tests = [
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",  # 5 shard 1 exec
         "//tools/base/build-system/integration-test/application:automatic-tests",  # 8 shard 2 exec
-        "//tools/base/build-system/integration-test/native:AbiPureSplits",  # 1 shard 2 exec
         "//tools/base/lint/libs/lint-tests:tests.test",  # 1 shard 1 exec
     ],
 )
@@ -229,7 +228,8 @@ coverage_report(
         "//tools/base/bazel:third_party_up_to_date",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger_tests",
         "//tools/base/build-system:tools.manifest-merger_tests.test",
-        "//tools/base/build-system/builder:tests.test",
+        # TODO(b/142017389) too flaky for use in coverage runs
+        #"//tools/base/build-system/builder:tests.test",
         "//tools/base/build-system/builder-model:tests",
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api_tests",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api_tests",
@@ -243,27 +243,23 @@ coverage_report(
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
         "//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
-        "//tools/base/build-system/integration-test/native:AbiPureSplits",
         "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
         "//tools/base/build-system/integration-test/native:CmakeExtensionsTest",
         "//tools/base/build-system/integration-test/native:CmakeGradleTargetsTest",
         "//tools/base/build-system/integration-test/native:CmakeInjectedAbiSplitTest",
         "//tools/base/build-system/integration-test/native:CmakeJniLibTest",
-        "//tools/base/build-system/integration-test/native:CmakeJniPureSplitLibTest",
         "//tools/base/build-system/integration-test/native:CmakeMultiModuleTest",
         "//tools/base/build-system/integration-test/native:CmakeStlMatrixTest",
         "//tools/base/build-system/integration-test/native:CmakeSysrootTest",
         "//tools/base/build-system/integration-test/native:CmakeTargetsTest",
         "//tools/base/build-system/integration-test/native:CmakeVanillaBasicProjectTest",
-        "//tools/base/build-system/integration-test/native:CombinedAbiDensityPureSplits",
+        "//tools/base/build-system/integration-test/native:CombinedAbiDensitySplits",
         "//tools/base/build-system/integration-test/native:HeaderInCmakeListsTest",
         "//tools/base/build-system/integration-test/native:InjectedAbiNativeLibraryTest",
         "//tools/base/build-system/integration-test/native:NativeBuildOutputTest",
         "//tools/base/build-system/integration-test/native:NativeModelTest",
         "//tools/base/build-system/integration-test/native:NdkBuildAndroidMkLibraryTest",
         "//tools/base/build-system/integration-test/native:NdkBuildJniLibTest",
-        "//tools/base/build-system/integration-test/native:NdkBuildJniPureSplitLibTest",
-        "//tools/base/build-system/integration-test/native:NdkBuildSplitTest",
         "//tools/base/build-system/integration-test/native:NdkBuildTargetsTest",
         "//tools/base/build-system/integration-test/native:NdkBuildTest",
         "//tools/base/build-system/integration-test/native:NdkJniLibTest",

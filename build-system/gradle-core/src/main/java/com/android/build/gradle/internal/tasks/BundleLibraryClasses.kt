@@ -22,15 +22,14 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -55,8 +54,6 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
  */
 abstract class BundleLibraryClasses : NonIncrementalTask() {
 
-    private lateinit var toIgnoreRegExps: Supplier<List<String>>
-
     @get:OutputFile
     abstract val output: RegularFileProperty
 
@@ -74,8 +71,8 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
     @get:Input
     abstract val packageRClass: Property<Boolean>
 
-    @Input
-    fun getToIgnore() = toIgnoreRegExps.get()
+    @get:Input
+    abstract val toIgnoreRegExps: ListProperty<String>
 
     @get:Input
     lateinit var jarCreatorType: JarCreatorType
@@ -137,15 +134,16 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClasses>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
-                if (publishedType == PublishedConfigType.API_ELEMENTS)
-                    InternalArtifactType.COMPILE_LIBRARY_CLASSES
-                else InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
-                BuildArtifactsHolder.OperationType.APPEND,
-                taskProvider,
-                BundleLibraryClasses::output,
-                fileName = FN_CLASSES_JAR
-            )
+
+            val request = variantScope.artifacts.getOperations()
+                .setInitialProvider(taskProvider,
+                    BundleLibraryClasses::output).withName(FN_CLASSES_JAR)
+
+            if (publishedType == PublishedConfigType.API_ELEMENTS) {
+                request.on(InternalArtifactType.COMPILE_LIBRARY_CLASSES)
+            } else {
+                request.on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES)
+            }
         }
 
         override fun configure(task: BundleLibraryClasses) {
@@ -159,10 +157,12 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
                         !variantScope.globalScope.extension.aaptOptions.namespaced
             task.packageRClass.set(packageRClass)
             if (packageRClass) {
-                task.classes.from(variantScope.artifacts.getFinalProduct<RegularFile>(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+                task.classes.from(variantScope.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
             }
             // FIXME pass this as List<TextResources>
-            task.toIgnoreRegExps = TaskInputHelper.memoize(toIgnoreRegExps)
+            task.toIgnoreRegExps.set(
+                variantScope.globalScope.project.provider(toIgnoreRegExps::get)
+            )
             task.packageBuildConfig = variantScope.globalScope.extension.packageBuildConfig
             task.jarCreatorType = variantScope.jarCreatorType
         }

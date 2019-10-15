@@ -23,18 +23,21 @@ public final class JavaCompileOptionsStub extends BaseStub implements JavaCompil
     @NonNull private final String myEncoding;
     @NonNull private final String mySourceCompatibility;
     @NonNull private final String myTargetCompatibility;
+    private final boolean myCoreLibraryDesugaringEnabled;
 
     public JavaCompileOptionsStub() {
-        this("encoding", "sourceCompatibility", "targetCompatibility");
+        this("encoding", "sourceCompatibility", "targetCompatibility", false);
     }
 
     public JavaCompileOptionsStub(
             @NonNull String encoding,
             @NonNull String sourceCompatibility,
-            @NonNull String targetCompatibility) {
+            @NonNull String targetCompatibility,
+            boolean coreLibraryDesugaringEnabled) {
         myEncoding = encoding;
         mySourceCompatibility = sourceCompatibility;
         myTargetCompatibility = targetCompatibility;
+        myCoreLibraryDesugaringEnabled = coreLibraryDesugaringEnabled;
     }
 
     @Override
@@ -56,6 +59,11 @@ public final class JavaCompileOptionsStub extends BaseStub implements JavaCompil
     }
 
     @Override
+    public boolean isCoreLibraryDesugaringEnabled() {
+        return myCoreLibraryDesugaringEnabled;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -66,13 +74,19 @@ public final class JavaCompileOptionsStub extends BaseStub implements JavaCompil
         JavaCompileOptions compileOptions = (JavaCompileOptions) o;
         return Objects.equals(getEncoding(), compileOptions.getEncoding())
                 && Objects.equals(getSourceCompatibility(), compileOptions.getSourceCompatibility())
+                && Objects.equals(getTargetCompatibility(), compileOptions.getTargetCompatibility())
                 && Objects.equals(
-                        getTargetCompatibility(), compileOptions.getTargetCompatibility());
+                        isCoreLibraryDesugaringEnabled(),
+                        compileOptions.isCoreLibraryDesugaringEnabled());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getEncoding(), getSourceCompatibility(), getTargetCompatibility());
+        return Objects.hash(
+                getEncoding(),
+                getSourceCompatibility(),
+                getTargetCompatibility(),
+                isCoreLibraryDesugaringEnabled());
     }
 
     @Override
@@ -86,6 +100,9 @@ public final class JavaCompileOptionsStub extends BaseStub implements JavaCompil
                 + '\''
                 + ", myTargetCompatibility='"
                 + myTargetCompatibility
+                + '\''
+                + ", myCoreLibraryDesugaringEnabled='"
+                + myCoreLibraryDesugaringEnabled
                 + '\''
                 + "}";
     }

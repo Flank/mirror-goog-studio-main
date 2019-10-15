@@ -106,7 +106,6 @@ public abstract class PrepareLintJar extends DefaultTask {
             scope.getArtifacts()
                     .producesFile(
                             InternalArtifactType.LINT_JAR.INSTANCE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             PrepareLintJar::getOutputLintJar,
                             FN_LINT_JAR);

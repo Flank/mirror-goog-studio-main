@@ -21,8 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Immutable
 public final class Aar extends AndroidArchive {
@@ -61,6 +63,19 @@ public final class Aar extends AndroidArchive {
     @Override
     public Path getJavaResource(@NonNull String name) throws IOException {
         return getEntryAsZip("classes.jar").getEntry(name);
+    }
+
+    /**
+     * Returns the contents of the AAR's AndroidManifest.xml entry as a String; returns null if the
+     * AAR doesn't have an AndroidManifest.xml entry.
+     */
+    @Nullable
+    public String getAndroidManifestContentsAsString() throws IOException {
+        Path path = getEntry("AndroidManifest.xml");
+        if (path == null) {
+            return null;
+        }
+        return Files.readAllLines(path).stream().collect(Collectors.joining("\n"));
     }
 
     @Override

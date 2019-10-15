@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -119,7 +117,6 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APP_INTEGRITY_CONFIG,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 ParseIntegrityConfigTask::appIntegrityConfigProto,
                 "AppIntegrityConfig.pb"
@@ -131,16 +128,9 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             task.integrityConfigDir.set(getIntegrityConfigFolder())
         }
 
-        private fun getIntegrityConfigFolder(): Provider<out Directory> {
-            val bundleOptions = if (variantScope.type.isHybrid) {
-                (variantScope.globalScope.extension as FeatureExtension).bundle
-            } else {
-                (variantScope.globalScope.extension as BaseAppModuleExtension).bundle
-            }
-            return bundleOptions.integrityConfigDir
-        }
+        private fun getIntegrityConfigFolder(): Provider<out Directory> =
+            (variantScope.globalScope.extension as BaseAppModuleExtension).bundle.integrityConfigDir
     }
-
 }
 
 

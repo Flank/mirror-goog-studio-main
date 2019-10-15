@@ -27,8 +27,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.FeatureExtension;
-import com.android.build.gradle.internal.FeatureModelBuilder;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -98,7 +96,7 @@ public class GlobalScope implements TransformGlobalScope {
         this.buildCache = buildCache;
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
-        this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir, dslScope);
+        this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir);
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();
@@ -323,9 +321,7 @@ public class GlobalScope implements TransformGlobalScope {
         if (extension instanceof BaseAppModuleExtension) {
             return !((BaseAppModuleExtension) extension).getDynamicFeatures().isEmpty();
         }
-        if (extension instanceof FeatureExtension) {
-            return !FeatureModelBuilder.getDynamicFeatures(this).isEmpty();
-        }
+
         return false;
     }
 

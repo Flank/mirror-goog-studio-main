@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.scope.VariantScope
@@ -29,10 +28,8 @@ import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
-import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -64,17 +61,15 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         get() {
             val hasLocalAarDependencies = localAarDeps.files.isNotEmpty()
             if (hasLocalAarDependencies) {
-                reporter.reportWarning(
+                reporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "The AAR produced by this build for the $projectPath project is broken. " +
-                            "Direct local .aar file dependencies are not supported when building " +
-                            "an AAR. The resulting AAR is broken because the classes and Android " +
-                            "resources from any local .aar file dependencies are not packaged in " +
-                            "the resulting AAR. Previous versions of the Android Gradle Plugin " +
-                            "produce broken AARs in this case too (despite not having this " +
-                            "warning), and this warning will be replaced with an error in " +
-                            "subsequent versions of the Android Gradle Plugin. The following " +
-                            "direct local .aar file dependencies caused this warning: " +
+                    "Direct local .aar file dependencies are not supported when building an AAR. " +
+                            "The resulting AAR would be broken because the classes and Android " +
+                            "resources from any local .aar file dependencies would not be " +
+                            "packaged in the resulting AAR. Previous versions of the Android " +
+                            "Gradle Plugin produce broken AARs in this case too (despite not " +
+                            "throwing this error). The following direct local .aar file " +
+                            "dependencies of the $projectPath project caused this error: " +
                             localAarDeps.files.joinToString { it.absolutePath }
                 )
             }
@@ -93,10 +88,11 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         override fun handleProvider(taskProvider: TaskProvider<out BundleAar>) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.bundleLibraryTask = taskProvider
-            variantScope.artifacts.producesFile(InternalArtifactType.AAR,
-                BuildArtifactsHolder.OperationType.INITIAL,
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.AAR,
                 taskProvider,
-                BundleAar::getArchiveFile)
+                BundleAar::getArchiveFile
+            )
         }
 
         override fun configure(task: BundleAar) {
@@ -120,22 +116,22 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.destinationDirectory.set(File(variantScope.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
             task.from(
-                variantScope.artifacts.getFinalProduct<Directory>(
+                variantScope.artifacts.getFinalProduct(
                     InternalArtifactType.AIDL_PARCELABLE
                 ),
                 prependToCopyPath(SdkConstants.FD_AIDL)
             )
-            task.from(artifacts.getFinalProduct<RegularFile>(
+            task.from(artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
             if (variantScope.globalScope.extension.dataBinding.isEnabled) {
                 task.from(
                     variantScope.globalScope.project.provider {
-                        variantScope.artifacts.getFinalProduct<Directory>(
+                        variantScope.artifacts.getFinalProduct(
                             InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
                 task.from(
-                    variantScope.artifacts.getFinalProduct<Directory>(
+                    variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                     prependToCopyPath(
                         DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
@@ -146,7 +142,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             if (!variantScope.globalScope.extension.aaptOptions.namespaced) {
                 // TODO: this should be unconditional b/69358522
                 task.from(
-                    artifacts.getFinalProduct<RegularFile>(
+                    artifacts.getFinalProduct(
                         InternalArtifactType.COMPILE_SYMBOL_LIST))
                 task.from(
                     artifacts.getFinalProduct(InternalArtifactType.PACKAGED_RES),

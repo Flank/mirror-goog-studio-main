@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
@@ -164,7 +165,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
         private val dexingType: DexingType,
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
-        private val outputType: InternalArtifactType<Directory> = InternalArtifactType.DEX
+        private val outputType: MultipleArtifactType<Directory> = MultipleArtifactType.DEX
     ) : VariantTaskCreationAction<DexMergingTask>(variantScope) {
 
         private val internalName: String = when (action) {
@@ -179,12 +180,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out DexMergingTask>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
-                outputType,
-                BuildArtifactsHolder.OperationType.APPEND,
-                taskProvider,
-                DexMergingTask::outputDir
-            )
+            variantScope.artifacts.getOperations().append(
+                taskProvider, DexMergingTask::outputDir).on(outputType)
         }
 
         override fun configure(task: DexMergingTask) {
@@ -272,8 +269,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 // be dex'ed in a task, so we need to fetch the output directly.
                                 // Otherwise, it will be in the dex'ed in the dex builder transform.
                                 files.from(
-                                    testedVariantData.scope.artifacts.getFinalProducts<Directory>(
-                                        InternalArtifactType.DEX
+                                    testedVariantData.scope.artifacts.getOperations().getAll(
+                                        MultipleArtifactType.DEX
                                     )
                                 )
                             }
@@ -291,10 +288,10 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
                             } else {
                                 // we merge external dex in a separate task
-                                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.EXTERNAL_LIBS_DEX)) {
+                                if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.EXTERNAL_LIBS_DEX)) {
                                     variantScope.globalScope.project.files(
-                                        variantScope.artifacts.getFinalProduct<Directory>(
-                                            InternalArtifactType.EXTERNAL_LIBS_DEX
+                                        variantScope.artifacts.getOperations().getAll(
+                                            MultipleArtifactType.EXTERNAL_LIBS_DEX
                                         )
                                     )
                                 } else variantScope.globalScope.project.files()
@@ -321,10 +318,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
             return when (action) {
                 DexMergingAction.MERGE_LIBRARY_PROJECTS ->
                     when {
-                        variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel < 23 -> {
-                            task.outputs.cacheIf { getAllRegularFiles(task.dexFiles.files).size < LIBRARIES_MERGING_THRESHOLD }
+                        variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel < 23 ->
                             LIBRARIES_MERGING_THRESHOLD
-                        }
                         else -> LIBRARIES_M_PLUS_MAX_THRESHOLD
                     }
                 else -> 0

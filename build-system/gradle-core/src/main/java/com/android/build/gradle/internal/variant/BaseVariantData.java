@@ -137,23 +137,16 @@ public abstract class BaseVariantData {
                         || splits.getAbi().isEnable()
                         || splits.getLanguage().isEnable();
 
-        // eventually, this will require a more open ended comparison.
-        multiOutputPolicy =
-                (globalScope.getExtension().getGeneratePureSplits()
-                                        || variantConfiguration.getType().isHybrid()) // == FEATURE
-                                && variantConfiguration.getMinSdkVersionValue() >= 21
-                        ? MultiOutputPolicy.SPLITS
-                        : MultiOutputPolicy.MULTI_APK;
+        // Since pure SPLITS are not supported, remove this before submitting.
+        multiOutputPolicy = MultiOutputPolicy.MULTI_APK;
 
         // warn the user if we are forced to ignore the generatePureSplits flag.
-        if (splitsEnabled
-                && globalScope.getExtension().getGeneratePureSplits()
-                && multiOutputPolicy != MultiOutputPolicy.SPLITS) {
-            Logging.getLogger(BaseVariantData.class).warn(
-                    String.format("Variant %s, MinSdkVersion %s is too low (<21) "
-                                    + "to support pure splits, reverting to full APKs",
-                            variantConfiguration.getFullName(),
-                            variantConfiguration.getMinSdkVersion().getApiLevel()));
+        if (splitsEnabled && globalScope.getExtension().getGeneratePureSplits()) {
+            Logging.getLogger(BaseVariantData.class)
+                    .warn(
+                            String.format(
+                                    "Variant %s requested removed pure splits support, reverted to full splits",
+                                    variantConfiguration.getFullName()));
         }
 
         final Project project = globalScope.getProject();

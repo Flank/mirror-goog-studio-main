@@ -255,11 +255,14 @@ public class ApkInstaller {
         }
 
         List<Deploy.PatchInstruction> patches =
-                new PatchSetGenerator().generateFromEntries(localEntries, dump.apkEntries);
+                new PatchSetGenerator(logger).generateFromEntries(localEntries, dump.apkEntries);
         if (patches == null) {
             return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
         } else if (patches.isEmpty()) {
             return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
+        }
+        for (Deploy.PatchInstruction patch : patches) {
+            logger.info("Patch size %d", patch.getSerializedSize());
         }
 
         // We use inheritance if there are more than one apks, and if the manifests

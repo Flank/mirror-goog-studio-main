@@ -30,7 +30,6 @@ import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -97,8 +96,6 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     @Override
     public ImmutableList<File> getTestedApks(
-            @NonNull ProcessExecutor processExecutor,
-            @Nullable File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
             @NonNull ILogger logger) throws ProcessException {
         BaseVariantData testedVariantData =
@@ -116,8 +113,6 @@ public class TestDataImpl extends AbstractTestDataImpl {
                                         .getFinalProduct(InternalArtifactType.APK.INSTANCE)));
         apks.addAll(
                 SplitOutputMatcher.computeBestOutput(
-                        processExecutor,
-                        splitSelectExe,
                         deviceConfigProvider,
                         splitOutputs,
                         testedVariantData.getVariantConfiguration().getSupportedAbis()));

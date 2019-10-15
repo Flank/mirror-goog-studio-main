@@ -15,6 +15,7 @@
  */
 #include <jni.h>
 #include <unistd.h>
+
 #include <sstream>
 #include <string>
 
@@ -218,7 +219,7 @@ void TraceMonitor::SubmitStopEvent(int tid) {
   int32_t pid = getpid();
   string trace_content;
   ReadTraceContent(confirmed_trace_path_, &trace_content);
-  Log::D("TraceMonitor::SubmitStopEvent '%s' size=%u",
+  Log::D("TraceMonitor::SubmitStopEvent '%s' size=%zu",
          confirmed_trace_path_.c_str(), trace_content.size());
   // We are done with the cached data. Reset so that the next API tracing call
   // proceeds as normal while the tasks below run asynchonrously.

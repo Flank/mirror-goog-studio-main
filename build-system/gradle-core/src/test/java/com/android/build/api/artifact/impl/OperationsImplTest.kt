@@ -103,7 +103,7 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(TEST_FILE, agpTaskProvider, AGPTask::outputFile)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         val artifactContainer = operations.getArtifactContainer(TEST_FILE)
@@ -123,7 +123,7 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(TEST_DIRECTORY, agpTaskProvider, AGPTask::outputFolder)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder).on(TEST_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         val artifactContainer = operations.getArtifactContainer(TEST_DIRECTORY)
@@ -247,9 +247,8 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(
-            TEST_TRANSFORMABLE_FILE,
-            agpTaskProvider, AGPTask::outputFile)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+            .on(TEST_TRANSFORMABLE_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(transformerInitialized.get()).isFalse()
@@ -292,7 +291,8 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(TEST_TRANSFORMABLE_DIRECTORY, agpTaskProvider, AGPTask::outputFolder)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+            .on(TEST_TRANSFORMABLE_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(transformerInitialized.get()).isFalse()
@@ -346,7 +346,9 @@ class OperationsImplTest {
         val agpInitialized = AtomicBoolean(false)
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
 
-        operations.setInitialProvider(TEST_TRANSFORMABLE_FILE, agpTaskProvider, AGPTask::outputFile)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+            .on(TEST_TRANSFORMABLE_FILE)
+
         agpTaskProvider.configure {
             agpInitialized.set(true)
         }
@@ -415,7 +417,8 @@ class OperationsImplTest {
         val agpInitialized = AtomicBoolean(false)
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
 
-        operations.setInitialProvider(TEST_TRANSFORMABLE_DIRECTORY, agpTaskProvider, AGPTask::outputFolder)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+            .on(TEST_TRANSFORMABLE_DIRECTORY)
         agpTaskProvider.configure {
             agpInitialized.set(true)
         }
@@ -474,9 +477,8 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(
-            TEST_REPLACABLE_FILE,
-            agpTaskProvider, AGPTask::outputFile)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+            .on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
@@ -520,7 +522,8 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(TEST_REPLACABLE_DIRECTORY, agpTaskProvider, AGPTask::outputFolder)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+            .on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
@@ -573,9 +576,8 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(
-            TEST_REPLACABLE_FILE,
-            agpTaskProvider, AGPTask::outputFile)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+            .on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
@@ -630,9 +632,8 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(
-            TEST_REPLACABLE_DIRECTORY,
-            agpTaskProvider, AGPTask::outputFolder)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+            .on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()

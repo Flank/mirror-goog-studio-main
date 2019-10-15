@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="6"
+    revision="7"
     name="Watch Face"
-    requireAndroidX="true"
+    constraints="androidx"
     minApi="23"
     minBuildApi="25"
     description="Creates a watch face for Wear OS">

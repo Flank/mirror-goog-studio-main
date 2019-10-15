@@ -17,7 +17,8 @@ package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.ResTableConfig
 
-class ConfigDescription: ResTableConfig() {
+
+class ConfigDescription(base: ResTableConfig = ResTableConfig()): ResTableConfig(base) {
     override fun equals(other: Any?): Boolean {
         if (other is ConfigDescription) {
             return compareTo(other) == 0

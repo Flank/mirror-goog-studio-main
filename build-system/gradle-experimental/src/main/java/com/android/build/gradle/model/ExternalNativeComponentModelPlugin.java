@@ -279,12 +279,12 @@ public class ExternalNativeComponentModelPlugin implements Plugin<Project> {
                             artifacts.setBuiltBy(
                                     Lists.newArrayList(
                                             tasks.get("create"
-                                                    + StringHelper.capitalize(lib.getName()))));
+                                                    + StringHelper.usLocaleCapitalize(lib.getName()))));
                         });
             }
         }
     }
     private static String getAssembleTaskName(String libraryName) {
-        return "create" + StringHelper.capitalize(libraryName);
+        return "create" + StringHelper.usLocaleCapitalize(libraryName);
     }
 }

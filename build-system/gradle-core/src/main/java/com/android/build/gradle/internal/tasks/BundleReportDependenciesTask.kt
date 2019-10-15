@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -58,13 +57,13 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
     public override fun doTaskAction() {
 
         val baseAppDeps =  BufferedInputStream(FileInputStream(baseDeps.get().asFile)).use {
-            AppDependencies.parseDelimitedFrom(it)
+            AppDependencies.parseFrom(it)
         }
 
         val featureAppDeps = LinkedList<AppDependencies>()
 
         featureDeps.files.forEach {
-            featureAppDeps.add(AppDependencies.parseDelimitedFrom(FileInputStream(it)))
+            featureAppDeps.add(AppDependencies.parseFrom(FileInputStream(it)))
         }
 
         val libraryToIndexMap = HashMap<Library, Integer>()
@@ -120,7 +119,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             .addAllModuleDependencies(moduleDeps)
             .build()
 
-        appDeps.writeDelimitedTo(FileOutputStream(dependenciesList.get().asFile))
+        appDeps.writeTo(FileOutputStream(dependenciesList.get().asFile))
     }
 
 
@@ -134,7 +133,6 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 BundleReportDependenciesTask::dependenciesList,
                 "dependencies.pb"

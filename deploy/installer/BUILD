@@ -109,6 +109,7 @@ genrule(
        $(location //tools/base/bazel:matryoshka) \
            -i $(location :installer) \
            -o $(location android-installer/test-installer) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:libswap.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:libswap.so) \
            -p agent_server=$(location //tools/base/deploy/agent/native:agent_server) \
            -p version=$(location :version.raw);

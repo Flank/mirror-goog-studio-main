@@ -44,6 +44,7 @@ import org.junit.Test
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
+import java.util.function.Supplier
 
 class TaskMethodModifiersAndAnnotationsTest {
 
@@ -114,8 +115,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setType",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportType",
-                "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportsDir",
-                "com.android.build.gradle.internal.tasks.AndroidReportTask::setResultsDir",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setWillRun",
                 "com.android.build.gradle.internal.tasks.AndroidVariantTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
@@ -125,7 +124,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setInstallOptions",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setReportsDir",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setResultsDir",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setTestData",
                 "com.android.build.gradle.internal.tasks.GenerateApkDataTask::setMinSdkVersion",
                 "com.android.build.gradle.internal.tasks.GenerateApkDataTask::setResOutputDir",
@@ -158,7 +156,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.ExtractAnnotations::setEncoding",
                 "com.android.build.gradle.tasks.GenerateBuildConfig::setBuildTypeName",
                 "com.android.build.gradle.tasks.GenerateBuildConfig::setSourceOutputDir",
-                "com.android.build.gradle.tasks.GenerateResValues::setItems",
                 "com.android.build.gradle.tasks.GenerateResValues::setResOutputDir",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setMainManifestFile",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setOutputFile",
@@ -214,6 +211,11 @@ class TaskMethodModifiersAndAnnotationsTest {
     @Test
     fun checkVariantConfigurationIsNotAField() {
         Truth.assertThat(findTaskFieldsOfType(VariantConfiguration::class.java)).isEmpty()
+    }
+
+    @Test
+    fun checkSupplierIsNotAField() {
+        Truth.assertThat(findTaskFieldsOfType(Supplier::class.java)).isEmpty()
     }
 
     private fun findTaskFieldsOfType(ofType: Class<*>): List<Field> {

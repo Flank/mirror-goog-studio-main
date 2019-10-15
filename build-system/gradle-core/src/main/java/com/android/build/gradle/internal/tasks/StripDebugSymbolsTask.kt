@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.VariantScope
@@ -127,7 +126,6 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
 
             variantScope.artifacts.producesDir(
                 STRIPPED_NATIVE_LIBS,
-                BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 StripDebugSymbolsTask::outputDir,
                 fileName = "out"

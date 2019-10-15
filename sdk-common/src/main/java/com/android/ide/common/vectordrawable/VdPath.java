@@ -445,7 +445,12 @@ class VdPath extends VdElement {
     }
 
     private void setNameValue(@NonNull String name, @NonNull String value) {
-        if (value.startsWith("@")) {
+        if (value.startsWith(SdkConstants.PREFIX_RESOURCE_REF) && PATH_FILL.equals(name)) {
+            // Ignore the android resource in "android:fillColor" present in the new material icons.
+            value = "#000000";
+        }
+
+        if (value.startsWith(SdkConstants.PREFIX_RESOURCE_REF)) {
             throw new ResourcesNotSupportedException(name, value);
         }
 

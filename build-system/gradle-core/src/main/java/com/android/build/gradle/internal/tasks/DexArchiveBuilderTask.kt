@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -124,12 +123,24 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
 
     @get:OutputDirectory
     abstract val projectOutputDex: DirectoryProperty
+    @get:Optional
+    @get:OutputDirectory
+    abstract val projectOutputKeepRules: DirectoryProperty
     @get:OutputDirectory
     abstract val subProjectOutputDex: DirectoryProperty
+    @get:Optional
+    @get:OutputDirectory
+    abstract val subProjectOutputKeepRules: DirectoryProperty
     @get:OutputDirectory
     abstract val externalLibsOutputDex: DirectoryProperty
+    @get:Optional
+    @get:OutputDirectory
+    abstract val externalLibsOutputKeepRules: DirectoryProperty
     @get:OutputDirectory
     abstract val mixedScopeOutputDex: DirectoryProperty
+    @get:Optional
+    @get:OutputDirectory
+    abstract val mixedScopeOutputKeepRules: DirectoryProperty
     @get:LocalState
     abstract val inputJarHashesFile: RegularFileProperty
 
@@ -151,9 +162,16 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
             mixedScopeChangedClasses = getChanged(inputChanges, mixedScopeClasses),
 
             projectOutputDex = projectOutputDex.asFile.get(),
+            projectOutputKeepRules = projectOutputKeepRules.asFile.orNull,
+
             subProjectOutputDex = subProjectOutputDex.asFile.get(),
+            subProjectOutputKeepRules = subProjectOutputKeepRules.asFile.orNull,
+
             externalLibsOutputDex = externalLibsOutputDex.asFile.get(),
+            externalLibsOutputKeepRules = externalLibsOutputKeepRules.asFile.orNull,
+
             mixedScopeOutputDex = mixedScopeOutputDex.asFile.get(),
+            mixedScopeOutputKeepRules = mixedScopeOutputKeepRules.asFile.orNull,
             inputJarHashesFile = inputJarHashesFile.get().asFile,
 
             desugaringClasspathClasses = desugaringClasspathClasses.files,
@@ -217,6 +235,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
         private val externalLibraryClasses: FileCollection
         private val mixedScopeClasses: FileCollection
         private val desugaringClasspathClasses: FileCollection
+        private val coreLibraryDesugaringEnabled: Boolean?
 
         init {
             val classesFilter =
@@ -284,6 +303,9 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS
             )
+
+            coreLibraryDesugaringEnabled =
+                variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
         }
 
         override val type: Class<DexArchiveBuilderTask> = DexArchiveBuilderTask::class.java
@@ -293,34 +315,53 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
 
             variantScope.artifacts.producesDir(
                 InternalArtifactType.PROJECT_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::projectOutputDex
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::subProjectOutputDex
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::externalLibsOutputDex
             )
             variantScope.artifacts.producesDir(
                 InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::mixedScopeOutputDex
             )
             variantScope.artifacts.producesFile(
                 InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES,
-                BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )
+            // Keep rules are not needed in debug build as desugar_jdk_libs would not be shrinked
+            if (coreLibraryDesugaringEnabled == true &&
+                !variantScope.variantConfiguration.buildType.isDebuggable) {
+                variantScope.artifacts.producesDir(
+                    InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
+                    taskProvider,
+                    DexArchiveBuilderTask::projectOutputKeepRules
+                )
+                variantScope.artifacts.producesDir(
+                    InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES,
+                    taskProvider,
+                    DexArchiveBuilderTask::subProjectOutputKeepRules
+                )
+                variantScope.artifacts.producesDir(
+                    InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES,
+                    taskProvider,
+                    DexArchiveBuilderTask::externalLibsOutputKeepRules
+                )
+                variantScope.artifacts.producesDir(
+                    InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES,
+                    taskProvider,
+                    DexArchiveBuilderTask::mixedScopeOutputKeepRules
+                )
+            }
         }
 
         override fun configure(task: DexArchiveBuilderTask) {
@@ -370,9 +411,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
             )
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.userLevelCache = userLevelCache
-            val javaApiDesugaringEnabled
-                    = variantScope.globalScope.extension.compileOptions.javaApiDesugaringEnabled
-            if (javaApiDesugaringEnabled != null && javaApiDesugaringEnabled) {
+            if (coreLibraryDesugaringEnabled == true) {
                 task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
             }
         }

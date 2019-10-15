@@ -27,6 +27,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -50,7 +51,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
@@ -79,6 +79,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -105,9 +106,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -117,7 +120,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -173,10 +175,7 @@ public class VariantScopeImpl implements VariantScope {
         }
         this.artifacts =
                 new VariantBuildArtifactsHolder(
-                        getProject(),
-                        getFullVariantName(),
-                        globalScope.getBuildDir(),
-                        globalScope.getDslScope());
+                        getProject(), getFullVariantName(), globalScope.getBuildDir());
         this.desugarTryWithResourcesRuntimeJar =
                 Suppliers.memoize(
                         () ->
@@ -224,37 +223,13 @@ public class VariantScopeImpl implements VariantScope {
     /**
      * Publish an intermediate artifact.
      *
-     * @param artifact FileCollection to be published.
+     * @param artifact Provider of File or FileSystemLocation to be published.
      * @param artifactType the artifact type.
      * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
      */
     @Override
     public void publishIntermediateArtifact(
-            @NonNull Provider<FileCollection> artifact,
-            @NonNull ArtifactType artifactType,
-            @NonNull Collection<PublishedConfigType> configTypes) {
-        // Create Provider so that the BuildableArtifact is not resolved until needed.
-        Provider<File> file = artifact.map(fileCollection -> fileCollection.getSingleFile());
-
-        Preconditions.checkState(!configTypes.isEmpty());
-
-        // FIXME this needs to be parameterized based on the variant's publishing type.
-        final VariantDependencies variantDependency = getVariantDependencies();
-
-        for (PublishedConfigType configType : PublishedConfigType.values()) {
-            if (configTypes.contains(configType)) {
-                Configuration config = variantDependency.getElements(configType);
-                Preconditions.checkNotNull(
-                        config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(config, file, artifact, artifactType);
-            }
-        }
-    }
-
-    @Override
-    public void publishIntermediateArtifact(
-            @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull Provider<String> lastProducerTaskName,
+            @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
 
@@ -268,8 +243,7 @@ public class VariantScopeImpl implements VariantScope {
                 Configuration config = variantDependency.getElements(configType);
                 Preconditions.checkNotNull(
                         config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(
-                        config, artifact, lastProducerTaskName, artifactType);
+                publishArtifactToConfiguration(config, artifact, artifactType);
             }
         }
     }
@@ -306,7 +280,7 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         // TODO: support resource shrinking for multi-apk applications http://b/78119690
-        if (getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
+        if (getType().isDynamicFeature() || globalScope.hasDynamicFeatures()) {
             globalScope
                     .getErrorHandler()
                     .reportError(
@@ -459,11 +433,8 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public List<File> getConsumerProguardFilesForFeatures() {
-        final boolean hasFeaturePlugin = getProject().getPlugins().hasPlugin(FeaturePlugin.class);
-        // We include proguardFiles if we're in a dynamic-feature or feature module. For feature
-        // modules, we check for the presence of the FeaturePlugin, because we want to include
-        // proguardFiles even when we're in the library variant.
-        final boolean includeProguardFiles = hasFeaturePlugin || getType().isDynamicFeature();
+        // We include proguardFiles if we're in a dynamic-feature module.
+        final boolean includeProguardFiles = getType().isDynamicFeature();
         final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
         if (includeProguardFiles) {
             consumerProguardFiles.addAll(getExplicitProguardFiles());
@@ -634,7 +605,24 @@ public class VariantScopeImpl implements VariantScope {
         mainCollection =
                 mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
 
+        // Add R class jars to the front of the classpath as libraries might also export
+        // compile-only classes. This behavior is verified in CompileRClassFlowTest
+        // While relying on this order seems brittle, it avoids doubling the number of
+        // files on the compilation classpath by exporting the R class separately or
+        // and is much simpler than having two different outputs from each library, with
+        // and without the R class, as AGP publishing code assumes there is exactly one
+        // artifact for each publication.
+        mainCollection = getProject().files(getCompiledRClasses(configType), mainCollection);
+
+        return mainCollection;
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getCompiledRClasses(@NonNull ConsumedConfigType configType) {
+        FileCollection mainCollection = getProject().files();
         BaseVariantData tested = getTestedVariantData();
+
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             Provider<RegularFile> namespacedRClassJar =
                     artifacts.getFinalProduct(
@@ -698,20 +686,13 @@ public class VariantScopeImpl implements VariantScope {
                     Provider<RegularFile> rJar =
                             artifacts.getFinalProduct(
                                     COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = getProject().files(mainCollection, rJar);
+                    mainCollection = getProject().files(rJar);
                 } else {
                     checkState(getType().isApk(), "Expected APK type but found: " + getType());
-                    // Add R class jars to the front of the classpath as libraries might also export
-                    // compile-only classes. This behavior is verified in CompileRClassFlowTest
-                    // While relying on this order seems brittle, it avoids doubling the number of
-                    // files on the compilation classpath by exporting the R class separately or
-                    // and is much simpler than having two different outputs from each library, with
-                    // and without the R class, as AGP publishing code assumes there is exactly one
-                    // artifact for each publication.
                     Provider<FileCollection> rJar =
                             artifacts.getFinalProductAsFileCollection(
                                     COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = getProject().files(rJar, mainCollection);
+                    mainCollection = getProject().files(rJar);
                 }
             } else { // Android test or unit test
                 if (!globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
@@ -723,7 +704,7 @@ public class VariantScopeImpl implements VariantScope {
                     } else {
                         rJar = getRJarForUnitTests();
                     }
-                    mainCollection = getProject().files(mainCollection, rJar);
+                    mainCollection = getProject().files(rJar);
                 }
             }
         }
@@ -777,7 +758,7 @@ public class VariantScopeImpl implements VariantScope {
         FileCollection fileCollection;
 
         if (configType == RUNTIME_CLASSPATH
-                && getType().isFeatureSplit()
+                && getType().isDynamicFeature()
                 && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
 
             FileCollection excludedDirectories =
@@ -819,7 +800,7 @@ public class VariantScopeImpl implements VariantScope {
                 computeArtifactCollection(configType, scope, artifactType, attributeMap);
 
         if (configType == RUNTIME_CLASSPATH
-                && getType().isFeatureSplit()
+                && getType().isDynamicFeature()
                 && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
 
             FileCollection excludedDirectories =
@@ -863,8 +844,8 @@ public class VariantScopeImpl implements VariantScope {
                 // was published to.
                 if (publishedConfigs.contains(configType.getPublishedTo())) {
                     // if it's the case then we add the tested artifact.
-                    final com.android.build.api.artifact.ArtifactType<? extends FileSystemLocation>
-                            taskOutputType = taskOutputSpec.getOutputType();
+                    final SingleArtifactType<? extends FileSystemLocation> taskOutputType =
+                            taskOutputSpec.getOutputType();
                     BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
                     artifacts =
                             ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
@@ -1263,9 +1244,7 @@ public class VariantScopeImpl implements VariantScope {
     public File getApkLocation() {
         String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
         File baseDirectory =
-                override != null && !getType().isHybrid()
-                        ? getProject().file(override)
-                        : getDefaultApkLocation();
+                override != null ? getProject().file(override) : getDefaultApkLocation();
 
         return new File(baseDirectory, getDirName());
     }
@@ -1443,4 +1422,90 @@ public class VariantScopeImpl implements VariantScope {
             return ApkCreatorType.APK_Z_FILE_CREATOR;
         }
     }
+
+    private Provider<FeatureSetMetadata> featureSetProvider = null;
+
+    @NonNull
+    private Provider<FeatureSetMetadata> getFeatureSetProvider() {
+        if (featureSetProvider == null) {
+            FileCollection fc =
+                    getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            PROJECT,
+                            FEATURE_SET_METADATA);
+            featureSetProvider =
+                    fc.getElements()
+                            .map(
+                                    entries -> {
+                                        FileSystemLocation file = Iterables.getOnlyElement(entries);
+                                        try {
+                                            return FeatureSetMetadata.load(file.getAsFile());
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+
+        }
+
+        return featureSetProvider;
+    }
+
+    private Provider<String> featureName = null;
+
+    @NonNull
+    @Override
+    public Provider<String> getFeatureName() {
+        if (featureName == null) {
+            final String gradlePath = globalScope.getProject().getPath();
+
+            featureName =
+                    getFeatureSetProvider()
+                            .map(
+                                    featureSetMetadata -> {
+                                        String featureName =
+                                                featureSetMetadata.getFeatureNameFor(gradlePath);
+
+                                        if (featureName == null) {
+                                            throw new RuntimeException(
+                                                    String.format(
+                                                            "Failed to find feature name for %s in %s",
+                                                            gradlePath,
+                                                            featureSetMetadata.getSourceFile()));
+                                        }
+                                        return featureName;
+                                    });
+        }
+
+        return featureName;
+    }
+
+    private Provider<Integer> resOffset = null;
+
+    @NonNull
+    @Override
+    public Provider<Integer> getResOffset() {
+        if (resOffset == null) {
+            final String gradlePath = globalScope.getProject().getPath();
+
+            resOffset =
+                    getFeatureSetProvider()
+                            .map(
+                                    featureSetMetadata -> {
+                                        Integer resOffset =
+                                                featureSetMetadata.getResOffsetFor(gradlePath);
+
+                                        if (resOffset == null) {
+                                            throw new RuntimeException(
+                                                    String.format(
+                                                            "Failed to find resource offset for %s in %s",
+                                                            gradlePath,
+                                                            featureSetMetadata.getSourceFile()));
+                                        }
+                                        return resOffset;
+                                    });
+        }
+
+        return resOffset;
+    }
+
 }

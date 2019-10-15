@@ -165,7 +165,7 @@ public class SimpleTestRunnable implements Runnable {
                 runner.addInstrumentationArg(argument.getKey(), argument.getValue());
             }
 
-            if (additionalTestOutputEnabled) {
+            if (additionalTestOutputEnabled && device.getApiLevel() >= 16) {
                 additionalTestOutputDir = queryAdditionalTestOutputLocation().toString();
 
                 MultiLineReceiver receiver = getOutputReceiver();
