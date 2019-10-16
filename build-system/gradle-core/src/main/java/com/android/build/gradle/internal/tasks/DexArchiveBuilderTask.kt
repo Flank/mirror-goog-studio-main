@@ -458,7 +458,8 @@ abstract class DxDexParameterInputs {
         return DxDexParameters(
             inBufferSize = inBufferSize.get(),
             outBufferSize = outBufferSize.get(),
-            dxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get()
+            dxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get(),
+            jumboMode = DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx()
         )
     }
 }

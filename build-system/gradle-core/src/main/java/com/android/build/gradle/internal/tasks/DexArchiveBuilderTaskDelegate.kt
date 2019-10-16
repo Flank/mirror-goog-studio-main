@@ -19,22 +19,19 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
+import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DexParameters
+import com.android.build.gradle.internal.dexing.DexWorkAction
 import com.android.build.gradle.internal.dexing.DxDexParameters
-import com.android.build.gradle.internal.dexing.DexParametersForWorkers
-import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.dexing.IncrementalDexSpec
+import com.android.build.gradle.internal.dexing.launchProcessing
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
 import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.ClassFileEntry
-import com.android.builder.dexing.ClassFileInputs
-import com.android.builder.dexing.DexArchiveBuilder
-import com.android.builder.dexing.DexArchiveBuilderConfig
-import com.android.builder.dexing.DexArchiveBuilderException
 import com.android.builder.dexing.DexerTool
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.builder.utils.FileCache
-import com.android.dx.command.dexer.DxContext
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.MessageReceiver
 import com.android.ide.common.blame.ParsingProcessOutputHandler
@@ -44,13 +41,9 @@ import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessOutput
 import com.android.utils.FileUtils
-import com.google.common.base.Preconditions
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
 import com.google.common.hash.Hashing
-import com.google.common.io.Closer
-import org.gradle.api.logging.Logging
-import org.gradle.tooling.BuildException
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
 import org.gradle.workers.IsolationMode
@@ -59,18 +52,11 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import java.io.OutputStream
-import java.io.Serializable
-import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.ArrayList
 import java.util.function.Supplier
-import java.util.stream.Stream
-import javax.inject.Inject
-import kotlin.math.abs
 
 /**
  * Delegate for the [DexArchiveBuilderTask]. This is where the actual processing happens. Using the
@@ -603,88 +589,6 @@ class DexArchiveBuilderTaskDelegate(
         )
     }
 
-    class DexConversionParameters(
-        internal val isIncremental: Boolean,
-        internal val inputs: Set<File>,
-        internal val isDirectory: Boolean,
-        output: File,
-        internal val dexParams: DexParametersForWorkers,
-        internal val dexPerClass: Boolean,
-        private val dxDexParams: DxDexParameters,
-        internal val changedFiles: Set<File>,
-        internal val additionalPaths: Set<File>,
-        private val dexer: DexerTool,
-        private val numberOfBuckets: Int,
-        private val buckedId: Int
-    ) : Serializable {
-        internal val output: String = output.toURI().toString()
-
-        fun belongsToThisBucket(path: String): Boolean {
-            return getBucketForFile(isDirectory, path, numberOfBuckets) == buckedId
-        }
-
-        fun getDexArchiveBuilder(
-            outStream: OutputStream,
-            errStream: OutputStream,
-            dexPerClass: Boolean,
-            messageReceiver: MessageReceiver
-        ): DexArchiveBuilder {
-            val dexArchiveBuilder: DexArchiveBuilder
-            when (dexer) {
-                DexerTool.DX -> {
-                    val config = DexArchiveBuilderConfig(
-                        DxContext(outStream, errStream),
-                        !dxDexParams.dxNoOptimizeFlagPresent, // optimizedDex
-                        dxDexParams.inBufferSize,
-                        dexParams.minSdkVersion,
-                        DexerTool.DX,
-                        dxDexParams.outBufferSize,
-                        DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx()
-                    )
-
-                    dexArchiveBuilder = DexArchiveBuilder.createDxDexBuilder(config)
-                }
-                DexerTool.D8 -> dexArchiveBuilder = DexArchiveBuilder.createD8DexBuilder(
-                    com.android.builder.dexing.DexParameters(
-                        minSdkVersion = dexParams.minSdkVersion,
-                        debuggable = dexParams.debuggable,
-                        dexPerClass = dexPerClass,
-                        withDesugaring = dexParams.withDesugaring,
-                        desugarBootclasspath =
-                                INSTANCE.getService(dexParams.desugarBootclasspath).service,
-                        desugarClasspath = INSTANCE.getService(dexParams.desugarClasspath).service,
-                        coreLibDesugarConfig = dexParams.coreLibDesugarConfig,
-                        coreLibDesugarOutputKeepRuleFile =
-                                dexParams.coreLibDesugarOutputKeepRuleFile,
-                        messageReceiver = messageReceiver
-                    )
-                )
-                else -> throw AssertionError("Unknown dexer type: " + dexer.name)
-            }
-            return dexArchiveBuilder
-        }
-    }
-
-    class DexConversionWorkAction @Inject
-    constructor(private val dexConversionParameters: DexConversionParameters) : Runnable {
-
-        override fun run() {
-            try {
-                launchProcessing(
-                    dexConversionParameters,
-                    System.out,
-                    System.err,
-                    MessageReceiverImpl(
-                        dexConversionParameters.dexParams.errorFormatMode,
-                        Logging.getLogger(DexArchiveBuilderTaskDelegate::class.java)
-                    )
-                )
-            } catch (e: Exception) {
-                throw BuildException(e.message, e)
-            }
-        }
-    }
-
     private open class D8DesugaringCacheInfo constructor(val orderedD8DesugaringDependencies: List<Path>)
     private object DesugaringNoInfoCache : D8DesugaringCacheInfo(emptyList())
     private object DesugaringDontCache : D8DesugaringCacheInfo(emptyList())
@@ -736,24 +640,25 @@ class DexArchiveBuilderTaskDelegate(
             }
 
             dexArchives.add(preDexOutputFile)
-            val parameters = DexConversionParameters(
-                isIncremental,
-                inputs,
-                isDirectory,
-                preDexOutputFile,
-                dexParams.toDexParametersForWorkers(bootClasspath, classpath, outputKeepRuleFile),
-                dexPerClass,
-                dxDexParams,
-                changedFiles,
-                additionalPaths,
-                dexer,
-                numberOfBuckets,
-                bucketId
+            val parameters = DexWorkActionParams(
+                dexer = dexer,
+                dexSpec = IncrementalDexSpec(
+                    classFileRoots = inputs.toList(),
+                    isDirectory = isDirectory,
+                    numberOfBuckets = numberOfBuckets,
+                    buckedId = bucketId,
+                    outputPath = preDexOutputFile,
+                    dexParams = dexParams.toDexParametersForWorkers(dexPerClass, bootClasspath, classpath, outputKeepRuleFile),
+                    isIncremental = isIncremental,
+                    changedFiles = changedFiles,
+                    impactedFiles = additionalPaths
+                ),
+                dxDexParams = dxDexParams
             )
 
             if (useGradleWorkers) {
                 workerExecutor.submit(
-                    DexConversionWorkAction::class.java
+                    DexWorkAction::class.java
                 ) { configuration ->
                     configuration.isolationMode = IsolationMode.NONE
                     configuration.setParams(parameters)
@@ -842,81 +747,6 @@ class DexArchiveBuilderTaskDelegate(
     private fun getKeepRulesOutputForJar(input: File, outputDir: File, bucketId: Int): File {
         val hash = inputJarHashesValues.getValue(input)
         return outputDir.resolve("${hash}_$bucketId")
-    }
-}
-
-/**
- * Returns the bucket based on relative path for jar and directory input.
- */
-private fun getBucketForFile(isDirectory: Boolean, path: String, numberOfBuckets: Int): Int {
-    Preconditions.checkArgument(!Paths.get(path).isAbsolute, "Path should be relative: $path")
-    if (!isDirectory) {
-        return abs(path.hashCode()) % numberOfBuckets
-    } else {
-        val packagePath = Paths.get(path).parent ?: return 0
-        return abs(packagePath.toString().hashCode()) % numberOfBuckets
-    }
-}
-
-private fun launchProcessing(
-    dexConversionParameters: DexArchiveBuilderTaskDelegate.DexConversionParameters,
-    outStream: OutputStream,
-    errStream: OutputStream,
-    receiver: MessageReceiver
-) {
-    val dexArchiveBuilder = dexConversionParameters.getDexArchiveBuilder(
-        outStream,
-        errStream,
-        dexConversionParameters.dexPerClass,
-        receiver
-    )
-
-    val inputPaths = dexConversionParameters.inputs.map { it.toPath() }
-
-    val hasIncrementalInfo =
-        dexConversionParameters.isDirectory && dexConversionParameters.isIncremental
-
-    fun toProcess(rootPath: Path, path: String): Boolean {
-        val inputPath = Paths.get(path)
-        // The inputPath could be relative path for jar input and absolute path for directory input
-        val relativePath = if (inputPath.isAbsolute) rootPath.relativize(inputPath) else inputPath
-        if (!dexConversionParameters.belongsToThisBucket(relativePath.toString())) return false
-
-        if (!hasIncrementalInfo) {
-            return true
-        }
-
-        val resolved = rootPath.resolve(path).toFile()
-        return resolved in dexConversionParameters.additionalPaths || resolved in dexConversionParameters.changedFiles
-    }
-
-    val bucketFilter = { rootPath: Path, path: String -> toProcess(rootPath, path) }
-    inputPaths.forEach {
-        loggerWrapper.verbose("Dexing '$it' to '" + dexConversionParameters.output + "'")
-    }
-
-    try {
-        Closer.create().use { closer ->
-            var classFileEntries = Stream.empty<ClassFileEntry>()
-            classFileEntries.use {
-                for (inputPath in inputPaths) {
-                    val classFileInput =
-                        ClassFileInputs.fromPath(inputPath).also { closer.register(it) }
-                    classFileEntries =
-                        Stream.concat(classFileEntries, classFileInput.entries(bucketFilter))
-                }
-                dexArchiveBuilder.convert(
-                    classFileEntries,
-                    Paths.get(URI(dexConversionParameters.output))
-                )
-            }
-        }
-    } catch (ex: DexArchiveBuilderException) {
-        if (dexConversionParameters.isDirectory) {
-            throw DexArchiveBuilderException("Failed to process for directories input", ex)
-        } else {
-            throw DexArchiveBuilderException("Failed to process ${inputPaths.first()}", ex)
-        }
     }
 }
 

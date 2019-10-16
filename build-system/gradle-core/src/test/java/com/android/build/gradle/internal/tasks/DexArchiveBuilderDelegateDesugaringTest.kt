@@ -471,7 +471,8 @@ class DexArchiveBuilderDelegateDesugaringTest {
             dxDexParams = DxDexParameters(
                 inBufferSize = 10,
                 outBufferSize = 10,
-                dxNoOptimizeFlagPresent = false
+                dxNoOptimizeFlagPresent = false,
+                jumboMode = true
             ),
             desugaringClasspathChangedClasses = emptySet(),
             projectVariant = "myVariant",
