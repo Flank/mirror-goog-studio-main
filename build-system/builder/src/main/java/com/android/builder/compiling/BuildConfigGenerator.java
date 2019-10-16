@@ -105,10 +105,8 @@ public class BuildConfigGenerator {
      */
     public void generate() throws IOException {
         File pkgFolder = getFolderPath();
-        if (!pkgFolder.isDirectory()) {
-            if (!pkgFolder.mkdirs()) {
-                throw new RuntimeException("Failed to create " + pkgFolder.getAbsolutePath());
-            }
+        if (!pkgFolder.isDirectory() && !pkgFolder.mkdirs()) {
+            throw new RuntimeException("Failed to create " + pkgFolder.getAbsolutePath());
         }
 
         File buildConfigJava = new File(pkgFolder, BUILD_CONFIG_NAME);
