@@ -30,6 +30,11 @@ swap_test(
 )
 
 swap_test(
+    name = "AgentBasedClassRedefinerJetPackComposeTest",
+    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerJetPackComposeTest.java"],
+)
+
+swap_test(
     name = "JdiBasedClassRedefinerTest",
     srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
 )

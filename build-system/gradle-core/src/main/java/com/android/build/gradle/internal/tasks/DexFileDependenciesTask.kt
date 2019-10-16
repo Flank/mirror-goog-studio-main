@@ -25,9 +25,9 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
-import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -84,28 +84,28 @@ abstract class DexFileDependenciesTask
 
     // TODO: make incremental
     override fun doTaskAction() {
-       getWorkerFacadeWithWorkers().use { workerExecutorFacade->
-           val inputs = classes.files.toList()
-           val totalClasspath = inputs + classpath.files
-           val outDir = outputDirectory.get().asFile
-           inputs.forEachIndexed { index, input ->
-               // Desugar each jar with reference to all the others
-               workerExecutorFacade.submit(
-                   DexFileDependenciesWorkerAction::class.java,
-                   DexFileDependenciesWorkerActionParams(
-                       minSdkVersion = minSdkVersion.get(),
-                       debuggable = debuggable.get(),
-                       bootClasspath = bootClasspath.files,
-                       classpath = totalClasspath,
-                       input = input,
-                       outputFile = outDir.resolve("${index}_${input.name}"),
-                       errorFormatMode = errorFormatMode,
-                       libConfiguration = libConfiguration.orNull,
-                       outputKeepRules = outputKeepRules.asFile.orNull
-                   )
-               )
-           }
-       }
+        getWorkerFacadeWithWorkers().use { workerExecutorFacade ->
+            val inputs = classes.files.toList()
+            val totalClasspath = inputs + classpath.files
+            val outDir = outputDirectory.get().asFile
+            inputs.forEachIndexed { index, input ->
+                // Desugar each jar with reference to all the others
+                workerExecutorFacade.submit(
+                    DexFileDependenciesWorkerAction::class.java,
+                    DexFileDependenciesWorkerActionParams(
+                        minSdkVersion = minSdkVersion.get(),
+                        debuggable = debuggable.get(),
+                        bootClasspath = bootClasspath.files,
+                        classpath = totalClasspath,
+                        input = input,
+                        outputFile = outDir.resolve("${index}_${input.name}"),
+                        errorFormatMode = errorFormatMode,
+                        libConfiguration = libConfiguration.orNull,
+                        outputKeepRules = outputKeepRules.asFile.orNull
+                    )
+                )
+            }
+        }
     }
 
     data class DexFileDependenciesWorkerActionParams(
@@ -128,17 +128,23 @@ abstract class DexFileDependenciesTask
             val classpath = params.classpath.map(File::toPath)
             Closer.create().use { closer ->
                 val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-                    params.minSdkVersion,
-                    params.debuggable,
-                    ClassFileProviderFactory(bootClasspath).also { closer.register(it) },
-                    ClassFileProviderFactory(classpath).also { closer.register(it) },
-                    false,
-                    true,
-                    params.libConfiguration,
-                    params.outputKeepRules,
-                    MessageReceiverImpl(
-                        errorFormatMode = params.errorFormatMode,
-                        logger = Logging.getLogger(DexFileDependenciesWorkerAction::class.java)
+                    DexParameters(
+                        minSdkVersion = params.minSdkVersion,
+                        debuggable = params.debuggable,
+                        dexPerClass = false,
+                        withDesugaring = true,
+                        desugarBootclasspath = ClassFileProviderFactory(bootClasspath).also {
+                            closer.register(it)
+                        },
+                        desugarClasspath = ClassFileProviderFactory(classpath).also {
+                            closer.register(it)
+                        },
+                        coreLibDesugarConfig = params.libConfiguration,
+                        coreLibDesugarOutputKeepRuleFile = params.outputKeepRules,
+                        messageReceiver = MessageReceiverImpl(
+                            errorFormatMode = params.errorFormatMode,
+                            logger = Logging.getLogger(DexFileDependenciesWorkerAction::class.java)
+                        )
                     )
                 )
 
@@ -160,9 +166,6 @@ abstract class DexFileDependenciesTask
         override val name: String = variantScope.getTaskName("desugar", "FileDependencies")
         override val type = DexFileDependenciesTask::class.java
 
-        private val coreLibraryDesugaringEnabled =
-            variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
-
         override fun handleProvider(taskProvider: TaskProvider<out DexFileDependenciesTask>) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
@@ -172,8 +175,7 @@ abstract class DexFileDependenciesTask
                 fileName = "out"
             )
 
-            if (coreLibraryDesugaringEnabled == true
-                && !variantScope.variantConfiguration.buildType.isDebuggable) {
+            if (variantScope.needsShrinkDesugarLibrary) {
                 variantScope.artifacts.getOperations()
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
@@ -206,7 +208,7 @@ abstract class DexFileDependenciesTask
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
 
-            if (coreLibraryDesugaringEnabled == true) {
+            if (variantScope.isCoreLibraryDesugaringEnabled) {
                 task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
             }
         }

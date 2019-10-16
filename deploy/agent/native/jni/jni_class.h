@@ -34,6 +34,8 @@ class JniClass {
     class_ = jni_->FindClass(name);
   }
 
+  JniClass(JNIEnv* jni, jclass klass) : jni_(jni) { class_ = klass; }
+
   ~JniClass() { jni_->DeleteLocalRef(class_); }
 
   JniClass& operator=(JniClass&&) = default;
@@ -87,6 +89,12 @@ inline JniObject JniClass::CallStaticMethod(const JniSignature& method,
                                             jvalue* args) {
   jobject object = CallStaticMethod<jobject>(method, args);
   return JniObject(jni_, object);
+}
+
+template <>
+inline jobject JniClass::GetStaticField(const JniSignature& field) {
+  jfieldID fid = jni_->GetStaticFieldID(class_, field.name, field.signature);
+  return jni_->GetStaticObjectField(class_, fid);
 }
 
 }  // namespace deploy

@@ -150,6 +150,7 @@ public abstract class InstantAppSideLoadTask extends NonIncrementalTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public Provider<File> getAdbExe() {
         return adbExecutableProvider;
     }

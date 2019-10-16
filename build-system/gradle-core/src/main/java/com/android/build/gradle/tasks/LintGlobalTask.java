@@ -29,6 +29,8 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 public class LintGlobalTask extends LintBaseTask {
@@ -37,6 +39,7 @@ public class LintGlobalTask extends LintBaseTask {
     private ConfigurableFileCollection allInputs;
 
     @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     @Optional
     public FileCollection getAllInputs() {
         return allInputs;

@@ -16,8 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.dexing.DexParameters
+import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -442,7 +443,6 @@ class DexArchiveBuilderDelegateDesugaringTest {
 
         return DexArchiveBuilderTaskDelegate(
             isIncremental = isIncremental,
-            androidJarClasspath = bootClasspath,
             projectClasses = projectClasses,
             projectChangedClasses = projectChanges,
             subProjectClasses = emptySet(),
@@ -451,23 +451,6 @@ class DexArchiveBuilderDelegateDesugaringTest {
             externalLibChangedClasses = emptySet(),
             mixedScopeClasses = emptySet(),
             mixedScopeChangedClasses = emptySet(),
-            desugaringClasspathClasses = desugaringClasspath,
-            desugaringClasspathChangedClasses = emptySet(),
-            useGradleWorkers = false,
-            minSdkVersion = minSdkVersion,
-            isDebuggable = isDebuggable,
-            errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-            messageReceiver = NoOpMessageReceiver(),
-            isDxNoOptimizeFlagPresent = false,
-            inBufferSize = 10,
-            outBufferSize = 10,
-            java8LangSupportType = VariantScope.Java8LangSupport.D8,
-            projectVariant = "myVariant",
-            numberOfBuckets = 2,
-            userLevelCache = userCache,
-            inputJarHashesFile = inputJarHashes,
-            workerExecutor = workerExecutor,
-
             projectOutputDex = projectOutput,
             projectOutputKeepRules = null,
             subProjectOutputDex = tmpDir.newFolder(),
@@ -476,8 +459,29 @@ class DexArchiveBuilderDelegateDesugaringTest {
             externalLibsOutputKeepRules = null,
             mixedScopeOutputDex = tmpDir.newFolder(),
             mixedScopeOutputKeepRules = null,
+            dexParams = DexParameters(
+                minSdkVersion = minSdkVersion,
+                debuggable = isDebuggable,
+                withDesugaring = true,
+                desugarBootclasspath = bootClasspath.toList(),
+                desugarClasspath = desugaringClasspath.toList(),
+                coreLibDesugarConfig = libConfiguration,
+                errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
+            ),
+            dxDexParams = DxDexParameters(
+                inBufferSize = 10,
+                outBufferSize = 10,
+                dxNoOptimizeFlagPresent = false
+            ),
+            desugaringClasspathChangedClasses = emptySet(),
+            projectVariant = "myVariant",
+            inputJarHashesFile = inputJarHashes,
             dexer = DexerTool.D8,
-            libConfiguration = libConfiguration
+            numberOfBuckets = 2,
+            useGradleWorkers = false,
+            workerExecutor = workerExecutor,
+            userLevelCache = userCache,
+            messageReceiver = NoOpMessageReceiver()
         )
     }
 

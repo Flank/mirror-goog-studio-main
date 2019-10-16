@@ -109,6 +109,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
+import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeClassesTask;
@@ -2039,6 +2040,8 @@ public abstract class TaskManager {
                 new DexArchiveBuilderTask.CreationAction(
                         dexOptions, enableDexingArtifactTransform, userLevelCache, variantScope));
 
+        maybeCreateDexDesugarLibTask(variantScope, enableDexingArtifactTransform);
+
         createDexMergingTasks(variantScope, dexingType, enableDexingArtifactTransform);
     }
 
@@ -3184,6 +3187,20 @@ public abstract class TaskManager {
     private void maybeCreateCheckDuplicateClassesTask(@NonNull VariantScope variantScope) {
         if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
             taskFactory.register(new CheckDuplicateClassesTask.CreationAction(variantScope));
+        }
+    }
+
+    private void maybeCreateDexDesugarLibTask(
+            @NonNull VariantScope variantScope, boolean enableDexingArtifactTransform) {
+        boolean separateFileDependenciesDexingTask =
+                variantScope.getJava8LangSupportType() == Java8LangSupport.D8
+                        && enableDexingArtifactTransform;
+        if (variantScope.getNeedsShrinkDesugarLibrary()) {
+            taskFactory.register(
+                    new L8DexDesugarLibTask.CreationAction(
+                            variantScope,
+                            enableDexingArtifactTransform,
+                            separateFileDependenciesDexingTask));
         }
     }
 }

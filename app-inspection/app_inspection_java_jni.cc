@@ -16,10 +16,11 @@
 #include <jni.h>
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
+#include "app_inspection_service.h"
 
-using app::inspection::ServiceResponse;
+using app_inspection::ServiceResponse;
 
-namespace profiler {
+namespace app_inspection {
 
 void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
                                          ServiceResponse::Status status,
@@ -86,20 +87,34 @@ void EnqueueAppInspectionCrashEvent(JNIEnv *env, int32_t command_id,
       }});
 }
 
+jobject CreateAppInspectionService(JNIEnv *env) {
+  auto service = AppInspectionService::create(env);
+  if (service == nullptr) {
+    return nullptr;
+  }
+
+  auto serviceClass = env->FindClass(
+      "com/android/tools/agent/app/inspection/AppInspectionService");
+  jmethodID constructor_method =
+      env->GetMethodID(serviceClass, "<init>", "(J)V");
+  return env->NewObject(serviceClass, constructor_method,
+                        reinterpret_cast<jlong>(service));
+}
+
 }  // namespace profiler
 
 extern "C" {
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_Responses_replyError(
     JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
-  profiler::EnqueueAppInspectionServiceResponse(
+  app_inspection::EnqueueAppInspectionServiceResponse(
       env, command_id, ServiceResponse::ERROR, error_message);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_Responses_replySuccess(
     JNIEnv *env, jobject obj, jint command_id) {
-  profiler::EnqueueAppInspectionServiceResponse(
+  app_inspection::EnqueueAppInspectionServiceResponse(
       env, command_id, ServiceResponse::SUCCESS, nullptr);
 }
 
@@ -107,15 +122,21 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_Responses_replyCrash(
     JNIEnv *env, jobject obj, jint command_id, jstring inspector_id,
     jstring error_message) {
-  profiler::EnqueueAppInspectionCrashEvent(env, command_id, inspector_id,
-                                           error_message);
+  app_inspection::EnqueueAppInspectionCrashEvent(env, command_id, inspector_id,
+                                                 error_message);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_Responses_sendEvent(
     JNIEnv *env, jobject obj, jint command_id, jbyteArray event_data,
     jint length, jstring inspector_id) {
-  profiler::EnqueueAppInspectionRawEvent(env, command_id, event_data, length,
-                                         inspector_id);
+  app_inspection::EnqueueAppInspectionRawEvent(env, command_id, event_data,
+                                               length, inspector_id);
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_android_tools_agent_app_inspection_AppInspectionService_createAppInspectionService(
+    JNIEnv *env, jclass jclazz) {
+  return app_inspection::CreateAppInspectionService(env);
 }
 }

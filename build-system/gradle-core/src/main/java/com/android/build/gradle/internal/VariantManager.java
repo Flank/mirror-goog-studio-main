@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.dependency.DexingOutputSplitTransformKt.registerDexingOutputSplitTransform;
 import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
 import static com.android.build.gradle.internal.dependency.L8DexDesugarLibTransformKt.getDesugarLibConfigurations;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
@@ -898,6 +899,8 @@ public class VariantManager implements VariantModel {
         for (DesugarLibConfiguration configuration : getDesugarLibConfigurations(variantScopes)) {
             configuration.registerTransform(dependencies);
         }
+
+        registerDexingOutputSplitTransform(dependencies, variantScopes);
     }
 
     private static <F, T> List<T> convert(
@@ -931,7 +934,7 @@ public class VariantManager implements VariantModel {
 
         if (!alternateMap.isEmpty()) {
             AttributeMatchingStrategy<BuildTypeAttr> buildTypeStrategy =
-                    schema.attribute(BuildTypeAttr.ATTRIBUTE);
+                    schema.attribute(BuildTypeAttr.getATTRIBUTE());
 
             buildTypeStrategy
                     .getCompatibilityRules()

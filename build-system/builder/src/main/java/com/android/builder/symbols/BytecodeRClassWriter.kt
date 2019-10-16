@@ -31,14 +31,12 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ACC_SUPER
 import org.objectweb.asm.Opcodes.ALOAD
-import org.objectweb.asm.Opcodes.BIPUSH
-import org.objectweb.asm.Opcodes.DUP
-import org.objectweb.asm.Opcodes.IASTORE
 import org.objectweb.asm.Opcodes.INVOKESPECIAL
-import org.objectweb.asm.Opcodes.NEWARRAY
 import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
-import org.objectweb.asm.Opcodes.T_INT
+import org.objectweb.asm.Type.INT_TYPE
+import org.objectweb.asm.commons.GeneratorAdapter
+import org.objectweb.asm.commons.Method
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarFlinger
 import java.io.IOException
@@ -163,26 +161,26 @@ private fun generateResourceTypeClass(
 
     // init method
     if (resType == ResourceType.STYLEABLE) {
-        val clinit = cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null)
+        val method = Method("<clinit>", "()V")
+        val clinit = GeneratorAdapter(ACC_PUBLIC.or(ACC_STATIC), method, null, null, cw)
         clinit.visitCode()
         for (s in symbols) {
             s as Symbol.StyleableSymbol
             val values = s.values
-            clinit.visitIntInsn(BIPUSH, values.size)
-            clinit.visitIntInsn(NEWARRAY, T_INT)
+            clinit.push(values.size)
+            clinit.newArray(INT_TYPE)
 
             for ((i, value) in values.withIndex()) {
-                clinit.visitInsn(DUP)
-                clinit.visitIntInsn(BIPUSH, i)
-                clinit.visitLdcInsn(value)
-                clinit.visitInsn(IASTORE)
+                clinit.dup()
+                clinit.push(i)
+                clinit.push(value)
+                clinit.arrayStore(INT_TYPE)
             }
 
             clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "[I")
         }
-        clinit.visitInsn(RETURN)
-        clinit.visitMaxs(0, 0)
-        clinit.visitEnd()
+        clinit.returnValue()
+        clinit.endMethod()
     }
 
     cw.visitEnd()

@@ -51,6 +51,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
@@ -502,6 +503,59 @@ public class VariantScopeImpl implements VariantScope {
                 AndroidTargetHash.getVersionFromHash(
                         globalScope.getExtension().getCompileSdkVersion());
         return version != null && version.isPreview();
+    }
+
+    /**
+     * Returns if core library desugaring is enabled.
+     *
+     * <p>Java language desugaring and multidex are required for enabling core library desugaring.
+     */
+    @Override
+    public boolean isCoreLibraryDesugaringEnabled() {
+        BaseExtension extension = globalScope.getExtension();
+
+        boolean libDesugarEnabled =
+                extension.getCompileOptions().getCoreLibraryDesugaringEnabled() != null
+                        && extension.getCompileOptions().getCoreLibraryDesugaringEnabled();
+
+        boolean multidexEnabled = getVariantConfiguration().isMultiDexEnabled();
+
+        Java8LangSupport langSupportType = getJava8LangSupportType();
+        boolean langDesugarEnabled =
+                langSupportType == Java8LangSupport.D8 || langSupportType == Java8LangSupport.R8;
+
+        if (libDesugarEnabled && !langDesugarEnabled) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            Type.GENERIC,
+                            "In order to use core library desugaring, "
+                                    + "please enable java 8 language desugaring with D8 or R8.");
+        }
+
+        if (libDesugarEnabled && !multidexEnabled) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            Type.GENERIC,
+                            "In order to use core library desugaring, "
+                                    + "please enable multidex.");
+        }
+        return libDesugarEnabled;
+    }
+
+    @Override
+    public boolean getNeedsShrinkDesugarLibrary() {
+        if (!isCoreLibraryDesugaringEnabled()) {
+            return false;
+        }
+        // Assume Java8LangSupport is either D8 or R8 as we checked that in
+        // isCoreLibraryDesugaringEnabled()
+        if (getJava8LangSupportType() == Java8LangSupport.D8
+                && getVariantConfiguration().getBuildType().isDebuggable()) {
+            return false;
+        }
+        return true;
     }
 
     @NonNull

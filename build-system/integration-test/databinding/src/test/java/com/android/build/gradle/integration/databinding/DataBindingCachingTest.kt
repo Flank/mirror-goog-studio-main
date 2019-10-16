@@ -83,22 +83,66 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     }
 
     @Test
-    fun testDifferentProjectLocations() {
-        // Build the first project to populate the Gradle build cache
+    fun `test main resources located within root project directory, expect cacheable tasks`() {
+        // Build the first project
         val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-
         project.executor().withArgument("--build-cache").run("clean", JAVA_COMPILE_TASK)
         assertThat(buildCacheDir).exists()
 
-        // Build the second project that is identical to the first project, uses the same build
-        // cache, but has a different location. The Java compile task should still get their outputs
-        // from the build cache.
+        // Build the second project that is identical to the first project but has a different
+        // location
         val result = projectCopy.executor().withArgument("--build-cache")
             .run("clean", JAVA_COMPILE_TASK)
+
+        // Check that the relevant tasks are cacheable
         assertThat(result.getTask(DATA_BINDING_GEN_BASE_CLASSES_TASK)).wasFromCache()
         assertThat(result.getTask(JAVA_COMPILE_TASK)).wasFromCache()
 
+        // Clean up
+        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+    }
+
+    @Test
+    fun `test main resources located outside root project directory, expect non-cacheable tasks`() {
+        // Add some resources outside of the root project directory
+        for (project in listOf(project, projectCopy)) {
+            val resDirOutsideProject = "../resOutside${project.name}"
+            FileUtils.mkdirs(project.file("$resDirOutsideProject/layout"))
+            FileUtils.copyFile(
+                project.file("src/main/res/layout/activity_main.xml"),
+                project.file("$resDirOutsideProject/layout/activity_main_copy.xml")
+            )
+            project.buildFile.appendText(
+                """
+                android.sourceSets.main {
+                    res.srcDirs = res.srcDirs + ['$resDirOutsideProject']
+                }
+                """
+            )
+        }
+
+        // Build the first project
+        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
+        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+        project.executor().withArgument("--build-cache").run("clean", JAVA_COMPILE_TASK)
+        assertThat(buildCacheDir).exists()
+
+        // Build the second project that is identical to the first project but has a different
+        // location
+        val result = projectCopy.executor().withArgument("--build-cache")
+            .run("clean", JAVA_COMPILE_TASK)
+
+        // Check that the relevant tasks are not cacheable
+        assertThat(result.getTask(DATA_BINDING_GEN_BASE_CLASSES_TASK)).didWork()
+        if (withKotlin) {
+            // Data binding was processed by Kapt, so it doesn't make JavaCompile non-cacheable
+            assertThat(result.getTask(JAVA_COMPILE_TASK)).wasFromCache()
+        } else {
+            assertThat(result.getTask(JAVA_COMPILE_TASK)).didWork()
+        }
+
+        // Clean up
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
     }
 }

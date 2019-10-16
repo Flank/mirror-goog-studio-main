@@ -34,6 +34,9 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 public abstract class UninstallTask extends NonIncrementalTask {
@@ -89,10 +92,12 @@ public abstract class UninstallTask extends NonIncrementalTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public File getAdbExe() {
         return adbExecutableProvider.get();
     }
 
+    @Internal("This task is always executed")
     public BaseVariantData getVariant() {
         return variant;
     }

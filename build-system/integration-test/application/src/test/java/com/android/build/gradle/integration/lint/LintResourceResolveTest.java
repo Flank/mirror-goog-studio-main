@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
-import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
@@ -26,10 +25,7 @@ import org.junit.Test;
 
 /**
  * Test making sure that the SupportAnnotationUsage does not report errors referencing R.type.name
- * resource fields. The real reason for this test is making sure that lint's hardcoded path to the
- * R.jar file is still correct; if the location is changed in Gradle this test is expected to fail.
- * (The longer term plan is for Gradle to pass the location to lint via a flag; this is tracked in
- * b/133326990.)
+ * resource fields. (Regression test for bug 133326990.)
  */
 public class LintResourceResolveTest {
     @Rule

@@ -27,7 +27,7 @@ internal data class TemplateImpl(
   override val requireAndroidX: Boolean,
   override val category: Category,
   override val formFactor: FormFactor,
-  override val parameters: Parameters,
+  override val parameters: Collection<Parameter<*>>,
   private val _thumb: () -> Thumb,
   override val recipe: Recipe,
   override val uiContexts: Collection<WizardUiContext>

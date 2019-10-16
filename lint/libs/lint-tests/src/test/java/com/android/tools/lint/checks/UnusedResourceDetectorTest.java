@@ -1502,6 +1502,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testFontTags() {
+        // Regression test for https://issuetracker.google.com/142182927
+        // 142182927: A <font> tag inside a string is treated as an empty resource
+        lint().files(
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<resources xmlns:tools=\"http://schemas.android.com/tools\" tools:keep=\"@string/other\">\n"
+                                        + "    <string name=\"other\">Here\\'s a <font color=\"#ffff00\">bold</font> prediction</string>\n"
+                                        + "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAccessibility =
             xml(

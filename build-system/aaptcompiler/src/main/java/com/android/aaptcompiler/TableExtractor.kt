@@ -666,7 +666,7 @@ class TableExtractor(
 
     val reference = Reference()
     reference.name = ResourceName("", AaptResourceType.ID, nameAttribute.value)
-    return AttributeResource.Symbol(reference, resValue.data)
+    return AttributeResource.Symbol(reference, resValue.data, resValue.dataType.byteValue)
   }
 
   /**

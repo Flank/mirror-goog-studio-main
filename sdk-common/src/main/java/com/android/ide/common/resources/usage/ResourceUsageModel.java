@@ -35,6 +35,7 @@ import static com.android.SdkConstants.REFERENCE_STYLE;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
+import static com.android.SdkConstants.TAG_STRING;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_SAFE;
@@ -994,6 +995,10 @@ public class ResourceUsageModel {
                 ResourceType type = ResourceType.fromXmlTag(element);
                 if (type != null) {
                     String name = getResourceFieldName(element);
+                    if (name.isEmpty()) {
+                        // Not a real resource
+                        return;
+                    }
                     if (type == ResourceType.PUBLIC) {
                         String typeName = element.getAttribute(ATTR_TYPE);
                         if (!typeName.isEmpty()) {
@@ -1009,6 +1014,21 @@ public class ResourceUsageModel {
                 }
                 if (definition != null) {
                     from = definition;
+                }
+
+                if (type == ResourceType.STRING) {
+                    // Don't look for resource definitions inside a <string> element;
+                    // you can find random markup there, like <font>, which should not
+                    // be taken to be a real resource. Only handle text children:
+                    NodeList children = node.getChildNodes();
+                    for (int i = 0, n = children.getLength(); i < n; i++) {
+                        Node child = children.item(i);
+                        if (child.getNodeType() != Node.ELEMENT_NODE) {
+                            recordResourceReferences(folderType, child, from);
+                        }
+                    }
+
+                    return;
                 }
 
                 String tagName = element.getTagName();

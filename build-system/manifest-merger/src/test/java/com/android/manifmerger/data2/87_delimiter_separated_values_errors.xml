@@ -86,6 +86,6 @@
 
 @errors
 
-ERROR:Invalid value for attribute permission#com.example.DangerWillRobinson@protectionLevel at ManifestMerger2Test1_lib1.xml:11:17-43, value=\(\), acceptable delimiter-separated values are \(normal\|dangerous\|signature\|signatureOrSystem\|privileged\|system\|development\|appop\|pre23\|installer\|verifier\|preinstalled\|setup\|ephemeral\)
-ERROR:Invalid value for attribute permission#com.example.WhatWereYouThinking@protectionLevel at ManifestMerger2Test1_lib1.xml:15:17-45, value=\(\|\|\), acceptable delimiter-separated values are \(normal\|dangerous\|signature\|signatureOrSystem\|privileged\|system\|development\|appop\|pre23\|installer\|verifier\|preinstalled\|setup\|ephemeral\)
+ERROR:Invalid value for attribute permission#com.example.DangerWillRobinson@protectionLevel at ManifestMerger2Test1_lib1.xml:11:17-43, value=\(\), acceptable delimiter-separated values are \(normal\|dangerous\|signature\|signatureOrSystem\|privileged\|system\|development\|appop\|pre23\|installer\|verifier\|preinstalled\|setup\|ephemeral\|instant\|runtime\|oem\|vendorPrivileged\|textClassifier\|wellbeing\|documenter\|configurator\|incidentReportApprover\|appPredictor\)
+ERROR:Invalid value for attribute permission#com.example.WhatWereYouThinking@protectionLevel at ManifestMerger2Test1_lib1.xml:15:17-45, value=\(\|\|\), acceptable delimiter-separated values are \(normal\|dangerous\|signature\|signatureOrSystem\|privileged\|system\|development\|appop\|pre23\|installer\|verifier\|preinstalled\|setup\|ephemeral\|instant\|runtime\|oem\|vendorPrivileged\|textClassifier\|wellbeing\|documenter\|configurator\|incidentReportApprover\|appPredictor\)
 ERROR:Validation failed, exiting

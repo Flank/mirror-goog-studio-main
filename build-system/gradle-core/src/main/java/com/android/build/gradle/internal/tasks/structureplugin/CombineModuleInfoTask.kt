@@ -29,20 +29,26 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 open class CombineModuleInfoTask : DefaultTask() {
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
     lateinit var subModules: FileCollection
         private set
 
     // optional module info if root project is also a module with plugins applied
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
     var localModuleInfo: Provider<RegularFile>? = null
         internal set
 
     // output
+    @get:OutputFile
     lateinit var outputProvider: Provider<RegularFile>
         private set
 

@@ -67,6 +67,18 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             "dependencies { compile project(':library') }${System.lineSeparator()}"
         )
 
+        project.executor().run(":app:assembleDebug")
+
+        val rDef = FileUtils.join(
+            project.getSubproject("library").intermediatesDir,
+            "local_only_symbol_list",
+            "debug",
+            "R-def.txt"
+        )
+
+        assertThat(rDef).exists()
+        assertThat(rDef).doesNotContain("raw me")
+
         /*
          * Create raw/me.raw in library and see that it comes out in the apk.
          *
@@ -77,6 +89,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         Files.write(File(libraryRaw, "me.raw").toPath(), byteArrayOf(0, 1, 2))
 
         project.executor().run(":app:assembleDebug")
+
+        assertThat(rDef).exists()
+        assertThat(rDef).contains("raw me")
 
         assertThat(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
             .containsFileWithContent("res/raw/me.raw", byteArrayOf(0, 1, 2))

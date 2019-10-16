@@ -16,15 +16,16 @@
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
+import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-final class StringResourceUnescaper {
-
-    private StringResourceUnescaper() {}
+public final class StringResourceUnescaper {
+    @NonNull
+    private final SAXParserFactory mFactory = StringResourceEscapeUtils.createSaxParserFactory();
 
     @NonNull
-    static String unescapeCharacterData(@NonNull String xml) {
+    public String unescapeCharacterData(@NonNull String xml) {
         if (xml.isEmpty()) {
             return "";
         }
@@ -35,7 +36,7 @@ final class StringResourceUnescaper {
         StringBuilder builder = new StringBuilder(xml.length());
 
         try {
-            StringResourceEscapeUtils.parse(xml, newContentHandler(builder));
+            StringResourceEscapeUtils.parse(xml, mFactory, newContentHandler(builder));
         } catch (SAXException exception) {
             throw new IllegalArgumentException(xml, exception);
         }
@@ -49,7 +50,7 @@ final class StringResourceUnescaper {
     @NonNull
     private static String unescapeLeadingQuestionMarkOrAtSign(@NonNull String xml) {
         if (xml.startsWith("\\?") || xml.startsWith("\\@")) {
-            return xml.substring(1, xml.length());
+            return xml.substring(1);
         } else {
             return xml;
         }

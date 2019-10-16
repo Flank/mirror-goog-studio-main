@@ -31,11 +31,13 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.desugar.resources.ClassWithDesugarApi
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexClassSubject
+import com.android.testutils.truth.DexSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -60,6 +62,10 @@ class CoreLibraryDesugarTest {
     private lateinit var library: GradleTestProject
 
     private val programClass = "Lcom/example/helloworld/HelloWorld;"
+    private val usedDesugarClass = "Lj$/util/stream/Stream;"
+    private val usedDesugarClass2 = "Lj$/time/Month;"
+    private val usedDesugarClass3 = "Lj$/time/LocalTime;"
+    private val unusedDesugarClass = "Lj$/time/Year;"
 
     private fun setUpTestProject(): TestProject {
         return MultiModuleTestProject.builder()
@@ -83,6 +89,7 @@ class CoreLibraryDesugarTest {
                         coreLibraryDesugaringEnabled true
                     }
                 }
+                android.defaultConfig.multiDexEnabled = true
                 dependencies {
                     implementation project("$LIBRARY_MODULE")
                 }
@@ -119,6 +126,7 @@ class CoreLibraryDesugarTest {
                         targetCompatibility JavaVersion.VERSION_1_8
                         coreLibraryDesugaringEnabled true
                     }
+                    android.defaultConfig.multiDexEnabled = true
                 }
             """.trimIndent()
         )
@@ -199,15 +207,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromFileDependencies() {
-        val fileDependencyName = "withDesugarApi.jar"
-        addFileDependency(fileDependencyName)
-
-        app.buildFile.appendText("""
-
-            dependencies {
-                implementation files('$fileDependencyName')
-            }
-        """.trimIndent())
+        addFileDependency(app)
 
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
@@ -218,8 +218,73 @@ class CoreLibraryDesugarTest {
         assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
     }
 
-    private fun addFileDependency(name: String) {
-        val fileLib = app.file(name).toPath()
+    @Test
+    fun testKeepRulesConsumptionWithArtifactTransform() {
+        addFileDependency(app)
+
+        project.executor().run("app:assembleRelease")
+        val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        // check consuming keep rules generated from project by d8 task
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $usedDesugarClass")
+        // check consuming keep rules generated from subproject by d8 artifact transform
+        DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass2)
+        // check consuming keep rules generated from file dependencies by DexFileDependenciesTask
+        DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
+        // check unused API classes are removed from desugar lib dex
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
+    }
+
+    @Test
+    fun testKeepRulesConsumptionWithoutArtifactTransform() {
+        addFileDependency(app)
+
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .run("app:assembleRelease")
+
+        val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        // check consuming keep rules generated from project/subproject/externalLibs
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $usedDesugarClass")
+        DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass2)
+        DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
+        // check unused API classes are removed from desugar lib dex
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
+    }
+
+    @Test
+    fun testKeepRulesConsumptionWithTwoConsecutiveBuilds() {
+        project.executor().run("app:assembleRelease")
+        var apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $usedDesugarClass")
+
+        TestFileUtils.addMethod(
+            FileUtils.join(app.mainSrcDir,"com/example/helloworld/HelloWorld.java"),
+            """
+                public static java.time.LocalTime getTime() {
+                    return java.time.LocalTime.MIDNIGHT;
+                }
+            """.trimIndent())
+
+        project.executor().run("app:assembleRelease")
+        apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $usedDesugarClass")
+        DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
+    }
+
+
+    private fun addFileDependency(project: GradleTestProject) {
+        val fileDependencyName = "withDesugarApi.jar"
+        project.buildFile.appendText("""
+
+            dependencies {
+                implementation files('$fileDependencyName')
+            }
+        """.trimIndent())
+        val fileLib = project.file(fileDependencyName).toPath()
         TestInputsGenerator.pathWithClasses(fileLib, listOf(ClassWithDesugarApi::class.java))
     }
 
@@ -242,17 +307,17 @@ class CoreLibraryDesugarTest {
 
     private fun addSourceWithDesugarApiToLibraryModule() {
         val source = with(JavaSourceFileBuilder(LIBRARY_PACKAGE)) {
-            addImports("java.time.LocalTime")
+            addImports("java.time.Month")
             addClass("""
-                public class Clock {
-                    public static LocalTime getTime() {
-                        return LocalTime.MIDNIGHT;
+                public class Calendar {
+                    public static Month getTime() {
+                        return Month.JUNE;
                     }
                 }
             """.trimIndent())
             build()
         }
-        val file = File(library.mainSrcDir, "${LIBRARY_PACKAGE.replace('.', '/')}/Clock.java")
+        val file = File(library.mainSrcDir, "${LIBRARY_PACKAGE.replace('.', '/')}/Calendar.java")
         file.parentFile.mkdirs()
         file.writeText(source)
     }

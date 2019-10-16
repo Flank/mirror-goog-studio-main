@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
@@ -50,7 +51,7 @@ import java.io.File
 import java.nio.file.Path
 
 abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Parameters> {
-    interface Parameters: GenericTransformParameters {
+    interface Parameters : GenericTransformParameters {
         @get:Input
         val minSdkVersion: Property<Int>
         @get:Input
@@ -80,21 +81,39 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
             val inputFile = primaryInput.get().asFile
             val name = Files.getNameWithoutExtension(inputFile.name)
             val outputDir = outputs.dir(name)
+
+            val outputKeepRulesEnabled =
+                parameters.libConfiguration.isPresent && !parameters.debuggable.get()
+            val dexOutputDir =
+                if (outputKeepRulesEnabled) {
+                    outputDir.resolve(DEX_DIR_NAME).also { it.mkdir() }
+                } else {
+                    outputDir
+                }
+            val keepRulesOutputFile =
+                if (outputKeepRulesEnabled) outputDir.resolve(KEEP_RULES_FILE_NAME) else null
+
             Closer.create().use { closer ->
 
                 val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-                    parameters.minSdkVersion.get(),
-                    parameters.debuggable.get(),
-                    ClassFileProviderFactory(parameters.bootClasspath.files.map(File::toPath))
-                        .also { closer.register(it) },
-                    ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
-                    false,
-                    parameters.enableDesugaring.get(),
-                    parameters.libConfiguration.orNull,
-                    null,
-                    MessageReceiverImpl(
-                        parameters.errorFormat.get(),
-                        LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
+                    DexParameters(
+                        minSdkVersion = parameters.minSdkVersion.get(),
+                        debuggable = parameters.debuggable.get(),
+                        dexPerClass = false,
+                        withDesugaring = parameters.enableDesugaring.get(),
+                        desugarBootclasspath = ClassFileProviderFactory(
+                            parameters.bootClasspath.files.map(File::toPath)
+                        )
+                            .also { closer.register(it) },
+                        desugarClasspath = ClassFileProviderFactory(computeClasspathFiles()).also {
+                            closer.register(it)
+                        },
+                        coreLibDesugarConfig = parameters.libConfiguration.orNull,
+                        coreLibDesugarOutputKeepRuleFile = keepRulesOutputFile,
+                        messageReceiver = MessageReceiverImpl(
+                            parameters.errorFormat.get(),
+                            LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
+                        )
                     )
                 )
 
@@ -102,7 +121,8 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            outputDir.toPath()
+                            dexOutputDir.toPath()
+
                         )
                     }
                 }
@@ -136,15 +156,23 @@ fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfigura
     val minSdk = scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
     val debuggable = scope.variantConfiguration.buildType.isDebuggable
     val enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-    val enableCoreLibraryDesugaring = scope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
-    return DexingArtifactConfiguration(minSdk, debuggable, enableDesugaring, enableCoreLibraryDesugaring)
+    val enableCoreLibraryDesugaring = scope.isCoreLibraryDesugaringEnabled
+    val needsShrinkDesugarLibrary = scope.needsShrinkDesugarLibrary
+    return DexingArtifactConfiguration(
+        minSdk,
+        debuggable,
+        enableDesugaring,
+        enableCoreLibraryDesugaring,
+        needsShrinkDesugarLibrary
+    )
 }
 
 data class DexingArtifactConfiguration(
     private val minSdk: Int,
     private val isDebuggable: Boolean,
     private val enableDesugaring: Boolean,
-    private val enableCoreLibraryDesugaring: Boolean?
+    private val enableCoreLibraryDesugaring: Boolean,
+    private val needsShrinkDesugarLibrary: Boolean
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -166,12 +194,16 @@ data class DexingArtifactConfiguration(
                     parameters.bootClasspath.from(bootClasspath)
                 }
                 parameters.errorFormat.set(errorFormat)
-                if (enableCoreLibraryDesugaring == true) {
+                if (enableCoreLibraryDesugaring) {
                     parameters.libConfiguration.set(libConfiguration)
                 }
             }
             spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.PROCESSED_JAR.type)
-            spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)
+            if (needsShrinkDesugarLibrary) {
+                spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX_AND_KEEP_RULES.type)
+            } else {
+                spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)
+            }
 
             getAttributes().forEach { (attribute, value) ->
                 spec.from.attribute(attribute, value)

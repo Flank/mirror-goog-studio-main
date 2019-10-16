@@ -17,10 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.Message;
-import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
@@ -29,16 +26,12 @@ import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.StringConsumer.FileConsumer;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 final class D8DexArchiveBuilder extends DexArchiveBuilder {
-
-    private static final Logger LOGGER = Logger.getLogger(D8DexArchiveBuilder.class.getName());
 
     private static final String INVOKE_CUSTOM =
             "Invoke-customs are only supported starting with Android O";
@@ -49,35 +42,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     private static final String STATIC_INTERFACE_METHOD =
             "Static interface methods are only supported starting with Android N (--min-api 24)";
 
-    private final int minSdkVersion;
-    @NonNull private final CompilationMode compilationMode;
-    @NonNull private final ClassFileProviderFactory bootClasspath;
-    @NonNull private final ClassFileProviderFactory classpath;
-    private final boolean dexPerClass;
-    private final boolean desugaring;
-    @Nullable private final String libConfiguration;
-    @Nullable private final File outputKeepRule;
-    @NonNull private final MessageReceiver messageReceiver;
+    @NonNull private DexParameters dexParams;
 
-    public D8DexArchiveBuilder(
-            int minSdkVersion,
-            boolean isDebuggable,
-            @NonNull ClassFileProviderFactory bootClasspath,
-            @NonNull ClassFileProviderFactory classpath,
-            boolean dexPerClass,
-            boolean desugaring,
-            @Nullable String libConfiguration,
-            @Nullable File outputKeepRule,
-            @NonNull MessageReceiver messageReceiver) {
-        this.minSdkVersion = minSdkVersion;
-        this.compilationMode = isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE;
-        this.bootClasspath = bootClasspath;
-        this.classpath = classpath;
-        this.dexPerClass = dexPerClass;
-        this.desugaring = desugaring;
-        this.libConfiguration = libConfiguration;
-        this.outputKeepRule = outputKeepRule;
-        this.messageReceiver = messageReceiver;
+    public D8DexArchiveBuilder(@NonNull DexParameters dexParams) {
+        this.dexParams = dexParams;
     }
 
     @Override
@@ -99,23 +67,31 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 return;
             }
 
-            builder.setMode(compilationMode)
-                    .setMinApiLevel(minSdkVersion)
+            builder.setMode(
+                            dexParams.getDebuggable()
+                                    ? CompilationMode.DEBUG
+                                    : CompilationMode.RELEASE)
+                    .setMinApiLevel(dexParams.getMinSdkVersion())
                     .setIntermediate(true)
                     .setOutput(
                             output,
-                            dexPerClass ? OutputMode.DexFilePerClassFile : OutputMode.DexIndexed)
-                    .setIncludeClassesChecksum(compilationMode == compilationMode.DEBUG);
+                            dexParams.getDexPerClass()
+                                    ? OutputMode.DexFilePerClassFile
+                                    : OutputMode.DexIndexed)
+                    .setIncludeClassesChecksum(dexParams.getDebuggable());
 
-            if (desugaring) {
-                builder.addLibraryResourceProvider(bootClasspath.getOrderedProvider());
-                builder.addClasspathResourceProvider(classpath.getOrderedProvider());
+            if (dexParams.getWithDesugaring()) {
+                builder.addLibraryResourceProvider(
+                        dexParams.getDesugarBootclasspath().getOrderedProvider());
+                builder.addClasspathResourceProvider(
+                        dexParams.getDesugarClasspath().getOrderedProvider());
 
-                if (libConfiguration != null) {
-                    builder.addSpecialLibraryConfiguration(libConfiguration);
-                    if (outputKeepRule != null) {
+                if (dexParams.getCoreLibDesugarConfig() != null) {
+                    builder.addSpecialLibraryConfiguration(dexParams.getCoreLibDesugarConfig());
+                    if (dexParams.getCoreLibDesugarOutputKeepRuleFile() != null) {
                         builder.setDesugaredLibraryKeepRuleConsumer(
-                                new FileConsumer(outputKeepRule.toPath()));
+                                new FileConsumer(
+                                        dexParams.getCoreLibDesugarOutputKeepRuleFile().toPath()));
                     }
                 }
             } else {
@@ -138,7 +114,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     }
 
     @NonNull
-    private DexArchiveBuilderException getExceptionToRethrow(
+    private static DexArchiveBuilderException getExceptionToRethrow(
             @NonNull Throwable t, D8DiagnosticsHandler d8DiagnosticsHandler) {
         StringBuilder msg = new StringBuilder();
         msg.append("Error while dexing.");
@@ -152,7 +128,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
 
     private class InterceptingDiagnosticsHandler extends D8DiagnosticsHandler {
         public InterceptingDiagnosticsHandler() {
-            super(D8DexArchiveBuilder.this.messageReceiver);
+            super(D8DexArchiveBuilder.this.dexParams.getMessageReceiver());
         }
 
         @Override

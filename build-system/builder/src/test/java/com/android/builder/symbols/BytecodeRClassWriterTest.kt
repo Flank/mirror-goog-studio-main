@@ -126,10 +126,12 @@ class BytecodeRClassWriterTest {
                         ImmutableList.of(0x1004, 0x1002),
                                 ImmutableList.of("styles_boop", "styles_beep")))
                 .add(
+                    // number of children is > Byte.MAX_VALUE as a regression test for
+                    // https://issuetracker.google.com/142467886
                     Symbol.StyleableSymbol(
-                                "other_style",
-                        ImmutableList.of(0x1004, 0x1002),
-                                ImmutableList.of("foo", "bar.two")))
+                        "styleable_with_many_children",
+                        ImmutableList.copyOf(1..200),
+                        ImmutableList.copyOf((1..200).map { "child_$it" })))
                 .add(Symbol.NormalSymbol(ResourceType.STRING, "libstring", 0x4))
                 .build()
 

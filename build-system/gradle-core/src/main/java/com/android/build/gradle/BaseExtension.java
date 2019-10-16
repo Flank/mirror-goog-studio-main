@@ -18,6 +18,7 @@ package com.android.build.gradle;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -31,6 +32,7 @@ import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
+import com.android.build.gradle.internal.dsl.BuildFeaturesImpl;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -186,6 +188,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     @Nullable private String ndkVersion;
 
+    @NonNull private final BuildFeatures buildFeatures;
+
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
@@ -240,6 +244,7 @@ public abstract class BaseExtension implements AndroidConfig {
         splits = objectFactory.newInstance(Splits.class, objectFactory);
         dataBinding = objectFactory.newInstance(DataBindingOptions.class);
         viewBinding = objectFactory.newInstance(ViewBindingOptionsImpl.class);
+        buildFeatures = objectFactory.newInstance(BuildFeaturesImpl.class);
 
         // Create the "special" configuration for test buddy APKs. It will be resolved by the test
         // running task, so that we can install all the found APKs before running tests.
@@ -1037,5 +1042,16 @@ public abstract class BaseExtension implements AndroidConfig {
     @Override
     public Boolean getBaseFeature() {
         return isBaseModule;
+    }
+
+    @Incubating
+    @NonNull
+    public BuildFeatures getBuildFeatures() {
+        return buildFeatures;
+    }
+
+    @Incubating
+    public void buildFeatures(@NonNull Action<BuildFeatures> action) {
+        action.execute(buildFeatures);
     }
 }

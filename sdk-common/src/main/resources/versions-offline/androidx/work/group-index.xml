@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.work>
-  <work-rxjava2 versions="2.1.0,2.2.0-beta02"/>
-  <work-runtime versions="2.1.0,2.2.0-beta02"/>
-  <work-testing versions="2.1.0,2.2.0-beta02"/>
-  <work-runtime-ktx versions="2.1.0,2.2.0-beta02"/>
-  <work-gcm versions="2.2.0-beta02"/>
+  <work-rxjava2 versions="2.2.0,2.3.0-alpha02"/>
+  <work-runtime versions="2.2.0,2.3.0-alpha02"/>
+  <work-testing versions="2.2.0,2.3.0-alpha02"/>
+  <work-runtime-ktx versions="2.2.0,2.3.0-alpha02"/>
+  <work-gcm versions="2.2.0,2.3.0-alpha02"/>
 </androidx.work>
 

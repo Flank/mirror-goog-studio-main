@@ -129,6 +129,8 @@ TEST(SimpleperfTest, RecordCommandParams) {
   EXPECT_THAT(record_command, HasArgument("-f 10000"));
   // --exit-with-parent flag
   EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
+  // --log-to-android-buffer flag
+  EXPECT_THAT(record_command, HasArgument("--log-to-android-buffer"));
 }
 
 TEST(SimpleperfTest, NonUserBuildUseSuRoot) {

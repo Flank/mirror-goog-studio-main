@@ -23,6 +23,7 @@ filegroup(
         "databindingAndKotlin",
         "databindingIncremental",
         "databindingMultiModule",
+        "databindingWithDynamicFeatures",
     ]
 ]
 

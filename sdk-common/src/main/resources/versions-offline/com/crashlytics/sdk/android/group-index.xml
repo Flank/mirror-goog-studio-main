@@ -4,6 +4,6 @@
   <beta versions="1.2.10"/>
   <crashlytics-core versions="2.7.0"/>
   <crashlytics versions="2.10.1"/>
-  <crashlytics-ndk versions="2.1.0"/>
+  <crashlytics-ndk versions="2.1.1"/>
 </com.crashlytics.sdk.android>
 

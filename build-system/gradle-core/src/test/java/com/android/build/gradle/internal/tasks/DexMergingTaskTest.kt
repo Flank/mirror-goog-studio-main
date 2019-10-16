@@ -21,6 +21,7 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexMergerTool
+import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.testutils.TestInputsGenerator
@@ -269,15 +270,17 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
 
     // now convert to dex archive
     val builder = DexArchiveBuilder.createD8DexBuilder(
-        1,
-        true,
-        ClassFileProviderFactory(emptyList()),
-        ClassFileProviderFactory(emptyList()),
-        true,
-        false,
-        null,
-        null,
-        NoOpMessageReceiver()
+        DexParameters(
+            minSdkVersion = 1,
+            debuggable = true,
+            dexPerClass = true,
+            withDesugaring = false,
+            desugarBootclasspath = ClassFileProviderFactory(emptyList()),
+            desugarClasspath = ClassFileProviderFactory(emptyList()),
+            coreLibDesugarConfig = null,
+            coreLibDesugarOutputKeepRuleFile = null,
+            messageReceiver = NoOpMessageReceiver()
+        )
     )
 
     ClassFileInputs.fromPath(classesInput)

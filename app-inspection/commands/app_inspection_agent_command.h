@@ -19,10 +19,10 @@
 
 #include "agent/agent.h"
 
-using app::inspection::AppInspectionCommand;
-using app::inspection::CreateInspectorCommand;
-using app::inspection::DisposeInspectorCommand;
-using app::inspection::ServiceResponse;
+using app_inspection::AppInspectionCommand;
+using app_inspection::CreateInspectorCommand;
+using app_inspection::DisposeInspectorCommand;
+using app_inspection::ServiceResponse;
 using profiler::Agent;
 using profiler::proto::Command;
 
@@ -41,6 +41,12 @@ class AppInspectionAgentCommand {
               "AppInspectionService;");
           jobject service =
               jni_env->CallStaticObjectMethod(service_class, instance_method);
+
+          if (service == nullptr) {
+            // failed to instantiate AppInspectionService,
+            // errors will have been logged indicating failures.
+            return;
+          }
 
           int32_t command_id = command->command_id();
           auto& app_command = command->app_inspection_command();

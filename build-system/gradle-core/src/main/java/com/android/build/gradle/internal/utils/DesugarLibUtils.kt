@@ -56,10 +56,7 @@ fun getDesugarLibJarFromMaven(project: Project): FileCollection {
  * by artifact transform
  */
 fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
-    val libDesugarEnabled = variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
-    val langDesugarEnabled = variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-            || variantScope.java8LangSupportType == VariantScope.Java8LangSupport.R8
-    if (libDesugarEnabled == null || libDesugarEnabled == false || !langDesugarEnabled) {
+    if (!variantScope.isCoreLibraryDesugaringEnabled) {
         return variantScope.globalScope.project.files()
     }
 
@@ -112,7 +109,7 @@ private fun initDesugarLibConfigurations(project: Project) {
         mapOf(
             "group" to "com.android.tools",
             "name" to "desugar_jdk_libs",
-            "version" to "1.0.0"
+            "version" to "1.0.1"
         )
     )
 
@@ -128,7 +125,7 @@ private fun initDesugarLibConfigurations(project: Project) {
         mapOf(
             "group" to "com.android.tools",
             "name" to "desugar_jdk_libs_configuration",
-            "version" to "0.1.0"
+            "version" to "0.5.0"
         )
     )
 }

@@ -149,10 +149,52 @@ jclass HotSwap::FindClass(const std::string& name) const {
   return klass;
 }
 
+// Can be null if the application isn't a JetPack Compose application.
+jobject HotSwap::GetComposeHotReload() const {
+  Log::E("START GetComposeHotReload FindClass");
+  jclass klass = FindClass("androidx/compose/Compose$HotReloader");
+  Log::E("Finished GetComposeHotReload FindClass");
+  if (klass == nullptr) {
+    Log::E("GetComposeHotReload is null");
+    return nullptr;
+  }
+  Log::E("GetComposeHotReload is not null");
+  JniClass reloaderClass(jni_, klass);
+  return reloaderClass.GetStaticField<jobject>(
+      {"Companion", "Landroidx/compose/Compose$HotReloader$Companion;"});
+}
+
+void HotSwap::SaveStateAndDispose(jobject reloader) const {
+  JniObject reloader_jnio(jni_, reloader);
+  JniClass activity_thread(jni_, "android/app/ActivityThread");
+  jobject context = activity_thread.CallStaticMethod<jobject>(
+      {"currentApplication", "()Landroid/app/Application;"});
+  jvalue loader_args[1];
+  loader_args[0].l = context;
+  reloader_jnio.CallMethod<void>(
+      {"saveStateAndDispose", "(Landroid/content/Context;)V"}, loader_args);
+}
+
+void HotSwap::LoadStateAndCompose(jobject reloader) const {
+  JniObject reloader_jnio(jni_, reloader);
+  JniClass activity_thread(jni_, "android/app/ActivityThread");
+  jobject context = activity_thread.CallStaticMethod<jobject>(
+      {"currentApplication", "()Landroid/app/Application;"});
+  jvalue loader_args[1];
+  loader_args[0].l = context;
+  reloader_jnio.CallMethod<void>(
+      {"loadStateAndCompose", "(Landroid/content/Context;)V"}, loader_args);
+}
+
 SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   Phase p("doHotSwap");
 
   SwapResult result;
+
+  jobject reloader = GetComposeHotReload();
+  if (reloader != nullptr) {
+    SaveStateAndDispose(reloader);
+  }
 
   // Define new classes before redefining existing classes.
   if (swap_request.new_classes_size() != 0) {
@@ -223,6 +265,10 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   }
 
   delete[] def;
+
+  if (reloader != nullptr) {
+    LoadStateAndCompose(reloader);
+  }
 
   return result;
 }

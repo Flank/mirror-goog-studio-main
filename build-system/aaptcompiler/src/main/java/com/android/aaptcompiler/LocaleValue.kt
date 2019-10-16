@@ -82,6 +82,8 @@ class LocaleValue {
         }
     }
 
+    fun initFromBcp47Tag(word: String) = initFromBcp47TagImpl(word, '-')
+
     private fun isAlpha(word: String): Boolean = word.all { it.isLetter() }
 
     private fun initFromBcp47TagImpl(word: String, separator: Char): Boolean {

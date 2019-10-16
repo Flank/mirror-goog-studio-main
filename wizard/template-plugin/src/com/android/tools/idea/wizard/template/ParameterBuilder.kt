@@ -61,7 +61,7 @@ class ParametersBuilder {
 
   fun separator(): Separator = Separator().also { parameters.add(it) }
 
-  fun build() = Parameters(parameters)
+  fun build() = parameters
 }
 
 data class BooleanParameterBuilder(

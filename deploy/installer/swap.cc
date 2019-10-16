@@ -111,6 +111,8 @@ void SwapCommand::Run() {
 
   // If the swap succeeds but the commit fails, report a failed install.
   if (!cmd.CommitInstall(install_session, &output)) {
+    ErrEvent("Swap could not commit install");
+    ErrEvent(output);
     response_->set_status(proto::SwapResponse::INSTALLATION_FAILED);
     return;
   }

@@ -1381,11 +1381,81 @@ open class ResTableConfig(
     return true
   }
 
+  /**
+   * Get the string representation of the locale component of this Config.
+   *
+   * Example: en-US, en-Latn-US, en-POSIX.
+   *
+   * @param canonicalize if set, Tagalog (tl) locales get converted to Filipino (fil).
+   * @return the string representation of the locale
+   */
+  fun getBcp47Locale(canonicalize: Boolean = false): String {
+    // This represents the "any" locale value, which has traditionally been
+    // represented by the empty string.
+    if (language[0] == 0.toByte() && country[0] == 0.toByte()) {
+      return ""
+    }
+
+    val localeString = StringBuilder()
+    if (language[0] != 0.toByte()) {
+      if (canonicalize && language contentEquals TAGALOG) {
+        // Replace Tagalog with Filipino if we are canonicalizing.
+        localeString.append("fil")
+      } else {
+        localeString.append(unpackLanguage())
+      }
+      localeString.append('-')
+    }
+
+    if (localeScript[0] != 0.toByte() && !localeScriptWasComputed) {
+      var localeScriptEnd = localeScript.indexOf(0.toByte())
+      if (localeScriptEnd == -1) {
+        localeScriptEnd = localeScript.size
+      }
+      localeString.append(localeScript, 0, localeScriptEnd)
+      localeString.append('-')
+    }
+
+    if (country[0] != 0.toByte()) {
+      localeString.append(unpackRegion())
+      localeString.append('-')
+    }
+
+    if (localeVariant[0] != 0.toByte()) {
+      var localeVariantEnd = localeScript.indexOf(0.toByte())
+      if (localeVariantEnd == -1) {
+        localeVariantEnd = localeVariant.size
+      }
+      localeString.append(localeVariant, 0, localeVariantEnd)
+      localeString.append('-')
+    }
+
+    // Add Unicode extension only if at least one other locale component is present
+    if (localeNumberSystem[0] != 0.toByte() && localeString.isNotEmpty()) {
+      localeString.append(NUMBERING_SYSTEM_PREFIX)
+      var localeNumberEnd = localeNumberSystem.indexOf(0.toByte())
+      if (localeNumberEnd == -1) {
+        localeNumberEnd = localeNumberSystem.size
+      }
+      localeString.append(localeNumberSystem, 0, localeNumberEnd)
+      localeString.append('-')
+    }
+
+    if (localeString.isEmpty()) {
+      return ""
+    }
+
+    // Trim off the trailing '-'.
+    return localeString.substring(0, localeString.length - 1)
+  }
+
   companion object {
     internal val ENGLISH = byteArrayOf('e'.toByte(), 'n'.toByte()) // packed version of "en"
     internal val UNITED_STATES = byteArrayOf('U'.toByte(), 'S'.toByte()) // packed version of "US"
     internal val FILIPINO = byteArrayOf(0xAD.toByte(), 0x05.toByte()) // packed version of "fil"
     internal val TAGALOG = byteArrayOf('t'.toByte(), 'l'.toByte()) // packed version of "tl"
+
+    internal const val NUMBERING_SYSTEM_PREFIX = "u-nu-"
 
     // Flags indicating a set of config values.  These flag constants must
     // match the corresponding ones in android.content.pm.ActivityInfo and

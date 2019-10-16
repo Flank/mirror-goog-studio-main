@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,22 @@
  * limitations under the License.
  */
 
-/** Attributes used in the variant aware dependency management of Gradle. */
-package com.android.build.api.attributes;
+package com.android.build.api.dsl
+
+import org.gradle.api.Incubating
+
+/**
+ * The list of build features that can be disabled or enabled in an Android project.
+ */
+@Incubating
+interface BuildFeatures {
+    /**
+     * Flag to enable Jetpack Compose
+     * Setting the value to null resets to the default value
+     *
+     * Default value is false.
+     *
+     * More information available about this feature at: TBD
+     **/
+    var jetpackCompose: Boolean?
+}

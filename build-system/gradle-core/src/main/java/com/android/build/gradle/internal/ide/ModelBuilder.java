@@ -447,6 +447,10 @@ public class ModelBuilder<Extension extends BaseExtension>
         flags.put(
                 AndroidGradlePluginProjectFlags.BooleanFlag.TEST_R_CLASS_CONSTANT_IDS, finalResIds);
 
+        flags.put(
+                AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE,
+                globalScope.getBuildFeatures().getJetpackCompose());
+
         boolean transitiveRClass =
                 !globalScope.getProjectOptions().get(BooleanOption.NAMESPACED_R_CLASS);
         flags.put(AndroidGradlePluginProjectFlags.BooleanFlag.TRANSITIVE_R_CLASS, transitiveRClass);

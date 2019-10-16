@@ -30,6 +30,8 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
@@ -59,7 +61,9 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
      * In a feature, we only need to generate code for its Runtime dependencies as compile
      * dependencies are already available via other dependencies (base feature or another feature)
      */
-    @get:InputFiles lateinit var directDependencies: FileCollection
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var directDependencies: FileCollection
         private set
 
     override fun doTaskAction() {

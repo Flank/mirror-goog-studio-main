@@ -84,6 +84,7 @@ _binds = {
     "grpc_cpp_plugin": "@grpc_repo//:grpc_cpp_plugin",
     "grpc++_unsecure": "@grpc_repo//:grpc++_unsecure",
     "madler_zlib": "@zlib_repo//:zlib",  # Needed for grpc
+    "grpc-all-java": "//tools/base/third_party:io.grpc_grpc-all",
 }
 
 def setup_external_repositories(prefix = ""):

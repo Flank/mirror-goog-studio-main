@@ -4,24 +4,24 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-dcb2af43eb8a53f00c3b2554d42acc6305e30151670d1b97a4de254f25bfb5f6
+4b9f8eb3bd04814abd565bbb1f7bfaff1a7a8310a942097ea3d4d165ab4376f3
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
-com.android.build.api.artifact.ArtifactKind
-com.android.build.api.artifact.ArtifactKind$DIRECTORY
+com.android.build.api.artifact.ArtifactKind implements java.io.Serializable
+com.android.build.api.artifact.ArtifactKind$DIRECTORY extends com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()
-com.android.build.api.artifact.ArtifactKind$FILE
+com.android.build.api.artifact.ArtifactKind$FILE extends com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$FILE.dataType: kotlin.reflect.KClass<org.gradle.api.file.RegularFile> ()
 com.android.build.api.artifact.ArtifactKind.<init>: com.android.build.api.artifact.ArtifactKind<T> (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> ()
-com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.ArtifactType$Appendable
+com.android.build.api.artifact.ArtifactType implements java.io.Serializable
+com.android.build.api.artifact.ArtifactType$Appendable implements com.android.build.api.artifact.ArtifactType$Multiple
 com.android.build.api.artifact.ArtifactType$Companion
 com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType$Multiple
 com.android.build.api.artifact.ArtifactType$Multiple.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactType$Replaceable
+com.android.build.api.artifact.ArtifactType$Replaceable implements com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Transformable
@@ -30,9 +30,9 @@ com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
 com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
-com.android.build.api.artifact.BuildArtifactType
-com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES
-com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH
+com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
+com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
+com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH extends com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.BuildArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.MultipleTransformRequest
@@ -48,6 +48,9 @@ com.android.build.api.artifact.ReplaceRequest
 com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
+com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.BuildFeatures.getJetpackCompose: java.lang.Boolean ()
+com.android.build.api.dsl.BuildFeatures.setJetpackCompose: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()

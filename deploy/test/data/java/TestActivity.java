@@ -80,6 +80,10 @@ public class TestActivity extends Activity {
         System.out.println(new LambdaFailedTarget().getStatus());
     }
 
+    public void getComposeTargetStatus() {
+        System.out.println(new ComposeTarget().getStatus());
+    }
+
     public void getNewClassStatus() {
         System.out.println(
                 "public=" + new Wrapper().getPublic() + "package=" + new Wrapper().getPackage());

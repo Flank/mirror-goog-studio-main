@@ -179,15 +179,3 @@ class Separator: DslParameter<Nothing?>({true}, {true}) {
     get() = throw UnsupportedOperationException()
     set(_) = throw UnsupportedOperationException()
 }
-
-/**
- * A wrapped collection of [Parameter]s.
- *
- * Exists because parameters should not be accessed without setting [Parameter.wizardParameterData].
- */
-class Parameters(private val parameters: Collection<Parameter<*>>) {
-    operator fun invoke(wizardParameterData: WizardParameterData): Collection<Parameter<*>> {
-      parameters.forEach { it.wizardParameterData = wizardParameterData }
-      return parameters
-    }
-}

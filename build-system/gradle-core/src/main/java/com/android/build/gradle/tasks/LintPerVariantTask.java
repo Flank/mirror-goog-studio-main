@@ -27,6 +27,8 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask {
@@ -50,6 +52,7 @@ public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     @Optional
     public FileCollection getAllInputs() {
         return allInputs;

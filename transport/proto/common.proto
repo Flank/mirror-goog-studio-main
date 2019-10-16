@@ -229,7 +229,7 @@ message Event {
     layoutinspector.LayoutInspectorEvent layout_inspector_event = 1100;
 
     // App inspection prefix = 1200;
-    app.inspection.AppInspectionEvent app_inspection_event = 1200;
+    app_inspection.AppInspectionEvent app_inspection_event = 1200;
   }
 }
 

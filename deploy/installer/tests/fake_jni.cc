@@ -1,5 +1,7 @@
 #include "tools/base/deploy/installer/tests/fake_jni.h"
 
+#include <string.h>
+
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
@@ -33,6 +35,11 @@ FakeJNIEnv::FakeJNIEnv() : functions_{0} {
 
 jclass FakeJNIEnv::FindClass(JNIEnv* env, const char* name) {
   Log::I("JNI::FindClass");
+  // Behaves like the app is non-JetPack Compose app.
+  // There is test coverage with FakeAndroid / Host ART for those.
+  if (!strcmp(name, "androidx/compose/Compose$HotReloader")) {
+    return nullptr;
+  }
   jclass ret = new FakeClass();
   ((FakeJNIEnv*)env)->objects_.insert(ret);
   return ret;

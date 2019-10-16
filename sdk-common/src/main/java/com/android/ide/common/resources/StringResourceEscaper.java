@@ -18,16 +18,16 @@ package com.android.ide.common.resources;
 import com.android.annotations.NonNull;
 import com.google.common.escape.Escaper;
 import com.google.common.escape.Escapers;
+import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 final class StringResourceEscaper {
-
-    private StringResourceEscaper() {
-    }
+    @NonNull
+    private final SAXParserFactory mFactory = StringResourceEscapeUtils.createSaxParserFactory();
 
     @NonNull
-    static String escapeCharacterData(@NonNull String xml) {
+    String escapeCharacterData(@NonNull String xml) {
         if (xml.isEmpty()) {
             return "";
         }
@@ -43,7 +43,7 @@ final class StringResourceEscaper {
 
         try {
             Escaper escaper = buildEscaper(!startsOrEndsWithSpace(xml), false);
-            StringResourceEscapeUtils.parse(xml, newContentHandler(builder, escaper));
+            StringResourceEscapeUtils.parse(xml, mFactory, newContentHandler(builder, escaper));
         } catch (SAXException exception) {
             throw new IllegalArgumentException(xml, exception);
         }
@@ -91,11 +91,13 @@ final class StringResourceEscaper {
 
     @NonNull
     private static Escaper buildEscaper(boolean escapeApostrophes, boolean escapeMarkupDelimiters) {
-        Escapers.Builder builder = Escapers.builder()
-                .addEscape('"', "\\\"")
-                .addEscape('\\', "\\\\")
-                .addEscape('\n', "\\n")
-                .addEscape('\t', "\\t");
+        @SuppressWarnings("UnstableApiUsage")
+        Escapers.Builder builder =
+                Escapers.builder()
+                        .addEscape('"', "\\\"")
+                        .addEscape('\\', "\\\\")
+                        .addEscape('\n', "\\n")
+                        .addEscape('\t', "\\t");
 
         if (escapeApostrophes) {
             builder.addEscape('\'', "\\'");

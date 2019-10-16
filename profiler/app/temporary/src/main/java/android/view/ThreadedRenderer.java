@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.build.api.attributes;
+package android.view;
 
-import org.gradle.api.attributes.Attribute;
+import android.graphics.HardwareRenderer;
 
-/**
- * Type for the attribute holding the variant name information.
- *
- * <p>The key should be {@link #ATTRIBUTE}.
- */
-public interface VariantAttr extends org.gradle.api.Named {
-
-    Attribute<VariantAttr> ATTRIBUTE = Attribute.of(VariantAttr.class);
-}
+public class ThreadedRenderer extends HardwareRenderer {}

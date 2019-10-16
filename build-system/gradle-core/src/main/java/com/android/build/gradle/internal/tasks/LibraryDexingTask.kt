@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -27,6 +26,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
 import com.google.common.util.concurrent.MoreExecutors
@@ -80,7 +80,12 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
         private set
 
     override fun doTaskAction() {
-        preferWorkers(projectName, path, workerExecutor, MoreExecutors.newDirectExecutorService()).use {
+        preferWorkers(
+            projectName,
+            path,
+            workerExecutor,
+            MoreExecutors.newDirectExecutorService()
+        ).use {
             it.submit(
                 DexingRunnable::class.java,
                 DexParams(
@@ -155,17 +160,19 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
         ClassFileProviderFactory(params.bootClasspath.map(File::toPath)).use { bootClasspath ->
             ClassFileProviderFactory(params.classpath.map(File::toPath)).use { classpath ->
                 val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-                    params.minSdkVersion,
-                    true,
-                    bootClasspath,
-                    classpath,
-                    false,
-                    params.enableDesugaring,
-                    null,
-                    null,
-                    MessageReceiverImpl(
-                        params.errorFormatMode,
-                        Logging.getLogger(LibraryDexingTask::class.java)
+                    DexParameters(
+                        minSdkVersion = params.minSdkVersion,
+                        debuggable = true,
+                        dexPerClass = false,
+                        withDesugaring = params.enableDesugaring,
+                        desugarBootclasspath = bootClasspath,
+                        desugarClasspath = classpath,
+                        coreLibDesugarConfig = null,
+                        coreLibDesugarOutputKeepRuleFile = null,
+                        messageReceiver = MessageReceiverImpl(
+                            params.errorFormatMode,
+                            Logging.getLogger(LibraryDexingTask::class.java)
+                        )
                     )
                 )
 

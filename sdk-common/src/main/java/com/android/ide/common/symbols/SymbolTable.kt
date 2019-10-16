@@ -238,6 +238,14 @@ abstract class SymbolTable protected constructor() {
         }
 
         /**
+         * Adds all symbols in the given collection to the table - ignores the duplicates.
+         */
+        fun addAllIfNotExist(symbols: Collection<Symbol>): Builder {
+            symbols.filter { !this.contains(it) }.forEach { this.add(it) }
+            return this
+        }
+
+        /**
          * Adds a symbol if it doesn't exist in the table yet. If a symbol already exists, choose
          * the correct resource accessibility.
          *
@@ -379,6 +387,8 @@ abstract class SymbolTable protected constructor() {
         fun remove(resourceType: ResourceType, canonicalName: String): Symbol? {
             return symbols.remove(resourceType, canonicalName)
         }
+
+        fun isEmpty(): Boolean = symbols.isEmpty
 
         /**
          * Builds a symbol table with all symbols added.

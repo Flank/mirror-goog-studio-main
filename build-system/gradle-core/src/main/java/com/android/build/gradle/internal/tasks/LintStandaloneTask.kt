@@ -33,6 +33,8 @@ import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -48,14 +50,17 @@ open class LintStandaloneTask : DefaultTask() {
     @get:OutputDirectory
     var reportDir: File? = null
 
+    @get:Input
     var fatalOnly: Boolean = false
 
+    @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     var lintOptions: LintOptions? = null
 
     @get:Optional
     @get:Classpath
     var lintChecks: Configuration? = null
 
+    @get:Input
     var autoFix: Boolean = false
 
     /** This resolves the dependency of the lintChecks configuration */

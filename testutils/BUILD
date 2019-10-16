@@ -60,6 +60,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.easymock_easymock",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.smali_dexlib2",

@@ -24,7 +24,7 @@ import java.io.File
 
 
 open class Value {
-  var source: Source = Source("")
+  var source: Source = Source.EMPTY
   var comment = ""
   var weak = false
   var translatable = true
@@ -43,6 +43,8 @@ class Id: Item() {
   init {
     weak = true
   }
+
+  override fun equals(other: Any?) = other is Id
 
   override fun flatten(): ResValue? {
     return ResValue(ResValue.DataType.INT_BOOLEAN, 0.hostToDevice())
@@ -120,6 +122,14 @@ class FileReference(val path: StringPool.Ref): Item() {
   // if to inflate at all (just copy)
   var type: ResourceFile.Type = ResourceFile.Type.Unknown
 
+  override fun equals(other: Any?): Boolean {
+    if (other is FileReference) {
+      return path.value() == other.path.value() &&
+        type == other.type
+    }
+    return false
+  }
+
   override fun flatten(): ResValue? {
     return ResValue(ResValue.DataType.STRING, path.index().hostToDevice())
   }
@@ -134,15 +144,7 @@ class FileReference(val path: StringPool.Ref): Item() {
   }
 }
 
-class BinaryPrimitive(val resValue: ResValue): Item() {
-  override fun equals(other: Any?): Boolean {
-    if (other is BinaryPrimitive) {
-      return resValue.dataType == other.resValue.dataType &&
-        resValue.data == other.resValue.data
-    }
-    return false
-  }
-
+data class BinaryPrimitive(val resValue: ResValue): Item() {
   override fun flatten(): ResValue? {
     return ResValue(resValue.dataType, resValue.data.hostToDevice())
   }
@@ -155,8 +157,8 @@ class BinaryPrimitive(val resValue: ResValue): Item() {
   }
 }
 
-class AttributeResource(var typeMask: Int = 0): Value() {
-  class Symbol(val symbol: Reference, val value: Int)
+data class AttributeResource(var typeMask: Int = 0): Value() {
+  data class Symbol(val symbol: Reference, val value: Int, val type: Byte)
 
   var minInt = Int.MIN_VALUE
   var maxInt = Int.MAX_VALUE
@@ -242,6 +244,13 @@ data class UntranslatableSection(var startIndex: Int, var endIndex: Int = startI
  * shall *NOT* end up in the final resource table.
  */
 class RawString(val value: StringPool.Ref) : Item() {
+  override fun equals(other: Any?): Boolean {
+    if (other is RawString) {
+      return value.value() == other.value.value()
+    }
+    return false
+  }
+
   override fun clone(newPool: StringPool): RawString {
     val newRaw = RawString(newPool.makeRef(value))
     newRaw.source = source
@@ -303,6 +312,14 @@ class StyledString(
   val ref: StringPool.StyleRef,
   val untranslatableSections: List<UntranslatableSection>) : Item() {
 
+  override fun equals(other: Any?): Boolean {
+    if (other is StyledString) {
+      return ref.value() == other.ref.value() &&
+        ref.spans() == other.ref.spans()
+    }
+    return false
+  }
+
   override fun toString(): String {
     return ref.value()
   }
@@ -323,6 +340,7 @@ class StyledString(
 
 class ArrayResource: Value() {
   val elements = mutableListOf<Item>()
+
 
   override fun equals(other: Any?): Boolean {
     if (other is ArrayResource) {
@@ -445,11 +463,12 @@ class Plural: Value() {
     OTHER;
 
     companion object {
-      val numTypes = Type.values().size
+      val TYPES = Type.values()
+      val NUM_TYPES = TYPES.size
     }
   }
 
-  val values = arrayOfNulls<Item?>(Type.numTypes)
+  val values = arrayOfNulls<Item?>(Type.NUM_TYPES)
 
   fun setValue(type: Plural.Type, item: Item) {
     values[type.ordinal] = item
@@ -466,7 +485,7 @@ class Plural: Value() {
     val newPlural = Plural()
     newPlural.comment = comment
     newPlural.source = source
-    for (i in 0.until(Type.numTypes)) {
+    for (i in 0.until(Type.NUM_TYPES)) {
       newPlural.values[i] = values[i]?.clone(newPool)
     }
     return newPlural
@@ -475,4 +494,11 @@ class Plural: Value() {
 
 class Styleable: Value() {
   val entries = mutableListOf<Reference>()
+
+  override fun equals(other: Any?): Boolean {
+    if (other is Styleable) {
+      return entries == other.entries
+    }
+    return false
+  }
 }

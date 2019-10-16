@@ -66,6 +66,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -107,6 +108,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         super(objectFactory);
     }
 
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     public OutputScope getOutputScope() {
         return outputScope;
     }
@@ -444,7 +446,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     public abstract Property<String> getTestLabel();
 
     @Input
-    public abstract Property<Map<String, Object>> getPlaceholdersValues();
+    public abstract MapProperty<String, Object> getPlaceholdersValues();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)

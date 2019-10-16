@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 
 /** Base task for tasks that require an NdkConfig */
@@ -30,6 +31,7 @@ public abstract class NdkTask extends NonIncrementalTask {
     private CoreNdkOptions ndkConfig;
 
     @Nullable
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     public CoreNdkOptions getNdkConfig() {
         return ndkConfig;
     }

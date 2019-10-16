@@ -4,9 +4,9 @@
         revision="1"
         name="Compose Activity"
         description="Creates a new activity with Compose"
-        constraints="kotlin"
-        minApi="9"
-        minBuildApi="9">
+        constraints="androidx|kotlin"
+        minApi="21"
+        minBuildApi="21">
 
     <category value="Compose"/>
     <formfactor value="Mobile"/>
@@ -18,14 +18,6 @@
             constraints="class|unique|nonempty"
             default="MainActivity"
             help="The name of the activity class to create"/>
-
-    <parameter
-            id="layoutClass"
-            name="Frontend/Layout Name"
-            type="string"
-            constraints="class|unique|nonempty"
-            default="SimpleComposable"
-            help="The name of the frontend component/layout to create for the activity"/>
 
     <parameter
             id="activityTitle"
@@ -52,7 +44,7 @@
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
         <!-- default thumbnail is required -->
-        <thumb>template_compose_blank_activity.png</thumb>
+        <thumb>template_compose_empty_activity.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl"/>

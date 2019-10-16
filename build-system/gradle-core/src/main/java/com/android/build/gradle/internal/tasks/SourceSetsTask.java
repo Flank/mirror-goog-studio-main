@@ -26,6 +26,7 @@ import com.android.builder.core.VariantType;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.diagnostics.AbstractReportTask;
 import org.gradle.api.tasks.diagnostics.internal.ReportRenderer;
 import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
@@ -45,6 +46,7 @@ public class SourceSetsTask extends AbstractReportTask {
         return mRenderer;
     }
 
+    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     public BaseExtension getExtension() {
         return extension;
     }

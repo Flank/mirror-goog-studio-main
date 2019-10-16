@@ -20,6 +20,8 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
+import com.android.build.gradle.internal.dexing.DexParameters
+import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -38,13 +40,13 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
@@ -53,7 +55,6 @@ import org.gradle.work.FileChange
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
-import javax.inject.Inject
 
 /**
  * Task that converts CLASS files to dex archives, [com.android.builder.dexing.DexArchive].
@@ -65,21 +66,20 @@ import javax.inject.Inject
  * that jar will be dex'ed.
  */
 @CacheableTask
-abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFactory) :
-    NewIncrementalTask() {
-
-    @get:CompileClasspath
-    abstract val androidJarClasspath: ConfigurableFileCollection
+abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
     @get:Incremental
     @get:Classpath
     abstract val projectClasses: ConfigurableFileCollection
+
     @get:Incremental
     @get:Classpath
     abstract val subProjectClasses: ConfigurableFileCollection
+
     @get:Incremental
     @get:Classpath
     abstract val externalLibClasses: ConfigurableFileCollection
+
     /**
      * These are classes that contain multiple transform API scopes. E.g. if there is a transform
      * running before this task that outputs classes with both project and subProject scopes, this
@@ -89,69 +89,64 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
     @get:Classpath
     abstract val mixedScopeClasses: ConfigurableFileCollection
 
-    @get:Incremental
-    @get:CompileClasspath
-    abstract val desugaringClasspathClasses: ConfigurableFileCollection
-
-    @get:Input
-    val errorFormatMode: Property<SyncOptions.ErrorFormatMode> =
-        objectFactory.property(SyncOptions.ErrorFormatMode::class.java)
-    @get:Input
-    val minSdkVersion: Property<Int> = objectFactory.property(Int::class.java)
-    @get:Input
-    val dexer: Property<DexerTool> = objectFactory.property(DexerTool::class.java)
-    @get:Input
-    val useGradleWorkers: Property<Boolean> = objectFactory.property(Boolean::class.java)
-    @get:Input
-    val inBufferSize: Property<Int> = objectFactory.property(Int::class.java)
-    @get:Input
-    val outBufferSize: Property<Int> = objectFactory.property(Int::class.java)
-    @get:Input
-    val debuggable: Property<Boolean> = objectFactory.property(Boolean::class.java)
-    @get:Input
-    val java8LangSupportType: Property<VariantScope.Java8LangSupport> =
-        objectFactory.property(VariantScope.Java8LangSupport::class.java)
-    @get:Input
-    val projectVariant: Property<String> = objectFactory.property(String::class.java)
-    @get:Input
-    val numberOfBuckets: Property<Int> = objectFactory.property(Int::class.java)
-    @get:Input
-    val dxNoOptimizeFlagPresent: Property<Boolean> = objectFactory.property(Boolean::class.java)
-    @get:Optional
-    @get:Input
-    val libConfiguration: Property<String> = objectFactory.property(String::class.java)
-
     @get:OutputDirectory
     abstract val projectOutputDex: DirectoryProperty
+
     @get:Optional
     @get:OutputDirectory
     abstract val projectOutputKeepRules: DirectoryProperty
+
     @get:OutputDirectory
     abstract val subProjectOutputDex: DirectoryProperty
+
     @get:Optional
     @get:OutputDirectory
     abstract val subProjectOutputKeepRules: DirectoryProperty
+
     @get:OutputDirectory
     abstract val externalLibsOutputDex: DirectoryProperty
+
     @get:Optional
     @get:OutputDirectory
     abstract val externalLibsOutputKeepRules: DirectoryProperty
+
     @get:OutputDirectory
     abstract val mixedScopeOutputDex: DirectoryProperty
+
     @get:Optional
     @get:OutputDirectory
     abstract val mixedScopeOutputKeepRules: DirectoryProperty
+
+    @get:Nested
+    abstract val dexParams: DexParameterInputs
+
+    @get:Nested
+    abstract val dxDexParams: DxDexParameterInputs
+
+    @get:Input
+    abstract val projectVariant: Property<String>
+
     @get:LocalState
     abstract val inputJarHashesFile: RegularFileProperty
 
-    private lateinit var messageReceiver: MessageReceiver
+    @get:Input
+    abstract val dexer: Property<DexerTool>
+
+    @get:Input
+    abstract val numberOfBuckets: Property<Int>
+
+    @get:Input
+    abstract val useGradleWorkers: Property<Boolean>
+
     private var userLevelCache: FileCache? = null
+
+    private lateinit var messageReceiver: MessageReceiver
 
     override fun doTaskAction(inputChanges: InputChanges) {
 
         DexArchiveBuilderTaskDelegate(
             isIncremental = inputChanges.isIncremental,
-            androidJarClasspath = androidJarClasspath.files,
+
             projectClasses = projectClasses.files,
             projectChangedClasses = getChanged(inputChanges, projectClasses),
             subProjectClasses = subProjectClasses.files,
@@ -163,39 +158,29 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
 
             projectOutputDex = projectOutputDex.asFile.get(),
             projectOutputKeepRules = projectOutputKeepRules.asFile.orNull,
-
             subProjectOutputDex = subProjectOutputDex.asFile.get(),
             subProjectOutputKeepRules = subProjectOutputKeepRules.asFile.orNull,
-
             externalLibsOutputDex = externalLibsOutputDex.asFile.get(),
             externalLibsOutputKeepRules = externalLibsOutputKeepRules.asFile.orNull,
-
             mixedScopeOutputDex = mixedScopeOutputDex.asFile.get(),
             mixedScopeOutputKeepRules = mixedScopeOutputKeepRules.asFile.orNull,
-            inputJarHashesFile = inputJarHashesFile.get().asFile,
 
-            desugaringClasspathClasses = desugaringClasspathClasses.files,
+            dexParams = dexParams.toDexParameters(),
+            dxDexParams = dxDexParams.toDxDexParameters(),
+
             desugaringClasspathChangedClasses = getChanged(
                 inputChanges,
-                desugaringClasspathClasses
+                dexParams.desugarClasspath
             ),
 
-            errorFormatMode = errorFormatMode.get(),
-            minSdkVersion = minSdkVersion.get(),
-            dexer = dexer.get(),
-            useGradleWorkers = useGradleWorkers.get(),
-            inBufferSize = inBufferSize.get(),
-            outBufferSize = outBufferSize.get(),
-            isDebuggable = debuggable.get(),
-            java8LangSupportType = java8LangSupportType.get(),
             projectVariant = projectVariant.get(),
+            inputJarHashesFile = inputJarHashesFile.get().asFile,
+            dexer = dexer.get(),
             numberOfBuckets = numberOfBuckets.get(),
-
-            messageReceiver = messageReceiver,
-            isDxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get(),
-            libConfiguration = libConfiguration.orNull,
+            useGradleWorkers = useGradleWorkers.get(),
             workerExecutor = workerExecutor,
-            userLevelCache = userLevelCache
+            userLevelCache = userLevelCache,
+            messageReceiver = messageReceiver
         ).doProcess()
     }
 
@@ -235,7 +220,6 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
         private val externalLibraryClasses: FileCollection
         private val mixedScopeClasses: FileCollection
         private val desugaringClasspathClasses: FileCollection
-        private val coreLibraryDesugaringEnabled: Boolean?
 
         init {
             val classesFilter =
@@ -303,9 +287,6 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS
             )
-
-            coreLibraryDesugaringEnabled =
-                variantScope.globalScope.extension.compileOptions.coreLibraryDesugaringEnabled
         }
 
         override val type: Class<DexArchiveBuilderTask> = DexArchiveBuilderTask::class.java
@@ -338,9 +319,7 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )
-            // Keep rules are not needed in debug build as desugar_jdk_libs would not be shrinked
-            if (coreLibraryDesugaringEnabled == true &&
-                !variantScope.variantConfiguration.buildType.isDebuggable) {
+            if (variantScope.needsShrinkDesugarLibrary) {
                 variantScope.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
                     taskProvider,
@@ -378,41 +357,44 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
                 .variantConfiguration
                 .minSdkVersionWithTargetDeviceApi
                 .featureLevel
-            task.minSdkVersion.set(minSdkVersion)
+            task.dexParams.minSdkVersion.set(minSdkVersion)
+            task.dexParams.withDesugaring
+                .set(variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
             if (variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
                 && minSdkVersion < AndroidVersion.VersionCodes.N
             ) {
                 // Set bootclasspath and classpath only if desugaring with D8 and minSdkVersion < 24
-                task.desugaringClasspathClasses.from(desugaringClasspathClasses)
-                task.androidJarClasspath.from(variantScope.globalScope.filteredBootClasspath)
+                task.dexParams.desugarClasspath.from(desugaringClasspathClasses)
+                task.dexParams.desugarBootclasspath
+                    .from(variantScope.globalScope.filteredBootClasspath)
             }
 
-            task.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
+            task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
             task.dexer.set(variantScope.dexer)
             task.useGradleWorkers.set(projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
-            task.inBufferSize.set(
+            task.dxDexParams.inBufferSize.set(
                 (projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE)
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
-            task.outBufferSize.set(
+            task.dxDexParams.outBufferSize.set(
                 (projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE)
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
-            task.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
-            task.java8LangSupportType.set(variantScope.java8LangSupportType)
+            task.dexParams.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
             task.projectVariant.set(
                 "${variantScope.globalScope.project.name}:${variantScope.fullVariantName}"
             )
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS
             )
-            task.dxNoOptimizeFlagPresent.set(
+            task.dxDexParams.dxNoOptimizeFlagPresent.set(
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.userLevelCache = userLevelCache
-            if (coreLibraryDesugaringEnabled == true) {
-                task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
+            if (variantScope.isCoreLibraryDesugaringEnabled) {
+                task.dexParams.coreLibDesugarConfig
+                    .set(getDesugarLibConfig(variantScope.globalScope.project))
             }
         }
     }
@@ -420,3 +402,63 @@ abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFa
 
 private const val DEFAULT_BUFFER_SIZE_IN_KB = 100
 private val DEFAULT_NUM_BUCKETS = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1)
+
+/** Parameters required for dexing (with D8). */
+abstract class DexParameterInputs {
+
+    @get:Input
+    abstract val minSdkVersion: Property<Int>
+
+    @get:Input
+    abstract val debuggable: Property<Boolean>
+
+    @get:Input
+    abstract val withDesugaring: Property<Boolean>
+
+    @get:CompileClasspath
+    abstract val desugarBootclasspath: ConfigurableFileCollection
+
+    @get:Incremental
+    @get:CompileClasspath
+    abstract val desugarClasspath: ConfigurableFileCollection
+
+    @get:Input
+    @get:Optional
+    abstract val coreLibDesugarConfig: Property<String>
+
+    @get:Input
+    abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+
+    fun toDexParameters(): DexParameters {
+        return DexParameters(
+            minSdkVersion = minSdkVersion.get(),
+            debuggable = debuggable.get(),
+            withDesugaring = withDesugaring.get(),
+            desugarBootclasspath = desugarBootclasspath.files.toList(),
+            desugarClasspath = desugarClasspath.files.toList(),
+            coreLibDesugarConfig = coreLibDesugarConfig.orNull,
+            errorFormatMode = errorFormatMode.get()
+        )
+    }
+}
+
+/** Parameters required for dexing with DX. */
+abstract class DxDexParameterInputs {
+
+    @get:Input
+    abstract val inBufferSize: Property<Int>
+
+    @get:Input
+    abstract val outBufferSize: Property<Int>
+
+    @get:Input
+    abstract val dxNoOptimizeFlagPresent: Property<Boolean>
+
+    fun toDxDexParameters(): DxDexParameters {
+        return DxDexParameters(
+            inBufferSize = inBufferSize.get(),
+            outBufferSize = outBufferSize.get(),
+            dxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get()
+        )
+    }
+}

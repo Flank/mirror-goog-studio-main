@@ -38,14 +38,26 @@ public class AppInspectionService {
 
     public static AppInspectionService instance() {
         if (sInstance == null) {
-            sInstance = new AppInspectionService();
+            sInstance = createAppInspectionService();
         }
         return sInstance;
     }
 
-    private AppInspectionService() {}
-
+    // will be passed to jni method to call methods on the instance
+    @SuppressWarnings("FieldCanBeLocal")
+    // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
+    private final long mNativePtr;
     private Map<String, Inspector> mInspectors = new HashMap<String, Inspector>();
+
+    /**
+     * Construct an instance referencing some native (JVMTI) resources.
+     *
+     * <p>A user shouldn't call this directly - instead, call {@link #instance()}, which delegates
+     * work to JNI which ultimately calls this constructor.
+     */
+    AppInspectionService(long nativePtr) {
+        mNativePtr = nativePtr;
+    }
 
     @SuppressWarnings("unused") // invoked via jni
     public void createInspector(String inspectorId, String dexPath, int commandId) {
@@ -172,4 +184,6 @@ public class AppInspectionService {
         }
         return null;
     }
+
+    private static native AppInspectionService createAppInspectionService();
 }

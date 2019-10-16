@@ -532,7 +532,7 @@ public class VariantDependencies {
             final AttributeContainer attrContainer = config.getAttributes();
 
             applyVariantAttributes(attrContainer, buildType, publicationFlavorMap);
-            attrContainer.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
+            attrContainer.attribute(VariantAttr.getATTRIBUTE(), variantNameAttr);
 
             if (androidUsage != null) {
                 attrContainer.attribute(AndroidUsageAttr.ATTRIBUTE, androidUsage);
@@ -600,7 +600,7 @@ public class VariantDependencies {
                 @NonNull String buildType,
                 @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap) {
             attributeContainer.attribute(
-                    BuildTypeAttr.ATTRIBUTE,
+                    BuildTypeAttr.Companion.getATTRIBUTE(),
                     project.getObjects().named(BuildTypeAttr.class, buildType));
             for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry : flavorMap.entrySet()) {
                 attributeContainer.attribute(entry.getKey(), entry.getValue());

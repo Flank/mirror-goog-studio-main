@@ -58,7 +58,9 @@ public interface AndroidGradlePluginProjectFlags {
          * contain the resources defined in this project.
          */
         TRANSITIVE_R_CLASS(true),
-        ;
+
+        /** Whether the jetpack Compose feature is enabled for this project. */
+        JETPACK_COMPOSE(false);
 
         private final boolean legacyDefault;
 

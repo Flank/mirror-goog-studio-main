@@ -79,15 +79,18 @@ public final class DexArchiveTestUtil {
             } else {
                 dexArchiveBuilder =
                         DexArchiveBuilder.createD8DexBuilder(
-                                minSdkVersion,
-                                true,
-                                new ClassFileProviderFactory(Collections.emptyList()),
-                                new ClassFileProviderFactory(Collections.emptyList()),
-                                true,
-                                true,
-                                null,
-                                null,
-                                new StandardOutErrMessageReceiver());
+                                new DexParameters(
+                                        minSdkVersion, // minSdkVersion
+                                        true, // debuggable
+                                        true, // dexPerClass
+                                        true, // withDesugaring
+                                        new ClassFileProviderFactory(
+                                                Collections.emptyList()), // bootcp
+                                        new ClassFileProviderFactory(Collections.emptyList()), // cp
+                                        null, // coreLibDesugarConfig
+                                        null, // coreLibDesugarOutputKeepRuleFile
+                                        new StandardOutErrMessageReceiver() // messageReceiver
+                                        ));
             }
 
             dexArchiveBuilder.convert(inputs.entries((x, y) -> true), dexArchiveOutput);

@@ -17,10 +17,6 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.dexing.r8.ClassFileProviderFactory;
-import com.android.ide.common.blame.MessageReceiver;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -41,26 +37,8 @@ public abstract class DexArchiveBuilder {
 
     /** Creates an instance that is using d8 to convert class files to dex files. */
     @NonNull
-    public static DexArchiveBuilder createD8DexBuilder(
-            int minSdkVersion,
-            boolean isDebug,
-            @NonNull ClassFileProviderFactory bootClasspath,
-            @NonNull ClassFileProviderFactory classpath,
-            boolean dexPerClass,
-            boolean desugaring,
-            @Nullable String libConfiguration,
-            @Nullable File outputKeepRule,
-            @NonNull MessageReceiver messageReceiver) {
-        return new D8DexArchiveBuilder(
-                minSdkVersion,
-                isDebug,
-                bootClasspath,
-                classpath,
-                dexPerClass,
-                desugaring,
-                libConfiguration,
-                outputKeepRule,
-                messageReceiver);
+    public static DexArchiveBuilder createD8DexBuilder(@NonNull DexParameters dexParams) {
+        return new D8DexArchiveBuilder(dexParams);
     }
 
     /**

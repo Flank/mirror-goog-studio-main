@@ -29,6 +29,8 @@ import org.apache.tools.ant.BuildException
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 /**
  * Simple task to invoke the new Manifest Merger without any injection, features, system properties
@@ -37,9 +39,11 @@ import org.gradle.api.tasks.OutputFile
 abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     var mainManifestFile: File? = null
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     var secondaryManifestFiles: List<File>? = null
 
     @get:OutputFile

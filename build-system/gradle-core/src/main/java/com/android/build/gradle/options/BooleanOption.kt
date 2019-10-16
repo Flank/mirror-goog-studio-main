@@ -82,7 +82,7 @@ enum class BooleanOption(
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
-    ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", false),
+    ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true),
     ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false),
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

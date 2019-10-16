@@ -22,6 +22,12 @@ dependencies {
     testCompile libs.mockito_core
 }
 
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 sourceSets {
     main {
         compileClasspath += configurations.provided

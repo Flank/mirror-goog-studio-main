@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.api.attributes;
+apply plugin: 'com.android.library'
 
-import org.gradle.api.attributes.Attribute;
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+    dataBinding {
+        enabled true
+    }
+}
 
-/**
- * Type for the attribute holding BuildType information.
- *
- * <p>There should only be one build type attribute associated to each {@link
- * org.gradle.api.artifacts.Configuration} object. The key should be {@link #ATTRIBUTE}.
- */
-public interface BuildTypeAttr extends org.gradle.api.Named {
-
-    Attribute<BuildTypeAttr> ATTRIBUTE = Attribute.of(BuildTypeAttr.class);
+dependencies {
+    api 'com.android.support:appcompat-v7:' + rootProject.supportLibVersion
+    api 'com.android.support.constraint:constraint-layout:' + rootProject.constraintLayoutVersion
+    // TODO: remove once we are fully on AndroidX
+    api 'android.arch.lifecycle:runtime:1.1.0'
 }
