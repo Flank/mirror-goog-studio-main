@@ -58,7 +58,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
      * network operations will eventually time out on their own and/or throw exception in the worst
      * case, leading to the thread pool termination anyway.
      */
-    private static final int FETCH_PACKAGES_WAITING_ITERATION_MINUTES = 1;
+    private static final int FETCH_PACKAGES_WAITING_ITERATION_SECONDS = 10;
 
     private static final String FETCH_PACKAGES_WAITING_MESSAGE =
             "Still waiting for package manifests to be fetched remotely.";
@@ -168,9 +168,15 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                     || !downloadedRepoManifests.isEmpty()) {
                 Map.Entry<RepositorySource, InputStream> repoResult = null;
                 try {
-                    repoResult =
-                            downloadedRepoManifests.poll(
-                                    FETCH_PACKAGES_WAITING_ITERATION_MINUTES, TimeUnit.MINUTES);
+                    for (int waitedSeconds = 0;
+                            waitedSeconds < FETCH_PACKAGES_WAITING_ITERATION_SECONDS;
+                            ++waitedSeconds) {
+                        // Check sourceThreadPool every second to detect early termination.
+                        repoResult = downloadedRepoManifests.poll(1, TimeUnit.SECONDS);
+                        if (repoResult != null || sourceThreadPool.isTerminated()) {
+                            break;
+                        }
+                    }
                 } catch (InterruptedException e) {
                     // ignored
                 }
@@ -323,7 +329,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
 
         try {
             while (!threadPool.awaitTermination(
-                    FETCH_PACKAGES_WAITING_ITERATION_MINUTES, TimeUnit.MINUTES)) {
+                    FETCH_PACKAGES_WAITING_ITERATION_SECONDS, TimeUnit.SECONDS)) {
                 progress.logWarning(FETCH_PACKAGES_WAITING_MESSAGE);
             }
         } catch (InterruptedException ignored) {
