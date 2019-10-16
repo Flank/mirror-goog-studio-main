@@ -93,6 +93,7 @@ public class FakeDevice {
         // Set up
         this.shellUser = addUser(2000, "shell");
         this.storage = Files.createTempDirectory("storage").toFile();
+        this.storage.deleteOnExit();
         this.zygotepid = runProcess(0, "zygote64");
         this.logcat = File.createTempFile("logs", "txt");
         this.shellServer = ServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
@@ -485,11 +486,12 @@ public class FakeDevice {
         return false;
     }
 
-    public void shutdown() {
+    public void shutdown() throws Exception {
         for (AndroidProcess process : processes) {
             process.shutdown();
         }
         shellServer.shutdown();
+        FileUtils.deleteDirectoryContents(storage);
     }
 
     public File getLogcatFile() {
