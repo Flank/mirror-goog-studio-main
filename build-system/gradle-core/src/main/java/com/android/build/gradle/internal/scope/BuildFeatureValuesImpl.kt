@@ -28,5 +28,5 @@ class BuildFeatureValuesImpl(
     // dslFeatures.flagX ?: projectOptions[BooleanOption.FlagX]
 
     override val jetpackCompose: Boolean
-        get() = dslBuildFeatures.jetpackCompose ?: false
+        get() = dslBuildFeatures.compose ?: false
 }

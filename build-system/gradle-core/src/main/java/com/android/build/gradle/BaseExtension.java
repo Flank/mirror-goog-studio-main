@@ -34,6 +34,8 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.BuildFeaturesImpl;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.ComposeOptions;
+import com.android.build.gradle.internal.dsl.ComposeOptionsImpl;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.DexOptions;
@@ -191,6 +193,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     @NonNull private final BuildFeatures buildFeatures;
 
+    @NonNull private final ComposeOptions composeOptions;
+
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
@@ -246,6 +250,7 @@ public abstract class BaseExtension implements AndroidConfig {
         dataBinding = objectFactory.newInstance(DataBindingOptions.class);
         viewBinding = objectFactory.newInstance(ViewBindingOptionsImpl.class);
         buildFeatures = objectFactory.newInstance(BuildFeaturesImpl.class);
+        composeOptions = objectFactory.newInstance(ComposeOptionsImpl.class);
 
         // Create the "special" configuration for test buddy APKs. It will be resolved by the test
         // running task, so that we can install all the found APKs before running tests.
@@ -1054,5 +1059,16 @@ public abstract class BaseExtension implements AndroidConfig {
     @Incubating
     public void buildFeatures(@NonNull Action<BuildFeatures> action) {
         action.execute(buildFeatures);
+    }
+
+    @Incubating
+    @NonNull
+    public ComposeOptions getComposeOptions() {
+        return composeOptions;
+    }
+
+    @Incubating
+    public void composeOptions(@NonNull Action<ComposeOptions> action) {
+        action.execute(composeOptions);
     }
 }
