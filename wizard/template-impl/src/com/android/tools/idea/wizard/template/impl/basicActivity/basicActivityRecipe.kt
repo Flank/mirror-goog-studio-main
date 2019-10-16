@@ -15,21 +15,25 @@
  */
 package com.android.tools.idea.wizard.template.impl.basicActivity
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
-import com.android.tools.idea.wizard.template.impl.common.navigation.navigationKotlinBuildGradle
-import com.android.tools.idea.wizard.template.impl.basicActivity.res.layout.fragmentSimpleXml
-import com.android.tools.idea.wizard.template.impl.basicActivity.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.basicActivity.src.basicActivityKt
-import com.android.tools.idea.wizard.template.impl.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.basicActivity.res.layout.fragmentFirstLayout
 import com.android.tools.idea.wizard.template.impl.basicActivity.res.layout.fragmentSecondLayout
+import com.android.tools.idea.wizard.template.impl.basicActivity.res.layout.fragmentSimpleXml
 import com.android.tools.idea.wizard.template.impl.basicActivity.res.navigation.navGraphXml
+import com.android.tools.idea.wizard.template.impl.basicActivity.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.basicActivity.src.basicActivityJava
+import com.android.tools.idea.wizard.template.impl.basicActivity.src.basicActivityKt
+import com.android.tools.idea.wizard.template.impl.basicActivity.src.firstFragmentJava
+import com.android.tools.idea.wizard.template.impl.basicActivity.src.firstFragmentKt
+import com.android.tools.idea.wizard.template.impl.basicActivity.src.secondFragmentJava
+import com.android.tools.idea.wizard.template.impl.basicActivity.src.secondFragmentKt
+import com.android.tools.idea.wizard.template.impl.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.common.navigation.addSafeArgsPlugin
 import com.android.tools.idea.wizard.template.impl.common.navigation.addSafeArgsPluginToClasspath
-import com.android.tools.idea.wizard.template.impl.common.navigation.src.ui.firstFragmentKt
-import com.android.tools.idea.wizard.template.impl.common.navigation.src.ui.secondFragmentKt
+import com.android.tools.idea.wizard.template.impl.common.navigation.navigationKotlinBuildGradle
 import com.android.tools.idea.wizard.template.impl.common.recipeAppBar
 import com.android.tools.idea.wizard.template.impl.common.recipeManifest
 import com.android.tools.idea.wizard.template.impl.common.recipeSimpleMenu
@@ -75,21 +79,39 @@ fun RecipeExecutor.basicActivityRecipe(
 
   val ktOrJavaExt = projectData.language.extension
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
+  val generateKotlin = projectData.language == Language.Kotlin
 
-  val simpleActivity = basicActivityKt(
-    data.isNew, projectData.applicationPackage, data.packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
-  )
+  val simpleActivity = when (projectData.language) {
+      Language.Java ->
+        basicActivityJava(
+          data.isNew, projectData.applicationPackage, data.packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+        )
+      Language.Kotlin ->
+        basicActivityKt(
+          data.isNew, projectData.applicationPackage, data.packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+        )
+  }
 
   save(simpleActivity, simpleActivityPath)
 
   val firstFragmentClass = layoutToFragment(firstFragmentLayoutName)
   val secondFragmentClass = layoutToFragment(secondFragmentLayoutName)
-  val firstFragmentClassContent = firstFragmentKt(
-    packageName, useAndroidX, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName
-  )
-  val secondFragmentClassContent = secondFragmentKt(
-    packageName, useAndroidX, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName
-  )
+  val firstFragmentClassContent = when (projectData.language) {
+    Language.Java -> firstFragmentJava(
+      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName
+    )
+    Language.Kotlin -> firstFragmentKt(
+      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName
+    )
+  }
+  val secondFragmentClassContent = when (projectData.language) {
+    Language.Java -> secondFragmentJava(
+      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName
+    )
+    Language.Kotlin -> secondFragmentKt(
+      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName
+    )
+  }
   val firstFragmentLayoutContent = fragmentFirstLayout(useAndroidX, firstFragmentClass)
   val secondFragmentLayoutContent = fragmentSecondLayout(useAndroidX, secondFragmentClass)
   save(firstFragmentClassContent, srcOut.resolve("$firstFragmentClass.$ktOrJavaExt"))
@@ -102,10 +124,7 @@ fun RecipeExecutor.basicActivityRecipe(
   )
   mergeXml(navGraphContent, resOut.resolve("navigation/nav_graph.xml"))
   mergeXml(stringsXml, resOut.resolve("values/strings.xml"))
-  mergeGradleFile(navigationKotlinBuildGradle, data.rootDir.resolve(data.name + "/build.gradle"))
 
-  // TODO(b/142690180)
-  val generateKotlin = true
   if (generateKotlin) {
     addDependency("android.arch.navigation:navigation-fragment-ktx:+")
     addDependency("android.arch.navigation:navigation-ui-ktx:+")
@@ -113,7 +132,7 @@ fun RecipeExecutor.basicActivityRecipe(
     addDependency("android.arch.navigation:navigation-fragment:+")
     addDependency("android.arch.navigation:navigation-ui:+")
   }
-  addSafeArgsPlugin(true, projectData.rootDir)
+  addSafeArgsPlugin(generateKotlin, projectData.rootDir)
 
   open(simpleActivityPath)
 

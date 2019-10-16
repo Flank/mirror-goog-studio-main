@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.*
 import com.android.tools.idea.wizard.template.FormFactor
+import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.Separator
 import com.android.tools.idea.wizard.template.StringParameter
@@ -127,8 +128,8 @@ val basicActivityTemplate = template {
     TextFieldWidget(contentLayoutName),
     TextFieldWidget(firstFragmentLayoutName),
     TextFieldWidget(secondFragmentLayoutName),
-    PackageNameWidget(packageName)
-    // TODO(qumeric): LanguageWidget()
+    PackageNameWidget(packageName),
+    LanguageWidget()
     )
 
   thumb {
