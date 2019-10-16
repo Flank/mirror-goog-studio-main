@@ -4,24 +4,24 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-829ab18c60d055dfa346eab0af4da057e40372077d567de7bbb3f0d8768191be
+e62988fba4de810f0ae4461c513d1ad4807e58c14a9ee03fd6b60b94a89340af
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
-com.android.build.api.artifact.ArtifactKind
-com.android.build.api.artifact.ArtifactKind$DIRECTORY
+com.android.build.api.artifact.ArtifactKind implements java.io.Serializable
+com.android.build.api.artifact.ArtifactKind$DIRECTORY extends com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()
-com.android.build.api.artifact.ArtifactKind$FILE
+com.android.build.api.artifact.ArtifactKind$FILE extends com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$FILE.dataType: kotlin.reflect.KClass<org.gradle.api.file.RegularFile> ()
 com.android.build.api.artifact.ArtifactKind.<init>: com.android.build.api.artifact.ArtifactKind<T> (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> ()
-com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.ArtifactType$Appendable
+com.android.build.api.artifact.ArtifactType implements java.io.Serializable
+com.android.build.api.artifact.ArtifactType$Appendable implements com.android.build.api.artifact.ArtifactType$Multiple
 com.android.build.api.artifact.ArtifactType$Companion
 com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType$Multiple
 com.android.build.api.artifact.ArtifactType$Multiple.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactType$Replaceable
+com.android.build.api.artifact.ArtifactType$Replaceable implements com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Transformable
@@ -30,9 +30,9 @@ com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
 com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
-com.android.build.api.artifact.BuildArtifactType
-com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES
-com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH
+com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
+com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
+com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH extends com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.BuildArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.MultipleTransformRequest
@@ -44,8 +44,8 @@ com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provid
 com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.PublicArtifactType
-com.android.build.api.artifact.PublicArtifactType$APK
+com.android.build.api.artifact.PublicArtifactType extends com.android.build.api.artifact.ArtifactType
+com.android.build.api.artifact.PublicArtifactType$APK extends com.android.build.api.artifact.PublicArtifactType implements com.android.build.api.artifact.ArtifactType$Replaceable
 com.android.build.api.artifact.PublicArtifactType.<init>: com.android.build.api.artifact.PublicArtifactType<T> (com.android.build.api.artifact.ArtifactKind, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.PublicArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ReplaceRequest
@@ -67,10 +67,10 @@ com.android.build.api.variant.VariantInfo.getFullVariantName: java.lang.String (
 com.android.build.api.variant.VariantInfo.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo.isTest: boolean ()
 com.android.build.api.variant.VariantOutput
-com.android.build.api.variant.VariantOutput$FilterType
+com.android.build.api.variant.VariantOutput$FilterType extends java.lang.Enum
 com.android.build.api.variant.VariantOutput$FilterType.valueOf: com.android.build.api.variant.VariantOutput$FilterType (java.lang.String)
 com.android.build.api.variant.VariantOutput$FilterType.values: com.android.build.api.variant.VariantOutput$FilterType[] ()
-com.android.build.api.variant.VariantOutput$OutputType
+com.android.build.api.variant.VariantOutput$OutputType extends java.lang.Enum
 com.android.build.api.variant.VariantOutput$OutputType.valueOf: com.android.build.api.variant.VariantOutput$OutputType (java.lang.String)
 com.android.build.api.variant.VariantOutput$OutputType.values: com.android.build.api.variant.VariantOutput$OutputType[] ()
 com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()

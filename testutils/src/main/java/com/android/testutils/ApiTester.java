@@ -37,7 +37,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -88,15 +88,7 @@ public final class ApiTester {
     private final Set<Flag> flags;
 
     private boolean classFilter(boolean incubatingClass) {
-        switch (filter) {
-            case ALL:
-                return true;
-            case STABLE_ONLY:
-                return !incubatingClass;
-            case INCUBATING_ONLY:
-                return incubatingClass;
-        }
-        throw new IllegalStateException(filter.toString());
+        return memberFilter(incubatingClass, false);
     }
 
     private boolean memberFilter(boolean incubatingClass, boolean incubatingMember) {
@@ -227,14 +219,27 @@ public final class ApiTester {
                         // Finally, all inner classes:
                         Stream.of(klass.getDeclaredClasses()).flatMap(this::getApiElements));
 
-        List<String> values = streams.flatMap(Function.identity()).collect(Collectors.toList());
-
         if (classFilter(incubatingClass)) {
-            values = new ArrayList<>(values);
-            values.add(klass.getName());
+            streams = Stream.concat(streams, Stream.of(Stream.of(getApiElement(klass))));
         }
 
-        return values.stream();
+        return streams.flatMap(Function.identity());
+    }
+
+    @NonNull
+    private static String getApiElement(@NonNull Class<?> apiClass) {
+        StringBuilder classItem = new StringBuilder(apiClass.getName());
+        Class<?> superclass = apiClass.getSuperclass();
+        if (superclass != null && superclass != Object.class) {
+            classItem.append(" extends ").append(superclass.getName());
+        }
+        Class<?>[] interfaces = apiClass.getInterfaces();
+        if (interfaces.length > 0) {
+            classItem.append(" implements ");
+        }
+        classItem.append(
+                Arrays.stream(interfaces).map(Class::getName).collect(Collectors.joining(", ")));
+        return classItem.toString();
     }
 
     private static String getApiElement(Field field) {
