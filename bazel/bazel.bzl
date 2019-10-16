@@ -663,42 +663,42 @@ def _iml_project_impl(ctx):
         content = artifacts,
     )
 
-    outs = [ctx.outputs.win, ctx.outputs.win32, ctx.outputs.mac, ctx.outputs.linux, ctx.outputs.output]
+#   outs = [ctx.outputs.win, ctx.outputs.win32, ctx.outputs.mac, ctx.outputs.linux, ctx.outputs.output]
 
-    args = [
-        "--win",
-        ctx.outputs.win.path,
-        "--win32",
-        ctx.outputs.win32.path,
-        "--mac",
-        ctx.outputs.mac.path,
-        "--linux",
-        ctx.outputs.linux.path,
-        "--bin_dir",
-        ctx.var["BINDIR"],
-        "--gen_dir",
-        ctx.var["GENDIR"],
-        "--build",
-        ctx.file.build.path,
-        "--tmp",
-        module_info.path + ".tmp",
-        "--out",
-        ctx.outputs.output.path,
-        "--module_info",
-        module_info.path,
-        "--artifact_info",
-        artifact_info.path,
-    ]
+#   args = [
+#       "--win",
+#       ctx.outputs.win.path,
+#       "--win32",
+#       ctx.outputs.win32.path,
+#       "--mac",
+#       ctx.outputs.mac.path,
+#       "--linux",
+#       ctx.outputs.linux.path,
+#       "--bin_dir",
+#       ctx.var["BINDIR"],
+#       "--gen_dir",
+#       ctx.var["GENDIR"],
+#       "--build",
+#       ctx.file.build.path,
+#       "--tmp",
+#       module_info.path + ".tmp",
+#       "--out",
+#       ctx.outputs.output.path,
+#       "--module_info",
+#       module_info.path,
+#       "--artifact_info",
+#       artifact_info.path,
+#   ]
 
-    ctx.actions.run(
-        mnemonic = "Ant",
-        inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + transitive_data.to_list(),
-        outputs = outs,
-        executable = ctx.executable.ant,
-        # We cannot enable this yet, because Mac's sandbox throws an error
-        # execution_requirements = { "block-network" : "1" },
-        arguments = args,
-    )
+#   ctx.actions.run(
+#       mnemonic = "Ant",
+#       inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + transitive_data.to_list(),
+#       outputs = outs,
+#       executable = ctx.executable.ant,
+#       # We cannot enable this yet, because Mac's sandbox throws an error
+#       # execution_requirements = { "block-network" : "1" },
+#       arguments = args,
+#   )
 
 _iml_project = rule(
     attrs = {
@@ -723,11 +723,11 @@ _iml_project = rule(
         ),
     },
     outputs = {
-        "win": "%{name}.win.zip",
-        "win32": "%{name}.win32.zip",
-        "mac": "%{name}.mac.zip",
-        "linux": "%{name}.tar.gz",
-        "output": "%{name}.log",
+#       "win": "%{name}.win.zip",
+#       "win32": "%{name}.win32.zip",
+#       "mac": "%{name}.mac.zip",
+#       "linux": "%{name}.tar.gz",
+#       "output": "%{name}.log",
     },
     implementation = _iml_project_impl,
 )
