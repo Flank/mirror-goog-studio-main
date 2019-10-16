@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a7592987ae86d8b9d29851ea8be3045ae4ecc8a0b51e5690c1037046f3ea8df7
+e1f3c3dc46ac76aac28b9287848e1dc35b83f781e59e6e35106aeb70f637bc62
 -------------------------------------------------------------------------
 com.android.build.gradle.AndroidConfig
 com.android.build.gradle.AndroidConfig.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
@@ -64,6 +64,7 @@ com.android.build.gradle.BaseExtension.buildTypes: void (org.gradle.api.Action<?
 com.android.build.gradle.BaseExtension.compileOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.CompileOptions>)
 com.android.build.gradle.BaseExtension.compileSdkVersion: void (int)
 com.android.build.gradle.BaseExtension.compileSdkVersion: void (java.lang.String)
+com.android.build.gradle.BaseExtension.composeOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ComposeOptions>)
 com.android.build.gradle.BaseExtension.dataBinding: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DataBindingOptions>)
 com.android.build.gradle.BaseExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
 com.android.build.gradle.BaseExtension.defaultPublishConfig: void (java.lang.String)
@@ -88,6 +89,7 @@ com.android.build.gradle.BaseExtension.getBuildTypes: java.util.Collection ()
 com.android.build.gradle.BaseExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType> ()
 com.android.build.gradle.BaseExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.BaseExtension.getCompileSdkVersion: java.lang.String ()
+com.android.build.gradle.BaseExtension.getComposeOptions: com.android.build.gradle.internal.dsl.ComposeOptions ()
 com.android.build.gradle.BaseExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.BaseExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
 com.android.build.gradle.BaseExtension.getDefaultConfig: com.android.build.gradle.internal.dsl.CoreProductFlavor ()

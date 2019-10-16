@@ -178,6 +178,7 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
+import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
 import com.android.build.gradle.tasks.ProcessAnnotationsTask;
 import com.android.build.gradle.tasks.ProcessAnnotationsTaskCreationAction;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
@@ -192,6 +193,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
@@ -268,6 +270,13 @@ public abstract class TaskManager {
     public static final String LINT = "lint";
     public static final String LINT_FIX = "lintFix";
     public static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
+
+    // Temporary static variables for Kotlin+Compose configuration
+    public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
+            "kotlinCompilerClasspath";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION = "0.1.0-dev02";
+    public static final String COMPOSE_KOTLIN_COMPILER =
+            "kotlin-compiler-embeddable:1.3.60-withExperimentalGoogleExtensions-20191016";
 
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
@@ -476,6 +485,77 @@ public abstract class TaskManager {
         for (VariantScope scope : variants) {
             scope.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
         }
+    }
+
+    public void configureKotlinPluginTasksForComposeIfNecessary(
+            GlobalScope globalScope, List<VariantScope> variantScopes) {
+
+        boolean composeIsEnabled = globalScope.getBuildFeatures().getJetpackCompose();
+        if (!composeIsEnabled) {
+            return;
+        }
+
+        // any override coming from the DSL.
+        String kotlinCompilerVersionInDsl =
+                globalScope.getExtension().getComposeOptions().getKotlinCompilerVersion();
+        String kotlinCompilerExtensionVersionInDsl =
+                globalScope.getExtension().getComposeOptions().getKotlinCompilerExtensionVersion();
+
+        project.getConfigurations()
+                .maybeCreate(KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME)
+                .withDependencies(
+                        configuration -> {
+                            configuration.add(
+                                    project.getDependencies()
+                                            .create(
+                                                    "org.jetbrains.kotlin:"
+                                                            + (kotlinCompilerVersionInDsl != null
+                                                                    ? kotlinCompilerVersionInDsl
+                                                                    : COMPOSE_KOTLIN_COMPILER)));
+                        });
+
+        // record in our metrics that compose is enabled.
+        ProcessProfileWriter.getProject(project.getPath()).setComposeEnabled(true);
+
+        // Create a project configuration that holds the androidx compose kotlin
+        // compiler extension
+        Configuration kotlinExtension = project.getConfigurations().create("kotlin-extension");
+        project.getDependencies()
+                .add(
+                        kotlinExtension.getName(),
+                        "androidx.compose:compose-compiler:"
+                                + (kotlinCompilerExtensionVersionInDsl != null
+                                        ? kotlinCompilerExtensionVersionInDsl
+                                        : COMPOSE_KOTLIN_COMPILER_EXTENSION));
+        kotlinExtension.setTransitive(false);
+        kotlinExtension.setDescription(
+                "Configuration for Compose related kotlin compiler extension");
+
+        // register for all variant the prepareKotlinCompileTask if necessary.
+        variantScopes.forEach(
+                variantScope -> {
+                    Set<Task> kotlinCompiles =
+                            globalScope
+                                    .getProject()
+                                    .getTasksByName(
+                                            variantScope
+                                                    .getVariantData()
+                                                    .getTaskName("compile", "Kotlin"),
+                                            false);
+                    if (!kotlinCompiles.isEmpty()) {
+                        TaskProvider<PrepareKotlinCompileTask>
+                                prepareKotlinCompileTaskTaskProvider =
+                                        taskFactory.register(
+                                                new PrepareKotlinCompileTask.CreationAction(
+                                                        variantScope,
+                                                        kotlinCompiles,
+                                                        kotlinExtension));
+                        // make the dependency !
+                        for (Task kotlinCompile : kotlinCompiles) {
+                            kotlinCompile.dependsOn(prepareKotlinCompileTaskTaskProvider);
+                        }
+                    }
+                });
     }
 
     // This is for config attribute debugging
