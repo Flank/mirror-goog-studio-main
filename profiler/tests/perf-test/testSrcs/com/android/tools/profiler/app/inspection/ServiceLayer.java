@@ -71,13 +71,14 @@ class ServiceLayer implements Runnable {
 
     AppInspectionEvent sendCommand(AppInspectionCommand appInspectionCommand) throws Exception {
         int commandId = nextCommandId.getAndIncrement();
+        AppInspectionCommand idAppInspectionCommand =
+                appInspectionCommand.toBuilder().setCommandId(commandId).build();
         Commands.Command command =
                 Commands.Command.newBuilder()
                         .setType(Commands.Command.CommandType.APP_INSPECTION)
-                        .setAppInspectionCommand(appInspectionCommand)
+                        .setAppInspectionCommand(idAppInspectionCommand)
                         .setStreamId(1234)
                         .setPid(pid)
-                        .setCommandId(commandId)
                         .build();
 
         CompletableFuture<AppInspectionEvent> local = new CompletableFuture<>();
@@ -99,7 +100,7 @@ class ServiceLayer implements Runnable {
                 continue;
             }
             AppInspectionEvent inspectionEvent = event.getAppInspectionEvent();
-            int commandId = event.getCommandId();
+            int commandId = inspectionEvent.getCommandId();
             if (commandId == 0) {
                 events.offer(inspectionEvent);
             } else {

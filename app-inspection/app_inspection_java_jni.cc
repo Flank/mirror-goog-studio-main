@@ -34,8 +34,8 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
-        event->set_command_id(command_id);
         auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_command_id(command_id);
         auto *service_response = inspection_event->mutable_response();
         service_response->set_status(status);
         service_response->set_error_message(message.get().c_str());
@@ -56,8 +56,8 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
-        event->set_command_id(command_id);
         auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_command_id(command_id);
         auto *raw_response = inspection_event->mutable_raw_event();
         raw_response->set_inspector_id(id.get().c_str());
         raw_response->set_content(data.get());
@@ -78,8 +78,8 @@ void EnqueueAppInspectionCrashEvent(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
-        event->set_command_id(command_id);
         auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_command_id(command_id);
         auto *service_response = inspection_event->mutable_crash_event();
         service_response->set_inspector_id(id.get().c_str());
         service_response->set_error_message(message.get().c_str());

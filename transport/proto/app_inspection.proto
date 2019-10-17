@@ -22,10 +22,14 @@ option java_outer_classname = "AppInspection";
 // Union of all commands.
 // See descriptions of command next to their types declaration
 message AppInspectionCommand {
+  // DO NOT USE.
+  // A unique id associated with this command. To be set by inspection service
+  // when sending command to inspector.
+  uint32 command_id = 1;
   oneof union {
-    CreateInspectorCommand create_inspector_command = 1;
-    DisposeInspectorCommand dispose_inspector_command = 2;
-    RawCommand raw_inspector_command = 3;
+    CreateInspectorCommand create_inspector_command = 2;
+    DisposeInspectorCommand dispose_inspector_command = 3;
+    RawCommand raw_inspector_command = 4;
   }
 }
 
@@ -60,10 +64,13 @@ message RawCommand {
 
 // Union of all events and responses.
 message AppInspectionEvent {
+  // Unique id associated with the command that triggered this event or 0 if not
+  // needed.
+  uint32 command_id = 1;
   oneof union {
-    ServiceResponse response = 1;
-    RawEvent raw_event = 2;
-    CrashEvent crash_event = 3;
+    ServiceResponse response = 2;
+    RawEvent raw_event = 3;
+    CrashEvent crash_event = 4;
   }
 }
 
