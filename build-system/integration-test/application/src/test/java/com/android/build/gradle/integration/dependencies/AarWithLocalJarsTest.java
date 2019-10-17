@@ -95,10 +95,17 @@ public class AarWithLocalJarsTest {
 
         // build and publish the 2 AArs and then build the app.
         baseLibrary.execute("clean", "publishReleasePublicationToMavenRepository");
-        library.execute(
-                "clean",
-                "publishReleasePublicationToMavenRepository",
-                "publishDebugPublicationToMavenRepository");
+        library.execute("clean", "publish");
+
+        // specify disambiguation rule for the free/paid variant of the library.
+        TestFileUtils.appendToFile(
+                app.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "  defaultConfig {\n"
+                        + "    missingDimensionStrategy 'price', 'free'\n"
+                        + "  }\n"
+                        + "\n}");
         app.execute("clean", "assembleDebug");
 
         Apk apk = app.getApk(GradleTestProject.ApkType.DEBUG);

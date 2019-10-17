@@ -22,24 +22,22 @@ dependencies {
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+    flavorDimensions 'price'
+    productFlavors {
+        free {}
+        paid {}
+    }
 }
 
 afterEvaluate {
     publishing {
         publications {
-            release(MavenPublication) {
+            all(MavenPublication) {
                 groupId = 'com.example.android.multiproject'
-                artifactId = 'lib-release'
+                artifactId = 'lib'
                 version = '1.0'
 
-                from components.release
-            }
-            debug(MavenPublication) {
-                groupId = 'com.example.android.multiproject'
-                artifactId = 'lib-debug'
-                version = '1.0'
-
-                from components.debug
+                from components.all
             }
         }
     }
