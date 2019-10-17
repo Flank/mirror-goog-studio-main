@@ -17,67 +17,59 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.BaseExtension
-import com.android.testutils.GoldenFile
 import com.android.testutils.TestInputsGenerator
-import com.android.utils.PathUtils
 import com.google.common.reflect.ClassPath
 import org.gradle.plugin.devel.tasks.ValidateTaskProperties
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.net.URLClassLoader
 import java.nio.file.Files
+import kotlin.test.assertTrue
 
 /**
  * Runs Gradle's task properties validation task on the Android Gradle Plugin.
- *
- * The expected result file can be updated by running [ValidateTaskPropertiesUpdater.main]
  */
 class ValidateTaskPropertiesTest {
 
+    @get:Rule
+    val tmpDir = TemporaryFolder()
+
     @Test
     fun validate() {
-        taskPropertiesGoldenFile.assertUpToDate(updater = ValidateTaskPropertiesUpdater::class.java)
+        val warnings = getWarnings()
+        assertTrue(warnings.isEmpty(), "Warnings found, please fix: $warnings")
     }
 
-    companion object {
-        internal val taskPropertiesGoldenFile = GoldenFile(
-            resourceRootWorkspacePath = "tools/base/build-system/gradle-core/src/test/resources",
-            resourcePath = "com/android/build/gradle/internal/tasks/validateTaskProperties.txt",
-            actualCallable = {
-                val temporaryDirectory =
-                    Files.createTempDirectory("validateTaskProperties")
-                try {
-                    val classes = temporaryDirectory.resolve("Classes")
-                    val classLoader = BaseExtension::class.java.classLoader
-                    val classesList: List<Class<*>> =
-                        ClassPath.from(classLoader)
-                            .getTopLevelClassesRecursive("com.android.build.gradle")
-                            .map { it.load() }
-                    TestInputsGenerator.pathWithClasses(classes, classesList)
-                    // This duplicates the program classes put in the test inputs generator,
-                    // but that doesn't seem to matter.
-                    val classpath = (classLoader as URLClassLoader).urLs.map { File(it.toURI()) }
+    private fun getWarnings(): List<String> {
+        val classes = tmpDir.root.resolve("Classes")
+        val classLoader = BaseExtension::class.java.classLoader
+        val classesList: List<Class<*>> =
+            ClassPath.from(classLoader)
+                .getTopLevelClassesRecursive("com.android.build.gradle")
+                .map { it.load() }
+        TestInputsGenerator.pathWithClasses(classes.toPath(), classesList)
+        // This duplicates the program classes put in the test inputs generator,
+        // but that doesn't seem to matter.
+        val classpath = (classLoader as URLClassLoader).urLs.map { File(it.toURI()) }
 
-                    val project = ProjectBuilder.builder()
-                        .withProjectDir(temporaryDirectory.resolve("project").toFile())
-                        .withName("fakeProject").build()
-                    val outputFile = temporaryDirectory.resolve("output.txt")
-                    val task =
-                        project.tasks.register(
-                            "validateTaskProperties",
-                            ValidateTaskProperties::class.java
-                        ) {
-                            it.enableStricterValidation = true
-                            it.outputFile.set(outputFile.toFile())
-                            it.classes.setFrom(classes)
-                            it.classpath.setFrom(classpath)
-                        }
-                    task.get().validateTaskClasses()
-                    return@GoldenFile Files.readAllLines(outputFile)
-                } finally {
-                    PathUtils.deleteRecursivelyIfExists(temporaryDirectory)
-                }
-            })
+        val project = ProjectBuilder.builder()
+            .withProjectDir(tmpDir.root.resolve("project"))
+            .withName("fakeProject").build()
+        val outputFile = tmpDir.root.resolve("output.txt")
+        val task =
+            project.tasks.register(
+                "validateTaskProperties",
+                ValidateTaskProperties::class.java
+            ) {
+                it.enableStricterValidation = true
+                it.outputFile.set(outputFile)
+                it.classes.setFrom(classes)
+                it.classpath.setFrom(classpath)
+            }
+        task.get().validateTaskClasses()
+        return Files.readAllLines(outputFile.toPath())
     }
 }
