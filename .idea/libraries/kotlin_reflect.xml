@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="kotlin-reflect">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.60-dev-3052/kotlin-reflect-1.3.60-dev-3052.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.60-eap-23/kotlin-reflect-1.3.60-eap-23.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
