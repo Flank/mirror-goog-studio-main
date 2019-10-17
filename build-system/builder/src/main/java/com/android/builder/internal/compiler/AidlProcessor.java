@@ -33,9 +33,11 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -158,11 +160,31 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
         // send the dependency file to the processor.
         DependencyData data = mDependencyFileProcessor.processFile(depFile);
 
-        if (mPackagedOutputDir != null && data != null) {
+        if (data != null) {
+            // As of build tools 29.0.2, Aidl no longer produces an empty list of output files
+            // so we need to check each file in it for content and delete the empty java files
+            boolean isParcelable = true;
 
-            boolean isParcelable = data.getOutputFiles().isEmpty();
+            List<String> outputFiles = data.getOutputFiles();
+
+            if (!outputFiles.isEmpty()) {
+                for (String path : outputFiles) {
+                    List<String> outputFileContent =
+                            Files.readLines(new File(path), StandardCharsets.UTF_8);
+                    String emptyFileLine =
+                            "// This file is intentionally left blank as placeholder for parcel declaration.";
+                    if (outputFileContent.size() <= 2
+                            && outputFileContent.get(0).equals(emptyFileLine)) {
+                        FileUtils.delete(new File(path));
+                    } else {
+                        isParcelable = false;
+                    }
+                }
+            }
+
             boolean isWhiteListed = mPackageWhiteList.contains(relativeInputFile);
-            if (isParcelable || isWhiteListed) {
+
+            if (mPackagedOutputDir != null && (isParcelable || isWhiteListed)) {
                 // looks like a parcelable or is white-listed.
                 // Store it in the secondary output of the DependencyData object.
 
@@ -176,4 +198,5 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
 
         FileUtils.delete(depFile);
     }
+
 }
