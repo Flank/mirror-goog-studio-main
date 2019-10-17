@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.api.dsl
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
+import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 
 /**
@@ -27,6 +29,8 @@ import org.gradle.api.model.ObjectFactory
  * - the issue reporter
  * - the deprecation reporter
  * - the instantiator.
+ * - a logger
+ * - the [BuildFeatureValues]
  */
 interface DslScope {
 
@@ -35,4 +39,8 @@ interface DslScope {
     val deprecationReporter: DeprecationReporter
 
     val objectFactory: ObjectFactory
+
+    val logger: Logger
+
+    val buildFeatures: BuildFeatureValues
 }

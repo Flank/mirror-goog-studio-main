@@ -253,13 +253,10 @@ class VariantAttributesProvider(
 
     val versionCodeSerializableSupplier: IntSupplier
         get() {
-            val versionCode = mergedFlavor.versionCode ?: -1
             val file = if (isTestVariant) null else manifestFile
             return SerializableIntSupplier(
                 file,
-                manifestSupplier.isManifestFileRequired,
-                versionCode
-            )
+                manifestSupplier.isManifestFileRequired)
         }
 
     private class SerializableStringSupplier(
@@ -294,10 +291,10 @@ class VariantAttributesProvider(
 
     private class SerializableIntSupplier(
                 private val manifestFile: File? = null,
-                private val isManifestFileRequired: Boolean,
-                private var versionCode: Int = -1) : IntSupplier, Serializable
+                private val isManifestFileRequired: Boolean) : IntSupplier, Serializable
     {
         private var isCached: Boolean = false
+        private var versionCode: Int = -1
 
         override fun getAsInt(): Int {
             if (isCached) {

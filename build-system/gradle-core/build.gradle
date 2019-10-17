@@ -61,6 +61,8 @@ dependencies {
     compile libs.protobuf
     compile libs.protobuf_util
 
+    compileOnly libs.kotlin_gradle_plugin
+
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report
 

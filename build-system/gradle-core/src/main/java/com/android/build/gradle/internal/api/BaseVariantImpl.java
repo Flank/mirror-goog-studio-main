@@ -78,6 +78,10 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public static final String TASK_ACCESS_DEPRECATION_URL =
             "https://d.android.com/r/tools/task-configuration-avoidance";
 
+    // TODO : b/142687686
+    public static final String USE_PROPERTIES_DEPRECATION_URL =
+            "https://d.android.com/r/tools/use-properties";
+
     @NonNull private final ObjectFactory objectFactory;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;

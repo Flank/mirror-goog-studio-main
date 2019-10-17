@@ -41,6 +41,8 @@ public class LayoutInspectorService {
 
     private static LayoutInspectorService sInstance;
 
+    static class LayoutModifiedException extends Exception {}
+
     public static LayoutInspectorService instance() {
         if (sInstance == null) {
             sInstance = new LayoutInspectorService();
@@ -160,6 +162,9 @@ public class LayoutInspectorService {
             }
             int id = (int) System.currentTimeMillis();
             sendComponentTree(request, image, image.length, id);
+        } catch (LayoutModifiedException e) {
+            // The layout changed while we were traversing, start over.
+            captureAndSendComponentTree(image);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         } finally {

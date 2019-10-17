@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.VariantOutput;
+import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -30,7 +31,6 @@ import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Task;
@@ -47,8 +47,9 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     public ApkVariantOutputImpl(
             @NonNull ApkData apkData,
             @NonNull TaskContainer taskContainer,
-            @NonNull DeprecationReporter deprecationReporter) {
-        super(apkData, taskContainer, deprecationReporter);
+            @NonNull DeprecationReporter deprecationReporter,
+            @NonNull VariantOutputImpl variantOutput) {
+        super(apkData, taskContainer, deprecationReporter, variantOutput);
     }
 
     @Nullable
@@ -83,12 +84,18 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public void setVersionCodeOverride(int versionCodeOverride) {
-        apkData.setVersionCode((IntSupplier & Serializable) () -> versionCodeOverride);
+        variantOutput.getVersionCode().set(versionCodeOverride);
     }
 
     @Override
     public int getVersionCodeOverride() {
-        return apkData.getVersionCode();
+        // consider throwing an exception instead, as this is not reliable.
+        deprecationReporter.reportDeprecatedApi(
+                "VariantOutput.versionCode()",
+                "ApkVariantOutput.getVersionCodeOverride()",
+                BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
+        return variantOutput.getVersionCode().get();
     }
 
     @Override

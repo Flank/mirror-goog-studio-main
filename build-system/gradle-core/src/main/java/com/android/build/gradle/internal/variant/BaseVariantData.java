@@ -24,6 +24,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -122,6 +123,7 @@ public abstract class BaseVariantData {
 
     private final MutableTaskContainer taskContainer;
     public TextResource applicationIdTextResource;
+    private final VariantImpl publicVariantAPI;
 
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
@@ -158,6 +160,15 @@ public abstract class BaseVariantData {
                                 globalScope.getErrorHandler(),
                                 recorder),
                         this);
+
+        publicVariantAPI =
+                new VariantImpl(
+                        scope.getFullVariantName(),
+                        globalScope.getProject().getObjects(),
+                        scope,
+                        variantConfiguration,
+                        scope.getArtifacts().getOperations());
+
         outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantConfiguration);
 
         TaskManager.configureScopeForNdk(scope);
@@ -196,6 +207,11 @@ public abstract class BaseVariantData {
                                     .get(BooleanOption.USE_ANDROID_X));
         }
         return layoutXmlProcessor;
+    }
+
+    @NonNull
+    public VariantImpl getPublicVariantApi() {
+        return publicVariantAPI;
     }
 
     @NonNull

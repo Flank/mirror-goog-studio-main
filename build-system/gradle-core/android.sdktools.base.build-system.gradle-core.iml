@@ -74,5 +74,7 @@
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="module" module-name="android.sdktools.apksig" />
     <orderEntry type="module" module-name="android.sdktools.zipflinger" />
+    <orderEntry type="library" scope="PROVIDED" name="kotlin-gradle-plugin" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="kotlin-gradle-plugin-api" level="project" />
   </component>
 </module>

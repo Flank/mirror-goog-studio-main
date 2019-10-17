@@ -74,8 +74,6 @@ public class GlobalScope implements TransformGlobalScope {
 
     @Nullable private ConfigurableFileCollection bootClasspath = null;
 
-    @NonNull private BuildFeatureValues buildFeatures;
-
     public GlobalScope(
             @NonNull Project project,
             @NonNull String createdBy,
@@ -106,13 +104,11 @@ public class GlobalScope implements TransformGlobalScope {
 
     public void setExtension(@NonNull BaseExtension extension) {
         this.extension = checkNotNull(extension);
-
-        buildFeatures = new BuildFeatureValuesImpl(extension.getBuildFeatures(), projectOptions);
     }
 
     @NonNull
     public BuildFeatureValues getBuildFeatures() {
-        return buildFeatures;
+        return dslScope.getBuildFeatures();
     }
 
     @NonNull

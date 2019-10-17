@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
@@ -828,7 +829,7 @@ public abstract class BaseExtension implements AndroidConfig {
         resourcePrefix = prefix;
     }
 
-    public abstract void addVariant(BaseVariant variant);
+    public abstract void addVariant(BaseVariant variant, VariantScope variantScope);
 
     public void registerArtifactType(@NonNull String name,
             boolean isTest,

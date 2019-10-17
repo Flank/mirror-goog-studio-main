@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.api.variant
 
-import com.android.build.api.dsl.BuildFeatures
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.api.artifact.Operations
+import org.gradle.api.Incubating
 
-class BuildFeatureValuesImpl(
-    private val projectOptions: ProjectOptions
-) : BuildFeatureValues {
-    lateinit var dslBuildFeatures: BuildFeatures
+/**
+ * Parent interface for all types of variants.
+ */
+@Incubating
+interface Variant {
 
-    // add new flags here with computation:
-    // dslFeatures.flagX ?: projectOptions[BooleanOption.FlagX]
+    /**
+     * Variant name, unique within a project.
+     * @return the variant name
+     */
+    val name: String
 
-    override val jetpackCompose: Boolean
-        get() = dslBuildFeatures.jetpackCompose ?: false
+    /**
+     * Returns the final list of variant outputs.
+     * @return read only list of [VariantOutput] for this variant.
+     */
+    val outputs: List<VariantOutput>
+
+    /**
+     * Access to the variant's buildable artifacts for build customization.
+     */
+    val operations: Operations
 }

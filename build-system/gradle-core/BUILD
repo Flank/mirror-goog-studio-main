@@ -42,6 +42,7 @@ kotlin_library(
     deps = [
         ":jacoco.core_neverlink",
         ":jacoco.report_neverlink",
+        ":jetbrains.kotlin-gradle-plugin_neverlink",
         "//tools/analytics-library/crash:tools.analytics-crash",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
@@ -103,6 +104,12 @@ maven_java_library(
     exports = ["//tools/base/third_party:org.jacoco_org.jacoco.report"],
 )
 
+maven_java_library(
+    name = "jetbrains.kotlin-gradle-plugin_neverlink",
+    # TODO fix kotlin_library rule so neverlink = 1 can be added here
+    exports = ["//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin"],
+)
+
 maven_pom(
     name = "pom",
     artifact = "gradle",
@@ -140,7 +147,7 @@ kotlin_test(
         ":gradle-core",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.1:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.5.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.60-withExperimentalGoogleExtensions-20191014:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.60-dev-3052:jar",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apkzlib",
         "//tools/base/annotations",

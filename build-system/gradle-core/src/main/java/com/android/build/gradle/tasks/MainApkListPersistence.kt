@@ -25,7 +25,9 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -45,6 +47,9 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
     @get:Nested
     lateinit var apkDataList : List<ApkData>
         private set
+
+    @get:Input
+    abstract val apkVersionCodes: ListProperty<Int>
 
     public override fun doTaskAction() {
         FileUtils.deleteIfExists(outputFile.get().asFile)
@@ -77,6 +82,12 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
             super.configure(task)
 
             task.apkDataList = variantScope.outputScope.apkDatas
+            variantScope.outputScope.apkDatas.forEach {
+                val variantOutput = it.variantOutput
+                if (variantOutput != null) {
+                    task.apkVersionCodes.add(variantOutput.versionCode)
+                }
+            }
         }
     }
 }

@@ -36,7 +36,8 @@ class ComponentTree {
      * @param view the root of the tree to load the component tree for
      * @param event a handle to a ComponentTreeEvent protobuf to pass back in native calls
      */
-    public void writeTree(long event, View view) {
+    public void writeTree(long event, View view)
+            throws LayoutInspectorService.LayoutModifiedException {
         mStringTable.clear();
         Resource layout = Resource.fromResourceId(view, getSourceLayoutResId(view));
         loadView(event, view, false);
@@ -45,7 +46,8 @@ class ComponentTree {
         mStringTable.clear();
     }
 
-    private void loadView(long buffer, View view, boolean isSubView) {
+    private void loadView(long buffer, View view, boolean isSubView)
+            throws LayoutInspectorService.LayoutModifiedException {
         long viewId = getUniqueDrawingId(view);
         Class<? extends View> klass = view.getClass();
         int packageName = toInt(getPackageName(klass));
@@ -85,6 +87,10 @@ class ComponentTree {
         ViewGroup group = (ViewGroup) view;
         int count = group.getChildCount();
         for (int index = 0; index < count; index++) {
+            if (group.getChildCount() != count) {
+                // The tree changed. Start over.
+                throw new LayoutInspectorService.LayoutModifiedException();
+            }
             loadView(viewBuffer, group.getChildAt(index), true);
         }
     }

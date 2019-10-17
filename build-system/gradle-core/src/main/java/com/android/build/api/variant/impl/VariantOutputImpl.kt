@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.api.variant.impl
 
-import com.android.build.api.dsl.BuildFeatures
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.api.variant.VariantOutput
+import org.gradle.api.provider.Property
 
-class BuildFeatureValuesImpl(
-    private val projectOptions: ProjectOptions
-) : BuildFeatureValues {
-    lateinit var dslBuildFeatures: BuildFeatures
+internal class VariantOutputImpl(override val versionCode: Property<Int>,
+    val type: VariantOutput.OutputType
+) : VariantOutput {
 
-    // add new flags here with computation:
-    // dslFeatures.flagX ?: projectOptions[BooleanOption.FlagX]
-
-    override val jetpackCompose: Boolean
-        get() = dslBuildFeatures.jetpackCompose ?: false
+    override val outputType: String
+        get() = type.name
 }

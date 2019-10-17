@@ -11,6 +11,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -58,7 +59,7 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
     }
 
     @Override
-    public void addVariant(BaseVariant variant) {
+    public void addVariant(BaseVariant variant, VariantScope variantScope) {
         applicationVariantList.add((ApplicationVariant) variant);
     }
 

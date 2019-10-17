@@ -69,7 +69,8 @@ abstract class BuildArtifactsHolder(
      * @param targetType the supplemental [ArtifactType] the same built artifacts will also be
      * published under.
      */
-    fun <T: FileSystemLocation> republish(sourceType: SingleArtifactType<T>, targetType: SingleArtifactType<T>) {
+    fun <T: FileSystemLocation, U> republish(sourceType: U, targetType: U)
+            where U: ArtifactType<T>, U : ArtifactType.Single {
         operations.republish(sourceType, targetType)
     }
 
