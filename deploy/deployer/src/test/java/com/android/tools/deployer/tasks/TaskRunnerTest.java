@@ -264,13 +264,10 @@ public class TaskRunnerTest {
                         },
                         start);
 
-        try {
-            runner.run();
-            fail("Exception should have been thrown");
-        } catch (DeployerException e) {
+        DeployerException e = runner.run().getException();
             assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
             assertEquals("failed", e.getDetails());
-        }
+
         service.shutdown();
     }
 
@@ -288,15 +285,12 @@ public class TaskRunnerTest {
                             throw DeployerException.operationNotSupported("failed");
                         },
                         start);
-        Task<String> task2 = runner.create(Tasks.TASK2, a -> a + "2", task1);
+        runner.create(Tasks.TASK2, a -> a + "2", task1);
 
-        try {
-            runner.run();
-            fail("Exception should have been thrown");
-        } catch (DeployerException e) {
-            assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
-            assertEquals("failed", e.getDetails());
-        }
+        DeployerException e = runner.run().getException();
+        assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
+        assertEquals("failed", e.getDetails());
+
         service.shutdown();
     }
 

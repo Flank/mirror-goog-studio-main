@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class Deployer {
 
@@ -177,25 +176,24 @@ public class Deployer {
         ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart);
         runner.create(Tasks.SWAP, swapper::swap, dumps, sessionId, toSwap);
 
-        List<Task<?>> tasks = runner.run();
+        TaskRunner.Result result = runner.run();
+        result.getMetrics().forEach(metrics::add);
 
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
         // Note we artificially block this task until swap is done.
-        runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
+        if (result.isSuccess()) {
+            runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
 
-        // Wait only for swap to finish
-        runner.runAsync();
+            // Wait only for swap to finish
+            runner.runAsync();
+        } else {
+            throw result.getException();
+        }
 
-        // null metrics are from tasks that are not started.
-        tasks.stream()
-                .map(task -> task.getMetric())
-                .filter(Objects::nonNull)
-                .forEach(metric -> metrics.add(metric));
-
-        Result result = new Result();
-        result.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
-        return result;
+        Result deployResult = new Result();
+        deployResult.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
+        return deployResult;
     }
 }

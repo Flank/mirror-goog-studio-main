@@ -1212,7 +1212,18 @@ public class DeployerRunnerTest {
             assertHistory(device, "getprop");
         } else {
             String packageCommand = device.getApi() < 28 ? "dump" : "path";
-            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Success",
+                    "COMPARE:Failed");
             assertHistory(
                     device,
                     "getprop",
@@ -1339,7 +1350,19 @@ public class DeployerRunnerTest {
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk"); // TODO: Don't we need to abort installation?
-            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Success",
+                    "COMPARE:Success",
+                    "SWAP:Failed");
         }
     }
 
@@ -1484,7 +1507,17 @@ public class DeployerRunnerTest {
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
-            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Failed");
         }
     }
 

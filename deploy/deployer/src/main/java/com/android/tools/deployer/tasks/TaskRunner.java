@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -100,21 +101,56 @@ public class TaskRunner {
         }
     }
 
+    public static final class Result {
+        private final DeployerException exception;
+        private final List<Task<?>> tasks;
+
+        public Result(List<Task<?>> tasks) {
+            this(tasks, null);
+        }
+
+        public Result(List<Task<?>> tasks, DeployerException exception) {
+            this.tasks = tasks;
+            this.exception = exception;
+        }
+
+        /** @return the metrics for completed tasks, filtering out non-started and dropped tasks. */
+        public List<DeployMetric> getMetrics() {
+            return tasks.stream()
+                    .map(Task::getMetric)
+                    .filter(Objects::nonNull)
+                    .filter(m -> !m.getStatus().equals("Dropped"))
+                    .collect(Collectors.toList());
+        }
+
+        /**
+         * @return the exception that was thrown if the execution was not a success. Returns null if
+         *     the execution succeeded.
+         */
+        public DeployerException getException() {
+            return exception;
+        }
+
+        public boolean isSuccess() {
+            return exception == null;
+        }
+    }
+
     /**
      * Runs and waits for all the pending tasks to be executed.
      *
      * <p>If no tasks are pending this is a no-op, except that it will wait for the existing running
      * tasks to end.
-     *
-     * @throws DeployerException if a task throws it while executing
      */
-    public List<Task<?>> run() throws DeployerException {
+    public Result run() {
+        running.acquireUninterruptibly();
+        ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         try {
-            running.acquireUninterruptibly();
-            ArrayList<Task<?>> batch = new ArrayList<>(tasks);
             tasks.clear();
             runInternal(batch);
-            return batch;
+            return new Result(batch);
+        } catch (DeployerException e) {
+            return new Result(batch, e);
         } finally {
             running.release();
         }
