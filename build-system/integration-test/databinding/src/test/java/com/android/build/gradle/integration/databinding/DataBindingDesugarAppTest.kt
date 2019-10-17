@@ -14,65 +14,57 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.databinding;
+package com.android.build.gradle.integration.databinding
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
-import java.io.IOException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Test use of Java 8 language in the application module with data binding.
  *
- * <p>regression test for - http://b.android.com/321693
+ * regression test for - http://b.android.com/321693
  */
-@RunWith(Parameterized.class)
-public class DataBindingDesugarAppTest {
+@RunWith(Parameterized::class)
+class DataBindingDesugarAppTest(private val enableGradleWorkers: Boolean) {
 
-    @NonNull private final Boolean enableGradleWorkers;
+    @get:Rule
+    val project = GradleTestProject.builder()
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+        .create()
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    .create();
-
-    @Parameterized.Parameters(name = "enableGradleWorkers={0}")
-    public static Boolean[] getParameters() {
-        return new Boolean[] {Boolean.TRUE, Boolean.FALSE};
+    companion object {
+        @Parameterized.Parameters(name = "enableGradleWorkers={0}")
+        @JvmStatic
+        fun getParameters() = arrayOf(java.lang.Boolean.TRUE, java.lang.Boolean.FALSE)
     }
 
-    public DataBindingDesugarAppTest(@NonNull Boolean enableGradleWorkers) {
-        this.enableGradleWorkers = enableGradleWorkers;
-    }
+    private val projectExecutor: GradleTaskExecutor
+        get() = project.executor().with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers)
 
     @Test
-    public void testDatabinding() throws IOException, InterruptedException {
+    fun testDatabinding() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                String.format(
-                        "\n"
-                                + "android.compileOptions.sourceCompatibility 1.8\n"
-                                + "android.compileOptions.targetCompatibility 1.8\n"
-                                + "android.dataBinding.enabled true\n"
-                                + "android.defaultConfig.minSdkVersion %d\n"
-                                + "dependencies {\n"
-                                + "    compile 'com.android.support:support-v4:%s'\n"
-                                + "}",
-                        TestVersions.SUPPORT_LIB_MIN_SDK, TestVersions.SUPPORT_LIB_VERSION));
+            project.buildFile,
+                """
+                |android.compileOptions.sourceCompatibility 1.8
+                |android.compileOptions.targetCompatibility 1.8
+                |android.dataBinding.enabled true
+                |android.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK
+                |dependencies {
+                |    compile 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'
+                |}
+                """.trimMargin("|")
+        )
 
-        getProjectExecutor().run("assembleDebug");
-    }
-
-    private GradleTaskExecutor getProjectExecutor() {
-        return project.executor().with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
+        projectExecutor.run("assembleDebug")
     }
 }
