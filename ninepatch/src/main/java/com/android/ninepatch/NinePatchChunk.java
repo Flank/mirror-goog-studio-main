@@ -16,12 +16,16 @@
 
 package com.android.ninepatch;
 
+import com.google.common.io.LittleEndianDataOutputStream;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -53,6 +57,7 @@ public class NinePatchChunk implements Serializable {
 
     private Pair<Integer> mHorizontalPadding;
     private Pair<Integer> mVerticalPadding;
+    private byte[] mSerializedChunk;
 
 
     /**
@@ -361,11 +366,55 @@ public class NinePatchChunk implements Serializable {
         row = GraphicsUtilities.getPixels(image, 1, height + 1, width, 1, row);
         column = GraphicsUtilities.getPixels(image, width + 1, 1, 1, height, column);
 
-        top = getPatches(row, result);
-        mHorizontalPadding = getPadding(top.mFirst);
+        Pair<List<Pair<Integer>>> bottom = getPatches(row, result);
+        mHorizontalPadding = getPadding(bottom.mFirst);
 
-        left = getPatches(column, result);
-        mVerticalPadding = getPadding(left.mFirst);
+        Pair<List<Pair<Integer>>> right = getPatches(column, result);
+        mVerticalPadding = getPadding(right.mFirst);
+
+        ArrayList<Rectangle> allRegions = new ArrayList<>();
+        allRegions.addAll(mHorizontalPatches);
+        allRegions.addAll(mVerticalPatches);
+        allRegions.addAll(mPatches);
+        allRegions.addAll(mFixed);
+        // Sort regions from top left to bottom right.
+        allRegions.sort(
+                Comparator.comparingInt((Rectangle rect) -> rect.y)
+                        .thenComparingInt(rect -> rect.x));
+
+        int xDivsOffset = 32;
+        int yDivsOffset = xDivsOffset + 4 * top.mSecond.size() * 2;
+        int colorsOffset = yDivsOffset + 4 * left.mSecond.size() * 2;
+
+        // Create the serialized form of the chunk, following format laid out in frameworks/base/libs/androidfw/ResourceTypes.[h|cpp]
+        // The chunk is written using little endian format to match the Android framework.
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (LittleEndianDataOutputStream oos = new LittleEndianDataOutputStream(baos)) {
+            oos.writeBoolean(true); // wasDeserialized (1 byte)
+            oos.writeByte(top.mSecond.size() * 2); // numXDivs (1 byte)
+            oos.writeByte(left.mSecond.size() * 2); // numYDivs 1(1 byte)
+            oos.writeByte(allRegions.size()); // numColors (1 byte)
+            oos.writeInt(xDivsOffset); // xDivsOffset (4 bytes)
+            oos.writeInt(yDivsOffset); // yDivsOffset (4 bytes)
+            oos.writeInt(mHorizontalPadding.mFirst); // paddingLeft (4 bytes)
+            oos.writeInt(mHorizontalPadding.mSecond); // paddingRight (4 bytes)
+            oos.writeInt(mVerticalPadding.mFirst); // paddingTop (4 bytes)
+            oos.writeInt(mVerticalPadding.mSecond); // paddingBottom (4 bytes)
+            oos.writeInt(colorsOffset); // colorsOffset (4 bytes)
+            for (Pair<Integer> patch : top.mSecond) { // xDivs
+                oos.writeInt(patch.mFirst); // left position (4 bytes)
+                oos.writeInt(patch.mSecond); // right position (4 bytes)
+            }
+            for (Pair<Integer> patch : left.mSecond) {
+                oos.writeInt(patch.mFirst); // top position (4 bytes)
+                oos.writeInt(patch.mSecond); // bottom position (4 bytes)
+            }
+            for (Rectangle region : allRegions) { // colors
+                oos.writeInt(getRegionColor(image, region)); // color (4 bytes)
+            }
+        } catch (IOException ignore) {
+        }
+        mSerializedChunk = baos.toByteArray();
     }
 
     private List<Rectangle> getVerticalRectangles(int imageHeight,
@@ -478,6 +527,38 @@ public class NinePatchChunk implements Serializable {
         }
 
         return new Pair<List<Pair<Integer>>>(fixed, patches);
+    }
+
+    /**
+     * This checks whether the entire region of the given image has the same color. If it does, this
+     * returns that color, or 0 (corresponding to the enum value for
+     * android::Res_png_9patch::TRANSPARENT_COLOR) if the region is completely transparent. If the
+     * region is composed of several colors, this returns 1 (corresponding to
+     * android::Res_png_9patch::NO_COLOR). This follows algorithm from AAPT2 (see
+     * frameworks/base/tools/aapt2/compile/NinePatch.cpp)
+     */
+    private static int getRegionColor(BufferedImage image, Rectangle region) {
+        int expectedColor = image.getRGB(region.x, region.y);
+        int expectedAlpha = (expectedColor >> 24) & 0xff;
+        for (int y = region.y; y < region.y + region.height; y++) {
+            for (int x = region.x + 1; x < region.x + region.width; x++) {
+                int color = image.getRGB(x, y);
+                int alpha = (color >> 24) & 0xff;
+                if (alpha == 0 && expectedAlpha != 0) {
+                    return 1; // android::Res_png_9patch::NO_COLOR
+                } else if (alpha != 0 && color != expectedColor) {
+                    return 1; // android::Res_png_9patch::NO_COLOR
+                }
+            }
+        }
+        if (expectedAlpha == 0) {
+            return 0; // android::Res_png_9patch::TRANSPARENT_COLOR
+        }
+        return expectedColor;
+    }
+
+    public byte[] getSerializedChunk() {
+        return mSerializedChunk;
     }
 
     /**
