@@ -276,7 +276,7 @@ public abstract class TaskManager {
             "kotlinCompilerClasspath";
     public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION = "0.1.0-dev02";
     public static final String COMPOSE_KOTLIN_COMPILER =
-            "kotlin-compiler-embeddable:1.3.60-withExperimentalGoogleExtensions-20191016";
+            "kotlin-compiler-embeddable:1.3.60-dev-withExperimentalGoogleExtensions-20191016";
 
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
