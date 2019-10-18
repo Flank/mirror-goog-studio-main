@@ -676,6 +676,10 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 variantManager.getVariantScopes());
 
 
+        // configure compose related tasks.
+        taskManager.configureKotlinPluginTasksForComposeIfNecessary(
+                globalScope, variantManager.getVariantScopes());
+
         // create the global lint task that depends on all the variants
         taskManager.configureGlobalLintTask(variantManager.getVariantScopes());
 

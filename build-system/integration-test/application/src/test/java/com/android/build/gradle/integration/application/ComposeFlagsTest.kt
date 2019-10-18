@@ -26,7 +26,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import kotlin.test.assertNotNull
 
-class JetpackComposeTest {
+class ComposeFlagsTest {
     @JvmField
     @Rule
     val tmp = TemporaryFolder()
@@ -35,7 +35,7 @@ class JetpackComposeTest {
         .appendToBuild("""
 android {
     buildFeatures {
-        jetpackCompose true
+        compose true
     }
 }
         """.trimIndent())
@@ -46,7 +46,7 @@ android {
         .appendToBuild("""
 android {
     buildFeatures {
-        jetpackCompose false
+        compose false
     }
 }
         """.trimIndent())

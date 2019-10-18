@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
-
-import org.gradle.api.Incubating
+package com.android.build.gradle.internal.dsl
 
 /**
- * The list of build features that can be disabled or enabled in an Android project.
+ * Optional settings for the Compose feature.
  */
-@Incubating
-interface BuildFeatures {
+interface ComposeOptions {
     /**
-     * Flag to enable Compose feature.
-     * Setting the value to null resets to the default value
-     *
-     * Default value is false.
-     *
-     * More information available about this feature at: TBD
-     **/
-    var compose: Boolean?
+     * Sets the version of the Kotlin Compiler used to compile the project or null if using
+     * the default one.
+     */
+    var kotlinCompilerVersion: String?
+
+    /**
+     * Sets the version of the Kotlin Compiler extension for the project or null if using
+     * the default one.
+     */
+    var kotlinCompilerExtensionVersion: String?
 }

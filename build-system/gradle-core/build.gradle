@@ -83,6 +83,8 @@ dependencies {
     testCompile libs.jsoup
     testCompile libs.jacoco_core
     testCompile libs.jacoco_report
+    testCompile libs.kotlin_gradle_plugin
+
 }
 
 protobuf {
