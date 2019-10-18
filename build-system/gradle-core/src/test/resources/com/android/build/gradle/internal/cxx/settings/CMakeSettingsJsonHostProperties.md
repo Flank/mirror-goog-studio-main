@@ -92,7 +92,7 @@ The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.
 
 ## ${ndk.dir}
 Folder of the current Android NDK.
-- example: ${ndk.sdkDir}/ndk/20.0.5594570
+- example: ${ndk.sdkDir}/ndk/21.0.5935234
 - environment: android-ndk
 
 ## ${ndk.fullConfigurationHash}
@@ -157,12 +157,12 @@ Name of the gradle variant.
 
 ## ${ndk.version}
 Version of NDK.
-- example: 20.0.5594570
+- example: 21.0.5935234
 - environment: android-ndk
 
 ## ${ndk.versionMajor}
 Version number major part.
-- example: 20
+- example: 21
 - environment: android-ndk
 
 ## ${ndk.versionMinor}
