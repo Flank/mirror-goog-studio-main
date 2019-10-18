@@ -1,10 +1,10 @@
 <component name="libraryTable">
   <library name="kotlin-stdlib-jdk8">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.3.60-dev-3052/kotlin-stdlib-jdk8-1.3.60-dev-3052.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.3.60-dev-3052/kotlin-stdlib-1.3.60-dev-3052.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.3.60-dev-3052/kotlin-stdlib-common-1.3.60-dev-3052.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.3.60-dev-3052/kotlin-stdlib-jdk7-1.3.60-dev-3052.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.3.60-eap-25/kotlin-stdlib-jdk8-1.3.60-eap-25.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.3.60-eap-25/kotlin-stdlib-1.3.60-eap-25.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.3.60-eap-25/kotlin-stdlib-common-1.3.60-eap-25.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.3.60-eap-25/kotlin-stdlib-jdk7-1.3.60-eap-25.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
