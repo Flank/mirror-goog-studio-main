@@ -272,7 +272,7 @@ class XmlReporterTest {
                             file="src/test/pkg/WakelockTest.java"
                             offset="488"
                             after="ock.acquire("
-                            before="); // ERROR&amp;#xA;"
+                            before="); // ERROR&#xA;"
                             insert="10*60*1000L /*10 minutes*/"/>
                     </fix>
                     <location
@@ -338,7 +338,7 @@ class XmlReporterTest {
                         <edit
                             file="res/values/strings.xml"
                             offset="81"
-                            after="message&amp;quot;>%d "
+                            after="message&quot;>%d "
                             before="unsed resour"
                             delete="unsed"
                             insert="used"/>
@@ -349,7 +349,7 @@ class XmlReporterTest {
                         <edit
                             file="res/values/strings.xml"
                             offset="81"
-                            after="message&amp;quot;>%d "
+                            after="message&quot;>%d "
                             before="unsed resour"
                             delete="unsed"
                             insert="unused"/>
@@ -360,7 +360,7 @@ class XmlReporterTest {
                         <edit
                             file="res/values/strings.xml"
                             offset="81"
-                            after="message&amp;quot;>%d "
+                            after="message&quot;>%d "
                             before="unsed resour"
                             delete="unsed"
                             insert="unsaid"/>
@@ -419,15 +419,15 @@ class XmlReporterTest {
                         <edit
                             file="res/layout/sample.xml"
                             offset="330"
-                            after="&amp;quot;1&amp;quot;&amp;#xA;        "
+                            after="&quot;1&quot;&#xA;        "
                             before="android:text"
-                            insert="android:singleLine=&amp;quot;true&amp;quot; "/>
+                            insert="android:singleLine=&quot;true&quot; "/>
                         <edit
                             file="res/layout/sample.xml"
                             offset="304"
-                            after="rt&amp;quot;&amp;#xA;        "
-                            before="android:lines=&amp;quot;1&amp;quot;"
-                            delete="android:lines=&amp;quot;1&amp;quot;"/>
+                            after="rt&quot;&#xA;        "
+                            before="android:lines=&quot;1&quot;"
+                            delete="android:lines=&quot;1&quot;"/>
                     </fix>
                     <location
                         file="res/layout/sample.xml"
