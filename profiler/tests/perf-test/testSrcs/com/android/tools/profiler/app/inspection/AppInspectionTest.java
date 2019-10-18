@@ -55,7 +55,7 @@ public class AppInspectionTest {
     private FakeAndroidDriver androidDriver;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         androidDriver = perfDriver.getFakeAndroidDriver();
         serviceLayer = ServiceLayer.create(perfDriver);
     }
@@ -136,6 +136,18 @@ public class AppInspectionTest {
                         + inspectorId
                         + " crashed during sendCommand due to This is an inspector exception.");
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
+    }
+
+    @Test
+    public void inspectorEnvironmentNoOp() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertResponseStatus(
+                serviceLayer.sendCommand(
+                        createInspector("test.environment.inspector", onDevicePath)),
+                SUCCESS);
+        assertInput(androidDriver, "FIND INSTANCES NOT IMPLEMENTED");
+        assertInput(androidDriver, "REGISTER ENTRY HOOK NOT IMPLEMENTED");
+        assertInput(androidDriver, "REGISTER EXIT HOOK NOT IMPLEMENTED");
     }
 
     private static AppInspectionCommand rawCommandInspector(

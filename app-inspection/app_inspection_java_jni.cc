@@ -17,6 +17,7 @@
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
 #include "app_inspection_service.h"
+#include "utils/log.h"
 
 using app_inspection::ServiceResponse;
 
@@ -138,5 +139,36 @@ JNIEXPORT jobject JNICALL
 Java_com_android_tools_agent_app_inspection_AppInspectionService_createAppInspectionService(
     JNIEnv *env, jclass jclazz) {
   return app_inspection::CreateAppInspectionService(env);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterEntryHook(
+    JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
+    jstring originMethod, jclass hookClass, jstring hookMethod) {
+#ifdef APP_INSPECTION_EXPERIMENT
+#else
+  profiler::Log::E("REGISTER ENTRY HOOK NOT IMPLEMENTED");
+#endif
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterExitHook(
+    JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
+    jstring originMethod, jclass hookClass, jstring hookMethod) {
+#ifdef APP_INSPECTION_EXPERIMENT
+#else
+  profiler::Log::E("REGISTER EXIT HOOK NOT IMPLEMENTED");
+#endif
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeFindInstances(
+    JNIEnv *env, jclass callerClass, jlong servicePtr, jclass jclass) {
+#ifdef APP_INSPECTION_EXPERIMENT
+#else
+  profiler::Log::E("FIND INSTANCES NOT IMPLEMENTED");
+#endif
+  auto result = env->NewObjectArray(0, jclass, NULL);
+  return result;
 }
 }

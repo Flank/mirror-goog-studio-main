@@ -21,6 +21,7 @@ import static com.android.tools.agent.app.inspection.Responses.replyError;
 import static com.android.tools.agent.app.inspection.Responses.replySuccess;
 
 import androidx.inspection.Inspector;
+import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
 import java.io.File;
@@ -91,7 +92,8 @@ public class AppInspectionService {
                 InspectorFactory inspectorFactory = iterator.next();
                 if (inspectorId.equals(inspectorFactory.getInspectorId())) {
                     ConnectionImpl connection = new ConnectionImpl(inspectorId);
-                    inspector = inspectorFactory.createInspector(connection);
+                    InspectorEnvironment environment = new InspectorEnvironmentImpl(mNativePtr);
+                    inspector = inspectorFactory.createInspector(connection, environment);
                     mInspectors.put(inspectorId, inspector);
                     break;
                 }

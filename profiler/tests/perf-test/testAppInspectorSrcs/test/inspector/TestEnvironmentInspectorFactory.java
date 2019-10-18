@@ -20,14 +20,20 @@ import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 
-public class TestInspectorFactory extends InspectorFactory<TestInspector> {
+// this factory accesses environment on createInspector call.
+public class TestEnvironmentInspectorFactory extends InspectorFactory<TestInspector> {
 
-    public TestInspectorFactory() {
-        super("test.inspector");
+    public TestEnvironmentInspectorFactory() {
+        super("test.environment.inspector");
     }
 
     @Override
     public TestInspector createInspector(Connection connection, InspectorEnvironment environment) {
+        environment.findInstances(TestInspector.class);
+        environment.registerEntryHook(
+                TestInspectorFactory.class, "_", TestInspectorFactory.class, "_");
+        environment.registerExitHook(
+                TestInspectorFactory.class, "_", TestInspectorFactory.class, "_");
         return new TestInspector(connection);
     }
 }
