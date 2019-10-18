@@ -2,8 +2,8 @@
 <template
         format="5"
         revision="1"
-        name="Compose Activity"
-        description="Creates a new activity with Compose"
+        name="Empty Compose Activity"
+        description="Create a new empty activity with Jetpack Compose"
         constraints="androidx|kotlin"
         minApi="21"
         minBuildApi="21">
