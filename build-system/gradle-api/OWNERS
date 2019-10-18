@@ -1,3 +1,5 @@
+# Don't inherit the permissive owners file from build-system
+set noparent
 cmw@google.com
 jedo@google.com
 xav@google.com

@@ -1,0 +1,5 @@
+# Allow anyone to make changes
+*
+# Except to the owners file itself.
+per-file OWNERS = set noparent
+per-file OWNERS = file: gradle-api/OWNERS
