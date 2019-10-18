@@ -52,7 +52,8 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
     //  0.2 - First Release (AS 3.5)
     //  0.3 - Take into account of dex splitter version.
     //  1.0 - D8 Checksum support (Note: No database table scheme was changed, just changing checksum computation)
-    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "1.0";
+    //  1.1 - A bug was introduced where db entries where growing at 2^N rate and we are dropping everyone's DB.
+    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "1.1";
     private static final String CURRENT_CHECKSUM_TOOL_VERSION = Version.getVersionString();
     private static final String CURRENT_DATABASE_VERSION_STRING =
             CURRENT_SCHEMA_VERSION_NUMBER + "|" + CURRENT_CHECKSUM_TOOL_VERSION;
