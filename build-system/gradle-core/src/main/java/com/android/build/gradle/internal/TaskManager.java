@@ -274,9 +274,9 @@ public abstract class TaskManager {
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION = "0.1.0-dev02";
-    public static final String COMPOSE_KOTLIN_COMPILER =
-            "kotlin-compiler-embeddable:1.3.60-dev-withExperimentalGoogleExtensions-20191016";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev02";
+    public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
+            "1.3.60-dev-withExperimentalGoogleExtensions-20191016";
 
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
@@ -501,18 +501,17 @@ public abstract class TaskManager {
         String kotlinCompilerExtensionVersionInDsl =
                 globalScope.getExtension().getComposeOptions().getKotlinCompilerExtensionVersion();
 
+        String kotlinCompilerDependency =
+                "org.jetbrains.kotlin:kotlin-compiler-embeddable:"
+                        + (kotlinCompilerVersionInDsl != null
+                        ? kotlinCompilerVersionInDsl
+                        : COMPOSE_KOTLIN_COMPILER_VERSION);
         project.getConfigurations()
                 .maybeCreate(KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME)
                 .withDependencies(
-                        configuration -> {
-                            configuration.add(
-                                    project.getDependencies()
-                                            .create(
-                                                    "org.jetbrains.kotlin:"
-                                                            + (kotlinCompilerVersionInDsl != null
-                                                                    ? kotlinCompilerVersionInDsl
-                                                                    : COMPOSE_KOTLIN_COMPILER)));
-                        });
+                        configuration -> configuration.add(
+                                project.getDependencies().create(kotlinCompilerDependency)))
+                .getResolutionStrategy().force(kotlinCompilerDependency);
 
         // record in our metrics that compose is enabled.
         ProcessProfileWriter.getProject(project.getPath()).setComposeEnabled(true);
@@ -526,7 +525,7 @@ public abstract class TaskManager {
                         "androidx.compose:compose-compiler:"
                                 + (kotlinCompilerExtensionVersionInDsl != null
                                         ? kotlinCompilerExtensionVersionInDsl
-                                        : COMPOSE_KOTLIN_COMPILER_EXTENSION));
+                                        : COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION));
         kotlinExtension.setTransitive(false);
         kotlinExtension.setDescription(
                 "Configuration for Compose related kotlin compiler extension");
