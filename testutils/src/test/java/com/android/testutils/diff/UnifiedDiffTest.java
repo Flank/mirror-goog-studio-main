@@ -19,7 +19,6 @@ import static org.junit.Assert.*;
 
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -139,9 +138,7 @@ public class UnifiedDiffTest {
             assertEquals(
                     expected.toPath().relativize(e).toString(),
                     value.toPath().relativize(r).toString());
-            assertEquals(
-                    new String(Files.readAllBytes(e), Charsets.UTF_8),
-                    new String(Files.readAllBytes(r), Charsets.UTF_8));
+            assertEquals(new String(Files.readAllBytes(e)), new String(Files.readAllBytes(r)));
         }
         if (it.length > ex.length) {
             fail("Unexpected file " + it[ex.length] + " was found.");
