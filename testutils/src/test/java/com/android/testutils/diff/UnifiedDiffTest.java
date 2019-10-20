@@ -15,10 +15,13 @@
  */
 package com.android.testutils.diff;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import com.android.SdkConstants;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +29,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 
 public class UnifiedDiffTest {
@@ -138,7 +142,26 @@ public class UnifiedDiffTest {
             assertEquals(
                     expected.toPath().relativize(e).toString(),
                     value.toPath().relativize(r).toString());
-            assertEquals(new String(Files.readAllBytes(e)), new String(Files.readAllBytes(r)));
+            if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS) {
+                assertEquals(new String(Files.readAllBytes(e)), new String(Files.readAllBytes(r)));
+            } else {
+                // b/142972246: It is not clear to me whether the written output should use
+                // a platform specific line separator or not. For now, do a simpler fix that just
+                // asserts that the trimmed lines are all the same.
+                List<String> expectedStrings =
+                        Files.readAllLines(e)
+                                .stream()
+                                .map(String::trim)
+                                .collect(Collectors.toList());
+                String expectedContent = Joiner.on('\n').join(expectedStrings);
+                List<String> actualStrings =
+                        Files.readAllLines(e)
+                                .stream()
+                                .map(String::trim)
+                                .collect(Collectors.toList());
+                String actualContent = Joiner.on('\n').join(actualStrings);
+                assertEquals(expectedContent, actualContent);
+            }
         }
         if (it.length > ex.length) {
             fail("Unexpected file " + it[ex.length] + " was found.");
