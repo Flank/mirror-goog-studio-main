@@ -48,6 +48,7 @@ iml_module(
         "//tools/base/perf-logger:studio.perf-logger[module, test]",
         "//tools/base/deploy/installer/tests:fake_device_proto[test]",
         "//tools/idea/.idea/libraries:studio-grpc[test]",
+        "//tools/base/zipflinger:zipflinger[module, test]",
     ],
 )
 
@@ -137,6 +138,7 @@ coverage_java_test(
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/tracer:tools.tracer",
+        "//tools/base/zipflinger",
         "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
     ],
