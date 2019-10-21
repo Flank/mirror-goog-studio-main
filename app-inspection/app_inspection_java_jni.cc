@@ -17,6 +17,7 @@
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
 #include "app_inspection_service.h"
+#include "unistd.h"
 #include "utils/log.h"
 
 using app_inspection::ServiceResponse;
@@ -34,6 +35,7 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
+        event->set_pid(getpid());
         auto *inspection_event = event->mutable_app_inspection_event();
         inspection_event->set_command_id(command_id);
         auto *service_response = inspection_event->mutable_response();
@@ -56,6 +58,7 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
+        event->set_pid(getpid());
         auto *inspection_event = event->mutable_app_inspection_event();
         inspection_event->set_command_id(command_id);
         auto *raw_response = inspection_event->mutable_raw_event();
@@ -78,6 +81,7 @@ void EnqueueAppInspectionCrashEvent(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
+        event->set_pid(getpid());
         auto *inspection_event = event->mutable_app_inspection_event();
         inspection_event->set_command_id(command_id);
         auto *service_response = inspection_event->mutable_crash_event();
