@@ -20,15 +20,15 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.common.recipeManifest
-import com.android.tools.idea.wizard.template.impl.common.recipeSimpleLayout
 import com.android.tools.idea.wizard.template.impl.emptyActivity.src.emptyActivityJava
+import com.android.tools.idea.wizard.template.impl.common.generateManifest
+import com.android.tools.idea.wizard.template.impl.common.generateSimpleLayout
 import com.android.tools.idea.wizard.template.impl.emptyActivity.src.emptyActivityKt
 import com.android.tools.idea.wizard.template.impl.emptyActivity.src.emptyActivityWithCppSupportJava
 import com.android.tools.idea.wizard.template.impl.emptyActivity.src.emptyActivityWithCppSupportKt
 import com.android.tools.idea.wizard.template.impl.emptyActivity.src.nativeLibCpp
 
-fun RecipeExecutor.emptyActivityRecipe(
+fun RecipeExecutor.generateEmptyActivity(
   moduleData: ModuleTemplateData,
   activityClass: String,
   generateLayout: Boolean,
@@ -42,7 +42,7 @@ fun RecipeExecutor.emptyActivityRecipe(
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
 
-  recipeManifest(
+  generateManifest(
     moduleData , activityClass, "", packageName, isLauncher, false,
     requireTheme = false, generateActivityTitle = false, useMaterial2 = useMaterial2
   )
@@ -50,7 +50,7 @@ fun RecipeExecutor.emptyActivityRecipe(
   addAllKotlinDependencies(moduleData)
 
   if (generateLayout || includeCppSupport) {
-    recipeSimpleLayout(moduleData, activityClass, layoutName, true, packageName)
+    generateSimpleLayout(moduleData, activityClass, layoutName, true, packageName)
   }
 
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")

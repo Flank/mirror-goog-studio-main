@@ -33,13 +33,12 @@ import com.android.tools.idea.wizard.template.impl.basicActivity.src.secondFragm
 import com.android.tools.idea.wizard.template.impl.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.common.navigation.addSafeArgsPlugin
 import com.android.tools.idea.wizard.template.impl.common.navigation.addSafeArgsPluginToClasspath
-import com.android.tools.idea.wizard.template.impl.common.navigation.navigationKotlinBuildGradle
-import com.android.tools.idea.wizard.template.impl.common.recipeAppBar
-import com.android.tools.idea.wizard.template.impl.common.recipeManifest
-import com.android.tools.idea.wizard.template.impl.common.recipeSimpleMenu
+import com.android.tools.idea.wizard.template.impl.common.generateAppBar
+import com.android.tools.idea.wizard.template.impl.common.generateManifest
+import com.android.tools.idea.wizard.template.impl.common.generateSimpleMenu
 import com.android.tools.idea.wizard.template.layoutToFragment
 
-fun RecipeExecutor.basicActivityRecipe(
+fun RecipeExecutor.generateBasicActivity(
   moduleData: ModuleTemplateData,
   activityClass: String,
   layoutName: String,
@@ -63,11 +62,11 @@ fun RecipeExecutor.basicActivityRecipe(
   }
   addSafeArgsPluginToClasspath(useAndroidX)
   addAllKotlinDependencies(moduleData)
-  recipeManifest(
+  generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
     requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
   )
-  recipeAppBar(
+  generateAppBar(
     moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX, useMaterial2 = useMaterial2
   )
 
@@ -76,7 +75,7 @@ fun RecipeExecutor.basicActivityRecipe(
   applyPlugin("androidx.navigation.safeargs")
   save(fragmentSimpleXml(projectData.androidXSupport, moduleData.isNew), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
   if (moduleData.isNew) {
-    recipeSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
+    generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
   }
 
   val ktOrJavaExt = projectData.language.extension

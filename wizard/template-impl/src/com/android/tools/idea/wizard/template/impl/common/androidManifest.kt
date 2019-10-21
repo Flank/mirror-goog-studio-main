@@ -33,18 +33,17 @@ fun androidManifestXml(
   requireTheme: Boolean = false,
   hasApplicationTheme: Boolean = false
 ): String {
-
   val appName = if (isNewProject) "app_name" else "title_" + activityToLayout(activityClass)
 
   val generateActivityTitleBlock = renderIf(generateActivityTitle) { "android:label = \"@string/$appName\"" }
 
-    val hasActionBarBlock = when {
-      hasNoActionBar -> """android:theme = "@style/${hasNoActionBarTheme.name}""""
-      requireTheme && !hasApplicationTheme -> """android:theme = "@style/${mainTheme.name}""""
-      else -> ""
-    }
+  val hasActionBarBlock = when {
+    hasNoActionBar -> """android:theme = "@style/${hasNoActionBarTheme.name}""""
+    requireTheme && !hasApplicationTheme -> """android:theme = "@style/${mainTheme.name}""""
+    else -> ""
+  }
 
-    return """
+  return """
     <manifest xmlns:android ="http://schemas.android.com/apk/res/android">
     <application>
     <activity android:name ="${packageName}.${activityClass}"

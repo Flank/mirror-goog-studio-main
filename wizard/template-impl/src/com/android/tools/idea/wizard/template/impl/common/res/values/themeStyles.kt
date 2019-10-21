@@ -15,9 +15,8 @@
  */
 package com.android.tools.idea.wizard.template.impl.common.res.values
 
-fun themeStyles(themeName: String, useMaterial2: Boolean): String {
-  val parent = if (useMaterial2) "Theme.MaterialComponents.Light" else "Theme.AppCompat.Light"
-  return """<resources>
-  <style name="$themeName" parent="$parent"/>
-</resources>"""
-}
+fun themeStyles(themeName: String, useMaterial2: Boolean) = """
+<resources>
+  <style name="$themeName" parent="${if (useMaterial2) "Theme.MaterialComponents.Light" else "Theme.AppCompat.Light"}"/>
+</resources>
+"""

@@ -98,7 +98,7 @@ val emptyActivityTemplate = template {
   }
 
   recipe = { data ->
-    emptyActivityRecipe(
+    generateEmptyActivity(
       data as ModuleTemplateData, activityClass.value, generateLayout.value, layoutName.value, isLauncher.value, packageName.value
     )
   }
