@@ -69,6 +69,10 @@ data class IdeAndroidGradlePluginProjectFlags(
     val transitiveRClasses: Boolean
         get() = getBooleanFlag(BooleanFlag.TRANSITIVE_R_CLASS)
 
+    /** Whether the Jetpack Compose feature is enabled for this project. */
+    val usesCompose: Boolean
+        get() = getBooleanFlag(BooleanFlag.JETPACK_COMPOSE)
+
     private fun getBooleanFlag(flag: BooleanFlag): Boolean {
         return booleanFlagMap[flag] ?: flag.legacyDefault
     }
