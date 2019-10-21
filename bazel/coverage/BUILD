@@ -238,6 +238,26 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "projectsystem",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/gradle",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
+coverage_report(
+    name = "dsl",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/gradle/dsl",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
