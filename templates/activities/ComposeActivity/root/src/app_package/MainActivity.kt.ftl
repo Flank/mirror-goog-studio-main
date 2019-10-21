@@ -5,13 +5,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.ui.core.Text
 import androidx.ui.core.setContent
+import androidx.ui.material.MaterialTheme
 import androidx.ui.tooling.preview.Preview
 
 class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Greeting("Android")
+            MaterialTheme {
+                Greeting("Android")
+            }
         }
     }
 }
@@ -24,5 +27,7 @@ fun Greeting(name: String) {
 @Preview
 @Composable
 fun DefaultPreview() {
-    Greeting("Android")
+    MaterialTheme {
+        Greeting("Android")
+    }
 }
