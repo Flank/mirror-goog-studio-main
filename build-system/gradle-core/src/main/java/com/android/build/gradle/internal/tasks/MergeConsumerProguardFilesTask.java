@@ -20,7 +20,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.GENER
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -29,6 +28,7 @@ import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
@@ -36,6 +36,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Configuration action for a merge-Proguard-files task. */
+@CacheableTask
 public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
     private boolean isDynamicFeature;

@@ -69,6 +69,8 @@ class LibraryCacheabilityTest {
                     ":lib:generateReleaseResValues",
                     ":lib:generateReleaseRFile",
                     ":lib:javaPreCompileRelease",
+                    ":lib:mergeReleaseConsumerProguardFiles",
+                    ":lib:mergeReleaseGeneratedProguardFiles",
                     ":lib:mergeReleaseJavaResource",
                     ":lib:mergeReleaseJniLibFolders",
                     ":lib:mergeReleaseNativeLibs",
@@ -89,8 +91,6 @@ class LibraryCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
-                    ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
-                    ":lib:mergeReleaseGeneratedProguardFiles" /* Bug 127247527 */,
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
                 ),
                 SKIPPED to setOf(
