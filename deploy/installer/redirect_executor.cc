@@ -18,17 +18,6 @@
 
 namespace deploy {
 
-bool RedirectExecutor::RunWithInput(const std::string& executable_path,
-                                    const std::vector<std::string>& parameters,
-                                    std::string* output, std::string* error,
-                                    const std::string& input_file) const {
-  std::vector<std::string> args;
-  args.insert(args.end(), args_.begin(), args_.end());
-  args.push_back(executable_path);
-  args.insert(args.end(), parameters.begin(), parameters.end());
-  return executor_.RunWithInput(executable_, args, output, error, input_file);
-}
-
 bool RedirectExecutor::Run(const std::string& executable_path,
                            const std::vector<std::string>& parameters,
                            std::string* output, std::string* error) const {

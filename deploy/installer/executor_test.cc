@@ -54,46 +54,6 @@ TEST_F(ShellCommandRunnerTest, TestSimpleRun) {
   ASSERT_EQ("Hello\n", output);
 }
 
-TEST_F(ShellCommandRunnerTest, TestPiped) {
-  // Set the size to more than 64K so pipes block
-  int size = 64 * 1024 + 1;
-
-  char* buffer0 = alloc("01234", 5, size);
-  char* buffer1 = alloc("abcde", 5, size);
-  char* buffer2 = alloc("ABCDE", 5, size);
-
-  string tmp = std::getenv("TEST_TMPDIR");
-  tmp += "/stdin.XXXXXX";
-  char* name = strdup(tmp.c_str());
-  int temp_fd = mkstemp(name);
-  write(temp_fd, buffer0, size);
-  write(temp_fd, buffer1, size);
-  write(temp_fd, buffer2, size);
-  close(temp_fd);
-  tmp = name;
-  free(name);
-
-  string output, error;
-  vector<string> args;
-  std::stringstream string_size;
-  string_size << size;
-  args.push_back(string_size.str());
-  ExecutorImpl executor;
-  executor.RunWithInput(helper_path, args, &output, &error, tmp);
-  ASSERT_EQ(size * 3 + 3, output.size());
-  EXPECT_EQ(0, strncmp(output.data(), buffer0, size));
-  EXPECT_EQ(0, strncmp(output.data() + size + 1, buffer1, size));
-  EXPECT_EQ(0, strncmp(output.data() + size + size + 2, buffer2, size));
-
-  ASSERT_EQ(size * 2 + 2, error.size());
-  EXPECT_EQ(0, strncmp(error.data(), buffer0, size));
-  EXPECT_EQ(0, strncmp(error.data() + size + 1, buffer1, size));
-
-  free(buffer0);
-  free(buffer1);
-  free(buffer2);
-}
-
 TEST_F(ShellCommandRunnerTest, TestForkExitIfExecFails) {
   // This test times out if the child process is not killed before Run()
   // returns. This is accomplished by leveraging the fact that a read on a pipe

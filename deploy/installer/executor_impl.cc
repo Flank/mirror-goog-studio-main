@@ -134,16 +134,6 @@ bool ExecutorImpl::PrivateRun(const std::string& executable_path,
   return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
 }
 
-bool ExecutorImpl::RunWithInput(const std::string& executable_path,
-                                const std::vector<std::string>& args,
-                                std::string* output, std::string* error,
-                                const std::string& input_file) const {
-  int stdin_source = open(input_file.c_str(), O_RDONLY, 0);
-  bool result = PrivateRun(executable_path, args, output, error, stdin_source);
-  close(stdin_source);
-  return result;
-}
-
 bool ExecutorImpl::Run(const std::string& executable_path,
                        const std::vector<std::string>& args,
                        std::string* output, std::string* error) const {

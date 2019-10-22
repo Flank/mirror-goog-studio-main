@@ -213,37 +213,6 @@ bool CmdCommand::CreateInstallSession(
   return true;
 }
 
-int CmdCommand::PreInstall(const std::vector<std::string>& apks,
-                           std::string* output) const noexcept {
-  Phase p("Preinstall");
-  output->clear();
-
-  std::string session;
-  std::vector<std::string> options;
-  if (!CreateInstallSession(output, options)) {
-    return -1;
-  } else {
-    session = *output;
-  }
-
-  output->clear();
-  for (auto& apk : apks) {
-    std::string output;
-    std::string error;
-    std::vector<std::string> parameters;
-    parameters.push_back("package");
-    parameters.push_back("install-write");
-    std::stringstream size;
-    size << "-S" << get_file_size(apk);
-    parameters.push_back(size.str());
-    parameters.push_back(session);
-    parameters.push_back(apk.substr(apk.rfind("/") + 1));
-    workspace_.GetExecutor().RunWithInput(CMD_EXEC, parameters, &output, &error,
-                                          apk);
-  }
-  return atoi(session.c_str());
-}  // namespace deploy
-
 bool CmdCommand::CommitInstall(const std::string& session,
                                std::string* output) const noexcept {
   Phase p("Commit Install");

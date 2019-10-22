@@ -47,12 +47,6 @@ class CmdCommand {
                             const std::vector<std::string> options) const
       noexcept;
 
-  // Prepares an installation and returns an id that can be used
-  // to finish the installation by calling |CommitInstall| or it
-  // can be aborted by calling |AbortInstall|
-  int PreInstall(const std::vector<std::string>& apks,
-                 std::string* output) const noexcept;
-
   bool CommitInstall(const std::string& session, std::string* output) const
       noexcept;
 

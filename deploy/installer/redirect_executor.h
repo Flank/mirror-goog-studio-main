@@ -39,10 +39,6 @@ class RedirectExecutor : public Executor {
            const std::vector<std::string>& args, std::string* output,
            std::string* error) const;
 
-  bool RunWithInput(const std::string& executable_path,
-                    const std::vector<std::string>& args, std::string* output,
-                    std::string* error, const std::string& input_file) const;
-
   bool ForkAndExec(const std::string& executable_path,
                    const std::vector<std::string>& parameters,
                    int* child_stdin_fd, int* child_stdout_fd,
