@@ -859,8 +859,15 @@ public abstract class MergeResources extends ResourceAwareTask {
                         // This set is used only when data binding / view binding is enabled
                         return resourceDirsOutsideRootProjectDir;
                     }
+
+                    // In this task, data binding doesn't process layout files that come from
+                    // dependencies (see the code at processSingleFile()). Therefore, we'll look at
+                    // resources in the current sub-project only (via task.getLocalResources()).
+                    // These resources are usually located inside the root project directory, but
+                    // some of them may come from custom resource sets that are outside of the root
+                    // project directory, so we need to collect the latter set.
                     File rootProjectDir = task.getProject().getRootDir();
-                    for (FileCollection resDirs : task.getResources()) {
+                    for (FileCollection resDirs : task.getLocalResources()) {
                         for (File resDir : resDirs.getFiles()) {
                             if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
                                 resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
@@ -878,10 +885,10 @@ public abstract class MergeResources extends ResourceAwareTask {
             // path sensitivity (e.g. big merge in app). Otherwise just using the relative path
             // sensitivity is enough (e.g. merges in libraries).
             task.getInputs()
-                    .files(task.getResources())
+                    .files(task.getLocalResources())
                     .withPathSensitivity(
                             processResources ? PathSensitivity.ABSOLUTE : PathSensitivity.RELATIVE)
-                    .withPropertyName("rawResources");
+                    .withPropertyName("rawLocalResources");
 
         }
     }

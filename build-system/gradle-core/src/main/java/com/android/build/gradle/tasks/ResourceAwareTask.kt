@@ -52,6 +52,7 @@ abstract class ResourceAwareTask : IncrementalTask() {
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getLibraries() = resourcesComputer.libraries?.artifactFiles
 
-    @Internal
-    fun getResources() = resourcesComputer.resources.values
+    /** Returns resources in the current sub-project. */
+    @Internal // Should be annotated programmatically in sub-classes
+    fun getLocalResources() = resourcesComputer.resources.values
 }
