@@ -191,7 +191,10 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
   SwapResult result;
 
-  jobject reloader = GetComposeHotReload();
+  // We only try to see if we need HotReload for Apply Code Changes. Otherwise
+  // activity restart would re-compose anyways.
+  jobject reloader =
+      swap_request.restart_activity() ? nullptr : GetComposeHotReload();
   if (reloader != nullptr) {
     SaveStateAndDispose(reloader);
   }

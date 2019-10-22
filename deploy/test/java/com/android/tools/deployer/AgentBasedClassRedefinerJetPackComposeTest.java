@@ -22,7 +22,24 @@ import org.junit.Test;
 public class AgentBasedClassRedefinerJetPackComposeTest extends AgentBasedClassRedefinerTestBase {
 
     @Test
-    public void testReCompose() throws Exception {
+    public void testReComposeApplyChanges() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        android.triggerMethod(ACTIVITY_CLASS, "getComposeTargetStatus");
+        Assert.assertTrue(android.waitForInput("ComposeTarget NOT SWAPPED", RETURN_VALUE_TIMEOUT));
+
+        Deploy.SwapRequest request =
+                createRequest("app.ComposeTarget", "app/ComposeTarget.dex", true);
+        redefiner.redefine(request, true);
+
+        // Swaps but no recompose calls.
+        android.triggerMethod(ACTIVITY_CLASS, "getComposeTargetStatus");
+        Assert.assertTrue(android.waitForInput("ComposeTarget JUST SWAPPED", RETURN_VALUE_TIMEOUT));
+    }
+
+    @Test
+    public void testReComposeApplyCodeChanges() throws Exception {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
@@ -34,6 +51,8 @@ public class AgentBasedClassRedefinerJetPackComposeTest extends AgentBasedClassR
         redefiner.redefine(request, true);
 
         android.triggerMethod(ACTIVITY_CLASS, "getComposeTargetStatus");
+
+        // Swaps with recompose calls.
         Assert.assertTrue(
                 android.waitForInput(
                         "ComposeTarget saveStateAndDispose() loadStateAndCompose() JUST SWAPPED",
