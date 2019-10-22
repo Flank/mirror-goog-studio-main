@@ -37,6 +37,7 @@ public class LayoutInspectorService {
     private final Properties properties = new Properties();
     private final ComponentTree componentTree = new ComponentTree();
     private final Object lock = new Object();
+    private DetectRootViewChange detectRootChange = null;
     private AutoCloseable captureClosable = null;
 
     private static LayoutInspectorService sInstance;
@@ -56,6 +57,14 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onStartLayoutInspectorCommand() {
         View root = getRootView();
+        if (root != null) {
+            startLayoutInspector(root);
+        }
+        detectRootChange = new DetectRootViewChange(this);
+        detectRootChange.start(root);
+    }
+
+    public void startLayoutInspector(View root) {
 
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         final Callable<OutputStream> callable =
@@ -86,7 +95,7 @@ public class LayoutInspectorService {
                 };
 
         // Stop a running capture:
-        onStopLayoutInspectorCommand();
+        stopCapturing();
 
         root.post(
                 new Runnable() {
@@ -94,16 +103,18 @@ public class LayoutInspectorService {
                     public void run() {
                         try {
                             synchronized (lock) {
-                                captureClosable =
-                                        SkiaQWorkaround.startRenderingCommandsCapture(
-                                                root, executor, callable);
+                                // Sometimes the window has become detached before we get in here, so check one
+                                // more time before trying to start capture.
+                                if (root.isAttachedToWindow()) {
+                                    captureClosable =
+                                            SkiaQWorkaround.startRenderingCommandsCapture(
+                                                    root, executor, callable);
+                                }
                                 // TODO: The above should be
                                 // ViewDebug.startRenderingCommandsCapture(...) once it's fixed.
 
                             }
                             root.invalidate();
-                            root.getViewTreeObserver()
-                                    .addOnWindowAttachListener(new DetectDetach(sInstance, root));
                         } catch (Throwable e) {
                             sendErrorMessage(e);
                         }
@@ -114,6 +125,12 @@ public class LayoutInspectorService {
     /** Stops the capture from sending more messages. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStopLayoutInspectorCommand() {
+        stopCapturing();
+        detectRootChange.stop();
+        detectRootChange = null;
+    }
+
+    private void stopCapturing() {
         synchronized (lock) {
             if (captureClosable != null) {
                 try {
@@ -131,8 +148,14 @@ public class LayoutInspectorService {
             Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
             Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
             List<View> views = (List<View>) getViewsMethod.invoke(null);
-            return views.isEmpty() ? null : views.get(0);
+            for (View view : views) {
+                if (view.getVisibility() == View.VISIBLE && view.isAttachedToWindow()) {
+                    return view;
+                }
+            }
+            return null;
         } catch (Throwable e) {
+            e.printStackTrace();
             sendErrorMessage(e);
             return null;
         }
@@ -154,7 +177,8 @@ public class LayoutInspectorService {
     private void captureAndSendComponentTree(byte[] image) {
         long request = 0;
         try {
-            View root = findRootView();
+            // TODO: Store the root view such that we don't have to find it here:
+            View root = getRootView();
             request = allocateSendRequest();
             long event = initComponentTree(request);
             if (root != null) {
@@ -184,7 +208,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onGetPropertiesInspectorCommand(long viewId, long event) {
         try {
-            View root = findRootView();
+            View root = getRootView();
             View view = findViewById(root, viewId);
             if (view == null) {
                 return;
@@ -206,7 +230,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onEditPropertyInspectorCommand(long viewId, int attributeId, int value) {
         try {
-            View root = findRootView();
+            View root = getRootView();
             View view = findViewById(root, viewId);
             if (view == null) {
                 return;
@@ -214,17 +238,6 @@ public class LayoutInspectorService {
             applyPropertyEdit(view, attributeId, value);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
-        }
-    }
-
-    private View findRootView() {
-        try {
-            Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
-            Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
-            List<View> views = (List<View>) getViewsMethod.invoke(null);
-            return views.isEmpty() ? null : views.get(0);
-        } catch (Throwable ex) {
-            return null;
         }
     }
 
