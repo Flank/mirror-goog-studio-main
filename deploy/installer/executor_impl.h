@@ -46,12 +46,12 @@ class ExecutorImpl : public Executor {
                    int* child_stderr_fd, int* fork_pid) const;
 
  private:
-  void Pump(int stdin_source, int child_stdin, int child_stdout,
-            std::string* output, int child_stderr, std::string* error) const;
+  void Pump(int child_stdout, std::string* output, int child_stderr,
+            std::string* error) const;
 
   bool PrivateRun(const std::string& executable_path,
                   const std::vector<std::string>& args, std::string* output,
-                  std::string* error, int input_file_fd) const;
+                  std::string* error) const;
 };
 
 }  // namespace deploy

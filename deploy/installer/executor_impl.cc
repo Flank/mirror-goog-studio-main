@@ -30,62 +30,30 @@
 using std::string;
 namespace deploy {
 
-const size_t kStdinFileBufferSize = 64 * 1024;
 const size_t kReadBufferSize = 64 * 1024;
 
-// Pump stdin_source > child_stdin
-//      child_stdout > output
+// Pump child_stdout > output
 //      child_strerr > error
-void ExecutorImpl::Pump(int stdin_source, int child_stdin, int child_stdout,
-                        std::string* output, int child_stderr,
+void ExecutorImpl::Pump(int child_stdout, std::string* output, int child_stderr,
                         std::string* error) const {
-  pollfd fds[3];
-  fds[0].fd = child_stdin;
-  fds[0].events = POLLOUT;
-  fds[1].fd = child_stdout;
+  pollfd fds[2];
+  fds[0].fd = child_stdout;
+  fds[0].events = POLLIN;
+  fds[1].fd = child_stderr;
   fds[1].events = POLLIN;
-  fds[2].fd = child_stderr;
-  fds[2].events = POLLIN;
 
-  std::string* strings[3];
-  strings[0] = nullptr;
-  strings[1] = output;
-  strings[2] = error;
+  std::string* strings[2];
+  strings[0] = output;
+  strings[1] = error;
 
-  fcntl(child_stdin, F_SETFL, O_NONBLOCK);
   fcntl(child_stdout, F_SETFL, O_NONBLOCK);
   fcntl(child_stderr, F_SETFL, O_NONBLOCK);
 
-  char* stdin_buffer = (char*)malloc(kStdinFileBufferSize);
-  size_t buffer_offset = 0;
-  size_t buffer_size = 0;
-  buffer_size = read(stdin_source, stdin_buffer, kStdinFileBufferSize);
-
   char* buffer = (char*)malloc(kReadBufferSize);
   int hups = 0;
-  if (buffer_size > 0) {
-    hups = 1;
-  }
 
-  while (hups < 3 && poll(fds, 3, -1) > 0) {
-    if (fds[0].revents & POLLOUT) {
-      size_t wr = write(child_stdin, stdin_buffer + buffer_offset, buffer_size);
-      if (wr > 0) {
-        buffer_size -= wr;
-        buffer_offset += wr;
-        if (!buffer_size) {
-          // Reload the buffer from the input file file
-          buffer_offset = 0;
-          buffer_size = read(stdin_source, stdin_buffer, kStdinFileBufferSize);
-          if (!buffer_size) {
-            hups++;
-            fds[0].fd = -1;
-          }
-        }
-      }
-    }
-
-    for (int i = 0; i < 3; i++) {
+  while (hups < 2 && poll(fds, 2, -1) > 0) {
+    for (int i = 0; i < 2; i++) {
       if (fds[i].fd >= 0) {
         if (fds[i].revents & POLLIN) {
           size_t bytes = read(fds[i].fd, buffer, kReadBufferSize);
@@ -102,13 +70,11 @@ void ExecutorImpl::Pump(int stdin_source, int child_stdin, int child_stdout,
     }
   }
   free(buffer);
-  free(stdin_buffer);
 }
 
 bool ExecutorImpl::PrivateRun(const std::string& executable_path,
                               const std::vector<std::string>& args,
-                              std::string* output, std::string* error,
-                              int input_file_fd) const {
+                              std::string* output, std::string* error) const {
   int child_stdout, child_stdin, child_stderr, child_pid, status;
   bool ok = ForkAndExec(executable_path, args, &child_stdin, &child_stdout,
                         &child_stderr, &child_pid);
@@ -117,7 +83,7 @@ bool ExecutorImpl::PrivateRun(const std::string& executable_path,
     return false;
   }
 
-  Pump(input_file_fd, child_stdin, child_stdout, output, child_stderr, error);
+  Pump(child_stdout, output, child_stderr, error);
 
   close(child_stdin);
   close(child_stdout);
@@ -137,17 +103,7 @@ bool ExecutorImpl::PrivateRun(const std::string& executable_path,
 bool ExecutorImpl::Run(const std::string& executable_path,
                        const std::vector<std::string>& args,
                        std::string* output, std::string* error) const {
-  // Create an empty input fd for the pump
-  int p[2];
-  int err = pipe(p);
-  if (err != 0) {
-    *error = "Unable to pipe() while executing " + executable_path;
-    return false;
-  }
-  close(p[1]);
-  close(p[0]);
-  bool result = PrivateRun(executable_path, args, output, error, p[0]);
-  return result;
+  return PrivateRun(executable_path, args, output, error);
 }
 
 bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
