@@ -32,10 +32,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ApkParser {
-    private static final int EOCD_SIGNATURE = 0x06054b50;
+    public static final int EOCD_SIGNATURE = 0x06054b50;
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
     private static final long USHRT_MAX = 65535;
-    private static final int EOCD_SIZE = 22;
+    public static final int EOCD_SIZE = 22;
 
     public static class ApkArchiveMap {
         public static final long UNINITIALIZED = -1;

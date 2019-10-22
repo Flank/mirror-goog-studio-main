@@ -60,5 +60,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.zipflinger" scope="TEST" />
   </component>
 </module>

@@ -105,8 +105,9 @@ public class ZipUtils {
 
             // Keep track of boundaries of the entry in the zip archive since those are used while
             // deltaPushing. Since we don't have the lfh extra size, we can only approximate the
-            // end boundary.
-            long approx_end = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength;
+            // end boundary. -1 is because approx_end must point to the last byte and not after
+            // the last byte.
+            long approx_end = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength - 1;
             approx_end += compression == 0 ? decompressedSize : compressedSize;
             ZipEntry entry = new ZipEntry(crc, name, start, approx_end, localFileHeader);
             entries.put(entry.name, entry);
