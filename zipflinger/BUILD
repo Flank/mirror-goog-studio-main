@@ -8,7 +8,6 @@ maven_java_library(
     pom = ":pom",
     visibility = [
         "//tools/base/build-system:__subpackages__",
-        "//tools/base/deploy/deployer:__subpackages__",
         "//tools/base/lint:__subpackages__",
         "//tools/base/signflinger:__subpackages__",
     ],
