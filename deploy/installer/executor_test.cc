@@ -70,7 +70,41 @@ TEST_F(ShellCommandRunnerTest, TestForkExitIfExecFails) {
   read(fds[0], &buf, 1);
 }
 
-}  // namespace deploy
+TEST_F(ShellCommandRunnerTest, TestForkAndExec) {
+  ExecutorImpl executor;
+
+  int input, output, pid;
+  executor.ForkAndExec("sh", {"-c", "cat"}, &input, &output, nullptr, &pid);
+
+  ASSERT_EQ(5, write(input, "Hello", 5));
+  ASSERT_EQ(0, close(input));
+  ASSERT_EQ(pid, waitpid(pid, nullptr, 0));
+
+  char buffer[6] = {'\0'};
+  ASSERT_EQ(5, read(output, buffer, 5));
+  ASSERT_EQ("Hello", std::string(buffer));
+}
+
+TEST_F(ShellCommandRunnerTest, TestForkAndExecWithFds) {
+  ExecutorImpl executor;
+
+  int fds[2];
+  pipe(fds);
+
+  ASSERT_EQ(5, write(fds[1], "Hello", 5));
+  fcntl(fds[1], F_SETFD, FD_CLOEXEC);
+
+  int output, error, pid;
+  executor.ForkAndExecWithStdinFd("sh", {"-c", "cat"}, fds[0], &output, &error, &pid);
+
+  ASSERT_EQ(2, write(fds[1], "!!", 2));
+  ASSERT_EQ(0, close(fds[1]));
+  ASSERT_EQ(pid, waitpid(pid, nullptr, 0));
+
+  char buffer[8] = {'\0'};
+  ASSERT_EQ(7, read(output, buffer, 7));
+  ASSERT_EQ("Hello!!", std::string(buffer));
+}
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
@@ -79,3 +113,4 @@ int main(int argc, char** argv) {
   }
   return RUN_ALL_TESTS();
 }
+}  // namespace deploy

@@ -39,4 +39,16 @@ bool RedirectExecutor::ForkAndExec(const std::string& executable_path,
   return executor_.ForkAndExec(executable_, args, child_stdin_fd,
                                child_stdout_fd, child_stderr_fd, fork_pid);
 }
+
+bool RedirectExecutor::ForkAndExecWithStdinFd(
+    const std::string& executable_path,
+    const std::vector<std::string>& parameters, int stdin_fd,
+    int* child_stdout_fd, int* child_stderr_fd, int* fork_pid) const {
+  std::vector<std::string> args;
+  args.insert(args.end(), args_.begin(), args_.end());
+  args.push_back(executable_path);
+  args.insert(args.end(), parameters.begin(), parameters.end());
+  return executor_.ForkAndExecWithStdinFd(
+      executable_, args, stdin_fd, child_stdout_fd, child_stderr_fd, fork_pid);
+}
 }  // namespace deploy

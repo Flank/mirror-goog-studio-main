@@ -44,6 +44,11 @@ class RedirectExecutor : public Executor {
                    int* child_stdin_fd, int* child_stdout_fd,
                    int* child_stderr_fd, int* fork_pid) const;
 
+  bool ForkAndExecWithStdinFd(const std::string& executable_path,
+                              const std::vector<std::string>& parameters,
+                              int stdin_fd, int* child_stdout_fd,
+                              int* child_stderr_fd, int* fork_pid) const;
+
  private:
   Executor& executor_;
   std::string executable_;

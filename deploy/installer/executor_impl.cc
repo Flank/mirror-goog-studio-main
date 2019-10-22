@@ -112,8 +112,28 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
                                const std::vector<std::string>& args,
                                int* child_stdin_fd, int* child_stdout_fd,
                                int* child_stderr_fd, int* fork_pid) const {
-  int stdin_pipe[2], stdout_pipe[2], stderr_pipe[2];
-  if (pipe(stdin_pipe) || pipe(stdout_pipe) || pipe(stderr_pipe)) {
+  int stdin_pipe[2];
+  if (pipe(stdin_pipe)) {
+    return false;
+  }
+
+  // Ensure the child process automatically closes the write end of the pipe.
+  fcntl(stdin_pipe[WRITE], F_SETFD, FD_CLOEXEC);
+
+  // Return the write end of the pipe for the parent process.
+  *child_stdin_fd = stdin_pipe[WRITE];
+
+  return ForkAndExecWithStdinFd(executable_path, args, stdin_pipe[READ],
+                                child_stdout_fd, child_stderr_fd, fork_pid);
+}
+
+bool ExecutorImpl::ForkAndExecWithStdinFd(const std::string& executable_path,
+                                          const std::vector<std::string>& args,
+                                          int stdin_fd, int* child_stdout_fd,
+                                          int* child_stderr_fd,
+                                          int* fork_pid) const {
+  int stdout_pipe[2], stderr_pipe[2];
+  if (pipe(stdout_pipe) || pipe(stderr_pipe)) {
     return false;
   }
 
@@ -124,14 +144,14 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
   *fork_pid = fork();
   if (*fork_pid == 0) {
     // Child
-    close(stdin_pipe[WRITE]);
     close(stdout_pipe[READ]);
     close(stderr_pipe[READ]);
 
     // Map the output of the parent-write pipe to stdin and the input of the
     // parent-read pipe to stdout. This lets us communicate between the
     // swap_server and the installer.
-    dup2(stdin_pipe[READ], STDIN_FILENO);
+
+    dup2(stdin_fd, STDIN_FILENO);
     if (child_stdout_fd == nullptr) {
       close(STDOUT_FILENO);
       open("/dev/null", O_WRONLY);
@@ -146,7 +166,7 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
       dup2(stderr_pipe[WRITE], STDERR_FILENO);
     }
 
-    close(stdin_pipe[READ]);
+    close(stdin_fd);
     close(stdout_pipe[WRITE]);
     close(stderr_pipe[WRITE]);
 
@@ -164,11 +184,10 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
   }
 
   // Parent
-  close(stdin_pipe[READ]);
+  close(stdin_fd);
   close(stdout_pipe[WRITE]);
   close(stderr_pipe[WRITE]);
 
-  *child_stdin_fd = stdin_pipe[WRITE];
   if (child_stdout_fd != nullptr) {
     *child_stdout_fd = stdout_pipe[READ];
   }
