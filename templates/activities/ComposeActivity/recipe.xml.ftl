@@ -14,6 +14,8 @@
 
     <merge from="root://activities/ComposeActivity/build-compose.gradle.ftl"
                  to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+    <merge from="root://activities/common/navigation/navigation-kotlin-build.gradle.ftl"
+                 to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
 </recipe>
