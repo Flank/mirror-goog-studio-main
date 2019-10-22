@@ -13,21 +13,21 @@ class ${activityClass} : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                Greeting("Android")
+                ${greeting}("Android")
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String) {
+fun ${greeting}(name: String) {
     Text(text = "Hello $name!")
 }
 
 @Preview
 @Composable
-fun DefaultPreview() {
+fun ${defaultPreview}() {
     MaterialTheme {
-        Greeting("Android")
+        ${greeting}("Android")
     }
 }
