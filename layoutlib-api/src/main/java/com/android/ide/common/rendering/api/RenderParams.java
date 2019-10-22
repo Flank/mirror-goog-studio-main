@@ -38,8 +38,7 @@ public abstract class RenderParams {
     private float mFontScale = 1f;
     private final LayoutLog mLog;
 
-    private boolean mCustomBackgroundEnabled;
-    private int mCustomBackgroundColor;
+    private boolean mSetTransparentBackground;
     private long mTimeout;
 
     private AssetRepository mAssetRepository;
@@ -83,7 +82,7 @@ public abstract class RenderParams {
         mMinSdkVersion = minSdkVersion;
         mTargetSdkVersion = targetSdkVersion;
         mLog = log;
-        mCustomBackgroundEnabled = false;
+        mSetTransparentBackground = false;
         mTimeout = DEFAULT_TIMEOUT;
     }
 
@@ -99,8 +98,7 @@ public abstract class RenderParams {
         mMinSdkVersion = params.mMinSdkVersion;
         mTargetSdkVersion = params.mTargetSdkVersion;
         mLog = params.mLog;
-        mCustomBackgroundEnabled = params.mCustomBackgroundEnabled;
-        mCustomBackgroundColor = params.mCustomBackgroundColor;
+        mSetTransparentBackground = params.mSetTransparentBackground;
         mTimeout = params.mTimeout;
         mImageFactory = params.mImageFactory;
         mAppIcon = params.mAppIcon;
@@ -116,9 +114,8 @@ public abstract class RenderParams {
         mFontScale = params.mFontScale;
     }
 
-    public void setOverrideBgColor(int color) {
-        mCustomBackgroundEnabled = true;
-        mCustomBackgroundColor = color;
+    public void setTransparentBackground() {
+        mSetTransparentBackground = true;
     }
 
     public void setTimeout(long timeout) {
@@ -258,12 +255,28 @@ public abstract class RenderParams {
         return mLog;
     }
 
-    public boolean isBgColorOverridden() {
-        return mCustomBackgroundEnabled;
+    /**
+     * @return if the background color should be transparent (in contrast to match the window theme
+     *     background color).
+     */
+    public boolean isTransparentBackground() {
+        return mSetTransparentBackground;
     }
 
+    /** @deprecated use {@link #isTransparentBackground()} instead */
+    @Deprecated
+    public boolean isBgColorOverridden() {
+        return mSetTransparentBackground;
+    }
+
+    /**
+     * @deprecated background color may only be overridden with transparent background. If for some
+     *     reason in the future one wants to override background with a specific color one can do it
+     *     in studio and drawing the image with transparent background on top.
+     */
+    @Deprecated
     public int getOverrideBgColor() {
-        return mCustomBackgroundColor;
+        return 0;
     }
 
     public long getTimeout() {
