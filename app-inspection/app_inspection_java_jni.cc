@@ -148,7 +148,7 @@ Java_com_android_tools_agent_app_inspection_AppInspectionService_createAppInspec
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterEntryHook(
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
-    jstring originMethod, jclass hookClass, jstring hookMethod) {
+    jstring originMethod) {
 #ifdef APP_INSPECTION_EXPERIMENT
 #else
   profiler::Log::E("REGISTER ENTRY HOOK NOT IMPLEMENTED");
@@ -158,7 +158,7 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegis
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterExitHook(
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
-    jstring originMethod, jclass hookClass, jstring hookMethod) {
+    jstring originMethod) {
 #ifdef APP_INSPECTION_EXPERIMENT
 #else
   profiler::Log::E("REGISTER EXIT HOOK NOT IMPLEMENTED");
