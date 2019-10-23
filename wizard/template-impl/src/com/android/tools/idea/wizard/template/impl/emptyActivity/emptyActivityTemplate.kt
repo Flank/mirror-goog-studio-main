@@ -36,7 +36,7 @@ import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
 
-val emptyActivityTemplate = template {
+val emptyActivityTemplate get() = template {
   revision = 1
   name = "Empty Activity"
   minApi = 14
@@ -74,7 +74,7 @@ val emptyActivityTemplate = template {
   val isLauncher: BooleanParameter = booleanParameter {
     name = "Launcher Activity"
     visible = { !isNewModule }
-    default = true
+    default = false
     help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
   }
   val packageName: StringParameter = stringParameter {

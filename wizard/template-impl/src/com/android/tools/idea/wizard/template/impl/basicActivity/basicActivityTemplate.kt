@@ -35,7 +35,7 @@ import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import java.io.File
 
-val basicActivityTemplate = template {
+val basicActivityTemplate get() = template {
   revision = 1
   name = "Basic Activity"
   minApi = 14
@@ -82,7 +82,7 @@ val basicActivityTemplate = template {
   val isLauncher: BooleanParameter = booleanParameter {
     name = "Launcher Activity"
     visible = { !isNewModule }
-    default = true
+    default = false
     help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
   }
 
@@ -119,8 +119,8 @@ val basicActivityTemplate = template {
   }
 
   widgets(
-    TextFieldWidget(layoutName),
     TextFieldWidget(activityClass),
+    TextFieldWidget(layoutName),
     TextFieldWidget(activityTitle),
     TextFieldWidget(menuName),
     CheckBoxWidget(isLauncher),
