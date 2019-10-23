@@ -32,6 +32,8 @@ namespace deploy {
 
 const size_t kReadBufferSize = 64 * 1024;
 
+const enum PipeEnd { READ = 0, WRITE = 1 };
+
 // Pump child_stdout > output
 //      child_strerr > error
 void ExecutorImpl::Pump(int child_stdout, std::string* output, int child_stderr,
@@ -122,31 +124,31 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
   *fork_pid = fork();
   if (*fork_pid == 0) {
     // Child
-    close(stdin_pipe[1]);
-    close(stdout_pipe[0]);
-    close(stderr_pipe[0]);
+    close(stdin_pipe[WRITE]);
+    close(stdout_pipe[READ]);
+    close(stderr_pipe[READ]);
 
     // Map the output of the parent-write pipe to stdin and the input of the
     // parent-read pipe to stdout. This lets us communicate between the
     // swap_server and the installer.
-    dup2(stdin_pipe[0], STDIN_FILENO);
+    dup2(stdin_pipe[READ], STDIN_FILENO);
     if (child_stdout_fd == nullptr) {
       close(STDOUT_FILENO);
       open("/dev/null", O_WRONLY);
     } else {
-      dup2(stdout_pipe[1], STDOUT_FILENO);
+      dup2(stdout_pipe[WRITE], STDOUT_FILENO);
     }
 
     if (child_stderr_fd == nullptr) {
       close(STDERR_FILENO);
       open("/dev/null", O_WRONLY);
     } else {
-      dup2(stderr_pipe[1], STDERR_FILENO);
+      dup2(stderr_pipe[WRITE], STDERR_FILENO);
     }
 
-    close(stdin_pipe[0]);
-    close(stdout_pipe[1]);
-    close(stderr_pipe[1]);
+    close(stdin_pipe[READ]);
+    close(stdout_pipe[WRITE]);
+    close(stderr_pipe[WRITE]);
 
     const char** argv = new const char*[args.size() + 2];
     argv[0] = executable_path.c_str();
@@ -162,9 +164,9 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
   }
 
   // Parent
-  close(stdin_pipe[0]);
-  close(stdout_pipe[1]);
-  close(stderr_pipe[1]);
+  close(stdin_pipe[READ]);
+  close(stdout_pipe[WRITE]);
+  close(stderr_pipe[WRITE]);
 
   *child_stdin_fd = stdin_pipe[1];
   if (child_stdout_fd != nullptr) {
