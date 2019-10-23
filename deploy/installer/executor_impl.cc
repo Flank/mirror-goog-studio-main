@@ -32,7 +32,7 @@ namespace deploy {
 
 const size_t kReadBufferSize = 64 * 1024;
 
-const enum PipeEnd { READ = 0, WRITE = 1 };
+enum PipeEnd { READ = 0, WRITE = 1 };
 
 // Pump child_stdout > output
 //      child_strerr > error
@@ -168,12 +168,12 @@ bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
   close(stdout_pipe[WRITE]);
   close(stderr_pipe[WRITE]);
 
-  *child_stdin_fd = stdin_pipe[1];
+  *child_stdin_fd = stdin_pipe[WRITE];
   if (child_stdout_fd != nullptr) {
-    *child_stdout_fd = stdout_pipe[0];
+    *child_stdout_fd = stdout_pipe[READ];
   }
   if (child_stderr_fd != nullptr) {
-    *child_stderr_fd = stderr_pipe[0];
+    *child_stderr_fd = stderr_pipe[READ];
   }
 
   return true;
