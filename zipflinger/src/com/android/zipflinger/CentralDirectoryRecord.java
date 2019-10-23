@@ -24,8 +24,6 @@ class CentralDirectoryRecord {
     public static final int SIZE = 46;
     public static final int DATA_DESCRIPTOR_FLAG = 0x0008;
     public static final int DATA_DESCRIPTOR_SIGNATURE = 0x08074b50;
-    public static final int EXTRA_ID_FIELD_SIZE = 2;
-    public static final int EXTRA_SIZE_FIELD_SIZE = 2;
 
     // Unix = 3 (0x0300) + Version 3.0 (0x001E)
     public static final short DEFAULT_VERSION_MADE_BY = 0x031E;

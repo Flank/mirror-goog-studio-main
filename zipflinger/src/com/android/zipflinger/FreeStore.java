@@ -213,11 +213,7 @@ class FreeStore {
         if ((pointer % alignment) == 0) {
             return 0;
         } else {
-            long fixedPadding =
-                    CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE
-                            + CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE;
-            long newAlignment = (pointer + fixedPadding) % alignment;
-            return fixedPadding + alignment - newAlignment;
+            return alignment - (pointer % alignment);
         }
     }
 }

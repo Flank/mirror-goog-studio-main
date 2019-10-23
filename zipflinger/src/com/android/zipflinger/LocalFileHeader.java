@@ -34,9 +34,6 @@ class LocalFileHeader {
     public static final short COMPRESSION_NONE = 0;
     public static final short COMPRESSION_DEFLATE = 8;
 
-    // This is the extra marker value as what apkzlib uses.
-    private static final short ALIGN_SIGNATURE = (short) 0xd935;
-
     static final long VIRTUAL_ENTRY_MAX_SIZE = LOCAL_FILE_HEADER_SIZE + Ints.USHRT_MAX;
     static final long OFFSET_TO_NAME = 26;
 
@@ -91,7 +88,7 @@ class LocalFileHeader {
     }
 
     public void write(@NonNull ZipWriter writer) throws IOException {
-        ByteBuffer extraField = buildExtraField();
+        ByteBuffer extraField = ByteBuffer.allocate(extraPadding);
         int bytesNeeded = LOCAL_FILE_HEADER_SIZE + nameBytes.length + extraField.capacity();
 
         ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
@@ -111,26 +108,6 @@ class LocalFileHeader {
 
         buffer.rewind();
         writer.write(buffer);
-    }
-
-    private ByteBuffer buildExtraField() {
-        int bytesNeeded = extraPadding;
-        if (bytesNeeded == 0) {
-            return ByteBuffer.wrap(new byte[0]);
-        }
-
-        ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putShort(ALIGN_SIGNATURE);
-
-        int paddingSize =
-                bytesNeeded
-                        - CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE
-                        - CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE;
-        buffer.putShort(Ints.intToUshort(paddingSize));
-        buffer.put(new byte[paddingSize]);
-        buffer.rewind();
-
-        return buffer;
     }
 
     public static long sizeFor(@NonNull Source source) {
