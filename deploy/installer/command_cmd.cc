@@ -183,12 +183,6 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
   return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
 }
 
-int get_file_size(std::string path) {
-  struct stat statbuf;
-  stat(path.c_str(), &statbuf);
-  return statbuf.st_size;
-}
-
 bool CmdCommand::CreateInstallSession(
     std::string* output, const std::vector<std::string> options) const
     noexcept {
