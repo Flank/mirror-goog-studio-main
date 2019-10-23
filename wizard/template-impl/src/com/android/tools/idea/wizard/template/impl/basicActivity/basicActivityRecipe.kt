@@ -134,7 +134,7 @@ fun RecipeExecutor.generateBasicActivity(
     addDependency("android.arch.navigation:navigation-fragment:+")
     addDependency("android.arch.navigation:navigation-ui:+")
   }
-  addSafeArgsPlugin(generateKotlin, projectData.rootDir)
+  addSafeArgsPlugin(generateKotlin, moduleData.rootDir)
 
   open(simpleActivityPath)
 
