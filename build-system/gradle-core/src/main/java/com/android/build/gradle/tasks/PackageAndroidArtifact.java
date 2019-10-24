@@ -27,6 +27,7 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -80,6 +81,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -111,6 +113,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileType;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Classpath;
@@ -475,6 +478,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull protected final IncrementalPackagerBuilder.ApkFormat apkFormat;
         @Nullable protected final SigningConfigProviderParams signingConfig;
         @NonNull protected final Set<String> abiFilters;
+        @NonNull protected final Collection<File> jniFolders;
         @NonNull protected final File manifestDirectory;
         @Nullable protected final Collection<String> aaptOptionsNoCompress;
         @Nullable protected final String createdBy;
@@ -534,6 +538,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             apkFormat = task.apkFormat;
             signingConfig = task.signingConfig.convertToParams();
             abiFilters = task.abiFilters;
+            jniFolders = task.getJniFolders().getFiles();
             manifestDirectory = task.getManifests().get().getAsFile();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             createdBy = task.getCreatedBy().get();
@@ -623,12 +628,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 ImmutableMap.builder();
         javaResourcesForApk.putAll(changedJavaResources);
 
-        String filter = null;
-        FilterData abiFilter = params.apkInfo.getFilter(OutputFile.FilterType.ABI);
-        if (abiFilter != null) {
-            filter = abiFilter.getIdentifier();
-        }
-
         // find the manifest file for this split.
         BuildOutput manifestForSplit = manifestOutputs.element(params.apkInfo);
 
@@ -664,8 +663,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         params.aaptOptionsNoCompress, manifest))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withDebuggableBuild(params.isDebuggableBuild)
-                        .withAcceptedAbis(
-                                filter == null ? params.abiFilters : ImmutableSet.of(filter))
+                        .withAcceptedAbis(getAcceptedAbis(params))
                         .withJniDebuggableBuild(params.isJniDebuggableBuild)
                         .withApkCreatorType(params.apkCreatorType)
                         .withChangedDexFiles(changedDex)
@@ -698,6 +696,60 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 throw new IOExceptionWrapper(e);
                             }
                         });
+    }
+
+    /**
+     * Calculates the accepted ABIs based on the given {@link SplitterParams}. Also checks that the
+     * accepted ABIs are all available, and logs a warning if not.
+     *
+     * @param params the {@link SplitterParams}
+     */
+    private static Set<String> getAcceptedAbis(@NonNull SplitterParams params) {
+        FilterData splitAbiFilter = params.apkInfo.getFilter(OutputFile.FilterType.ABI);
+        final Set<String> acceptedAbis =
+                splitAbiFilter != null
+                        ? ImmutableSet.of(splitAbiFilter.getIdentifier())
+                        : ImmutableSet.copyOf(params.abiFilters);
+        // After calculating acceptedAbis, we calculate availableAbis, which is the set of ABIs
+        // present in params.jniFolders.
+        Set<String> availableAbis = new HashSet<>();
+        for (File jniFolder : params.jniFolders) {
+            File[] libDirs = jniFolder.listFiles();
+            if (libDirs == null) {
+                continue;
+            }
+            for (File libDir : libDirs) {
+                File[] abiDirs = libDir.listFiles();
+                if (!"lib".equals(libDir.getName()) || abiDirs == null) {
+                    continue;
+                }
+                for (File abiDir : abiDirs) {
+                    File[] soFiles = abiDir.listFiles();
+                    if (soFiles != null && soFiles.length > 0) {
+                        availableAbis.add(abiDir.getName());
+                    }
+                }
+            }
+        }
+        // if acceptedAbis and availableAbis both aren't empty, we make sure that the ABIs in
+        // acceptedAbis are also in availableAbis, or else we log a warning.
+        if (!acceptedAbis.isEmpty() && !availableAbis.isEmpty()) {
+            Set<String> missingAbis = Sets.difference(acceptedAbis, availableAbis);
+            if (!missingAbis.isEmpty()) {
+                LoggerWrapper logger =
+                        new LoggerWrapper(Logging.getLogger(PackageAndroidArtifact.class));
+                logger.warning(
+                        String.format(
+                                "There are no .so files available to package in the APK for %s.",
+                                Joiner.on(", ")
+                                        .join(
+                                                missingAbis
+                                                        .stream()
+                                                        .sorted()
+                                                        .collect(Collectors.toList()))));
+            }
+        }
+        return acceptedAbis;
     }
 
 

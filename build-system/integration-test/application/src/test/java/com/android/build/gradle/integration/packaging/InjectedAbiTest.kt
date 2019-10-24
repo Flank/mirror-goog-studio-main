@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.packaging
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.options.BooleanOption
@@ -29,6 +30,7 @@ import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -52,21 +54,8 @@ class InjectedAbiTest {
     }
 
     @Test
-    fun testAbiChangeWithSplits() {
-        TestFileUtils.appendToFile(
-            project.buildFile, """
-                android {
-                    splits {
-                        abi {
-                            enable true
-                            reset()
-                            include 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
-                            universalApk false
-                        }
-                    }
-                }
-            """.trimIndent()
-        )
+    fun testInjectedAbiChange_WithSplits() {
+        enableSplits(listOf("x86", "armeabi-v7a", "x86_64", "arm64-v8a"))
         // Run the first build with a target ABI, check that only the APK for that ABI is generated
         // and that APK only contains native libraries for target ABI
         var result = project.executor()
@@ -139,7 +128,7 @@ class InjectedAbiTest {
     }
 
     @Test
-    fun testAbiChangeWithoutSplits() {
+    fun testInjectedAbiChange_WithoutSplits() {
         // Run the first build with a target ABI, check that no split APKs are generated
         // and main APK only contains native libraries for target ABI
         var result = project.executor()
@@ -177,6 +166,122 @@ class InjectedAbiTest {
     }
 
     @Test
+    fun testMissingSoFiles_WithoutSplits() {
+        // Build first with all .so files present. Inject x86_64 first, followed by x86
+        val result1 = project.executor()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64,x86")
+            .run("assembleDebug")
+
+        // we expect x86_64 .so files in the APK (and no x86 .so files) since there are x86_64 .so
+        // files available, and we also don't expect a warning about missing .so files in this case.
+        val apk1 = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertCorrectApk(apk1)
+        assertThat(apk1).contains("lib/x86_64/libapp.so")
+        assertThat(apk1).doesNotContain("lib/x86/libapp.so")
+        result1.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).doesNotContain("There are no .so files available")
+        }
+
+        // remove x86_64 .so files
+        removeSoFiles(listOf("x86_64"))
+        val jniLibsDir = FileUtils.join(project.testDir, "src", "main", "jniLibs")
+        assertThat(jniLibsDir).exists()
+        assertThat(jniLibsDir.listFiles()?.toList()?.map { it.name }).doesNotContain("x86_64")
+
+        // Build again with the same command.
+        val result2 = project.executor()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64,x86")
+            .run("assembleDebug")
+
+        // we expect no .so files in the APK since there are no x86_64 .so files available, and we
+        // also expect a warning about the missing .so files.
+        val apk2 = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertCorrectApk(apk2)
+        assertThat(apk2).doesNotContain("lib/x86_64/libapp.so")
+        assertThat(apk2).doesNotContain("lib/x86/libapp.so")
+        result2.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).contains(
+                "There are no .so files available to package in the APK for x86_64."
+            )
+        }
+
+        // Add explicit abiFilters and remove x86 .so files
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            "android.defaultConfig.ndk.abiFilters 'x86_64', 'x86', 'arm64-v8a'"
+        )
+        removeSoFiles(listOf("x86"))
+        assertThat(jniLibsDir).exists()
+        assertThat(jniLibsDir.listFiles()?.toList()?.map { it.name }).doesNotContain("x86")
+
+        // Build again with the same command.
+        val result3 = project.executor()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64,x86")
+            .run("assembleDebug")
+
+        // we expect only arm64-v8a .so files in the APK, and we also expect a warning about the
+        // missing x86 and x86_64 .so files.
+        val apk3 = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertCorrectApk(apk3)
+        assertThat(apk3).contains("lib/arm64-v8a/libapp.so")
+        assertThat(apk3).doesNotContain("lib/x86_64/libapp.so")
+        assertThat(apk3).doesNotContain("lib/x86/libapp.so")
+        result3.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).contains(
+                "There are no .so files available to package in the APK for x86, x86_64."
+            )
+        }
+    }
+
+    @Test
+    fun testMissingSoFiles_WithSplits() {
+        enableSplits(listOf("x86", "armeabi-v7a", "x86_64", "arm64-v8a"))
+
+        // Build first with all .so files present. Inject x86_64 first, followed by x86
+        val result1 = project.executor()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64,x86")
+            .run("assembleDebug")
+
+        // we expect the x86_64 APK to be created with the x86_64 .so files, and we also don't
+        // expect a warning about missing .so files in this case.
+        val apk1 = project.getApk("x86_64", GradleTestProject.ApkType.DEBUG)
+        assertCorrectApk(apk1)
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist()
+        assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist()
+        assertThat(apk1).contains("lib/x86_64/libapp.so")
+        assertThat(apk1).doesNotContain("lib/x86/libapp.so")
+        result1.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).doesNotContain("There are no .so files available")
+        }
+
+        // remove x86_64 .so files
+        removeSoFiles(listOf("x86_64"))
+        val jniLibsDir = FileUtils.join(project.testDir, "src", "main", "jniLibs")
+        assertThat(jniLibsDir).exists()
+        assertThat(jniLibsDir.listFiles()?.toList()?.map { it.name }).doesNotContain("x86_64")
+
+        // Build again with the same command.
+        val result2 = project.executor()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64,x86")
+            .run("assembleDebug")
+
+        // we expect the x86_64 APK to be created, but we don't expect any .so files in the APK
+        // since there were no "source" x86_64 .so files. We expect a warning about the missing .so
+        // files.
+        val apk2 = project.getApk("x86_64", GradleTestProject.ApkType.DEBUG)
+        assertCorrectApk(apk2)
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist()
+        assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist()
+        assertThat(apk2).doesNotContain("lib/x86_64/libapp.so")
+        assertThat(apk2).doesNotContain("lib/x86/libapp.so")
+        result2.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).contains(
+                "There are no .so files available to package in the APK for x86_64."
+            )
+        }
+    }
+
+    @Test
     fun testPackagingTargetAbiCanBeDisabled() {
         // Run the build with target ABI but set BUILD_ONLY_TARGET_ABI to false,
         // check that APK contains native libraries for multiple ABIs
@@ -208,5 +313,30 @@ class InjectedAbiTest {
         val assetFolder = FileUtils.join(projectFolder, "src", "main", "jniLibs", abi)
         FileUtils.mkdirs(assetFolder)
         Files.asCharSink(File(assetFolder, filename), Charsets.UTF_8).write(content)
+    }
+
+    private fun removeSoFiles(abis: List<String>) {
+        abis.forEach {
+            FileUtils.deleteRecursivelyIfExists(
+                FileUtils.join(project.testDir, "src", "main", "jniLibs", it)
+            )
+        }
+    }
+
+    private fun enableSplits(abis: List<String>) {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android {
+                    splits {
+                        abi {
+                            enable true
+                            reset()
+                            include ${abis.joinToString { "'$it'" }}
+                            universalApk false
+                        }
+                    }
+                }""".trimIndent()
+        )
     }
 }
