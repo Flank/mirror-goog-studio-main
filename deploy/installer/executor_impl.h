@@ -65,10 +65,6 @@ class ExecutorImpl : public Executor {
  private:
   void Pump(int child_stdout, std::string* output, int child_stderr,
             std::string* error) const;
-
-  bool PrivateRun(const std::string& executable_path,
-                  const std::vector<std::string>& args, std::string* output,
-                  std::string* error) const;
 };
 
 }  // namespace deploy

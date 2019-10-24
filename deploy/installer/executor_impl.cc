@@ -74,9 +74,9 @@ void ExecutorImpl::Pump(int child_stdout, std::string* output, int child_stderr,
   free(buffer);
 }
 
-bool ExecutorImpl::PrivateRun(const std::string& executable_path,
-                              const std::vector<std::string>& args,
-                              std::string* output, std::string* error) const {
+bool ExecutorImpl::Run(const std::string& executable_path,
+                       const std::vector<std::string>& args,
+                       std::string* output, std::string* error) const {
   int child_stdout, child_stdin, child_stderr, child_pid, status;
   bool ok = ForkAndExec(executable_path, args, &child_stdin, &child_stdout,
                         &child_stderr, &child_pid);
@@ -100,12 +100,6 @@ bool ExecutorImpl::PrivateRun(const std::string& executable_path,
     return false;
   }
   return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
-}
-
-bool ExecutorImpl::Run(const std::string& executable_path,
-                       const std::vector<std::string>& args,
-                       std::string* output, std::string* error) const {
-  return PrivateRun(executable_path, args, output, error);
 }
 
 bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
