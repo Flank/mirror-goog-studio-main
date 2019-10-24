@@ -26,6 +26,10 @@ platform(
             name: "dockerAddCapabilities"
             value: "SYS_NICE"
           }
+          properties: {
+            name: "OSFamily"
+            value: "Linux"
+          }
          """,
 )
 
@@ -39,6 +43,10 @@ platform(
         properties: {
           name: "container-image"
           value: "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows1803-as@sha256:e75260564cf7f4236867382a9d6340f25afb0afe8d65a9f65e0a748a92d1d5a3"
+        }
+        properties: {
+          name: "OSFamily"
+          value: "Windows"
         }
        """,
 )
