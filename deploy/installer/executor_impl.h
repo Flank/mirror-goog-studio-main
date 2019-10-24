@@ -32,10 +32,6 @@ class ExecutorImpl : public Executor {
            const std::vector<std::string>& args, std::string* output,
            std::string* error) const;
 
-  bool RunWithInput(const std::string& executable_path,
-                    const std::vector<std::string>& args, std::string* output,
-                    std::string* error, const std::string& input_file) const;
-
   // Returns open file descriptors for the child's stdin, stdout, and stderr.
   // It is the caller's responsibility to call waitpid(2) on fork_pid in order
   // to avoid zombie process.
@@ -50,12 +46,12 @@ class ExecutorImpl : public Executor {
                    int* child_stderr_fd, int* fork_pid) const;
 
  private:
-  void Pump(int stdin_source, int child_stdin, int child_stdout,
-            std::string* output, int child_stderr, std::string* error) const;
+  void Pump(int child_stdout, std::string* output, int child_stderr,
+            std::string* error) const;
 
   bool PrivateRun(const std::string& executable_path,
                   const std::vector<std::string>& args, std::string* output,
-                  std::string* error, int input_file_fd) const;
+                  std::string* error) const;
 };
 
 }  // namespace deploy

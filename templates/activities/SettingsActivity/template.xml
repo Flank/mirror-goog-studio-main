@@ -24,7 +24,9 @@
             id="activityTitle"
             name="Title"
             type="string"
+            visibility="false"
             constraints="nonempty"
+            suggest="${activityClass}"
             default="Settings"
             help="The title of the activity."/>
 

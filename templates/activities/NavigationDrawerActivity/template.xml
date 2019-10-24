@@ -32,6 +32,7 @@
         id="activityTitle"
         name="Title"
         type="string"
+        visible="false"
         constraints="nonempty"
         default="MainActivity"
         suggest="${activityClass}"

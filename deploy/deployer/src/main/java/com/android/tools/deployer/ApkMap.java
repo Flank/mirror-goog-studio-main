@@ -28,9 +28,6 @@ public class ApkMap {
             this.end = end;
         }
 
-        // TODO: Make start inclusive and end exclusive to be consistent with
-        //       the rest of Java. Alternatively, move to (offset, length) pair
-        //       representation.
         // Both offset are inclusive. The area start=1, end=2 has a size of two
         // where both offset 1 and offset 2 are included in the area.
         final long start;
@@ -47,7 +44,7 @@ public class ApkMap {
     // Calls to markClean() fraction the map into areas:     [    CCC           ]
     //                                                       [                C ]
     //                                                       [C                 ]
-    // At the end of the process, getDirtyAreas returns.      [                  ]
+    // At the end of the process, getDirtyAreas returns      [                  ]
     // a set of areas describing what is not clean     :     [ DDD   DDDDDDDDD D]
     private List<Area> cleanAreas = new ArrayList<>();
     private final long size;

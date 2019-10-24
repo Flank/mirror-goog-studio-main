@@ -157,3 +157,25 @@ java_test(
         "//tools/base/third_party:junit_junit",
     ],
 )
+
+java_binary(
+    name = "verify",
+    srcs = glob([
+        "tools/src/com/android/zipflinger/Verify.java",
+    ]),
+    main_class = "com.android.zipflinger.Verify",
+    deps = [
+        ":zipflinger",
+    ],
+)
+
+java_binary(
+    name = "map",
+    srcs = glob([
+        "tools/src/com/android/zipflinger/Mapper.java",
+    ]),
+    main_class = "com.android.zipflinger.Mapper",
+    deps = [
+        ":zipflinger",
+    ],
+)

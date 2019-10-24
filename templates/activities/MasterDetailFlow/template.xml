@@ -30,6 +30,7 @@
         id="activityTitle"
         name="Title"
         type="string"
+        visibility="false"
         constraints="nonempty"
         suggest="${objectKindPlural}"
         default="Items" />

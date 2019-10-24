@@ -1,2 +1,3 @@
 test.inspector.TestInspectorFactory
 test.inspector.TestExceptionInspectorFactory
+test.inspector.TestEnvironmentInspectorFactory

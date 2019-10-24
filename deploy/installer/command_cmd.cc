@@ -183,12 +183,6 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
   return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
 }
 
-int get_file_size(std::string path) {
-  struct stat statbuf;
-  stat(path.c_str(), &statbuf);
-  return statbuf.st_size;
-}
-
 bool CmdCommand::CreateInstallSession(
     std::string* output, const std::vector<std::string> options) const
     noexcept {
@@ -212,37 +206,6 @@ bool CmdCommand::CreateInstallSession(
   *output = output->substr(match.size(), output->size() - match.size() - 2);
   return true;
 }
-
-int CmdCommand::PreInstall(const std::vector<std::string>& apks,
-                           std::string* output) const noexcept {
-  Phase p("Preinstall");
-  output->clear();
-
-  std::string session;
-  std::vector<std::string> options;
-  if (!CreateInstallSession(output, options)) {
-    return -1;
-  } else {
-    session = *output;
-  }
-
-  output->clear();
-  for (auto& apk : apks) {
-    std::string output;
-    std::string error;
-    std::vector<std::string> parameters;
-    parameters.push_back("package");
-    parameters.push_back("install-write");
-    std::stringstream size;
-    size << "-S" << get_file_size(apk);
-    parameters.push_back(size.str());
-    parameters.push_back(session);
-    parameters.push_back(apk.substr(apk.rfind("/") + 1));
-    workspace_.GetExecutor().RunWithInput(CMD_EXEC, parameters, &output, &error,
-                                          apk);
-  }
-  return atoi(session.c_str());
-}  // namespace deploy
 
 bool CmdCommand::CommitInstall(const std::string& session,
                                std::string* output) const noexcept {

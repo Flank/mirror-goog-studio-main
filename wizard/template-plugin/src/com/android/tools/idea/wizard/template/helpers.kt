@@ -15,5 +15,8 @@
  */
 package com.android.tools.idea.wizard.template
 
-infix fun String.renderIf(predicate: () -> Boolean) = if (predicate()) this else ""
-
+inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
+  if (predicate)
+    if(trimVertical) str().trim() else str()
+  else
+    ""

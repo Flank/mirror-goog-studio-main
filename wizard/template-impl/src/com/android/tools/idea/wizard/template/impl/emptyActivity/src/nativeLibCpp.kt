@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.idea.wizard.template.impl.emptyActivity.src
 
-package com.android.build.gradle.internal.tasks
+fun nativeLibCpp(packageName: String, activityClass: String): String {
+  val pn = packageName.replaceFirst("_", "_1").replaceFirst('.', '_')
+  return (
+    """
+#include <jni.h>
+#include <string>
 
-/** See [ValidateTaskPropertiesTest] */
-class ValidateTaskPropertiesUpdater {
-    companion object {
-        /** Run this to update the expected file.*/
-        @JvmStatic
-        fun main(args: Array<String>) {
-            ValidateTaskPropertiesTest.taskPropertiesGoldenFile.update()
-        }
-    }
+extern "C" JNIEXPORT jstring JNICALL
+Java_${pn}_${activityClass}_stringFromJNI(
+        JNIEnv* env,
+        jobject /* this */) {
+    std::string hello = "Hello from C++";
+    return env->NewStringUTF(hello.c_str());
+}
+    """
+         )
 }

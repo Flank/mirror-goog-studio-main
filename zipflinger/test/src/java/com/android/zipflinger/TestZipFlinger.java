@@ -660,4 +660,34 @@ public class TestZipFlinger extends TestBase {
         boolean deleted = archive.delete();
         Assert.assertTrue("Archive was not deleted", deleted);
     }
+
+    @Test
+    // Regression test for b/143215332 where "int cannot be converted to ushort" in the case
+    // gap filling space is a multiple of (65_535 + [30-33]) bytes
+    public void testGapTooBigForOneVirtualEntry() throws Exception {
+        Path dst = getTestPath("testGapTooBigForOneVirtualEntry.zip");
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            // This entry will result in a 30 (header) + 1 (filename length) + max ushort (payload)
+            // size
+            archive.add(new BytesSource(new byte[65_535], "1", 0));
+            archive.add(new BytesSource(new byte[0], "file2", 0));
+        }
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            archive.delete("1");
+        }
+        verifyArchive(dst.toFile());
+    }
+
+    @Test
+    public void testDeleteSmallestPossibleEntry() throws Exception {
+        Path dst = getTestPath("testDeleteSmallestPossibleEntry.zip");
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            archive.add(new BytesSource(new byte[0], "", 0));
+            archive.add(new BytesSource(new byte[0], "file2", 0));
+        }
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            archive.delete("");
+        }
+        verifyArchive(dst.toFile());
+    }
 }

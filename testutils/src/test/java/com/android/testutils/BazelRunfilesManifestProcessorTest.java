@@ -16,7 +16,6 @@
 
 package com.android.testutils;
 
-import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -30,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -115,7 +115,17 @@ public class BazelRunfilesManifestProcessorTest {
 
         for (SymbolicLinkDefinition x : links) {
             Path destinationPath = destFileSystem.getPath().resolve(x.getPath());
-            assertTrue(Files.exists(destinationPath));
+            // Note: Destination files are always symbolic links. We use the
+            // NOFOLLOW_LINKS option because resolving symbolic links on a docker
+            // instance of Windows (remote configuration) fails with an exception in
+            // destinationPath.getFileSystem().provider().checkAccess(destinationPath)
+            // (which is called by Files.exists()). For the record the exception type is
+            // "java.nio.file.FileSystemException" and the error message is
+            //   "The create operation failed because the name contained at least one mount point
+            //   which resolves to a volume to which the specified device object is not attached."
+            // A workaround would be to create relative symbolic links, but the NOFOLLOW_LINKS
+            // option works and ensures we are testing the right behavior.
+            assertTrue(Files.exists(destinationPath, LinkOption.NOFOLLOW_LINKS));
             assertTrue(Files.isSymbolicLink(destinationPath));
         }
     }
@@ -172,7 +182,6 @@ public class BazelRunfilesManifestProcessorTest {
 
     @Test
     public void creatingFileSystemShouldWork() throws Exception {
-        assumeNotWindows();
         List<SymbolicLinkDefinition> links =
                 runProcessor(mSourceFileSystem, mDestinationFileSystem);
         assertSameFileSystems(mDestinationFileSystem, links);

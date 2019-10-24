@@ -62,6 +62,7 @@ data class ProjectTemplateData(
 ): TemplateData()
 
 
+// TODO(qumeric): create a more generic mechanism which will support modifying other modules
 /**
  * Info about base feature.
  *
@@ -95,4 +96,7 @@ data class ModuleTemplateData(
    * Info about base feature. Only present in dynamic feature project.
    */
   val baseFeature: BaseFeature?
-): TemplateData()
+): TemplateData() {
+  val isDynamic: Boolean
+    get() = baseFeature != null
+}

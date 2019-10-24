@@ -151,14 +151,11 @@ jclass HotSwap::FindClass(const std::string& name) const {
 
 // Can be null if the application isn't a JetPack Compose application.
 jobject HotSwap::GetComposeHotReload() const {
-  Log::E("START GetComposeHotReload FindClass");
   jclass klass = FindClass("androidx/compose/Compose$HotReloader");
-  Log::E("Finished GetComposeHotReload FindClass");
   if (klass == nullptr) {
-    Log::E("GetComposeHotReload is null");
     return nullptr;
   }
-  Log::E("GetComposeHotReload is not null");
+  Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");
   JniClass reloaderClass(jni_, klass);
   return reloaderClass.GetStaticField<jobject>(
       {"Companion", "Landroidx/compose/Compose$HotReloader$Companion;"});
@@ -191,7 +188,10 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
   SwapResult result;
 
-  jobject reloader = GetComposeHotReload();
+  // We only try to see if we need HotReload for Apply Code Changes. Otherwise
+  // activity restart would re-compose anyways.
+  jobject reloader =
+      swap_request.restart_activity() ? nullptr : GetComposeHotReload();
   if (reloader != nullptr) {
     SaveStateAndDispose(reloader);
   }

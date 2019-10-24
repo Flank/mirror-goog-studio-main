@@ -94,6 +94,8 @@ public abstract class AidlCompile extends NonIncrementalTask {
     @Internal
     public abstract Property<Revision> getBuildToolsRevisionProvider();
 
+    private String javaEncoding;
+
     // Given the same version, the path or contents of the AIDL tool may change across platforms,
     // but it would still produce the same output (given the same inputs)---see bug 138920846.
     // Therefore, the path or contents of the tool should not be an input. Instead, we set the
@@ -159,7 +161,8 @@ public abstract class AidlCompile extends NonIncrementalTask {
                             packageWhitelist,
                             new DepFileProcessor(),
                             new GradleProcessExecutor(getProject()),
-                            new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())));
+                            new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
+                            javaEncoding);
 
             for (File dir : sourceFolders) {
                 workers.submit(AidlCompileRunnable.class, new AidlCompileParams(dir, processor));
@@ -275,6 +278,9 @@ public abstract class AidlCompile extends NonIncrementalTask {
                 compileTask.setPackageWhitelist(
                         globalScope.getExtension().getAidlPackageWhiteList());
             }
+
+            compileTask.javaEncoding =
+                    scope.getGlobalScope().getExtension().getCompileOptions().getEncoding();
         }
     }
 

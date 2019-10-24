@@ -32,37 +32,15 @@ interface ParameterBuilder<T> {
   }
 }
 
-/**
- * A builder for different kinds of [DslParameter]s.
- *
- * Contains builder functions which should be used from DSL, such as [stringParameter].
- */
-class ParametersBuilder {
-  private val parameters = arrayListOf<Parameter<*>>()
-  fun stringParameter(block: StringParameterBuilder.() -> Unit): StringParameter =
-    StringParameterBuilder().apply(block).build().also {
-      parameters.add(it)
-    }
+fun stringParameter(block: StringParameterBuilder.() -> Unit): StringParameter = StringParameterBuilder().apply(block).build()
 
-  fun booleanParameter(block: BooleanParameterBuilder.() -> Unit): BooleanParameter =
-    BooleanParameterBuilder().apply(block).build().also {
-      parameters.add(it)
-    }
+fun booleanParameter(block: BooleanParameterBuilder.() -> Unit): BooleanParameter = BooleanParameterBuilder().apply(block).build()
 
-  inline fun <reified T : Enum<T>> enumParameter(noinline block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> {
-    return enumParameter(T::class, block)
-  }
+inline fun <reified T : Enum<T>> enumParameter(noinline block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
+  enumParameter(T::class, block)
 
-  fun <T : Enum<T>> enumParameter(klass: KClass<T>, block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> {
-    return EnumParameterBuilder(klass).apply(block).build().also {
-      parameters.add(it)
-    }
-  }
-
-  fun separator(): Separator = Separator().also { parameters.add(it) }
-
-  fun build() = parameters
-}
+fun <T : Enum<T>> enumParameter(klass: KClass<T>, block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
+  EnumParameterBuilder(klass).apply(block).build()
 
 data class BooleanParameterBuilder(
   override var name: String? = null,
@@ -84,12 +62,11 @@ data class StringParameterBuilder(
   override var enabled: WizardParameterData.() -> Boolean = { true },
   override var default: String? = null,
   var constraints: List<Constraint> = listOf(),
-  var suggest: () -> String? = { null },
-  var type: StringParameter.Type = StringParameter.Type.STRING
+  var suggest: () -> String? = { null }
 ) : ParameterBuilder<String> {
   override fun build(): StringParameter {
     validate()
-    return StringParameter(name!!, help, visible, enabled, default!!, constraints, suggest, type)
+    return StringParameter(name!!, help, visible, enabled, default!!, constraints, suggest)
   }
 }
 

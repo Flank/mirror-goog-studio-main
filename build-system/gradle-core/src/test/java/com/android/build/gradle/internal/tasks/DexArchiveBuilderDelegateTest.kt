@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DexParameters
+import com.android.build.gradle.internal.dexing.DexWorkAction
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.scope.VariantScope
@@ -93,11 +95,11 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
         ) {
             val workerConfiguration = Mockito.mock(WorkerConfiguration::class.java)
             val captor = ArgumentCaptor.forClass(
-                DexArchiveBuilderTaskDelegate.DexConversionParameters::class.java
+                DexWorkActionParams::class.java
             )
             action.execute(workerConfiguration)
             verify(workerConfiguration).setParams(captor.capture())
-            val workAction = DexArchiveBuilderTaskDelegate.DexConversionWorkAction(
+            val workAction = DexWorkAction(
                 captor.value
             )
             workAction.run()
@@ -673,7 +675,8 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
             dxDexParams = DxDexParameters(
                 inBufferSize = 10,
                 outBufferSize = 10,
-                dxNoOptimizeFlagPresent = false
+                dxNoOptimizeFlagPresent = false,
+                jumboMode = true
             )
         )
     }

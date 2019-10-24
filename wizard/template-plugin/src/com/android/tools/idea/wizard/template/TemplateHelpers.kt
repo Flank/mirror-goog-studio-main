@@ -71,6 +71,7 @@ fun extractClassName(string: String): String? {
 }
 
 fun layoutToActivity(name: String): String = AssetNameConverter(Type.LAYOUT, name).getValue(Type.ACTIVITY)
+fun layoutToFragment(name: String): String = AssetNameConverter(Type.LAYOUT, name).getValue(Type.FRAGMENT)
 
 fun getMaterialComponentName(oldName: String, useMaterial2: Boolean): String =
   if (useMaterial2) AndroidxNameUtils.getNewName(oldName) else oldName

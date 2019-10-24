@@ -17,6 +17,7 @@
 package test.inspector;
 
 import androidx.inspection.Connection;
+import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 
 public class TestInspectorFactory extends InspectorFactory<TestInspector> {
@@ -26,7 +27,7 @@ public class TestInspectorFactory extends InspectorFactory<TestInspector> {
     }
 
     @Override
-    public TestInspector createInspector(Connection connection) {
+    public TestInspector createInspector(Connection connection, InspectorEnvironment environment) {
         return new TestInspector(connection);
     }
 }

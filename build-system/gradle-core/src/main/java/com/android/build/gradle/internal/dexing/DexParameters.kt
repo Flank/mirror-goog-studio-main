@@ -33,12 +33,14 @@ class DexParameters(
 ) {
 
     fun toDexParametersForWorkers(
+            dexPerClass: Boolean,
             bootClasspath: DexArchiveBuilderTaskDelegate.ClasspathServiceKey,
             classpath: DexArchiveBuilderTaskDelegate.ClasspathServiceKey,
             coreLibDesugarOutputKeepRuleFile: File?): DexParametersForWorkers {
         return DexParametersForWorkers(
             minSdkVersion = minSdkVersion,
             debuggable = debuggable,
+            dexPerClass = dexPerClass,
             withDesugaring = withDesugaring,
             desugarBootclasspath = bootClasspath,
             desugarClasspath = classpath,
@@ -56,6 +58,7 @@ class DexParameters(
 class DexParametersForWorkers(
     val minSdkVersion: Int,
     val debuggable: Boolean,
+    val dexPerClass: Boolean,
     val withDesugaring: Boolean,
     val desugarBootclasspath: DexArchiveBuilderTaskDelegate.ClasspathServiceKey,
     val desugarClasspath: DexArchiveBuilderTaskDelegate.ClasspathServiceKey,
@@ -77,7 +80,8 @@ class DexParametersForWorkers(
 class DxDexParameters(
     val inBufferSize: Int,
     val outBufferSize: Int,
-    val dxNoOptimizeFlagPresent: Boolean
+    val dxNoOptimizeFlagPresent: Boolean,
+    val jumboMode: Boolean
 ) : Serializable {
 
     companion object {

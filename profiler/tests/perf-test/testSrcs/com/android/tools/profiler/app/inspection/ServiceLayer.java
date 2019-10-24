@@ -51,10 +51,10 @@ class ServiceLayer implements Runnable {
     private final int pid;
 
     private AtomicInteger nextCommandId = new AtomicInteger(1);
-    private List<AppInspectionEvent> unexpectedResponses = new ArrayList<>();
-    private ConcurrentHashMap<Integer, CompletableFuture<AppInspectionEvent>> commandIdToFuture =
+    private List<Common.Event> unexpectedResponses = new ArrayList<>();
+    private ConcurrentHashMap<Integer, CompletableFuture<Common.Event>> commandIdToFuture =
             new ConcurrentHashMap<>();
-    private LinkedBlockingQueue<AppInspectionEvent> events = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<Common.Event> events = new LinkedBlockingQueue<>();
 
     private ServiceLayer(
             TransportServiceBlockingStub transportStub, ExecutorService executor, int pid) {
@@ -64,29 +64,37 @@ class ServiceLayer implements Runnable {
     }
 
     List<AppInspectionEvent> consumeCollectedEvents() {
+        ArrayList<Common.Event> drainedEvents = new ArrayList<>(events.size());
         ArrayList<AppInspectionEvent> result = new ArrayList<>(events.size());
-        events.drainTo(result);
+        events.drainTo(drainedEvents);
+        for (Common.Event event : drainedEvents) {
+            assertThat(event.getPid()).isEqualTo(pid);
+            result.add(event.getAppInspectionEvent());
+        }
         return result;
     }
 
     AppInspectionEvent sendCommand(AppInspectionCommand appInspectionCommand) throws Exception {
         int commandId = nextCommandId.getAndIncrement();
+        AppInspectionCommand idAppInspectionCommand =
+                appInspectionCommand.toBuilder().setCommandId(commandId).build();
         Commands.Command command =
                 Commands.Command.newBuilder()
                         .setType(Commands.Command.CommandType.APP_INSPECTION)
-                        .setAppInspectionCommand(appInspectionCommand)
+                        .setAppInspectionCommand(idAppInspectionCommand)
                         .setStreamId(1234)
                         .setPid(pid)
-                        .setCommandId(commandId)
                         .build();
 
-        CompletableFuture<AppInspectionEvent> local = new CompletableFuture<>();
+        CompletableFuture<Common.Event> local = new CompletableFuture<>();
         commandIdToFuture.put(commandId, local);
         ExecuteRequest executeRequest = ExecuteRequest.newBuilder().setCommand(command).build();
         transportStub.execute(executeRequest);
-        AppInspectionEvent appInspectionEvent = local.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        assertThat(appInspectionEvent).isNotNull();
-        return appInspectionEvent;
+        Common.Event event = local.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertThat(event).isNotNull();
+        assertThat(event.hasAppInspectionEvent()).isTrue();
+        assertThat(event.getPid()).isEqualTo(pid);
+        return event.getAppInspectionEvent();
     }
 
     @Override
@@ -99,18 +107,17 @@ class ServiceLayer implements Runnable {
                 continue;
             }
             AppInspectionEvent inspectionEvent = event.getAppInspectionEvent();
-            int commandId = event.getCommandId();
+            int commandId = inspectionEvent.getCommandId();
             if (commandId == 0) {
-                events.offer(inspectionEvent);
+                events.offer(event);
             } else {
-                handleCommandResponse(commandId, inspectionEvent);
+                handleCommandResponse(commandId, event);
             }
         }
     }
 
-    private void handleCommandResponse(int commandId, AppInspectionEvent response) {
-        CompletableFuture<AppInspectionEvent> localCommandCompleter =
-                commandIdToFuture.get(commandId);
+    private void handleCommandResponse(int commandId, Common.Event response) {
+        CompletableFuture<Common.Event> localCommandCompleter = commandIdToFuture.get(commandId);
         if (localCommandCompleter == null) {
             unexpectedResponses.add(response);
         } else {

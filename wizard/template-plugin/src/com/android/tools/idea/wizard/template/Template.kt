@@ -2,7 +2,7 @@ package com.android.tools.idea.wizard.template
 
 import java.io.File
 
-typealias Recipe = RecipeExecutor.(TemplateData) -> Boolean
+typealias Recipe = RecipeExecutor.(TemplateData) -> Unit
 
 /**
  * Determines in which context (basically a screen) the template should be shown.
@@ -58,10 +58,15 @@ enum class FormFactor {
  **/
 interface Template {
   /**
-   * When a [Template] is chosen by the user, the [Parameter]s are used by the Wizards to build the user UI.
-   * A user provides [Parameter.value]s by interaction with the UI.
+   * When a [Template] is chosen by the user, the [widgets] are used by the Wizards to build the user UI.
+   *
+   * Usually, it displays an input for [Parameter].
+   */
+  val widgets: Collection<Widget<*>>
+  /**
+   * Usually, a user provides [Parameter.value]s by interaction with the UI [widgets].
    **/
-  val parameters: Collection<Parameter<*>>
+  val parameters: Collection<Parameter<*>> get() = widgets.filterIsInstance<ParameterWidget<*>>().map { it.parameter }
   /**
    * A template name which is also used as identified.
    *
@@ -104,7 +109,7 @@ interface Template {
    * Reprent absence of a [Template] (null object pattern).
    */
   companion object NoActivity: Template {
-    override val parameters: Collection<Parameter<*>> = listOf()
+    override val widgets: Collection<Widget<*>> = listOf()
     override val uiContexts: Collection<WizardUiContext> get() = TODO()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
     override val revision: Int = 1

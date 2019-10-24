@@ -29,10 +29,7 @@ class LocalFileHeader {
 
     // Minimum number of bytes needed to create a virtual zip entry (an entry not present in
     // the Central Directory with name length = 0 and an extra field containing padding data).
-    public static final long VIRTUAL_HEADER_SIZE =
-            LOCAL_FILE_HEADER_SIZE
-                    + CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE
-                    + CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE;
+    public static final long VIRTUAL_HEADER_SIZE = LOCAL_FILE_HEADER_SIZE;
 
     public static final short COMPRESSION_NONE = 0;
     public static final short COMPRESSION_DEFLATE = 8;
@@ -72,6 +69,11 @@ class LocalFileHeader {
 
 
     public static void fillVirtualEntry(@NonNull ByteBuffer virtualEntry) {
+        int sizeToFill = virtualEntry.capacity();
+        if (sizeToFill < VIRTUAL_HEADER_SIZE) {
+            String message = String.format("Not enough space for virtual entry (%d)", sizeToFill);
+            throw new IllegalStateException(message);
+        }
         virtualEntry.order(ByteOrder.LITTLE_ENDIAN);
         virtualEntry.putInt(SIGNATURE);
         virtualEntry.putShort(DEFAULT_VERSION_NEEDED); // Version needed
@@ -83,16 +85,8 @@ class LocalFileHeader {
         virtualEntry.putInt(0); // compressed size
         virtualEntry.putInt(0); // uncompressed size
         virtualEntry.putShort((short) 0); // file name length
-        // -2 for the short we are about to write
-        virtualEntry.putShort(Ints.intToUshort(virtualEntry.remaining() - 2));
-
-        // Write the extra field header
-        virtualEntry.putShort(ALIGN_SIGNATURE);
-
-        // -2 for the short we are about to write
-        short extraFieldSize = Ints.intToUshort(virtualEntry.remaining() - 2);
-        virtualEntry.putShort(extraFieldSize);
-
+        // -2 for the extra length ushort we have to write
+        virtualEntry.putShort(Ints.intToUshort(virtualEntry.remaining() - 2)); // extra length
         virtualEntry.rewind();
     }
 

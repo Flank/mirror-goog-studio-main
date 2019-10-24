@@ -27,7 +27,7 @@ internal data class TemplateImpl(
   override val requireAndroidX: Boolean,
   override val category: Category,
   override val formFactor: FormFactor,
-  override val parameters: Collection<Parameter<*>>,
+  override val widgets: Collection<Widget<*>>,
   private val _thumb: () -> Thumb,
   override val recipe: Recipe,
   override val uiContexts: Collection<WizardUiContext>
@@ -40,8 +40,6 @@ fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().ap
 
 // TODO(qumeric): use Kotlin DSL annotations to limit visibility scope
 class TemplateBuilder {
-  private val parametersBuilder = ParametersBuilder()
-
   var revision: Int? = null
   var name: String? = null
   var description: String? = null
@@ -54,9 +52,11 @@ class TemplateBuilder {
   var thumb: () -> Thumb = { Thumb.NoThumb }
   var recipe: Recipe? = null
   var screens: Collection<WizardUiContext> = listOf()
+  var widgets = listOf<Widget<*>>()
 
-  // TODO(qumeric): use contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) } when it will be ready
-  fun parameters(block: ParametersBuilder.() -> Unit): ParametersBuilder = parametersBuilder.apply(block)
+  fun widgets(vararg widgets: Widget<*>) {
+    this.widgets = widgets.toList()
+  }
 
   /** A wrapper for collection of [Thumb]s with an optional [get]ter. Implementations usually use [Parameter.value] to choose [Thumb]. */
   fun thumb(block: () -> File) {
@@ -81,7 +81,7 @@ class TemplateBuilder {
       requireAndroidX,
       category!!,
       formFactor!!,
-      parametersBuilder.build(),
+      widgets,
       thumb,
       recipe!!,
       screens

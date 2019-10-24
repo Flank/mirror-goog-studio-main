@@ -96,8 +96,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     abstract val localResourcesFile: RegularFileProperty
 
     @get:Input
-    var namespacedRClass: Boolean = false
-        private set
+    abstract val namespacedRClass: Property<Boolean>
 
     @get:Input
     abstract val compileClasspathLibraryRClasses: Property<Boolean>
@@ -127,7 +126,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     null,
                     rClassOutputJar.get().asFile,
                     textSymbolOutputFileProperty.get().asFile,
-                    namespacedRClass,
+                    namespacedRClass.get(),
                     compileClasspathLibraryRClasses.get(),
                     symbolsWithPackageNameOutputFile.get().asFile,
                     useConstantIds.get()
@@ -274,10 +273,23 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             })
             task.applicationId.disallowChanges()
 
-            if (!projectOptions[BooleanOption.NAMESPACED_R_CLASS]) {
-                // Only include the dependency symbol tables when not using namespaced R classes.
+            val namespacedRClass = projectOptions[BooleanOption.NAMESPACED_R_CLASS]
+            val compileClasspathLibraryRClasses = projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]
+
+            if (!namespacedRClass || !compileClasspathLibraryRClasses) {
+                // We need the dependencies for generating our own R class or for generating R
+                // classes of the dependencies:
+                //   * If we're creating a transitive (non-namespaced) R class, then we need the
+                //     dependencies to include them in the local R class.
+                //   * If we're using the runtime classpath (not compile classpath) then we need the
+                //     dependencies for generating the R classes for each of them.
+                //   * If both above are true then we use the dependencies for generating both the
+                //     local R class and the dependencies' R classes.
+                //   * The only case when we don't need the dependencies is if we are generating a
+                //     namespaced (non-transitive) local R class AND we're using the compile
+                //     classpath R class flow.
                 val consumedConfigType =
-                    if (projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]) {
+                    if (compileClasspathLibraryRClasses) {
                         COMPILE_CLASSPATH
                     } else {
                         RUNTIME_CLASSPATH
@@ -289,6 +301,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 ))
             }
 
+            task.namespacedRClass.set(namespacedRClass)
+            task.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses)
+
             task.packageForR.set(task.project.provider {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
             })
@@ -296,10 +311,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
-
-            task.namespacedRClass = projectOptions[BooleanOption.NAMESPACED_R_CLASS]
-
-            task.compileClasspathLibraryRClasses.set(projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
             task.outputScope = variantScope.outputScope
 

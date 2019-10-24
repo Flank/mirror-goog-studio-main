@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <iostream>
 #include <memory>
@@ -214,12 +215,15 @@ void Daemon::RunServer(const string& server_address) {
   std::unique_ptr<grpc::Server> server(builder_.BuildAndStart());
   if (port == 0) {
     // The port wasn't successfully bound to the server by BuildAndStart().
-    std::cout << "Server failed to start. A port number wasn't bound."
-              << std::endl;
+    const char* error = "Server failed to start. A port number wasn't bound.";
+    std::cout << error << std::endl;
+    Log::E(error);
     exit(EXIT_FAILURE);
   }
-  std::cout << "Server listening on " << server_address << " port:" << port
-            << std::endl;
+  std::ostringstream oss;
+  oss << "Server listening on " << server_address << " port:" << port;
+  std::cout << oss.str() << std::endl;
+  Log::V(oss.str().c_str());
   server->Wait();  // Block until the server shuts down.
 }
 
@@ -267,9 +271,23 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
       socket_name.append(config_->GetConfig().common().service_socket_name());
       RunConnector(app_pid, package_name, socket_name);
       // RunConnector calls execl() at the end. It returns only if an error
-      // has occured.
+      // has occurred.
       exit(EXIT_FAILURE);
     }
+    // Call waitpid() from the parent process, waiting for the child process so
+    // it will not be in zombie state after it dies. When a child process is in
+    // zombie state, the operating system's Live-LocK Daemon may kill the parent
+    // process.
+    //
+    // Creates a new thread so the waitpid() function will not add the execution
+    // time of this function.
+    // clang-format off
+    std::thread([fork_pid] {
+      SetThreadName("Studio:WaitConn");
+      int status = 0;
+      waitpid(fork_pid, &status, 0);
+    }).detach();
+    // clang-format on
   }
 
   return true;

@@ -6,8 +6,8 @@
     <dependency mavenUrl="${resolveDependency("androidx.ui:ui-material:+", "0.1.0-dev02")}" />
     <dependency mavenUrl="${resolveDependency("androidx.ui:ui-tooling:+", "0.1.0-dev02")}" />
 
-    <#include "../common/recipe_theme.xml.ftl" />
     <#include "../common/recipe_manifest.xml.ftl" />
+    <#include "../common/recipe_no_actionbar.xml.ftl" />
 
     <instantiate from="root/src/app_package/MainActivity.kt.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />

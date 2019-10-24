@@ -17,6 +17,8 @@
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
 #include "app_inspection_service.h"
+#include "unistd.h"
+#include "utils/log.h"
 
 using app_inspection::ServiceResponse;
 
@@ -33,8 +35,9 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
-        event->set_command_id(command_id);
+        event->set_pid(getpid());
         auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_command_id(command_id);
         auto *service_response = inspection_event->mutable_response();
         service_response->set_status(status);
         service_response->set_error_message(message.get().c_str());
@@ -55,8 +58,9 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
-        event->set_command_id(command_id);
+        event->set_pid(getpid());
         auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_command_id(command_id);
         auto *raw_response = inspection_event->mutable_raw_event();
         raw_response->set_inspector_id(id.get().c_str());
         raw_response->set_content(data.get());
@@ -77,8 +81,9 @@ void EnqueueAppInspectionCrashEvent(JNIEnv *env, int32_t command_id,
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION);
         event->set_is_ended(true);
-        event->set_command_id(command_id);
+        event->set_pid(getpid());
         auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_command_id(command_id);
         auto *service_response = inspection_event->mutable_crash_event();
         service_response->set_inspector_id(id.get().c_str());
         service_response->set_error_message(message.get().c_str());
@@ -138,5 +143,36 @@ JNIEXPORT jobject JNICALL
 Java_com_android_tools_agent_app_inspection_AppInspectionService_createAppInspectionService(
     JNIEnv *env, jclass jclazz) {
   return app_inspection::CreateAppInspectionService(env);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterEntryHook(
+    JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
+    jstring originMethod, jclass hookClass, jstring hookMethod) {
+#ifdef APP_INSPECTION_EXPERIMENT
+#else
+  profiler::Log::E("REGISTER ENTRY HOOK NOT IMPLEMENTED");
+#endif
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterExitHook(
+    JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
+    jstring originMethod, jclass hookClass, jstring hookMethod) {
+#ifdef APP_INSPECTION_EXPERIMENT
+#else
+  profiler::Log::E("REGISTER EXIT HOOK NOT IMPLEMENTED");
+#endif
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeFindInstances(
+    JNIEnv *env, jclass callerClass, jlong servicePtr, jclass jclass) {
+#ifdef APP_INSPECTION_EXPERIMENT
+#else
+  profiler::Log::E("FIND INSTANCES NOT IMPLEMENTED");
+#endif
+  auto result = env->NewObjectArray(0, jclass, NULL);
+  return result;
 }
 }

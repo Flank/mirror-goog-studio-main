@@ -48,8 +48,8 @@ class AppInspectionAgentCommand {
             return;
           }
 
-          int32_t command_id = command->command_id();
           auto& app_command = command->app_inspection_command();
+          int32_t command_id = app_command.command_id();
           if (app_command.has_create_inspector_command()) {
             auto& create_inspector = app_command.create_inspector_command();
             jstring inspector_id =

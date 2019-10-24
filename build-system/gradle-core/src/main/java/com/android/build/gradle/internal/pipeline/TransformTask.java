@@ -175,6 +175,7 @@ public abstract class TransformTask extends StreamBasedTask {
                 GradleTransformExecution.newBuilder()
                         .setType(AnalyticsUtil.getTransformType(transform.getClass()).getNumber())
                         .setIsIncremental(isIncremental.getValue())
+                        .setTransformClassName(transform.getClass().getName())
                         .build();
 
         recorder.record(

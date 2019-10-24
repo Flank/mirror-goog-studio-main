@@ -208,8 +208,8 @@ public class ZipMap {
         // TODO Test the impact on performance to read the LFH. This is only useful to check if general status
         // flag differs from the CDR which so far does not seem to happen.
 
-        // Parse extra to find out if there is a zip64 descriptor there
-        parseExtra(buf, extraLength);
+        // Skip extra field
+        buf.position(buf.position() + extraLength);
 
         // Skip comment field
         buf.position(buf.position() + commentLength);
@@ -292,22 +292,6 @@ public class ZipMap {
                         entry.getLocation().first,
                         entry.getLocation().size() + dataDescriptorLength);
         entry.setLocation(adjustedLocation);
-    }
-
-    private static void parseExtra(ByteBuffer buf, int length) {
-        while (length >= 4) { // Only parse if this is a value ID-size-payload pair.
-            buf.getShort(); // id
-            // TODO: Zip64 -> id==1 is where offset, size and usize and specified.
-            int size = Ints.ushortToInt(buf.getShort());
-            if (buf.remaining() < size) {
-                throw new IllegalStateException("Invalid zip entry, extra size > remaining data");
-            }
-            buf.position(buf.position() + size);
-            length -=
-                    size
-                            + CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE
-                            + CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE;
-        }
     }
 
     public File getFile() {

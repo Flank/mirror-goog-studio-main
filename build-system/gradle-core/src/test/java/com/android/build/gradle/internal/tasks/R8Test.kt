@@ -242,8 +242,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             proguardRulesFiles = listOf(proguardConfiguration)
         )
 
-        assertClassExists(Animal::class.java)
-        assertClassExists(CarbonForm::class.java)
+        // Super classes are not explicitly kept and thus may be merged into Cat.
         assertClassExists(Cat::class.java)
         assertClassExists(Toy::class.java)
         // Check proguard compatibility mode
@@ -283,8 +282,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             useFullR8 = true
         )
 
-        assertClassExists(Animal::class.java)
-        assertClassExists(CarbonForm::class.java)
+        // Super classes are not explicitly kept and thus may be merged into Cat.
         assertClassExists(Cat::class.java)
         assertClassExists(Toy::class.java)
         // Check full R8 mode

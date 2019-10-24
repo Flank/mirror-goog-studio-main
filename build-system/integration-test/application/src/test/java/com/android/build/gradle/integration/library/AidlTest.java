@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -30,6 +31,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,6 +55,7 @@ public class AidlTest {
     private File iTestAidl;
     private File aidlDir;
     private File activity;
+    private File javaDir;
 
     public AidlTest(String plugin) {
         this.plugin = plugin;
@@ -61,6 +66,7 @@ public class AidlTest {
     @Before
     public void setUp() throws IOException {
         aidlDir = project.file("src/main/aidl/com/example/helloworld");
+        javaDir = project.file("src/main/java/com/example/helloworld");
 
         FileUtils.mkdirs(aidlDir);
 
@@ -99,7 +105,6 @@ public class AidlTest {
                         + "    int getInt();\n"
                         + "}");
 
-        File javaDir = project.file("src/main/java/com/example/helloworld");
         activity = new File(javaDir, "HelloWorld.java");
 
         TestFileUtils.appendToFile(
@@ -217,6 +222,33 @@ public class AidlTest {
         checkAar("ITest");
     }
 
+    // TODO(126399082): Remove this test
+    @Test
+    public void testJapaneseCharacters() throws IOException, InterruptedException {
+        // First, add japanese characters
+        TestFileUtils.searchAndReplace(
+                new File(aidlDir, "WhiteListed.aidl"),
+                "interface WhiteListed {\n",
+                "interface WhiteListed {\n" + "/**\n" + "     * テスト用コメント\n" + "     */");
+
+        // Then, change encoding to Shift_JIS and compile
+        // (should fail on mac/linux if encoding is not handled properly)
+        String newEncoding = "Shift_JIS";
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "android.compileOptions.encoding = '" + newEncoding + "'");
+
+        changeEncoding(
+                ImmutableList.of(
+                        new File(aidlDir, "WhiteListed.aidl"),
+                        new File(aidlDir, "MyRect.aidl"),
+                        new File(aidlDir, "ITest.aidl"),
+                        new File(javaDir, "MyRect.java"),
+                        new File(javaDir, "HelloWorld.java")),
+                Charset.forName(newEncoding));
+
+        project.execute("clean", "assembleDebug");
+    }
+
     private void checkAar(String dontInclude) throws IOException {
         if (!this.plugin.contains("library")) {
             return;
@@ -226,5 +258,17 @@ public class AidlTest {
         aar.contains("aidl/com/example/helloworld/MyRect.aidl");
         aar.contains("aidl/com/example/helloworld/WhiteListed.aidl");
         aar.doesNotContain("aidl/com/example/helloworld/" + dontInclude + ".aidl");
+    }
+
+    private static void changeEncoding(@NonNull List<File> files, @NonNull Charset newEncoding)
+            throws IOException {
+        Charset oldEncoding = StandardCharsets.UTF_8;
+        for (File f : files) {
+            // Read file
+            List<String> lines = java.nio.file.Files.readAllLines(f.toPath(), oldEncoding);
+
+            // Re-create file in new encoding
+            java.nio.file.Files.write(f.toPath(), lines, newEncoding);
+        }
     }
 }

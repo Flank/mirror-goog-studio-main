@@ -65,9 +65,6 @@ public class PatchTest {
                 "Patch is smaller than apk",
                 patch.data.capacity() + patch.instructions.capacity() < remoteApkSize);
 
-        // Hard-coded value is specific to this test.
-        assertEquals("Patch size", patch.data.capacity() + patch.instructions.capacity(), 1458338);
-
         // Apply patch.
         Patcher patcher = new Patcher();
         String patchedFilePath =
