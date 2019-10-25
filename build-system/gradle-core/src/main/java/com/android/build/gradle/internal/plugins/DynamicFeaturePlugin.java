@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AppExtension;
-import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
@@ -35,7 +35,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
 
     @Override
     protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE;
+        return AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE;
     }
 
     @NonNull

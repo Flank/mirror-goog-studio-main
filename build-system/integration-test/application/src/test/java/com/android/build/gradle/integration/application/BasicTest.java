@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.builder.model.AndroidProject.PROJECT_TYPE_LIBRARY;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.AndroidProjectTypes;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -95,8 +95,11 @@ public class BasicTest {
 
     @Test
     public void basicModel() {
-        assertNotEquals("Library Project", model.getProjectType(), PROJECT_TYPE_LIBRARY);
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
+        assertNotEquals(
+                "Library Project",
+                model.getProjectType(),
+                AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
+        assertEquals("Project Type", AndroidProjectTypes.PROJECT_TYPE_APP, model.getProjectType());
         assertEquals(
                 "Compile Target", GradleTestProject.getCompileSdkHash(), model.getCompileTarget());
         assertFalse("Non empty bootclasspath", model.getBootClasspath().isEmpty());

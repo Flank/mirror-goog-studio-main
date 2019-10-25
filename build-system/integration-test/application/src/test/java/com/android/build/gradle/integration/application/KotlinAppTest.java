@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.AndroidProjectTypes;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -50,7 +50,7 @@ public class KotlinAppTest {
 
         assertThat(appModel.getProjectType())
                 .named("Project Type")
-                .isEqualTo(AndroidProject.PROJECT_TYPE_APP);
+                .isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
         assertThat(appModel.getCompileTarget())
                 .named("Compile Target")
                 .isEqualTo(GradleTestProject.getCompileSdkHash());

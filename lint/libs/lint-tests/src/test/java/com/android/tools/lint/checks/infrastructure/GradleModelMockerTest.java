@@ -20,12 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
@@ -131,7 +131,7 @@ public class GradleModelMockerTest {
                                 + "}");
         Variant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
-        assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_APP);
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
         Collection<AndroidLibrary> libraries =
@@ -156,7 +156,7 @@ public class GradleModelMockerTest {
                                 + "}");
         Variant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
-        assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_APP);
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
         Collection<JavaLibrary> libraries =
@@ -302,7 +302,7 @@ public class GradleModelMockerTest {
 
         Variant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
-        assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_LIBRARY);
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
         Dependencies dependencies = variant.getMainArtifact().getDependencies();
         Collection<JavaLibrary> libraries = dependencies.getJavaLibraries();
         assertThat(libraries.size()).isEqualTo(1);

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.AndroidProjectTypes.PROJECT_TYPE_LIBRARY;
+
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

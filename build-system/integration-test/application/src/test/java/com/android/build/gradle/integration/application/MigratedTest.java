@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.android.AndroidProjectTypes;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
@@ -44,8 +45,10 @@ public class MigratedTest {
         File projectDir = project.getTestDir();
 
         assertNotEquals(
-                "Library Project", AndroidProject.PROJECT_TYPE_LIBRARY, model.getProjectType());
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
+                "Library Project",
+                AndroidProjectTypes.PROJECT_TYPE_LIBRARY,
+                model.getProjectType());
+        assertEquals("Project Type", AndroidProjectTypes.PROJECT_TYPE_APP, model.getProjectType());
 
         ProductFlavorContainer defaultConfig = model.getDefaultConfig();
 

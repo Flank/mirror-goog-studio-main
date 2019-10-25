@@ -21,6 +21,7 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.android.AndroidProjectTypes;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -63,7 +64,7 @@ public class FlavorsTest {
         File projectDir = project.getTestDir();
 
         assertFalse("Library Project", model.isLibrary());
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
+        assertEquals("Project Type", AndroidProjectTypes.PROJECT_TYPE_APP, model.getProjectType());
 
         assertThat(model.getFlavorDimensions()).containsExactly("group1", "group2");
 

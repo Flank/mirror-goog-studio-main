@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.AndroidProjectTypes
 import com.android.SdkConstants
 import com.android.apksig.ApkVerifier
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -25,7 +26,6 @@ import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.ide.common.signing.KeystoreHelper
@@ -127,7 +127,7 @@ class DynamicAppTest {
         Truth.assertThat(featureModel).named("feature model").isNotNull()
         Truth.assertThat(featureModel!!.projectType)
             .named("feature model type")
-            .isEqualTo(AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE)
+            .isEqualTo(AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE)
     }
 
     @Test
@@ -830,7 +830,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
         assertThat(bundleFile.lastModified()).isNotEqualTo(bundleTimestamp)
 
-        // Make sure the resources.pb files are smaller. 
+        // Make sure the resources.pb files are smaller.
         // For this project the savings are (for the current version of aapt2):
         // /feature2/resources.pb: 456 -> 158
         // /feature1/resources.pb: 454 -> 156
