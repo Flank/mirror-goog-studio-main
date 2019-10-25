@@ -25,9 +25,6 @@ class CentralDirectoryRecord {
     public static final int DATA_DESCRIPTOR_FLAG = 0x0008;
     public static final int DATA_DESCRIPTOR_SIGNATURE = 0x08074b50;
 
-    // Unix = 3 (0x0300) + Version 3.0 (0x001E)
-    public static final short DEFAULT_VERSION_MADE_BY = 0x031E;
-
     private final byte[] nameBytes;
     private final int crc;
     private final long compressedSize;
@@ -56,7 +53,7 @@ class CentralDirectoryRecord {
 
     void write(@NonNull ByteBuffer buf) {
         buf.putInt(SIGNATURE);
-        buf.putShort(DEFAULT_VERSION_MADE_BY);
+        buf.putShort((short) 0); // version made by
         buf.putShort(LocalFileHeader.DEFAULT_VERSION_NEEDED);
         buf.putShort((short) 0); // flag
         buf.putShort(compressionFlag);
