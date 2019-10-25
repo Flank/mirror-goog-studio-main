@@ -54,7 +54,7 @@ class CentralDirectoryRecord {
     void write(@NonNull ByteBuffer buf) {
         buf.putInt(SIGNATURE);
         buf.putShort((short) 0); // version made by
-        buf.putShort(LocalFileHeader.DEFAULT_VERSION_NEEDED);
+        buf.putShort((short) 0); // version needed
         buf.putShort((short) 0); // flag
         buf.putShort(compressionFlag);
         buf.putShort((short) 0); // time

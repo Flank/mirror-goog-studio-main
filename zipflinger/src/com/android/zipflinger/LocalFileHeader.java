@@ -23,8 +23,6 @@ import java.nio.ByteOrder;
 class LocalFileHeader {
     private static final int SIGNATURE = 0x04034b50;
 
-    // Minium version = 2.0 (encoded dec = 20)
-    public static final short DEFAULT_VERSION_NEEDED = 0x0014;
     public static final int LOCAL_FILE_HEADER_SIZE = 30;
 
     // Minimum number of bytes needed to create a virtual zip entry (an entry not present in
@@ -73,7 +71,7 @@ class LocalFileHeader {
         }
         virtualEntry.order(ByteOrder.LITTLE_ENDIAN);
         virtualEntry.putInt(SIGNATURE);
-        virtualEntry.putShort(DEFAULT_VERSION_NEEDED); // Version needed
+        virtualEntry.putShort((short) 0); // Version needed
         virtualEntry.putShort((short) 0); // general purpose flag
         virtualEntry.putShort(COMPRESSION_NONE);
         virtualEntry.putShort((short) 0); // time
@@ -93,7 +91,7 @@ class LocalFileHeader {
 
         ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(SIGNATURE);
-        buffer.putShort(DEFAULT_VERSION_NEEDED);
+        buffer.putShort((short) 0); // Version needed
         buffer.putShort((short) 0); // general purpose flag
         buffer.putShort(compressionFlag);
         buffer.putShort((short) 0); // time
