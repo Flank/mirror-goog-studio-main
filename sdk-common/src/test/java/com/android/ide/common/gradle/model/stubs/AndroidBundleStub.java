@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
@@ -65,6 +66,38 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
             @Nullable File resStaticLibrary,
             @NonNull File assetsFolder,
             @Nullable String variant) {
+        myBundle = bundle;
+        myFolder = folder;
+        myLibraryDependencies = dependencies;
+        myJavaDependencies = javaDependencies;
+        myManifest = manifest;
+        myJarFile = jarFile;
+        myCompileJarFile = compileJarFile;
+        myResFolder = resFolder;
+        myResStaticLibrary = resStaticLibrary;
+        myAssetsFolder = assetsFolder;
+        myProjectVariant = variant;
+    }
+
+    public AndroidBundleStub(
+            @NonNull MavenCoordinates coordinates,
+            @Nullable String buildId,
+            @Nullable String project,
+            @Nullable String name,
+            boolean provided,
+            boolean isSkipped,
+            @NonNull File bundle,
+            @NonNull File folder,
+            @NonNull List<AndroidLibrary> dependencies,
+            @NonNull Collection<JavaLibrary> javaDependencies,
+            @NonNull File manifest,
+            @NonNull File jarFile,
+            @NonNull File compileJarFile,
+            @NonNull File resFolder,
+            @Nullable File resStaticLibrary,
+            @NonNull File assetsFolder,
+            @Nullable String variant) {
+        super(coordinates, buildId, project, name, provided, isSkipped);
         myBundle = bundle;
         myFolder = folder;
         myLibraryDependencies = dependencies;

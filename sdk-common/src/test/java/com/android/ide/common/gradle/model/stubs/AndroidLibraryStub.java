@@ -16,11 +16,15 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibrary {
@@ -42,6 +46,52 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
             @NonNull File proguardRules,
             @NonNull File lintJar,
             @NonNull File publicResources) {
+        myLocalJars = jars;
+        myProguardRules = proguardRules;
+        myLintJar = lintJar;
+        myPublicResources = publicResources;
+    }
+
+    public AndroidLibraryStub(
+            @NonNull MavenCoordinates coordinates,
+            @Nullable String buildId,
+            @Nullable String project,
+            @Nullable String name,
+            boolean provided,
+            boolean isSkipped,
+            @NonNull File bundle,
+            @NonNull File folder,
+            @NonNull List<AndroidLibrary> dependencies,
+            @NonNull Collection<JavaLibrary> javaDependencies,
+            @NonNull File manifest,
+            @NonNull File jarFile,
+            @NonNull File compileJarFile,
+            @NonNull File resFolder,
+            @Nullable File resStaticLibrary,
+            @NonNull File assetsFolder,
+            @Nullable String variant,
+            @NonNull Collection<File> jars,
+            @NonNull File proguardRules,
+            @NonNull File lintJar,
+            @NonNull File publicResources) {
+        super(
+                coordinates,
+                buildId,
+                project,
+                name,
+                provided,
+                isSkipped,
+                bundle,
+                folder,
+                dependencies,
+                javaDependencies,
+                manifest,
+                jarFile,
+                compileJarFile,
+                resFolder,
+                resStaticLibrary,
+                assetsFolder,
+                variant);
         myLocalJars = jars;
         myProguardRules = proguardRules;
         myLintJar = lintJar;
