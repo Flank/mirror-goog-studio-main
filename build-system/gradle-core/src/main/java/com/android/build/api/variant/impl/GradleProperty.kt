@@ -36,7 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * This will provided added services like property names which will help debugging while converting
  * to the new Variant API. It is unclear if this wrapper will remain once conversion is done.
  */
-open class GradleProperty<T>(private val property: Property<T>) : PropertyInternal<T>, Property<T> {
+open class GradleProperty<T>(
+    private val property: Property<T>) : PropertyInternal<T>, Property<T> {
 
     override fun getOrElse(p0: T): T {
         return property.getOrElse(p0)
@@ -138,26 +139,26 @@ open class GradleProperty<T>(private val property: Property<T>) : PropertyIntern
     }
 
     companion object {
-        internal val afterEndOfEvaluation = AtomicBoolean(false)
+        private val inExecutionMode = AtomicBoolean(false)
 
         fun endOfEvaluation() {
-            afterEndOfEvaluation.set(true)
+            inExecutionMode.set(true)
         }
 
         /**
          * A special version of [Property] that does not allow access to any of the [Property.get]
          * methods while in configuration phase.
          */
-        fun <T> noReadingBeforeExecution(id: String, property: Property<T>, initialValue: T?): Property<T> {
-            return NoReadingBeforeExecution(id, property).also { it.set(initialValue) }
+        fun <T> noReadingBeforeExecution(id: String, property: Property<T>, initialValue: T?, executionMode: AtomicBoolean = inExecutionMode): Property<T> {
+            return NoReadingBeforeExecution(id, property, executionMode).also { it.set(initialValue) }
         }
 
-        fun <T> safeReadingBeforeExecution(id: String, property: Property<T>, initialValue: T? = null): Property<T> {
-            return SafeReadingBeforeExecution(id, property).also { it.set( initialValue) }
+        fun <T> safeReadingBeforeExecution(id: String, property: Property<T>, initialValue: T? = null, executionMode: AtomicBoolean = inExecutionMode): Property<T> {
+            return SafeReadingBeforeExecution(id, property, executionMode).also { it.set( initialValue) }
         }
 
-        fun <T> safeReadingBeforeExecution(id: String, property: Property<T>, initialValue: Provider<T>): Property<T> {
-            return SafeReadingBeforeExecution(id, property).also { it.set( initialValue) }
+        fun <T> safeReadingBeforeExecution(id: String, property: Property<T>, initialValue: Provider<T>, executionMode: AtomicBoolean = inExecutionMode): Property<T> {
+            return SafeReadingBeforeExecution(id, property, executionMode).also { it.set( initialValue) }
         }
     }
 }
@@ -167,24 +168,25 @@ open class GradleProperty<T>(private val property: Property<T>) : PropertyIntern
  */
 private class NoReadingBeforeExecution<T>(
     private val id: String,
-    property: Property<T>): GradleProperty<T>(property) {
+    property: Property<T>,
+    private val inExecutionMode: AtomicBoolean): GradleProperty<T>(property) {
 
     override fun get(): T {
-        if (!afterEndOfEvaluation.get()) {
+        if (!inExecutionMode.get()) {
             throw RuntimeException("Property.get() method invoked on $id before execution phase")
         }
         return super.get()
     }
 
     override fun getOrNull(): T? {
-        if (!afterEndOfEvaluation.get()) {
+        if (!inExecutionMode.get()) {
             throw RuntimeException("Property.getOrNull() method invoked on $id before execution phase")
         }
         return super.getOrNull()
     }
 
     override fun getOrElse(p0: T): T {
-        if (!afterEndOfEvaluation.get()) {
+        if (!inExecutionMode.get()) {
             throw RuntimeException("Property.getOrElse() method invoked on $id before execution phase")
         }
         return super.getOrElse(p0)
@@ -199,13 +201,14 @@ private class NoReadingBeforeExecution<T>(
  */
 private class SafeReadingBeforeExecution<T>(
     private val id: String,
-    property: Property<T>): GradleProperty<T>(property) {
+    property: Property<T>,
+    private val inExecutionMode: AtomicBoolean): GradleProperty<T>(property) {
 
     private val providerSet = AtomicBoolean(false)
     private val getIssued = AtomicBoolean(false)
 
     override fun get(): T {
-        if (providerSet.get() && !afterEndOfEvaluation.get()) {
+        if (providerSet.get() && !inExecutionMode.get()) {
             throw RuntimeException("A [Provider] was set of $id property, therefore get() cannot be issued before execution phase")
         }
         getIssued.set(true)
@@ -213,7 +216,7 @@ private class SafeReadingBeforeExecution<T>(
     }
 
     override fun getOrElse(p0: T): T {
-        if (providerSet.get() && !afterEndOfEvaluation.get()) {
+        if (providerSet.get() && !inExecutionMode.get()) {
             throw RuntimeException("A [Provider] was set of $id property, therefore get() cannot be issued before execution phase")
         }
         getIssued.set(true)
@@ -221,7 +224,7 @@ private class SafeReadingBeforeExecution<T>(
     }
 
     override fun getOrNull(): T? {
-        if (providerSet.get() && !afterEndOfEvaluation.get()) {
+        if (providerSet.get() && !inExecutionMode.get()) {
             throw RuntimeException("A [Provider] was set of $id property, therefore get() cannot be issued before execution phase")
         }
         getIssued.set(true)

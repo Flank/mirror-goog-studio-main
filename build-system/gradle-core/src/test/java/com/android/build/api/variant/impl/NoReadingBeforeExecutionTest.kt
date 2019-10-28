@@ -19,13 +19,13 @@ package com.android.build.api.variant.impl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.lang.RuntimeException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.DefaultAsserter.fail
 
 class NoReadingBeforeExecutionTest {
@@ -33,18 +33,18 @@ class NoReadingBeforeExecutionTest {
     @Mock lateinit var property: Property<String>
     @Mock lateinit var provider: Provider<String>
 
+    private val executionMode= AtomicBoolean(false)
     lateinit var gradleProperty: Property<String>
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        gradleProperty = GradleProperty.noReadingBeforeExecution("someId", property, "initial")
+        gradleProperty = GradleProperty.noReadingBeforeExecution(
+            id = "someId",
+            property = property,
+            initialValue = "initial",
+            executionMode = executionMode)
         Mockito.`when`(property.get()).thenReturn("initial")
-    }
-
-    @After
-    fun clean() {
-        GradleProperty.afterEndOfEvaluation.set(false)
     }
 
     @Test
@@ -71,7 +71,7 @@ class NoReadingBeforeExecutionTest {
         }
 
         // fake execution phase
-        GradleProperty.endOfEvaluation()
+        executionMode.set(true)
 
         assertThat(gradleProperty.get()).isEqualTo("initial")
     }
