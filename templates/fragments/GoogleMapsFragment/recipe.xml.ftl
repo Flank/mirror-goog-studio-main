@@ -3,7 +3,7 @@
 <recipe>
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.google.android.gms:play-services-maps:+" />
-    <dependency mavenUrl="com.android.support:appcompat-v7:${targetApi}.+" />
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
