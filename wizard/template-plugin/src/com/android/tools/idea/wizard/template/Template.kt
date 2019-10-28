@@ -113,7 +113,7 @@ interface Template {
     override val uiContexts: Collection<WizardUiContext> get() = TODO()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
     override val revision: Int = 1
-    override val name: String = "Empty Activity"
+    override val name: String = "No Activity"
     override val description: String = "Creates a new empty project"
     override val minSdk: Int = 1
     override val minCompileSdk: Int = 1
