@@ -26,8 +26,6 @@
     <global id="isDynamicFeature" type="boolean" value="false" />
 
     <global id="manifestOut" value="${manifestDir}" />
-    <global id="buildVersion" value="${buildApi}" />
-    <global id="buildApiRevision" type="integer" value="${buildApiRevision!0}" />
 
     <global id="superClassFqcn" type="string" value="${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}"/>
     <global id="actionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
