@@ -38,6 +38,7 @@ enum class Language(val string: String, val extension: String) {
   Kotlin("Kotlin", "kt")
 }
 
+
 // TODO: pack version data in separate class, possibly similar to AndroidVersionsInfo.VersionItem
 data class ProjectTemplateData(
   val minApi: String,
@@ -58,9 +59,11 @@ data class ProjectTemplateData(
   val kotlinVersion: String,
   val buildToolsVersion: Revision,
   val rootDir: File,
-  val applicationPackage: PackageName?
-): TemplateData()
-
+  val applicationPackage: PackageName?,
+  val includedFormFactorNames: Map<FormFactor, List<String>>
+): TemplateData() {
+  fun hasFormFactor(ff: FormFactor) = !includedFormFactorNames[ff].isNullOrEmpty()
+}
 
 // TODO(qumeric): create a more generic mechanism which will support modifying other modules
 /**
