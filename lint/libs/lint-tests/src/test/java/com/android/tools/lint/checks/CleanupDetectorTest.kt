@@ -1766,6 +1766,41 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testKtxUseStatement() {
+        // Regression test for
+        //  140344435 Lint does not realised that TypedArray.recycle() will be done by
+        //    KTX function of TypedArray.use
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.util.AttributeSet
+                import androidx.core.content.res.use
+
+                fun test(context: Context, attrs: AttributeSet, resource: Int) {
+                    var text: String? = null
+                    context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.text))
+                        .use { text = it.getString(0) }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package androidx.core.content.res
+                import android.content.res.TypedArray
+
+                inline fun <R> TypedArray.use(block: (TypedArray) -> R): R {
+                    return block(this).also {
+                        recycle()
+                    }
+                }
+                """
+            )
+        ).run().expectClean()
+    }
+
     fun testUse1() {
         // Regression test from 62377185
         lint().files(

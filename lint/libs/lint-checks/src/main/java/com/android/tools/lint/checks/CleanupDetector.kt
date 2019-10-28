@@ -239,11 +239,13 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
             private fun isCleanup(call: UCallExpression): Boolean {
                 val methodName = getMethodName(call)
-                if ("use" == methodName && CLOSE == recycleName) {
+                if ("use" == methodName) {
                     // Kotlin: "use" calls close; see issue 62377185
                     // Can't call call.resolve() to check it's the runtime because
                     // resolve returns null on these usages.
-                    // Now make sure we're calling it on the right variable
+                    // (See also ktx use method, issue 140344435, which
+                    // handles recycle() calls.)
+                    // Now make sure we're calling it on the right variable:
                     val operand: UExpression? = call.receiver
                     if (operand != null && instances.contains(operand)) {
                         return true
