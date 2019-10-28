@@ -26,7 +26,12 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
-/** Class that checks the presence of the manifest file, if it is required to exist.  */
+/**
+ * Class that checks the presence of the manifest file, if it is required to exist.
+ *
+ * REMOVE ME (bug 139855995): This task can be removed when the new variant API is ready, we haven't
+ * removed it yet for compatibility reasons.
+ */
 abstract class CheckManifest : NonIncrementalTask() {
 
     /** Whether the manifest file is required to exist. */

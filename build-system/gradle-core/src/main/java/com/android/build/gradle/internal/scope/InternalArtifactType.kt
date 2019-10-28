@@ -234,7 +234,9 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // renderscript library
     object RENDERSCRIPT_LIB: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
-    // An output of AndroidManifest.xml check
+    // An output of AndroidManifest.xml check.
+    // REMOVE ME (bug 139855995): This artifact can be removed in the new variant API, we haven't
+    // removed it yet for compatibility reasons.
     object CHECK_MANIFEST_RESULT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable
