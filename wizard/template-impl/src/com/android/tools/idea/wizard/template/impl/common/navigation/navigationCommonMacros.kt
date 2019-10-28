@@ -78,14 +78,13 @@ fun RecipeExecutor.navigationDependencies(
   }
 }
 
-fun RecipeExecutor.addSafeArgsPlugin(generateKotlin: Boolean, projectOut: File) {
+fun RecipeExecutor.addSafeArgsPlugin(generateKotlin: Boolean, moduleOut: File) {
   /*
-  Only use the Java version of the plugin to avoid Java and Kotlin version of the plugins are
-  added in the same project.
+  Only use the Java version of the plugin to avoid Java and Kotlin version of the plugins are added in the same project.
   */
   applyPlugin("androidx.navigation.safeargs")
   if (generateKotlin) {
-    mergeGradleFile(navigationKotlinBuildGradle, projectOut.resolve("build.gradle"))
+    mergeGradleFile(navigationKotlinBuildGradle, moduleOut.resolve("build.gradle"))
   }
 }
 
