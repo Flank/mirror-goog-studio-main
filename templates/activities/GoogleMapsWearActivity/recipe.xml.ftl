@@ -6,9 +6,7 @@
     <dependency mavenUrl="com.google.android.gms:play-services-maps:+" />
     <dependency mavenUrl="com.google.android.support:wearable:+" />
     <dependency mavenUrl="com.google.android.wearable:wearable:+" gradleConfiguration="provided" />
-<#if buildApi gte 26>
     <dependency mavenUrl="com.android.support:wear:+" />
-</#if>
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />

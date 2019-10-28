@@ -173,11 +173,7 @@ class ${detailsFragment} : DetailsFragment() {
             listRowAdapter.add(list[j % 5])
         }
 
-<#if buildApi gte 22>
         val header = HeaderItem(0, subcategories[0])
-<#else>
-        val header = HeaderItem(0, subcategories[0], null)
-</#if>
         mAdapter.add(ListRow(header, listRowAdapter))
         mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
     }

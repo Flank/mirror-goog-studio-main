@@ -18,11 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-    <#if buildApi gte 25 && targetApi gte 25>
         app:srcCompat="@mipmap/ic_launcher_round"
-    <#else>
-        app:srcCompat="@mipmap/ic_launcher"
-    </#if>
         android:contentDescription="@string/nav_header_desc"
         android:id="@+id/imageView" />
 </#if>

@@ -105,19 +105,11 @@ public class ${mainFragment} extends BrowseFragment {
             for (int j = 0; j < NUM_COLS; j++) {
                 listRowAdapter.add(list.get(j % 5));
             }
-            <#if buildApi gte 22>
-                HeaderItem header = new HeaderItem(i, MovieList.MOVIE_CATEGORY[i]);
-            <#else>
-                HeaderItem header = new HeaderItem(i, MovieList.MOVIE_CATEGORY[i], null);
-            </#if>
+            HeaderItem header = new HeaderItem(i, MovieList.MOVIE_CATEGORY[i]);
             rowsAdapter.add(new ListRow(header, listRowAdapter));
         }
 
-        <#if buildApi gte 22>
-            HeaderItem gridHeader = new HeaderItem(i, "PREFERENCES");
-        <#else>
-            HeaderItem gridHeader = new HeaderItem(i, "PREFERENCES", null);
-        </#if>
+        HeaderItem gridHeader = new HeaderItem(i, "PREFERENCES");
 
         GridItemPresenter mGridPresenter = new GridItemPresenter();
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);

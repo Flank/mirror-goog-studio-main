@@ -2,13 +2,8 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
-
     <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
-
-    <#if (includePermissionCheck!false)>
-        <dependency mavenUrl="com.android.support:support-annotations:${buildApi}.+" />
-    </#if>
-
+    <dependency mavenUrl="com.android.support:support-annotations:${buildApi}.+" />
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
     <dependency mavenUrl="android.arch.lifecycle:extensions:+"/>
 

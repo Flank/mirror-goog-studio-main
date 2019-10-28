@@ -5,7 +5,7 @@
     <application android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        <#if buildApi gte 17>android:supportsRtl="true"</#if>
+        android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
     </application>

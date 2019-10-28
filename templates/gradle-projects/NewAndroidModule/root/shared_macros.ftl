@@ -9,9 +9,9 @@
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:icon="@mipmap/ic_launcher"<#if buildApi gte 25 && targetApi gte 25>
-        android:roundIcon="@mipmap/ic_launcher_round"</#if><#if buildApi gte 17>
-        android:supportsRtl="true"</#if>
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme"/>
 </manifest></#if>
 </#macro>

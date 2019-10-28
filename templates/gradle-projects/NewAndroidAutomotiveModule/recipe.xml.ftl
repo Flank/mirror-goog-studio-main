@@ -68,10 +68,8 @@
 <#if !isLibraryProject>
     <instantiate from="root/res/values/styles.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
-    <#if buildApi gte 22>
-        <copy from="root/res/values/colors.xml"
-                to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
-    </#if>
+    <copy from="root/res/values/colors.xml"
+            to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
 </#if>
 
 <#if generateKotlin && useAndroidX>

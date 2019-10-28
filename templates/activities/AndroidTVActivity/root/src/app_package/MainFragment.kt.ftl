@@ -115,19 +115,11 @@ class ${mainFragment} : BrowseFragment() {
             for (j in 0 until NUM_COLS ) {
                 listRowAdapter.add(list[j % 5])
             }
-            <#if buildApi gte 22>
-                val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
-            <#else>
-                val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i], null)
-            </#if>
+            val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
             rowsAdapter.add(ListRow(header, listRowAdapter))
         }
 
-        <#if buildApi gte 22>
-            val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
-        <#else>
-            val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES", null)
-        </#if>
+        val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
 
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
