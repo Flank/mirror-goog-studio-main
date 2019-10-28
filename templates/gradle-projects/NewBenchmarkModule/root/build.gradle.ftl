@@ -4,7 +4,7 @@ apply plugin: 'androidx.benchmark'
 <@kt.addKotlinPlugins />
 
 android {
-    compileSdkVersion ${buildApi}
+    compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
 <#if explicitBuildToolsVersion!false>
     buildToolsVersion "${buildToolsVersion}"
 </#if>
@@ -22,7 +22,7 @@ android {
 </#if>
     defaultConfig {
         minSdkVersion ${minApi}
-        targetSdkVersion ${targetApi}
+        targetSdkVersion <#if targetApiString?matches("^\\d+$")>${targetApiString}<#else>'${targetApiString}'</#if>
         versionCode 1
         versionName "1.0"
 
