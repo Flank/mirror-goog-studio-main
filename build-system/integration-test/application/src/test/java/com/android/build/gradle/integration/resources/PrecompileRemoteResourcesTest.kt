@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
@@ -36,7 +37,8 @@ import java.io.File
 
 class PrecompileRemoteResourcesTest {
 
-    private val publishedLib = MinimalSubProject.lib("com.example.publishedLib")
+    private val publishedLib =
+        MinimalSubProject.lib("com.precompileRemoteResourcesTest.publishedLib")
         .withFile(
             "src/main/res/values-v28/strings.xml",
             """<resources>
@@ -89,8 +91,8 @@ class PrecompileRemoteResourcesTest {
             "src/main/AndroidManifest.xml",
             """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
                          xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="com.example.publishedLib"
-                    android:versionName="@com.example.publishedLib:string/my_version_name">
+                    package="com.precompileRemoteResourcesTest.publishedLib"
+                    android:versionName="@com.precompileRemoteResourcesTest.publishedLib:string/my_version_name">
                 </manifest>""".trimIndent()
         )
 
@@ -177,6 +179,13 @@ class PrecompileRemoteResourcesTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
+    private val transformCacheDir = FileUtils.join(
+        GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
+        "caches",
+        "transforms-2",
+        "files-2.1"
+    )
+
     @Test
     fun checkAppBuild() {
         project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
@@ -239,23 +248,21 @@ class PrecompileRemoteResourcesTest {
         }
     }
 
+    // TODO: find a better way to check the output of the transform
     private fun checkAarResourcesCompilerTransformOutput() {
-        val transformCacheDir = FileUtils.join(
-            GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-            "caches",
-            "transforms-2",
-            "files-2.1"
-        )
         assertThat(transformCacheDir.exists()).isTrue()
         assertThat(transformCacheDir.isDirectory).isTrue()
 
         var outputDir: File? = null
         for (subdirectory in transformCacheDir.listFiles()!!) {
             if (subdirectory.isDirectory) {
-                val outputDirCandidate = File(subdirectory, "com.example.publishedLib")
+                val outputDirCandidate =
+                    File(subdirectory, "com.precompileRemoteResourcesTest.publishedLib")
                 if (outputDirCandidate.exists() && outputDirCandidate.isDirectory) {
+                    assertWithMessage("Found more than one directory that could contain the output of the transform").that(
+                        outputDir
+                    ).isNull()
                     outputDir = outputDirCandidate
-                    break
                 }
             }
         }
