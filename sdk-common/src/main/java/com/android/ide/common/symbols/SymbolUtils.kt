@@ -358,7 +358,7 @@ fun parseMinifiedKeepRules(proguardRulesFile: File): SortedSet<String> {
 
     proguardRulesFile.forEachLine {
         if (it.startsWith(KEEP_RULE_PREFIX) && it.endsWith(KEEP_RULE_SUFFIX)) {
-            keepClasses.add(it.drop(KEEP_RULE_PREFIX.length).dropLast(KEEP_RULE_SUFFIX.length))
+            keepClasses.add(it)
         }
     }
     return keepClasses

@@ -317,9 +317,11 @@ public class SymbolUtilsTest {
                 SymbolUtils.parseMinifiedKeepRules(proguardMinifiedKeepRules);
 
         assertThat(keepClasses.size()).isEqualTo(8);
-        assertThat(keepClasses.first()).isEqualTo("android.support.v4.content.FileProvider");
+        assertThat(keepClasses.first())
+                .isEqualTo("-keep class android.support.v4.content.FileProvider { <init>(...); }");
         assertThat(keepClasses.last())
-                .isEqualTo("org.sampleapp.android.ui.posts.services.Service2");
+                .isEqualTo(
+                        "-keep class org.sampleapp.android.ui.posts.services.Service2 { <init>(...); }");
     }
 
     /**
