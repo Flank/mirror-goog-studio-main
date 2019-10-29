@@ -16,11 +16,23 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import java.util.Collection;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Verify some basic swapping that involves Kotlin compiler generated classes. */
+@RunWith(Parameterized.class)
 public class AgentBasedClassRedefinerDesugarTest extends AgentBasedClassRedefinerTestBase {
+    @Parameterized.Parameters
+    public static Collection<String> artFlags() {
+        return ALL_ART_FLAGS;
+    }
+
+    public AgentBasedClassRedefinerDesugarTest(String artFlag) {
+        super(artFlag);
+    }
 
     @Test
     public void testLambdasHotSwap() throws Exception {

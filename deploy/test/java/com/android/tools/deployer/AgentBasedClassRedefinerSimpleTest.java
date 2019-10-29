@@ -17,11 +17,25 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Test very simple cases on class redefinitions. */
+@RunWith(Parameterized.class)
 public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefinerTestBase {
+    @Parameterized.Parameters
+    public static Collection<String> artFlags() {
+        return ALL_ART_FLAGS;
+    }
+
+    public AgentBasedClassRedefinerSimpleTest(String artFlag) {
+        super(artFlag);
+    }
+
     @Test
     public void testSimpleClassRedefinition() throws Exception {
         android.loadDex(DEX_LOCATION);
@@ -47,6 +61,7 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
      */
     @Test
     public void testRedefiningNotLoaded() throws Exception {
+        Assume.assumeTrue(artFlag == null);
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 

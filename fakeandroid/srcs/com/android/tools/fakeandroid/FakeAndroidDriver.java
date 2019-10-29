@@ -20,7 +20,7 @@ public class FakeAndroidDriver extends ProcessRunner {
     private int myCommunicationPort;
     private final String myAddress;
 
-    public FakeAndroidDriver(String address, int debuggerPort, String[] env) {
+    public FakeAndroidDriver(String address, int debuggerPort, String extraArtFlag, String[] env) {
         List<String> args = new ArrayList<>();
         String[] array = new String[] {};
         args.add("bash");
@@ -90,6 +90,10 @@ public class FakeAndroidDriver extends ProcessRunner {
                             + debuggerPort);
         }
 
+        if (extraArtFlag != null) {
+            args.add(extraArtFlag);
+        }
+
         args.add("com.android.tools.applauncher.FakeAndroid");
 
         this.myAddress = address;
@@ -97,8 +101,12 @@ public class FakeAndroidDriver extends ProcessRunner {
         myProcessEnv = env;
     }
 
+    public FakeAndroidDriver(String address, int debuggerPort, String[] env) {
+        this(address, debuggerPort, null, env);
+    }
+
     public FakeAndroidDriver(String address, String[] env) {
-        this(address, -1, env);
+        this(address, -1, null, env);
     }
 
     @Override

@@ -20,4 +20,8 @@ public class R {
         public static final int FIELD_A = 0;
         public static final int FIELD_B = 1;
     }
+    public static class id {
+        public static final int custom_action_0 = 0;
+        public static final int custom_action_1 = 1;
+    }
 }
