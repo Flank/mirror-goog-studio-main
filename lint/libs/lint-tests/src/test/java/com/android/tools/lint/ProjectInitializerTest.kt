@@ -329,7 +329,10 @@ class ProjectInitializerTest {
             ),
 
             {
-                it.replace(canonicalRoot, "ROOT").replace(baseline.parentFile.path, "TESTROOT")
+                it
+                    .replace(canonicalRoot, "ROOT")
+                    .replace(root.path, "ROOT")
+                    .replace(baseline.parentFile.path, "TESTROOT")
                     .replace('\\', '/')
             },
             listener
