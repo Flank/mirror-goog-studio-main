@@ -122,6 +122,8 @@ public class GradleModelMocker {
     private ILogger logger;
     private boolean initialized;
 
+    private final Map<String, String> ext = new HashMap<>();
+
     @Language("Groovy")
     private final String gradle;
 
@@ -671,24 +673,43 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static String getUnquotedValue(String key) {
+    private String getUnquotedValue(String key) {
+        String value = key;
         int index = key.indexOf('\'');
         if (index != -1) {
-            return key.substring(index + 1, key.indexOf('\'', index + 1));
+            value = key.substring(index + 1, key.indexOf('\'', index + 1));
         }
-        index = key.indexOf('"');
-        if (index != -1) {
-            return key.substring(index + 1, key.indexOf('"', index + 1));
+        else if ((index = key.indexOf('"')) != -1) {
+            value = key.substring(index + 1, key.indexOf('"', index + 1));
         }
-        index = key.indexOf('=');
-        if (index != -1) {
-            return key.substring(index + 1);
+        else if ((index = key.indexOf('=')) != -1) {
+            value = key.substring(index + 1);
         }
-        index = key.indexOf(' ');
-        if (index != -1) {
-            return key.substring(index + 1);
+        else if ((index = key.indexOf(' ')) != -1) {
+            value = key.substring(index + 1);
         }
-        return key;
+        return value.indexOf('$') == -1 ? value : doInterpolations(value);
+    }
+
+    @NonNull
+    private String doInterpolations(String value) {
+        StringBuilder sb = new StringBuilder();
+        int lastIndex = 0;
+        int index;
+        while ((index = value.indexOf('$', lastIndex)) != -1) {
+            sb.append(value, lastIndex, index);
+            int end = value.indexOf(' ', index);
+            if (end == -1) end = value.length();
+            String name = value.substring(index+1, end);
+            if (ext.containsKey(name)) {
+                sb.append(ext.get(name));
+            } else {
+                sb.append("$" + name);
+            }
+            lastIndex = end;
+        }
+        sb.append(value, lastIndex, value.length());
+        return sb.toString();
     }
 
     private void line(@NonNull String line, @NonNull String context) {
@@ -729,7 +750,10 @@ public class GradleModelMocker {
         }
 
         String key = context.isEmpty() ? line : context + "." + line;
-        if (key.startsWith("dependencies.compile ")
+        if (key.startsWith("ext.")) {
+            String name = key.substring(4, key.indexOf(' '));
+            ext.put(name, getUnquotedValue(key));
+        } else if (key.startsWith("dependencies.compile ")
                 || key.startsWith("dependencies.compile(")
                 || key.startsWith("dependencies.implementation(")
                 || key.startsWith("dependencies.implementation ")) {
@@ -1333,7 +1357,7 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static ApiVersion createApiVersion(@NonNull String value) {
+    private ApiVersion createApiVersion(@NonNull String value) {
         ApiVersion version = mock(ApiVersion.class);
         String s = value.substring(value.indexOf(' ') + 1);
         if (s.startsWith("'")) {

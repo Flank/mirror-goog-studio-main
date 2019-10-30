@@ -176,6 +176,41 @@ public class GradleModelMockerTest {
     }
 
     @Test
+    public void testKotlinWithInterpolation() {
+        GradleModelMocker mocker =
+                createMocker(
+                        ""
+                                + "apply plugin: 'kotlin-android'\n"
+                                + "\n"
+                                + "ext {\n"
+                                + "    kotlin_version = \"1.3.21\"\n"
+                                + "}\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n"
+                                + "}");
+        Variant variant = mocker.getVariant();
+        IdeAndroidProject project = mocker.getProject();
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
+
+        assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
+        Collection<JavaLibrary> libraries =
+                variant.getMainArtifact().getDependencies().getJavaLibraries();
+        assertThat(libraries).hasSize(3);
+        JavaLibrary library = libraries.iterator().next();
+        MavenCoordinates resolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
+        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib-jdk7");
+        assertThat(resolvedCoordinates.getVersion()).isEqualTo("1.3.21");
+
+        library = Iterators.get(libraries.iterator(), 1);
+        resolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
+        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib");
+        assertThat(resolvedCoordinates.getVersion()).isEqualTo("1.3.21");
+    }
+
+    @Test
     @SuppressWarnings("ConstantConditions")
     public void testMinSdkVersion() {
         GradleModelMocker mocker =
