@@ -1,0 +1,21 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.latestCompileSdk
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 28
+    }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+}
+
+dependencies {
+    lintPublish project(":checkB")
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
