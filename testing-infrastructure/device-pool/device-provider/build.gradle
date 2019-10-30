@@ -5,7 +5,7 @@ dependencies {
     compile gradleApi()
     compileOnly project(":base:builder")
     compileOnly project(":base:builder-test-api")
-    compileOnly project(":base:gradle-core")
+    compileOnly project(":base:build-system:gradle-core")
     compileOnly libs.guava
 }
 

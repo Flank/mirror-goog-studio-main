@@ -24,7 +24,7 @@ import org.gradle.build.docs.releasenotes.*
 import org.gradle.build.docs.releasenotes.checks.*
 
 evaluationDependsOn(':base:gradle-api')
-evaluationDependsOn(':base:gradle-core')
+evaluationDependsOn(':base:build-system:gradle-core')
 evaluationDependsOn(':base:builder')
 
 apply plugin: 'groovy'
@@ -202,7 +202,7 @@ def javaApiUrl = "http://docs.oracle.com/javase/8/docs/api/"
 def groovyApiUrl = "http://groovy.codehaus.org/gapi/"
 def publicGroovyProjects = [
         project(":base:gradle-api"),
-        project(":base:gradle-core"),
+        project(":base:build-system:gradle-core"),
         project(":base:builder-model"),
         project(":base:builder")
 ]

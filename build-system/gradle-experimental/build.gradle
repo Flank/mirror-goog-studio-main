@@ -8,7 +8,7 @@ apply plugin: 'jacoco-tools-base'
 
 dependencies {
     compile gradleApi()
-    compile project(':base:gradle-core')
+    compile project(':base:build-system:gradle-core')
 
     testCompile libs.junit
     testCompile libs.truth
