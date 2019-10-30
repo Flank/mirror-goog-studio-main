@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dexing
 
+import com.android.builder.dexing.ClassBucket
 import java.io.File
 import java.io.Serializable
 
@@ -23,10 +24,7 @@ import java.io.Serializable
 class IncrementalDexSpec(
 
     /** The input class files to dex. A class file could be a regular file or a jar entry. */
-    val classFileRoots: List<File>,
-    val isDirectory: Boolean,
-    val numberOfBuckets: Int,
-    val buckedId: Int,
+    val inputClassFiles: ClassBucket,
 
     /** The path to a directory or jar file containing output dex files. */
     val outputPath: File,
