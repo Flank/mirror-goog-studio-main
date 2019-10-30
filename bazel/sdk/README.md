@@ -143,6 +143,9 @@ $ repo sync
 
 You only have to do this step once.
 
+To remove the repositories after you are done with them, you can simply delete
+the file from local_manifests.
+
 ### Start a new branch
 
 ```
