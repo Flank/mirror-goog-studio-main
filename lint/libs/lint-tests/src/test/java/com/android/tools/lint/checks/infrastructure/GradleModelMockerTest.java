@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_UNIT_TEST;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
@@ -142,6 +144,47 @@ public class GradleModelMockerTest {
         assertThat(resolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
         assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("mylib");
         assertThat(resolvedCoordinates.getVersion()).isEqualTo("25.0.0-SNAPSHOT");
+    }
+
+    @Test
+    public void testLibrariesInExtraArtifacts() {
+        GradleModelMocker mocker =
+                createMocker(
+                        ""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    testCompile 'my.group.id:mylib1:1.2.3-rc4'\n"
+                        + "    androidTestImplementation 'my.group.id:mylib2:4.5.6-SNAPSHOT'\n"
+                        + "}");
+        Variant variant = mocker.getVariant();
+        IdeAndroidProject project = mocker.getProject();
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
+
+        assertThat(variant.getMergedFlavor().getVersionCode()).isNull();
+
+        Collection<AndroidLibrary> testLibraries =
+                variant.getExtraJavaArtifacts().stream()
+                        .filter(a -> a.getName().equals(ARTIFACT_NAME_UNIT_TEST))
+                        .findFirst().get().getDependencies().getLibraries();
+        assertThat(testLibraries).hasSize(1);
+        AndroidLibrary testLibrary = testLibraries.iterator().next();
+        MavenCoordinates testResolvedCoordinates = testLibrary.getResolvedCoordinates();
+        assertThat(testResolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
+        assertThat(testResolvedCoordinates.getArtifactId()).isEqualTo("mylib1");
+        assertThat(testResolvedCoordinates.getVersion()).isEqualTo("1.2.3-rc4");
+
+        Collection<AndroidLibrary> androidTestLibraries =
+                variant.getExtraAndroidArtifacts().stream()
+                        .filter(a -> a.getName().equals(ARTIFACT_NAME_ANDROID_TEST))
+                        .findFirst().get().getDependencies().getLibraries();
+        assertThat(androidTestLibraries).hasSize(1);
+        AndroidLibrary library = androidTestLibraries.iterator().next();
+        MavenCoordinates androidTestResolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(androidTestResolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
+        assertThat(androidTestResolvedCoordinates.getArtifactId()).isEqualTo("mylib2");
+        assertThat(androidTestResolvedCoordinates.getVersion()).isEqualTo("4.5.6-SNAPSHOT");
+
     }
 
     @Test
