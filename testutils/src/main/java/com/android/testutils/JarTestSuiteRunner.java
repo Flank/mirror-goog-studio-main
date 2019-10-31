@@ -229,6 +229,10 @@ public class JarTestSuiteRunner extends Suite {
 
         // Set up the hard-coded white list of packages that pass tests
         Set<String> packagesToInclude = new HashSet<>();
+        packagesToInclude.add("com.android.tools.idea.actions");
+        packagesToInclude.add("com.android.tools.idea.apk");
+        packagesToInclude.add("com.android.tools.idea.avdmanager");
+        packagesToInclude.add("com.android.tools.idea.completion");
         packagesToInclude.add("com.android.tools.idea.explorer");
 
         // Compute list of classes included in the above list
