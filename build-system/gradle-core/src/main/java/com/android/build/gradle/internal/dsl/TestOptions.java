@@ -26,7 +26,6 @@ import groovy.lang.Closure;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
-import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.util.ConfigureUtil;
@@ -54,7 +53,7 @@ public class TestOptions {
 
     @Inject
     public TestOptions(ObjectFactory objectFactory) {
-        this.unitTests = objectFactory.newInstance(UnitTestOptions.class);
+        this.unitTests = objectFactory.newInstance(UnitTestOptions.class, objectFactory);
     }
 
     /**
@@ -157,11 +156,15 @@ public class TestOptions {
     /** Options for controlling unit tests execution. */
     public static class UnitTestOptions {
         // Used by testTasks.all below, DSL docs generator can't handle diamond operator.
-        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "Convert2Diamond"})
-        private DomainObjectSet<Test> testTasks = new DefaultDomainObjectSet<Test>(Test.class);
+        private final DomainObjectSet<Test> testTasks;
 
         private boolean returnDefaultValues;
         private boolean includeAndroidResources;
+
+        @Inject
+        public UnitTestOptions(@NonNull ObjectFactory objectFactory) {
+            testTasks = objectFactory.domainObjectSet(Test.class);
+        }
 
         /**
          * Whether unmocked methods from android.jar should throw exceptions or return default
