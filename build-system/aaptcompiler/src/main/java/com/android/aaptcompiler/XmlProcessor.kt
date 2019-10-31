@@ -87,9 +87,6 @@ class XmlProcessor(val source: Source) {
     lateinit var primaryFile: ResourceFile
         private set
 
-    var createdIds = listOf<SourcedResourceName>()
-        private set
-
     var xmlResources = listOf<XmlResource>()
         private set
 
@@ -139,10 +136,10 @@ class XmlProcessor(val source: Source) {
                 return false
             }
 
-            createdIds = collectedIds.values.toList().sortedBy { it.name }
+            primaryFile.exportedSymbols.addAll(collectedIds.values.toList().sortedBy { it.name })
 
             xmlResources = protoBuilders.values.map { it.build() }
-                .sortedWith(Comparator<XmlResource> { left, right ->
+                .sortedWith(Comparator { left, right ->
                     when {
                         // The primary file should come first in the result.
                         left === right -> 0
@@ -178,7 +175,7 @@ class XmlProcessor(val source: Source) {
      * @param eventReader the stream from which the XML file is read. The event reader should be in
      * a state where [startElement] was the last event read. When this method finishes,
      * [eventReader] will be positioned immediately after the [EndElement] that aligns with the
-     * supplied[StartElement].
+     * supplied [StartElement].
      * @param collectedIds The map of all created ID resources in the XML document. Any created ids
      * found in the XML tree represented by [startElement] will be added to this map.
      * @param resourceBuilders The map of all XML resource builders created for this XML document.
@@ -251,27 +248,25 @@ class XmlProcessor(val source: Source) {
 
         // Add namespaces to proto.
         for (namespace in namespaces) {
-            val nsLocation = namespace.location
             currentBuilder.addNamespaceDeclaration(
                 namespace.namespaceURI,
                 namespace.prefix,
-                nsLocation.lineNumber,
-                nsLocation.columnNumber
+                elementLocation.lineNumber,
+                elementLocation.columnNumber
             )
         }
 
-        // Add attributes to proto
+        // Add attributes to proto.
         val attributes = startElement.attributes
         while (attributes.hasNext()) {
             val attribute = attributes.next() as Attribute
-            val attrLocation = attribute.location
             val attrName = attribute.name
             currentBuilder.addAttribute(
                 attrName.localPart,
                 attrName.namespaceURI,
                 attribute.value,
-                attrLocation.lineNumber,
-                attrLocation.columnNumber
+                elementLocation.lineNumber,
+                elementLocation.columnNumber
             )
         }
 
@@ -395,11 +390,10 @@ class XmlProcessor(val source: Source) {
 
         // Check to see if the attribute would overwrite a previously defined one.
         if (parentBuilder.findAttribute(nameValue.entry!!, attrUri) != null) {
-            // TODO(b/139297538): diagnostics
             return false
         }
 
-        // Now to add the new attribute to the parent xml element
+        // Now to add the new attribute to the parent xml element.
         parentBuilder.addAttribute(
             nameValue.entry,
             attrUri,
@@ -494,8 +488,8 @@ class XmlProcessor(val source: Source) {
         }
 
         if (!foundChild) {
-            // TODO(b/139297538): diagnostics
-            return null
+          // TODO(b/139297538): diagnostics
+          return null
         }
 
         if (foundError) return null

@@ -73,13 +73,17 @@ class Container(val output: OutputStream, val totalEntryCount: Int) {
     closeIfFinished()
   }
 
-  fun addFileEntry(input: InputStream, file: ResourceFile) {
+  fun addFileEntry(input: InputStream, file: ResourceFile) =
+    addFileEntryImpl(input.readBytes(), file)
+
+  fun addXmlEntry(resource: XmlResource) =
+    addFileEntryImpl(resource.xmlProto.toByteArray(), resource.file)
+
+  private fun addFileEntryImpl(content: ByteArray, file: ResourceFile) {
     if (currentEntryCount >= totalEntryCount) {
       error("Too many entries being serialized.")
     }
     ++currentEntryCount
-
-    val content = input.readBytes()
 
     val codedOut = CodedOutputStream.newInstance(output)
 
