@@ -23,9 +23,11 @@ import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_C
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -36,6 +38,7 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,10 +67,10 @@ public class NativeSoPackagingTest {
     private GradleTestProject jarProject;
     private GradleTestProject jarProject2;
 
-    private void execute(String... tasks) throws Exception {
+    private GradleBuildResult execute(String... tasks) throws Exception {
         // TODO: Remove once we understand the cause of flakiness.
         TestUtils.waitForFileSystemTick();
-        project.executor().run(tasks);
+        return project.executor().run(tasks);
     }
 
     @Before
@@ -258,18 +261,25 @@ public class NativeSoPackagingTest {
     public void testAppProjectWithNewAssetFileOverridingDependency() throws Exception {
         execute("app:clean", "app:assembleDebug");
 
-        doTest(appProject, project -> {
-            project.addFile("src/main/jniLibs/x86/liblibrary.so", "new content");
-            execute("app:assembleDebug");
+        doTest(
+                appProject,
+                project -> {
+                    project.addFile("src/main/jniLibs/x86/liblibrary.so", "new content");
+                    GradleBuildResult result = execute("app:assembleDebug");
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        "More than one file was found with OS independent path 'lib/x86/liblibrary.so'.");
+                    }
 
-            checkApk(appProject, "liblibrary.so", "new content");
+                    checkApk(appProject, "liblibrary.so", "new content");
 
-            // now remove it to test it works in the other direction
-            project.removeFile("src/main/jniLibs/x86/liblibrary.so");
-            execute("app:assembleDebug");
+                    // now remove it to test it works in the other direction
+                    project.removeFile("src/main/jniLibs/x86/liblibrary.so");
+                    execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary.so", "library:abcd");
-        });
+                    checkApk(appProject, "liblibrary.so", "library:abcd");
+                });
     }
 
     @Test
@@ -487,36 +497,50 @@ public class NativeSoPackagingTest {
     public void testLibProjectTestWithNewAssetFileOverridingTestedLib() throws Exception {
         execute("library:clean", "library:assembleAT");
 
-        doTest(libProject, project -> {
-            project.addFile("src/androidTest/jniLibs/x86/liblibrary.so", "new content");
-            execute("library:assembleAT");
+        doTest(
+                libProject,
+                project -> {
+                    project.addFile("src/androidTest/jniLibs/x86/liblibrary.so", "new content");
+                    GradleBuildResult result = execute("library:assembleAT");
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        "More than one file was found with OS independent path 'lib/x86/liblibrary.so'.");
+                    }
 
-            checkTestApk(libProject, "liblibrary.so", "new content");
+                    checkTestApk(libProject, "liblibrary.so", "new content");
 
-            // now remove it to test it works in the other direction
-            project.removeFile("src/androidTest/jniLibs/x86/liblibrary.so");
-            execute("library:assembleAT");
+                    // now remove it to test it works in the other direction
+                    project.removeFile("src/androidTest/jniLibs/x86/liblibrary.so");
+                    execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrary.so", "library:abcd");
-        });
+                    checkTestApk(libProject, "liblibrary.so", "library:abcd");
+                });
     }
 
     @Test
     public void testLibProjectTestWithNewAssetFileOverridingDepenency() throws Exception {
         execute("library:clean", "library:assembleAT");
 
-        doTest(libProject, project -> {
-            project.addFile("src/androidTest/jniLibs/x86/liblibrary2.so", "new content");
-            execute("library:assembleAT");
+        doTest(
+                libProject,
+                project -> {
+                    project.addFile("src/androidTest/jniLibs/x86/liblibrary2.so", "new content");
+                    GradleBuildResult result = execute("library:assembleAT");
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        "More than one file was found with OS independent path 'lib/x86/liblibrary2.so'.");
+                    }
 
-            checkTestApk(libProject, "liblibrary2.so", "new content");
+                    checkTestApk(libProject, "liblibrary2.so", "new content");
 
-            // now remove it to test it works in the other direction
-            project.removeFile("src/androidTest/jniLibs/x86/liblibrary2.so");
-            execute("library:assembleAT");
+                    // now remove it to test it works in the other direction
+                    project.removeFile("src/androidTest/jniLibs/x86/liblibrary2.so");
+                    execute("library:assembleAT");
 
-            checkTestApk(libProject, "liblibrary2.so", "library2:abcd");
-        });
+                    checkTestApk(libProject, "liblibrary2.so", "library2:abcd");
+                });
     }
 
     // ---- TEST DEFAULT ---

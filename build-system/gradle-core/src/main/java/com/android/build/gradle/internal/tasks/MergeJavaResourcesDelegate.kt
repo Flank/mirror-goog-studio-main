@@ -20,6 +20,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.InternalScope
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.packaging.PackagingFileAction
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
@@ -36,6 +37,7 @@ import com.android.builder.merge.StreamMergeAlgorithms
 import com.android.builder.packaging.PackagingUtils
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
+import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -246,7 +248,24 @@ class MergeJavaResourcesDelegate(
                     packagingAction == PackagingFileAction.NONE &&
                             inputs.any { highPriorityInputs.contains(it) }
                 return if (shouldFilterInputs) {
-                    ImmutableList.copyOf(inputs.filter { highPriorityInputs.contains(it) })
+                    // Warn if filtering out "low priority inputs" resolves collisions. Future
+                    // AGP versions will not do this filtering and will result in an error instead.
+                    // See Issue 141758241.
+                    val filteredInputs =
+                        ImmutableList.copyOf(inputs.filter { highPriorityInputs.contains(it) })
+                    if (filteredInputs.size < inputs.size) {
+                        val logger =
+                            LoggerWrapper(Logging.getLogger(MergeJavaResourcesDelegate::class.java))
+                        logger.warning(
+                            "More than one file was found with OS independent path '$path'. "
+                                    + "This version of the Android Gradle Plugin chooses the file "
+                                    + "from the app or dynamic-feature module, but this can cause "
+                                    + "unexpected behavior or errors at runtime. Future versions "
+                                    + "of the Android Gradle Plugin will throw an error in this "
+                                    + "case."
+                        )
+                    }
+                    filteredInputs
                 } else {
                     ImmutableList.copyOf(inputs)
                 }
