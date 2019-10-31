@@ -19,11 +19,21 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.flags.Flag;
 import com.android.flags.ImmutableFlagOverrides;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /** Read-only collection of override values backed by a set of Java properties. */
 public final class PropertyOverrides implements ImmutableFlagOverrides {
     private final Properties properties;
+    /**
+     * We create a cache of properties that we've already fetched, since {@link Properties} is a
+     * thread-safe class, meaning a user repeatedly querying a flag over and over in a tight loop
+     * could see a performance hit without the cache.
+     *
+     * <p>Note that it's valid for the value parameter to be null.
+     */
+    private final Map<String, String> cache = new HashMap<>();
 
     public PropertyOverrides() {
         this(System.getProperties());
@@ -36,6 +46,10 @@ public final class PropertyOverrides implements ImmutableFlagOverrides {
     @Nullable
     @Override
     public String get(@NonNull Flag<?> flag) {
-        return (String) properties.get(flag.getId());
+        String key = flag.getId();
+        if (!cache.containsKey(key)) {
+            cache.put(key, properties.getProperty(key));
+        }
+        return cache.get(key);
     }
 }

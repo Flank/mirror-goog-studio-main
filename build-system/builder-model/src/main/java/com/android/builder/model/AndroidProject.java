@@ -152,14 +152,6 @@ public interface AndroidProject {
     int MODEL_LEVEL_4_NEW_DEP_MODEL = 4;
     int MODEL_LEVEL_LATEST = MODEL_LEVEL_4_NEW_DEP_MODEL;
 
-    int PROJECT_TYPE_APP = 0;
-    int PROJECT_TYPE_LIBRARY = 1;
-    int PROJECT_TYPE_TEST = 2;
-    @Deprecated int PROJECT_TYPE_ATOM = 3;
-    int PROJECT_TYPE_INSTANTAPP = 4; // Instant App Bundle
-    int PROJECT_TYPE_FEATURE = 5; // com.android.feature module
-    int PROJECT_TYPE_DYNAMIC_FEATURE = 6; //com.android.dynamic-feature module
-
     /**
      * Returns the model version. This is a string in the format X.Y.Z
      *

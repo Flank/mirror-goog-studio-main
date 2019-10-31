@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -85,7 +86,9 @@ public class FlavorlibTest {
         assertThat(appModel).named("app model").isNotNull();
 
         assertThat(appModel.isLibrary()).named("App isLibrary()").isFalse();
-        assertThat(appModel.getProjectType()).named("App Project Type").isEqualTo(AndroidProject.PROJECT_TYPE_APP);
+        assertThat(appModel.getProjectType())
+                .named("App Project Type")
+                .isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         // query for presence check
         AndroidProjectUtils.getProductFlavor(appModel, "flavor1");

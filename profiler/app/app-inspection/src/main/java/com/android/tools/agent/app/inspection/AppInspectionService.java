@@ -25,6 +25,7 @@ import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -188,4 +189,69 @@ public class AppInspectionService {
     }
 
     private static native AppInspectionService createAppInspectionService();
+
+    /// ==================================== EVERYTHING below should be called only when app_inspection_experimental=true
+    private ExperimentalCapabilities mExperimental = new ExperimentalCapabilities();
+
+    static class ExperimentalCapabilities {
+        // TODO: save inspector and clean up transformation when inspectors are gone
+        Map<String, InspectorEnvironment.ExitHook> mExitTransforms =
+                new HashMap<String, InspectorEnvironment.ExitHook>();
+        Map<String, InspectorEnvironment.EntryHook> mEntryTransforms =
+                new HashMap<String, InspectorEnvironment.EntryHook>();
+
+        private static String createLabel(Class origin, String method) {
+            if (method.indexOf('(') == -1) {
+                return "";
+            }
+            return origin.getCanonicalName() + method.substring(0, method.indexOf('('));
+        }
+
+        static void addEntryHook(Class origin, String method, InspectorEnvironment.EntryHook hook) {
+            sInstance.mExperimental.mEntryTransforms.put(createLabel(origin, method), hook);
+        }
+
+        static void addExitHook(
+                Class origin, String method, InspectorEnvironment.ExitHook<?> hook) {
+            sInstance.mExperimental.mExitTransforms.put(createLabel(origin, method), hook);
+        }
+
+        public static void onExit(Object returnObject) {
+            Error error = new Error();
+            error.fillInStackTrace();
+            StackTraceElement[] stackTrace = error.getStackTrace();
+            if (stackTrace.length < 2) {
+                return;
+            }
+            StackTraceElement element = stackTrace[1];
+            String label = element.getClassName() + element.getMethodName();
+
+            AppInspectionService instance = AppInspectionService.instance();
+            InspectorEnvironment.ExitHook hook = instance.mExperimental.mExitTransforms.get(label);
+            if (hook != null) {
+                hook.onExit(returnObject);
+            } else {
+                System.out.println("!!! Dropped on the floor");
+            }
+        }
+
+        public static void onEntry(Object thisObject) {
+            Error error = new Error();
+            error.fillInStackTrace();
+            StackTraceElement[] stackTrace = error.getStackTrace();
+            if (stackTrace.length < 2) {
+                return;
+            }
+            StackTraceElement element = stackTrace[1];
+            String label = element.getClassName() + element.getMethodName();
+            InspectorEnvironment.EntryHook hook =
+                    AppInspectionService.instance().mExperimental.mEntryTransforms.get(label);
+            System.out.println("!!!!! entry worked yo yo you! " + label + " " + hook);
+            if (hook != null) {
+                hook.onEntry(thisObject, Collections.emptyList());
+            } else {
+                System.out.println("!!! Dropped on the floor exit");
+            }
+        }
+    }
 }

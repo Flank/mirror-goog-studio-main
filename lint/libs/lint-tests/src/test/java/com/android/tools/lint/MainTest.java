@@ -232,6 +232,7 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testNonexistentLibrary() {
+        File fooJar = new File(getTempDir(), "foo.jar");
         checkDriver(
                 "",
                 "Library /TESTROOT/foo.jar does not exist.\n",
@@ -240,7 +241,7 @@ public class MainTest extends AbstractCheckTest {
                 ERRNO_INVALID_ARGS,
 
                 // Args
-                new String[] {"--libraries", "foo.jar", "prj"});
+                new String[] {"--libraries", fooJar.getPath(), "prj"});
     }
 
     public void testMultipleProjects() throws Exception {

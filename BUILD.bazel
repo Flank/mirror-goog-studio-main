@@ -9,7 +9,6 @@ maven_repo(
         "//tools/base/build-system/gradle-core",
         "//tools/base/build-system/aapt2",
         "//tools/base/build-system/aapt2-proto",
-        "//tools/base/devicelib:tools.devicelib",
         "//tools/base/lint/libs/lint-tests",
         "//tools/base/lint:tools.lint-gradle",
         "//tools/base/testutils:tools.testutils",

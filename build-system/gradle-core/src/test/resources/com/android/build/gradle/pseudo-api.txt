@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-e1f3c3dc46ac76aac28b9287848e1dc35b83f781e59e6e35106aeb70f637bc62
+4da9c89662bd3d687a5af99490f965818263aa07141141372536892999654b2d
 -------------------------------------------------------------------------
 com.android.build.gradle.AndroidConfig
 com.android.build.gradle.AndroidConfig.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
@@ -43,18 +43,18 @@ com.android.build.gradle.AndroidConfig.getTestServers: java.util.List<com.androi
 com.android.build.gradle.AndroidConfig.getTransforms: java.util.List<com.android.build.api.transform.Transform> ()
 com.android.build.gradle.AndroidConfig.getTransformsDependencies: java.util.List<java.util.List<java.lang.Object>> ()
 com.android.build.gradle.AndroidConfig.getVariantFilter: org.gradle.api.Action<com.android.build.api.variant.VariantFilter> ()
-com.android.build.gradle.AppExtension
+com.android.build.gradle.AppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AppExtension.<init>: com.android.build.gradle.AppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
 com.android.build.gradle.AppExtension.addVariant: void (com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.scope.VariantScope)
 com.android.build.gradle.AppExtension.getApplicationVariants: org.gradle.api.DomainObjectSet<com.android.build.gradle.api.ApplicationVariant> ()
 com.android.build.gradle.AppExtension.onVariants: void (org.gradle.api.Action<com.android.build.api.variant.Variant>)
-com.android.build.gradle.AppPlugin
+com.android.build.gradle.AppPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.AppPlugin.<init>: com.android.build.gradle.AppPlugin ()
 com.android.build.gradle.AppPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.AppPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.AppPluginKt
 com.android.build.gradle.AppPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
-com.android.build.gradle.BaseExtension
+com.android.build.gradle.BaseExtension implements com.android.build.gradle.AndroidConfig, com.android.build.api.dsl.CommonExtension
 com.android.build.gradle.BaseExtension.aaptOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AaptOptions>)
 com.android.build.gradle.BaseExtension.adbOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AdbOptions>)
 com.android.build.gradle.BaseExtension.addVariant: void (com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.scope.VariantScope)
@@ -152,14 +152,14 @@ com.android.build.gradle.BaseExtension.useLibrary: void (java.lang.String, boole
 com.android.build.gradle.BaseExtension.variantFilter: void (org.gradle.api.Action<com.android.build.api.variant.VariantFilter>)
 com.android.build.gradle.BaseExtension.viewBinding: void (org.gradle.api.Action<com.android.build.gradle.api.ViewBindingOptions>)
 com.android.build.gradle.BaseExtension.wrapJavaSourceSet: com.android.builder.model.SourceProvider (org.gradle.api.tasks.SourceSet)
-com.android.build.gradle.BasePlugin
+com.android.build.gradle.BasePlugin implements org.gradle.api.Plugin
 com.android.build.gradle.BasePlugin.<init>: com.android.build.gradle.BasePlugin ()
 com.android.build.gradle.BasePlugin.apply: void (java.lang.Object)
 com.android.build.gradle.BasePlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.BasePlugin.getExtension: com.android.build.gradle.BaseExtension ()
 com.android.build.gradle.BasePluginKt
 com.android.build.gradle.BasePluginKt.getVERSION_CHECK_PLUGIN_ID: java.util.Map<java.lang.String, java.lang.String> ()
-com.android.build.gradle.DynamicFeaturePlugin
+com.android.build.gradle.DynamicFeaturePlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.DynamicFeaturePlugin.<init>: com.android.build.gradle.DynamicFeaturePlugin ()
 com.android.build.gradle.DynamicFeaturePlugin.apply: void (java.lang.Object)
 com.android.build.gradle.DynamicFeaturePlugin.apply: void (org.gradle.api.Project)
@@ -167,11 +167,11 @@ com.android.build.gradle.DynamicFeaturePluginKt
 com.android.build.gradle.DynamicFeaturePluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.FeatureExtension
 com.android.build.gradle.FeatureExtension.<init>: com.android.build.gradle.FeatureExtension ()
-com.android.build.gradle.FeaturePlugin
+com.android.build.gradle.FeaturePlugin implements org.gradle.api.Plugin
 com.android.build.gradle.FeaturePlugin.<init>: com.android.build.gradle.FeaturePlugin ()
 com.android.build.gradle.FeaturePlugin.apply: void (java.lang.Object)
 com.android.build.gradle.FeaturePlugin.apply: void (org.gradle.api.Project)
-com.android.build.gradle.LibraryExtension
+com.android.build.gradle.LibraryExtension extends com.android.build.gradle.TestedExtension implements com.android.build.api.dsl.LibraryExtension
 com.android.build.gradle.LibraryExtension.<init>: com.android.build.gradle.LibraryExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo)
 com.android.build.gradle.LibraryExtension.addVariant: void (com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.scope.VariantScope)
 com.android.build.gradle.LibraryExtension.aidlPackageWhiteList: void (java.lang.String[])
@@ -181,18 +181,18 @@ com.android.build.gradle.LibraryExtension.getPackageBuildConfig: java.lang.Boole
 com.android.build.gradle.LibraryExtension.packageBuildConfig: void (boolean)
 com.android.build.gradle.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.LibraryExtension.setPackageBuildConfig: void (boolean)
-com.android.build.gradle.LibraryPlugin
+com.android.build.gradle.LibraryPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.LibraryPlugin.<init>: com.android.build.gradle.LibraryPlugin ()
 com.android.build.gradle.LibraryPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.LibraryPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.LibraryPluginKt
 com.android.build.gradle.LibraryPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
-com.android.build.gradle.LintPlugin
+com.android.build.gradle.LintPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.LintPlugin.<init>: com.android.build.gradle.LintPlugin ()
 com.android.build.gradle.LintPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.LintPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.ProguardFiles
-com.android.build.gradle.ProguardFiles$ProguardFile
+com.android.build.gradle.ProguardFiles$ProguardFile extends java.lang.Enum
 com.android.build.gradle.ProguardFiles$ProguardFile.fileName: Field - class java.lang.String
 com.android.build.gradle.ProguardFiles$ProguardFile.valueOf: com.android.build.gradle.ProguardFiles$ProguardFile (java.lang.String)
 com.android.build.gradle.ProguardFiles$ProguardFile.values: com.android.build.gradle.ProguardFiles$ProguardFile[] ()
@@ -202,16 +202,16 @@ com.android.build.gradle.ProguardFiles.getDefaultProguardFile: java.io.File (jav
 com.android.build.gradle.PseudoApiUpdater
 com.android.build.gradle.PseudoApiUpdater.<init>: com.android.build.gradle.PseudoApiUpdater ()
 com.android.build.gradle.PseudoApiUpdater.main: void (java.lang.String[]) throws java.io.IOException
-com.android.build.gradle.ReportingPlugin
+com.android.build.gradle.ReportingPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.ReportingPlugin.<init>: com.android.build.gradle.ReportingPlugin ()
 com.android.build.gradle.ReportingPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.ReportingPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.ReportingPluginKt
 com.android.build.gradle.ReportingPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
-com.android.build.gradle.TestAndroidConfig
+com.android.build.gradle.TestAndroidConfig implements com.android.build.gradle.AndroidConfig
 com.android.build.gradle.TestAndroidConfig.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestAndroidConfig.getTargetVariant: java.lang.String ()
-com.android.build.gradle.TestExtension
+com.android.build.gradle.TestExtension extends com.android.build.gradle.BaseExtension implements com.android.build.gradle.TestAndroidConfig, com.android.build.api.dsl.TestExtension
 com.android.build.gradle.TestExtension.<init>: com.android.build.gradle.TestExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo)
 com.android.build.gradle.TestExtension.addVariant: void (com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.scope.VariantScope)
 com.android.build.gradle.TestExtension.getApplicationVariants: org.gradle.api.internal.DefaultDomainObjectSet<com.android.build.gradle.api.ApplicationVariant> ()
@@ -222,17 +222,17 @@ com.android.build.gradle.TestExtension.setTargetProjectPath: void (java.lang.Str
 com.android.build.gradle.TestExtension.setTargetVariant: void (java.lang.String)
 com.android.build.gradle.TestExtension.targetProjectPath: void (java.lang.String)
 com.android.build.gradle.TestExtension.targetVariant: void (java.lang.String)
-com.android.build.gradle.TestPlugin
+com.android.build.gradle.TestPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.TestPlugin.<init>: com.android.build.gradle.TestPlugin ()
 com.android.build.gradle.TestPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.TestPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.TestPluginKt
 com.android.build.gradle.TestPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
-com.android.build.gradle.TestedAndroidConfig
+com.android.build.gradle.TestedAndroidConfig implements com.android.build.gradle.AndroidConfig
 com.android.build.gradle.TestedAndroidConfig.getTestBuildType: java.lang.String ()
 com.android.build.gradle.TestedAndroidConfig.getTestVariants: org.gradle.api.DomainObjectSet<com.android.build.gradle.api.TestVariant> ()
 com.android.build.gradle.TestedAndroidConfig.getUnitTestVariants: org.gradle.api.DomainObjectSet<com.android.build.gradle.api.UnitTestVariant> ()
-com.android.build.gradle.TestedExtension
+com.android.build.gradle.TestedExtension extends com.android.build.gradle.BaseExtension implements com.android.build.gradle.TestedAndroidConfig, com.android.build.api.dsl.TestedExtension
 com.android.build.gradle.TestedExtension.<init>: com.android.build.gradle.TestedExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
 com.android.build.gradle.TestedExtension.addTestVariant: void (com.android.build.gradle.api.TestVariant)
 com.android.build.gradle.TestedExtension.addUnitTestVariant: void (com.android.build.gradle.api.UnitTestVariant)

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.plugins;
 
 import android.databinding.tool.DataBindingBuilder;
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
@@ -32,7 +33,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
@@ -43,25 +43,21 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
 public abstract class AbstractAppPlugin extends BasePlugin {
-    private final boolean isBaseApplication;
 
     @Inject
     public AbstractAppPlugin(
-            ToolingModelBuilderRegistry registry,
-            SoftwareComponentFactory componentFactory,
-            boolean isBaseApplication) {
+            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
         super(registry, componentFactory);
-        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
     protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_APP;
+        return AndroidProjectTypes.PROJECT_TYPE_APP;
     }
 
     @NonNull
     @Override
-    protected BaseExtension createExtension(
+    protected AppExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -83,8 +79,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
                         signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo,
-                        isBaseApplication);
+                        extraModelInfo);
     }
 
     @NonNull

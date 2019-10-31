@@ -862,7 +862,6 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
-                "com/android/tools/devicelib",
                 "com/",
                 "com/android/",
                 "com/android/tools/",

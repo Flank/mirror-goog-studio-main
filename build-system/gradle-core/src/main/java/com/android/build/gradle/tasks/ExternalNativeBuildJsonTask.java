@@ -17,22 +17,35 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
 
     private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract DirectoryProperty getRenderscriptSources();
 
     @Override
     protected void doTaskAction() throws ProcessException, IOException {
@@ -80,8 +93,19 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ExternalNativeBuildJsonTask task) {
             super.configure(task);
+
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             task.generator = generator;
             task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
+            GradleVariantConfiguration config = getVariantScope().getVariantConfiguration();
+
+            if (artifacts.hasFinalProduct(
+                            InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
+                    && config.getRenderscriptNdkModeEnabled()) {
+                artifacts.setTaskInputToFinalProduct(
+                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE,
+                        task.getRenderscriptSources());
+            }
         }
     }
 }

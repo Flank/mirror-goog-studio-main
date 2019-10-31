@@ -23,7 +23,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile project(':apkzlib')
     testCompile project(':base:testutils')
-    testCompile project(':base:gradle-core')
+    testCompile project(':base:build-system:gradle-core')
 }
 
 sourceSets {

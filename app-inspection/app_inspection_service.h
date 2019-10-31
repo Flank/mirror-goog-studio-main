@@ -17,6 +17,7 @@
 #ifndef APP_INSPECTION_SERVICE_H_
 #define APP_INSPECTION_SERVICE_H_
 
+#include <string>
 #include "jvmti.h"
 
 namespace app_inspection {
@@ -25,13 +26,51 @@ class AppInspectionService {
  public:
   static AppInspectionService* create(JNIEnv* env);
 
+#ifdef APP_INSPECTION_EXPERIMENT
+  // transforms the given method and inserts AppInspectionService.onEntry call
+  // as an entry hook
+  void AddEntryTransform(JNIEnv* jni, const std::string& class_name,
+                         const std::string& method_name,
+                         const std::string& signature) {
+    AddTransform(jni, class_name, method_name, signature, true);
+  }
+
+  // transforms the given method and inserts AppInspectionService.onExit call as
+  // exit hook
+  void AddExitTransform(JNIEnv* jni, const std::string& class_name,
+                        const std::string& method_name,
+                        const std::string& signature) {
+    AddTransform(jni, class_name, method_name, signature, false);
+  }
+  // finds instances of the given class in the heap
+  jobjectArray FindInstances(JNIEnv* jni, jclass jclass);
+#endif
  private:
   explicit AppInspectionService(jvmtiEnv* jvmti);
   // java object AppInspectionService that keeps reference to this object is
   // singleton, so no need to clean up
   ~AppInspectionService() = delete;
+  void Initialize();
 
   jvmtiEnv* jvmti_;
+
+#ifdef APP_INSPECTION_EXPERIMENT
+  void AddTransform(JNIEnv* jni, const std::string& class_name,
+                    const std::string& method_name,
+                    const std::string& signature, bool is_entry);
+
+  static void OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
+                             jthread thread, jclass klass);
+  static void OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
+                                jclass class_being_redefined, jobject loader,
+                                const char* name, jobject protection_domain,
+                                jint class_data_len,
+                                const unsigned char* class_data,
+                                jint* new_class_data_len,
+                                unsigned char** new_class_data);
+
+  jlong nextTag = 1;
+#endif
 };
 
 }  // namespace app_inspection

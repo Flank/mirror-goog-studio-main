@@ -45,6 +45,23 @@ class ExecutorImpl : public Executor {
                    int* child_stdin_fd, int* child_stdout_fd,
                    int* child_stderr_fd, int* fork_pid) const;
 
+  // Takes a file descriptor which will be duplicated into the stdin of the
+  // child process. The child process takes ownershp of stdin_fd. The parent
+  // closes stdin_fd, which should not be used after calling this method.
+  //
+  // Returns open file descriptors for the child's stdout, and stderr.
+  // It is the caller's responsibility to call waitpid(2) on fork_pid in order
+  // to avoid zombie process.
+  //
+  // It is also the caller's responsibility to close(2) these fds. If the caller
+  // is not interested in the child outputs, nullptr can be passed in place of
+  // child_stdout_fd and child_stderr_fd in which case fork will establish sinks
+  // for the child process outputs.
+  bool ForkAndExecWithStdinFd(const std::string& executable_path,
+                              const std::vector<std::string>& parameters,
+                              int stdin_fd, int* child_stdout_fd,
+                              int* child_stderr_fd, int* fork_pid) const;
+
  private:
   void Pump(int child_stdout, std::string* output, int child_stderr,
             std::string* error) const;

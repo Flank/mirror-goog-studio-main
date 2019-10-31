@@ -1,0 +1,22 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+    defaultConfig {
+        minSdkVersion 16
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
+        targetSdkVersion 24
+    }
+
+    lintOptions {
+        xmlOutput file("lint-results.xml")
+        check 'ShortUniqueIdA', 'ShortUniqueIdB'
+        absolutePaths false
+    }
+}
+
+dependencies {
+    lintChecks project(":checkA")
+    implementation project(":checkBAar")
+}

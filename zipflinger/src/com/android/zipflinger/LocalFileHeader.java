@@ -23,8 +23,6 @@ import java.nio.ByteOrder;
 class LocalFileHeader {
     private static final int SIGNATURE = 0x04034b50;
 
-    // Minium version = 2.0 (encoded dec = 20)
-    public static final short DEFAULT_VERSION_NEEDED = 0x0014;
     public static final int LOCAL_FILE_HEADER_SIZE = 30;
 
     // Minimum number of bytes needed to create a virtual zip entry (an entry not present in
@@ -33,9 +31,6 @@ class LocalFileHeader {
 
     public static final short COMPRESSION_NONE = 0;
     public static final short COMPRESSION_DEFLATE = 8;
-
-    // This is the extra marker value as what apkzlib uses.
-    private static final short ALIGN_SIGNATURE = (short) 0xd935;
 
     static final long VIRTUAL_ENTRY_MAX_SIZE = LOCAL_FILE_HEADER_SIZE + Ints.USHRT_MAX;
     static final long OFFSET_TO_NAME = 26;
@@ -76,7 +71,7 @@ class LocalFileHeader {
         }
         virtualEntry.order(ByteOrder.LITTLE_ENDIAN);
         virtualEntry.putInt(SIGNATURE);
-        virtualEntry.putShort(DEFAULT_VERSION_NEEDED); // Version needed
+        virtualEntry.putShort((short) 0); // Version needed
         virtualEntry.putShort((short) 0); // general purpose flag
         virtualEntry.putShort(COMPRESSION_NONE);
         virtualEntry.putShort((short) 0); // time
@@ -91,12 +86,12 @@ class LocalFileHeader {
     }
 
     public void write(@NonNull ZipWriter writer) throws IOException {
-        ByteBuffer extraField = buildExtraField();
+        ByteBuffer extraField = ByteBuffer.allocate(extraPadding);
         int bytesNeeded = LOCAL_FILE_HEADER_SIZE + nameBytes.length + extraField.capacity();
 
         ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(SIGNATURE);
-        buffer.putShort(DEFAULT_VERSION_NEEDED);
+        buffer.putShort((short) 0); // Version needed
         buffer.putShort((short) 0); // general purpose flag
         buffer.putShort(compressionFlag);
         buffer.putShort((short) 0); // time
@@ -111,26 +106,6 @@ class LocalFileHeader {
 
         buffer.rewind();
         writer.write(buffer);
-    }
-
-    private ByteBuffer buildExtraField() {
-        int bytesNeeded = extraPadding;
-        if (bytesNeeded == 0) {
-            return ByteBuffer.wrap(new byte[0]);
-        }
-
-        ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putShort(ALIGN_SIGNATURE);
-
-        int paddingSize =
-                bytesNeeded
-                        - CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE
-                        - CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE;
-        buffer.putShort(Ints.intToUshort(paddingSize));
-        buffer.put(new byte[paddingSize]);
-        buffer.rewind();
-
-        return buffer;
     }
 
     public static long sizeFor(@NonNull Source source) {

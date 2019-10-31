@@ -19,35 +19,30 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 
-// Macro used to add the necessary dependencies to support kotlin to an app build.gradle
+fun RecipeExecutor.addKotlinPlugins()  {
+  applyPlugin("kotlin-android")
+  applyPlugin("kotlin-android-extensions")
+}
 
-/*fun addKotlinPlugins() {
-  if (generateKotlin)
-    //<#compress>
-      apply plugin : 'kotlin-android'
-      apply plugin : 'kotlin-android-extensions'
-    //</#compress>
+fun RecipeExecutor.addKotlinDependencies(generateKotlin: Boolean) {
+  if (generateKotlin) {
+    addDependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:\$kotlin_version\"")
   }
 }
 
-fun addKotlinDependencies(): String? =
-  if (generateKotlin) {
-    """${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version""""
-  } else {
-    null
+fun RecipeExecutor.setKotlinVersion() {
+    setExtVar("kotlin_version", "\${kotlinVersion}")
+    addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:\$kotlin_version")
+}
+
+fun RecipeExecutor.addKotlinToBaseProject(language: Language, isNewProject: Boolean = false) {
+  if (!isNewProject && language == Language.Kotlin) {
+    setKotlinVersion()
   }
+}
 
-
-
-fun addKotlinToBaseProject() {
-  if (language == "Kotlin") {
-    merge("root://activities/common/kotlin.gradle.ftl", "$topOut/build.gradle")
-  }
-}*/
-
-// TODO: <apply plugin /> Is adding the dependencies at the *end* of build.gradle
-// TODO: The two macros above, addKotlinPlugins and addKotlinDependencies, are duplicating the work of addAllKotlinDependencies, when
-//       creating a new project (isNewProject == true). The only reason is the above bug on <apply plugin />
+// TODO(qumeric): The two functions above, addKotlinPlugins and addKotlinDependencies, are duplicating the work of addAllKotlinDependencies,
+//                when creating a new module (isNewProject == true).
 fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   val projectData = data.projectTemplateData
   if (!data.isNew && projectData.language == Language.Kotlin) {
@@ -55,7 +50,7 @@ fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
     applyPlugin("kotlin-android-extensions")
     if (!hasDependency("org.jetbrains.kotlin:kotlin-stdlib")) {
       addDependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:\$kotlin_version")
-      mergeGradleFile(kotlinGradle(), projectData.rootDir.resolve(BUILD_GRADLE))
+      setKotlinVersion()
     }
   }
 }

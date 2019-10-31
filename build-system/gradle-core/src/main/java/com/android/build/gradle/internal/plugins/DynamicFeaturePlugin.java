@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AppExtension;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.dsl.DynamicFeatureExtension;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
@@ -30,12 +31,12 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
-        super(registry, componentFactory, false /*isBaseApplication*/);
+        super(registry, componentFactory);
     }
 
     @Override
     protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE;
+        return AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE;
     }
 
     @NonNull
@@ -52,6 +53,6 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @NonNull
     @Override
     protected Class<? extends AppExtension> getExtensionClass() {
-        return AppExtension.class;
+        return DynamicFeatureExtension.class;
     }
 }

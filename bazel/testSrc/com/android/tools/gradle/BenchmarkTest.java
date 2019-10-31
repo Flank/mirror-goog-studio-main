@@ -69,6 +69,7 @@ public class BenchmarkTest {
     private List<BenchmarkListener> listeners = new ArrayList<>();
     private boolean fromStudio = false;
     @Nullable private String agpVersion = null;
+    private boolean failOnWarning = true;
 
     @Before
     public void setUp() throws Exception {
@@ -130,7 +131,7 @@ public class BenchmarkTest {
         }
         value = System.getProperty("from-studio");
         if (value != null && !value.isEmpty()) {
-            fromStudio = Boolean.valueOf(value);
+            fromStudio = Boolean.parseBoolean(value);
         }
         testProjectGradleRootFromSourceRoot = System.getProperty("gradle-root");
         value = System.getProperty("pre_mutate_assertion");
@@ -148,6 +149,10 @@ public class BenchmarkTest {
         value = System.getProperty("agp_version");
         if (value != null && !value.isEmpty()) {
             agpVersion = value;
+        }
+        value = System.getProperty("fail_on_warning");
+        if (value != null && !value.isEmpty()) {
+            failOnWarning = Boolean.parseBoolean(value);
         }
     }
 
@@ -298,6 +303,9 @@ public class BenchmarkTest {
                         "-Pandroid.injected.build.api=10000"); // as high as possible so we never need to change it.
                 gradle.addArgument("-Pandroid.injected.build.abi=arm64-v8a");
                 gradle.addArgument("-Pandroid.injected.build.density=xhdpi");
+            }
+            if (failOnWarning) {
+                gradle.addArgument("--warning-mode=fail");
             }
             buildProperties.forEach(gradle::addArgument);
 

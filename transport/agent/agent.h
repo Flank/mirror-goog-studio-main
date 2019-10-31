@@ -181,15 +181,15 @@ class Agent {
   // |io_stub_|, |network_stub_| and |wait_and_get_memory_component_|
   std::mutex connect_mutex_;
   std::condition_variable connect_cv_;
-  // The current grpc target we are currently connected to. We only
-  // reinstantiate channel if the target has changed. Otherwise in the case of
-  // O+ unix socket, if the file descriptor happens to be the same, re-creating
-  // the channel on the same fd can cause the socket to be closed immediately
-  // (TODO: investigate further).
-  // For pre-O, the target is an ip address. (e.g. |profiler::kServerAddress|)
-  // For O+ the target is of the form "unix:&fd", where fd maps to the client
-  // socket used for communicating with the daemon server.
-  std::string current_connected_target_;
+  // Valid for O+. The current fd the agent is connected to.
+  // We need to reinstantiate the channel if the daemon has restarted (e.g.,
+  // Studio closes and reopens). If the file descriptor happens to be the same
+  // as the previous run, re-creating the channel on the same fd can cause the
+  // socket to be closed immediately. The reason is likely that GRPC will close
+  // the underlying fd when it destroys the previous channel. However in this
+  // specific case, the old fd is already bad. Closing it (as an integer) would
+  // actually close the new fd that's newly received from the daemon.
+  int current_fd_ = -1;
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<proto::AgentService::Stub> agent_stub_;
   std::unique_ptr<proto::InternalCpuService::Stub> cpu_stub_;

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.android.AndroidProjectTypes;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.BaseExtension;
@@ -46,7 +47,6 @@ import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -121,7 +121,7 @@ public class ModelBuilderTest {
                         taskManager,
                         extension,
                         extraModelInfo,
-                        AndroidProject.PROJECT_TYPE_APP);
+                        AndroidProjectTypes.PROJECT_TYPE_APP);
     }
 
     @Test

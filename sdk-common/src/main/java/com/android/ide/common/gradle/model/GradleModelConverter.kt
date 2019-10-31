@@ -66,7 +66,8 @@ val ApiVersion.androidVersion: AndroidVersion
     get() = AndroidVersion(apiLevel, codename)
 
 /**
- * Returns the [ProjectType] for the given type ID. Type ids must be one of the values defined by AndroidProject.PROJECT_TYPE_*.
+ * Returns the [ProjectType] for the given type ID. Type ids must be one of the values defined by
+ * AndroidProjectTypes.PROJECT_TYPE_*.
  */
 fun getProjectType(typeId: Int): ProjectType {
     return when (typeId) {

@@ -333,8 +333,6 @@ coverage_report(
         "//tools/base/ddmlib:tools.tests",
         "//tools/base/deploy/deployer:deployer.tests",
         "//tools/base/deploy/deployer:studio.android.sdktools.deployer_tests",
-        "//tools/base/devicelib:studio.devicelib_tests",
-        "//tools/base/devicelib:tools.tests.test",
         "//tools/base/draw9patch:studio.android.sdktools.draw9patch_tests",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver_tests",
         "//tools/base/fakeadbserver:tools.tests",

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -36,8 +37,7 @@ open class BaseAppModuleExtension(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
-    extraModelInfo: ExtraModelInfo,
-    isBaseModule: Boolean
+    extraModelInfo: ExtraModelInfo
 ) : AppExtension(
     project,
     projectOptions,
@@ -48,8 +48,8 @@ open class BaseAppModuleExtension(
     buildOutputs,
     sourceSetManager,
     extraModelInfo,
-    isBaseModule
-) {
+    true
+), ApplicationExtension {
 
     var dynamicFeatures: MutableSet<String> = mutableSetOf()
 

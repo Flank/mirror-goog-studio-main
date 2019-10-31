@@ -41,7 +41,6 @@ import org.jetbrains.uast.asQualifiedPath
 import org.jetbrains.uast.getContainingClass
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getQualifiedParentOrThis
-import org.jetbrains.uast.java.JavaAbstractUExpression
 import org.jetbrains.uast.java.JavaUDeclarationsExpression
 
 /**
@@ -109,8 +108,8 @@ class ResourceReference(
             // and pick out the resource type and name from the context.
             // This also lets us pick up resource references even when the R fields don't
             // resolve (e.g. when there are symbol or source error problems.)
-            if (element is UQualifiedReferenceExpression && element is JavaAbstractUExpression) {
-                val ref = toAndroidReference(element as UQualifiedReferenceExpression)
+            if (element is UQualifiedReferenceExpression) {
+                val ref = toAndroidReference(element)
                 if (ref != null) {
                     return ref
                 }

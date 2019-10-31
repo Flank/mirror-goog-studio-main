@@ -45,7 +45,7 @@ import java.lang.RuntimeException
 /**
  * The hard-coded NDK version for this Android Gradle Plugin.
  */
-const val ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION = "20.0.5594570" // r20
+const val ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION = "21.0.5935234"
 
 private enum class LocationType(val tag: String) {
     // These are in order of preferred in the case when versions are identical.

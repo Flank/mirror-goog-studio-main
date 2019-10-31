@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT;
 import static com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.MavenCoordinatesImpl;
@@ -245,7 +246,7 @@ public class LintGradleProject extends Project {
 
         @Override
         public boolean isLibrary() {
-            return mProject.getProjectType() == AndroidProject.PROJECT_TYPE_LIBRARY;
+            return mProject.getProjectType() == AndroidProjectTypes.PROJECT_TYPE_LIBRARY;
         }
 
         @Override
@@ -1034,7 +1035,7 @@ public class LintGradleProject extends Project {
             }
             File dir = gradleProject.getProjectDir();
             LintGradleProject lintProject;
-            if (project.getProjectType() == AndroidProject.PROJECT_TYPE_INSTANTAPP) {
+            if (project.getProjectType() == AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP) {
                 lintProject = new InstantAppGradleProject(client, dir, dir);
             } else {
                 File manifest = client.getMergedManifest();

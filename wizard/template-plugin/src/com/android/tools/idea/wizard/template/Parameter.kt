@@ -61,7 +61,9 @@ enum class Constraint {
   /** The associated value should represent a valid string resource name. */
   STRING,
   /**  The associated value should represent a valid URI authority. Format: [userinfo@]host[:port] */
-  URI_AUTHORITY;
+  URI_AUTHORITY,
+  /** The associated value should represent a package-level Kotlin function. */
+  KOTLIN_FUNCTION;
 }
 
 /**

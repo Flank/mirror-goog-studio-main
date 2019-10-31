@@ -179,3 +179,15 @@ java_binary(
         ":zipflinger",
     ],
 )
+
+# Debug tool to create zip files directly with zipflinger
+java_binary(
+    name = "zip",
+    srcs = glob([
+        "tools/src/com/android/zipflinger/Zip.java",
+    ]),
+    main_class = "com.android.zipflinger.Zip",
+    deps = [
+        ":zipflinger",
+    ],
+)

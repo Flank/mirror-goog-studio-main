@@ -37,7 +37,7 @@ public class AppPlugin extends AbstractAppPlugin {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
-        super(registry, componentFactory, true /*isBaseApplication*/);
+        super(registry, componentFactory);
     }
 
     @Override

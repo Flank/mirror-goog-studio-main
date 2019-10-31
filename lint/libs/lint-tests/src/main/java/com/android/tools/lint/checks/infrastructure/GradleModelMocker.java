@@ -24,6 +24,7 @@ import static com.android.SdkConstants.VALUE_TRUE;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -224,7 +225,7 @@ public class GradleModelMocker {
     }
 
     public boolean isLibrary() {
-        return project.getProjectType() == AndroidProject.PROJECT_TYPE_LIBRARY
+        return project.getProjectType() == AndroidProjectTypes.PROJECT_TYPE_LIBRARY
                 || hasJavaLibraryPlugin();
     }
 
@@ -699,18 +700,18 @@ public class GradleModelMocker {
         if (line.equals("apply plugin: 'com.android.library'")
                 || line.equals("apply plugin: 'android-library'")) {
             //noinspection deprecation
-            when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_LIBRARY);
+            when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
             return;
         } else if (line.equals("apply plugin: 'com.android.application'")
                 || line.equals("apply plugin: 'android'")) {
             //noinspection deprecation
-            when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_APP);
+            when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_APP);
             return;
         } else if (line.equals("apply plugin: 'com.android.feature'")) {
-            when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_FEATURE);
+            when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_FEATURE);
             return;
         } else if (line.equals("apply plugin: 'com.android.instantapp'")) {
-            when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_INSTANTAPP);
+            when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP);
             return;
         } else if (line.equals("apply plugin: 'java'")) {
             javaPlugin = true;

@@ -33,32 +33,25 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
     }
 
     @Override
-    public void registerEntryHook(
-            Class<?> originClass, String originMethod, Class<?> hookClass, String hookMethodName) {
-        nativeRegisterEntryHook(
-                mAppInspectionServicePtr, originClass, originMethod, hookClass, hookMethodName);
+    public void registerEntryHook(Class<?> originClass, String originMethod, EntryHook entryHook) {
+        AppInspectionService.ExperimentalCapabilities.addEntryHook(
+                originClass, originMethod, entryHook);
+        nativeRegisterEntryHook(mAppInspectionServicePtr, originClass, originMethod);
     }
 
     @Override
-    public void registerExitHook(
-            Class<?> originClass, String originMethod, Class<?> hookClass, String hookMethodName) {
-        nativeRegisterExitHook(
-                mAppInspectionServicePtr, originClass, originMethod, hookClass, hookMethodName);
+    public <T> void registerExitHook(
+            Class<?> originClass, String originMethod, ExitHook<T> exitHook) {
+        AppInspectionService.ExperimentalCapabilities.addExitHook(
+                originClass, originMethod, exitHook);
+        nativeRegisterExitHook(mAppInspectionServicePtr, originClass, originMethod);
     }
 
     private static native <T> T[] nativeFindInstances(long servicePtr, Class<T> clazz);
 
     private static native void nativeRegisterEntryHook(
-            long servicePtr,
-            Class<?> originClass,
-            String originMethod,
-            Class<?> hookClass,
-            String hookMethodName);
+            long servicePtr, Class<?> originClass, String originMethod);
 
     private static native void nativeRegisterExitHook(
-            long servicePtr,
-            Class<?> originClass,
-            String originMethod,
-            Class<?> hookClass,
-            String hookMethodName);
+            long servicePtr, Class<?> originClass, String originMethod);
 }

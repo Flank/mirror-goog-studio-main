@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
-import static com.android.builder.model.AndroidProject.PROJECT_TYPE_INSTANTAPP;
 
 import com.android.SdkConstants;
 import com.android.Version;

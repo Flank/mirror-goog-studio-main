@@ -420,7 +420,7 @@ class CustomRuleTest {
             )
         )
             .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000)
+                override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000.canonicalFile)
 
                 override fun findRuleJars(project: Project): List<File> = emptyList()
             })
@@ -428,7 +428,7 @@ class CustomRuleTest {
             .allowMissingSdk()
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
-            .rootDirectory(lintApiLevel1000.parentFile)
+            .rootDirectory(lintApiLevel1000.parentFile.canonicalFile)
             .run()
             .expect(
                 "../lint6.jar: Warning: Lint found an issue registry " +

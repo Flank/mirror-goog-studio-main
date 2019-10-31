@@ -59,7 +59,7 @@ class ApplyDiff {
         Path tempFile = tempDir.resolve(inFile.getFileName());
         Files.copy(inFile, tempFile);
 
-        UnifiedDiff diff = new UnifiedDiff(Files.readAllLines(diffFile));
+        UnifiedDiff diff = new UnifiedDiff(diffFile);
         diff.apply(tempDir.toFile(), 1);
 
         Files.createDirectories(outFile.getParent());

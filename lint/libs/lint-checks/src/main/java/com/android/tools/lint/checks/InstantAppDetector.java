@@ -28,9 +28,9 @@ import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
 
+import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -133,7 +133,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
             return false;
         }
         int type = model.getProjectType();
-        return type == AndroidProject.PROJECT_TYPE_INSTANTAPP;
+        return type == AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP;
     }
 
     @Override

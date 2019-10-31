@@ -2,7 +2,7 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <@kt.addAllKotlinDependencies />
-    <dependency mavenUrl="com.android.support:appcompat-v7:+"/>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
     <dependency mavenUrl="com.android.support:leanback-v17:+"/>
     <dependency mavenUrl="com.github.bumptech.glide:glide:3.8.0"/>
 

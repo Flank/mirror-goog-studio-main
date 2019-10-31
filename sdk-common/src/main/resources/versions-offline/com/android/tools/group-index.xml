@@ -4,7 +4,6 @@
   <sdklib versions="26.5.1,26.6.0-beta01"/>
   <repository versions="26.5.1,26.6.0-beta01"/>
   <annotations versions="26.5.1,26.6.0-beta01"/>
-  <devicelib versions="26.5.1,26.6.0-beta01"/>
   <sdk-common versions="26.5.1,26.6.0-beta01"/>
   <testutils versions="26.5.1,26.6.0-beta01"/>
   <common versions="26.5.1,26.6.0-beta01"/>

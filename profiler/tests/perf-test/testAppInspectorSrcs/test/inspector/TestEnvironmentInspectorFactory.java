@@ -19,6 +19,7 @@ package test.inspector;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
+import java.util.List;
 
 // this factory accesses environment on createInspector call.
 public class TestEnvironmentInspectorFactory extends InspectorFactory<TestInspector> {
@@ -31,9 +32,21 @@ public class TestEnvironmentInspectorFactory extends InspectorFactory<TestInspec
     public TestInspector createInspector(Connection connection, InspectorEnvironment environment) {
         environment.findInstances(TestInspector.class);
         environment.registerEntryHook(
-                TestInspectorFactory.class, "_", TestInspectorFactory.class, "_");
+                TestInspectorFactory.class,
+                "_",
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(Object o, List<Object> list) {}
+                });
         environment.registerExitHook(
-                TestInspectorFactory.class, "_", TestInspectorFactory.class, "_");
+                TestInspectorFactory.class,
+                "_",
+                new InspectorEnvironment.ExitHook<String>() {
+                    @Override
+                    public String onExit(String s) {
+                        return s;
+                    }
+                });
         return new TestInspector(connection);
     }
 }

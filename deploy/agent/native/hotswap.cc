@@ -183,6 +183,31 @@ void HotSwap::LoadStateAndCompose(jobject reloader) const {
       {"loadStateAndCompose", "(Landroid/content/Context;)V"}, loader_args);
 }
 
+jvmtiExtensionFunction const* GetExtensionFunctionVoid(
+    JNIEnv* env, jvmtiEnv* jvmti, const std::string& name) {
+  jint n_ext = 0;
+  jvmtiExtensionFunction const* res = nullptr;
+  jvmtiExtensionFunctionInfo* infos = nullptr;
+  if (jvmti->GetExtensionFunctions(&n_ext, &infos) != JVMTI_ERROR_NONE) {
+    return res;
+  }
+
+  for (jint i = 0; i < n_ext; i++) {
+    const jvmtiExtensionFunctionInfo& info = infos[i];
+    if (name == info.id) {
+      res = &info.func;
+    }
+    for (auto j = 0; j < info.param_count; j++) {
+      jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.params[j].name));
+    }
+    jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.short_description));
+    jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.errors));
+    jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.id));
+    jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.params));
+  }
+  return res;
+}
+
 SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   Phase p("doHotSwap");
 
@@ -208,6 +233,9 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   const std::string& r_class_prefix = "/R$";
   std::vector<ClassInfo> detailed_error_classes;
 
+  jvmtiExtensionFunction const* extension =
+      GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);
+
   for (size_t i = 0; i < modified_classes; i++) {
     const proto::ClassDef& class_def = swap_request.modified_classes(i);
     const std::string code = class_def.dex();
@@ -230,7 +258,8 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     def[i].class_bytes = dex;
 
     // Only run verification on R classes right now.
-    if (name.find(r_class_prefix) != std::string::npos) {
+    if (extension == nullptr &&
+        name.find(r_class_prefix) != std::string::npos) {
       ClassInfo info{name, def[i].class_bytes, code.length(), def[i].klass};
       detailed_error_classes.emplace_back(info);
     }
@@ -240,7 +269,30 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   // we can ask the user for logcats.
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER,
                          true);  // Best Effort, ignore erros.
-  jvmtiError error_num = jvmti_->RedefineClasses(modified_classes, def);
+
+  jvmtiError error_num = JVMTI_ERROR_NONE;
+
+  if (extension == nullptr) {
+    error_num = jvmti_->RedefineClasses(modified_classes, def);
+  } else {
+    Log::I("Using Structure Redefinition Extension");
+    std::vector<size_t> failed_index;
+    for (size_t i = 0; i < modified_classes; i++) {
+      // Currently only supports one class per redefinition request.
+      error_num = (*extension)(jvmti_, def[i].klass, def[i].class_bytes,
+                               def[i].class_byte_count);
+      if (error_num != JVMTI_ERROR_NONE) {
+        failed_index.push_back(i);
+      }
+    }
+    jvmtiClassDefinition* retry_def =
+        new jvmtiClassDefinition[modified_classes];
+    for (size_t i = 0; i < failed_index.size(); i++) {
+      size_t offset = failed_index[i];
+      retry_def[i] = def[offset];
+    }
+    error_num = jvmti_->RedefineClasses(failed_index.size(), retry_def);
+  }
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
 
   if (error_num == JVMTI_ERROR_NONE) {

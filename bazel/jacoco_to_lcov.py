@@ -90,7 +90,6 @@ def main():
       './tools/base/ddmlib/src/test',
       './tools/base/deploy/deployer/src/test',
       './tools/base/deploy/test',
-      './tools/base/devicelib/src/test',
       './tools/base/draw9patch/src/test',
       './tools/base/fakeadbserver/src/test',
       './tools/base/flags/src/test',

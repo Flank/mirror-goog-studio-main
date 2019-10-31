@@ -19,6 +19,9 @@ package com.android.testutils.diff;
 import static com.android.testutils.diff.UnifiedDiff.Chunk.Type.FROM;
 import static com.android.testutils.diff.UnifiedDiff.Chunk.Type.TO;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,11 +29,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import kotlin.text.StringsKt;
 
 /**
  * Parses and applies diff files in git unified format.
@@ -59,14 +64,18 @@ public class UnifiedDiff {
     public static final Pattern DELETED_FILE = Pattern.compile("deleted file mode .*");
     public static final Pattern NEW_FILE = Pattern.compile("new file mode .*");
 
-
     public final List<Diff> diffs;
 
     public UnifiedDiff(File file) throws IOException {
-        this(Files.readAllLines(file.toPath()));
+        this(file.toPath());
     }
 
-    public UnifiedDiff(List<String> lines) {
+    public UnifiedDiff(Path path) throws IOException {
+        this(readAllLines(path));
+    }
+
+    @VisibleForTesting
+    UnifiedDiff(List<String> lines) {
         diffs = new ArrayList<>();
         parse(lines);
     }
@@ -106,7 +115,11 @@ public class UnifiedDiff {
 
         int i = 0;
         while (i < lines.size()) {
-            String line = lines.get(i);
+            String rawLine = lines.get(i);
+            // For everything other than chunks, the line ending is not relevant,
+            // But the distinction between DOS and Unix line endings must be preserved for chunks,
+            // which use rawLine for that purpose.
+            String line = StringsKt.removeSuffix(rawLine, "\r");
             switch (state) {
                 case HEADER:
                     {
@@ -195,23 +208,23 @@ public class UnifiedDiff {
                 case CHUNK:
                     {
                         ensure(chunk != null, "Chunk line unexpected");
-                        switch (line.charAt(0)) {
+                        switch (rawLine.charAt(0)) {
                             case ' ':
                                 ensure(remFrom > 0, "Unexpected common line, at line " + i);
                                 ensure(remTo > 0, "Unexpected common line, at line " + i);
                                 remFrom--;
                                 remTo--;
-                                chunk.addLine(line.substring(1), Chunk.Type.COMMON);
+                                chunk.addLine(rawLine.substring(1), Chunk.Type.COMMON);
                                 break;
                             case '-':
                                 ensure(remFrom > 0, "Unexpected 'from' line, at line " + i);
                                 remFrom--;
-                                chunk.addLine(line.substring(1), FROM);
+                                chunk.addLine(rawLine.substring(1), FROM);
                                 break;
                             case '+':
                                 ensure(remTo > 0, "Unexpected common line, at line " + i);
                                 remTo--;
-                                chunk.addLine(line.substring(1), Chunk.Type.TO);
+                                chunk.addLine(rawLine.substring(1), Chunk.Type.TO);
                                 break;
                             default:
                                 ensure(false, "Unexpected type of diff line at line " + i);
@@ -224,6 +237,34 @@ public class UnifiedDiff {
             }
             i++;
         }
+    }
+
+    /**
+     * Read all the lines in a file to a {@code List<String>} for internal use of unified diff.
+     *
+     * <p>To preserve whether the file has {@code \n} at the end, this treats all files as if they
+     * do not end in {@code \n}. Therefore returned list will always have at least one element. When
+     * the file ends in {@code \n}, the last element is an empty string.
+     *
+     * <p>To preserve DOS format, {@code \r} is kept in the string when it appears at end of line.
+     *
+     * <p>Thus:
+     *
+     * <ul>
+     *   <li>A 0-byte file is represented as {@code ("")}
+     *   <li>A file containing just {@code \n} is represented as {@code ("", "")}.
+     *   <li>A file containing {@code \r\n} is represented as {@code ("\r", "")}
+     *   <li>A file containing {@code 1\r\n2\r\n} is represented as {@code ("1\r", "2\r", "")}.
+     * </ul>
+     */
+    private static List<String> readAllLines(Path file) throws IOException {
+        return Splitter.on('\n')
+                .splitToList(new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
+    }
+
+    /** Empty file is represented by {@code ("")}; see {@link #readAllLines(Path)} */
+    private static List<String> emptyFile() {
+        return Collections.singletonList("");
     }
 
     private static int optValueOf(String value) {
@@ -275,9 +316,9 @@ public class UnifiedDiff {
                         if (!line.line.equals(fromLine)) {
                             throw new IllegalStateException(
                                     "Line expected to be:\n"
-                                            + line.line
+                                            + withVisibleCarriageReturn(line.line)
                                             + "\nbut was:\n"
-                                            + fromLine);
+                                            + withVisibleCarriageReturn(fromLine));
                         }
                         if (line.type == FROM) {
                             it.remove();
@@ -302,11 +343,14 @@ public class UnifiedDiff {
                     target.getParentFile().mkdirs();
                 }
                 List<String> strings =
-                        NO_FILE.equals(from)
-                                ? new ArrayList<>()
-                                : Files.readAllLines(target.toPath());
+                        new ArrayList<>(
+                                NO_FILE.equals(from) ? emptyFile() : readAllLines(target.toPath()));
                 apply(strings);
-                Files.write(target.toPath(), strings, StandardCharsets.UTF_8);
+                // Do the concatenation manually to preserve the line endings.
+                // See readLines(Path) for the details.
+                Files.write(
+                        target.toPath(),
+                        Joiner.on('\n').join(strings).getBytes(StandardCharsets.UTF_8));
             }
         }
 
@@ -368,5 +412,9 @@ public class UnifiedDiff {
         public String toString() {
             return type + " " + line;
         }
+    }
+
+    static String withVisibleCarriageReturn(String original) {
+        return original.replace("\r", "\\r");
     }
 }

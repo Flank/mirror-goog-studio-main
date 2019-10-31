@@ -163,7 +163,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Returns the set of issue id's to suppress. Callers are allowed to modify this collection.
+     * Returns the set of issue id's to suppress. Callers are allowed to modify this collection. To
+     * suppress a given issue, add the lint issue id to the returned set.
      */
     @Override
     @NonNull
@@ -173,8 +174,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Sets the set of issue id's to suppress. Callers are allowed to modify this collection.
-     * Note that these ids add to rather than replace the given set of ids.
+     * Sets the set of issue id's to suppress. Callers are allowed to modify this collection. Note
+     * that these ids add to rather than replace the given set of ids.
      */
     public void setDisable(@Nullable Set<String> ids) {
         if (ids != null) {
@@ -183,8 +184,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Returns the set of issue id's to enable. Callers are allowed to modify this collection.
-     * To enable a given issue, add the issue ID to the returned set.
+     * Returns the set of issue id's to enable. Callers are allowed to modify this collection. To
+     * enable a given issue, add the issue ID to the returned set.
      */
     @Override
     @NonNull
@@ -194,8 +195,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Sets the set of issue id's to enable. Callers are allowed to modify this collection.
-     * Note that these ids add to rather than replace the given set of ids.
+     * Sets the set of issue id's to enable. Callers are allowed to modify this collection. Note
+     * that these ids add to rather than replace the given set of ids.
      */
     public void setEnable(@Nullable Set<String> ids) {
         if (ids != null) {
@@ -204,9 +205,9 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Returns the exact set of issues to check, or null to run the issues that are enabled
-     * by default plus any issues enabled via {@link #getEnable} and without issues disabled
-     * via {@link #getDisable}. If non-null, callers are allowed to modify this collection.
+     * Returns the exact set of issues to check, or null to run the issues that are enabled by
+     * default plus any issues enabled via {@link #getEnable} and without issues disabled via {@link
+     * #getDisable}. If non-null, callers are allowed to modify this collection.
      */
     @Override
     @Nullable
@@ -218,6 +219,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
 
     /**
      * Sets the <b>exact</b> set of issues to check.
+     *
      * @param ids the set of issue id's to check
      */
     public void setCheck(@NonNull Set<String> ids) {
@@ -237,8 +239,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Whether lint should display full paths in the error output. By default the paths
-     * are relative to the path lint was invoked from.
+     * Whether lint should display full paths in the error output. By default the paths are relative
+     * to the path lint was invoked from.
      */
     @Override
     @Input
@@ -247,16 +249,16 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Sets whether lint should display full paths in the error output. By default the paths
-     * are relative to the path lint was invoked from.
+     * Sets whether lint should display full paths in the error output. By default the paths are
+     * relative to the path lint was invoked from.
      */
     public void setAbsolutePaths(boolean absolutePaths) {
         this.absolutePaths = absolutePaths;
     }
 
     /**
-     * Whether lint should include the source lines in the output where errors occurred
-     * (true by default)
+     * Whether lint should include the source lines in the output where errors occurred (true by
+     * default)
      */
     @Override
     @Input
@@ -265,16 +267,16 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Sets whether lint should include the source lines in the output where errors occurred
-     * (true by default)
+     * Sets whether lint should include the source lines in the output where errors occurred (true
+     * by default)
      */
     public void setNoLines(boolean noLines) {
         this.noLines = noLines;
     }
 
     /**
-     * Returns whether lint should be quiet (for example, not write informational messages
-     * such as paths to report files written)
+     * Returns whether lint should be quiet (for example, not write informational messages such as
+     * paths to report files written)
      */
     @Override
     @Input
@@ -283,8 +285,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Sets whether lint should be quiet (for example, not write informational messages
-     * such as paths to report files written)
+     * Sets whether lint should be quiet (for example, not write informational messages such as
+     * paths to report files written)
      */
     public void setQuiet(boolean quiet) {
         this.quiet = quiet;
@@ -326,17 +328,31 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         this.warningsAsErrors = allErrors;
     }
 
+    /**
+     * Returns whether lint should run all checks on test sources, instead of just the lint checks
+     * that have been specifically written to include tests (e.g. checks looking for specific test
+     * errors, or checks that need to consider testing code such as the unused resource detector)
+     */
     @Override
     public boolean isCheckTestSources() {
         return checkTestSources;
     }
 
+    /**
+     * Like {@link #isCheckTestSources()}, but always skips analyzing tests -- meaning that it also
+     * ignores checks that have explicitly asked to look at test sources, such as the unused
+     * resource check.
+     */
     @Override
     public boolean isIgnoreTestSources() {
         return ignoreTestSources;
     }
 
-    /** Sets whether lint should check test sources */
+    /**
+     * Sets whether lint should run all checks on test sources, instead of just the lint checks that
+     * have been specifically written to include tests (e.g. checks looking for specific test
+     * errors, or checks that need to consider testing code such as the unused resource detector)
+     */
     public void setCheckTestSources(boolean checkTestSources) {
         this.checkTestSources = checkTestSources;
         if (checkTestSources) {
@@ -344,7 +360,12 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         }
     }
 
-    /** Sets whether lint should ignore all test sources */
+    /**
+     * Sets whether lint should ignore all test sources. This is like {@link
+     * #setCheckTestSources(boolean)}, but always skips analyzing tests -- meaning that it also
+     * ignores checks that have explicitly asked to look at test sources, such as the unused
+     * resource check.
+     */
     public void setIgnoreTestSources(boolean ignoreTestSources) {
         this.ignoreTestSources = ignoreTestSources;
         if (ignoreTestSources) {
@@ -352,6 +373,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         }
     }
 
+    /** Returns whether lint should run checks on generated sources. */
     @Override
     public boolean isCheckGeneratedSources() {
         return checkGeneratedSources;
@@ -362,32 +384,45 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         this.checkGeneratedSources = checkGeneratedSources;
     }
 
+    /**
+     * Returns whether lint should check all dependencies too as part of its analysis. Default is
+     * false.
+     */
     @Override
     @Input
     public boolean isCheckDependencies() {
         return checkDependencies;
     }
 
-    /** Sets whether lint should check dependencies too */
+    /**
+     * Sets whether lint should check all dependencies too as part of its analysis. Default is
+     * false.
+     */
     public void setCheckDependencies(boolean checkDependencies) {
         this.checkDependencies = checkDependencies;
     }
 
-    /** Returns whether lint should include explanations for issue errors. (Note that
-     * HTML and XML reports intentionally do this unconditionally, ignoring this setting.) */
+    /**
+     * Returns whether lint should include explanations for issue errors. (Note that HTML and XML
+     * reports intentionally do this unconditionally, ignoring this setting.)
+     */
     @Override
     @Input
     public boolean isExplainIssues() {
         return explainIssues;
     }
 
+    /**
+     * Sets whether lint should include explanations for issue errors. (Note that HTML and XML
+     * reports intentionally do this unconditionally, ignoring this setting.)
+     */
     public void setExplainIssues(boolean explainIssues) {
         this.explainIssues = explainIssues;
     }
 
     /**
-     * Returns whether lint should include all output (e.g. include all alternate
-     * locations, not truncating long messages, etc.)
+     * Returns whether lint should include all output (e.g. include all alternate locations, not
+     * truncating long messages, etc.)
      */
     @Override
     @Input
@@ -396,16 +431,16 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     /**
-     * Sets whether lint should include all output (e.g. include all alternate
-     * locations, not truncating long messages, etc.)
+     * Sets whether lint should include all output (e.g. include all alternate locations, not
+     * truncating long messages, etc.)
      */
     public void setShowAll(boolean showAll) {
         this.showAll = showAll;
     }
 
     /**
-     * Returns whether lint should check for fatal errors during release builds. Default is true.
-     * If issues with severity "fatal" are found, the release build is aborted.
+     * Returns whether lint should check for fatal errors during release builds. Default is true. If
+     * issues with severity "fatal" are found, the release build is aborted.
      */
     @Override
     @Input
@@ -413,55 +448,75 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         return checkReleaseBuilds;
     }
 
+    /**
+     * Sets whether lint should check for fatal errors during release builds. Default is true. If
+     * issues with severity "fatal" are found, the release build is aborted.
+     */
     public void setCheckReleaseBuilds(boolean checkReleaseBuilds) {
         this.checkReleaseBuilds = checkReleaseBuilds;
     }
 
-    /**
-     * Returns the default configuration file to use as a fallback
-     */
+    /** Returns the default configuration file to use as a fallback */
     @Nullable
     @Override
-    @Optional @InputFile
+    @Optional
+    @InputFile
     public File getLintConfig() {
         return lintConfig;
     }
 
-    /** Whether we should write an text report. Default false. The location can be
-     * controlled by {@link #getTextOutput()}. */
+    /**
+     * Whether we should write a text report. Default is false. The location can be controlled by
+     * {@link #getTextOutput()}.
+     */
     @Override
     @Input
     public boolean getTextReport() {
         return textReport;
     }
 
+    /**
+     * Sets whether we should write a text report. Default is false. The location can be controlled
+     * by {@link #textOutput(File)}.
+     */
     public void setTextReport(boolean textReport) {
         this.textReport = textReport;
     }
 
+    /**
+     * Sets whether we should write an HTML report. Default is true. The location can be controlled by
+     * {@link #setHtmlOutput(File)}.
+     */
     public void setHtmlReport(boolean htmlReport) {
         this.htmlReport = htmlReport;
     }
 
+    /** Sets the optional path to where an HTML report should be written */
     public void setHtmlOutput(@NonNull File htmlOutput) {
         this.htmlOutput = htmlOutput;
     }
 
+    /**
+     * Sets whether we should write an XML report. Default is true. The location can be controlled by
+     * {@link #setXmlOutput(File)}.
+     */
     public void setXmlReport(boolean xmlReport) {
         this.xmlReport = xmlReport;
     }
 
+    /** Sets the optional path to where an XML report should be written */
     public void setXmlOutput(@NonNull File xmlOutput) {
         if (xmlOutput.getName().equals("lint.xml")) {
-            throw new GradleException("Don't set the xmlOutput file to \"lint.xml\"; that's a "
-                    + "reserved filename used for for lint configuration files, not reports.");
+            throw new GradleException(
+                    "Don't set the xmlOutput file to \"lint.xml\"; that's a "
+                            + "reserved filename used for for lint configuration files, not reports.");
         }
         this.xmlOutput = xmlOutput;
     }
 
     /**
-     * The optional path to where a text report should be written. The special value
-     * "stdout" can be used to point to standard output.
+     * The optional path to where a text report should be written. The special value "stdout" can be
+     * used to point to standard output.
      */
     @Override
     @Nullable
@@ -471,8 +526,10 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         return textOutput;
     }
 
-    /** Whether we should write an HTML report. Default true. The location can be
-     * controlled by {@link #getHtmlOutput()}. */
+    /**
+     * Whether we should write an HTML report. Default is true. The location can be controlled by
+     * {@link #getHtmlOutput()}.
+     */
     @Override
     @Input
     public boolean getHtmlReport() {
@@ -488,8 +545,10 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         return htmlOutput;
     }
 
-    /** Whether we should write an XML report. Default true. The location can be
-     * controlled by {@link #getXmlOutput()}. */
+    /**
+     * Whether we should write an XML report. Default is true. The location can be controlled by {@link
+     * #getXmlOutput()}.
+     */
     @Override
     @Input
     public boolean getXmlReport() {
@@ -513,15 +572,41 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         this.lintConfig = lintConfig;
     }
 
-    @Override @Nullable
+    /**
+     * Returns the baseline file to use, if any. The baseline file is an XML report previously
+     * created by lint, and any warnings and errors listed in that report will be ignored from
+     * analysis.
+     *
+     * <p>If you have a project with a large number of existing warnings, this lets you set a
+     * baseline and only see newly introduced warnings until you get a chance to go back and address
+     * the "technical debt" of the earlier warnings.
+     */
+    @Override
+    @Nullable
     public File getBaselineFile() {
         return baselineFile;
     }
 
+    /**
+     * Sets the baseline file to use, if any. The baseline file is an XML report previously created
+     * by lint, and any warnings and errors listed in that report will be ignored from analysis.
+     *
+     * <p>If you have a project with a large number of existing warnings, this lets you set a
+     * baseline and only see newly introduced warnings until you get a chance to go back and address
+     * the "technical debt" of the earlier warnings.
+     */
     public void setBaselineFile(@Nullable File baselineFile) {
         this.baselineFile = baselineFile;
     }
 
+    /**
+     * Sets the baseline file to use, if any. The baseline file is an XML report previously created
+     * by lint, and any warnings and errors listed in that report will be ignored from analysis.
+     *
+     * <p>If you have a project with a large number of existing warnings, this lets you set a
+     * baseline and only see newly introduced warnings until you get a chance to go back and address
+     * the "technical debt" of the earlier warnings.
+     */
     // DSL method
     public void baseline(@NonNull String baseline) {
         File file = new File(baseline);
@@ -533,6 +618,14 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         this.baselineFile = file;
     }
 
+    /**
+     * Sets the baseline file to use, if any. The baseline file is an XML report previously created
+     * by lint, and any warnings and errors listed in that report will be ignored from analysis.
+     *
+     * <p>If you have a project with a large number of existing warnings, this lets you set a
+     * baseline and only see newly introduced warnings until you get a chance to go back and address
+     * the "technical debt" of the earlier warnings.
+     */
     public void baseline(@NonNull File baselineFile) {
         this.baselineFile = baselineFile;
     }
@@ -541,9 +634,9 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * An optional map of severity overrides. The map maps from issue id's to the corresponding
      * severity to use, which must be "fatal", "error", "warning", or "ignore".
      *
-     * @return a map of severity overrides, or null. The severities are one of the constants
-     *  {@link #SEVERITY_FATAL}, {@link #SEVERITY_ERROR}, {@link #SEVERITY_WARNING},
-     *  {@link #SEVERITY_INFORMATIONAL}, {@link #SEVERITY_IGNORE}
+     * @return a map of severity overrides, or null. The severities are one of the constants {@link
+     *     #SEVERITY_FATAL}, {@link #SEVERITY_ERROR}, {@link #SEVERITY_WARNING}, {@link
+     *     #SEVERITY_INFORMATIONAL}, {@link #SEVERITY_IGNORE}
      */
     @Override
     @Nullable
@@ -557,142 +650,112 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
 
     // -- DSL Methods.
 
-    /**
-     * Adds the id to the set of issues to check.
-     */
+    /** Adds the id to the set of issues to check. */
     public void check(String id) {
         check.add(id);
     }
 
-    /**
-     * Adds the ids to the set of issues to check.
-     */
+    /** Adds the ids to the set of issues to check. */
     public void check(String... ids) {
         for (String id : ids) {
             check(id);
         }
     }
 
-    /**
-     * Adds the id to the set of issues to enable.
-     */
+    /** Adds the id to the set of issues to enable. */
     public void enable(String id) {
         enable.add(id);
         severities.put(id, SEVERITY_DEFAULT_ENABLED);
     }
 
-    /**
-     * Adds the ids to the set of issues to enable.
-     */
+    /** Adds the ids to the set of issues to enable. */
     public void enable(String... ids) {
         for (String id : ids) {
             enable(id);
         }
     }
 
-    /**
-     * Adds the id to the set of issues to enable.
-     */
+    /** Adds the id to the set of issues to enable. */
     public void disable(String id) {
         disable.add(id);
         severities.put(id, SEVERITY_IGNORE);
     }
 
-    /**
-     * Adds the ids to the set of issues to enable.
-     */
+    /** Adds the ids to the set of issues to enable. */
     public void disable(String... ids) {
         for (String id : ids) {
             disable(id);
         }
     }
 
+    /** Sets the optional path to where a text report should be written */
     // For textOutput 'stdout' or 'stderr' (normally a file)
     @SuppressWarnings("unused") // DSL method
     public void textOutput(String textOutput) {
         this.textOutput = new File(textOutput);
     }
 
+    /** Sets the optional path to where a text report should be written */
     // For textOutput file()
     @SuppressWarnings("unused") // DSL method
     public void textOutput(File textOutput) {
         this.textOutput = textOutput;
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void fatal(String id) {
         severities.put(id, SEVERITY_FATAL);
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void fatal(String... ids) {
         for (String id : ids) {
             fatal(id);
         }
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void error(String id) {
         severities.put(id, SEVERITY_ERROR);
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void error(String... ids) {
         for (String id : ids) {
             error(id);
         }
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void warning(String id) {
         severities.put(id, SEVERITY_WARNING);
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void warning(String... ids) {
         for (String id : ids) {
             warning(id);
         }
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void ignore(String id) {
         severities.put(id, SEVERITY_IGNORE);
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void ignore(String... ids) {
         for (String id : ids) {
             ignore(id);
         }
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     public void informational(String id) {
         severities.put(id, SEVERITY_INFORMATIONAL);
     }
 
-    /**
-     * Adds a severity override for the given issues.
-     */
+    /** Adds a severity override for the given issues. */
     @SuppressWarnings("unused") // DSL method
     public void informational(String... ids) {
         for (String id : ids) {

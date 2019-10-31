@@ -20,9 +20,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.Deflater;
@@ -689,5 +692,48 @@ public class TestZipFlinger extends TestBase {
             archive.delete("");
         }
         verifyArchive(dst.toFile());
+    }
+
+    @Test
+    // Regression test for b/141861587
+    public void testVersionMadeByZero() throws Exception {
+        int fileSize = 4;
+        Path dst = getTestPath("testMadeByZero.zip");
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            archive.add(new BytesSource(new byte[fileSize], "file1", 0));
+        }
+        ZipMap map = ZipMap.from(dst.toFile(), false);
+
+        Path cdDumpPath = getTestPath("cd_dump");
+        try (FileChannel channel =
+                        FileChannel.open(
+                                cdDumpPath,
+                                StandardOpenOption.WRITE,
+                                StandardOpenOption.READ,
+                                StandardOpenOption.CREATE);
+                ZipWriter writer = new ZipWriter(channel)) {
+            map.getCentralDirectory().write(writer);
+        }
+
+        // Extract the CD from the archive
+        byte[] cdBytes = Files.readAllBytes(cdDumpPath);
+        ByteBuffer cd = ByteBuffer.wrap(cdBytes).order(ByteOrder.LITTLE_ENDIAN);
+
+        // Check signature
+        int signature = cd.getInt();
+        Assert.assertEquals("CD signature not found", signature, CentralDirectoryRecord.SIGNATURE);
+
+        // Check version Made-kby
+        short versionMadeBy = cd.getShort();
+        Assert.assertEquals("Version Made-By field in CD[0] = 0", versionMadeBy, 0);
+
+        // Just to make sure we have the right record, skip to size and usize and check there
+        cd.position(cd.position() + 14);
+
+        int compressedSize = cd.getInt();
+        Assert.assertEquals("Bad CSize", fileSize, compressedSize);
+
+        int ucompressedSize = cd.getInt();
+        Assert.assertEquals("Bad USize", fileSize, ucompressedSize);
     }
 }

@@ -154,6 +154,7 @@ java_import(
     visibility = [
         "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/profiler/app:__pkg__",
+        "//tools/base/experimental/live-sql-inspector:__pkg__",
     ],
 )
 
@@ -244,7 +245,7 @@ filegroup(
 filegroup(
     name = "ndk",
     srcs = sdk_glob(
-        include = ["ndk/20.0.5594570/**"],
+        include = ["ndk/21.0.5935234/**"],
     ),
     visibility = ["//visibility:public"],
 )

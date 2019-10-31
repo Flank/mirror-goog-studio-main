@@ -25,7 +25,8 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
  * <p>To learn more about testing Android projects, read <a
  * href="https://developer.android.com/studio/test/index.html">Test Your App</a>.
  */
-public abstract class TestedExtension extends BaseExtension implements TestedAndroidConfig {
+public abstract class TestedExtension extends BaseExtension
+        implements TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
     private final DomainObjectSet<TestVariant> testVariantList =
             new DefaultDomainObjectSet<TestVariant>(TestVariant.class);

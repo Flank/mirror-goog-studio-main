@@ -136,3 +136,13 @@ index 947d26da1e..130da503c7 100644
 +An so vulgar to on points wanted. Not rapturous resolving continued household northward gay. He it otherwise supported instantly. Unfeeling agreeable suffering it on smallness newspaper be. So come must time no as. Do on unpleasing possession as of unreserved. Yet joy exquisite put sometimes enjoyment perpetual now. Behind lovers eat having length horses vanity say had its. 
  
  
+diff --git a/before/windows_to_unix_line_endings.txt b/after/windows_to_unix_line_endings.txt
+index e9c441cdb0..36275a8308 100644
+--- a/before/windows_to_unix_line_endings.txt
++++ b/after/windows_to_unix_line_endings.txt
+@@ -1,2 +1,2 @@
+-Line 1
++Line 1
+-Line 2
++Line 2
+ 

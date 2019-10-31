@@ -59,6 +59,10 @@ public class FakeAndroidDriver extends ProcessRunner {
                                 ProcessRunner.getProcessPath("art.deps.location"),
                                 "conscrypt-hostdex.jar")
                         + String.format(
+                                "%s%s:",
+                                ProcessRunner.getProcessPath("art.deps.location"),
+                                "core-icu4j-hostdex.jar")
+                        + String.format(
                                 "%s%s",
                                 ProcessRunner.getProcessPath("art.deps.location"),
                                 "okhttp-hostdex.jar"));

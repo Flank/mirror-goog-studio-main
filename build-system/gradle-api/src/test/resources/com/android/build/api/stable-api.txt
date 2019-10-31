@@ -4,14 +4,14 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-59cdec9d16443437e17b2ff3a046e3240614cf8d00382352af383ac8fa6eaa1a
+0c39187b7f4ea6cb9cd21e2af69f181bc5356abc519473b2fa01c277418e58ca
 -------------------------------------------------------------------------
-com.android.build.api.attributes.BuildTypeAttr
+com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.BuildTypeAttr$Companion.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.BuildTypeAttr> ()
 com.android.build.api.attributes.BuildTypeAttr.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.BuildTypeAttr> ()
-com.android.build.api.attributes.ProductFlavorAttr
-com.android.build.api.attributes.VariantAttr
+com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
+com.android.build.api.attributes.VariantAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr$Companion
 com.android.build.api.attributes.VariantAttr$Companion.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.VariantAttr> ()
 com.android.build.api.attributes.VariantAttr.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.VariantAttr> ()
@@ -22,22 +22,22 @@ com.android.build.api.transform.Context.getProjectName: java.lang.String ()
 com.android.build.api.transform.Context.getTemporaryDir: java.io.File ()
 com.android.build.api.transform.Context.getVariantName: java.lang.String ()
 com.android.build.api.transform.Context.getWorkerExecutor: org.gradle.workers.WorkerExecutor ()
-com.android.build.api.transform.DirectoryInput
+com.android.build.api.transform.DirectoryInput implements com.android.build.api.transform.QualifiedContent
 com.android.build.api.transform.DirectoryInput.getChangedFiles: java.util.Map<java.io.File, com.android.build.api.transform.Status> ()
-com.android.build.api.transform.Format
+com.android.build.api.transform.Format extends java.lang.Enum
 com.android.build.api.transform.Format.valueOf: com.android.build.api.transform.Format (java.lang.String)
 com.android.build.api.transform.Format.values: com.android.build.api.transform.Format[] ()
-com.android.build.api.transform.JarInput
+com.android.build.api.transform.JarInput implements com.android.build.api.transform.QualifiedContent
 com.android.build.api.transform.JarInput.getStatus: com.android.build.api.transform.Status ()
 com.android.build.api.transform.QualifiedContent
 com.android.build.api.transform.QualifiedContent$ContentType
 com.android.build.api.transform.QualifiedContent$ContentType.getValue: int ()
 com.android.build.api.transform.QualifiedContent$ContentType.name: java.lang.String ()
-com.android.build.api.transform.QualifiedContent$DefaultContentType
+com.android.build.api.transform.QualifiedContent$DefaultContentType extends java.lang.Enum implements com.android.build.api.transform.QualifiedContent$ContentType
 com.android.build.api.transform.QualifiedContent$DefaultContentType.getValue: int ()
 com.android.build.api.transform.QualifiedContent$DefaultContentType.valueOf: com.android.build.api.transform.QualifiedContent$DefaultContentType (java.lang.String)
 com.android.build.api.transform.QualifiedContent$DefaultContentType.values: com.android.build.api.transform.QualifiedContent$DefaultContentType[] ()
-com.android.build.api.transform.QualifiedContent$Scope
+com.android.build.api.transform.QualifiedContent$Scope extends java.lang.Enum implements com.android.build.api.transform.QualifiedContent$ScopeType
 com.android.build.api.transform.QualifiedContent$Scope.getValue: int ()
 com.android.build.api.transform.QualifiedContent$Scope.valueOf: com.android.build.api.transform.QualifiedContent$Scope (java.lang.String)
 com.android.build.api.transform.QualifiedContent$Scope.values: com.android.build.api.transform.QualifiedContent$Scope[] ()
@@ -62,7 +62,7 @@ com.android.build.api.transform.SecondaryFile.supportsIncrementalBuild: boolean 
 com.android.build.api.transform.SecondaryInput
 com.android.build.api.transform.SecondaryInput.getSecondaryInput: com.android.build.api.transform.SecondaryFile ()
 com.android.build.api.transform.SecondaryInput.getStatus: com.android.build.api.transform.Status ()
-com.android.build.api.transform.Status
+com.android.build.api.transform.Status extends java.lang.Enum
 com.android.build.api.transform.Status.valueOf: com.android.build.api.transform.Status (java.lang.String)
 com.android.build.api.transform.Status.values: com.android.build.api.transform.Status[] ()
 com.android.build.api.transform.Transform
@@ -83,7 +83,7 @@ com.android.build.api.transform.Transform.setOutputDirectory: void (org.gradle.a
 com.android.build.api.transform.Transform.setOutputFile: void (org.gradle.api.provider.Property<org.gradle.api.file.RegularFile>)
 com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.Context, java.util.Collection<com.android.build.api.transform.TransformInput>, java.util.Collection<com.android.build.api.transform.TransformInput>, com.android.build.api.transform.TransformOutputProvider, boolean) throws java.io.IOException, com.android.build.api.transform.TransformException, java.lang.InterruptedException
 com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.TransformInvocation) throws com.android.build.api.transform.TransformException, java.lang.InterruptedException, java.io.IOException
-com.android.build.api.transform.TransformException
+com.android.build.api.transform.TransformException extends java.lang.Exception
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.String)
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.String, java.lang.Throwable)
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.Throwable)
