@@ -26,6 +26,7 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
 import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.TestUtils;
+import com.android.testutils.WindowsPathUtilsKt;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -67,8 +68,8 @@ public class BazelIntegrationTestsSuite {
             NDK_IN_TMP = DATA_DIR.resolve("ndk-bundle").toAbsolutePath();
             Path ndkSideBySideRoot;
             try {
-                ndkSideBySideRoot =
-                        new File(TestUtils.getSdk(), SdkConstants.FD_NDK_SIDE_BY_SIDE).toPath();
+                File root = new File(TestUtils.getSdk(), SdkConstants.FD_NDK_SIDE_BY_SIDE);
+                ndkSideBySideRoot = WindowsPathUtilsKt.getWindowsShortNameFile(root).toPath();
             } catch (IllegalArgumentException e) {
                 // this is thrown when getSdk() calls getWorkspaceFile() with a string that cannot be
                 // found in the workspace directory. In this specific instance, we don't care, so don't
