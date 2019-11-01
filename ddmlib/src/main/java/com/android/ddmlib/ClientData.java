@@ -146,11 +146,17 @@ public class ClientData {
     private static IMethodProfilingHandler sMethodProfilingHandler;
     private static IAllocationTrackingHandler sAllocationTrackingHandler;
 
+    // owning Client
+    private final Client mClient;
+
     // the client's process ID
     private final int mPid;
 
     // Java VM identification string
     private String mVmIdentifier;
+
+    // client's underlying package name (R+ only)
+    private String mPackageName = Device.UNKNOWN_PACKAGE;
 
     // client's self-description
     private String mClientDescription;
@@ -484,10 +490,9 @@ public class ClientData {
         return sAllocationTrackingHandler;
     }
 
-    /**
-     * Generic constructor.
-     */
-    ClientData(int pid) {
+    /** Generic constructor. */
+    ClientData(@NonNull Client client, int pid) {
+        mClient = client;
         mPid = pid;
 
         mDebuggerInterest = DebuggerStatus.DEFAULT;
@@ -855,9 +860,22 @@ public class ClientData {
         return mPendingMethodProfiling;
     }
 
-    /** Returns the application's package name. */
+    void setPackageName(String packageName) {
+        mPackageName = packageName;
+    }
+
+    /**
+     * Returns the application's real package name if there is protocol support. If there is no
+     * protocol support, returns the attempted derivation of the package name from the app name (to
+     * maintain backward compatibility), or the app name if not successful.
+     */
     @Nullable
     public String getPackageName() {
+        // Use the reported package name if the version (R+) supports it.
+        if (mClient.getDevice().supportsFeature(IDevice.Feature.REAL_PKG_NAME)) {
+            return mPackageName;
+        }
+        // Try to infer the package name.
         // Check for multi-process app name that might have a following format - "$applicationId:$processName"
         if (mClientDescription == null) {
             return null;

@@ -101,6 +101,11 @@ final class HandleHello extends ChunkHandler {
         vmIdent = ByteBufferUtil.getString(data, vmIdentLen);
         appName = ByteBufferUtil.getString(data, appNameLen);
 
+        Log.d(
+                "ddm-hello",
+                String.format(
+                        "HELO: v=%d, pid=%d, vm='%s', app='%s'", version, pid, vmIdent, appName));
+
         // Newer devices send user id in the APNM packet.
         int userId = -1;
         boolean validUserId = false;
@@ -153,8 +158,16 @@ final class HandleHello extends ChunkHandler {
             }
         }
 
-        Log.d("ddm-hello", "HELO: v=" + version + ", pid=" + pid
-            + ", vm='" + vmIdent + "', app='" + appName + "'");
+        String packageName = null;
+        if (data.hasRemaining()) {
+            try {
+                int packageNameLength = data.getInt();
+                packageName = ByteBufferUtil.getString(data, packageNameLength);
+                Log.d("ddm-hello", String.format("HELO: pkg='%s'", packageName));
+            } catch (BufferUnderflowException e) {
+                Log.e("ddm-hello", "Insufficient data in HELO chunk to retrieve packageName");
+            }
+        }
 
         ClientData cd = client.getClientData();
 
@@ -175,6 +188,10 @@ final class HandleHello extends ChunkHandler {
             }
 
             cd.setNativeDebuggable(nativeDebuggable);
+
+            if (packageName != null) {
+                cd.setPackageName(packageName);
+            }
         } else {
             Log.e("ddm-hello", "Received pid (" + pid + ") does not match client pid ("
                     + cd.getPid() + ")");

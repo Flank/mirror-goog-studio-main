@@ -66,6 +66,7 @@ public interface IDevice extends IShellEnabledDevice {
         SCREEN_RECORD,      // screen recorder available?
         PROCSTATS,          // procstats service (dumpsys procstats) available
         ABB_EXEC,           // Android Binder Bridge available
+        REAL_PKG_NAME,      // Reports the real package name, instead of inferring from client description
     }
 
     /** Device level hardware features. */
