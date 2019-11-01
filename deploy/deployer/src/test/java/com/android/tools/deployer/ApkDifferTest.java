@@ -148,7 +148,7 @@ public class ApkDifferTest {
 
         List<FileDiff> diff = checkDiffs(apk1, apk2);
         assertEquals(4, diff.size());
-        diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.name));
+        diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.getName()));
         assertEquals(FileDiff.Status.CREATED, diff.get(0).status);
         ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex4", 0x04, diff.get(0).newFile);
 
@@ -165,7 +165,7 @@ public class ApkDifferTest {
 
         // Diff in the other direction
         diff = checkDiffs(apk2, apk1);
-        diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.name));
+        diff.sort(Comparator.comparing(a -> a.oldFile == null ? "" : a.oldFile.getName()));
         assertEquals(FileDiff.Status.CREATED, diff.get(0).status);
         ApkTestUtils.assertApkEntryEquals(apk1.checksum, "dex0", 0x00, diff.get(0).newFile);
 

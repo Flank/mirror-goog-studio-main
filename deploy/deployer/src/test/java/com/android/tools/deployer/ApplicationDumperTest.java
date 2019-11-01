@@ -55,7 +55,7 @@ public class ApplicationDumperTest {
         Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
         Apk dumpApk = Apk.builder().setPackageName("package").addApkEntry("", 0).build();
-        List<ApkEntry> files =
+        Map<String, ApkEntry> files =
                 new ApplicationDumper(installer)
                         .dump(ImmutableList.of(dumpApk))
                         .apks
@@ -65,13 +65,17 @@ public class ApplicationDumperTest {
         String apk = "b236acae47f2b2163e9617021c4e1adc7a0c197b";
         assertEquals(277, files.size());
         // Check a few files
-        assertApkEntryEquals(apk, "res/drawable-nodpi-v4/frantic.jpg", 0x492381F1L, files.get(10));
+        assertApkEntryEquals(
+                apk,
+                "res/drawable-nodpi-v4/frantic.jpg",
+                0x492381F1L,
+                files.get("res/drawable-nodpi-v4/frantic.jpg"));
         assertApkEntryEquals(
                 apk,
                 "res/drawable-xxhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png",
                 0x4034A6D4L,
-                files.get(20));
-        assertApkEntryEquals(apk, "resources.arsc", 0xFCD1856L, files.get(30));
+                files.get("res/drawable-xxhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png"));
+        assertApkEntryEquals(apk, "resources.arsc", 0xFCD1856L, files.get("resources.arsc"));
     }
 
     @Test
@@ -91,7 +95,7 @@ public class ApplicationDumperTest {
         Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
         Apk dumpApk = Apk.builder().setPackageName("package").addApkEntry("", 0).build();
-        List<ApkEntry> files =
+        Map<String, ApkEntry> files =
                 new ApplicationDumper(installer)
                         .dump(ImmutableList.of(dumpApk))
                         .apks
@@ -105,13 +109,17 @@ public class ApplicationDumperTest {
                 apk,
                 "res/drawable/abc_list_selector_background_transition_holo_light.xml",
                 0x29EE1C29L,
-                files.get(10));
+                files.get("res/drawable/abc_list_selector_background_transition_holo_light.xml"));
         assertApkEntryEquals(
                 apk,
                 "res/drawable-xxxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png",
                 0x566244DBL,
-                files.get(20));
-        assertApkEntryEquals(apk, "res/color/abc_tint_spinner.xml", 0xD7611BC4L, files.get(30));
+                files.get("res/drawable-xxxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png"));
+        assertApkEntryEquals(
+                apk,
+                "res/color/abc_tint_spinner.xml",
+                0xD7611BC4L,
+                files.get("res/color/abc_tint_spinner.xml"));
     }
 
     @Test

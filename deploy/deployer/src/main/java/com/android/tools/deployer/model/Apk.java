@@ -16,11 +16,11 @@
 package com.android.tools.deployer.model;
 
 import com.android.tools.deployer.ZipUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class Apk {
     public final String name;
@@ -33,12 +33,7 @@ public class Apk {
     // most common in the form of an instrumented unit test run from studio.
     public final List<String> targetPackages;
 
-    public final List<ApkEntry> apkEntries;
-
-    // TODO: This should either be in the ApkEntry loosely connected to this Apk
-    //       or we change the model and have a list of ApkEntry in the APK since
-    //       we spend
-    public final HashMap<String, ZipUtils.ZipEntry> zipEntries;
+    public final Map<String, ApkEntry> apkEntries;
 
     private Apk(
             String name,
@@ -46,19 +41,13 @@ public class Apk {
             String path,
             String packageName,
             List<String> targetPackages,
-            List<ApkEntry> apkEntries,
-            HashMap<String, ZipUtils.ZipEntry> zipEntries) {
+            Map<String, ApkEntry> apkEntries) {
         this.name = name;
         this.checksum = checksum;
         this.path = path;
         this.packageName = packageName;
         this.targetPackages = targetPackages;
-        this.apkEntries =
-                apkEntries
-                        .stream()
-                        .map(e -> new ApkEntry(e.name, e.checksum, this))
-                        .collect(Collectors.toList());
-        this.zipEntries = zipEntries;
+        this.apkEntries = apkEntries;
     }
 
     public static Builder builder() {
@@ -71,8 +60,7 @@ public class Apk {
         private String path;
         private String packageName;
         private List<String> targetPackages;
-        private List<ApkEntry> apkEntries;
-        private HashMap<String, ZipUtils.ZipEntry> zipEntries;
+        private ImmutableMap.Builder<String, ApkEntry> apkEntries;
 
         public Builder() {
             this.name = "";
@@ -80,8 +68,7 @@ public class Apk {
             this.path = "";
             this.packageName = "";
             this.targetPackages = null;
-            this.apkEntries = new ArrayList<>();
-            this.zipEntries = null;
+            this.apkEntries = ImmutableMap.builder();
         }
 
         public Builder setName(String name) {
@@ -109,22 +96,23 @@ public class Apk {
             return this;
         }
 
+        @VisibleForTesting
         public Builder addApkEntry(String name, long checksum) {
-            this.apkEntries.add(new ApkEntry(name, checksum, null));
+            this.apkEntries.put(name, new ApkEntry(name, checksum, null));
             return this;
         }
 
-        public Builder setZipEntries(HashMap<String, ZipUtils.ZipEntry> zipEntries) {
-            this.zipEntries = zipEntries;
+        public Builder addApkEntry(ZipUtils.ZipEntry zipEntry) {
+            this.apkEntries.put(zipEntry.name, new ApkEntry(zipEntry));
             return this;
         }
 
         public Apk build() {
             targetPackages = targetPackages == null ? ImmutableList.of() : targetPackages;
-            apkEntries = apkEntries == null ? ImmutableList.of() : apkEntries;
-            zipEntries = zipEntries == null ? new HashMap<>() : zipEntries;
-            return new Apk(
-                    name, checksum, path, packageName, targetPackages, apkEntries, zipEntries);
+            Apk apk =
+                    new Apk(name, checksum, path, packageName, targetPackages, apkEntries.build());
+            apk.apkEntries.values().forEach(entry -> entry.setApk(apk));
+            return apk;
         }
     }
 }

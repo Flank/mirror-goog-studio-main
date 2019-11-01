@@ -121,11 +121,10 @@ public class ApplicationDumper {
                     Apk.builder()
                             .setName(dump.getName())
                             .setChecksum(digest)
-                            .setPath(dump.getAbsolutePath())
-                            .setZipEntries(zipEntries);
+                            .setPath(dump.getAbsolutePath());
 
             for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-                builder.addApkEntry(entry.getKey(), entry.getValue().crc);
+                builder.addApkEntry(entry.getValue());
             }
 
             dumps.add(builder.build());

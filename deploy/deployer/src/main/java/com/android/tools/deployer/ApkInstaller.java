@@ -313,7 +313,7 @@ public class ApkInstaller {
         if (inherit) {
             for (FileDiff fileDiff : diff) {
                 if (fileDiff.oldFile != null
-                        && fileDiff.oldFile.name.equals("AndroidManifest.xml")) {
+                        && fileDiff.oldFile.getName().equals("AndroidManifest.xml")) {
                     inherit = false;
                 }
             }

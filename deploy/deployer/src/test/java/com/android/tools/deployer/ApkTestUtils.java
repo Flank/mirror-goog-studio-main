@@ -35,8 +35,8 @@ public class ApkTestUtils {
 
     public static void assertApkEntryEquals(
             String apkChecksum, String fileName, long fileChecksum, ApkEntry file) {
-        Assert.assertEquals(apkChecksum, file.apk.checksum);
-        Assert.assertEquals(fileName, file.name);
-        Assert.assertEquals(fileChecksum, file.checksum);
+        Assert.assertEquals(apkChecksum, file.getApk().checksum);
+        Assert.assertEquals(fileName, file.getName());
+        Assert.assertEquals(fileChecksum, file.getChecksum());
     }
 }

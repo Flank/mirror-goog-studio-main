@@ -45,19 +45,19 @@ public class ApkDiffer {
         // Traverse local and remote list of crcs in order to detect what has changed in a local apk.
         List<FileDiff> diffs = new ArrayList<>();
         for (ApkEntry newFile : newFiles) {
-            ApkEntry oldFile = oldMap.get(newFile.apk.name).get(newFile.name);
+            ApkEntry oldFile = oldMap.get(newFile.getApk().name).get(newFile.getName());
             if (oldFile == null) {
                 diffs.add(new FileDiff(null, newFile, FileDiff.Status.CREATED));
             } else {
                 // Check if modified.
-                if (oldFile.checksum != newFile.checksum) {
+                if (oldFile.getChecksum() != newFile.getChecksum()) {
                     diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
                 }
             }
         }
 
         for (ApkEntry oldFile : oldFiles) {
-            ApkEntry newFile = newMap.get(oldFile.apk.name).get(oldFile.name);
+            ApkEntry newFile = newMap.get(oldFile.getApk().name).get(oldFile.getName());
             if (newFile == null) {
                 diffs.add(new FileDiff(oldFile, null, FileDiff.Status.DELETED));
             }
@@ -68,12 +68,8 @@ public class ApkDiffer {
     private static void groupFiles(
             List<Apk> apks, List<ApkEntry> entries, Map<String, Map<String, ApkEntry>> map) {
         for (Apk apk : apks) {
-            map.putIfAbsent(apk.name, new HashMap<>());
-            Map<String, ApkEntry> innerMap = map.get(apk.name);
-            for (ApkEntry entry : apk.apkEntries) {
-                innerMap.putIfAbsent(entry.name, entry);
-                entries.add(entry);
-            }
+            map.putIfAbsent(apk.name, apk.apkEntries);
+            entries.addAll(apk.apkEntries.values());
         }
     }
 }

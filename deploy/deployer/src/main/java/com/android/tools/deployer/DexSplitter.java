@@ -27,8 +27,8 @@ public interface DexSplitter {
 
     default boolean cache(List<Apk> apks) throws DeployerException {
         for (Apk apk : apks) {
-            for (ApkEntry file : apk.apkEntries) {
-                if (file.name.endsWith(".dex")) {
+            for (ApkEntry file : apk.apkEntries.values()) {
+                if (file.getName().endsWith(".dex")) {
                     split(file, null);
                 }
             }

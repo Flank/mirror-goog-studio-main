@@ -106,11 +106,10 @@ public class ApkParser {
                         .setChecksum(digest)
                         .setPath(absolutePath)
                         .setPackageName(apkDetails.packageName)
-                        .setTargetPackages(apkDetails.targetPackages)
-                        .setZipEntries(zipEntries);
+                        .setTargetPackages(apkDetails.targetPackages);
 
         for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-            builder.addApkEntry(entry.getKey(), entry.getValue().crc);
+            builder.addApkEntry(entry.getValue());
         }
 
         return builder.build();

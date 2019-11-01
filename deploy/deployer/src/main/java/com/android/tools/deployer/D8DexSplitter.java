@@ -43,7 +43,7 @@ public class D8DexSplitter implements DexSplitter {
     /** @param keepCode Needs to be threadsafe. */
     @Override
     public Collection<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) {
-        try (Trace ignored = Trace.begin("split " + dex.name)) {
+        try (Trace ignored = Trace.begin("split " + dex.getName())) {
             D8Command.Builder newBuilder = D8Command.builder();
             DexConsumer consumer = new DexConsumer(dex, keepCode);
             newBuilder.addDexProgramData(readDex(dex), Origin.unknown());
@@ -59,8 +59,8 @@ public class D8DexSplitter implements DexSplitter {
 
     protected byte[] readDex(ApkEntry dex) {
         // TODO Check if opening the file several times matters
-        try (ZipFile file = new ZipFile(dex.apk.path)) {
-            ZipEntry entry = file.getEntry(dex.name);
+        try (ZipFile file = new ZipFile(dex.getApk().path)) {
+            ZipEntry entry = file.getEntry(dex.getName());
             return ByteStreams.toByteArray(file.getInputStream(entry));
         } catch (IOException e) {
             throw new UncheckedIOException(e);

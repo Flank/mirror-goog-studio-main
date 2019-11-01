@@ -27,7 +27,7 @@ class SwapVerifier {
         // TODO: Support multiple errors
         for (FileDiff diff : diffs) {
             if (diff.status.equals(FileDiff.Status.MODIFIED)) {
-                String name = diff.oldFile.name;
+                String name = diff.oldFile.getName();
                 if (name.endsWith(".so")) {
                     throw DeployerException.changedSharedObject(name);
                 }
