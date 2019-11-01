@@ -158,7 +158,7 @@ public class ImlToIr {
                     JpsLibrary library = libraryDependency.getLibrary();
 
                     if (library == null) {
-                        if (!shouldWarnOnModule(jpsModule)) {
+                        if (!ignoreWarnings(jpsModule)) {
                             System.err.println(
                                     String.format(
                                             "Module %s: invalid item '%s' in the dependencies list",
@@ -182,7 +182,11 @@ public class ImlToIr {
                     // across systems. Choose alphabetical always:
                     Collections.sort(files);
                     for (File file : files) {
-                        if (!file.exists()) {
+                        // "KotlinPlugin" is the library that upstream IntelliJ uses that points
+                        // to files under idea/build that we never create. Instead, Android Studio
+                        // has its own library, called "kotlin-plugin" that points to files in
+                        // prebuilts. Here we ignore "KotinPlugin".
+                        if (!file.exists() && !"KotlinPlugin".equals(library.getName())) {
                             String libraryName = library.getName();
                             String dependencyDescription;
                             if (libraryName.equals("#")) {
@@ -210,7 +214,13 @@ public class ImlToIr {
                     JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
                     JpsModule dep = moduleDependency.getModule();
                     if (dep == null) {
-                        System.err.println("Invalid module dependency: " + moduleDependency.getModuleReference().getModuleName() + " from " + module.getName());
+                        if (!ignoreWarnings(module.getName())) {
+                            System.err.println(
+                                    "Invalid module dependency: "
+                                            + moduleDependency.getModuleReference().getModuleName()
+                                            + " from "
+                                            + module.getName());
+                        }
                     } else {
                         dot.addEdge(jpsModule.getName(), dep.getName(), scopeToColor(scope));
                         IrModule irDep = imlToIr.get(dep);
@@ -279,19 +289,23 @@ public class ImlToIr {
      * cycles) or if it involves our code as well.
      */
     private static boolean isCycleAllowed(List<JpsModule> cycle) {
-        return cycle.stream().allMatch(ImlToIr::shouldWarnOnModule);
+        return cycle.stream().allMatch(ImlToIr::ignoreWarnings);
     }
 
     /**
      * Checks if warnings about the given module should be printed out.
      *
-     * We don't warn users about modules we don't maintain, i.e. platform modules.
+     * <p>We don't warn users about modules we don't maintain, i.e. platform modules.
      */
-    private static boolean shouldWarnOnModule(JpsModule module) {
-        String name = module.getName();
-        return name.startsWith("intellij.platform")
-                || name.startsWith("intellij.c")
-                || name.startsWith("intellij.java");
+    public static boolean ignoreWarnings(JpsModule module) {
+        return ignoreWarnings(module.getName());
+    }
+
+    private static boolean ignoreWarnings(String moduleName) {
+        return moduleName.startsWith("intellij.platform")
+                || moduleName.startsWith("intellij.idea")
+                || moduleName.startsWith("intellij.c")
+                || moduleName.startsWith("intellij.java");
     }
 
     private static String scopeToColor(IrModule.Scope scope) {
