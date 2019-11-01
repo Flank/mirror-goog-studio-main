@@ -248,13 +248,27 @@ public class ImlToIr {
     private static void printCycleWarnings(PrintWriter writer, JpsGraph graph) {
         for (List<JpsModule> component : graph.getConnectedComponents()) {
             // If the component has more than one element, there is a cycle:
-            if (component.size() > 1) {
+            if (component.size() > 1 && !isCycleAllowed(component)) {
                 writer.println("Found circular module dependency: " + component.size() + " modules");
                 for (JpsModule module : component) {
                     writer.println("        " + module.getName());
                 }
             }
         }
+    }
+
+    /**
+     * Checks if a circular dependency is something in the platform (which we know contains such
+     * cycles) or if it involves our code as well.
+     */
+    private static boolean isCycleAllowed(List<JpsModule> cycle) {
+        return cycle.stream()
+                .allMatch(
+                        module -> {
+                            String name = module.getName();
+                            return name.startsWith("intellij.platform")
+                                    || name.startsWith("intellij.java");
+                        });
     }
 
     private static String scopeToColor(IrModule.Scope scope) {
