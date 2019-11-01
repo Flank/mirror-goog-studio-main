@@ -19,9 +19,7 @@
 #include <fcntl.h>
 
 #include "tools/base/deploy/common/utils.h"
-
-// Defined in main.cc
-std::string GetVersion();
+#include "tools/base/deploy/installer/runas_executor.h"
 
 namespace deploy {
 
@@ -29,10 +27,14 @@ namespace {
 constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
 }
 
-Workspace::Workspace(const std::string& executable_path, Executor* executor)
-    : executor_(executor), output_pipe_(dup(STDOUT_FILENO)) {
+Workspace::Workspace(const std::string& executable_path,
+                     const std::string& version, Executor* executor)
+    : exec_path_(executable_path),
+      version_(version),
+      executor_(executor),
+      output_pipe_(dup(STDOUT_FILENO)) {
   base_ = kBasedir;
-  tmp_ = base_ + "tmp-" + GetVersion() + "/";
+  tmp_ = base_ + "tmp-" + version + "/";
 }
 
 void Workspace::Init() noexcept {
@@ -46,16 +48,6 @@ void Workspace::Init() noexcept {
   close(STDOUT_FILENO);
   open("/dev/null", O_WRONLY);
   open("/dev/null", O_WRONLY);
-}
-
-void Workspace::SendResponse() noexcept {
-  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
-  for (Event& event : *events) {
-    ConvertEventToProtoEvent(event, response_.add_events());
-  }
-  std::string responseString;
-  response_.SerializeToString(&responseString);
-  output_pipe_.Write(responseString);
 }
 
 }  // namespace deploy

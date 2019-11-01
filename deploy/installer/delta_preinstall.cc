@@ -34,11 +34,10 @@
 
 namespace deploy {
 
-void DeltaPreinstallCommand::Run() {
+void DeltaPreinstallCommand::Run(proto::InstallerResponse* response) {
   Metric m("DELTAPREINSTALL_WRITE");
 
-  auto response = new proto::DeltaPreinstallResponse();
-  workspace_.GetResponse().set_allocated_deltapreinstall_response(response);
+  auto delta_response = response->mutable_deltapreinstall_response();
 
   // Create a session
   CmdCommand cmd(workspace_);
@@ -56,20 +55,20 @@ void DeltaPreinstallCommand::Run() {
   bool session_created = CreateInstallSession(&output, &options);
   if (session_created) {
     session_id = output;
-    response->set_session_id(session_id);
+    delta_response->set_session_id(session_id);
   } else {
     ErrEvent("Unable to create session");
     ErrEvent(output);
-    response->set_status(proto::DeltaStatus::ERROR);
+    delta_response->set_status(proto::DeltaStatus::ERROR);
     return;
   }
 
   if (!SendApksToPackageManager(session_id)) {
-    response->set_status(proto::DeltaStatus::STREAM_APK_FAILED);
+    delta_response->set_status(proto::DeltaStatus::STREAM_APK_FAILED);
     return;
   }
 
-  response->set_status(proto::DeltaStatus::OK);
+  delta_response->set_status(proto::DeltaStatus::OK);
 }
 
 }  // namespace deploy

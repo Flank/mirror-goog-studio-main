@@ -28,12 +28,12 @@ class DeltaInstallCommand : public BaseInstallCommand {
   explicit DeltaInstallCommand(Workspace& workspace);
   virtual ~DeltaInstallCommand() = default;
   virtual void ParseParameters(int argc, char** argv);
-  virtual void Run();
+  virtual void Run(proto::InstallerResponse* response);
 
  private:
   // Install using pm install-create, install-write, install-commit streaming
   // API where data is streamed directely to the Package Manager.
-  void StreamInstall();
+  void StreamInstall(proto::DeltaInstallResponse* response);
 };
 
 }  // namespace deploy

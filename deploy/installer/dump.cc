@@ -50,14 +50,13 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-void DumpCommand::Run() {
+void DumpCommand::Run(proto::InstallerResponse* response) {
   Phase p("Command Dump");
 
-  proto::DumpResponse* response = new proto::DumpResponse();
-  workspace_.GetResponse().set_allocated_dump_response(response);
+  auto dump_response = response->mutable_dump_response();
 
   for (const std::string& package_name : package_names_) {
-    proto::PackageDump* package_dump = response->add_packages();
+    proto::PackageDump* package_dump = dump_response->add_packages();
     package_dump->set_name(package_name);
 
     GetProcessIds(package_name, package_dump);
@@ -65,13 +64,13 @@ void DumpCommand::Run() {
     // TODO: Since dump performs multiple operations, this should not
     // terminate the command. Processing should continue here.
     if (!GetApks(package_name, package_dump)) {
-      response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
-      response->set_failed_package(package_name);
+      dump_response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
+      dump_response->set_failed_package(package_name);
       return;
     }
   }
 
-  response->set_status(proto::DumpResponse::OK);
+  dump_response->set_status(proto::DumpResponse::OK);
 }
 
 bool DumpCommand::GetApks(const std::string& package_name,

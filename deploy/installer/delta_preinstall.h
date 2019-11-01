@@ -31,7 +31,7 @@ class DeltaPreinstallCommand : public BaseInstallCommand {
   DeltaPreinstallCommand(Workspace& workspace)
       : BaseInstallCommand(workspace) {}
   virtual ~DeltaPreinstallCommand() {}
-  virtual void Run();
+  virtual void Run(proto::InstallerResponse* response);
 };
 
 }  // namespace deploy

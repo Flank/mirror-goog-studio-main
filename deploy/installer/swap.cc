@@ -73,11 +73,10 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-void SwapCommand::Run() {
+void SwapCommand::Run(proto::InstallerResponse* response) {
   Phase p("Command Swap");
 
-  response_ = new proto::SwapResponse();
-  workspace_.GetResponse().set_allocated_swap_response(response_);
+  response_ = response->mutable_swap_response();
   std::string install_session = request_.session_id();
   CmdCommand cmd(workspace_);
   std::string output;

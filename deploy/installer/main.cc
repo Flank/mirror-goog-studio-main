@@ -115,11 +115,23 @@ std::string GetInstallerPath() {
   return std::string(dest);
 }
 
-int Fail(proto::InstallerResponse_Status status, Workspace& workspace,
+void SendResponse(proto::InstallerResponse* response,
+                  const Workspace& workspace) noexcept {
+  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
+  for (Event& event : *events) {
+    ConvertEventToProtoEvent(event, response->add_events());
+  }
+  std::string response_string;
+  response->SerializeToString(&response_string);
+  workspace.GetOutput().Write(response_string);
+}
+
+int Fail(proto::InstallerResponse::Status status, Workspace& workspace,
          const std::string& message) {
-  workspace.GetResponse().set_status(status);
+  proto::InstallerResponse response;
+  response.set_status(status);
   ErrEvent(message);
-  workspace.SendResponse();
+  SendResponse(&response, workspace);
   return EXIT_FAILURE;
 }
 
@@ -145,7 +157,7 @@ int main(int argc, char** argv) {
   BeginPhase("installer");
 
   ExecutorImpl executor;
-  Workspace workspace(GetInstallerPath(), &executor);
+  Workspace workspace(GetInstallerPath(), GetVersion(), &executor);
 
   // Check and parse parameters
   if (argc < 2) {
@@ -202,9 +214,10 @@ int main(int argc, char** argv) {
   }
 
   // Finally! Run !
-  task->Run();
-  workspace.GetResponse().set_status(proto::InstallerResponse::OK);
+  proto::InstallerResponse response;
+  task->Run(&response);
+  response.set_status(proto::InstallerResponse::OK);
   EndPhase();
-  workspace.SendResponse();
+  SendResponse(&response, workspace);
   return EXIT_SUCCESS;
 }
