@@ -83,7 +83,12 @@ public class ImlToIr {
     public static final ImmutableSet<JpsJavaDependencyScope> RUNTIME_TEST_COMPILE_SCOPE = ImmutableSet
             .of(JpsJavaDependencyScope.TEST, JpsJavaDependencyScope.COMPILE, JpsJavaDependencyScope.RUNTIME);
 
-    public IrProject convert(Path workspace, String projectPath, String imlGraph, PrintWriter writer) throws IOException {
+    // This is the public API of ImlToIr, keeping it an instance method in case we ever need to
+    // mock it or write another implementation.
+    @SuppressWarnings("MethodMayBeStatic")
+    public IrProject convert(
+            Path workspace, String projectPath, String imlGraph, PrintWriter writer)
+            throws IOException {
         projectPath = workspace.resolve(projectPath).toString();
         // Depending on class initialization order this property will be read, so it needs to be set.
         System.setProperty("idea.home.path", projectPath);
@@ -240,7 +245,7 @@ public class ImlToIr {
         return irProject;
     }
 
-    private void printCycleWarnings(PrintWriter writer, JpsGraph graph) {
+    private static void printCycleWarnings(PrintWriter writer, JpsGraph graph) {
         for (List<JpsModule> component : graph.getConnectedComponents()) {
             // If the component has more than one element, there is a cycle:
             if (component.size() > 1) {
@@ -252,7 +257,7 @@ public class ImlToIr {
         }
     }
 
-    private String scopeToColor(IrModule.Scope scope) {
+    private static String scopeToColor(IrModule.Scope scope) {
         switch (scope) {
             case COMPILE: return "black";
             case TEST: return "green";
@@ -262,7 +267,8 @@ public class ImlToIr {
         return "";
     }
 
-    private Map<JpsModule, Set<JpsModule>> calculateNewDependencies(JpsGraph partial, JpsGraph complete) {
+    private static Map<JpsModule, Set<JpsModule>> calculateNewDependencies(
+            JpsGraph partial, JpsGraph complete) {
         Map<JpsModule, Set<JpsModule>> runtimeDeps = new LinkedHashMap<>();
         for (JpsModule module : partial.getModules()) {
             Set<JpsModule> newRuntimeDeps = new LinkedHashSet<>();
@@ -279,15 +285,23 @@ public class ImlToIr {
         return runtimeDeps;
     }
 
-    public IrModule createIrModule(List<JpsModule> modules) {
-        String name = modules.stream().max(BY_NUM_ORDER_ENTRIES).get().getName() +
-                (modules.size() == 1 ? "" : "_and_others");
+    private static IrModule createIrModule(List<JpsModule> modules) {
+        String jpsModuleName =
+                modules.stream()
+                        .max(BY_NUM_ORDER_ENTRIES)
+                        .orElseThrow(() -> new IllegalStateException("empty list of JpsModule"))
+                        .getName();
+        String name = jpsModuleName + (modules.size() == 1 ? "" : "_and_others");
         IrModule irModule = new IrModule(name);
 
         Path baseDir = null;
         // Find the common ancestor of all the modules
         for (JpsModule module : modules) {
             File base = JpsModelSerializationDataService.getBaseDirectory(module);
+            if (base == null) {
+                throw new IllegalStateException(
+                        "Cannot determine base directory of module " + module.getName());
+            }
             File moduleFile = new File(base, module.getName() + ".iml");
             if (!moduleFile.exists()) {
                 throw new IllegalStateException("Cannot find module iml file: " + moduleFile);
@@ -336,8 +350,8 @@ public class ImlToIr {
         return irModule;
     }
 
-    private List<File> excludedFiles(JpsCompilerExcludes excludes) {
-        List<File> excludedFiles = new ArrayList<File>();
+    private static List<File> excludedFiles(JpsCompilerExcludes excludes) {
+        List<File> excludedFiles = new ArrayList<>();
         excludedFiles.addAll(captureExcludedSet("myFiles", excludes));
         excludedFiles.addAll(captureExcludedSet("myDirectories", excludes));
         return excludedFiles;
@@ -348,8 +362,8 @@ public class ImlToIr {
      * the whole tree to find which files are excluded. In this case JPS and IJ code differ and both
      * parse the xml differently. For now we use reflection assuming the implementation class.
      */
-    private List<File> captureExcludedSet(String field, JpsCompilerExcludes excludes) {
-        Field myFiles = null;
+    private static List<File> captureExcludedSet(String field, JpsCompilerExcludes excludes) {
+        Field myFiles;
         try {
             myFiles = excludes.getClass().getDeclaredField(field);
             Type genericType = myFiles.getGenericType();
@@ -359,15 +373,15 @@ public class ImlToIr {
                     Type[] args = type.getActualTypeArguments();
                     if (args.length == 1 && args[0].equals(File.class)) {
                         myFiles.setAccessible(true);
-                        Object object = myFiles.get(excludes);
-                        Set<File> set = (Set<File>) object;
+                        @SuppressWarnings("unchecked")
+                        Set<File> set = (Set<File>) myFiles.get(excludes);
                         return set.stream().sorted().collect(Collectors.toList());
                     }
                 }
 
             }
-        } catch (NoSuchFieldException e) {
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            // ignored
         }
         throw new IllegalStateException("Unexpected version of JpsCompilerExcludes");
     }
