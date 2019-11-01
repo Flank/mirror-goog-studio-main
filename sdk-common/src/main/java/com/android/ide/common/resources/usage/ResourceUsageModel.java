@@ -67,6 +67,7 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -360,7 +361,7 @@ public class ResourceUsageModel {
 
             Resource resource = (Resource) o;
 
-            if (name != null ? !name.equals(resource.name) : resource.name != null) {
+            if (!Objects.equals(name, resource.name)) {
                 return false;
             }
             if (type != resource.type) {
@@ -568,11 +569,8 @@ public class ResourceUsageModel {
         if (realValue != -1) {
             mValueToResource.put(realValue, resource);
         }
-        Map<String, Resource> nameMap = mTypeToName.get(type);
-        if (nameMap == null) {
-            nameMap = Maps.newHashMapWithExpectedSize(30);
-            mTypeToName.put(type, nameMap);
-        }
+        Map<String, Resource> nameMap =
+                mTypeToName.computeIfAbsent(type, k -> Maps.newHashMapWithExpectedSize(30));
         nameMap.put(SdkUtils.getResourceFieldName(name), resource);
 
         // TODO: Assert that we don't set the same resource multiple times to different values.

@@ -25,7 +25,9 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.TAG_RESOURCES;
+import static com.android.ide.common.symbols.SymbolIo.readFromAapt;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
@@ -39,6 +41,8 @@ import com.android.builder.dexing.R8ResourceShrinker;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
+import com.android.ide.common.symbols.Symbol;
+import com.android.ide.common.symbols.SymbolTable;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
@@ -199,7 +203,7 @@ public class ResourceUsageAnalyzer {
     static final String NO_MATCH = "-nomatch-";
 
     /* A source of resource classes to track, can be either a folder or a jar */
-    private final File mResourceClasseseSource;
+    private final File mResourceSource;
     private final File mProguardMapping;
     /** These can be class or dex files. */
     private final Iterable<File> mClasses;
@@ -240,7 +244,7 @@ public class ResourceUsageAnalyzer {
             @NonNull Iterable<File> resources,
             @Nullable File reportFile,
             @NonNull ApkFormat format) {
-        mResourceClasseseSource = rClasses;
+        mResourceSource = rClasses;
         mProguardMapping = mapping;
         mClasses = classes;
         mMergedManifest = manifest;
@@ -296,7 +300,7 @@ public class ResourceUsageAnalyzer {
     }
 
     public void analyze() throws IOException, ParserConfigurationException, SAXException {
-        gatherResourceValues(mResourceClasseseSource);
+        gatherResourceValues(mResourceSource);
         recordMapping(mProguardMapping);
 
         for (File jarOrDir : mClasses) {
@@ -574,7 +578,7 @@ public class ResourceUsageAnalyzer {
         zos.closeEntry();
     }
 
-    /** Writes the whitelist string to whitelist file specified by destination */
+     /** Writes the whitelist string to whitelist file specified by destination */
     public void emitWhitelist(Path destination) throws IOException {
         File destinationFile = destination.toFile();
         if (!destinationFile.exists()) {
@@ -598,7 +602,6 @@ public class ResourceUsageAnalyzer {
         }
         Files.asCharSink(destinationFile, UTF_8).write(mModel.dumpConfig());
     }
-
 
     /**
      * Remove resources (already identified by {@link #analyze()}).
@@ -1527,19 +1530,17 @@ public class ResourceUsageAnalyzer {
         }
     }
 
-    /** Returns whether the given class file name points to an aapt-generated compiled R class */
+    /** Returns whether the given class file name points to an aapt-generated compiled R class. */
     @VisibleForTesting
     boolean isResourceClass(@NonNull String name) {
         if (mResourceObfuscation.containsKey(name)) {
             return true;
         }
-        assert name.endsWith(DOT_CLASS) : name;
         int index = name.lastIndexOf('/');
-        if (index != -1 && name.startsWith("R$", index + 1)) {
+        if (index != -1 && name.startsWith("R$", index + 1) && name.endsWith(DOT_CLASS)) {
             String typeName = name.substring(index + 3, name.length() - DOT_CLASS.length());
             return ResourceType.fromClassName(typeName) != null;
         }
-
         return false;
     }
 
@@ -1556,7 +1557,19 @@ public class ResourceUsageAnalyzer {
             }
             return mModel.getResource(type, name);
         }
+        if (isValidResourceType(owner)) {
+            ResourceType type =
+                    ResourceType.fromClassName(owner.substring(owner.lastIndexOf('$') + 1));
+            if (type != null) {
+                return mModel.getResource(type, name);
+            }
+        }
         return null;
+    }
+
+    private Boolean isValidResourceType(String candidateString) {
+        return candidateString.contains("/")
+                && candidateString.substring(candidateString.lastIndexOf('/') + 1).contains("$");
     }
 
     private void gatherResourceValues(File file) throws IOException {
@@ -1570,9 +1583,32 @@ public class ResourceUsageAnalyzer {
         } else if (file.isFile()) {
             if (file.getName().equals(SdkConstants.FN_RESOURCE_CLASS)) {
                 parseResourceSourceClass(file);
-            } else if (file.getName().equals(SdkConstants.FN_R_CLASS_JAR)) {
+            }
+            if (file.getName().equals(SdkConstants.FN_R_CLASS_JAR)) {
                 parseResourceRJar(file);
             }
+            if (file.getName().equals(FN_RESOURCE_TEXT)) {
+                addResourcesFromRTxtFile(file);
+            }
+        }
+    }
+
+    private void addResourcesFromRTxtFile(File file) {
+        try {
+            SymbolTable st = readFromAapt(file, null);
+            for (Symbol symbol : st.getSymbols().values()) {
+                String symbolValue = symbol.getValue();
+                if (symbol.getResourceType() == ResourceType.STYLEABLE) {
+                    if (symbolValue.trim().startsWith("{")) {
+                        // Only add the styleable parent, styleable children are not yet supported.
+                        mModel.addResource(symbol.getResourceType(), symbol.getName(), null);
+                    }
+                } else {
+                    mModel.addResource(symbol.getResourceType(), symbol.getName(), symbolValue);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
