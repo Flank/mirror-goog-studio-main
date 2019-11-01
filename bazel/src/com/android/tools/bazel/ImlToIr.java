@@ -178,7 +178,19 @@ public class ImlToIr {
                     Collections.sort(files);
                     for (File file : files) {
                         if (!file.exists()) {
-                          System.err.println("Library \"" + library.getName() + "\" points to non existing file: " + file);
+                            String libraryName = library.getName();
+                            String dependencyDescription;
+                            if (libraryName.equals("#")) {
+                                dependencyDescription =
+                                        "Module library in "
+                                                + libraryDependency.getContainingModule().getName();
+                            } else {
+                                dependencyDescription = "Library " + libraryName;
+                            }
+                            System.err.println(
+                                    dependencyDescription
+                                            + " points to non existing file: "
+                                            + file);
                         }
                         if (!file.exists() ||
                                 !Files.getFileExtension(file.getName()).equals("jar") ||
