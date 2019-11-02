@@ -89,7 +89,7 @@ public class ApkParser {
         File file = new File(apkPath);
         String absolutePath = file.getAbsolutePath();
         String digest;
-        HashMap<String, ZipUtils.ZipEntry> zipEntries;
+        List<ZipUtils.ZipEntry> zipEntries;
         try (RandomAccessFile raf = new RandomAccessFile(absolutePath, "r");
                 FileChannel fileChannel = raf.getChannel()) {
             ApkArchiveMap map = new ApkArchiveMap();
@@ -108,8 +108,8 @@ public class ApkParser {
                         .setPackageName(apkDetails.packageName)
                         .setTargetPackages(apkDetails.targetPackages);
 
-        for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-            builder.addApkEntry(entry.getValue());
+        for (ZipUtils.ZipEntry entry : zipEntries) {
+            builder.addApkEntry(entry);
         }
 
         return builder.build();
@@ -198,7 +198,7 @@ public class ApkParser {
         return true;
     }
 
-    private HashMap<String, ZipUtils.ZipEntry> readZipEntries(
+    private List<ZipUtils.ZipEntry> readZipEntries(
             RandomAccessFile randomAccessFile, ApkArchiveMap map) throws IOException {
         ByteBuffer buffer;
         // There is no method to unmap a MappedByteBuffer so we cannot use FileChannel.map() on Windows.

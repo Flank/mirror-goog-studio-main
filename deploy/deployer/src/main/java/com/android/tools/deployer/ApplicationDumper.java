@@ -113,7 +113,7 @@ public class ApplicationDumper {
         for (Deploy.ApkDump dump : packageDump.getApksList()) {
             ByteBuffer cd = dump.getCd().asReadOnlyByteBuffer();
             ByteBuffer signature = dump.getSignature().asReadOnlyByteBuffer();
-            HashMap<String, ZipUtils.ZipEntry> zipEntries = ZipUtils.readZipEntries(cd);
+            List<ZipUtils.ZipEntry> zipEntries = ZipUtils.readZipEntries(cd);
             cd.rewind();
             String digest = ZipUtils.digest(signature.remaining() != 0 ? signature : cd);
 
@@ -123,8 +123,8 @@ public class ApplicationDumper {
                             .setChecksum(digest)
                             .setPath(dump.getAbsolutePath());
 
-            for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-                builder.addApkEntry(entry.getValue());
+            for (ZipUtils.ZipEntry entry : zipEntries) {
+                builder.addApkEntry(entry);
             }
 
             dumps.add(builder.build());

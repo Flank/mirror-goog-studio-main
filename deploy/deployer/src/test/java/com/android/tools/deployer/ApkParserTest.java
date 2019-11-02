@@ -46,7 +46,7 @@ public class ApkParserTest {
     public void testCentralDirectoryParse() throws IOException {
         File file = TestUtils.getWorkspaceFile(BASE + "base.apk.remotecd");
         byte[] fileContent = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
-        HashMap<String, ZipUtils.ZipEntry> entries = ZipUtils.readZipEntries(fileContent);
+        Map<String, ZipUtils.ZipEntry> entries = ZipUtils.readZipEntries(fileContent);
         assertEquals(1007, entries.size());
         long manifestCrc = entries.get("AndroidManifest.xml").crc;
         assertEquals(0x5804A053, manifestCrc);
