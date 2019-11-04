@@ -2400,6 +2400,41 @@ public final class SdkConstants {
         public static final String ATTR_SWITCH_TEXT_OFF = "switchTextOff";
     }
 
+    public static class MotionSceneTags {
+        public static final String MOTION_SCENE = "MotionScene";
+        public static final String TRANSITION = "Transition";
+        public static final String STATE_SET = "StateSet";
+        public static final String CONSTRAINT_SET = "ConstraintSet";
+        public static final String CONSTRAINT = "Constraint";
+        public static final String KEY_FRAME_SET = "KeyFrameSet";
+        public static final String KEY_ATTRIBUTE = "KeyAttribute";
+        public static final String KEY_CYCLE = "KeyCycle";
+        public static final String KEY_POSITION = "KeyPosition";
+        public static final String KEY_TRIGGER = "KeyTrigger";
+        public static final String KEY_TIME_CYCLE = "KeyTimeCycle";
+        public static final String ON_CLICK = "OnClick";
+        public static final String ON_SWIPE = "OnSwipe";
+        public static final String LAYOUT = "Layout";
+        public static final String MOTION = "Motion";
+        public static final String PROPERTY_SET = "PropertySet";
+        public static final String TRANSFORM = "Transform";
+        public static final String CUSTOM_ATTRIBUTE = "CustomAttribute";
+        public static final String STATE = "State";
+        public static final String VARIANT = "Variant";
+    }
+
+    public static class MotionSceneAttributes {
+        public static final String ATTR_CUSTOM_ATTRIBUTE_NAME = "attributeName";
+        public static final String ATTR_CUSTOM_COLOR_VALUE = "customColorValue";
+        public static final String ATTR_CUSTOM_COLOR_DRAWABLE_VALUE = "customColorDrawableValue";
+        public static final String ATTR_CUSTOM_INTEGER_VALUE = "customIntegerValue";
+        public static final String ATTR_CUSTOM_FLOAT_VALUE = "customFloatValue";
+        public static final String ATTR_CUSTOM_STRING_VALUE = "customStringValue";
+        public static final String ATTR_CUSTOM_DIMENSION_VALUE = "customDimension";
+        public static final String ATTR_CUSTOM_PIXEL_DIMENSION_VALUE = "customPixelDimension";
+        public static final String ATTR_CUSTOM_BOOLEAN_VALUE = "customBoolean";
+    }
+
     // Text Alignment values.
     public static class TextAlignment {
         public static final String NONE = "none"; //$NON-NLS-1$

@@ -25,6 +25,7 @@ import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
+import static com.android.SdkConstants.MOTION_LAYOUT;
 import static com.android.SdkConstants.TAG_INCLUDE;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
@@ -92,7 +93,9 @@ public class ConstraintLayoutDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return ImmutableSet.of(CONSTRAINT_LAYOUT.oldName(), CONSTRAINT_LAYOUT.newName());
+        return ImmutableSet.of(
+                CONSTRAINT_LAYOUT.oldName(), CONSTRAINT_LAYOUT.newName(),
+                MOTION_LAYOUT.oldName(), MOTION_LAYOUT.newName());
     }
 
     @Override
