@@ -179,8 +179,9 @@ public class SvgColor {
     private SvgColor() {}
 
     /**
-     * Converts an SVG color value to "#RRGGBB" or "#RGB" format used by vector drawables. The input
-     * color value can be "none" and RGB value, e.g. "rgb(255, 0, 0)", or a color name defined in
+     * Converts an SVG color value to "#RRGGBB" or "#AARRGGBB" format used by vector drawables.
+     * The input color value can be "none" and RGB value, e.g. "rgb(255, 0, 0)",
+     * "rgba(255, 0, 0, 127)", or a color name defined in
      * https://www.w3.org/TR/SVG11/types.html#ColorKeywords.
      *
      * @param svgColorValue the SVG color value to convert
@@ -244,8 +245,7 @@ public class SvgColor {
                 return clampColor(Math.round(value * 255.f / 100.f));
             }
 
-            int value = Integer.parseInt(colorComponent);
-            return clampColor(value);
+            return clampColor(Integer.parseInt(colorComponent));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(svgColorValue);
         }
