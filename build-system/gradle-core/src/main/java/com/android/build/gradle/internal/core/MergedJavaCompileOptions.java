@@ -25,7 +25,7 @@ public class MergedJavaCompileOptions implements JavaCompileOptions {
 
     private com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
             annotationProcessorOptions =
-                    new com.android.build.gradle.internal.dsl.AnnotationProcessorOptions();
+                    new com.android.build.gradle.internal.dsl.AnnotationProcessorOptions(null);
 
     @NonNull
     @Override
@@ -46,9 +46,5 @@ public class MergedJavaCompileOptions implements JavaCompileOptions {
                 javaCompileOptions.getAnnotationProcessorOptions().getArguments());
         annotationProcessorOptions.compilerArgumentProviders(
                 javaCompileOptions.getAnnotationProcessorOptions().getCompilerArgumentProviders());
-        if (javaCompileOptions.getAnnotationProcessorOptions().getIncludeCompileClasspath() != null) {
-            annotationProcessorOptions.setIncludeCompileClasspath(
-                    javaCompileOptions.getAnnotationProcessorOptions().getIncludeCompileClasspath());
-        }
     }
 }

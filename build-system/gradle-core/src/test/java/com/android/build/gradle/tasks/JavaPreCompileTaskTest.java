@@ -18,10 +18,10 @@ package com.android.build.gradle.tasks;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
+import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -56,7 +56,6 @@ public class JavaPreCompileTaskTest {
 
     private Project project;
     private Configuration processorConfiguration;
-    private Configuration compileConfiguration;
     private JavaPreCompileTask task;
 
     @BeforeClass
@@ -93,7 +92,7 @@ public class JavaPreCompileTaskTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         task = project.getTasks().create("test", JavaPreCompileTask.class);
         processorConfiguration = project.getConfigurations().create("annotationProcessor");
-        compileConfiguration = project.getConfigurations().create("api");
+        project.getConfigurations().create("api");
         task.getProcessorListFile().set(temporaryFolder.newFile());
     }
 
@@ -106,11 +105,8 @@ public class JavaPreCompileTaskTest {
     public void checkSuccessForNormalJar() throws IOException {
         project.getDependencies().add("api", project.files(jar, nonJarFile, directory));
         task.init(
-                "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(),
-                false);
+                new AnnotationProcessorOptions(new NoOpDeprecationReporter()));
 
         task.doTaskAction();
 
@@ -124,17 +120,9 @@ public class JavaPreCompileTaskTest {
                         "annotationProcessor",
                         project.files(
                                 jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
-        project.getDependencies()
-                .add(
-                        "api",
-                        project.files(
-                                jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
         task.init(
-                "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(),
-                false);
+                new AnnotationProcessorOptions(new NoOpDeprecationReporter()));
 
         task.doTaskAction();
 
@@ -145,72 +133,23 @@ public class JavaPreCompileTaskTest {
     }
 
     @Test
-    public void checkErrorIsThrownForAnnotationProcessor() throws IOException {
-        project.getDependencies()
-                .add(
-                        "api",
-                        project.files(
-                                jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(),
-                false);
-        try {
-            task.doTaskAction();
-            fail("Expected to fail");
-        } catch (RuntimeException e) {
-            assertThat(e.getMessage()).contains(jarWithAnnotationProcessor.getName());
-            assertThat(e.getMessage()).contains(directoryWithAnnotationProcessor.getName());
-        }
-    }
-
-    @Test
-    public void checkSettingIncludeClasspathFalseDisableError() throws IOException {
+    public void checkNoAnnotationProcessorsIncluded() {
         project.getDependencies().add("api", project.files(jarWithAnnotationProcessor));
-        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
-        options.setIncludeCompileClasspath(false);
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                options,
-                false);
-
+        AnnotationProcessorOptions options =
+                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
+        options.setIncludeCompileClasspath(true);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
         task.doTaskAction();
-
         assertThat(getProcessorNames()).isEmpty();
     }
 
     @Test
-    public void checkSettingIncludeClasspathTrueDisableError() throws IOException {
-        project.getDependencies().add("api", project.files(jarWithAnnotationProcessor));
-        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
-        options.setIncludeCompileClasspath(true);
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                options,
-                false);
-
-        task.doTaskAction();
-
-        assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
-    }
-
-    @Test
     public void checkProcessorConfigurationAddedForMetrics() throws IOException {
-        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
+        AnnotationProcessorOptions options =
+                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
         project.getDependencies()
                 .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                options,
-                false);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
         task.doTaskAction();
 
         assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
@@ -218,37 +157,12 @@ public class JavaPreCompileTaskTest {
 
     @Test
     public void checkExplicitProcessorAddedForMetrics() throws IOException {
-        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
+        AnnotationProcessorOptions options =
+                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
         options.getClassNames().add(testProcessorName);
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                options,
-                false);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
         task.doTaskAction();
 
-        assertThat(getProcessorNames()).containsExactly(testProcessorName);
-    }
-
-    @Test
-    public void checkOnlyExplicitProcessorsAddedForMetrics() throws IOException {
-        project.getDependencies().add("api", project.files(jarWithAnnotationProcessor));
-        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
-        options.setIncludeCompileClasspath(true); // Disable exception.
-        options.getClassNames().add(testProcessorName);
-
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                options,
-                false);
-        task.doTaskAction();
-
-        // Since the processor name is explicitly specified via
-        // AnnotationProcessorOptions.getClassNames(), only the annotation processor with that name
-        // will be executed and should be added for metrics
         assertThat(getProcessorNames()).containsExactly(testProcessorName);
     }
 
@@ -256,14 +170,10 @@ public class JavaPreCompileTaskTest {
     public void checkImplicitProcessorsAddedForMetrics() throws IOException {
         project.getDependencies()
                 .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
-        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
+        AnnotationProcessorOptions options =
+                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
 
-        task.init(
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                options,
-                false);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
         task.doTaskAction();
 
         // Since the processor names are not explicitly specified via

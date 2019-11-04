@@ -98,7 +98,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         javaCompileOptions =
                 objectFactory.newInstance(
                         com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
-                        objectFactory);
+                        objectFactory,
+                        dslScope.getDeprecationReporter());
         shaderOptions = objectFactory.newInstance(ShaderOptions.class);
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =

@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.google.common.truth.Truth.assertThat
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -40,88 +38,34 @@ class AnnotationProcessorCompileClasspathTest {
     }
 
     @Test
-    fun failWhenClasspathHasProcessor() {
-
+    fun checkWarningWithIncludeCompileClasspath() {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
             dependencies {
                 compile 'com.jakewharton:butterknife:7.0.1'
             }
-            android.defaultConfig.javaCompileOptions
-                .annotationProcessorOptions.includeCompileClasspath null""".trimIndent())
-
-        val result = project.executor().expectFailure().run("assembleDebug")
-        assertThat(result.failureMessage)
-            .contains("Annotation processors must be explicitly declared now")
-        assertThat(result.failureMessage)
-            .contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)")
-    }
-
-    @Test
-    fun failForAndroidTest() {
-        TestFileUtils.appendToFile(
-            project.buildFile,
-            """
-            dependencies {
-                compile 'com.jakewharton:butterknife:7.0.1'
-                annotationProcessor 'com.jakewharton:butterknife:7.0.1'
-            }
-            android.defaultConfig.javaCompileOptions
-                .annotationProcessorOptions.includeCompileClasspath null""".trimIndent()
-        )
-
-        var result = project.executor().run("assembleDebugAndroidTest")
-        result.stdout.use { stdout ->
-            ScannerSubject.assertThat(stdout)
-                .contains("""
-                          Annotation processors must be explicitly declared now
-                          androidTestAnnotationProcessor
-                          butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)
-                          """.trimIndent())
-        }
-        result = project.executor().run("assembleDebugUnitTest")
-        result.stdout.use { stdout ->
-            ScannerSubject.assertThat(stdout)
-                .contains("""
-                          Annotation processors must be explicitly declared
-                          testAnnotationProcessor
-                          - butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)
-                          """.trimIndent()
-                )
+            """.trimIndent())
+        var result = project.executor().run("help")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).doesNotContain(
+                "annotationProcessorOptions.includeCompileClasspath")
         }
 
-    }
-
-    @Test
-    fun checkSuccessWithIncludeCompileClasspath() {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
             android.defaultConfig.javaCompileOptions
                 .annotationProcessorOptions.includeCompileClasspath = true
-            dependencies {
-                compile 'com.jakewharton:butterknife:7.0.1'
-            }
             """.trimIndent())
-        project.executor()
-            .run("assembleDebug", "assembleDebugAndroidTest", "assembleDebugUnitTest")
-    }
+        result = project.executor().run("help")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains(
+                "DSL element 'annotationProcessorOptions.includeCompileClasspath' is obsolete "
+                        + "and will be removed soon. It does not do anything and AGP no longer "
+                        + "includes annotation processors added on your project's compile classpath"
 
-    @Test
-    fun checkSuccessWhenProcessorIsSpecified() {
-        TestFileUtils.appendToFile(
-            project.buildFile,
-            """
-            android.defaultConfig.javaCompileOptions
-                .annotationProcessorOptions.includeCompileClasspath null
-            dependencies {
-                compile 'com.jakewharton:butterknife:7.0.1'
-                annotationProcessor 'com.jakewharton:butterknife:7.0.1'
-                testAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'
-                androidTestAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'
-            }
-            """.trimIndent())
-        project.executor().run("assembleDebug", "assembleDebugAndroidTest", "testDebug")
+            )
+        }
     }
 }

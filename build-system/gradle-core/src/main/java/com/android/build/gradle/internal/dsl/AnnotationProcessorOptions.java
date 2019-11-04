@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 import org.gradle.process.CommandLineArgumentProvider;
 
 /** Options for configuring Java annotation processors. */
@@ -39,8 +41,14 @@ public class AnnotationProcessorOptions
     @NonNull
     private final List<CommandLineArgumentProvider> compilerArgumentProviders = new ArrayList<>();
 
-    @Nullable
-    private Boolean includeCompileClasspath = null;
+    private final Boolean includeCompileClasspath = false;
+
+    @Nullable private final DeprecationReporter deprecationReporter;
+
+    @Inject
+    public AnnotationProcessorOptions(@Nullable DeprecationReporter deprecationReporter) {
+        this.deprecationReporter = deprecationReporter;
+    }
 
     /**
      * Specifies the annotation processor classes to run.
@@ -137,39 +145,30 @@ public class AnnotationProcessorOptions
     /**
      * Whether to include compile classpath in the processor path.
      *
-     * <p>By default, the Android plugin throws a build error when you add annotation processors to
-     * your project's compile classpath. You must instead <a
-     * href="https://developer.android.com/studio/build/dependencies#annotation_processor">add
-     * annotation processors</a> to the processor classpath using the <code>annotationProcessor
-     * </code> dependency configuration. This behavior exists to improve build performance by
-     * separating the compile classpath from the annotation processor classpath.
-     *
-     * <p>If, however, you still want to add a dependency that includes an annotation processor to
-     * the compile classpath, but you don't need to run the processor, you can disable the error
-     * check by setting this property to <code>false</code>.
-     *
-     * <p>If you experience issues after migrating your project's annotation processors to the
-     * processor classpath, you can allow annotation processors on the compile classpath by setting
-     * this property to <code>true</code>. However, setting this property to <code>true</code> is
-     * not recommended, and the option to do so will be removed in a future update.
-     *
-     * <p>By default, this property is <code>null</code>.
+     * <p>This option is removed from Android Gradle plugin 4.0 and always returns false. We won't
+     * include annotation processors on your project's compile classpath and will throw warnings if
+     * you use this option.
      */
     @Override
-    @Nullable
     public Boolean getIncludeCompileClasspath() {
+        deprecationReporter.reportObsoleteUsage(
+                "annotationProcessorOptions.includeCompileClasspath",
+                DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
         return includeCompileClasspath;
     }
 
     public void setIncludeCompileClasspath(@Nullable Boolean includeCompileClasspath) {
-        this.includeCompileClasspath = includeCompileClasspath;
+        if (deprecationReporter != null) {
+            deprecationReporter.reportObsoleteUsage(
+                    "annotationProcessorOptions.includeCompileClasspath",
+                    DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
+        }
     }
 
     public void _initWith(com.android.build.gradle.api.AnnotationProcessorOptions aptOptions) {
         setClassNames(aptOptions.getClassNames());
         setArguments(aptOptions.getArguments());
         setCompilerArgumentProviders(aptOptions.getCompilerArgumentProviders());
-        setIncludeCompileClasspath(aptOptions.getIncludeCompileClasspath());
     }
 
     @Override

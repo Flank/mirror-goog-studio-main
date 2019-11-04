@@ -56,7 +56,9 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
-        javaCompileOptions = objectFactory.newInstance(JavaCompileOptions.class, objectFactory);
+        javaCompileOptions =
+                objectFactory.newInstance(
+                        JavaCompileOptions.class, objectFactory, dslScope.getDeprecationReporter());
         shaderOptions = objectFactory.newInstance(ShaderOptions.class);
     }
 
