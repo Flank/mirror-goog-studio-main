@@ -1,12 +1,13 @@
-<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
- <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+<svg width="70" height="70" xmlns="http://www.w3.org/2000/svg">
  <g>
   <title>Layer 1</title>
   <g id="svg_1"/>
-  <rect fill="#f00" id="svg_2" height="10" width="64" y="0" x="0"/>
-  <rect fill="#00ff00" id="svg_3" height="10" width="64" y="10" x="0"/>
-  <rect id="svg_4" height="10" width="64" y="20" x="0" fill="rgb(0, -10, 355)"/>
-  <rect id="svg_5" height="10" width="64" y="30" x="0" fill="rgb(150%, -50%, -50%)"/>
-  <rect id="svg_6" height="10" width="64" y="40" x="0" fill="rgb(-50%, 150%, -150%)"/>
+  <rect id="svg_2" height="10" width="70" y="0" x="0" fill="#f00"/>
+  <rect id="svg_3" height="10" width="70" y="10" x="0" fill="#00ff00"/>
+  <rect id="svg_4" height="10" width="70" y="20" x="0" fill="rgb(0, -10, 355)"/>
+  <rect id="svg_5" height="10" width="70" y="30" x="0" fill="rgb(150%, -50%, -50%)"/>
+  <rect id="svg_6" height="10" width="70" y="40" x="0" fill="rgb(-50%, 150%, -150%)"/>
+  <rect id="svg_7" height="10" width="70" y="50" x="0" fill="rgba(143,253,253,0)"/>
+  <rect id="svg_8" height="10" width="70" y="60" x="0" fill="rgba(150%, -50%, -50%, 50%)"/>
  </g>
 </svg>
