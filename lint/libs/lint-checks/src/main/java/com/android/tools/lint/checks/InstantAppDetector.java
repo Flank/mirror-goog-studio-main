@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
-import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.TAG_ACTIVITY;
 import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_PROVIDER;
@@ -27,6 +26,7 @@ import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
+import static com.android.utils.BuildScriptUtil.findGradleBuildFile;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
@@ -318,7 +318,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
             AndroidVersion version = SdkVersionInfo.getVersion(target, null);
             if (version != null && version.getFeatureLevel() < 23) {
                 File dir = project.getDir();
-                File gradle = project.isGradleProject() ? new File(dir, FN_BUILD_GRADLE) : null;
+                File gradle = project.isGradleProject() ? findGradleBuildFile(dir) : null;
                 Location location =
                         Location.create(gradle != null && gradle.isFile() ? gradle : dir);
                 context.report(

@@ -25,7 +25,6 @@ import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FN_ANNOTATIONS_ZIP
-import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.GEN_FOLDER
 import com.android.SdkConstants.LIBS_FOLDER
 import com.android.SdkConstants.PLATFORM_LINUX
@@ -61,6 +60,7 @@ import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
+import com.android.utils.findGradleBuildFile
 import com.google.common.annotations.Beta
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Splitter
@@ -1326,7 +1326,7 @@ abstract class LintClient {
     open fun isProjectDirectory(dir: File): Boolean =
         isManifestFolder(dir) ||
                 Project.isAospFrameworksRelatedProject(dir) ||
-                File(dir, FN_BUILD_GRADLE).exists()
+                findGradleBuildFile(dir).exists()
 
     /**
      * Returns whether lint should look for suppress comments. Tools that already do

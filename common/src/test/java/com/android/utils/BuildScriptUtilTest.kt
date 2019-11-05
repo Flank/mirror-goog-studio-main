@@ -54,4 +54,73 @@ class BuildScriptUtilTest : TestCase() {
     writeToFile(ktsBuildFilePath, "")
     assertEquals(ktsBuildFilePath, findGradleSettingsFile(tempDir))
   }
+
+  fun testIsGradleBuildFile() {
+    val tempDir = Files.createTempDir()
+    val buildFilePath = File(tempDir, FN_BUILD_GRADLE)
+    assertFalse(isGradleScript(buildFilePath))
+    writeToFile(buildFilePath, "")
+    assertTrue(isGradleScript(buildFilePath))
+
+    val buildFilePathKts = File(tempDir, FN_BUILD_GRADLE_KTS)
+    assertFalse(isGradleScript(buildFilePathKts))
+    writeToFile(buildFilePathKts, "")
+    assertTrue(isGradleScript(buildFilePathKts))
+
+    val renamedBuildFilePath = File(tempDir, "app.gradle")
+    assertFalse(isGradleScript(renamedBuildFilePath))
+    writeToFile(renamedBuildFilePath, "")
+    assertTrue(isGradleScript(renamedBuildFilePath))
+
+    val otherFilePath = File(tempDir, "some_file.txt")
+    assertFalse(isGradleScript(otherFilePath))
+    writeToFile(otherFilePath, "")
+    assertFalse(isGradleScript(otherFilePath))
+  }
+
+  fun testIsDefaultGradleBuildFile() {
+    val tempDir = Files.createTempDir()
+    val buildFilePath = File(tempDir, FN_BUILD_GRADLE)
+    assertFalse(isDefaultGradleBuildFile(buildFilePath))
+    writeToFile(buildFilePath, "")
+    assertTrue(isDefaultGradleBuildFile(buildFilePath))
+
+    val buildFilePathKts = File(tempDir, FN_BUILD_GRADLE_KTS)
+    assertFalse(isDefaultGradleBuildFile(buildFilePathKts))
+    writeToFile(buildFilePathKts, "")
+    assertTrue(isDefaultGradleBuildFile(buildFilePathKts))
+
+    val renamedBuildFilePath = File(tempDir, "app.gradle")
+    assertFalse(isDefaultGradleBuildFile(renamedBuildFilePath))
+    writeToFile(renamedBuildFilePath, "")
+    assertFalse(isDefaultGradleBuildFile(renamedBuildFilePath))
+
+    val otherFilePath = File(tempDir, "some_file.txt")
+    assertFalse(isDefaultGradleBuildFile(otherFilePath))
+    writeToFile(otherFilePath, "")
+    assertFalse(isDefaultGradleBuildFile(otherFilePath))
+  }
+
+  fun testIsGradleSettingsFile() {
+    val tempDir = Files.createTempDir()
+    val buildFilePath = File(tempDir, FN_SETTINGS_GRADLE)
+    assertFalse(isGradleSettingsFile(buildFilePath))
+    writeToFile(buildFilePath, "")
+    assertTrue(isGradleSettingsFile(buildFilePath))
+
+    val buildFilePathKts = File(tempDir, FN_SETTINGS_GRADLE_KTS)
+    assertFalse(isGradleSettingsFile(buildFilePathKts))
+    writeToFile(buildFilePathKts, "")
+    assertTrue(isGradleSettingsFile(buildFilePathKts))
+
+    val renamedBuildFilePath = File(tempDir, "app.gradle")
+    assertFalse(isGradleSettingsFile(renamedBuildFilePath))
+    writeToFile(renamedBuildFilePath, "")
+    assertFalse(isGradleSettingsFile(renamedBuildFilePath))
+
+    val otherFilePath = File(tempDir, "some_file.txt")
+    assertFalse(isGradleSettingsFile(otherFilePath))
+    writeToFile(otherFilePath, "")
+    assertFalse(isGradleSettingsFile(otherFilePath))
+  }
 }
