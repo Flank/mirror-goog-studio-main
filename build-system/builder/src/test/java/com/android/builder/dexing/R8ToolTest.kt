@@ -16,6 +16,7 @@
 
 package com.android.builder.dexing
 
+import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -23,8 +24,11 @@ import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThatDex
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
+import com.android.utils.Pair
 import com.android.utils.FileUtils
+import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -72,8 +76,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
 
         assertThat(getDexFileCount(output)).isEqualTo(1)
@@ -108,8 +114,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
     }
@@ -144,8 +152,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
 
@@ -190,8 +200,10 @@ class R8ToolTest {
             mainDexConfig,
             NoOpMessageReceiver(),
             true,
-            listOf(),
-            null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         Zip(javaRes.toFile()).use { assertThat(it).contains("res.txt") }
@@ -232,8 +244,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(2)
     }
@@ -270,8 +284,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(2)
     }
@@ -308,8 +324,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatDex(output.resolve("classes.dex").toFile()).containsClass("Ltest/A;")
@@ -373,8 +391,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatDex(output.resolve("classes.dex").toFile())
@@ -426,8 +446,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(Files.exists(proguardSeedsOutput)).isTrue()
         assertThat(Files.exists(proguardUsageOutput)).isTrue()
@@ -470,8 +492,10 @@ class R8ToolTest {
                     messages.add(message.text)
                     toolNameTags.add(message.toolName!!)
                 },
-                featureJars = listOf(),
-                featureDexDir = null
+                featureClassJars = listOf(),
+                featureJavaResourceJars = listOf(),
+                featureDexDir = null,
+                featureJavaResourceOutputDir = null
             )
             fail("Parsing proguard configuration should fail.")
         } catch (e: Throwable){
@@ -515,8 +539,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
 
         assertThatDex(output.resolve("classes.dex").toFile())
@@ -539,16 +565,31 @@ class R8ToolTest {
         val classes = tmp.newFolder().toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
-        val featureJar = tmp.newFolder().toPath().resolve("feature.jar")
-        TestInputsGenerator.jarWithEmptyClasses(featureJar, listOf("test/C", "test/D"))
+        val featureClassesJar = tmp.newFolder().toPath().resolve("feature1.jar")
+        TestInputsGenerator.jarWithEmptyClasses(featureClassesJar, listOf("test/C", "test/D"))
+
+        val emptyFeatureClassesJar = tmp.newFolder().toPath().resolve("feature2.jar")
+        JarFlinger(emptyFeatureClassesJar).use {}
+        assertThat(emptyFeatureClassesJar.toFile()).exists()
+
+        val javaResJar = tmp.newFolder().toPath().resolve("base.jar")
+        TestInputsGenerator.writeJarWithTextEntries(javaResJar, Pair.of("foo.txt", "foo"))
+
+        val featureJavaResJar = tmp.newFolder().toPath().resolve("feature1.jar")
+        TestInputsGenerator.writeJarWithTextEntries(featureJavaResJar, Pair.of("bar.txt", "bar"))
+
+        val emptyFeatureJavaResJar = tmp.newFolder().toPath().resolve("feature2.jar")
+        JarFlinger(emptyFeatureJavaResJar).use {}
+        assertThat(emptyFeatureJavaResJar.toFile()).exists()
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
         val featureDexDir = tmp.newFolder().toPath()
+        val featureJavaResourceOutputDir = tmp.newFolder().toPath()
         runR8(
             listOf(classes),
             output,
-            listOf(),
+            listOf(javaResJar),
             javaRes,
             bootClasspath,
             emptyList(),
@@ -556,11 +597,26 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(featureJar),
-            featureDexDir = featureDexDir
+            featureClassJars = listOf(featureClassesJar, emptyFeatureClassesJar),
+            featureJavaResourceJars = listOf(featureJavaResJar, emptyFeatureJavaResJar),
+            featureDexDir = featureDexDir,
+            featureJavaResourceOutputDir = featureJavaResourceOutputDir
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
-        assertThat(getDexFileCount(featureDexDir.resolve("feature"))).isEqualTo(1)
+        val feature1DexOutput = featureDexDir.resolve("feature1")
+        assertThat(feature1DexOutput.toFile()).exists()
+        assertThat(getDexFileCount(feature1DexOutput)).isEqualTo(1)
+        val feature2DexOutput = featureDexDir.resolve("feature2")
+        assertThat(feature2DexOutput.toFile()).exists()
+        assertThat(getDexFileCount(feature2DexOutput)).isEqualTo(0)
+        assertThat(javaRes.toFile()).exists()
+        assertThat(ZipArchive.listEntries(javaRes.toFile()).keys).containsExactly("foo.txt")
+        val feature1JavaResOutput = featureJavaResourceOutputDir.resolve("feature1.jar").toFile()
+        assertThat(feature1JavaResOutput).exists()
+        assertThat(ZipArchive.listEntries(feature1JavaResOutput).keys).containsExactly("bar.txt")
+        val feature2JavaResOutput = featureJavaResourceOutputDir.resolve("feature2.jar").toFile()
+        assertThat(feature2JavaResOutput).exists()
+        assertThat(ZipArchive.listEntries(feature2JavaResOutput)).isEmpty()
     }
 
     @Test
@@ -595,8 +651,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         val className = testClass.name.replace('.', '/')
         val dex = Dex(output.toFile().walk().filter { it.extension == "dex" }.single())
@@ -618,8 +676,10 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            featureJars = listOf(),
-            featureDexDir = null
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
+            featureDexDir = null,
+            featureJavaResourceOutputDir = null
         )
         assertThat(dex).containsClass("L$className;")
             .that()

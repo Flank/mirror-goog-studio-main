@@ -25,7 +25,11 @@ import com.android.builder.dexing.DexingType
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.Pair
+import com.android.zipflinger.ZipArchive
+import com.google.common.truth.Truth
 import org.gradle.api.file.RegularFile
 import org.junit.Before
 import org.junit.Rule
@@ -44,10 +48,13 @@ class R8TaskWithDynamicFeaturesTest {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var classesJar: Path
-    private lateinit var feature1Jar: Path
-    private lateinit var feature2Jar: Path
+    private lateinit var feature1ClassesJar: Path
+    private lateinit var feature1JavaResJar: Path
+    private lateinit var feature2ClassesJar: Path
+    private lateinit var feature2JavaResJar: Path
     private lateinit var outputDir: Path
     private lateinit var featureDexDir: File
+    private lateinit var featureJavaResOutputDir: File
     private lateinit var outputProguard: RegularFile
 
     @Before
@@ -61,22 +68,27 @@ class R8TaskWithDynamicFeaturesTest {
                 Toy::class.java
             )
         )
-        feature1Jar = tmp.root.toPath().resolve("feature1.jar")
+        feature1ClassesJar = tmp.root.toPath().resolve("feature1.jar")
         TestInputsGenerator.pathWithClasses(
-            feature1Jar,
+            feature1ClassesJar,
             listOf(
                 Cat::class.java
             )
         )
-        feature2Jar = tmp.root.toPath().resolve("feature2.jar")
+        feature1JavaResJar = tmp.newFolder().toPath().resolve("feature1.jar")
+        TestInputsGenerator.writeJarWithTextEntries(feature1JavaResJar, Pair.of("foo.txt", "foo"))
+        feature2ClassesJar = tmp.root.toPath().resolve("feature2.jar")
         TestInputsGenerator.pathWithClasses(
-            feature2Jar,
+            feature2ClassesJar,
             listOf(
                 Dog::class.java
             )
         )
+        feature2JavaResJar = tmp.newFolder().toPath().resolve("feature2.jar")
+        TestInputsGenerator.writeJarWithTextEntries(feature2JavaResJar)
         outputDir = tmp.newFolder().toPath()
         featureDexDir = tmp.newFolder()
+        featureJavaResOutputDir = tmp.newFolder()
         outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
@@ -95,8 +107,13 @@ class R8TaskWithDynamicFeaturesTest {
             r8Keep = "class **",
             outputDir = outputDir,
             proguardOutputDir = tmp.root,
+            featureClassJars = listOf(feature1ClassesJar.toFile(), feature2ClassesJar.toFile()),
+            featureJavaResourceJars = listOf(
+                    feature1JavaResJar.toFile(),
+                    feature2JavaResJar.toFile()
+            ),
             featureDexDir = featureDexDir,
-            featureJars = listOf(feature1Jar.toFile(), feature2Jar.toFile())
+            featureJavaResourceOutputDir = featureJavaResOutputDir
         )
 
         val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
@@ -119,6 +136,18 @@ class R8TaskWithDynamicFeaturesTest {
         val feature2Dex = Dex(featureDexDir.resolve("feature2").resolve("classes.dex"))
         assertThat(feature2Dex)
             .containsExactlyClassesIn(listOf(Type.getDescriptor(Dog::class.java)))
+
+        // Check feature java resource outputs
+        val feature1JavaResOutput = featureJavaResOutputDir.resolve("feature1.jar")
+        FileSubject.assertThat(feature1JavaResOutput).exists()
+        ZipArchive(feature1JavaResOutput).use {
+            Truth.assertThat(it.listEntries()).containsExactly("foo.txt")
+        }
+        val feature2JavaResOutput = featureJavaResOutputDir.resolve("feature2.jar")
+        FileSubject.assertThat(feature2JavaResOutput).exists()
+        ZipArchive(feature2JavaResOutput).use {
+            Truth.assertThat(it.listEntries()).isEmpty()
+        }
     }
 
     @Test
@@ -138,8 +167,13 @@ class R8TaskWithDynamicFeaturesTest {
             outputDir = outputDir,
             mappingFile = tmp.newFolder("mapping"),
             proguardOutputDir = tmp.root,
+            featureClassJars = listOf(feature1ClassesJar.toFile(), feature2ClassesJar.toFile()),
+            featureJavaResourceJars = listOf(
+                feature1JavaResJar.toFile(),
+                feature2JavaResJar.toFile()
+            ),
             featureDexDir = featureDexDir,
-            featureJars = listOf(feature1Jar.toFile(), feature2Jar.toFile())
+            featureJavaResourceOutputDir = featureJavaResOutputDir
         )
 
         val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
@@ -161,5 +195,17 @@ class R8TaskWithDynamicFeaturesTest {
         val feature2Dex = Dex(featureDexDir.resolve("feature2").resolve("classes.dex"))
         assertThat(feature2Dex)
             .containsExactlyClassesIn(listOf(Type.getDescriptor(Dog::class.java)))
+
+        // Check feature java resource outputs
+        val feature1JavaResOutput = featureJavaResOutputDir.resolve("feature1.jar")
+        FileSubject.assertThat(feature1JavaResOutput).exists()
+        ZipArchive(feature1JavaResOutput).use {
+            Truth.assertThat(it.listEntries()).containsExactly("foo.txt")
+        }
+        val feature2JavaResOutput = featureJavaResOutputDir.resolve("feature2.jar")
+        FileSubject.assertThat(feature2JavaResOutput).exists()
+        ZipArchive(feature2JavaResOutput).use {
+            Truth.assertThat(it.listEntries()).isEmpty()
+        }
     }
 }

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
+import static com.android.builder.model.CodeShrinker.R8;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
@@ -31,6 +32,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -261,7 +263,12 @@ public abstract class AbstractAppTaskManager<
     protected Set<ScopeType> getJavaResMergingScopes(
             @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
-        if (creationConfig.getVariantScope().consumesFeatureJars() && contentType == RESOURCES) {
+        boolean usesR8 =
+                creationConfig instanceof ConsumableCreationConfig
+                        && ((ConsumableCreationConfig) creationConfig).getCodeShrinker() == R8;
+        if (creationConfig.getVariantScope().consumesFeatureJars()
+                && contentType == RESOURCES
+                && !usesR8) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;

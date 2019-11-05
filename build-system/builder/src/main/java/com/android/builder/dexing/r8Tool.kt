@@ -19,6 +19,7 @@
 package com.android.builder.dexing
 
 import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.PROGUARD_RULES_FOLDER
 import com.android.SdkConstants.TOOLS_CONFIGURATION_FOLDER
 import com.android.builder.dexing.r8.ClassFileProviderFactory
@@ -43,7 +44,6 @@ import com.android.tools.r8.origin.Origin
 import com.android.tools.r8.utils.ArchiveResourceProvider
 import com.google.common.io.ByteStreams
 import java.io.BufferedOutputStream
-import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -83,8 +83,10 @@ fun runR8(
     mainDexListConfig: MainDexListConfig,
     messageReceiver: MessageReceiver,
     useFullR8: Boolean = false,
-    featureJars: Collection<Path>,
+    featureClassJars: Collection<Path>,
+    featureJavaResourceJars: Collection<Path>,
     featureDexDir: Path?,
+    featureJavaResourceOutputDir: Path?,
     libConfiguration: String? = null,
     outputKeepRules: Path? = null
 ) {
@@ -234,21 +236,56 @@ fun runR8(
 
     r8CommandBuilder.addProgramResourceProvider(r8ProgramResourceProvider)
 
-    for (featureJar in featureJars) {
-        if (featureDexDir == null){
-            throw RuntimeException("featureDexDir must be non-null if featureJars.isNotEmpty()")
+    val featureClassJarMap =
+        featureClassJars.associateBy({ it.toFile().nameWithoutExtension }, { it })
+    val featureJavaResourceJarMap =
+        featureJavaResourceJars.associateBy({ it.toFile().nameWithoutExtension }, { it })
+    // Check that each feature class jar has a corresponding feature java resources jar, and vice
+    // versa.
+    check(
+        featureClassJarMap.keys.containsAll(featureJavaResourceJarMap.keys)
+            && featureJavaResourceJarMap.keys.containsAll(featureClassJarMap.keys)
+    ) {
+        """
+            featureClassJarMap and featureJavaResourceJarMap must have the same keys.
+
+            featureClassJarMap keys:
+            ${featureClassJarMap.keys.sorted()}
+
+            featureJavaResourceJarMap keys:
+            ${featureJavaResourceJarMap.keys.sorted()}
+            """.trimIndent()
+    }
+    if (featureClassJarMap.isNotEmpty()) {
+        check(featureDexDir != null && featureJavaResourceOutputDir != null) {
+            "featureDexDir == null || featureJavaResourceOutputDir == null."
         }
-        r8CommandBuilder.addFeatureSplit {
-            it.addProgramResourceProvider(ArchiveProgramResourceProvider.fromArchive(featureJar))
-            it.setProgramConsumer(
-                DexIndexedConsumer.DirectoryConsumer(
-                    Files.createDirectories(
-                        File(featureDexDir.toFile(), featureJar.toFile().nameWithoutExtension)
-                            .toPath()
-                    )
+        Files.createDirectories(featureJavaResourceOutputDir)
+        check(toolConfig.r8OutputType == R8OutputType.DEX) {
+            "toolConfig.r8OutputType != R8OutputType.DEX."
+        }
+        for (featureKey in featureClassJarMap.keys) {
+            r8CommandBuilder.addFeatureSplit {
+                it.addProgramResourceProvider(
+                    ArchiveProgramResourceProvider.fromArchive(featureClassJarMap[featureKey])
                 )
-            )
-            return@addFeatureSplit it.build()
+                it.addProgramResourceProvider(
+                    ArchiveResourceProvider.fromArchive(featureJavaResourceJarMap[featureKey], true)
+                )
+                val javaResConsumer = JavaResourcesConsumer(
+                    featureJavaResourceOutputDir.resolve("$featureKey$DOT_JAR")
+                )
+                it.setProgramConsumer(
+                    object : DexIndexedConsumer.DirectoryConsumer(
+                        Files.createDirectories(featureDexDir.resolve(featureKey))
+                    ) {
+                        override fun getDataResourceConsumer(): DataResourceConsumer {
+                            return javaResConsumer
+                        }
+                    }
+                )
+                return@addFeatureSplit it.build()
+            }
         }
     }
 

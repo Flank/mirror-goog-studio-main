@@ -121,6 +121,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_SIGNING_CONFIG_VERSIONS =
             "android-feature-signing-config-versions";
     private static final String TYPE_FEATURE_NAME = "android-feature-name";
+    private static final String TYPE_FEATURE_SHRUNK_JAVA_RES = "android-feature-shrunk-java-res";
 
     // types for reverse metadata content.
     private static final String TYPE_REVERSE_METADATA_FEATURE_DECLARATION =
@@ -411,9 +412,12 @@ public class AndroidArtifacts {
         // by other APKs to avoid repackaging the same thing.
         PACKAGED_DEPENDENCIES(TYPE_PACKAGED_DEPENDENCIES),
 
-        // The feature dex files output by the DexSplitter from the base. The base produces and
-        // publishes these files when there's multi-apk code shrinking.
+        // The feature dex files output by R8 or DexSplitter from the base. The base produces and
+        // publishes these files when the base has dynamic features and code shrinking occurs.
         FEATURE_DEX(TYPE_FEATURE_DEX),
+        // The feature java resources output by R8 from the base. The base produces and publishes
+        // these files when the base has dynamic features and R8 code shrinking occurs.
+        FEATURE_SHRUNK_JAVA_RES(TYPE_FEATURE_SHRUNK_JAVA_RES),
 
         // The name of an instant or dynamic feature module
         // This is published by {@link FeatureNameWriterTask} to be consumed by dependencies

@@ -91,6 +91,10 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val featureJavaResFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val assetsFiles: DirectoryProperty
 
     @get:InputFiles
@@ -154,10 +158,12 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 addHybridFolder(it, dexFilesSet.sortedBy { it.name }, DexRelocator(FD_DEX), excludeJarManifest)
             }
 
-            val javaResFilesSet = if (hasFeatureDexFiles()) setOf<File>() else javaResFiles.files
-            addHybridFolder(it, javaResFilesSet,
-                Relocator("root"),
-                JarMerger.EXCLUDE_CLASSES)
+            // we check hasFeatureDexFiles() instead of checking if
+            // featureJavaResFiles.files.isNotEmpty() because we want to use featureJavaResFiles
+            // even if it's empty (which will be the case when using proguard)
+            val javaResFilesSet =
+                if (hasFeatureDexFiles()) featureJavaResFiles.files else javaResFiles.files
+            addHybridFolder(it, javaResFilesSet, Relocator("root"), JarMerger.EXCLUDE_CLASSES)
 
             addHybridFolder(it, nativeLibsFiles.files, fileFilter = abiFilter)
         }
@@ -278,6 +284,15 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 }
             )
             task.nativeLibsFiles.from(getNativeLibsFiles(creationConfig))
+            task.featureJavaResFiles.from(
+                creationConfig.variantDependencies.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.FEATURE_SHRUNK_JAVA_RES,
+                    AndroidAttributes(MODULE_PATH to task.project.path)
+                )
+            )
+            task.featureJavaResFiles.disallowChanges()
 
             if (creationConfig.variantType.isDynamicFeature) {
                 // If this is a dynamic feature, we use the abiFilters published by the base module.

@@ -37,7 +37,8 @@ import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThat
 
 import com.android.testutils.truth.PathSubject.assertThat
-import com.android.testutils.truth.ZipFileSubject
+import com.android.utils.Pair
+import com.android.zipflinger.ZipArchive
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.RegularFile
@@ -72,6 +73,7 @@ class R8Test(val r8OutputType: R8OutputType) {
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var outputDir: Path
     private lateinit var featureDexDir: File
+    private lateinit var featureJavaResourceOutputDir: File
     private lateinit var outputProguard: RegularFile
 
     companion object {
@@ -84,6 +86,7 @@ class R8Test(val r8OutputType: R8OutputType) {
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
         featureDexDir = tmp.newFolder()
+        featureJavaResourceOutputDir = tmp.newFolder()
         outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
@@ -322,8 +325,14 @@ class R8Test(val r8OutputType: R8OutputType) {
             listOf(Animal::class.java, CarbonForm::class.java)
         )
 
-        val featureJar = tmp.root.toPath().resolve("feature.jar")
-        TestInputsGenerator.pathWithClasses(featureJar, listOf(Cat::class.java, Toy::class.java))
+        val featureClassesJar = tmp.root.toPath().resolve("feature.jar")
+        TestInputsGenerator.pathWithClasses(
+            featureClassesJar,
+            listOf(Cat::class.java, Toy::class.java)
+        )
+
+        val featureJavaResJar = tmp.newFolder().toPath().resolve("feature.jar")
+        TestInputsGenerator.writeJarWithTextEntries(featureJavaResJar, Pair.of("foo.txt", "foo"))
 
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
@@ -337,8 +346,10 @@ class R8Test(val r8OutputType: R8OutputType) {
             resources = listOf(),
             java8Support = VariantScope.Java8LangSupport.R8,
             proguardRulesFiles = listOf(proguardConfiguration),
-            featureJars = listOf(featureJar.toFile()),
-            featureDexDir = featureDexDir
+            featureClassJars = listOf(featureClassesJar.toFile()),
+            featureJavaResourceJars = listOf(featureJavaResJar.toFile()),
+            featureDexDir = featureDexDir,
+            featureJavaResourceOutputDir = featureJavaResourceOutputDir
         )
 
         // Animal class is not explicitly kept and thus may be merged into Cat.
@@ -359,14 +370,23 @@ class R8Test(val r8OutputType: R8OutputType) {
             .that()
             .hasAnnotations()
 
+        // Check feature java resource output
+        val featureJavaResOutput = featureJavaResourceOutputDir.resolve("feature.jar")
+        FileSubject.assertThat(featureJavaResOutput).exists()
+        ZipArchive(featureJavaResOutput).use {
+            assertThat(it.listEntries()).containsExactly("foo.txt")
+        }
+
         // run again in full R8 mode
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
             java8Support = VariantScope.Java8LangSupport.R8,
             proguardRulesFiles = listOf(proguardConfiguration),
-            featureJars = listOf(featureJar.toFile()),
+            featureClassJars = listOf(featureClassesJar.toFile()),
+            featureJavaResourceJars = listOf(featureJavaResJar.toFile()),
             featureDexDir = featureDexDir,
+            featureJavaResourceOutputDir = featureJavaResourceOutputDir,
             useFullR8 = true
         )
 
@@ -388,14 +408,22 @@ class R8Test(val r8OutputType: R8OutputType) {
             .that()
             .doesNotHaveAnnotations()
 
+        // Check feature java resource output
+        FileSubject.assertThat(featureJavaResOutput).exists()
+        ZipArchive(featureJavaResOutput).use {
+            assertThat(it.listEntries()).containsExactly("foo.txt")
+        }
+
         // run again with different keep rules such that we expect no classes in feature
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
             java8Support = VariantScope.Java8LangSupport.R8,
             r8Keep = "class " + CarbonForm::class.java.name,
-            featureJars = listOf(featureJar.toFile()),
-            featureDexDir = featureDexDir
+            featureClassJars = listOf(featureClassesJar.toFile()),
+            featureJavaResourceJars = listOf(featureJavaResJar.toFile()),
+            featureDexDir = featureDexDir,
+            featureJavaResourceOutputDir = featureJavaResourceOutputDir
         )
 
         val baseDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
@@ -408,6 +436,13 @@ class R8Test(val r8OutputType: R8OutputType) {
         FileSubject.assertThat(featureDexParent).exists()
         FileSubject.assertThat(featureDexParent).isDirectory()
         assertThat(featureDexParent.listFiles()).hasLength(0)
+
+        // Check feature java resource output
+        FileSubject.assertThat(featureJavaResOutput).exists()
+        ZipArchive(featureJavaResOutput).use {
+            assertThat(it.listEntries()).containsExactly("foo.txt")
+        }
+
     }
 
     @Test
@@ -650,8 +685,10 @@ class R8Test(val r8OutputType: R8OutputType) {
         useFullR8: Boolean = false,
         r8Keep: String? = null,
         referencedInputs: List<File> = listOf(),
-        featureJars: List<File> = listOf(),
+        featureClassJars: List<File> = listOf(),
+        featureJavaResourceJars: List<File> = listOf(),
         featureDexDir: File? = null,
+        featureJavaResourceOutputDir: File? = null,
         libConfiguration: String? = null,
         outputKeepRulesDir: File? = null
     ) {
@@ -705,8 +742,10 @@ class R8Test(val r8OutputType: R8OutputType) {
             output = output,
             outputResources = outputDir.resolve("java_res.jar").toFile(),
             mainDexListOutput = null,
-            featureJars = featureJars,
+            featureClassJars = featureClassJars,
+            featureJavaResourceJars = featureJavaResourceJars,
             featureDexDir = featureDexDir,
+            featureJavaResourceOutputDir = featureJavaResourceOutputDir,
             libConfiguration = libConfiguration,
             outputKeepRulesDir = outputKeepRulesDir
         )

@@ -16,85 +16,88 @@
 
 package com.android.build.gradle.integration.bundle
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.truth.FileSubject
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Tests in which java resources are merged from feature and dynamic-feature modules.
+ * Tests in which java resources from dynamic-feature modules are packaged.
  */
 class DynamicFeatureJavaResTest {
 
     private val lib =
         MinimalSubProject.lib("com.example.lib")
-            .appendToBuild("""
-                android {
-                    buildTypes {
-                        minified.initWith(buildTypes.debug)
-                    }
-                }
-                """)
-            .withFile("src/main/resources/foo.txt", "lib")
+            .appendToBuild(
+                """
+                    android {
+                        buildTypes {
+                            minified.initWith(buildTypes.debug)
+                        }
+                    }""".trimIndent()
+            )
+            .withFile("src/main/resources/collide.txt", "lib")
+            .withFile("src/main/resources/pickFirst.txt", "lib")
+            .withFile(
+                "src/main/resources/META-INF/services/com.example.Service",
+                "com.example.lib.impl.LibService"
+            )
 
-    private val baseModule = MinimalSubProject.app("com.example.baseModule")
-        .appendToBuild(
-            """
-                            android {
-                                dynamicFeatures = [':feature']
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                    minified {
-                                        minifyEnabled true
-                                        proguardFiles getDefaultProguardFile('proguard-android.txt'),
-                                                "proguard-rules.pro"
-                                    }
-                                }
+    private val baseModule =
+        MinimalSubProject.app("com.example.baseModule")
+            .appendToBuild(
+                """
+                    android {
+                        dynamicFeatures = [':dynamicFeature']
+                        buildTypes {
+                            minified.initWith(buildTypes.debug)
+                            minified {
+                                minifyEnabled true
                             }
-                            """)
-        .withFile("src/main/resources/foo.txt", "base")
+                        }
+                    }""".trimIndent()
+            )
+        .withFile("src/main/resources/collide.txt", "base")
         .withFile(
-            "src/main/java/com/example/baseModule/EmptyClassToKeep.java",
-            """package com.example.baseModule;
-                public class EmptyClassToKeep {
-                }""")
-        .withFile(
-            "proguard-rules.pro",
-            """-keep public class com.example.baseModule.EmptyClassToKeep""")
+            "src/main/resources/META-INF/services/com.example.Service",
+            "com.example.baseModule.impl.BaseModuleService"
+        )
 
-    private val feature = MinimalSubProject.dynamicFeature("com.example.feature")
-        .appendToBuild(
-            """
-                android {
-                    buildTypes {
-                        minified.initWith(buildTypes.debug)
-                    }
-                }
-                """)
-
-    private val app =
-        MinimalSubProject.app("com.example.app")
-            .appendToBuild("""
-                android {
-                    buildTypes {
-                        minified.initWith(buildTypes.debug)
-                    }
-                    packagingOptions {
-                        exclude "/foo.txt"
-                    }
-                }
-                """)
+    private val dynamicFeature =
+        MinimalSubProject.dynamicFeature("com.example.dynamicFeature")
+            .appendToBuild(
+                """
+                    android {
+                        buildTypes {
+                            minified.initWith(buildTypes.debug)
+                        }
+                        packagingOptions {
+                            exclude "collide.txt"
+                            pickFirst "pickFirst.txt"
+                        }
+                    }""".trimIndent()
+            )
+            .withFile("src/main/resources/pickFirst.txt", "dynamicFeature")
+            .withFile(
+                "src/main/resources/META-INF/services/com.example.Service",
+                "com.example.dynamicFeature.impl.DynamicFeatureService"
+            )
+            .withFile(
+                "src/main/resources/META-INF/services/com.example.feature.Service",
+                "com.example.dynamicFeature.impl.DynamicFeatureService"
+            )
 
     private val testApp =
         MultiModuleTestProject.builder()
             .subproject(":lib", lib)
             .subproject(":baseModule", baseModule)
-            .subproject(":feature", feature)
-            .dependency(feature, baseModule)
-            .dependency(feature, lib)
+            .subproject(":dynamicFeature", dynamicFeature)
+            .dependency(dynamicFeature, baseModule)
+            .dependency(dynamicFeature, lib)
             .build()
 
     @get:Rule
@@ -104,17 +107,51 @@ class DynamicFeatureJavaResTest {
             .create()
 
     @Test
-    fun `test duplicate java res from feature library dependency throws exception`() {
+    fun testDuplicateJavaResThrowsException() {
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":dynamicFeature").buildFile, "exclude \"collide.txt\"", ""
+        )
         val result = project.executor().expectFailure().run("assembleMinified")
-        assertThat(result.failureMessage).contains("2 files found with path 'foo.txt'")
+        assertThat(result.failureMessage).contains(
+            "Multiple dynamic-feature and/or base APKs will contain entries "
+                    + "with the same path, 'collide.txt'"
+        )
     }
 
     @Test
-    fun `test java res from feature library dependency can be excluded`() {
-        project.getSubproject(":feature")
-            .buildFile
-            .appendText("android.packagingOptions.exclude \"/foo.txt\"")
+    fun testJavaResourcePackaging() {
         project.executor().run("assembleMinified")
+        project.getSubproject("dynamicFeature").getApk(apkType).use { apk ->
+            FileSubject.assertThat(apk.file.toFile()).exists()
+            assertThat(apk).containsJavaResourceWithContent("pickFirst.txt", "dynamicFeature")
+            assertThat(apk).doesNotContainJavaResource("META-INF/services/com.example.Service")
+            assertThat(apk).doesNotContainJavaResource(
+                "META-INF/services/com.example.feature.Service"
+            )
+        }
+        project.getSubproject("baseModule").getApk(apkType).use { apk ->
+            FileSubject.assertThat(apk.file.toFile()).exists()
+            assertThat(apk).containsJavaResourceWithContent("collide.txt", "base")
+            assertThat(apk).containsJavaResourceWithContent(
+                "META-INF/services/com.example.Service",
+                """
+                    com.example.baseModule.impl.BaseModuleService
+                    com.example.dynamicFeature.impl.DynamicFeatureService
+                    com.example.lib.impl.LibService
+                    """.trimIndent()
+            )
+            // All services go to base the APK, even if they come from only a dynamic feature.
+            assertThat(apk).containsJavaResourceWithContent(
+                "META-INF/services/com.example.feature.Service",
+                "com.example.dynamicFeature.impl.DynamicFeatureService"
+            )
+        }
     }
+}
+
+val apkType = object : GradleTestProject.ApkType {
+    override val buildType: String = "minified"
+    override val testName: String? = null
+    override val isSigned: Boolean = true
 }
 

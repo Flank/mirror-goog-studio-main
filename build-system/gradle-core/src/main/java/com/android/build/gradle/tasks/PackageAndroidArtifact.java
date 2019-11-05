@@ -195,6 +195,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Incremental
     public abstract ConfigurableFileCollection getJavaResourceFiles();
 
+    /** FileCollection because it comes from another project. */
+    @Classpath
+    @Incremental
+    public abstract ConfigurableFileCollection getFeatureJavaResourceFiles();
+
     /** FileCollection because of the legacy Transform API. */
     @Classpath
     @Incremental
@@ -431,11 +436,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 IncrementalChangesUtils.getChangesInSerializableForm(
                                         changes, getJavaResourceFiles()));
             } else {
-                // We reach this code if we're in a feature module and
-                // minification is enabled in the
-                // base module. In this case, we want to use the classes.dex
-                // file from the base
-                // module's DexSplitterTask.
+                // We reach this code if we're in a dynamic-feature module and code shrinking is
+                // enabled in the base module. In this case, we want to use the feature dex files
+                // (and the feature java resource jar if using R8) published from the base.
                 parameter
                         .getDexFiles()
                         .set(
@@ -443,7 +446,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         changes, getFeatureDexFolder()));
                 parameter
                         .getJavaResourceFiles()
-                        .set(new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of()));
+                        .set(
+                                IncrementalChangesUtils.getChangesInSerializableForm(
+                                        changes, getFeatureJavaResourceFiles()));
             }
             parameter
                     .getAssetsFiles()
@@ -468,8 +473,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
             parameter.getManifestType().set(manifestType);
             parameter.getSigningConfigData().set(signingConfigData.convertToParams());
-            parameter.getSigningConfigVersionsFile().set(
-                    getSigningConfigVersions().getSingleFile());
+            parameter
+                    .getSigningConfigVersionsFile()
+                    .set(getSigningConfigVersions().getSingleFile());
 
             if (getBaseModuleMetadata().isEmpty()) {
                 parameter.getAbiFilters().set(getAbiFilters());
@@ -1131,14 +1137,21 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.getManifests().set(manifests);
 
             packageAndroidArtifact.getDexFolders().from(getDexFolders(creationConfig));
+            final String projectPath = packageAndroidArtifact.getProject().getPath();
             @Nullable
-            FileCollection featureDexFolder =
-                    getFeatureDexFolder(
-                            creationConfig, packageAndroidArtifact.getProject().getPath());
+            FileCollection featureDexFolder = getFeatureDexFolder(creationConfig, projectPath);
             if (featureDexFolder != null) {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
             packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources(creationConfig));
+            @Nullable
+            FileCollection featureJavaResources =
+                    getFeatureJavaResources(creationConfig, projectPath);
+            if (featureJavaResources != null) {
+                packageAndroidArtifact.getFeatureJavaResourceFiles().from(featureJavaResources);
+            }
+            packageAndroidArtifact.getFeatureJavaResourceFiles().disallowChanges();
+
             if (creationConfig instanceof ApplicationCreationConfig) {
                 creationConfig.getArtifacts().setTaskInputToFinalProduct(
                         InternalArtifactType.APP_METADATA.INSTANCE,
@@ -1298,6 +1311,21 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                            new AndroidAttributes(new Pair<>(MODULE_PATH, projectPath)));
+        }
+
+        @Nullable
+        public FileCollection getFeatureJavaResources(
+                @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
+            if (!creationConfig.getVariantType().isDynamicFeature()) {
+                return null;
+            }
+            return creationConfig
+                    .getVariantDependencies()
+                    .getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            PROJECT,
+                            AndroidArtifacts.ArtifactType.FEATURE_SHRUNK_JAVA_RES,
                             new AndroidAttributes(new Pair<>(MODULE_PATH, projectPath)));
         }
 
