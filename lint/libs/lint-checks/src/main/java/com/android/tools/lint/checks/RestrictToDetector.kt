@@ -143,7 +143,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         return qualifiedName.startsWith("com.google.firebase") ||
                 qualifiedName.startsWith("com.google.android.gms") ||
-                qualifiedName.startsWith("com.google.ads")
+                qualifiedName.startsWith("com.google.ads") ||
+                qualifiedName.startsWith("com.google.mlkit")
     }
 
     private fun isTestContext(
