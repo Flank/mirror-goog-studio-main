@@ -29,6 +29,14 @@ public class InstallerResponseHandler {
             return;
         }
 
+        if (response.getStatus() == SwapResponse.Status.PROCESS_CRASHING) {
+            throw DeployerException.processCrashing(response.getExtra());
+        }
+
+        if (response.getStatus() == SwapResponse.Status.PROCESS_NOT_RESPONDING) {
+            throw DeployerException.processNotResponding(response.getExtra());
+        }
+
         if (response.getStatus() != SwapResponse.Status.AGENT_ERROR) {
             throw DeployerException.swapFailed(response.getStatus());
         }

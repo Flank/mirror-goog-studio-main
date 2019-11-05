@@ -57,6 +57,24 @@ const char* FindNextLine(const char* buf) {
   }
   return buf + 1;
 }
+
+bool GetProcessRecordField(const std::string& output, const std::string& field,
+                           std::string* value) {
+  const std::string search = field + "=";
+  size_t field_start = output.find(search);
+  if (field_start == std::string::npos) {
+    return false;
+  }
+  field_start += search.size();
+
+  size_t field_end = output.find(" ", field_start);
+  if (field_end == std::string::npos) {
+    return false;
+  }
+
+  *value = output.substr(field_start, field_end - field_start);
+  return true;
+}
 }  // namespace
 
 bool CmdCommand::GetApks(const std::string& package_name,
@@ -253,5 +271,60 @@ bool CmdCommand::AbortInstall(const std::string& session,
   output->clear();
   std::string err;
   return executor_.Run(cmd_exec_, parameters, output, &err);
+}
+
+bool CmdCommand::GetProcessInfo(const std::string& package_name,
+                                std::vector<ProcessRecord>* records) const
+    noexcept {
+  std::vector<std::string> parameters;
+  parameters.emplace_back("activity");
+  parameters.emplace_back("dump");
+  parameters.emplace_back("processes");
+  parameters.emplace_back(package_name);
+
+  std::string output;
+  std::string error;
+  if (!executor_.Run(cmd_exec_, parameters, &output, &error)) {
+    ErrEvent("Failed to get process dump: " + error);
+    return false;
+  }
+
+  size_t record_start = output.find("ProcessRecord");
+  size_t record_end = output.find("ProcessRecord", record_start + 1);
+  size_t section_end = output.find("PID mappings");
+
+  while (record_start != std::string::npos && record_start < section_end) {
+    const std::string record =
+        output.substr(record_start, record_end - record_start);
+
+    // Format of a ProcessRecord entry is:
+    //    ProcessRecord{<id> <pid>:<process_name>/<uid>}
+    size_t name_start = record.find(":") + 1;
+    size_t name_end = record.find("/", name_start);
+
+    ProcessRecord process;
+    process.process_name = record.substr(name_start, name_end - name_start);
+    process.crashing = false;
+    process.not_responding = false;
+
+    std::string crashing;
+    if (GetProcessRecordField(record, "crashing", &crashing)) {
+      std::istringstream ss(crashing);
+      ss >> std::boolalpha >> process.crashing;
+    }
+
+    std::string not_responding;
+    if (GetProcessRecordField(record, "notResponding", &not_responding)) {
+      std::istringstream ss(not_responding);
+      ss >> std::boolalpha >> process.not_responding;
+    }
+
+    records->emplace_back(std::move(process));
+
+    record_start = record_end;
+    record_end = output.find("ProcessRecord", record_end + 1);
+  }
+
+  return true;
 }
 }  // namespace deploy

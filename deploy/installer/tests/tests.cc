@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <iostream>
 
 #include <gtest/gtest.h>
 
 #include "tools/base/deploy/installer/apk_archive.h"
+#include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor_impl.h"
 #include "tools/base/deploy/installer/patch_applier.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
@@ -41,7 +43,61 @@ class deploy::ApkArchiveTester {
   ApkArchive archive_;
 };
 
+class GetProcessInfoExecutor : public Executor {
+ public:
+  GetProcessInfoExecutor(const std::string& file_path)
+      : file_path_(file_path) {}
+
+  bool Run(const std::string& executable_path,
+           const std::vector<std::string>& args, std::string* output,
+           std::string* error) const {
+    std::ifstream file(file_path_);
+    std::string line;
+    while (std::getline(file, line)) {
+      output->append(line);
+      output->append("\n");
+    }
+    std::cout << *output << std::endl;
+    return true;
+  }
+
+  bool ForkAndExec(const std::string& executable_path,
+                   const std::vector<std::string>& parameters,
+                   int* child_stdin_fd, int* child_stdout_fd,
+                   int* child_stderr_fd, int* fork_pid) const {
+    return false;
+  }
+
+  bool ForkAndExecWithStdinFd(const std::string& executable_path,
+                              const std::vector<std::string>& parameters,
+                              int stdin_fd, int* child_stdout_fd,
+                              int* child_stderr_fd, int* fork_pid) const {
+    return false;
+  }
+
+ private:
+  const std::string file_path_;
+};
+
 class InstallerTest : public ::testing::Test {};
+
+TEST_F(InstallerTest, TestGetProcessInfo) {
+  Executor* exec = new GetProcessInfoExecutor(
+      "tools/base/deploy/installer/tests/data/dumpOutput.txt");
+  Workspace workspace("fake/path", "fakeversion", exec);
+  CmdCommand cmd(workspace);
+
+  std::vector<ProcessRecord> records;
+  ASSERT_TRUE(cmd.GetProcessInfo("com.noah.clr", &records));
+  ASSERT_EQ(2, records.size());
+  ASSERT_EQ("com.noah.clr:wow", records[0].process_name);
+  ASSERT_EQ(false, records[0].crashing);
+  ASSERT_EQ(true, records[0].not_responding);
+
+  ASSERT_EQ("com.noah.clr", records[1].process_name);
+  ASSERT_EQ(true, records[1].crashing);
+  ASSERT_EQ(false, records[1].not_responding);
+}
 
 TEST_F(InstallerTest, TestArchiveParser) {
   ApkArchive archive(

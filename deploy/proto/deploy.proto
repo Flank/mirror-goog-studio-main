@@ -107,11 +107,16 @@ message SwapResponse {
     WRITE_TO_SERVER_FAILED = 9;   // Could not communicate with the server
     UNPARSEABLE_AGENT_RESPONSE = 10;  // An agent responded in an unexpected way
     NO_DEBUGGER_SESSIONS = 11;        // Could not swap with debugger
+    PROCESS_CRASHING = 12;        // One of the processes is crashing
+    PROCESS_NOT_RESPONDING = 13;  // One of the processes is not responding
   }
 
   Status status = 1;
 
   repeated AgentSwapResponse failed_agents = 2;
+
+  // Additional data to help display a better error message in studio
+  string extra = 3;
 }
 
 // Message returned by the Android native IRR installer. There are two layers :

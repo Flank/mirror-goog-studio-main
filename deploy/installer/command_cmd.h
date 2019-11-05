@@ -24,6 +24,13 @@
 
 namespace deploy {
 
+// Information on an ART process.
+struct ProcessRecord {
+  std::string process_name;
+  bool crashing;
+  bool not_responding;
+};
+
 // Wrapper around Android executable "service client".
 class CmdCommand {
  public:
@@ -51,6 +58,9 @@ class CmdCommand {
 
   bool AbortInstall(const std::string& session, std::string* output) const
       noexcept;
+
+  bool GetProcessInfo(const std::string& package_name,
+                      std::vector<ProcessRecord>* records) const noexcept;
 
  private:
   Executor& executor_;

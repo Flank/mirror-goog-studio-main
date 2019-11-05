@@ -81,6 +81,18 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
+        PROCESS_CRASHING(
+                "Apply Changes could not complete because an application process is crashed.",
+                "Process '%s' has crashed.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
+        PROCESS_NOT_RESPONDING(
+                "Apply Changes could not complete because an application process is not responding.",
+                "Process '%s' is not responding.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
         // Errors pertaining to un-swappable changes.
 
         CLASS_NOT_FOUND(
@@ -313,6 +325,14 @@ public class DeployerException extends Exception {
 
     public static DeployerException apkNameMismatch() {
         return new DeployerException(Error.DIFFERENT_APK_NAMES);
+    }
+
+    public static DeployerException processCrashing(String processName) {
+        return new DeployerException(Error.PROCESS_CRASHING, NO_ARGS, processName);
+    }
+
+    public static DeployerException processNotResponding(String processName) {
+        return new DeployerException(Error.PROCESS_NOT_RESPONDING, NO_ARGS, processName);
     }
 
     public static DeployerException changedSharedObject(String filePath) {
