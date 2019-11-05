@@ -95,7 +95,8 @@ class AutoNamespaceTest {
 
         TruthHelper.assertThat(result.getTask(":autoNamespaceDebugDependencies")).wasUpToDate();
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk).containsClass("Landroid/support/constraint/Guideline;")
+        // TODO(b/138780160): Re-introduce assertion when auto namespacing is converted to an artifact transform.
+        // assertThat(apk).containsClass("Landroid/support/constraint/Guideline;")
         assertThat(apk).containsClass("Landroid/support/constraint/R\$attr;")
     }
 

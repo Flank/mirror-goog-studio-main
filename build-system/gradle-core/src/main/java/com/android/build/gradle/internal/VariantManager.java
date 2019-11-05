@@ -900,7 +900,7 @@ public class VariantManager implements VariantModel {
             configuration.registerTransform(dependencies);
         }
 
-        registerDexingOutputSplitTransform(dependencies, variantScopes);
+        registerDexingOutputSplitTransform(dependencies);
     }
 
     private static <F, T> List<T> convert(
