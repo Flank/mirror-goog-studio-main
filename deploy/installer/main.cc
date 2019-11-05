@@ -36,7 +36,6 @@
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/dump.h"
 #include "tools/base/deploy/installer/executor_impl.h"
-#include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/installer/redirect_executor.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
@@ -171,10 +170,10 @@ int main(int argc, char** argv) {
     return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
   }
   if (parameters.cmd_path != nullptr) {
-    CmdCommand::SetPath(parameters.cmd_path);
+    workspace.SetCmdPath(parameters.cmd_path);
   }
   if (parameters.pm_path != nullptr) {
-    PackageManager::SetPath(parameters.pm_path);
+    workspace.SetPmPath(parameters.pm_path);
   }
   RedirectExecutor redirect(Env::shell(), executor);
   if (Env::IsValid()) {

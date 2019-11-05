@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
@@ -30,7 +31,6 @@
 namespace deploy {
 
 namespace {
-const char* CMD_EXEC = "/system/bin/cmd";
 
 bool IsLeadingSpaceOrTab(const char* buf) {
   return *buf == ' ' || *buf == '\t';
@@ -59,17 +59,37 @@ const char* FindNextLine(const char* buf) {
 }
 }  // namespace
 
-bool CmdCommand::GetAppApks(const std::string& package_name,
-                            std::vector<std::string>* apks,
-                            std::string* error_string) const noexcept {
-  Trace trace("CmdCommand::GetAppApks");
+bool CmdCommand::GetApks(const std::string& package_name,
+                         std::vector<std::string>* apks,
+                         std::string* error_string) const noexcept {
+  Trace trace("CmdCommand::GetApks");
+  int api = Env::api_level();
+  if (api >= 28) {
+    return GetApksFromPath(cmd_exec_, package_name, apks, error_string);
+  } else if (api >= 24) {
+    return GetApksFromDump(package_name, apks, error_string);
+  } else {
+    return GetApksFromPath(pm_exec_, package_name, apks, error_string);
+  }
+}
+
+bool CmdCommand::GetApksFromPath(const std::string& exec_path,
+                                 const std::string& package_name,
+                                 std::vector<std::string>* apks,
+                                 std::string* error_string) const noexcept {
+  Phase p("CmdCommand::GetApksFromPath");
   std::vector<std::string> parameters;
-  parameters.emplace_back("package");
+
+  // If we're using the cmd executable, we need to specify which utility.
+  if (exec_path == cmd_exec_) {
+    parameters.emplace_back("package");
+  }
+
   parameters.emplace_back("path");
   parameters.emplace_back(package_name);
   std::string out;
   std::string err;
-  bool success = workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, &err);
+  bool success = executor_.Run(exec_path, parameters, &out, &err);
   if (!success) {
     *error_string = err;
     return false;
@@ -96,17 +116,17 @@ bool CmdCommand::GetAppApks(const std::string& package_name,
 //
 // The custom parser simply looks for the "Dexopt state:" header,
 // followed by "[pkg_name]", followed by the "path:" entry.
-bool CmdCommand::DumpApks(const std::string& package_name,
-                          std::vector<std::string>* apks,
-                          std::string* error_string) const noexcept {
-  Trace trace("CmdCommand::DumpApks");
+bool CmdCommand::GetApksFromDump(const std::string& package_name,
+                                 std::vector<std::string>* apks,
+                                 std::string* error_string) const noexcept {
+  Phase p("CmdCommand::GetApksFromDump");
   std::vector<std::string> parameters;
   parameters.emplace_back("package");
   parameters.emplace_back("dump");
   parameters.emplace_back(package_name);
   std::string out;
   std::string err;
-  bool success = workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, &err);
+  bool success = executor_.Run(cmd_exec_, parameters, &out, &err);
   if (!success) {
     *error_string = err;
     return false;
@@ -166,7 +186,7 @@ bool CmdCommand::AttachAgent(int pid, const std::string& agent,
   parameters.emplace_back(agent + "=" + args);
 
   std::string out;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
+  return executor_.Run(cmd_exec_, parameters, &out, error_string);
 }
 
 bool CmdCommand::UpdateAppInfo(const std::string& user_id,
@@ -180,7 +200,7 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
   parameters.emplace_back(package_name);
 
   std::string out;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
+  return executor_.Run(cmd_exec_, parameters, &out, error_string);
 }
 
 bool CmdCommand::CreateInstallSession(
@@ -198,7 +218,7 @@ bool CmdCommand::CreateInstallSession(
   }
 
   std::string err;
-  workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
+  executor_.Run(cmd_exec_, parameters, output, &err);
   std::string match = "Success: created install session [";
   if (output->find(match, 0) != 0) {
     return false;
@@ -221,7 +241,7 @@ bool CmdCommand::CommitInstall(const std::string& session,
   }
 
   std::string err;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
+  return executor_.Run(cmd_exec_, parameters, output, &err);
 }
 
 bool CmdCommand::AbortInstall(const std::string& session,
@@ -232,9 +252,6 @@ bool CmdCommand::AbortInstall(const std::string& session,
   parameters.emplace_back(session);
   output->clear();
   std::string err;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
+  return executor_.Run(cmd_exec_, parameters, output, &err);
 }
-
-void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }
-
 }  // namespace deploy

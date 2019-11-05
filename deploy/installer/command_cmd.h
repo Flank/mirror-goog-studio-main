@@ -27,14 +27,13 @@ namespace deploy {
 // Wrapper around Android executable "service client".
 class CmdCommand {
  public:
-  CmdCommand(Workspace& workspace) : workspace_(workspace) {}
+  CmdCommand(const Workspace& workspace)
+      : executor_(workspace.GetExecutor()),
+        pm_exec_(workspace.GetPmPath()),
+        cmd_exec_(workspace.GetCmdPath()) {}
 
-  bool GetAppApks(const std::string& package_name,
-                  std::vector<std::string>* apks,
-                  std::string* error_string) const noexcept;
-
-  bool DumpApks(const std::string& package_name, std::vector<std::string>* apks,
-                std::string* error_string) const noexcept;
+  bool GetApks(const std::string& package_name, std::vector<std::string>* apks,
+               std::string* error_string) const noexcept;
 
   bool AttachAgent(int pid, const std::string& agent, const std::string& args,
                    std::string* error_string) const noexcept;
@@ -53,10 +52,23 @@ class CmdCommand {
   bool AbortInstall(const std::string& session, std::string* output) const
       noexcept;
 
-  static void SetPath(const char* path);
-
  private:
-  Workspace& workspace_;
+  Executor& executor_;
+
+  // Path to the Android package manager executable, or a test mock.
+  const std::string& pm_exec_;
+
+  // Path to the Android cmd executable, or a test mock.
+  const std::string& cmd_exec_;
+
+  bool GetApksFromPath(const std::string& exec_path,
+                       const std::string& package_name,
+                       std::vector<std::string>* apks,
+                       std::string* error_string) const noexcept;
+
+  bool GetApksFromDump(const std::string& package_name,
+                       std::vector<std::string>* apks,
+                       std::string* error_string) const noexcept;
 };
 
 }  // namespace deploy

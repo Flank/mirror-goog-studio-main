@@ -34,8 +34,6 @@ class DumpCommand : public Command {
  private:
   std::vector<std::string> package_names_;
 
-  std::vector<std::string> RetrieveApks(const std::string& package_name);
-
   struct ProcStats {
     char name[16];
     int pid;

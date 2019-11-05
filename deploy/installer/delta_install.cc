@@ -26,7 +26,6 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
-#include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/installer/patch_applier.h"
 
 namespace deploy {

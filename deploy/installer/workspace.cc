@@ -24,13 +24,17 @@
 namespace deploy {
 
 namespace {
+constexpr const char* kDefaultPmPath = "/system/bin/pm";
+constexpr const char* kDefaultCmdPath = "/system/bin/cmd";
 constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
-}
+}  // namespace
 
 Workspace::Workspace(const std::string& executable_path,
                      const std::string& version, Executor* executor)
     : exec_path_(executable_path),
       version_(version),
+      pm_path_(kDefaultPmPath),
+      cmd_path_(kDefaultCmdPath),
       executor_(executor),
       output_pipe_(dup(STDOUT_FILENO)) {
   base_ = kBasedir;
