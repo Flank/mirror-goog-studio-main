@@ -23,10 +23,12 @@ import com.android.SdkConstants.FN_API_JAR
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.SdkConstants.LIBS_FOLDER
+import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.rTxtToSymbolTable
 import com.android.ide.common.xml.AndroidManifestParser
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -37,7 +39,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import com.android.builder.packaging.JarCreator
+import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -80,10 +82,32 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
             val useSuffix = if (parameters.forCompileUse.get()) "api" else "runtime"
             val outputFileName =
                 "${inputAarFile.get().asFile.nameWithoutExtension}-$useSuffix$DOT_JAR"
-            val outputJar = transformOutputs.file(outputFileName)
-            JarMerger(outputJar.toPath()).use { outputApiJar ->
-                if (parameters.forCompileUse.get()) {
-                    if (parameters.generateRClassJar.get()) {
+            val outputJar = transformOutputs.file(outputFileName).toPath()
+            mergeJars(
+                outputJar,
+                inputAar,
+                parameters.forCompileUse.get(),
+                parameters.generateRClassJar.get()
+            )
+        }
+    }
+
+    companion object {
+        @VisibleForTesting
+        internal fun mergeJars(
+            outputJar: Path,
+            inputAar: ZipFile,
+            forCompileUse: Boolean,
+            generateRClassJar: Boolean
+        ) {
+            val ignoreFilter = if (forCompileUse) {
+                JarMerger.allIgnoringDuplicateResources()
+            } else {
+                JarMerger.CLASSES_ONLY
+            }
+            JarMerger(outputJar, ignoreFilter).use { outputApiJar ->
+                if (forCompileUse) {
+                    if (generateRClassJar) {
                         generateRClassJarFromRTxt(outputApiJar, inputAar)
                     }
                     val apiJAr = inputAar.getEntry(FN_API_JAR)
@@ -92,12 +116,11 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
                         return
                     }
                 }
+
                 inputAar.copyAllClassesJarsTo(outputApiJar)
             }
         }
-    }
 
-    companion object {
         private const val LIBS_FOLDER_SLASH = "$LIBS_FOLDER/"
 
         private fun ZipFile.copyAllClassesJarsTo(outputApiJar: JarMerger) {

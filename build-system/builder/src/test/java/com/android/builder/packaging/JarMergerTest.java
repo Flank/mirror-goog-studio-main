@@ -35,6 +35,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.function.Predicate;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
@@ -133,6 +134,16 @@ public class JarMergerTest {
             merger.addJar(createJarWithClass());
         }
         assertThat(getEntries(out)).containsExactly("resource.txt", RESOURCE_CONTENT);
+    }
+
+    @Test
+    public void ignoringDuplicateResourcesFilter() {
+        Predicate<String> predicate = JarMerger.allIgnoringDuplicateResources();
+        assertThat(predicate.test("a")).named("first resource with name 'a' included").isTrue();
+        assertThat(predicate.test("a")).named("second resource with name 'a' included").isFalse();
+
+        assertThat(predicate.test("A.class")).named("Class always included").isTrue();
+        assertThat(predicate.test("A.class")).named("Class always included").isTrue();
     }
 
     @Test
