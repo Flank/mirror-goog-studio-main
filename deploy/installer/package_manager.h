@@ -32,10 +32,6 @@ class PackageManager {
                std::string* error_string) const;
   static void SetPath(const char* path);
 
-  bool Install(const std::string& apk_path,
-               const std::vector<std::string>& options,
-               std::string* output) const noexcept;
-
  private:
   Workspace& workspace_;
 };
