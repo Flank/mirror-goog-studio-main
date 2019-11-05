@@ -73,6 +73,9 @@ import org.w3c.dom.NodeList;
 @Immutable
 public class ManifestMerger2 {
 
+    public static final String COMPATIBLE_SCREENS_SUB_MANIFEST = "Compatible-Screens sub-manifest";
+    public static final String WEAR_APP_SUB_MANIFEST = "Wear App sub-manifest";
+
     static final String BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER =
             "com.android.tools.ir.server.InstantRunContentProvider";
 
@@ -203,10 +206,12 @@ public class ManifestMerger2 {
                                 ? mainPackageAttribute.get().getValue()
                                 : null);
 
-        if (mOptionalFeatures.contains(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)) {
-            checkUniquePackageName(
-                    loadedMainManifestInfo, loadedLibraryDocuments, mergingReportBuilder);
-        }
+        // make sure each module/library has a unique package name
+        checkUniquePackageName(
+                loadedMainManifestInfo,
+                loadedLibraryDocuments,
+                mergingReportBuilder,
+                mOptionalFeatures.contains(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME));
 
         // perform system property injection
         performSystemPropertiesInjection(mergingReportBuilder,
@@ -1373,10 +1378,15 @@ public class ManifestMerger2 {
         return loadedLibraryDocuments.build();
     }
 
+    /**
+     * Checks whether all manifests have unique package names. If the strict mode is enabled it will
+     * result in an error for name collisions, otherwise it will result in a warning.
+     */
     private void checkUniquePackageName(
             @NonNull LoadedManifestInfo mainPackage,
             @NonNull List<LoadedManifestInfo> libraries,
-            @NonNull MergingReport.Builder mergingReportBuilder) {
+            @NonNull MergingReport.Builder mergingReportBuilder,
+            boolean strictUniquePackageNameCheck) {
         Multimap<String, LoadedManifestInfo> uniquePackageNameMap = ArrayListMultimap.create();
 
         // Is main manifest is a Overlay we need to fallback.
@@ -1391,16 +1401,12 @@ public class ManifestMerger2 {
                 .filter(l -> l.getOriginalPackageName().isPresent())
                 .forEach(l -> uniquePackageNameMap.put(l.getOriginalPackageName().get(), l));
 
-        uniquePackageNameMap
-                .asMap()
-                .entrySet()
-                .stream()
+        uniquePackageNameMap.asMap().entrySet().stream()
                 .filter(e -> e.getValue().size() > 1)
                 .forEach(
                         e -> {
                             Collection<String> offendingTargets =
-                                    e.getValue()
-                                            .stream()
+                                    e.getValue().stream()
                                             .map(i -> i.getName())
                                             .collect(Collectors.toList());
                             String repeatedPackageErrors =
@@ -1415,7 +1421,9 @@ public class ManifestMerger2 {
                             // to all manifests with the repeated package name.
                             mergingReportBuilder.addMessage(
                                     info.getXmlDocument().getSourceFile(),
-                                    MergingReport.Record.Severity.ERROR,
+                                    strictUniquePackageNameCheck
+                                            ? MergingReport.Record.Severity.ERROR
+                                            : MergingReport.Record.Severity.WARNING,
                                     repeatedPackageErrors);
                         });
     }

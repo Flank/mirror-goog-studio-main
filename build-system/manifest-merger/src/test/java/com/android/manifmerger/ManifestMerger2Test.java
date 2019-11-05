@@ -134,6 +134,8 @@ public class ManifestMerger2Test {
                 "98_fail_if_package_name_does_not_contain_dot.xml",
                 "99_inject_feature_deps_with_add_uses_split_dependencies.xml",
                 "99b_no_uses_split_when_disabled.xml",
+                "100_enforce_unique_package_name_warning.xml",
+                "101_enforce_unique_package_name_same_as_app_warning.xml"
             };
 
     private static final Multimap<Predicate<String>, ManifestMerger2.Invoker.Feature>
@@ -220,11 +222,8 @@ public class ManifestMerger2Test {
             stdLogger.info(xmlDocument);
 
             if (testFiles.getActualResult() != null) {
-                FileWriter writer = new FileWriter(testFiles.getActualResult());
-                try {
+                try (FileWriter writer = new FileWriter(testFiles.getActualResult())) {
                     writer.append(xmlDocument);
-                } finally {
-                    writer.close();
                 }
             }
 
@@ -278,8 +277,7 @@ public class ManifestMerger2Test {
 
     private static boolean isExpectingError(String expectedOutput) throws IOException {
         StringReader stringReader = new StringReader(expectedOutput);
-        BufferedReader reader = new BufferedReader(stringReader);
-        try {
+        try (BufferedReader reader = new BufferedReader(stringReader)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("ERROR")) {
@@ -287,8 +285,6 @@ public class ManifestMerger2Test {
                 }
             }
             return false;
-        } finally {
-            reader.close();
         }
     }
 
@@ -297,9 +293,8 @@ public class ManifestMerger2Test {
             String expectedOutput) throws IOException {
 
         StringReader stringReader = new StringReader(expectedOutput);
-        List<Record> records = new ArrayList<Record>(mergeReport.getLoggingRecords());
-        BufferedReader reader = new BufferedReader(stringReader);
-        try {
+        List<Record> records = new ArrayList<>(mergeReport.getLoggingRecords());
+        try (BufferedReader reader = new BufferedReader(stringReader)) {
             String line = reader.readLine();
             while (line != null) {
                 String message = line;
@@ -320,8 +315,6 @@ public class ManifestMerger2Test {
                     fail(errorMessage.toString());
                 }
             }
-        } finally {
-            reader.close();
         }
         // check that we do not have any unexpected error messages.
         if (!records.isEmpty()) {

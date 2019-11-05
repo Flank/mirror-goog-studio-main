@@ -40,7 +40,7 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-   package="com.example.blankactivity5" >
+   package="com.example.blankactivity5.lib1" >
 
    <application>
        <!-- The activity name will be expanded to its full FQCN by default. -->
@@ -81,7 +81,7 @@
        </activity>
        <!-- The activity name will be expanded to its full FQCN by default. -->
        <activity
-           android:name="com.example.blankactivity5.FooActivity"
+           android:name="com.example.blankactivity5.lib1.FooActivity"
            android:label="@string/title_activity_foo" >
        </activity>
    </application>
@@ -90,7 +90,4 @@
    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     </manifest>
-
-@errors
-
 

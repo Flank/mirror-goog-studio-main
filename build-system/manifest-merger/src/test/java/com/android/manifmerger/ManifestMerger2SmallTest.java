@@ -1682,7 +1682,7 @@ public class ManifestMerger2SmallTest {
                         + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
                         + "    package=\"com.example.app1\">\n"
                         + "\n"
-                        + "    <application t:name=\".applicationOne\">\n"
+                        + "    <application t:name=\".applicationOne\" tools:replace=\"t:name\">\n"
                         + "    </application>"
                         + "\n"
                         + "</manifest>";
@@ -1692,7 +1692,7 @@ public class ManifestMerger2SmallTest {
         String featureInput =
                 ""
                         + "<manifest\n"
-                        + "    package=\"com.example.app1\""
+                        + "    package=\"com.example.feature\""
                         + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <application t:name=\".applicationOne\">\n"
                         + "        <activity t:name=\"activityOne\" t:splitName=\"feature\" />\n"
@@ -1738,7 +1738,7 @@ public class ManifestMerger2SmallTest {
                         + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
                         + "    package=\"com.example.app1\">\n"
                         + "\n"
-                        + "    <application t:name=\".applicationOne\">\n"
+                        + "    <application t:name=\".applicationOne\" tools:replace=\"t:name\">\n"
                         + "    </application>"
                         + "\n"
                         + "</manifest>";
@@ -1748,7 +1748,7 @@ public class ManifestMerger2SmallTest {
         String featureInput =
                 ""
                         + "<manifest\n"
-                        + "    package=\"com.example.app1\""
+                        + "    package=\"com.example.feature\""
                         + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <application t:name=\".applicationOne\">\n"
                         + "        <activity t:name=\"activityOne\" t:splitName=\"feature\" />\n"
@@ -1823,7 +1823,7 @@ public class ManifestMerger2SmallTest {
                         + "    t:targetSandboxVersion = \"1\"\n"
                         + "    package=\"com.example.app1\">\n"
                         + "\n"
-                        + "    <application t:name=\".applicationOne\">\n"
+                        + "    <application t:name=\".applicationOne\" tools:replace=\"t:name\">\n"
                         + "    </application>"
                         + "\n"
                         + "</manifest>";
@@ -1833,7 +1833,7 @@ public class ManifestMerger2SmallTest {
         String featureInput =
                 ""
                         + "<manifest\n"
-                        + "    package=\"com.example.app1\""
+                        + "    package=\"com.example.feature\""
                         + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <application t:name=\".applicationOne\">\n"
                         + "        <activity t:name=\"activityOne\" t:splitName=\"feature\" />\n"

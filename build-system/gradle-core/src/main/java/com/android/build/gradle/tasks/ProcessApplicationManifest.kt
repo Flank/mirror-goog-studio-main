@@ -44,6 +44,8 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.Invoker
+import com.android.manifmerger.ManifestMerger2.COMPATIBLE_SCREENS_SUB_MANIFEST
+import com.android.manifmerger.ManifestMerger2.WEAR_APP_SUB_MANIFEST
 import com.android.manifmerger.ManifestProvider
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
@@ -320,7 +322,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             if (microManifest.isFile) {
                 providers.add(
                     ManifestProviderImpl(
-                        microManifest, "Wear App sub-manifest"
+                        microManifest, WEAR_APP_SUB_MANIFEST
                     )
                 )
             }
@@ -329,7 +331,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             providers.add(
                 ManifestProviderImpl(
                     File(compatibleScreenManifestForSplit.outputFile),
-                    "Compatible-Screens sub-manifest"
+                    COMPATIBLE_SCREENS_SUB_MANIFEST
                 )
             )
         }

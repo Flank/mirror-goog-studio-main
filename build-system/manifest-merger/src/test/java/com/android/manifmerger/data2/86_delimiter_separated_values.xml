@@ -30,6 +30,7 @@
 
     <application
             android:name="TheApp"
+            tools:replace="android:name"
             android:backupAgent=".MyBackupAgent" >
     </application>
 
@@ -40,7 +41,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.app1">
+    package="com.example.lib1">
 
     <application android:name="TheApp" >
         <permission
@@ -82,6 +83,3 @@
     </application>
 
 </manifest>
-
-
-@errors
