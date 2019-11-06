@@ -82,6 +82,7 @@ data class ModuleTemplateData(
   val resDir: File,
   val manifestDir: File,
   val testDir: File,
+  val unitTestDir: File,
   val aidlDir: File,
   val rootDir: File,
   val themeExists: Boolean,

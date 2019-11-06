@@ -362,6 +362,8 @@ public final class SdkConstants {
     public static final String FD_MAIN = "main"; //$NON-NLS-1$
     /** Default test source set folder name, i.e. "androidTest" */
     public static final String FD_TEST = "androidTest"; //$NON-NLS-1$
+    /** Default unit test source set folder name, i.e. "test" */
+    public static final String FD_UNIT_TEST = "test"; //$NON-NLS-1$
     /** Default java code folder name, i.e. "java" */
     public static final String FD_JAVA = "java"; //$NON-NLS-1$
     /** Default native code folder name, i.e. "jni" */
