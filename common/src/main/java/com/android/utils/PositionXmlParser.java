@@ -49,6 +49,7 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.DefaultHandler2;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * A simple DOM XML parser which can retrieve exact beginning and end offsets
@@ -71,25 +72,35 @@ public class PositionXmlParser {
      * @return the corresponding document
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
-     * @throws IOException if something is seriously wrong. This should not
-     *             happen since the input source is known to be constructed from
-     *             a string.
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string
      */
     @NonNull
     public static Document parse(@NonNull InputStream input, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
-        // Read in all the data
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[1024];
-        while (true) {
-          int r = input.read(buf);
-          if (r == -1) {
-            break;
-          }
-          out.write(buf, 0, r);
-        }
-        input.close();
-        return parse(out.toByteArray(), namespaceAware);
+        return parse(readAllBytes(input), namespaceAware);
+    }
+
+    /**
+     * Parses the XML content from the given input stream.
+     *
+     * <p>If a non-recoverable parser error is encountered, parsing stops, an error message is
+     * added to the {@code parseErrors} list, and the returned document contains the elements up
+     * to the one where the error was encountered.
+     *
+     * @param input the input stream containing the XML to be parsed
+     * @param namespaceAware whether the parser should be namespace aware
+     * @param parseErrors parsing errors, if any, are appended to this list
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string
+     */
+    @NonNull
+    public static Document parse(
+            @NonNull InputStream input, boolean namespaceAware, @NonNull List<String> parseErrors)
+            throws ParserConfigurationException, IOException {
+        return parse(readAllBytes(input), namespaceAware, parseErrors);
     }
 
     /**
@@ -120,71 +131,144 @@ public class PositionXmlParser {
     }
 
     /**
-     * Parses the XML content from the given byte array
+     * Parses the XML content from the given byte array.
      *
      * @param data the raw XML data (with unknown encoding)
      * @param namespaceAware whether the parser should be namespace aware
      * @return the corresponding document
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
-     * @throws IOException if something is seriously wrong. This should not
-     *             happen since the input source is known to be constructed from
-     *             a string.
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string.
      */
     @NonNull
     public static Document parse(@NonNull byte[] data, boolean namespaceAware)
-      throws ParserConfigurationException, SAXException, IOException {
+            throws ParserConfigurationException, SAXException, IOException {
         String xml = getXmlString(data);
         xml = XmlUtils.stripBom(xml);
-        return parse(xml, new InputSource(new StringReader(xml)), true, namespaceAware);
+        return parseInternal(xml, namespaceAware);
+    }
+
+    /**
+     * Parses the XML content from the given byte array.
+     *
+     * <p>If a non-recoverable parser error is encountered, parsing stops, an error message is
+     * added to the {@code parseErrors} list, and the returned document contains the elements up
+     * to the one where the error was encountered.
+     *
+     * @param data the raw XML data (with unknown encoding)
+     * @param namespaceAware whether the parser should be namespace aware
+     * @param parseErrors parsing errors, if any, are appended to this list
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string.
+     */
+    @NonNull
+    public static Document parse(
+            @NonNull byte[] data, boolean namespaceAware, @NonNull List<String> parseErrors)
+            throws ParserConfigurationException, IOException {
+        String xml = getXmlString(data);
+        xml = XmlUtils.stripBom(xml);
+        return parseInternal(xml, namespaceAware, parseErrors);
     }
 
     /**
      * Parses the given XML content.
      *
-     * @param xml the XML string to be parsed. This must be in the correct
-     *     encoding already.
+     * @param xml the XML string to be parsed. This must be in the correct encoding already
      * @param namespaceAware whether the parser should be namespace aware
      * @return the corresponding document
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
-     * @throws IOException if something is seriously wrong. This should not
-     *             happen since the input source is known to be constructed from
-     *             a string.
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string
      */
     @NonNull
     public static Document parse(@NonNull String xml, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
         xml = XmlUtils.stripBom(xml);
-        return parse(xml, new InputSource(new StringReader(xml)), true, namespaceAware);
+        return parseInternal(xml, namespaceAware);
     }
 
     @NonNull
-    private static Document parse(
-            @NonNull String xml,
-            @NonNull InputSource input,
-            boolean checkBom,
-            boolean namespaceAware)
+    private static Document parseInternal(@NonNull String xml, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
-        try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            XmlUtils.configureSaxFactory(factory, namespaceAware, false);
-            SAXParser parser = XmlUtils.createSaxParser(factory, true);
-            DomBuilder handler = new DomBuilder(xml);
-            XMLReader xmlReader = parser.getXMLReader();
-            xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
-            parser.parse(input, handler);
-            return handler.getDocument();
-        } catch (SAXException e) {
-            if (checkBom && e.getMessage().contains("Content is not allowed in prolog")) {
+        DomBuilder domBuilder;
+        boolean retry = false;
+        while (true) {
+            domBuilder = new DomBuilder(xml);
+            try {
+                parseInternal(xml, namespaceAware, domBuilder);
+                break;
+            } catch (SAXException e) {
+                if (retry || !e.getMessage().contains("Content is not allowed in prolog")) {
+                    throw e;
+                }
                 // Byte order mark in the string? Skip it. There are many markers
                 // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
-                // just skip those up to the XML prolog beginning character, <
-                xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
-                return parse(xml, new InputSource(new StringReader(xml)), false, namespaceAware);
+                // just skip those up to the XML prolog beginning character, '<'.
+                xml = xml.replaceFirst("^([\\W]+)<", "<");
+                retry = true;
             }
-            throw e;
+        };
+        return domBuilder.getDocument();
+    }
+
+    @NonNull
+    private static Document parseInternal(
+            @NonNull String xml, boolean namespaceAware, @NonNull List<String> parseErrors)
+            throws ParserConfigurationException, IOException {
+        DomBuilder domBuilder = null;
+        boolean retry = false;
+        while (true) {
+            domBuilder = new DomBuilder(xml);
+            try {
+                parseInternal(xml, namespaceAware, domBuilder);
+                break;
+            } catch (SAXException e) {
+                if (retry || !e.getMessage().contains("Content is not allowed in prolog")) {
+                    parseErrors.add(e.getLocalizedMessage());
+                    domBuilder.closeUnfinishedElements();
+                    break;
+                }
+                // Byte order mark in the string? Skip it. There are many markers
+                // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
+                // just skip those up to the XML prolog beginning character, '<'.
+                xml = xml.replaceFirst("^([\\W]+)<", "<");
+                retry = true;
+            }
         }
+        return domBuilder.getDocument();
+    }
+
+    private static void parseInternal(
+            @NonNull String xml, boolean namespaceAware, @NonNull DefaultHandler handler)
+            throws ParserConfigurationException, IOException, SAXException {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        XmlUtils.configureSaxFactory(factory, namespaceAware, false);
+        SAXParser parser = XmlUtils.createSaxParser(factory, true);
+        XMLReader xmlReader = parser.getXMLReader();
+        xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
+        parser.parse(createSource(xml), handler);
+    }
+
+    private static byte[] readAllBytes(@NonNull InputStream input) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        while (true) {
+            int r = input.read(buf);
+            if (r == -1) {
+                break;
+            }
+            out.write(buf, 0, r);
+        }
+        input.close();
+        return out.toByteArray();
+    }
+
+    private static InputSource createSource(@NonNull String xml) {
+        return new InputSource(new StringReader(xml));
     }
 
     /**
@@ -653,7 +737,7 @@ public class PositionXmlParser {
         @SuppressWarnings("StringBufferField")
         private final StringBuilder mPendingText = new StringBuilder();
 
-        private DomBuilder(String xml) throws ParserConfigurationException {
+        DomBuilder(String xml) throws ParserConfigurationException {
             mXml = xml;
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -668,6 +752,19 @@ public class PositionXmlParser {
         @NonNull
         Document getDocument() {
             return mDocument;
+        }
+
+        void closeUnfinishedElements() {
+            flushText();
+            while (!mStack.isEmpty()) {
+                Element element = mStack.remove(mStack.size() - 1);
+
+                Position pos = (Position) element.getUserData(POS_KEY);
+                assert pos != null;
+                pos.setEnd(getCurrentPosition());
+
+                addNodeToParent(element);
+            }
         }
 
         @Override
