@@ -61,7 +61,8 @@ class L8DexDesugarLibTaskTest {
         val dexFile = output.resolve("classes1000.dex")
         DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/stream/Stream;")
         DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/Optional;")
-        DexSubject.assertThatDex(dexFile).doesNotContainClasses("Lj$/time/LocalTime;")
+        // check unused API classes are not removed from desugar lib dex (L8 has this disabled)
+        DexSubject.assertThatDex(dexFile).containsClasses("Lj$/time/LocalTime;")
     }
 
     companion object {
