@@ -14,316 +14,249 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
-import static com.android.SdkConstants.DOT_XML;
-import static com.android.SdkConstants.FD_RES_RAW;
-import static com.android.SdkConstants.FD_RES_XML;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.APK;
-import static com.android.builder.core.BuilderConstants.ANDROID_WEAR;
-import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
+import com.android.SdkConstants.DOT_ANDROID_PACKAGE
+import com.android.SdkConstants.DOT_XML
+import com.android.SdkConstants.FD_RES_RAW
+import com.android.SdkConstants.FD_RES_XML
+import com.android.build.gradle.internal.scope.InternalArtifactType.APK
+import com.android.builder.core.BuilderConstants.ANDROID_WEAR
+import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
+import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.variant.ApkVariantData
+import com.android.builder.core.ApkInfoParser
+import com.android.ide.common.process.ProcessException
+import com.android.utils.FileUtils
+import com.google.common.base.Charsets
+import com.google.common.collect.Iterables
+import com.google.common.io.Files
+import java.io.File
+import java.io.IOException
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.res.Aapt2MavenUtils;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.builder.core.ApkInfoParser;
-import com.android.ide.common.process.ProcessException;
-import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
-import java.util.stream.Collectors;
-import kotlin.Pair;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskProvider;
+/** Task to generate micro app data res file.  */
+abstract class GenerateApkDataTask : NonIncrementalTask() {
 
-/** Task to generate micro app data res file. */
-public abstract class GenerateApkDataTask extends NonIncrementalTask {
+    // Tells us if the apk file collection received from task manager exists
+    @get:Input
+    abstract val hasDependency: Property<Boolean>
 
-    @Nullable private FileCollection apkDirectoryFileCollection;
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val apkFileCollection: ConfigurableFileCollection
 
-    private File resOutputDir;
+    @get:OutputDirectory
+    abstract val resOutputDir: DirectoryProperty
 
-    private File manifestFile;
+    @get:OutputFile
+    abstract val manifestFile: RegularFileProperty
 
-    private int minSdkVersion;
+    @get:Input
+    abstract val minSdkVersion: Property<Int>
 
-    private int targetSdkVersion;
+    @get:Input
+    abstract val targetSdkVersion: Property<Int>
 
-    private String aapt2Version;
+    @get:Input
+    abstract val aapt2Version: Property<String>
 
-    @Internal
-    public abstract ConfigurableFileCollection getAapt2Executable();
+    @get:Internal
+    abstract val aapt2Executable: ConfigurableFileCollection
 
-    @Override
-    protected void doTaskAction() throws IOException, ProcessException {
+    @get:Input
+    abstract val mainPkgName: Property<String>
+
+    override fun doTaskAction() {
+        // always empty output dir.
+        val outDir = resOutputDir.get().asFile
+        FileUtils.cleanOutputDir(outDir)
+
         // if the FileCollection contains no file, then there's nothing to do just abort.
-        File apkDirectory = null;
-        if (apkDirectoryFileCollection != null) {
-            Set<File> files = apkDirectoryFileCollection.getFiles();
+        var apkDirectory: File? = null
+        if (hasDependency.get()) {
+            val files = apkFileCollection.files
             if (files.isEmpty()) {
-                return;
+                return
             }
 
-            if (files.size() > 1) {
-                throw new IllegalStateException(
-                        "Wear App dependency resolve to more than one file: " + files);
+            check(files.size <= 1) {
+                "Wear App dependency resolve to more than one file: $files"
             }
 
-            apkDirectory = Iterables.getOnlyElement(files);
+            apkDirectory = Iterables.getOnlyElement(files)
 
-            if (!apkDirectory.isDirectory()) {
-                throw new IllegalStateException(
-                        "Wear App dependency does not resolve to a directory: " + files);
+            check(apkDirectory!!.isDirectory) {
+                "Wear App dependency does not resolve to a directory: $files"
             }
         }
-
-        // always empty output dir.
-        File outDir = getResOutputDir();
-        FileUtils.cleanOutputDir(outDir);
 
         if (apkDirectory != null) {
-            BuildElements apks = ExistingBuildElements.from(APK.INSTANCE, apkDirectory);
+            val apks = ExistingBuildElements.from(APK, apkDirectory)
 
-            if (apks.isEmpty()) {
-                throw new IllegalStateException("Wear App dependency resolve to zero APK");
+            check(!apks.isEmpty()) { "Wear App dependency resolve to zero APK" }
+
+            check(apks.size() <= 1) {
+                "Wear App dependency resolve to more than one APK: ${apks.map { it.outputFile }}"
             }
 
-            if (apks.size() > 1) {
-                throw new IllegalStateException(
-                        "Wear App dependency resolve to more than one APK: "
-                                + apks.stream()
-                                        .map(BuildOutput::getOutputFile)
-                                        .collect(Collectors.toList()));
-            }
-
-            File apk = Iterables.getOnlyElement(apks).getOutputFile();
+            val apk = Iterables.getOnlyElement(apks).outputFile
 
             // copy the file into the destination, by sanitizing the name first.
-            File rawDir = new File(outDir, FD_RES_RAW);
-            FileUtils.mkdirs(rawDir);
+            val rawDir = File(outDir, FD_RES_RAW)
+            FileUtils.mkdirs(rawDir)
 
-            File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
-            Files.copy(apk, to);
+            val to = File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE)
+            Files.copy(apk, to)
 
             generateApkData(
-                    apk, outDir, getMainPkgName().get(), getAapt2Executable().getSingleFile());
+                apk, outDir, mainPkgName.get(), aapt2Executable.singleFile
+            )
         } else {
-            generateUnbundledWearApkData(outDir, getMainPkgName().get());
+            generateUnbundledWearApkData(outDir, mainPkgName.get())
         }
 
-        generateApkDataEntryInManifest(minSdkVersion, targetSdkVersion, manifestFile);
+        generateApkDataEntryInManifest(
+            minSdkVersion.get(),
+            targetSdkVersion.get(),
+            manifestFile.get().asFile)
     }
 
-    private void generateApkData(
-            @NonNull File apkFile,
-            @NonNull File outResFolder,
-            @NonNull String mainPkgName,
-            @NonNull File aapt2Executable)
-            throws ProcessException, IOException {
+    @Throws(ProcessException::class, IOException::class)
+    private fun generateApkData(
+        apkFile: File,
+        outResFolder: File,
+        mainPkgName: String,
+        aapt2Executable: File
+    ) {
 
-        ApkInfoParser parser =
-                new ApkInfoParser(aapt2Executable, new GradleProcessExecutor(getProject()));
-        ApkInfoParser.ApkInfo apkInfo = parser.parseApk(apkFile);
+        val parser = ApkInfoParser(aapt2Executable, GradleProcessExecutor(project))
+        val apkInfo = parser.parseApk(apkFile)
 
-        if (!apkInfo.getPackageName().equals(mainPkgName)) {
-            throw new RuntimeException(
-                    "The main and the micro apps do not have the same package name.");
+        if (apkInfo.packageName != mainPkgName) {
+            throw RuntimeException(
+                "The main and the micro apps do not have the same package name."
+            )
         }
 
-        String content =
-                String.format(
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<wearableApp package=\"%1$s\">\n"
-                                + "    <versionCode>%2$s</versionCode>\n"
-                                + "    <versionName>%3$s</versionName>\n"
-                                + "    <rawPathResId>%4$s</rawPathResId>\n"
-                                + "</wearableApp>",
-                        apkInfo.getPackageName(),
-                        apkInfo.getVersionCode(),
-                        apkInfo.getVersionName(),
-                        ANDROID_WEAR_MICRO_APK);
+        val content = """|<?xml version="1.0" encoding="utf-8"?>
+                    |<wearableApp package="${apkInfo.packageName}">
+                    |    <versionCode>${apkInfo.versionCode}</versionCode>
+                    |    <versionName>${apkInfo.versionName}</versionName>
+                    |    <rawPathResId>$ANDROID_WEAR_MICRO_APK</rawPathResId>
+                    |</wearableApp>""".trimMargin("|")
 
         // xml folder
-        File resXmlFile = new File(outResFolder, FD_RES_XML);
-        FileUtils.mkdirs(resXmlFile);
+        val resXmlFile = File(outResFolder, FD_RES_XML)
+        FileUtils.mkdirs(resXmlFile)
 
-        Files.asCharSink(new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
-                .write(content);
+        Files.asCharSink(File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
+            .write(content)
     }
 
-    private static void generateUnbundledWearApkData(
-            @NonNull File outResFolder, @NonNull String mainPkgName) throws IOException {
-
-        String content =
-                String.format(
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<wearableApp package=\"%1$s\">\n"
-                                + "    <unbundled />\n"
-                                + "</wearableApp>",
-                        mainPkgName);
+    private fun generateUnbundledWearApkData(outResFolder: File, mainPkgName: String) {
+        val content = """|<?xml version="1.0" encoding="utf-8"?>
+                    |<wearableApp package="$mainPkgName">
+                    |    <unbundled />
+                    |</wearableApp>""".trimMargin("|")
 
         // xml folder
-        File resXmlFile = new File(outResFolder, FD_RES_XML);
-        FileUtils.mkdirs(resXmlFile);
+        val resXmlFile = File(outResFolder, FD_RES_XML)
+        FileUtils.mkdirs(resXmlFile)
 
-        Files.asCharSink(new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
-                .write(content);
+        Files.asCharSink(File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
+            .write(content)
     }
 
-    private static void generateApkDataEntryInManifest(
-            int minSdkVersion, int targetSdkVersion, @NonNull File manifestFile)
-            throws IOException {
+    private fun generateApkDataEntryInManifest(
+        minSdkVersion: Int, targetSdkVersion: Int, manifestFile: File
+    ) {
 
-        StringBuilder content = new StringBuilder();
-        content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-                .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-                .append("    package=\"${packageName}\">\n")
-                .append("    <uses-sdk android:minSdkVersion=\"")
-                .append(minSdkVersion)
-                .append("\"");
-        if (targetSdkVersion != -1) {
-            content.append(" android:targetSdkVersion=\"").append(targetSdkVersion).append("\"");
-        }
-        content.append("/>\n");
-        content.append("    <application>\n")
-                .append("        <meta-data android:name=\"" + ANDROID_WEAR + "\"\n")
-                .append("                   android:resource=\"@xml/" + ANDROID_WEAR_MICRO_APK)
-                .append("\" />\n")
-                .append("   </application>\n")
-                .append("</manifest>\n");
+        val targetVersionString =
+            if (targetSdkVersion == -1) ""
+            else " android:targetSdkVersion=\"$targetSdkVersion\""
 
-        Files.asCharSink(manifestFile, Charsets.UTF_8).write(content);
+        val content = """|<?xml version="1.0" encoding="utf-8"?>
+            |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+            |    package="${"$"}{packageName}">
+            |    <uses-sdk android:minSdkVersion="$minSdkVersion"$targetVersionString/>
+            |    <application>
+            |        <meta-data android:name="$ANDROID_WEAR"
+            |                   android:resource="@xml/$ANDROID_WEAR_MICRO_APK" />
+            |   </application>
+            |</manifest>
+            |""".trimMargin("|")
+
+        Files.asCharSink(manifestFile, Charsets.UTF_8).write(content)
     }
 
+    class CreationAction(
+        scope: VariantScope, private val apkFileCollection: FileCollection?
+    ) : VariantTaskCreationAction<GenerateApkDataTask>(scope) {
 
-    @OutputDirectory
-    public File getResOutputDir() {
-        return resOutputDir;
-    }
+        override val name: String = variantScope.getTaskName("handle", "MicroApk")
 
-    public void setResOutputDir(File resOutputDir) {
-        this.resOutputDir = resOutputDir;
-    }
+        override val type: Class<GenerateApkDataTask> = GenerateApkDataTask::class.java
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public FileCollection getApkFileCollection() {
-        return apkDirectoryFileCollection;
-    }
-
-    @Input
-    public abstract Property<String> getMainPkgName();
-
-    @Input
-    public int getMinSdkVersion() {
-        return minSdkVersion;
-    }
-
-    public void setMinSdkVersion(int minSdkVersion) {
-        this.minSdkVersion = minSdkVersion;
-    }
-
-    @Input
-    public int getTargetSdkVersion() {
-        return targetSdkVersion;
-    }
-
-    @Input
-    public String getAapt2Version() {
-        return aapt2Version;
-    }
-
-    public void setTargetSdkVersion(int targetSdkVersion) {
-        this.targetSdkVersion = targetSdkVersion;
-    }
-
-    @OutputFile
-    public File getManifestFile() {
-        return manifestFile;
-    }
-
-    public static class CreationAction extends VariantTaskCreationAction<GenerateApkDataTask> {
-
-        @Nullable private FileCollection apkFileCollection;
-
-        public CreationAction(
-                @NonNull VariantScope scope, @Nullable FileCollection apkFileCollection) {
-            super(scope);
-            this.apkFileCollection = apkFileCollection;
+        override fun handleProvider(taskProvider: TaskProvider<out GenerateApkDataTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.taskContainer.microApkTask = taskProvider
+            variantScope.taskContainer.generateApkDataTask = taskProvider
         }
 
-        @Override
-        @NonNull
-        public String getName() {
-            return getVariantScope().getTaskName("handle", "MicroApk");
-        }
+        override fun configure(task: GenerateApkDataTask) {
+            super.configure(task)
 
-        @Override
-        @NonNull
-        public Class<GenerateApkDataTask> getType() {
-            return GenerateApkDataTask.class;
-        }
+            val scope = variantScope
 
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends GenerateApkDataTask> taskProvider) {
-            super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setMicroApkTask(taskProvider);
-            getVariantScope().getTaskContainer().setGenerateApkDataTask(taskProvider);
-        }
+            val variantData = scope.variantData as ApkVariantData
+            val variantConfiguration = variantData.variantConfiguration
 
-        @Override
-        public void configure(@NonNull GenerateApkDataTask task) {
-            super.configure(task);
+            task.resOutputDir.set(scope.microApkResDirectory)
+            task.resOutputDir.disallowChanges()
 
-            VariantScope scope = getVariantScope();
+            if (apkFileCollection != null) {
+                task.apkFileCollection.from(apkFileCollection)
+            }
+            task.apkFileCollection.disallowChanges()
 
-            final ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
-            final GradleVariantConfiguration variantConfiguration =
-                    variantData.getVariantConfiguration();
+            task.hasDependency.setDisallowChanges(apkFileCollection != null)
 
-            task.setResOutputDir(scope.getMicroApkResDirectory());
+            task.manifestFile.set(scope.microApkManifestFile)
+            task.manifestFile.disallowChanges()
 
-            task.apkDirectoryFileCollection = apkFileCollection;
+            task.mainPkgName
+                .set(scope.globalScope.project.provider(variantConfiguration::getApplicationId))
+            task.mainPkgName.disallowChanges()
 
-            task.manifestFile = scope.getMicroApkManifestFile();
-            task.getMainPkgName()
-                    .set(
-                            scope.getGlobalScope()
-                                    .getProject()
-                                    .provider(variantConfiguration::getApplicationId));
-            task.getMainPkgName().disallowChanges();
-            task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
-            task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
+            task.minSdkVersion.setDisallowChanges(variantConfiguration.minSdkVersion.apiLevel)
 
-            Pair<FileCollection, String> aapt2AndVersion =
-                    Aapt2MavenUtils.getAapt2FromMavenAndVersion(scope.getGlobalScope());
-            task.getAapt2Executable().from(aapt2AndVersion.getFirst());
-            task.aapt2Version = aapt2AndVersion.getSecond();
+            task.targetSdkVersion.setDisallowChanges(variantConfiguration.targetSdkVersion.apiLevel)
+
+            val aapt2AndVersion = getAapt2FromMavenAndVersion(scope.globalScope)
+            task.aapt2Executable.from(aapt2AndVersion.first)
+            task.aapt2Executable.disallowChanges()
+
+            task.aapt2Version.setDisallowChanges(aapt2AndVersion.second)
         }
     }
 }
