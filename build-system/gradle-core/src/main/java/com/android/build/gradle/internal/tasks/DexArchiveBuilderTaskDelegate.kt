@@ -189,19 +189,6 @@ class DexArchiveBuilderTaskDelegate(
         }
 
         loggerWrapper.verbose("Dex builder is incremental : %b ", isIncremental)
-        if (!isIncremental) {
-            FileUtils.cleanOutputDir(projectOutputDex)
-            FileUtils.cleanOutputDir(subProjectOutputDex)
-            FileUtils.cleanOutputDir(externalLibsOutputDex)
-            FileUtils.cleanOutputDir(mixedScopeOutputDex)
-            projectOutputKeepRules?.let { FileUtils.cleanOutputDir(it) }
-            subProjectOutputKeepRules?.let { FileUtils.cleanOutputDir(it) }
-            externalLibsOutputKeepRules?.let { FileUtils.cleanOutputDir(it) }
-            mixedScopeOutputKeepRules?.let { FileUtils.cleanOutputDir(it) }
-        } else {
-            deletePreviousOutputsFromJars()
-            deletePreviousOutputsFromDirs()
-        }
 
         val additionalPaths: Set<File> =
             desugarIncrementalHelper?.additionalPaths?.map { it.toFile() }?.toSet()
@@ -227,11 +214,14 @@ class DexArchiveBuilderTaskDelegate(
 
                     val processInputType = {
                             classes: Set<File>,
+                            changedClasses: Set<FileChange>,
                             outputDir: File,
                             outputKeepRules: File?,
-                            useAndroidBuildCache: Boolean ->
+                            useAndroidBuildCache: Boolean,
+                            cacheableItems: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? ->
                         processClassFromInput(
                             classes,
+                            changedClasses,
                             outputDir,
                             outputKeepRules,
                             additionalPaths,
@@ -239,26 +229,45 @@ class DexArchiveBuilderTaskDelegate(
                             bootclasspath,
                             classpathServiceKey!!,
                             classpath,
-                            enableCaching = useAndroidBuildCache
+                            enableCaching = useAndroidBuildCache,
+                            cacheableItems = cacheableItems
                         )
                     }
                     processInputType(
                         projectClasses,
+                        projectChangedClasses,
                         projectOutputDex,
                         projectOutputKeepRules,
-                        false
+                        false, // useAndroidBuildCache
+                        null // cacheableItems
                     )
                     processInputType(
-                        subProjectClasses, subProjectOutputDex, subProjectOutputKeepRules, false
+                        subProjectClasses,
+                        subProjectChangedClasses,
+                        subProjectOutputDex,
+                        subProjectOutputKeepRules,
+                        false, // useAndroidBuildCache
+                        null // cacheableItems
                     )
                     processInputType(
-                        mixedScopeClasses, mixedScopeOutputDex, mixedScopeOutputKeepRules, false
+                        mixedScopeClasses,
+                        mixedScopeChangedClasses,
+                        mixedScopeOutputDex,
+                        mixedScopeOutputKeepRules,
+                        false, // useAndroidBuildCache
+                        null // cacheableItems
                     )
                     // TODO (b/141460382) Enable external libs caching when core library desugaring is enabled in release build
                     val enableCachingForExternalLibs = externalLibsOutputKeepRules == null
-                    val cacheableItems = processInputType(
-                        externalLibClasses, externalLibsOutputDex,
-                        externalLibsOutputKeepRules, enableCachingForExternalLibs
+                    val cacheableItems: MutableList<DexArchiveBuilderCacheHandler.CacheableItem> =
+                        mutableListOf()
+                    processInputType(
+                        externalLibClasses,
+                        externalLibChangedClasses,
+                        externalLibsOutputDex,
+                        externalLibsOutputKeepRules,
+                        enableCachingForExternalLibs,
+                        cacheableItems
                     )
 
                     // all work items have been submitted, now wait for completion.
@@ -351,6 +360,7 @@ class DexArchiveBuilderTaskDelegate(
 
     private fun processClassFromInput(
         inputFiles: Set<File>,
+        inputFileChanges: Set<FileChange>,
         outputDir: File,
         outputKeepRules: File?,
         additionalPaths: Set<File>,
@@ -358,10 +368,17 @@ class DexArchiveBuilderTaskDelegate(
         bootClasspath: List<Path>,
         classpathKey: ClasspathServiceKey,
         classpath: List<Path>,
-        enableCaching: Boolean
-    ): List<DexArchiveBuilderCacheHandler.CacheableItem> {
+        enableCaching: Boolean,
+        cacheableItems: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?
+    ) {
+        if (!isIncremental) {
+            FileUtils.cleanOutputDir(outputDir)
+            outputKeepRules?.let { FileUtils.cleanOutputDir(it) }
+        } else {
+            removeChangedJarOutputs(inputFiles, inputFileChanges, outputDir)
+            deletePreviousOutputsFromDirs(inputFileChanges, outputDir)
+        }
 
-        val itemsToCache = mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
         val (directoryInputs, jarInputs) = inputFiles.partition { it.isDirectory }
 
         directoryInputs.forEach { loggerWrapper.verbose("Processing input %s", it.toString()) }
@@ -403,7 +420,7 @@ class DexArchiveBuilderTaskDelegate(
                 outputKeepRules
             )
             if (cacheInfo != DesugaringDontCache && dexArchives.isNotEmpty()) {
-                itemsToCache.add(
+                cacheableItems?.add(
                     DexArchiveBuilderCacheHandler.CacheableItem(
                         input,
                         dexArchives,
@@ -412,7 +429,6 @@ class DexArchiveBuilderTaskDelegate(
                 )
             }
         }
-        return itemsToCache
     }
 
     private fun getD8DesugaringCacheInfo(
@@ -453,53 +469,20 @@ class DexArchiveBuilderTaskDelegate(
         return D8DesugaringCacheInfo(allDependencies)
     }
 
-    private fun deletePreviousOutputsFromJars() {
-        removeChangedJarOutputs(
-            projectClasses,
-            projectChangedClasses,
-            projectOutputDex
-        )
-        removeChangedJarOutputs(
-            subProjectClasses,
-            subProjectChangedClasses,
-            subProjectOutputDex
-        )
-        removeChangedJarOutputs(
-            externalLibClasses,
-            externalLibChangedClasses,
-            externalLibsOutputDex
-        )
-        removeChangedJarOutputs(
-            mixedScopeClasses,
-            mixedScopeChangedClasses,
-            mixedScopeOutputDex
-        )
-    }
-
-    private fun deletePreviousOutputsFromDirs() {
-        val changedToOutput = mapOf(
-            projectChangedClasses to projectOutputDex,
-            subProjectChangedClasses to subProjectOutputDex,
-            externalLibChangedClasses to externalLibsOutputDex,
-            mixedScopeChangedClasses to mixedScopeOutputDex
-        )
-
+    private fun deletePreviousOutputsFromDirs(inputFileChanges: Set<FileChange>, output: File) {
         // Handle dir/file deletions only. We rewrite modified files, so no need to delete those.
-        for ((changed, output) in changedToOutput) {
-            changed.asSequence().filter {
-                it.changeType == ChangeType.REMOVED && it.file.extension != SdkConstants.EXT_JAR
-            }.forEach {
-                val relativePath = it.normalizedPath
+        inputFileChanges.asSequence().filter {
+            it.changeType == ChangeType.REMOVED && it.file.extension != SdkConstants.EXT_JAR
+        }.forEach {
+            val relativePath = it.normalizedPath
 
-                val fileToDelete = if (it.file.extension == SdkConstants.EXT_CLASS) {
-                    ClassFileEntry.withDexExtension(relativePath.toString())
-                } else {
-                    relativePath.toString()
-                }
-
-                FileUtils.deleteRecursivelyIfExists(output.resolve(fileToDelete))
+            val fileToDelete = if (it.file.extension == SdkConstants.EXT_CLASS) {
+                ClassFileEntry.withDexExtension(relativePath.toString())
+            } else {
+                relativePath.toString()
             }
 
+            FileUtils.deleteRecursivelyIfExists(output.resolve(fileToDelete))
         }
     }
 
