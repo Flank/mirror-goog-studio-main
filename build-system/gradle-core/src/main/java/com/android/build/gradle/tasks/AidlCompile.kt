@@ -14,306 +14,250 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.SdkComponents;
-import com.android.build.gradle.internal.core.VariantConfiguration;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.builder.compiling.DependencyFileProcessor;
-import com.android.builder.internal.compiler.AidlProcessor;
-import com.android.builder.internal.compiler.DirectoryWalker;
-import com.android.builder.internal.incremental.DependencyData;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.android.repository.Revision;
-import com.android.utils.FileUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import javax.inject.Inject;
-import org.gradle.api.Project;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.SkipWhenEmpty;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.util.PatternSet;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.builder.compiling.DependencyFileProcessor
+import com.android.builder.internal.compiler.AidlProcessor
+import com.android.builder.internal.compiler.DirectoryWalker
+import com.android.builder.internal.incremental.DependencyData
+import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.repository.Revision
+import com.android.utils.FileUtils
+import com.google.common.base.Preconditions
+import com.google.common.collect.Lists
+import java.io.File
+import java.io.IOException
+import java.io.Serializable
+import javax.inject.Inject
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileTree
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.util.PatternSet
 
 /**
  * Task to compile aidl files. Supports incremental update.
  *
- * <p>TODO(b/124424292)
  *
- * <p>We can not use gradle worker in this task as we use {@link GradleProcessExecutor} for
+ * TODO(b/124424292)
+ *
+ *
+ * We can not use gradle worker in this task as we use [GradleProcessExecutor] for
  * compiling aidl files, which should not be serialized.
  */
 @CacheableTask
-public abstract class AidlCompile extends NonIncrementalTask {
+abstract class AidlCompile : NonIncrementalTask() {
+    @get:Input
+    @get:Optional
+    var packageWhitelist: Collection<String>? = null
 
-    private static final PatternSet PATTERN_SET = new PatternSet().include("**/*.aidl");
+    @get:Internal
+    abstract val sourceDirs: ListProperty<File>
 
-    @Nullable private Collection<String> packageWhitelist;
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var importDirs: FileCollection
+        private set
 
-    @Internal
-    public abstract ListProperty<File> getSourceDirs();
+    @get:Internal
+    abstract val aidlExecutableProvider: Property<File>
 
-    private FileCollection importDirs;
+    @get:Internal
+    abstract val buildToolsRevisionProvider: Property<Revision>
 
-    @Internal
-    public abstract Property<File> getAidlExecutableProvider();
-
-    @Internal
-    public abstract Property<Revision> getBuildToolsRevisionProvider();
-
-    private String javaEncoding;
+    private lateinit var javaEncoding: String
 
     // Given the same version, the path or contents of the AIDL tool may change across platforms,
     // but it would still produce the same output (given the same inputs)---see bug 138920846.
     // Therefore, the path or contents of the tool should not be an input. Instead, we set the
     // tool's version as input.
-    @Input
-    public String getAidlVersion() {
-        Revision buildToolsRevision = getBuildToolsRevisionProvider().getOrNull();
-        Preconditions.checkState(buildToolsRevision != null, "Build Tools not present");
+    @get:Input
+    val aidlVersion: String
+        get() {
+            val buildToolsRevision = buildToolsRevisionProvider.orNull
+            Preconditions.checkState(buildToolsRevision != null, "Build Tools not present")
 
-        File aidlExecutable = getAidlExecutableProvider().getOrNull();
-        Preconditions.checkState(
+            val aidlExecutable = aidlExecutableProvider.orNull
+            Preconditions.checkState(
                 aidlExecutable != null,
-                "AIDL executable not present in Build Tools " + buildToolsRevision.toString());
-        Preconditions.checkState(
-                aidlExecutable.exists(),
-                "AIDL executable does not exist: " + aidlExecutable.getPath());
+                "AIDL executable not present in Build Tools $buildToolsRevision"
+            )
+            Preconditions.checkState(
+                aidlExecutable!!.exists(),
+                "AIDL executable does not exist: ${aidlExecutable.path}"
+            )
 
-        return buildToolsRevision.toString();
-    }
+            return buildToolsRevision.toString()
+        }
 
-    @InputFile
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract Property<File> getAidlFrameworkProvider();
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val aidlFrameworkProvider: Property<File>
 
-    @InputFiles
-    @SkipWhenEmpty
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract Property<FileTree> getSourceFiles();
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sourceFiles: Property<FileTree>
 
-    private static class DepFileProcessor implements DependencyFileProcessor {
-        @Override
-        public DependencyData processFile(@NonNull File dependencyFile) throws IOException {
-            return DependencyData.parseDependencyFile(dependencyFile);
+    @get:OutputDirectory
+    abstract val sourceOutputDir: DirectoryProperty
+
+    @get:OutputDirectory
+    @get:Optional
+    abstract val packagedDir: DirectoryProperty
+
+    private class DepFileProcessor : DependencyFileProcessor {
+        override fun processFile(dependencyFile: File): DependencyData? {
+            return DependencyData.parseDependencyFile(dependencyFile)
         }
     }
 
-    @Override
-    protected void doTaskAction() throws IOException {
+    override fun doTaskAction() {
         // this is full run, clean the previous output
-        File destinationDir = getSourceOutputDir().get().getAsFile();
-        Directory parcelableDir = getPackagedDir().getOrNull();
-        FileUtils.cleanOutputDir(destinationDir);
+        val destinationDir = sourceOutputDir.get().asFile
+        val parcelableDir = packagedDir.orNull
+        FileUtils.cleanOutputDir(destinationDir)
         if (parcelableDir != null) {
-            FileUtils.cleanOutputDir(parcelableDir.getAsFile());
+            FileUtils.cleanOutputDir(parcelableDir.asFile)
         }
 
-        try (WorkerExecutorFacade workers = getWorkerFacadeWithThreads(false)) {
-            Collection<File> sourceFolders = getSourceDirs().get();
-            Set<File> importFolders = getImportDirs().getFiles();
+        getWorkerFacadeWithThreads(false).use { workers ->
+            val sourceFolders = sourceDirs.get()
+            val importFolders = importDirs.files
 
-            List<File> fullImportList =
-                    Lists.newArrayListWithCapacity(sourceFolders.size() + importFolders.size());
-            fullImportList.addAll(sourceFolders);
-            fullImportList.addAll(importFolders);
+            val fullImportList = sourceFolders + importFolders
 
-            AidlProcessor processor =
-                    new AidlProcessor(
-                            getAidlExecutableProvider().get().getAbsolutePath(),
-                            getAidlFrameworkProvider().get().getAbsolutePath(),
-                            fullImportList,
-                            destinationDir,
-                            parcelableDir != null ? parcelableDir.getAsFile() : null,
-                            packageWhitelist,
-                            new DepFileProcessor(),
-                            new GradleProcessExecutor(getProject()),
-                            new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
-                            javaEncoding);
+            val processor = AidlProcessor(
+                aidlExecutableProvider.get().absolutePath,
+                aidlFrameworkProvider.get().absolutePath,
+                fullImportList,
+                destinationDir,
+                parcelableDir?.asFile,
+                packageWhitelist,
+                DepFileProcessor(),
+                GradleProcessExecutor(project),
+                LoggedProcessOutputHandler(LoggerWrapper(logger)),
+                javaEncoding
+            )
 
-            for (File dir : sourceFolders) {
-                workers.submit(AidlCompileRunnable.class, new AidlCompileParams(dir, processor));
+            for (dir in sourceFolders) {
+                workers.submit(AidlCompileRunnable::class.java, AidlCompileParams(dir, processor))
             }
         }
     }
 
-    @OutputDirectory
-    @NonNull
-    public abstract DirectoryProperty getSourceOutputDir();
+    class CreationAction(scope: VariantScope) : VariantTaskCreationAction<AidlCompile>(scope) {
 
-    @OutputDirectory
-    @Optional
-    @NonNull
-    public abstract DirectoryProperty getPackagedDir();
+        override val name: String = variantScope.getTaskName("compile", "Aidl")
 
-    @Input
-    @Optional
-    @Nullable
-    public Collection<String> getPackageWhitelist() {
-        return packageWhitelist;
-    }
+        override val type: Class<AidlCompile> = AidlCompile::class.java
 
-    public void setPackageWhitelist(@Nullable Collection<String> packageWhitelist) {
-        this.packageWhitelist = packageWhitelist;
-    }
+        override fun handleProvider(taskProvider: TaskProvider<out AidlCompile>) {
+            super.handleProvider(taskProvider)
+            variantScope.taskContainer.aidlCompileTask = taskProvider
+            variantScope
+                .artifacts
+                .producesDir(
+                    InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
+                    taskProvider,
+                    AidlCompile::sourceOutputDir,
+                    "out"
+                )
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getImportDirs() {
-        return importDirs;
-    }
-
-    public static class CreationAction extends VariantTaskCreationAction<AidlCompile> {
-
-        public CreationAction(@NonNull VariantScope scope) {
-            super(scope);
-        }
-
-        @Override
-        @NonNull
-        public String getName() {
-            return getVariantScope().getTaskName("compile", "Aidl");
-        }
-
-        @Override
-        @NonNull
-        public Class<AidlCompile> getType() {
-            return AidlCompile.class;
-        }
-
-        @Override
-        public void handleProvider(@NonNull TaskProvider<? extends AidlCompile> taskProvider) {
-            super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setAidlCompileTask(taskProvider);
-            getVariantScope()
-                    .getArtifacts()
+            if (variantScope.variantConfiguration.type.isAar) {
+                variantScope
+                    .artifacts
                     .producesDir(
-                            InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE,
-                            taskProvider,
-                            AidlCompile::getSourceOutputDir,
-                            "out");
-
-            if (getVariantScope().getVariantConfiguration().getType().isAar()) {
-                getVariantScope()
-                        .getArtifacts()
-                        .producesDir(
-                                InternalArtifactType.AIDL_PARCELABLE.INSTANCE,
-                                taskProvider,
-                                AidlCompile::getPackagedDir,
-                                "out");
+                        InternalArtifactType.AIDL_PARCELABLE,
+                        taskProvider,
+                        AidlCompile::packagedDir,
+                        "out"
+                    )
             }
         }
 
-        @Override
-        public void configure(@NonNull AidlCompile compileTask) {
-            super.configure(compileTask);
-            final VariantScope scope = getVariantScope();
-            final GlobalScope globalScope = scope.getGlobalScope();
-            final Project project = globalScope.getProject();
+        override fun configure(task: AidlCompile) {
+            super.configure(task)
+            val scope = variantScope
+            val globalScope = scope.globalScope
+            val project = globalScope.project
 
-            final VariantConfiguration<?, ?, ?> variantConfiguration =
-                    scope.getVariantConfiguration();
+            val variantConfiguration = scope.variantConfiguration
 
-            final SdkComponents sdkComponents = globalScope.getSdkComponents();
-            compileTask.getAidlExecutableProvider().set(sdkComponents.getAidlExecutableProvider());
-            compileTask
-                    .getBuildToolsRevisionProvider()
-                    .set(sdkComponents.getBuildToolsRevisionProvider());
-            compileTask.getAidlFrameworkProvider().set(sdkComponents.getAidlFrameworkProvider());
+            val sdkComponents = globalScope.sdkComponents
+            task.aidlExecutableProvider.set(sdkComponents.aidlExecutableProvider)
+            task
+                .buildToolsRevisionProvider
+                .set(sdkComponents.buildToolsRevisionProvider)
+            task.aidlFrameworkProvider.set(sdkComponents.aidlFrameworkProvider)
 
-            compileTask
-                    .getSourceDirs()
-                    .set(project.provider(variantConfiguration::getAidlSourceList));
-            compileTask.getSourceDirs().disallowChanges();
+            task
+                .sourceDirs
+                .set(project.provider(variantConfiguration::getAidlSourceList))
+            task.sourceDirs.disallowChanges()
 
             // This is because aidl may be in the same folder as Java and we want to restrict to
             // .aidl files and not java files.
-            compileTask
-                    .getSourceFiles()
-                    .set(
-                            project.provider(
-                                    () ->
-                                            project.getLayout()
-                                                    .files(compileTask.getSourceDirs())
-                                                    .getAsFileTree()
-                                                    .matching(PATTERN_SET)));
-            compileTask.getSourceFiles().disallowChanges();
+            task
+                .sourceFiles
+                .set(
+                    project.provider {
+                        project.layout.files(task.sourceDirs).asFileTree.matching(PATTERN_SET)
+                    })
+            task.sourceFiles.disallowChanges()
 
-            compileTask.importDirs = scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL);
+            task.importDirs = scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
-            if (variantConfiguration.getType().isAar()) {
-                compileTask.setPackageWhitelist(
-                        globalScope.getExtension().getAidlPackageWhiteList());
+            if (variantConfiguration.type.isAar) {
+                task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
             }
 
-            compileTask.javaEncoding =
-                    scope.getGlobalScope().getExtension().getCompileOptions().getEncoding();
+            task.javaEncoding = scope.globalScope.extension.compileOptions.encoding
         }
     }
 
-    static class AidlCompileRunnable implements Runnable {
-        private final AidlCompileParams params;
+    internal class AidlCompileRunnable @Inject
+    constructor(private val params: AidlCompileParams) : Runnable {
 
-        @Inject
-        AidlCompileRunnable(AidlCompileParams params) {
-            this.params = params;
-        }
-
-        @Override
-        public void run() {
+        override fun run() {
             try {
                 DirectoryWalker.builder()
-                        .root(params.dir.toPath())
-                        .extensions("aidl")
-                        .action(params.processor)
-                        .build()
-                        .walk();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                    .root(params.dir.toPath())
+                    .extensions("aidl")
+                    .action(params.processor)
+                    .build()
+                    .walk()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
+
         }
     }
 
-    static class AidlCompileParams implements Serializable {
-        private final File dir;
-        private final AidlProcessor processor;
+    internal class AidlCompileParams(val dir: File, val processor: AidlProcessor): Serializable
 
-        AidlCompileParams(File dir, AidlProcessor processor) {
-            this.dir = dir;
-            this.processor = processor;
-        }
+    companion object {
+        private val PATTERN_SET = PatternSet().include("**/*.aidl")
     }
 }
