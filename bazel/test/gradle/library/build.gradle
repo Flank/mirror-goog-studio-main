@@ -8,7 +8,11 @@ buildscript {
     }
 }
 
-repositories {
+repositories.all {
+    metadataSources {
+        mavenPom()
+        artifact()
+    }
 }
 buildDir = new File(System.getenv("BUILD_DIR"))
 

@@ -17,6 +17,8 @@
 package com.android.build.api.artifact.impl
 
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.OutputDirectory
 
 /**
  * Unit tests for [SingleArtifactContainer]
@@ -27,5 +29,8 @@ class SingleDirectoryArtifactTest:
         { directory, name -> directory.dir(name) },
         { tasks, name -> tasks.register(name, DirectoryProducerTask::class.java)}) {
 
-    internal abstract class DirectoryProducerTask: ProducerTask<Directory>()
+    internal abstract class DirectoryProducerTask: ProducerTask<Directory>() {
+        @OutputDirectory
+        abstract override fun getOutputFile(): DirectoryProperty
+    }
 }

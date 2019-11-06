@@ -10,7 +10,13 @@ android {
 }
 
 repositories {
-    maven { url '../localRepo' }
+    maven {
+        url '../localRepo'
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
 }
 
 dependencies {

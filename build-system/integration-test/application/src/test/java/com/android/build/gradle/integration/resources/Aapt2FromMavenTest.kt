@@ -54,7 +54,7 @@ class Aapt2FromMavenTest {
         // https://issuetracker.google.com/77321151
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
 
-        val project = ProjectBuilder().withProjectDir(temporaryFolder.newFolder()).build()
+        val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
         val artifact = getAapt2FromMavenForTest(project)
 
         // There should be an aapt artifact in the resolved file collection.

@@ -577,14 +577,7 @@ class IncrementalJavaCompileWithAPsTest(
 
         // In incremental mode, the irrelevant original source files should not be recompiled
         if (incrementalMode) {
-            if (annotationProcessingByJavaCompile) {
-                // EXPECTATION-NOT-MET: This is a limitation of Gradle. mainActivityClass references
-                // the generated source files and Gradle considers mainActivityClass as relevant to
-                // the change even though the re-generated source files' contents haven't changed.
-                assertFileHasChanged(mainActivityClass)
-            } else {
-                assertFileHasNotChanged(mainActivityClass)
-            }
+            assertFileHasNotChanged(mainActivityClass)
             assertFileHasNotChanged(annotation1Class2)
             assertFileHasNotChanged(annotation2Class1)
             assertFileHasNotChanged(annotation2Class2)

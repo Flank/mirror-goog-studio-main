@@ -256,7 +256,7 @@ class DefaultVariantTest {
                 }
                 """
             )
-        }).hasMessageThat().contains("The value for this property is final")
+        }).hasMessageThat().contains("is final and cannot be changed any further")
     }
 
 
