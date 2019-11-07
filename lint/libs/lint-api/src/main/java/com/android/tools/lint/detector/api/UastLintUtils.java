@@ -330,12 +330,7 @@ public class UastLintUtils {
 
     @Nullable
     public static UExpression getAnnotationValue(@NonNull UAnnotation annotation) {
-        UExpression value = annotation.findDeclaredAttributeValue(ATTR_VALUE);
-        if (value == null) {
-            value = annotation.findDeclaredAttributeValue(null);
-        }
-
-        return value;
+        return annotation.findDeclaredAttributeValue(ATTR_VALUE);
     }
 
     public static long getLongAttribute(
@@ -382,9 +377,6 @@ public class UastLintUtils {
             @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
             // Use constant evaluator since we want to resolve field references as well
             if (attributeValue != null) {
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
@@ -411,9 +403,6 @@ public class UastLintUtils {
             @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
             // Use constant evaluator since we want to resolve field references as well
             if (attributeValue != null) {
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
@@ -440,9 +429,6 @@ public class UastLintUtils {
             @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
             // Use constant evaluator since we want to resolve field references as well
             if (attributeValue != null) {
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
@@ -469,9 +455,6 @@ public class UastLintUtils {
             @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
             // Use constant evaluator since we want to resolve field references as well
             if (attributeValue != null) {
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
@@ -489,9 +472,6 @@ public class UastLintUtils {
             @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
             if (attributeValue == null) {
                 return null;
             }
