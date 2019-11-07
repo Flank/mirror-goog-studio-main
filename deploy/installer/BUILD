@@ -11,6 +11,7 @@ genrule(
         "//tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server",
         "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
         "//tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw",
+        "//tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server",
     ],
     outs = [
         "Version.java",
@@ -21,6 +22,7 @@ genrule(
           "$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) " +
           "$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) " +
           "$(location //tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw) " +
+          "$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) " +
           "\";" +
           # Java
           "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $$DEP && " +
@@ -40,6 +42,10 @@ genrule(
         ":android-installer_raw/x86_64/android-installer_raw",
         ":android-installer_raw/armeabi-v7a/android-installer_raw",
         ":android-installer_raw/arm64-v8a/android-installer_raw",
+        ":android-install-server/x86/android-install-server",
+        ":android-install-server/x86_64/android-install-server",
+        ":android-install-server/armeabi-v7a/android-install-server",
+        ":android-install-server/arm64-v8a/android-install-server",
         "//tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so",
         "//tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so",
         "//tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so",
@@ -62,6 +68,7 @@ genrule(
            -o $(location android-installer/x86/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
            -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/x86/android-agent_server) \
+           -p install_server=$(location //tools/base/deploy/installer:android-install-server/x86/android-install-server) \
            -p version=$(location :version.raw);
 
        $(location //tools/base/bazel:matryoshka) \
@@ -70,6 +77,7 @@ genrule(
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
            -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/x86_64/android-agent_server) \
+           -p install_server=$(location //tools/base/deploy/installer:android-install-server/x86_64/android-install-server) \
            -p version=$(location :version.raw);
 
        $(location //tools/base/bazel:matryoshka) \
@@ -77,6 +85,7 @@ genrule(
            -o $(location android-installer/armeabi-v7a/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
            -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/armeabi-v7a/android-agent_server) \
+           -p install_server=$(location //tools/base/deploy/installer:android-install-server/armeabi-v7a/android-install-server) \
            -p version=$(location :version.raw);
 
        $(location //tools/base/bazel:matryoshka) \
@@ -85,6 +94,7 @@ genrule(
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
            -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) \
+           -p install_server=$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) \
            -p version=$(location :version.raw);
     """,
     tools = [
@@ -134,6 +144,7 @@ cc_library(
         "dump.cc",
         "dump.h",
         "executor_impl.cc",
+        "install_client.cc",
         "patch_applier.cc",
         "redirect_executor.cc",
         "swap.cc",
@@ -149,6 +160,7 @@ cc_library(
         "dump.h",
         "executor.h",
         "executor_impl.h",
+        "install_client.h",
         "patch_applier.h",
         "redirect_executor.h",
         "runas_executor.h",
@@ -188,6 +200,34 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "install-server",
+    srcs = [
+        "executor.h",
+        "executor_impl.cc",
+        "executor_impl.h",
+        "install_client.cc",
+        "install_client.h",
+        "install_server.cc",
+        "install_server.h",
+        "main_server.cc",
+        "redirect_executor.cc",
+        "redirect_executor.h",
+        "runas_executor.h",
+        "workspace.cc",
+        "workspace.h",
+    ],
+    copts = ANDROID_COPTS,
+    linkopts = ANDROID_LINKOPTS,
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/deploy/common:common_lib",
+        "//tools/base/deploy/common:log",
+        "//tools/base/deploy/proto:cc_proto",
+    ],
+)
+
 android_cc_binary(
     name = "android-installer_raw",
     abis = [
@@ -205,11 +245,33 @@ android_cc_binary(
     visibility = ["//tools/base/deploy:__subpackages__"],
 )
 
+android_cc_binary(
+    name = "android-install-server",
+    abis = [
+        "x86",
+        "x86_64",
+        "armeabi-v7a",
+        "arm64-v8a",
+    ],
+    binary = select({
+        "//tools/base/bazel:windows": ":install-server.stripped.exe",
+        "//conditions:default": ":install-server.stripped",
+    }),
+    filename = "android-install-server",
+    tags = [
+        "no_windows",
+    ],
+    visibility = ["//tools/base/deploy:__subpackages__"],
+)
+
 cc_test(
     name = "installer_tests",
     size = "small",
     srcs = [
         "executor_test.cc",
+        "install_server.cc",
+        "install_server.h",
+        "install_server_test.cc",
     ],
     args = [
         "$(location :executor_test_helper)",

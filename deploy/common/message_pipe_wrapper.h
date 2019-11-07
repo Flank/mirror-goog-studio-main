@@ -56,6 +56,7 @@ class MessagePipeWrapper {
 
   // Waits for data on the specified wrappers. Returns a vector containing the
   // positions of the wrappers with data to read.
+  // TODO: Refactor this and make it not a static method on MPW.
   static std::vector<size_t> Poll(
       const std::vector<MessagePipeWrapper*>& wrappers, int timeout_ms);
 
