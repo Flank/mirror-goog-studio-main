@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.jetbrains.annotations.NotNull;
 
 public class IdeModel {
     @Nullable
@@ -56,7 +55,7 @@ public class IdeModel {
 
     @NonNull
     public static <T> T copyNewPropertyNonNull(
-            @NonNull Supplier<? extends T> propertyInvoker, @NotNull T defaultValue) {
+            @NonNull Supplier<? extends T> propertyInvoker, @NonNull T defaultValue) {
         try {
             return propertyInvoker.get();
         } catch (UnsupportedOperationException ignored) {

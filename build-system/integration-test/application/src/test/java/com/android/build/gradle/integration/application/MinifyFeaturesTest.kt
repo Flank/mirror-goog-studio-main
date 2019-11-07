@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.packaging.ApkCreatorType

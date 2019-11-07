@@ -17,12 +17,23 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.*;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.ClassField;
+import com.android.builder.model.CodeShrinker;
+import com.android.builder.model.InstantRun;
+import com.android.builder.model.NativeLibrary;
+import com.android.builder.model.TestOptions;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 /** Creates a deep copy of {@link AndroidArtifact}. */
 public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
@@ -45,6 +56,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @Nullable private final String myInstrumentedTestTaskName;
     @Nullable private final String myBundleTaskName;
     @Nullable private final String myApkFromBundleTaskName;
+    @Nullable private final CodeShrinker myCodeShrinker;
 
     private final boolean mySigned;
     private final int myHashCode;
@@ -68,6 +80,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myBundleTaskName = null;
         myApkFromBundleTaskName = null;
         mySigned = false;
+        myCodeShrinker = null;
 
         myHashCode = 0;
     }
@@ -83,46 +96,36 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         mySourceGenTaskName = artifact.getSourceGenTaskName();
         myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
         myBuildConfigFields =
-                IdeModel.copy(
-                        artifact.getBuildConfigFields(),
-                        modelCache,
-                        classField -> new IdeClassField(classField));
-        myResValues =
-                IdeModel.copy(
-                        artifact.getResValues(),
-                        modelCache,
-                        classField -> new IdeClassField(classField));
+                IdeModel.copy(artifact.getBuildConfigFields(), modelCache, IdeClassField::new);
+        myResValues = IdeModel.copy(artifact.getResValues(), modelCache, IdeClassField::new);
         myInstantRun =
                 IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getInstantRun,
-                        instantRun -> new IdeInstantRun(instantRun),
-                        null);
+                        modelCache, artifact::getInstantRun, IdeInstantRun::new, null);
         mySigningConfigName = artifact.getSigningConfigName();
         myAbiFilters = IdeModel.copy(artifact.getAbiFilters());
         myNativeLibraries = copy(modelCache, artifact.getNativeLibraries());
         mySigned = artifact.isSigned();
         myAdditionalRuntimeApks =
-                IdeModel.copyNewProperty(
+                IdeModel.copyNewPropertyNonNull(
                         artifact::getAdditionalRuntimeApks, Collections.emptySet());
         myTestOptions =
                 IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getTestOptions,
-                        testOptions -> new IdeTestOptions(testOptions),
-                        null);
+                        modelCache, artifact::getTestOptions, IdeTestOptions::new, null);
         myInstrumentedTestTaskName =
                 IdeModel.copyNewProperty(
                         modelCache,
                         artifact::getInstrumentedTestTaskName,
-                        taskName -> taskName,
+                        Function.identity(),
                         null);
         myBundleTaskName =
                 IdeModel.copyNewProperty(
-                        modelCache, artifact::getBundleTaskName, taskName -> taskName, null);
+                        modelCache, artifact::getBundleTaskName, Function.identity(), null);
         myApkFromBundleTaskName =
                 IdeModel.copyNewProperty(
-                        modelCache, artifact::getApkFromBundleTaskName, taskName -> taskName, null);
+                        modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null);
+        myCodeShrinker =
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getCodeShrinker, Function.identity(), null);
         myHashCode = calculateHashCode();
     }
 
@@ -146,9 +149,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @Nullable
     private static Collection<NativeLibrary> copy(
             @NonNull ModelCache modelCache, @Nullable Collection<NativeLibrary> original) {
-        return original != null
-                ? IdeModel.copy(original, modelCache, library -> new IdeNativeLibrary(library))
-                : null;
+        return original != null ? IdeModel.copy(original, modelCache, IdeNativeLibrary::new) : null;
     }
 
     @Override
@@ -227,6 +228,12 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         return myApkFromBundleTaskName;
     }
 
+    @Nullable
+    @Override
+    public CodeShrinker getCodeShrinker() {
+        return myCodeShrinker;
+    }
+
     @Override
     @Nullable
     public String getSigningConfigName() {
@@ -278,6 +285,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 && Objects.equals(myTestOptions, artifact.myTestOptions)
                 && Objects.equals(myInstrumentedTestTaskName, artifact.myInstrumentedTestTaskName)
                 && Objects.equals(myBundleTaskName, artifact.myBundleTaskName)
+                && Objects.equals(myCodeShrinker, artifact.myCodeShrinker)
                 && Objects.equals(myApkFromBundleTaskName, artifact.myApkFromBundleTaskName);
     }
 
@@ -310,6 +318,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 myTestOptions,
                 myInstrumentedTestTaskName,
                 myBundleTaskName,
+                myCodeShrinker,
                 myApkFromBundleTaskName);
     }
 
@@ -348,7 +357,8 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + myInstrumentedTestTaskName
                 + ", myBundleTaskName="
                 + myBundleTaskName
-                + "}"
+                + ", myCodeShrinker="
+                + myCodeShrinker
                 + ", myApkFromBundleTaskName="
                 + myApkFromBundleTaskName
                 + "}";

@@ -33,6 +33,7 @@ import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.internal.packaging.ApkCreatorType;
+import com.android.builder.model.CodeShrinker;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;

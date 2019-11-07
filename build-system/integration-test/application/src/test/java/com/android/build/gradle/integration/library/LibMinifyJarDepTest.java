@@ -18,8 +18,8 @@ package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.builder.model.CodeShrinker;
 import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;

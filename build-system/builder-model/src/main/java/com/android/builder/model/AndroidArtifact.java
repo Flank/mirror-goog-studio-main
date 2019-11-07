@@ -181,4 +181,11 @@ public interface AndroidArtifact extends BaseArtifact {
      */
     @Nullable
     String getApkFromBundleTaskName();
+
+    /**
+     * Returns the code shrinker used by this artifact or null if no shrinker is used to build this
+     * artifact.
+     */
+    @Nullable
+    CodeShrinker getCodeShrinker();
 }

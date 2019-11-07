@@ -8,7 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.builder.model.CodeShrinker;
 import com.android.testutils.internal.CopyOfTester;
 import com.google.common.collect.ImmutableList;
 import java.io.File;

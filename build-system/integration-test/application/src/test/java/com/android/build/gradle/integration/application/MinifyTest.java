@@ -26,10 +26,12 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.CodeShrinker;
+import com.android.builder.model.SyncIssue;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -65,6 +67,26 @@ public class MinifyTest {
             GradleTestProject.builder().fromTestProject("minify").create();
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Test
+    public void model() throws Exception {
+        AndroidProject model =
+                project.model()
+                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchAndroidProjects()
+                        .getOnlyModel();
+
+        CodeShrinker minifiedShrinker =
+                AndroidProjectUtils.getVariantByName(model, "minified")
+                        .getMainArtifact()
+                        .getCodeShrinker();
+        assertThat(minifiedShrinker).isEqualTo(codeShrinker);
+
+        CodeShrinker debugShrinker =
+                AndroidProjectUtils.getDebugVariant(model).getMainArtifact().getCodeShrinker();
+        assertThat(debugShrinker).isNull();
+    }
 
     @Test
     public void appApkIsMinified() throws Exception {
