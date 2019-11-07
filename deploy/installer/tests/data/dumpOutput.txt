@@ -1,0 +1,68 @@
+ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)
+  All known processes:
+  *APP* UID 10086 ProcessRecord{9e04cf4 17892:com.noah.clr:wow/u0a86}
+    user #0 uid=10086 gids={50086, 20086, 9997}
+    requiredAbi=x86 instructionSet=null
+    dir=/data/app/com.noah.clr-cOlbN3HPdCu3NCXhfSzpcw==/base.apk publicDir=/data/app/com.noah.clr-cOlbN3HPdCu3NCXhfSzpcw==/base.apk data=/data/user/0/com.noah.clr
+    packageList={com.noah.clr}
+    compat={420dpi}
+    thread=android.app.IApplicationThread$Stub$Proxy@4ab4c1d
+    pid=17892 starting=false
+    lastActivityTime=-1m6s136ms lastPssTime=-36s218ms pssStatType=0 nextPssTime=-16s254ms
+    adjSeq=12066 lruSeq=0 lastPss=20MB lastSwapPss=0.00 lastCachedPss=20MB lastCachedSwapPss=0.00
+    procStateMemTracker: best=4 (4=4 1.0x)
+    cached=false empty=true
+    oom: max=1001 curRaw=700 setRaw=700 cur=700 set=700
+    curSchedGroup=0 setSchedGroup=0 systemNoUi=false trimMemoryLevel=0
+    curProcState=14 repProcState=14 pssProcState=14 setProcState=14 lastStateTime=-1m2s506ms
+    hasShownUi=true pendingUiClean=false hasAboveClient=false treatLikeActivity=false
+    startSeq=83
+    notResponding=true
+    lastCpuTime=0 whenUnimportant=-1m2s506ms
+    lastRequestedGc=-1m6s138ms lastLowMemory=-1m6s138ms reportLowMemory=false
+    Activities:
+      - ActivityRecord{5b6c944 u0 com.noah.clr/.MainActivity t140}
+    Recent Tasks:
+      - TaskRecord{98e6e92 #140 A=com.noah.clr U=0 StackId=19 sz=2}
+    Connected Providers:
+      - a102d43/com.android.providers.settings/.SettingsProvider->17892:com.noah.clr:wow/u0a86 s1/1 u0/0 +1m6s56ms
+  *APP* UID 10086 ProcessRecord{e41c063 17925:com.noah.clr/u0a86}
+    user #0 uid=10086 gids={50086, 20086, 9997}
+    requiredAbi=x86 instructionSet=null
+    dir=/data/app/com.noah.clr-cOlbN3HPdCu3NCXhfSzpcw==/base.apk publicDir=/data/app/com.noah.clr-cOlbN3HPdCu3NCXhfSzpcw==/base.apk data=/data/user/0/com.noah.clr
+    packageList={com.noah.clr}
+    compat={420dpi}
+    thread=android.app.IApplicationThread$Stub$Proxy@a2f4460
+    pid=17925 starting=false
+    lastActivityTime=-1m3s420ms lastPssTime=-36s229ms pssStatType=0 nextPssTime=+23s746ms
+    adjSeq=12066 lruSeq=0 lastPss=22MB lastSwapPss=0.00 lastCachedPss=0.00 lastCachedSwapPss=0.00
+    procStateMemTracker: best=1 (1=1 1.5x)
+    cached=false empty=false
+    oom: max=1001 curRaw=0 setRaw=0 cur=0 set=0
+    curSchedGroup=3 setSchedGroup=3 systemNoUi=false trimMemoryLevel=0
+    curProcState=2 repProcState=2 pssProcState=2 setProcState=2 lastStateTime=-1m3s420ms
+    hasShownUi=true pendingUiClean=true hasAboveClient=false treatLikeActivity=false
+    reportedInteraction=true time=-1m3s420ms
+    crashing=true
+    hasClientActivities=false foregroundActivities=true (rep=true)
+    startSeq=84
+    lastRequestedGc=-1m3s421ms lastLowMemory=-1m3s421ms reportLowMemory=false
+    Activities:
+      - ActivityRecord{4122a64 u0 com.noah.clr/.Main2Activity t140}
+    Connected Providers:
+      - a102d43/com.android.providers.settings/.SettingsProvider->17925:com.noah.clr/u0a86 s1/1 u0/0 +1m3s329ms
+
+  Process LRU list (sorted by oom_adj, 27 total, non-act at 8, non-svc at 8):
+    Proc # 0: fore  T/A/TOP  trm: 0 17925:com.noah.clr/u0a86 (top-activity)
+    Proc # 2: prev  B/ /LAST trm: 0 17892:com.noah.clr:wow/u0a86 (previous)
+
+  PID mappings:
+    PID #17892: ProcessRecord{9e04cf4 17892:com.noah.clr:wow/u0a86}
+    PID #17925: ProcessRecord{e41c063 17925:com.noah.clr/u0a86}
+
+  mPreviousProcess: ProcessRecord{9e04cf4 17892:com.noah.clr:wow/u0a86}
+  mPreviousProcessVisibleTime: +18d18h58m48s541ms
+  mDeviceIdleWhitelist=[2000, 10008, 10009, 10018]
+  mDeviceIdleExceptIdleWhitelist=[2000, 10008, 10009, 10010, 10018, 10032, 10036]
+  mDeviceIdleTempWhitelist=[]
+  mForceBackgroundCheck=false

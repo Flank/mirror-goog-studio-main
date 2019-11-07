@@ -25,6 +25,7 @@ cc_library(
         "support/memory_stats_logger.cc",
         "support/memory_stats_logger.h",
         "support/profiler_service.cc",
+        "support/user_counter_passthrough.cc",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",

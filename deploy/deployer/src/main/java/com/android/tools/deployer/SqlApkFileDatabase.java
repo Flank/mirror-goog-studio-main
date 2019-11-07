@@ -206,9 +206,9 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                                         + "  INNER JOIN archives on archives.dexfileId = dexfiles.id"
                                         + "  INNER JOIN classes on classes.dexfileId = dexfiles.id"
                                         + "  WHERE dexfiles.name = \""
-                                        + dex.name
+                                        + dex.getName()
                                         + "\" AND dexfiles.checksum = "
-                                        + dex.checksum
+                                        + dex.getChecksum()
                                         + " ORDER BY id DESC")) {
             List<DexClass> classes = new ArrayList<>();
             while (result.next()) {
@@ -227,10 +227,10 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
         try {
             Map<Apk, Multimap<ApkEntry, DexClass>> map = new HashMap<>();
             for (DexClass clazz : allClasses) {
-                Multimap<ApkEntry, DexClass> multimap = map.get(clazz.dex.apk);
+                Multimap<ApkEntry, DexClass> multimap = map.get(clazz.dex.getApk());
                 if (multimap == null) {
                     multimap = HashMultimap.create();
-                    map.put(clazz.dex.apk, multimap);
+                    map.put(clazz.dex.getApk(), multimap);
                 }
                 multimap.put(clazz.dex, clazz);
             }
@@ -238,7 +238,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                 Multimap<ApkEntry, DexClass> classes = entry.getValue();
                 List<Integer> ids = new ArrayList<>();
                 for (ApkEntry dex : classes.keySet()) {
-                    int id = addDexFile(dex.checksum, dex.name);
+                    int id = addDexFile(dex.getChecksum(), dex.getName());
                     ids.add(id);
                     // TODO: Verify if writing all the classses in one go would help
                     addClasses(id, classes.get(dex));

@@ -22,21 +22,24 @@ import org.gradle.api.provider.Provider
 
 class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
 
+    private var valueProvider: Provider<out T>? = null
+    private var convention: T? = null
+
     override fun <S : Any?> flatMap(p0: Transformer<out Provider<out S>, in T>): Provider<S> {
         TODO("not yet implemented")
     }
 
-    override fun isPresent() = value != null
+    override fun isPresent() = value != null || valueProvider != null
 
-    override fun getOrElse(p0: T) = if (isPresent) value else p0
+    override fun getOrElse(defaultValue: T) = value ?: valueProvider?.get() ?: convention ?: defaultValue
 
     override fun <S : Any?> map(p0: Transformer<out S, in T>?): Provider<S> {
         TODO("not yet implemented")
     }
 
-    override fun get() = value ?: throw IllegalStateException("Value not set")
+    override fun get() = value ?: valueProvider?.get() ?: convention ?: throw IllegalStateException("Value not set")
 
-    override fun getOrNull() = value
+    override fun getOrNull() = value ?: valueProvider?.get() ?: convention
 
     override fun value(value: T?): Property<T> {
         this.value = value
@@ -45,14 +48,17 @@ class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
 
     override fun set(value: T?) {
         this.value = value
+        this.valueProvider = null
     }
 
-    override fun set(value: Provider<out T>) {
-        TODO("not yet implemented")
+    override fun set(provider: Provider<out T>) {
+        this.value = null
+        this.valueProvider = provider
     }
 
     override fun convention(convention: T): Property<T> {
-        TODO("not yet implemented")
+        this.convention = convention
+        return this
     }
 
     override fun convention(convention: Provider<out T>): Property<T> {

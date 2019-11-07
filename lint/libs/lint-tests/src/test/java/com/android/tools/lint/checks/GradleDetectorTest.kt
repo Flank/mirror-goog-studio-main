@@ -290,6 +290,51 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testDependenciesWithOtherArtifacts() {
+        // Regression test for b/124415929
+
+        listOf(
+            "implementation",
+            "testImplementation",
+            "androidTestImplementation"
+        ).forEach { configuration ->
+            listOf(
+                "com.android.support:appcompat-v7" to ("13.0.0" to "25.3.1"),
+                "com.google.guava:guava" to ("11.0.2" to "21.0")
+            )
+                .forEach { libraryInfo ->
+                    val library = libraryInfo.first
+                    val version = libraryInfo.second.first
+                    val expectedVersion = libraryInfo.second.second
+                    listOf(false, true).forEach {
+                        val versionString = if (it) "\$version" else version
+                        val dependencyString = "$configuration(\"$library:$versionString\")"
+                        println(dependencyString)
+                        val source = gradle(
+                            "" +
+                                    "ext.version = '$version'\n" +
+                                    "\n" +
+                                    "buildscript {\n" +
+                                    "    repositories {\n" +
+                                    "        jcenter()\n" +
+                                    "    }\n" +
+                                    "}\n" +
+                                    "dependencies {\n" +
+                                    "    $dependencyString\n" +
+                                    "}\n"
+                        )
+                        val expected = "" +
+                                "build.gradle:9: Warning: A newer version of $library than $version is available: $expectedVersion [GradleDependency]\n" +
+                                "    $dependencyString\n" +
+                                "    ${"~".repeat(dependencyString.length)}\n" +
+                                "0 errors, 1 warnings"
+
+                        lint().files(source).issues(DEPENDENCY).run().expect(expected)
+                    }
+                }
+        }
+    }
+
     fun testVersionFromIDE() {
         // Hardcoded cache lookup for the test in GroovyGradleDetector below. In the IDE
         // it consults SDK lib.

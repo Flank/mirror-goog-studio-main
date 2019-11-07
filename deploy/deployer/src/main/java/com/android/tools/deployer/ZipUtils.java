@@ -16,13 +16,18 @@
 
 package com.android.tools.deployer;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.io.BaseEncoding;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ZipUtils {
 
@@ -55,14 +60,17 @@ public class ZipUtils {
         }
     }
 
-    public static HashMap<String, ZipEntry> readZipEntries(byte[] buf) {
+    @VisibleForTesting
+    public static Map<String, ZipEntry> readZipEntries(byte[] buf) {
         ByteBuffer buffer = ByteBuffer.wrap(buf);
-        return readZipEntries(buffer);
+        return readZipEntries(buffer)
+                .stream()
+                .collect(Collectors.toMap(e -> e.name, Functions.identity()));
     }
 
-    public static HashMap<String, ZipEntry> readZipEntries(ByteBuffer buf) {
+    public static List<ZipEntry> readZipEntries(ByteBuffer buf) {
         buf.order(ByteOrder.LITTLE_ENDIAN);
-        HashMap<String, ZipEntry> entries = new HashMap<>();
+        List<ZipEntry> entries = new ArrayList<>();
         while (buf.remaining() >= CENTRAL_DIRECTORY_FILE_HEADER_SIZE
                 && buf.getInt() == CENTRAL_DIRECTORY_FILE_HEADER_MAGIC) {
             // Read all the data
@@ -110,7 +118,7 @@ public class ZipUtils {
             long approx_end = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength - 1;
             approx_end += compression == 0 ? decompressedSize : compressedSize;
             ZipEntry entry = new ZipEntry(crc, name, start, approx_end, localFileHeader);
-            entries.put(entry.name, entry);
+            entries.add(entry);
         }
         return entries;
     }

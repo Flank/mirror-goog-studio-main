@@ -19,7 +19,11 @@ package com.android.build.gradle.internal.variant;
 import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.BuildTypeData;
+import com.android.build.gradle.internal.ProductFlavorData;
+import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import org.gradle.api.Project;
 
@@ -43,6 +47,39 @@ public abstract class BaseVariantFactory implements VariantFactory {
                                     + "Please use 'annotationProcessor' configuration "
                                     + "instead.",
                             "android-apt");
+        }
+    }
+
+    @Override
+    public void validateModel(@NonNull VariantModel model) {
+        if (!globalScope.getBuildFeatures().getBuildConfig()) {
+            EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+
+            if (!model.getDefaultConfig().getProductFlavor().getBuildConfigFields().isEmpty()) {
+                issueReporter.reportError(
+                        Type.GENERIC,
+                        "defaultConfig contains custom BuildConfig fields, but the feature is disabled.");
+            }
+
+            for (BuildTypeData buildType : model.getBuildTypes().values()) {
+                if (!buildType.getBuildType().getBuildConfigFields().isEmpty()) {
+                    issueReporter.reportError(
+                            Type.GENERIC,
+                            String.format(
+                                    "Build Type '%s' contains custom BuildConfig fields, but the feature is disabled.",
+                                    buildType.getBuildType().getName()));
+                }
+            }
+
+            for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
+                if (!productFlavor.getProductFlavor().getBuildConfigFields().isEmpty()) {
+                    issueReporter.reportError(
+                            Type.GENERIC,
+                            String.format(
+                                    "Product Flavor '%s' contains custom BuildConfig fields, but the feature is disabled.",
+                                    productFlavor.getProductFlavor().getName()));
+                }
+            }
         }
     }
 }

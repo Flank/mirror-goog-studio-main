@@ -15,14 +15,46 @@
  */
 package com.android.tools.deployer.model;
 
-public class ApkEntry {
-    public final String name;
-    public final long checksum;
-    public final Apk apk;
+import com.android.tools.deployer.ZipUtils;
+import com.google.common.annotations.VisibleForTesting;
 
+public class ApkEntry {
+    private final String name;
+    private final long checksum;
+    private final ZipUtils.ZipEntry entry;
+    private Apk apk;
+
+    ApkEntry(ZipUtils.ZipEntry entry) {
+        this.name = entry.name;
+        this.checksum = entry.crc;
+        this.entry = entry;
+    }
+
+    @VisibleForTesting
     public ApkEntry(String name, long checksum, Apk apk) {
         this.name = name;
         this.checksum = checksum;
+        this.entry = null;
+        this.apk = apk;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public long getChecksum() {
+        return checksum;
+    }
+
+    public ZipUtils.ZipEntry getZipEntry() {
+        return entry;
+    }
+
+    public Apk getApk() {
+        return apk;
+    }
+
+    void setApk(Apk apk) {
         this.apk = apk;
     }
 }

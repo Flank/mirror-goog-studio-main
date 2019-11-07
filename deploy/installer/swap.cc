@@ -73,11 +73,10 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-void SwapCommand::Run() {
+void SwapCommand::Run(proto::InstallerResponse* response) {
   Phase p("Command Swap");
 
-  response_ = new proto::SwapResponse();
-  workspace_.GetResponse().set_allocated_swap_response(response_);
+  response_ = response->mutable_swap_response();
   std::string install_session = request_.session_id();
   CmdCommand cmd(workspace_);
   std::string output;
@@ -289,15 +288,28 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   waitpid(agent_server_pid, &status, 0);
 
   // Ensure all of the agents have responded.
-  if (agent_responses.size() < total_agents) {
-    return proto::SwapResponse::MISSING_AGENT_RESPONSES;
+  if (agent_responses.size() == total_agents) {
+    return response_->failed_agents_size() == 0
+               ? proto::SwapResponse::OK
+               : proto::SwapResponse::AGENT_ERROR;
   }
 
-  if (response_->failed_agents_size() > 0) {
-    return proto::SwapResponse::AGENT_ERROR;
-  }
+  CmdCommand cmd(workspace_);
+  std::vector<ProcessRecord> records;
+  if (cmd.GetProcessInfo(request_.package_name(), &records)) {
+    for (auto& record : records) {
+      if (record.crashing) {
+        response_->set_extra(record.process_name);
+        return proto::SwapResponse::PROCESS_CRASHING;
+      }
 
-  return proto::SwapResponse::OK;
+      if (record.not_responding) {
+        response_->set_extra(record.process_name);
+        return proto::SwapResponse::PROCESS_NOT_RESPONDING;
+      }
+    }
+  }
+  return proto::SwapResponse::MISSING_AGENT_RESPONSES;
 }
 
 bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,

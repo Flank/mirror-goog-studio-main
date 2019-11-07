@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.utils;
 
 import static com.android.SdkConstants.UTF_8;
@@ -49,19 +48,20 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.DefaultHandler2;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * A simple DOM XML parser which can retrieve exact beginning and end offsets
  * (and line and column numbers) for element nodes as well as attribute nodes.
  */
 public class PositionXmlParser {
-    private static final String UTF_16 = "UTF_16";               //$NON-NLS-1$
-    private static final String UTF_16LE = "UTF_16LE";           //$NON-NLS-1$
-    private static final String CONTENT_KEY = "contents";        //$NON-NLS-1$
-    private static final String POS_KEY = "offsets";             //$NON-NLS-1$
+    private static final String UTF_16 = "UTF_16";
+    private static final String UTF_16LE = "UTF_16LE";
+    private static final String CONTENT_KEY = "contents";
+    private static final String POS_KEY = "offsets";
     /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
     private static final Pattern ENCODING_PATTERN =
-            Pattern.compile("encoding=['\"](\\S*)['\"]");        //$NON-NLS-1$
+            Pattern.compile("encoding=['\"](\\S*)['\"]");
 
     /**
      * Parses the XML content from the given input stream.
@@ -71,29 +71,39 @@ public class PositionXmlParser {
      * @return the corresponding document
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
-     * @throws IOException if something is seriously wrong. This should not
-     *             happen since the input source is known to be constructed from
-     *             a string.
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string
      */
     @NonNull
     public static Document parse(@NonNull InputStream input, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
-        // Read in all the data
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[1024];
-        while (true) {
-          int r = input.read(buf);
-          if (r == -1) {
-            break;
-          }
-          out.write(buf, 0, r);
-        }
-        input.close();
-        return parse(out.toByteArray(), namespaceAware);
+        return parse(readAllBytes(input), namespaceAware);
     }
 
     /**
-     * @see PositionXmlParser#parse(InputStream, boolean)
+     * Parses the XML content from the given input stream.
+     *
+     * <p>If a non-recoverable parser error is encountered, parsing stops, an error message is
+     * added to the {@code parseErrors} list, and the returned document contains the elements up
+     * to the one where the error was encountered.
+     *
+     * @param input the input stream containing the XML to be parsed
+     * @param namespaceAware whether the parser should be namespace aware
+     * @param parseErrors parsing errors, if any, are appended to this list
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string
+     */
+    @NonNull
+    public static Document parse(
+            @NonNull InputStream input, boolean namespaceAware, @NonNull List<String> parseErrors)
+            throws ParserConfigurationException, IOException {
+        return parse(readAllBytes(input), namespaceAware, parseErrors);
+    }
+
+    /**
+     * @see #parse(InputStream, boolean)
      */
     @NonNull
     public static Document parse(@NonNull InputStream input)
@@ -102,7 +112,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * @see PositionXmlParser#parse(byte[], boolean)
+     * @see #parse(byte[], boolean)
      */
     @NonNull
     public static Document parse(@NonNull byte[] data)
@@ -111,7 +121,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * @see PositionXmlParser#parse(String, boolean)
+     * @see #parse(String, boolean)
      */
     @NonNull
     public static Document parse(@NonNull String xml)
@@ -120,77 +130,151 @@ public class PositionXmlParser {
     }
 
     /**
-     * Parses the XML content from the given byte array
+     * Parses the XML content from the given byte array.
      *
      * @param data the raw XML data (with unknown encoding)
      * @param namespaceAware whether the parser should be namespace aware
      * @return the corresponding document
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
-     * @throws IOException if something is seriously wrong. This should not
-     *             happen since the input source is known to be constructed from
-     *             a string.
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string.
      */
     @NonNull
     public static Document parse(@NonNull byte[] data, boolean namespaceAware)
-      throws ParserConfigurationException, SAXException, IOException {
+            throws ParserConfigurationException, SAXException, IOException {
         String xml = getXmlString(data);
         xml = XmlUtils.stripBom(xml);
-        return parse(xml, new InputSource(new StringReader(xml)), true, namespaceAware);
+        return parseInternal(xml, namespaceAware);
+    }
+
+    /**
+     * Parses the XML content from the given byte array.
+     *
+     * <p>If a non-recoverable parser error is encountered, parsing stops, an error message is
+     * added to the {@code parseErrors} list, and the returned document contains the elements up
+     * to the one where the error was encountered.
+     *
+     * @param data the raw XML data (with unknown encoding)
+     * @param namespaceAware whether the parser should be namespace aware
+     * @param parseErrors parsing errors, if any, are appended to this list
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string.
+     */
+    @NonNull
+    public static Document parse(
+            @NonNull byte[] data, boolean namespaceAware, @NonNull List<String> parseErrors)
+            throws ParserConfigurationException, IOException {
+        String xml = getXmlString(data);
+        xml = XmlUtils.stripBom(xml);
+        return parseInternal(xml, namespaceAware, parseErrors);
     }
 
     /**
      * Parses the given XML content.
      *
-     * @param xml the XML string to be parsed. This must be in the correct
-     *     encoding already.
+     * @param xml the XML string to be parsed. This must be in the correct encoding already
      * @param namespaceAware whether the parser should be namespace aware
      * @return the corresponding document
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
-     * @throws IOException if something is seriously wrong. This should not
-     *             happen since the input source is known to be constructed from
-     *             a string.
+     * @throws IOException if something is seriously wrong. This should not happen since the input
+     *         source is known to be constructed from a string
      */
     @NonNull
     public static Document parse(@NonNull String xml, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
         xml = XmlUtils.stripBom(xml);
-        return parse(xml, new InputSource(new StringReader(xml)), true, namespaceAware);
+        return parseInternal(xml, namespaceAware);
     }
 
     @NonNull
-    private static Document parse(
-            @NonNull String xml,
-            @NonNull InputSource input,
-            boolean checkBom,
-            boolean namespaceAware)
+    private static Document parseInternal(@NonNull String xml, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
-        try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            XmlUtils.configureSaxFactory(factory, namespaceAware, false);
-            SAXParser parser = XmlUtils.createSaxParser(factory, true);
-            DomBuilder handler = new DomBuilder(xml);
-            XMLReader xmlReader = parser.getXMLReader();
-            xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
-            parser.parse(input, handler);
-            return handler.getDocument();
-        } catch (SAXException e) {
-            if (checkBom && e.getMessage().contains("Content is not allowed in prolog")) {
+        DomBuilder domBuilder;
+        boolean retry = false;
+        while (true) {
+            domBuilder = new DomBuilder(xml);
+            try {
+                parseInternal(xml, namespaceAware, domBuilder);
+                break;
+            } catch (SAXException e) {
+                if (retry || !e.getMessage().contains("Content is not allowed in prolog")) {
+                    throw e;
+                }
                 // Byte order mark in the string? Skip it. There are many markers
                 // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
-                // just skip those up to the XML prolog beginning character, <
-                xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
-                return parse(xml, new InputSource(new StringReader(xml)), false, namespaceAware);
+                // just skip those up to the XML prolog beginning character, '<'.
+                xml = xml.replaceFirst("^([\\W]+)<", "<");
+                retry = true;
             }
-            throw e;
+        };
+        return domBuilder.getDocument();
+    }
+
+    @NonNull
+    private static Document parseInternal(
+            @NonNull String xml, boolean namespaceAware, @NonNull List<String> parseErrors)
+            throws ParserConfigurationException, IOException {
+        DomBuilder domBuilder = null;
+        boolean retry = false;
+        while (true) {
+            domBuilder = new DomBuilder(xml);
+            try {
+                parseInternal(xml, namespaceAware, domBuilder);
+                break;
+            } catch (SAXException e) {
+                if (retry || !e.getMessage().contains("Content is not allowed in prolog")) {
+                    parseErrors.add(e.getLocalizedMessage());
+                    domBuilder.closeUnfinishedElements();
+                    break;
+                }
+                // Byte order mark in the string? Skip it. There are many markers
+                // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
+                // just skip those up to the XML prolog beginning character, '<'.
+                xml = xml.replaceFirst("^([\\W]+)<", "<");
+                retry = true;
+            }
         }
+        return domBuilder.getDocument();
+    }
+
+    private static void parseInternal(
+            @NonNull String xml, boolean namespaceAware, @NonNull DefaultHandler handler)
+            throws ParserConfigurationException, IOException, SAXException {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        XmlUtils.configureSaxFactory(factory, namespaceAware, false);
+        SAXParser parser = XmlUtils.createSaxParser(factory, true);
+        XMLReader xmlReader = parser.getXMLReader();
+        xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
+        parser.parse(createSource(xml), handler);
+    }
+
+    private static byte[] readAllBytes(@NonNull InputStream input) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        while (true) {
+            int r = input.read(buf);
+            if (r == -1) {
+                break;
+            }
+            out.write(buf, 0, r);
+        }
+        input.close();
+        return out.toByteArray();
+    }
+
+    private static InputSource createSource(@NonNull String xml) {
+        return new InputSource(new StringReader(xml));
     }
 
     /**
      * Returns the String corresponding to the given byte array of XML data
      * (with unknown encoding). This method attempts to guess the encoding based
      * on the XML prologue.
+     *
      * @param data the XML data to be decoded into a string
      * @return a string corresponding to the XML data
      */
@@ -229,13 +313,13 @@ public class PositionXmlParser {
             } else if (data[0] == (byte)0x0 && data[1] == (byte)0x0
                     && data[2] == (byte)0xfe && data[3] == (byte)0xff) {
                 // UTF-32, big-endian
-                defaultCharset = charset = "UTF_32";    //$NON-NLS-1$
+                defaultCharset = charset = "UTF_32";
                 offset += 4;
             } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe
                     && data[2] == (byte)0x0 && data[3] == (byte)0x0) {
                 // UTF-32, little-endian. We must check for this *before* looking for
                 // UTF_16LE since UTF_32LE has the same prefix!
-                defaultCharset = charset = "UTF_32LE";  //$NON-NLS-1$
+                defaultCharset = charset = "UTF_32LE";
                 offset += 4;
             } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe) {
                 //  UTF-16, little-endian
@@ -290,7 +374,7 @@ public class PositionXmlParser {
                         }
                     }
                     String prologue = sb.toString();
-                    int encodingIndex = prologue.indexOf("encoding"); //$NON-NLS-1$
+                    int encodingIndex = prologue.indexOf("encoding");
                     if (encodingIndex != -1) {
                         Matcher matcher = ENCODING_PATTERN.matcher(prologue);
                         if (matcher.find(encodingIndex)) {
@@ -303,7 +387,7 @@ public class PositionXmlParser {
             }
         }
 
-        // No prologue on the first line, and no byte order mark: Assume UTF-8/16
+        // No prologue on the first line, and no byte order mark: Assume UTF-8/16.
         if (charset == null) {
             charset = seenOddZero ? UTF_16LE : seenEvenZero ? UTF_16 : defaultCharset;
         }
@@ -327,12 +411,11 @@ public class PositionXmlParser {
     }
 
     /**
-     * Returns the position for the given node. This is the start position. The
-     * end position can be obtained via {@link Position#getEnd()}.
+     * Returns the position for the given node. This is the start position. The end position can be
+     * obtained via {@link Position#getEnd()}.
      *
      * @param node the node to look up position for
-     * @return the position, or null if the node type is not supported for
-     *         position info
+     * @return the position, or null if the node type is not supported for position info
      */
     @NonNull
     public static SourcePosition getPosition(@NonNull Node node) {
@@ -340,10 +423,9 @@ public class PositionXmlParser {
     }
 
     /**
-     * Returns the position for the given node. This is the start position. The
-     * end position can be obtained via {@link Position#getEnd()}. A specific
-     * range within the node can be specified with the {@code start} and
-     * {@code end} parameters.
+     * Returns the position for the given node. This is the start position. The end position can be
+     * obtained via {@link Position#getEnd()}. A specific range within the node can be specified
+     * with the {@code start} and {@code end} parameters.
      *
      * @param node the node to look up position for
      * @param start the relative offset within the node range to use as the
@@ -353,7 +435,6 @@ public class PositionXmlParser {
      * @return the position, or null if the node type is not supported for
      *         position info
      */
-
     @NonNull
     public static SourcePosition getPosition(@NonNull Node node, int start, int end) {
         Position p = getPositionHelper(node, start, end);
@@ -361,7 +442,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * Finds the leaf node at the given offset
+     * Finds the leaf node at the given offset.
      *
      * @param document root node
      * @param offset   offset to look for
@@ -418,7 +499,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * Finds the leaf node at the given offset
+     * Finds the leaf node at the given offset.
      *
      * @param document root node
      * @param line     the line
@@ -501,22 +582,22 @@ public class PositionXmlParser {
                     }
                 }
 
-                // Find attribute in the text
+                // Find attribute in the text.
                 String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
                 if (contents == null) {
                     return null;
                 }
 
-                // Locate the name=value attribute in the source text
-                // Fast string check first for the common occurrence
+                // Locate the name=value attribute in the source text.
+                // Fast string check first for the common occurrence.
                 String name = attr.getName();
                 Pattern pattern = Pattern.compile(attr.getPrefix() != null
-                    ? String.format("(%1$s\\s*=\\s*[\"'].*?[\"'])", name) //$NON-NLS-1$
-                    : String.format("[^:](%1$s\\s*=\\s*[\"'].*?[\"'])", name));//$NON-NLS-1$
+                    ? String.format("(%1$s\\s*=\\s*[\"'].*?[\"'])", name)
+                    : String.format("[^:](%1$s\\s*=\\s*[\"'].*?[\"'])", name));
                 Matcher matcher = pattern.matcher(contents);
                 if (matcher.find(startOffset) && matcher.start(1) <= endOffset) {
                     int index = matcher.start(1);
-                    // Adjust the line and column to this new offset
+                    // Adjust the line and column to this new offset.
                     int line = pos.getLine();
                     int column = pos.getColumn();
                     for (int offset = pos.getOffset(); offset < index; offset++) {
@@ -530,17 +611,17 @@ public class PositionXmlParser {
                     }
 
                     Position attributePosition = new Position(line, column, index);
-                    // Also set end range for retrieval in getLocation
+                    // Also set end range for retrieval in getLocation.
                     attributePosition.setEnd(
                             new Position(line, column + matcher.end(1) - index, matcher.end(1)));
                     return attributePosition;
                 } else {
-                    // No regexp match either: just fall back to element position
+                    // No regexp match either: just fall back to element position.
                     return pos;
                 }
             }
         } else if (node instanceof Text) {
-            // Position of parent element, if any
+            // Position of parent element, if any.
             Position pos = null;
             if (node.getPreviousSibling() != null) {
                 pos = (Position) node.getPreviousSibling().getUserData(POS_KEY);
@@ -549,13 +630,13 @@ public class PositionXmlParser {
                 pos = (Position) node.getParentNode().getUserData(POS_KEY);
             }
             if (pos != null) {
-                // Attempt to point forward to the actual text node
+                // Attempt to point forward to the actual text node.
                 int startOffset = pos.getOffset();
                 int endOffset = pos.getEnd().getOffset();
                 int line = pos.getLine();
                 int column = pos.getColumn();
 
-                // Find attribute in the text
+                // Find attribute in the text.
                 String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
                 if (contents == null || contents.length() < endOffset) {
                     return null;
@@ -565,8 +646,7 @@ public class PositionXmlParser {
                 for (int offset = startOffset; offset <= endOffset; offset++) {
                     char c = contents.charAt(offset);
                     if (c == '>' && !inAttribute) {
-                        // Found the end of the element open tag: this is where the
-                        // text begins.
+                        // Found the end of the element open tag: this is where the text begins.
 
                         // Skip >
                         offset++;
@@ -653,7 +733,7 @@ public class PositionXmlParser {
         @SuppressWarnings("StringBufferField")
         private final StringBuilder mPendingText = new StringBuilder();
 
-        private DomBuilder(String xml) throws ParserConfigurationException {
+        DomBuilder(String xml) throws ParserConfigurationException {
             mXml = xml;
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -664,10 +744,24 @@ public class PositionXmlParser {
             mDocument.setUserData(CONTENT_KEY, xml, null);
         }
 
-        /** Returns the document parsed by the handler */
+        /** Returns the document parsed by the handler. */
         @NonNull
         Document getDocument() {
+            closeUnfinishedElements();
             return mDocument;
+        }
+
+        void closeUnfinishedElements() {
+            flushText();
+            while (!mStack.isEmpty()) {
+                Element element = mStack.remove(mStack.size() - 1);
+
+                Position pos = (Position) element.getUserData(POS_KEY);
+                assert pos != null;
+                pos.setEnd(getCurrentPosition());
+
+                addNodeToParent(element);
+            }
         }
 
         @Override
@@ -705,7 +799,7 @@ public class PositionXmlParser {
                 // -1: Make sure that when we have <foo></foo> we don't consider </foo>
                 // the beginning since pos.offset will typically point to the first character
                 // AFTER the element open tag, which could be a closing tag or a child open
-                // tag
+                // tag.
                 element.setUserData(POS_KEY, findOpeningTag(pos), null);
                 mStack.add(element);
             } catch (Exception t) {
@@ -727,7 +821,6 @@ public class PositionXmlParser {
 
         @Override
         public void comment(char[] chars, int start, int length) throws SAXException {
-
             flushText();
             String comment = new String(chars, start, length);
             Comment domComment = mDocument.createComment(comment);
@@ -744,7 +837,8 @@ public class PositionXmlParser {
         /**
          * Adds a node to the current parent element being visited, or to the document if there is
          * no parent in context.
-         * @param nodeToAdd xml node to add.
+         *
+         * @param nodeToAdd xml node to add
          */
         private void addNodeToParent(Node nodeToAdd) {
             if (mStack.isEmpty()){
@@ -757,13 +851,14 @@ public class PositionXmlParser {
 
         /**
          * Find opening tags from the current position.
-         * < cannot appear in attribute values or anywhere else within
+         * '<' cannot appear in attribute values or anywhere else within
          * an element open tag, so we know the first occurrence is the real
-         * element start
-         * For comments, it is not legal to put < in a comment, however we are not
+         * element start.
+         * For comments, it is not legal to put '<' in a comment, however we are not
          * validating so we will return an invalid column in that case.
-         * @param startingPosition the position to walk backwards until < is reached.
-         * @return the opening tag position or startPosition if cannot be found.
+         *
+         * @param startingPosition the position to walk backwards until < is reached
+         * @return the opening tag position or startPosition if cannot be found
          */
         private Position findOpeningTag(Position startingPosition) {
             for (int offset = startingPosition.getOffset() - 1; offset >= 0; offset--) {
@@ -793,7 +888,7 @@ public class PositionXmlParser {
             return startingPosition;
         }
 
-            /**
+        /**
          * Returns a position holder for the current position. The most
          * important part of this function is to incrementally compute the
          * offset as well, by counting forwards until it reaches the new line
@@ -804,8 +899,7 @@ public class PositionXmlParser {
             int line = mLocator.getLineNumber() - 1;
             int column = mLocator.getColumnNumber() - 1;
 
-            // Compute offset incrementally now that we have the new line and column
-            // numbers
+            // Compute offset incrementally now that we have the new line and column numbers.
             int xmlLength = mXml.length();
             while (mCurrentLine < line && mCurrentOffset < xmlLength) {
                 char c = mXml.charAt(mCurrentOffset);
@@ -867,20 +961,20 @@ public class PositionXmlParser {
     }
 
     private static class Position {
-        /** The line number (0-based where the first line is line 0) */
+        /** The line number (0-based where the first line is line 0). */
         private final int mLine;
         private final int mColumn;
         private final int mOffset;
         private Position mEnd;
 
         /**
-         * Creates a new position
+         * Creates a new position.
          *
          * @param line the 0-based line number, or -1 if unknown
          * @param column the 0-based column number, or -1 if unknown
          * @param offset the offset, or -1 if unknown
          */
-        public Position(int line, int column, int offset) {
+        Position(int line, int column, int offset) {
             this.mLine = line;
             this.mColumn = column;
             this.mOffset = offset;

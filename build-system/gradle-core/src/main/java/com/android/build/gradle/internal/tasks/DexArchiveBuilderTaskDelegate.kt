@@ -28,8 +28,12 @@ import com.android.build.gradle.internal.dexing.launchProcessing
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
 import com.android.builder.core.DefaultDexOptions
+import com.android.builder.dexing.ClassBucket
+import com.android.builder.dexing.ClassBucketGroup
 import com.android.builder.dexing.ClassFileEntry
 import com.android.builder.dexing.DexerTool
+import com.android.builder.dexing.DirectoryBucketGroup
+import com.android.builder.dexing.JarBucketGroup
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.builder.utils.FileCache
 import com.android.ide.common.blame.Message
@@ -362,8 +366,7 @@ class DexArchiveBuilderTaskDelegate(
 
         directoryInputs.forEach { loggerWrapper.verbose("Processing input %s", it.toString()) }
         convertToDexArchive(
-            directoryInputs.toSet(),
-            true,
+            DirectoryBucketGroup(directoryInputs, numberOfBuckets),
             outputDir,
             isIncremental,
             bootClasspathKey,
@@ -577,8 +580,7 @@ class DexArchiveBuilderTaskDelegate(
             }
         }
         return convertToDexArchive(
-            setOf(jarInput),
-            false,
+            JarBucketGroup(jarInput, numberOfBuckets),
             outputDir,
             false,
             bootclasspath,
@@ -594,8 +596,7 @@ class DexArchiveBuilderTaskDelegate(
     private object DesugaringDontCache : D8DesugaringCacheInfo(emptyList())
 
     private fun convertToDexArchive(
-        inputs: Set<File>,
-        isDirectory: Boolean,
+        inputs: ClassBucketGroup,
         outputDir: File,
         isIncremental: Boolean,
         bootClasspath: ClasspathServiceKey,
@@ -604,35 +605,36 @@ class DexArchiveBuilderTaskDelegate(
         changedFiles: Set<File>,
         outputKeepRulesDir: File?
     ): List<File> {
-        inputs.forEach { loggerWrapper.verbose("Dexing %s", it.absolutePath) }
+        inputs.getRoots().forEach { loggerWrapper.verbose("Dexing ${it.absolutePath}") }
 
         val dexArchives = mutableListOf<File>()
         for (bucketId in 0 until numberOfBuckets) {
             // For directory inputs, we prefer dexPerClass mode to support incremental dexing per
             // class, but dexPerClass mode is not supported by D8 when generating keep rules for
             // core library desugaring
-            val dexPerClass = isDirectory && outputKeepRulesDir == null
+            val dexPerClass = inputs is DirectoryBucketGroup && outputKeepRulesDir == null
 
-            val preDexOutputFile = if (isDirectory) {
-                if (dexPerClass) {
-                    outputDir.also { FileUtils.mkdirs(it) }
-                } else {
-                    //running in dexIndexMode, dex output location is determined by bucket and outputDir
-                    outputDir.resolve(bucketId.toString()).also { FileUtils.mkdirs(it) }
+            val preDexOutputFile = when (inputs) {
+                is DirectoryBucketGroup -> {
+                    if (dexPerClass) {
+                        outputDir.also { FileUtils.mkdirs(it) }
+                    } else {
+                        // running in dexIndexMode, dex output location is determined by bucket and
+                        // outputDir
+                        outputDir.resolve(bucketId.toString()).also { FileUtils.mkdirs(it) }
+                    }
                 }
-            } else {
-                check(inputs.size == 1) {
-                    "Expected a single jar, received input size ${inputs.size}"
+                is JarBucketGroup -> {
+                    getDexOutputForJar(inputs.jarFile, outputDir, bucketId)
+                        .also { FileUtils.mkdirs(it.parentFile) }
                 }
-                getDexOutputForJar(inputs.first(), outputDir, bucketId)
-                    .also { FileUtils.mkdirs(it.parentFile) }
             }
 
             val outputKeepRuleFile = outputKeepRulesDir?.let { outputKeepRuleDir ->
-                if (isDirectory) {
-                    outputKeepRuleDir.resolve(bucketId.toString())
-                } else {
-                    getKeepRulesOutputForJar(inputs.first(), outputKeepRuleDir, bucketId)
+                when (inputs) {
+                    is DirectoryBucketGroup -> outputKeepRuleDir.resolve(bucketId.toString())
+                    is JarBucketGroup ->
+                        getKeepRulesOutputForJar(inputs.jarFile, outputKeepRuleDir, bucketId)
                 }.also {
                     FileUtils.mkdirs(it.parentFile)
                     it.createNewFile()
@@ -643,12 +645,14 @@ class DexArchiveBuilderTaskDelegate(
             val parameters = DexWorkActionParams(
                 dexer = dexer,
                 dexSpec = IncrementalDexSpec(
-                    classFileRoots = inputs.toList(),
-                    isDirectory = isDirectory,
-                    numberOfBuckets = numberOfBuckets,
-                    buckedId = bucketId,
+                    inputClassFiles = ClassBucket(inputs, bucketId),
                     outputPath = preDexOutputFile,
-                    dexParams = dexParams.toDexParametersForWorkers(dexPerClass, bootClasspath, classpath, outputKeepRuleFile),
+                    dexParams = dexParams.toDexParametersForWorkers(
+                        dexPerClass,
+                        bootClasspath,
+                        classpath,
+                        outputKeepRuleFile
+                    ),
                     isIncremental = isIncremental,
                     changedFiles = changedFiles,
                     impactedFiles = additionalPaths

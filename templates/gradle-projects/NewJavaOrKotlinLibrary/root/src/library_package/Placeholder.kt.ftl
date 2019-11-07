@@ -1,4 +1,4 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-public class ${className} {
+class ${className} {
 }

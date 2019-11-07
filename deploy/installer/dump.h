@@ -29,12 +29,10 @@ class DumpCommand : public Command {
   DumpCommand(Workspace& workspace) : Command(workspace) {}
   virtual ~DumpCommand() {}
   virtual void ParseParameters(int argc, char** argv);
-  virtual void Run();
+  virtual void Run(proto::InstallerResponse* response);
 
  private:
   std::vector<std::string> package_names_;
-
-  std::vector<std::string> RetrieveApks(const std::string& package_name);
 
   struct ProcStats {
     char name[16];

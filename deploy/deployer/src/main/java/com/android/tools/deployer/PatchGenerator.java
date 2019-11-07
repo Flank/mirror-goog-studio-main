@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
+import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import java.io.File;
@@ -27,7 +28,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class PatchGenerator {
@@ -105,22 +105,24 @@ public class PatchGenerator {
 
     private List<ApkMap.Area> generateDirtyMap(Apk remoteApk, Apk localApk) throws IOException {
         Trace.begin("marking dirty");
-        HashMap<String, ZipUtils.ZipEntry> remoteApkEntries = remoteApk.zipEntries;
-        HashMap<String, ZipUtils.ZipEntry> localApkEntries = localApk.zipEntries;
         ApkMap dirtyMap = new ApkMap(Files.size(Paths.get(localApk.path)));
 
-        for (ZipUtils.ZipEntry remoteEntry : remoteApkEntries.values()) {
-            ZipUtils.ZipEntry localEntry = localApkEntries.get(remoteEntry.name);
+        for (ApkEntry remoteEntry : remoteApk.apkEntries.values()) {
+            ApkEntry localEntry = localApk.apkEntries.get(remoteEntry.getName());
             if (localEntry == null) {
                 continue; // Skip Deleted file
             }
-            if (!Arrays.equals(remoteEntry.localFileHeader, localEntry.localFileHeader)) {
+            if (!Arrays.equals(
+                    remoteEntry.getZipEntry().localFileHeader,
+                    localEntry.getZipEntry().localFileHeader)) {
                 // This entry has changed and is considered dirty.
                 continue;
             }
 
             // The entry has not changed. We can mark it a clean areas.
-            ApkMap.Area cleanArea = new ApkMap.Area(localEntry.start, localEntry.approx_end);
+            ApkMap.Area cleanArea =
+                    new ApkMap.Area(
+                            localEntry.getZipEntry().start, localEntry.getZipEntry().approx_end);
             dirtyMap.markClean(cleanArea);
         }
         Trace.end();

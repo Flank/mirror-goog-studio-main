@@ -32,4 +32,17 @@ interface BuildFeatures {
      * More information available about this feature at: TBD
      **/
     var compose: Boolean?
+
+    /**
+     * Flag to enable/disable generation of the BuildConfig class.
+     *
+     * Setting the value to null resets to the default value.
+     *
+     * The default value can be set with the gradle property android.defaults.buildfeatures.buildconfig
+     * This affects all modules.
+     * Default value is true
+     *
+     * More information about this feature at: TBD
+     */
+    var buildConfig: Boolean?
 }

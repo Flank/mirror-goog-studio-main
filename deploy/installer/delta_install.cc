@@ -26,7 +26,6 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
-#include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/installer/patch_applier.h"
 
 namespace deploy {
@@ -39,26 +38,24 @@ void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
   BaseInstallCommand::ParseParameters(argc, argv);
 }
 
-void DeltaInstallCommand::Run() {
+void DeltaInstallCommand::Run(proto::InstallerResponse* response) {
   Metric m("DELTAINSTALL_INSTALL");
-
-  auto response = new proto::DeltaInstallResponse();
-  workspace_.GetResponse().set_allocated_deltainstall_response(response);
 
   int api_level = Env::api_level();
   LogEvent("DeltaInstall found API level:" + to_string(api_level));
+
+  proto::DeltaInstallResponse* delta_response =
+      response->mutable_deltainstall_response();
   if (api_level < 21) {
-    response->set_status(proto::DeltaStatus::STREAM_APK_NOT_SUPPORTED);
+    delta_response->set_status(proto::DeltaStatus::STREAM_APK_NOT_SUPPORTED);
     return;
   }
 
-  StreamInstall();
+  StreamInstall(delta_response);
 }
 
-void DeltaInstallCommand::StreamInstall() {
+void DeltaInstallCommand::StreamInstall(proto::DeltaInstallResponse* response) {
   Phase p("DeltaInstallCommand::StreamInstall");
-  proto::DeltaInstallResponse* response =
-      workspace_.GetResponse().mutable_deltainstall_response();
   // Create session
   CmdCommand cmd(workspace_);
 

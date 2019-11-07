@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -73,7 +72,9 @@ class R8MainDexListTaskTest {
             resources = listOf(),
             mainDexRulesFiles = listOf(mainDexRuleFile),
             minSdkVersion = 19,
-            r8Keep = "class **"
+            r8Keep = "class **",
+            outputDir = outputDir,
+            proguardOutputDir = tmp.root
         )
 
         val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
@@ -109,7 +110,9 @@ class R8MainDexListTaskTest {
             minSdkVersion = 19,
             dexingType = DexingType.MONO_DEX,
             r8Keep = "class **",
-            mappingFile = tmp.newFolder("mapping")
+            outputDir = outputDir,
+            mappingFile = tmp.newFolder("mapping"),
+            proguardOutputDir = tmp.root
         )
 
         assertThatDex(outputDir.resolve("main/classes.dex").toFile())
@@ -122,54 +125,61 @@ class R8MainDexListTaskTest {
             )
         assertThat(outputDir.resolve("main/classes2.dex")).doesNotExist()
     }
+}
 
-    private fun runR8(
-        classes: List<File>,
-        resources: List<File>,
-        referencedInputs: List<File> = listOf(),
-        mainDexRulesFiles: List<File> = listOf(),
-        minSdkVersion: Int = 21,
-        dexingType: DexingType = DexingType.LEGACY_MULTIDEX,
-        r8Keep: String? = null,
-        mappingFile: File = outputDir.resolve("mapping.txt").toFile()
-    ) {
+fun runR8(
+    classes: List<File>,
+    resources: List<File>,
+    referencedInputs: List<File> = listOf(),
+    mainDexRulesFiles: List<File> = listOf(),
+    minSdkVersion: Int = 21,
+    dexingType: DexingType = DexingType.LEGACY_MULTIDEX,
+    r8Keep: String? = null,
+    outputDir: Path,
+    mappingFile: File = outputDir.resolve("mapping.txt").toFile(),
+    proguardOutputDir: File,
+    featureJars: List<File> = listOf(),
+    featureDexDir: File? = null
+) {
 
 
-        val proguardConfigurations: MutableList<String> = mutableListOf(
-            "-ignorewarnings")
+    val proguardConfigurations: MutableList<String> = mutableListOf(
+        "-ignorewarnings")
 
-        r8Keep?.let { proguardConfigurations.add("-keep $it") }
+    r8Keep?.let { proguardConfigurations.add("-keep $it") }
 
 
-        val output: File = outputDir.resolve("main").toFile()
+    val output: File = outputDir.resolve("main").toFile()
 
-        R8Task.shrink(
-            bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
-            minSdkVersion = minSdkVersion,
-            isDebuggable = true,
-            enableDesugaring = false,
-            disableTreeShaking = false,
-            disableMinification = true,
-            mainDexListFiles = listOf(),
-            mainDexRulesFiles = mainDexRulesFiles,
-            inputProguardMapping = null,
-            proguardConfigurationFiles = listOf(),
-            proguardConfigurations = proguardConfigurations,
-            variantType = VariantTypeImpl.BASE_APK,
-            messageReceiver = NoOpMessageReceiver(),
-            dexingType = dexingType,
-            useFullR8 = false,
-            referencedInputs = referencedInputs,
-            classes = classes,
-            resources = resources,
-            proguardOutputFiles =
-                ProguardOutputFiles(
-                    mappingFile.toPath(),
-                    tmp.root.resolve("seeds.txt").toPath(),
-                    tmp.root.resolve("usage.txt").toPath()),
-            output = output,
-            outputResources = outputDir.resolve("java_res.jar").toFile(),
-            mainDexListOutput = null
-        )
-    }
+    R8Task.shrink(
+        bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
+        minSdkVersion = minSdkVersion,
+        isDebuggable = true,
+        enableDesugaring = false,
+        disableTreeShaking = false,
+        disableMinification = true,
+        mainDexListFiles = listOf(),
+        mainDexRulesFiles = mainDexRulesFiles,
+        inputProguardMapping = null,
+        proguardConfigurationFiles = listOf(),
+        proguardConfigurations = proguardConfigurations,
+        variantType = VariantTypeImpl.BASE_APK,
+        messageReceiver = NoOpMessageReceiver(),
+        dexingType = dexingType,
+        useFullR8 = false,
+        referencedInputs = referencedInputs,
+        classes = classes,
+        resources = resources,
+        proguardOutputFiles =
+            ProguardOutputFiles(
+                mappingFile.toPath(),
+                proguardOutputDir.resolve("seeds.txt").toPath(),
+                proguardOutputDir.resolve("usage.txt").toPath()
+            ),
+        output = output,
+        outputResources = outputDir.resolve("java_res.jar").toFile(),
+        mainDexListOutput = null,
+        featureJars = featureJars,
+        featureDexDir = featureDexDir
+    )
 }

@@ -19,12 +19,12 @@ package com.android.build.api.variant.impl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.fail
 
 class SafeReadingBeforeExecutionTest {
@@ -40,14 +40,14 @@ class SafeReadingBeforeExecutionTest {
         MockitoAnnotations.initMocks(this)
     }
 
-    @After
-    fun clean() {
-        GradleProperty.afterEndOfEvaluation.set(false)
-    }
-
     @Test
     fun testSetAndGetOrderings() {
-        var gradleProperty = GradleProperty.safeReadingBeforeExecution("someId", property, "initial")
+        val executionMode = AtomicBoolean(false)
+        var gradleProperty = GradleProperty.safeReadingBeforeExecution(
+            id = "someId",
+            property = property,
+            initialValue = "initial",
+            executionMode = executionMode)
         `when`(property.get()).thenReturn("initial")
 
         gradleProperty.set(provider)
@@ -64,15 +64,20 @@ class SafeReadingBeforeExecutionTest {
         gradleProperty.set(provider)
 
         // now fake the execution phase.
-        GradleProperty.endOfEvaluation()
+        executionMode.set(true)
+
         // no exception expected
         gradleProperty.get()
 
         // reset
-        gradleProperty = GradleProperty.safeReadingBeforeExecution("someId", property, "initial")
+        gradleProperty = GradleProperty.safeReadingBeforeExecution(
+            id = "someId",
+            property = property,
+            initialValue = "initial",
+            executionMode = executionMode)
         `when`(property.get()).thenReturn("initial")
 
-        GradleProperty.afterEndOfEvaluation.set(false)
+        executionMode.set(false)
 
         assertThat(gradleProperty.get()).isEqualTo("initial")
         // now setting a provider should fail.

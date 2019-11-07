@@ -104,6 +104,40 @@ class SdkDirectLoadingStrategyTest {
         </ns2:repository>
     """.trimIndent()
 
+    private val ADD_ON_XML = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ns2:repository
+            xmlns:ns2="http://schemas.android.com/repository/android/common/01"
+            xmlns:ns3="http://schemas.android.com/repository/android/generic/01"
+            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/01"
+            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/01"
+            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+
+            <localPackage path="add-ons;addon-vendor_addon-name" obsolete="false">
+                <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns4:addonDetailsType">
+                    <api-level>28</api-level>
+                    <vendor>
+                        <id>addon-vendor</id>
+                        <display>Add-On Vendor</display>
+                    </vendor>
+                    <tag>
+                        <id>addon-name</id>
+                        <display>Add-On Name</display>
+                    </tag>
+                    <libraries>
+                        <library name="com.example.addon">
+                            <description>Example Add-On.</description>
+                        </library>
+                    </libraries>
+                </type-details>
+                <revision>
+                    <major>42</major>
+                </revision>
+                <display-name>Add-On Name</display-name>
+            </localPackage>
+        </ns2:repository>
+    """.trimIndent()
+
     private fun getPlatformXml(version: Int = 28) = """
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns2:repository
@@ -222,6 +256,15 @@ class SdkDirectLoadingStrategyTest {
     }
 
     @Test
+    fun load_addOnSdk() {
+        configureSdkDirectory()
+        val directLoader = getDirectLoader(platformHash = "Add-On Vendor:Add-On Name:28")
+
+        assertThat(directLoader.loadedSuccessfully()).isFalse()
+        assertAllComponentsAreNull(directLoader)
+    }
+
+    @Test
     fun load_missingBuildTools() {
         configureSdkDirectory(configureBuildTools = false)
         val directLoader = getDirectLoader()
@@ -289,7 +332,8 @@ class SdkDirectLoadingStrategyTest {
         configureBuildTools: Boolean = true,
         buildToolsDirectory: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION,
         configurePlatformTools: Boolean = true,
-        configureSupportTools: Boolean = true) {
+        configureSupportTools: Boolean = true,
+        configureTestAddOn: Boolean = true) {
 
         val sdkDir = SdkLocator.sdkTestDirectory!!
 
@@ -344,6 +388,15 @@ class SdkDirectLoadingStrategyTest {
             val supportToolsPackageXml = supportToolsRoot.resolve("package.xml")
             supportToolsPackageXml.createNewFile()
             supportToolsPackageXml.writeText(SUPPORT_TOOLS_XML, Charsets.UTF_8)
+        }
+
+        if (configureTestAddOn) {
+            val testAddOnRoot = sdkDir.resolve("add-ons/addon-vendor_addon-name")
+            testAddOnRoot.mkdirs()
+
+            val testAddOnPackageXml = testAddOnRoot.resolve("package.xml")
+            testAddOnPackageXml.createNewFile()
+            testAddOnPackageXml.writeText(ADD_ON_XML)
         }
     }
 

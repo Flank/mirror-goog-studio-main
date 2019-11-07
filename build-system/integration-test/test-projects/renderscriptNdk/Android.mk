@@ -18,7 +18,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 RENDERSCRIPT_OUTPUT_FOLDER := \
-    ./build/generated/renderscript_source_output_dir/debug/out/
+    build/generated/renderscript_source_output_dir/debug/out
 
 RENDERSCRIPT_TOOLCHAIN_PREBUILT_ROOT := \
     $(NDK_ROOT)/toolchains/renderscript/prebuilt/$(HOST_TAG64)

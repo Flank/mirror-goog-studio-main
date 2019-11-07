@@ -6,6 +6,9 @@ readonly build_number="$2"
 
 readonly script_dir="$(dirname "$0")"
 
+# Clean up existing results so obsolete data cannot cause issues
+"${script_dir}/bazel" clean --async || exit $?
+
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id="$(uuidgen)"
 

@@ -63,7 +63,6 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = input,
-                packageBuildConfig = false,
                 packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
@@ -84,7 +83,6 @@ class BundleLibraryClassesRunnableTest {
                 dir.resolve("test").mkdirs()
                 dir.resolve("test/R.class").createNewFile()
                 dir.resolve("test/R\$string.class").createNewFile()
-                dir.resolve("test/BuildConfig.class").createNewFile()
                 dir.resolve("test/Manifest.class").createNewFile()
                 dir.resolve("test/Manifest\$nested.class").createNewFile()
             }
@@ -95,7 +93,6 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = input,
-                packageBuildConfig = false,
                 packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
@@ -103,7 +100,6 @@ class BundleLibraryClassesRunnableTest {
         assertThatZip(output).contains("A.class")
         assertThatZip(output).doesNotContain("test/R.class")
         assertThatZip(output).doesNotContain("test/R\$string.class")
-        assertThatZip(output).doesNotContain("test/BuildConfig.class")
         assertThatZip(output).doesNotContain("test/Manifest.class")
         assertThatZip(output).doesNotContain("test/Manifest\$nested.class")
     }
@@ -117,7 +113,6 @@ class BundleLibraryClassesRunnableTest {
                 dir.resolve("test").mkdirs()
                 dir.resolve("test/R.class").createNewFile()
                 dir.resolve("test/R\$string.class").createNewFile()
-                dir.resolve("test/BuildConfig.class").createNewFile()
                 dir.resolve("test/Manifest.class").createNewFile()
                 dir.resolve("test/Manifest\$nested.class").createNewFile()
             }
@@ -128,7 +123,6 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = input,
-                packageBuildConfig = false,
                 packageRClass = true,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
@@ -136,7 +130,6 @@ class BundleLibraryClassesRunnableTest {
         assertThatZip(output).contains("A.class")
         assertThatZip(output).contains("test/R.class")
         assertThatZip(output).contains("test/R\$string.class")
-        assertThatZip(output).doesNotContain("test/BuildConfig.class")
         assertThatZip(output).doesNotContain("test/Manifest.class")
         assertThatZip(output).doesNotContain("test/Manifest\$nested.class")
     }
@@ -165,7 +158,6 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = setOf(inputJar),
-                packageBuildConfig = false,
                 packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
@@ -197,7 +189,6 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(".*A\\.class$"),
                 output = output,
                 input = setOf(inputJar),
-                packageBuildConfig = false,
                 packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )

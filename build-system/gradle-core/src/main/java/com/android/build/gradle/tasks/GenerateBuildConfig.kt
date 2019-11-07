@@ -134,12 +134,6 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                     "LIBRARY_PACKAGE_NAME",
                     '"'.toString() + buildConfigPackageName.get() + '"'.toString()
                 )
-                .addDeprecatedField(
-                    "String",
-                    "APPLICATION_ID",
-                    '"'.toString() + buildConfigPackageName.get() + '"'.toString(),
-                    "@deprecated APPLICATION_ID is misleading in libraries. For the library package name use LIBRARY_PACKAGE_NAME"
-                )
         } else {
             generator.addField(
                 "String",

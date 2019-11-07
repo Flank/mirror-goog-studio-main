@@ -35,10 +35,7 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
 import com.android.testutils.TestInputsGenerator
-import com.android.testutils.apk.Dex
-import com.android.testutils.apk.Zip
-import com.android.testutils.truth.DexSubject.assertThat
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.apk.Aab
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.utils.Pair
@@ -65,8 +62,6 @@ import kotlin.test.fail
  *   otherFeature2
  *
  * More explicitly,
- *    instantApp  depends on  otherFeature1, otherFeature2, baseModule  (not pictured)
- *           app  depends on  otherFeature1, otherFeature2, baseModule  (not pictured)
  * otherFeature1  depends on  library2, library3, baseModule
  * otherFeature2  depends on  baseModule
  *    baseModule  depends on  library1
@@ -81,7 +76,7 @@ class MinifyFeaturesTest(
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters(name = "{0}, {1}, {2}")
+        @Parameterized.Parameters(name = "{0}, {1}")
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
                 arrayOf(CodeShrinker.PROGUARD, APK_Z_FILE_CREATOR),
@@ -695,9 +690,9 @@ class MinifyFeaturesTest(
         executor.run("bundleMinified")
 
         val bundleFile = getApkFolderOutput("minified", ":baseModule").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
-        Zip(bundleFile).use {
+        Aab(bundleFile).use {
             // check that java resources are packaged as expected
             val expectedJavaRes = listOf(
                 "/base/root/base_java_res.txt",
@@ -707,16 +702,18 @@ class MinifyFeaturesTest(
                 "/base/root/other_java_res_2.txt"
             )
             Truth.assertThat(it.entries.map { it.toString() }).containsAllIn(expectedJavaRes)
-            // check base dex
-            val baseDex = Dex(it.getEntry("base/dex/classes.dex")!!)
-            assertThat(baseDex).containsClasses(
+            // check base classes
+            val expectedBaseClasses = listOf(
                 "Lcom/example/baseModule/Main;",
                 "Lcom/example/baseModule/a;",
                 "Lcom/example/baseModule/EmptyClassToKeep;",
                 "Lcom/example/lib1/EmptyClassToKeep;",
                 "Lcom/example/lib1/a;"
             )
-            assertThat(baseDex).doesNotContainClasses(
+            expectedBaseClasses.forEach {
+                    className -> assertThat(it.containsClass("base", className))
+            }
+            val unexpectedBaseClasses = listOf(
                 "Lcom/example/baseFeature/EmptyClassToRemove;",
                 "Lcom/example/lib1/EmptyClassToRemove;",
                 "Lcom/example/lib2/EmptyClassKeep;",
@@ -725,16 +722,21 @@ class MinifyFeaturesTest(
                 "Lcom/example/otherFeature1/Main;",
                 "Lcom/example/otherFeature2/Main;"
             )
-            // check otherFeature1 dex
-            val otherFeature1Dex = Dex(it.getEntry("otherFeature1/dex/classes.dex")!!)
-            assertThat(otherFeature1Dex).containsClasses(
+            unexpectedBaseClasses.forEach {
+                    className -> assertThat(!it.containsClass("base", className))
+            }
+            // check otherFeature1 classes
+            val expectedOtherFeature1Classes = listOf(
                 "Lcom/example/otherFeature1/Main;",
                 "Lcom/example/otherFeature1/EmptyClassToKeep;",
                 "Lcom/example/lib2/EmptyClassToKeep;",
                 "Lcom/example/lib2/FooView;",
                 "Lcom/example/lib2/a;"
             )
-            assertThat(otherFeature1Dex).doesNotContainClasses(
+            expectedOtherFeature1Classes.forEach {
+                    className -> assertThat(it.containsClass("otherFeature1", className))
+            }
+            val unexpectedOtherFeature1Classes = listOf(
                 "Lcom/example/otherFeature1/EmptyClassToRemove;",
                 "Lcom/example/lib2/EmptyClassToRemove;",
                 "Lcom/example/lib1/EmptyClassToKeep;",
@@ -743,17 +745,23 @@ class MinifyFeaturesTest(
                 "Lcom/example/baseModule/Main;",
                 "Lcom/example/otherFeature2/Main;"
             )
-            // check otherFeature2 dex
-            val otherFeature2Dex = Dex(it.getEntry("otherFeature2/dex/classes.dex")!!)
-            assertThat(otherFeature2Dex).containsClasses(
-                "Lcom/example/otherFeature2/Main;"
-            )
-            assertThat(otherFeature2Dex).doesNotContainClasses(
+            unexpectedOtherFeature1Classes.forEach {
+                    className -> assertThat(!it.containsClass("otherFeature1", className))
+            }
+            // check otherFeature2 classes
+            val expectedOtherFeature2Classes = listOf("Lcom/example/otherFeature2/Main;")
+            expectedOtherFeature2Classes.forEach {
+                    className -> assertThat(it.containsClass("otherFeature2", className))
+            }
+            val unexpectedOtherFeature2Classes = listOf(
                 "Lcom/example/lib1/EmptyClassToKeep;",
                 "Lcom/example/lib2/EmptyClassToKeep;",
                 "Lcom/example/baseModule/Main;",
                 "Lcom/example/otherFeature1/Main;"
             )
+            unexpectedOtherFeature2Classes.forEach {
+                    className -> assertThat(!it.containsClass("otherFeature2", className))
+            }
         }
     }
 

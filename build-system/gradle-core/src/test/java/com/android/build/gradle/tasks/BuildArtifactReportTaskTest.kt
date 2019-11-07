@@ -16,13 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
-import com.android.build.gradle.internal.variant2.DslScopeImpl
-import com.android.builder.errors.FakeEvalIssueReporter
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder

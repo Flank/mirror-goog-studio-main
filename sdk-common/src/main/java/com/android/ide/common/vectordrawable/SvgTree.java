@@ -48,7 +48,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 
 /**
  * Represents the SVG file in an internal data structure as a tree.
@@ -187,10 +186,11 @@ class SvgTree {
         }
     }
 
-    public Document parse(@NonNull File f) throws IOException, SAXException {
+    public Document parse(@NonNull File f, @NonNull List<String> parseErrors) throws IOException {
         mFileName = f.getName();
         try {
-            return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
+            BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(f));
+            return PositionXmlParser.parse(inputStream, false, parseErrors);
         } catch (ParserConfigurationException e) {
             throw new Error("Internal error", e); // Should not happen unless there is a bug.
         }

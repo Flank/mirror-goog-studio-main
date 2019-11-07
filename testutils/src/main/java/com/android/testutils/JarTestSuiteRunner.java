@@ -229,16 +229,36 @@ public class JarTestSuiteRunner extends Suite {
 
         // Set up the hard-coded white list of packages that pass tests
         Set<String> packagesToInclude = new HashSet<>();
+        packagesToInclude.add("com.android.tools.idea.actions");
+        packagesToInclude.add("com.android.tools.idea.apk");
+        packagesToInclude.add("com.android.tools.idea.avdmanager");
+        packagesToInclude.add("com.android.tools.idea.completion");
         packagesToInclude.add("com.android.tools.idea.explorer");
 
         // Compute list of classes included in the above list
         Set<String> allClassNames =
                 testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
         Set<String> classesToInclude = new HashSet<>();
+        Set<String> usedPackages = new HashSet<>();
         for (String className : allClassNames) {
-            if (isWhiteListed(packagesToInclude, className)) {
+            if (isWhiteListed(packagesToInclude, usedPackages, className)) {
                 classesToInclude.add(className);
             }
+        }
+
+        // Sanity check: usedPackages and packagesToInclude must be equal, otherwise, we have
+        // a typo in the white-list, or maybe the package has been renamed or moved to another JAR.
+        // We check this just to make sure this code does not get outdated.
+        Set<String> unusedPackages = new HashSet<>(packagesToInclude);
+        unusedPackages.removeAll(usedPackages);
+        if (!unusedPackages.isEmpty()) {
+            throw new RuntimeException(
+                    "At least one package in the list of white listed packages does not "
+                            + "contain any test class. The package(s) may have been renamed or moved to "
+                            + "another module. Please update this code to match the change. "
+                            + "The list of orphaned package(s) is: ["
+                            + String.join(", ", unusedPackages)
+                            + "].");
         }
 
         // The set of classes to exclude is the set of all classes minus the set of classes to
@@ -251,7 +271,8 @@ public class JarTestSuiteRunner extends Suite {
      * Returns {@code true} if the package of className is prefixed by at least one of the package
      * prefix from the packagePrefixes set.
      */
-    private static boolean isWhiteListed(Set<String> packagePrefixes, String className) {
+    private static boolean isWhiteListed(
+            Set<String> packagePrefixes, Set<String> usedPackagePrefixes, String className) {
         String dottedName = className;
         while (true) {
             int index = dottedName.lastIndexOf(".");
@@ -260,6 +281,8 @@ public class JarTestSuiteRunner extends Suite {
             }
             String packageName = dottedName.substring(0, index);
             if (packagePrefixes.contains(packageName)) {
+                // Mark package as used
+                usedPackagePrefixes.add(packageName);
                 return true;
             }
             dottedName = packageName;

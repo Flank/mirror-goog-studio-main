@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 
 class BuildFeatureValuesImpl(
@@ -29,4 +30,7 @@ class BuildFeatureValuesImpl(
 
     override val jetpackCompose: Boolean
         get() = dslBuildFeatures.compose ?: false
+
+    override val buildConfig: Boolean
+        get() = dslBuildFeatures.buildConfig ?: projectOptions[BooleanOption.BUILD_FEATURE_BUILDCONFIG]
 }

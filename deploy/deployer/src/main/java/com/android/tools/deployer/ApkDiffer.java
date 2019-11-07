@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer;
 
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
 import java.util.ArrayList;
@@ -24,12 +25,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ApkDiffer {
+    public List<FileDiff> diff(List<Apk> oldApks, List<Apk> newApks) throws DeployerException {
+        List<ApkEntry> oldFiles = new ArrayList<>();
+        Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();
+        groupFiles(oldApks, oldFiles, oldMap);
 
-    public List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
-            throws DeployerException {
-
-        Map<String, Map<String, ApkEntry>> oldMap = groupFiles(oldFiles);
-        Map<String, Map<String, ApkEntry>> newMap = groupFiles(newFiles);
+        List<ApkEntry> newFiles = new ArrayList<>();
+        Map<String, Map<String, ApkEntry>> newMap = new HashMap<>();
+        groupFiles(newApks, newFiles, newMap);
 
         if (newMap.size() != oldMap.size()) {
             throw DeployerException.apkCountMismatch();
@@ -42,19 +45,19 @@ public class ApkDiffer {
         // Traverse local and remote list of crcs in order to detect what has changed in a local apk.
         List<FileDiff> diffs = new ArrayList<>();
         for (ApkEntry newFile : newFiles) {
-            ApkEntry oldFile = oldMap.get(newFile.apk.name).get(newFile.name);
+            ApkEntry oldFile = oldMap.get(newFile.getApk().name).get(newFile.getName());
             if (oldFile == null) {
                 diffs.add(new FileDiff(null, newFile, FileDiff.Status.CREATED));
             } else {
                 // Check if modified.
-                if (oldFile.checksum != newFile.checksum) {
+                if (oldFile.getChecksum() != newFile.getChecksum()) {
                     diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
                 }
             }
         }
 
         for (ApkEntry oldFile : oldFiles) {
-            ApkEntry newFile = newMap.get(oldFile.apk.name).get(oldFile.name);
+            ApkEntry newFile = newMap.get(oldFile.getApk().name).get(oldFile.getName());
             if (newFile == null) {
                 diffs.add(new FileDiff(oldFile, null, FileDiff.Status.DELETED));
             }
@@ -62,12 +65,11 @@ public class ApkDiffer {
         return diffs;
     }
 
-    public Map<String, Map<String, ApkEntry>> groupFiles(List<ApkEntry> oldFiles) {
-        Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();
-        for (ApkEntry file : oldFiles) {
-            Map<String, ApkEntry> map = oldMap.computeIfAbsent(file.apk.name, k -> new HashMap<>());
-            map.put(file.name, file);
+    private static void groupFiles(
+            List<Apk> apks, List<ApkEntry> entries, Map<String, Map<String, ApkEntry>> map) {
+        for (Apk apk : apks) {
+            map.putIfAbsent(apk.name, apk.apkEntries);
+            entries.addAll(apk.apkEntries.values());
         }
-        return oldMap;
     }
 }

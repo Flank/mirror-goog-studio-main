@@ -32,7 +32,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -50,6 +52,18 @@ public class JarMerger implements JarCreator {
             archivePath -> archivePath.endsWith(SdkConstants.DOT_CLASS);
     public static final Predicate<String> EXCLUDE_CLASSES =
             archivePath -> !archivePath.endsWith(SdkConstants.DOT_CLASS);
+
+    /**
+     * A filter that keeps everything but ignores duplicate resources.
+     *
+     * <p>Stateful, hence a factory method rather than an instance.
+     */
+    public static Predicate<String> allIgnoringDuplicateResources() {
+        // Keep track of resources to avoid failing on collisions.
+        Set<String> resources = new HashSet<>();
+        return archivePath ->
+                archivePath.endsWith(SdkConstants.DOT_CLASS) || resources.add(archivePath);
+    }
 
     public static final String MODULE_PATH = "module-path";
 

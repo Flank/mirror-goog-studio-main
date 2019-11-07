@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-f8037d4ea0da1d7918335286325df7ba867dbdd1eb604533f6e28b508b693c9c
+c4506f505d0029cf4c881af895f6329dff60dffeb88d53c08ef1e204e37b2c3c
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -55,7 +55,9 @@ com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getCompose: java.lang.Boolean ()
+com.android.build.api.dsl.BuildFeatures.setBuildConfig: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setCompose: void (java.lang.Boolean)
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension

@@ -25,9 +25,11 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.utils.FileUtils;
@@ -35,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -151,8 +154,8 @@ public class JavaResPackagingTest {
         Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
     }
 
-    private void execute(String... tasks) throws IOException, InterruptedException {
-        project.executor().run(tasks);
+    private GradleBuildResult execute(String... tasks) throws IOException, InterruptedException {
+        return project.executor().run(tasks);
     }
 
     @Test
@@ -286,13 +289,19 @@ public class JavaResPackagingTest {
         checkApk(appProject, "library.txt", "library:abcd");
 
 
-        doTest(appProject, project -> {
-            project.addFile(resourcePath, "new content");
-            assertThat(appProject.file(resourcePath)).exists();
-            execute("app:assembleDebug");
-
-            checkApk(appProject, "library.txt", "new content");
-        });
+        doTest(
+                appProject,
+                project -> {
+                    project.addFile(resourcePath, "new content");
+                    assertThat(appProject.file(resourcePath)).exists();
+                    GradleBuildResult result = execute("app:assembleDebug");
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        "More than one file was found with OS independent path 'com/foo/library.txt'.");
+                    }
+                    checkApk(appProject, "library.txt", "new content");
+                });
 
         // Trying to figure out why the test is flaky?
         assertThat(appProject.file(resourcePath)).doesNotExist();
@@ -528,12 +537,19 @@ public class JavaResPackagingTest {
     public void testLibProjectTestWithNewResFileOverridingTestedLib() throws Exception {
         execute("library:clean", "library:assembleAT");
 
-        doTest(libProject, project -> {
-            project.addFile("src/androidTest/resources/com/foo/library.txt", "new content");
-            execute("library:assembleAT");
+        doTest(
+                libProject,
+                project -> {
+                    project.addFile("src/androidTest/resources/com/foo/library.txt", "new content");
+                    GradleBuildResult result = execute("library:assembleAT");
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        "More than one file was found with OS independent path 'com/foo/library.txt'.");
+                    }
 
-            checkTestApk(libProject, "library.txt", "new content");
-        });
+                    checkTestApk(libProject, "library.txt", "new content");
+                });
 
         // file's been removed, checking in the other direction.
         execute("library:assembleAT");
@@ -541,15 +557,23 @@ public class JavaResPackagingTest {
     }
 
     @Test
-    public void testLibProjectTestWtihNewResFileOverridingDependency() throws Exception {
+    public void testLibProjectTestWithNewResFileOverridingDependency() throws Exception {
         execute("library:clean", "library:assembleAT");
 
-        doTest(libProject, project -> {
-            project.addFile("src/androidTest/resources/com/foo/library2.txt", "new content");
-            execute("library:assembleAT");
+        doTest(
+                libProject,
+                project -> {
+                    project.addFile(
+                            "src/androidTest/resources/com/foo/library2.txt", "new content");
+                    GradleBuildResult result = execute("library:assembleAT");
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        "More than one file was found with OS independent path 'com/foo/library2.txt'.");
+                    }
 
-            checkTestApk(libProject, "library2.txt", "new content");
-        });
+                    checkTestApk(libProject, "library2.txt", "new content");
+                });
 
         // file's been removed, checking in the other direction.
         execute("library:assembleAT");

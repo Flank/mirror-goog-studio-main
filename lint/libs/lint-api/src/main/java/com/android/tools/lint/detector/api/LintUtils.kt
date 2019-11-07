@@ -28,7 +28,6 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.BIN_FOLDER
 import com.android.SdkConstants.DOT_XML
-import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.ID_PREFIX
 import com.android.SdkConstants.MANIFEST_PLACEHOLDER_PREFIX
 import com.android.SdkConstants.MANIFEST_PLACEHOLDER_SUFFIX
@@ -89,6 +88,7 @@ import com.android.utils.CharSequences
 import com.android.utils.PositionXmlParser
 import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
+import com.android.utils.findGradleBuildFile
 import com.google.common.base.Charsets
 import com.google.common.base.MoreObjects
 import com.google.common.base.Objects
@@ -1500,7 +1500,7 @@ fun isEnglishResource(context: XmlContext, assumeForBase: Boolean): Boolean {
 fun guessGradleLocation(project: Project): Location {
     val dir = project.getDir()
     val location: Location
-    val topLevel = File(dir, FN_BUILD_GRADLE)
+    val topLevel = findGradleBuildFile(dir)
     location = if (topLevel.exists()) {
         Location.create(topLevel)
     } else {
@@ -1524,7 +1524,7 @@ fun guessGradleLocation(
     projectDir: File,
     string: String?
 ): Location {
-    val gradle = File(projectDir, FN_BUILD_GRADLE)
+    val gradle = findGradleBuildFile(projectDir)
     if (gradle.isFile) {
         if (string == null) {
             return Location.create(gradle)

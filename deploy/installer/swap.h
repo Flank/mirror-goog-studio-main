@@ -34,7 +34,7 @@ class SwapCommand : public Command {
   ~SwapCommand() {}
 
   void ParseParameters(int argc, char** argv) override;
-  void Run() override;
+  void Run(proto::InstallerResponse* response) override;
 
  private:
   std::string request_bytes_;

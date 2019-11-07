@@ -130,13 +130,13 @@ public class DexComparatorTest {
         @Override
         public List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) {
             ArrayList<DexClass> classes = new ArrayList<>();
-            if (dex.checksum == 1) {
+            if (dex.getChecksum() == 1) {
                 classes.add(new DexClass("A", 0x0011, new byte[0], dex));
-            } else if (dex.checksum == 2) {
+            } else if (dex.getChecksum() == 2) {
                 classes.add(new DexClass("A", 0x0011, new byte[0], dex));
-            } else if (dex.checksum == 3) {
+            } else if (dex.getChecksum() == 3) {
                 classes.add(new DexClass("A", 0x0012, new byte[0], dex));
-            } else if (dex.checksum == 4) {
+            } else if (dex.getChecksum() == 4) {
                 classes.add(new DexClass("A", 0x0011, new byte[0], dex));
                 classes.add(new DexClass("B", 0x0013, new byte[0], dex));
             }

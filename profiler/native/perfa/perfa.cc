@@ -45,6 +45,7 @@
 #include "transform/android_pendingintent_transform.h"
 #include "transform/android_powermanager_transform.h"
 #include "transform/android_powermanager_wakelock_transform.h"
+#include "transform/android_user_counter_transform.h"
 #include "transform/androidx_fragment_transform.h"
 #include "transform/gms_fusedlocationproviderclient_transform.h"
 #include "transform/java_url_transform.h"
@@ -190,7 +191,8 @@ void RegisterTransforms(
   }
 
   if (config.common().profiler_custom_event_visualization()) {
-    // TODO: transform Custom Event Visualization class to hook into user's code
+    transforms->insert({"Lcom/google/android/profiler/EventProfiler;",
+                        new AndroidUserCounterTransform()});
   }
 }
 

@@ -22,7 +22,7 @@ import static com.android.tools.deployer.InstallStatus.SKIPPED_INSTALL;
 import com.android.ddmlib.InstallReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.utils.ILogger;
 import java.io.IOException;
@@ -233,10 +233,10 @@ public class ApkInstaller {
             return new DeltaInstallResult(DeltaInstallStatus.API_NOT_SUPPORTED);
         }
 
-        List<ApkEntry> localEntries = new ApkParser().parsePaths(apks);
+        List<Apk> localApks = new ApkParser().parsePaths(apks);
         ApplicationDumper.Dump dump;
         try {
-            dump = new ApplicationDumper(installer).dump(localEntries);
+            dump = new ApplicationDumper(installer).dump(localApks);
         } catch (DeployerException e) {
             if (e.getError() == DeployerException.Error.DUMP_UNKNOWN_PACKAGE) {
                 return new DeltaInstallResult(DeltaInstallStatus.DUMP_UNKNOWN_PACKAGE);
@@ -255,7 +255,7 @@ public class ApkInstaller {
         }
 
         List<Deploy.PatchInstruction> patches =
-                new PatchSetGenerator(logger).generateFromEntries(localEntries, dump.apkEntries);
+                new PatchSetGenerator(logger).generateFromApks(localApks, dump.apks);
         if (patches == null) {
             return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
         } else if (patches.isEmpty()) {
@@ -267,8 +267,7 @@ public class ApkInstaller {
 
         // We use inheritance if there are more than one apks, and if the manifests
         // have not changed
-        boolean inherit =
-                canInherit(apks.size(), new ApkDiffer().diff(dump.apkEntries, localEntries));
+        boolean inherit = canInherit(apks.size(), new ApkDiffer().diff(dump.apks, localApks));
         builder.setInherit(inherit);
         builder.addAllPatchInstructions(patches);
         builder.setPackageName(packageName);
@@ -314,7 +313,7 @@ public class ApkInstaller {
         if (inherit) {
             for (FileDiff fileDiff : diff) {
                 if (fileDiff.oldFile != null
-                        && fileDiff.oldFile.name.equals("AndroidManifest.xml")) {
+                        && fileDiff.oldFile.getName().equals("AndroidManifest.xml")) {
                     inherit = false;
                 }
             }

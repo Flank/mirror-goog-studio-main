@@ -1,4 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 maven_java_library(
     name = "zipflinger",
@@ -8,6 +9,7 @@ maven_java_library(
     pom = ":pom",
     visibility = [
         "//tools/base/build-system:__subpackages__",
+        "//tools/base/deploy/deployer:__subpackages__",
         "//tools/base/lint:__subpackages__",
         "//tools/base/signflinger:__subpackages__",
     ],
@@ -189,5 +191,25 @@ java_binary(
     main_class = "com.android.zipflinger.Zip",
     deps = [
         ":zipflinger",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.zipflinger",
+    # do not sort: must match IML order
+    srcs = [
+        "src",
+        "tools/src",
+    ],
+    iml_files = ["android.sdktools.zipflinger.iml"],
+    test_data = glob(["test/resource/**"]),
+    test_srcs = ["test/src/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module]",
     ],
 )

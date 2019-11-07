@@ -65,10 +65,6 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
     abstract val classes: ConfigurableFileCollection
 
     @get:Input
-    var packageBuildConfig: Boolean = false
-        private set
-
-    @get:Input
     abstract val packageRClass: Property<Boolean>
 
     @get:Input
@@ -87,7 +83,6 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
                     toIgnore = toIgnoreRegExps.get(),
                     output = output.get().asFile,
                     input = classes.files,
-                    packageBuildConfig = packageBuildConfig,
                     packageRClass = packageRClass.get(),
                     jarCreatorType = jarCreatorType
                 )
@@ -163,7 +158,6 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
             task.toIgnoreRegExps.set(
                 variantScope.globalScope.project.provider(toIgnoreRegExps::get)
             )
-            task.packageBuildConfig = variantScope.globalScope.extension.packageBuildConfig
             task.jarCreatorType = variantScope.jarCreatorType
         }
     }
@@ -176,7 +170,6 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
         val toIgnore: List<String>,
         val output: File,
         val input: Set<File>,
-        val packageBuildConfig: Boolean,
         val packageRClass: Boolean,
         val jarCreatorType: JarCreatorType
     ) :
@@ -189,7 +182,6 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
         val ignorePatterns =
             (LibraryAarJarsTask.getDefaultExcludes(
                 packagePath = params.packageName,
-                packageBuildConfig = params.packageBuildConfig,
                 packageR = params.packageRClass
             ) + params.toIgnore)
                 .map { Pattern.compile(it) }

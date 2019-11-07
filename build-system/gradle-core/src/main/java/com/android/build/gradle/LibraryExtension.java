@@ -16,6 +16,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.Collections;
+import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
@@ -30,10 +31,7 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
 public class LibraryExtension extends TestedExtension
         implements com.android.build.api.dsl.LibraryExtension {
 
-    private final DefaultDomainObjectSet<LibraryVariant> libraryVariantList
-            = new DefaultDomainObjectSet<LibraryVariant>(LibraryVariant.class);
-
-    private boolean packageBuildConfig = true;
+    private final DomainObjectSet<LibraryVariant> libraryVariantList;
 
     private Collection<String> aidlPackageWhiteList = null;
 
@@ -58,6 +56,7 @@ public class LibraryExtension extends TestedExtension
                 sourceSetManager,
                 extraModelInfo,
                 false);
+        libraryVariantList = project.getObjects().domainObjectSet(LibraryVariant.class);
     }
 
     /**
@@ -84,32 +83,12 @@ public class LibraryExtension extends TestedExtension
      * </pre>
      */
     public DefaultDomainObjectSet<LibraryVariant> getLibraryVariants() {
-        return libraryVariantList;
+        return (DefaultDomainObjectSet<LibraryVariant>) libraryVariantList;
     }
 
     @Override
     public void addVariant(BaseVariant variant, VariantScope variantScope) {
         libraryVariantList.add((LibraryVariant) variant);
-    }
-
-    public void packageBuildConfig(boolean value) {
-        if (!value) {
-            LoggingUtil.displayDeprecationWarning(logger, project,
-                    "Support for not packaging BuildConfig is deprecated.");
-        }
-
-        packageBuildConfig = value;
-    }
-
-    @Deprecated
-    public void setPackageBuildConfig(boolean value) {
-        // Remove when users stop requiring this setting.
-        packageBuildConfig(value);
-    }
-
-    @Override
-    public Boolean getPackageBuildConfig() {
-        return packageBuildConfig;
     }
 
     public void aidlPackageWhiteList(String ... aidlFqcns) {

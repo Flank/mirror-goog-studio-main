@@ -76,10 +76,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val typedefRecipe: RegularFileProperty
 
-    @get:Input
-    abstract var packageBuildConfig: Boolean
-        protected set
-
     @get:Classpath
     abstract var mainScopeClassFiles: FileCollection
         protected set
@@ -144,7 +140,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
     private fun computeExcludeList(): List<Pattern> {
         val excludes = getDefaultExcludes(
-            packageName.get().replace(".", "/"), packageBuildConfig)
+            packageName.get().replace(".", "/"))
 
         excludes.addAll(excludeList.get())
 
@@ -271,7 +267,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
 
         fun getDefaultExcludes(
-            packagePath: String, packageBuildConfig: Boolean, packageR: Boolean = false
+            packagePath: String, packageR: Boolean = false
         ): MutableList<String> {
             val excludes = ArrayList<String>(5)
             if (!packageR) {
@@ -281,16 +277,12 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             }
             excludes.add("$packagePath/Manifest.class$")
             excludes.add("$packagePath/Manifest\\$(.*).class$")
-            if (!packageBuildConfig) {
-                excludes.add("$packagePath/BuildConfig.class$")
-            }
             return excludes
         }
     }
 
     class CreationAction(
         variantScope: VariantScope,
-        private val packageBuildConfig: Boolean,
         private val excludeListProvider: Supplier<List<String>> =  Supplier { listOf<String>() }
     ) : VariantTaskCreationAction<LibraryAarJarsTask>(variantScope) {
         override val type = LibraryAarJarsTask::class.java
@@ -339,8 +331,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 }
             )
             task.packageName.disallowChanges()
-
-            task.packageBuildConfig = packageBuildConfig
 
             task.jarCreatorType = variantScope.jarCreatorType
 

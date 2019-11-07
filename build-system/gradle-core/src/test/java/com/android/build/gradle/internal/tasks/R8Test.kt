@@ -31,10 +31,12 @@ import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
+import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.RegularFile
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -64,6 +66,7 @@ class R8Test(val r8OutputType: R8OutputType) {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var outputDir: Path
+    private lateinit var featureDexDir: File
     private lateinit var outputProguard: RegularFile
 
     companion object {
@@ -75,6 +78,7 @@ class R8Test(val r8OutputType: R8OutputType) {
     @Before
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
+        featureDexDir = tmp.newFolder()
         outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
@@ -303,6 +307,102 @@ class R8Test(val r8OutputType: R8OutputType) {
     }
 
     @Test
+    fun testProguardConfiguration_withDynamicFeatures() {
+        Assume.assumeTrue(r8OutputType == R8OutputType.DEX)
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        TestInputsGenerator.pathWithClasses(
+            classes,
+            listOf(Animal::class.java, CarbonForm::class.java)
+        )
+
+        val featureJar = tmp.root.toPath().resolve("feature.jar")
+        TestInputsGenerator.pathWithClasses(featureJar, listOf(Cat::class.java, Toy::class.java))
+
+        val proguardConfiguration = tmp.newFile()
+        proguardConfiguration.printWriter().use {
+            it.println("-keep class " + Cat::class.java.name + " {*;}")
+            it.println("-keep class " + CarbonForm::class.java.name + " {*;}")
+        }
+
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            java8Support = VariantScope.Java8LangSupport.R8,
+            proguardRulesFiles = listOf(proguardConfiguration),
+            featureJars = listOf(featureJar.toFile()),
+            featureDexDir = featureDexDir
+        )
+
+        // Animal class is not explicitly kept and thus may be merged into Cat.
+        checkBaseAndFeatureDex(
+            baseClasses = listOf(
+                Type.getDescriptor(CarbonForm::class.java)
+            ),
+            featureClasses = listOf(
+                Type.getDescriptor(Cat::class.java),
+                Type.getDescriptor(Toy::class.java)
+            ),
+            featureName = "feature"
+        )
+
+        // Check proguard compatibility mode
+        assertThat(Dex(featureDexDir.resolve("feature/classes.dex")))
+            .containsClass(Type.getDescriptor(Toy::class.java))
+            .that()
+            .hasAnnotations()
+
+        // run again in full R8 mode
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            java8Support = VariantScope.Java8LangSupport.R8,
+            proguardRulesFiles = listOf(proguardConfiguration),
+            featureJars = listOf(featureJar.toFile()),
+            featureDexDir = featureDexDir,
+            useFullR8 = true
+        )
+
+        // Animal class is not explicitly kept and thus may be merged into Cat.
+        checkBaseAndFeatureDex(
+            baseClasses = listOf(
+                Type.getDescriptor(CarbonForm::class.java)
+            ),
+            featureClasses = listOf(
+                Type.getDescriptor(Cat::class.java),
+                Type.getDescriptor(Toy::class.java)
+            ),
+            featureName = "feature"
+        )
+
+        // Check full R8 mode
+        assertThat(Dex(featureDexDir.resolve("feature/classes.dex")))
+            .containsClass("L${Type.getInternalName(Toy::class.java)};")
+            .that()
+            .doesNotHaveAnnotations()
+
+        // run again with different keep rules such that we expect no classes in feature
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            java8Support = VariantScope.Java8LangSupport.R8,
+            r8Keep = "class " + CarbonForm::class.java.name,
+            featureJars = listOf(featureJar.toFile()),
+            featureDexDir = featureDexDir
+        )
+
+        val baseDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
+        assertThat(baseDex).containsExactlyClassesIn(
+            listOf(Type.getDescriptor(CarbonForm::class.java))
+        )
+
+        // there are no classes for the feature, but we expect the empty parent directory
+        val featureDexParent = featureDexDir.resolve("feature")
+        FileSubject.assertThat(featureDexParent).exists()
+        FileSubject.assertThat(featureDexParent).isDirectory()
+        assertThat(featureDexParent.listFiles()).hasLength(0)
+    }
+
+    @Test
     fun testNonAsciiClassName() {
         // test for http://b.android.com/221057
         val nonAsciiName = "com/android/tests/basic/Ubicación"
@@ -474,6 +574,21 @@ class R8Test(val r8OutputType: R8OutputType) {
         return Dex(dexFiles.single())
     }
 
+    private fun checkBaseAndFeatureDex(
+        baseClasses: List<String>,
+        featureClasses: List<String>,
+        featureName: String
+    ) {
+        val baseDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
+        assertThat(baseDex).containsClassesIn(baseClasses)
+        assertThat(baseDex).doesNotContainClasses(*featureClasses.toTypedArray())
+
+        val featureDex = Dex(featureDexDir.resolve("$featureName/classes.dex"))
+        assertThat(featureDex).containsExactlyClassesIn(featureClasses)
+        assertThat(featureDex).doesNotContainClasses(*baseClasses.toTypedArray())
+    }
+
+
     private fun runR8(
         classes: List<File>,
         resources: List<File>,
@@ -486,7 +601,9 @@ class R8Test(val r8OutputType: R8OutputType) {
         minSdkVersion: Int = 21,
         useFullR8: Boolean = false,
         r8Keep: String? = null,
-        referencedInputs: List<File> = listOf()
+        referencedInputs: List<File> = listOf(),
+        featureJars: List<File> = listOf(),
+        featureDexDir: File? = null
     ) {
         val proguardConfigurations: MutableList<String> = mutableListOf(
             "-ignorewarnings")
@@ -536,7 +653,9 @@ class R8Test(val r8OutputType: R8OutputType) {
                     tmp.root.resolve("usage.txt").toPath()),
             output = output,
             outputResources = outputDir.resolve("java_res.jar").toFile(),
-            mainDexListOutput = null
+            mainDexListOutput = null,
+            featureJars = featureJars,
+            featureDexDir = featureDexDir
         )
     }
 }

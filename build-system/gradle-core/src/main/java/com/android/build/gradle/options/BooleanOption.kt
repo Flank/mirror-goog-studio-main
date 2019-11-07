@@ -56,6 +56,11 @@ enum class BooleanOption(
     ENABLE_STUDIO_VERSION_CHECK("android.injected.studio.version.check", true, Option.Status.STABLE),
 
     // ---------------
+    // FEATURE Default Values
+    // This is a PUBLIC API.
+    BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, Option.Status.STABLE),
+
+    // ---------------
     // Lifecycle flags: Experimental stage, not yet enabled by default
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
@@ -63,7 +68,6 @@ enum class BooleanOption(
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", true),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),
-    ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
     ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
     USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),

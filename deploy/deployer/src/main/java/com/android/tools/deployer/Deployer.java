@@ -17,7 +17,7 @@
 package com.android.tools.deployer;
 
 import com.android.sdklib.AndroidVersion;
-import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class Deployer {
 
@@ -103,11 +102,11 @@ public class Deployer {
             CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
 
             // Parse the apks
-            Task<List<ApkEntry>> entries =
+            Task<List<Apk>> apkList =
                     runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
             // Update the database
-            runner.create(Tasks.CACHE, splitter::cache, entries);
+            runner.create(Tasks.CACHE, splitter::cache, apkList);
 
             runner.runAsync();
             return result;
@@ -141,7 +140,7 @@ public class Deployer {
         Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
 
         // Get the list of files from the local apks
-        Task<List<ApkEntry>> newFiles =
+        Task<List<Apk>> newFiles =
                 runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
         // Get the list of files from the installed app
@@ -152,8 +151,7 @@ public class Deployer {
         Task<List<FileDiff>> diffs =
                 runner.create(
                         Tasks.DIFF,
-                        (dump, newApkEntries) ->
-                                new ApkDiffer().diff(dump.apkEntries, newApkEntries),
+                        (dump, newApks) -> new ApkDiffer().diff(dump.apks, newApks),
                         dumps,
                         newFiles);
 
@@ -178,25 +176,24 @@ public class Deployer {
         ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart);
         runner.create(Tasks.SWAP, swapper::swap, dumps, sessionId, toSwap);
 
-        List<Task<?>> tasks = runner.run();
+        TaskRunner.Result result = runner.run();
+        result.getMetrics().forEach(metrics::add);
 
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
         // Note we artificially block this task until swap is done.
-        runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
+        if (result.isSuccess()) {
+            runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
 
-        // Wait only for swap to finish
-        runner.runAsync();
+            // Wait only for swap to finish
+            runner.runAsync();
+        } else {
+            throw result.getException();
+        }
 
-        // null metrics are from tasks that are not started.
-        tasks.stream()
-                .map(task -> task.getMetric())
-                .filter(Objects::nonNull)
-                .forEach(metric -> metrics.add(metric));
-
-        Result result = new Result();
-        result.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
-        return result;
+        Result deployResult = new Result();
+        deployResult.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
+        return deployResult;
     }
 }

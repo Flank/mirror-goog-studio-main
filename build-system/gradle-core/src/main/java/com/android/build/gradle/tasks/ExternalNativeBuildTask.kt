@@ -203,7 +203,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
                 }
                 if (!libraryValue.output!!.exists()) {
                     throw GradleException(
-                            "Expected output file at ${libraryValue.output} for target ${libraryValue.artifactName} but there was none")
+                        "Expected output file at ${libraryValue.output} for target ${libraryValue.artifactName} but there was none")
                 }
                 if (libraryValue.abi == null) {
                     throw GradleException("Expected NativeLibraryValue to have non-null abi")

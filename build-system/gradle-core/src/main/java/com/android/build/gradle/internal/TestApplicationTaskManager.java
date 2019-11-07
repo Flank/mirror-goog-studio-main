@@ -182,13 +182,10 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Nullable
     @Override
-    protected CodeShrinker maybeCreateJavaCodeShrinkerTransform(
-            @NonNull VariantScope variantScope) {
+    protected CodeShrinker maybeCreateJavaCodeShrinkerTask(@NonNull VariantScope variantScope) {
         if (variantScope.getCodeShrinker() != null) {
-            return doCreateJavaCodeShrinkerTransform(
-                    variantScope,
-                    Objects.requireNonNull(variantScope.getCodeShrinker()),
-                    true);
+            return doCreateJavaCodeShrinkerTask(
+                    variantScope, Objects.requireNonNull(variantScope.getCodeShrinker()), true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
                     taskFactory.register(

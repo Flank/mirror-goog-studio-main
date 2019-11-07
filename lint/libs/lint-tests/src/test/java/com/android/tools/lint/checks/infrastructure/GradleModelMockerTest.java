@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_UNIT_TEST;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
@@ -145,6 +147,47 @@ public class GradleModelMockerTest {
     }
 
     @Test
+    public void testLibrariesInExtraArtifacts() {
+        GradleModelMocker mocker =
+                createMocker(
+                        ""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    testCompile 'my.group.id:mylib1:1.2.3-rc4'\n"
+                        + "    androidTestImplementation 'my.group.id:mylib2:4.5.6-SNAPSHOT'\n"
+                        + "}");
+        Variant variant = mocker.getVariant();
+        IdeAndroidProject project = mocker.getProject();
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
+
+        assertThat(variant.getMergedFlavor().getVersionCode()).isNull();
+
+        Collection<AndroidLibrary> testLibraries =
+                variant.getExtraJavaArtifacts().stream()
+                        .filter(a -> a.getName().equals(ARTIFACT_NAME_UNIT_TEST))
+                        .findFirst().get().getDependencies().getLibraries();
+        assertThat(testLibraries).hasSize(1);
+        AndroidLibrary testLibrary = testLibraries.iterator().next();
+        MavenCoordinates testResolvedCoordinates = testLibrary.getResolvedCoordinates();
+        assertThat(testResolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
+        assertThat(testResolvedCoordinates.getArtifactId()).isEqualTo("mylib1");
+        assertThat(testResolvedCoordinates.getVersion()).isEqualTo("1.2.3-rc4");
+
+        Collection<AndroidLibrary> androidTestLibraries =
+                variant.getExtraAndroidArtifacts().stream()
+                        .filter(a -> a.getName().equals(ARTIFACT_NAME_ANDROID_TEST))
+                        .findFirst().get().getDependencies().getLibraries();
+        assertThat(androidTestLibraries).hasSize(1);
+        AndroidLibrary library = androidTestLibraries.iterator().next();
+        MavenCoordinates androidTestResolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(androidTestResolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
+        assertThat(androidTestResolvedCoordinates.getArtifactId()).isEqualTo("mylib2");
+        assertThat(androidTestResolvedCoordinates.getVersion()).isEqualTo("4.5.6-SNAPSHOT");
+
+    }
+
+    @Test
     public void testKotlin() {
         GradleModelMocker mocker =
                 createMocker(
@@ -173,6 +216,41 @@ public class GradleModelMockerTest {
         assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
         assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib");
         assertThat(resolvedCoordinates.getVersion()).isEqualTo("$kotlin_version");
+    }
+
+    @Test
+    public void testKotlinWithInterpolation() {
+        GradleModelMocker mocker =
+                createMocker(
+                        ""
+                                + "apply plugin: 'kotlin-android'\n"
+                                + "\n"
+                                + "ext {\n"
+                                + "    kotlin_version = \"1.3.21\"\n"
+                                + "}\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n"
+                                + "}");
+        Variant variant = mocker.getVariant();
+        IdeAndroidProject project = mocker.getProject();
+        assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
+
+        assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
+        Collection<JavaLibrary> libraries =
+                variant.getMainArtifact().getDependencies().getJavaLibraries();
+        assertThat(libraries).hasSize(3);
+        JavaLibrary library = libraries.iterator().next();
+        MavenCoordinates resolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
+        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib-jdk7");
+        assertThat(resolvedCoordinates.getVersion()).isEqualTo("1.3.21");
+
+        library = Iterators.get(libraries.iterator(), 1);
+        resolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
+        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib");
+        assertThat(resolvedCoordinates.getVersion()).isEqualTo("1.3.21");
     }
 
     @Test

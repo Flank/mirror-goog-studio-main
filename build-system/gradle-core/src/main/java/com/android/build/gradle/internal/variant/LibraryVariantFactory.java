@@ -82,6 +82,8 @@ public class LibraryVariantFactory extends BaseVariantFactory {
      */
     @Override
     public void validateModel(@NonNull VariantModel model) {
+        super.validateModel(model);
+
         EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 
         if (model.getDefaultConfig().getProductFlavor().getApplicationId() != null) {

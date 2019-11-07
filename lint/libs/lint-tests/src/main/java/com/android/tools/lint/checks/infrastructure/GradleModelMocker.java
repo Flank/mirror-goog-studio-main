@@ -21,6 +21,8 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_UNIT_TEST;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +40,7 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
@@ -91,6 +94,8 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
@@ -105,12 +110,18 @@ import org.mockito.stubbing.OngoingStubbing;
  * dependencies etc)
  */
 public class GradleModelMocker {
+    private static Pattern configurationPattern = Pattern.compile("^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*");
+
     private IdeAndroidProject project;
     private Variant variant;
     private GlobalLibraryMap globalLibraryMap;
     private final List<BuildType> buildTypes = Lists.newArrayList();
     private final List<AndroidLibrary> androidLibraries = Lists.newArrayList();
     private final List<JavaLibrary> javaLibraries = Lists.newArrayList();
+    private final List<AndroidLibrary> testAndroidLibraries = Lists.newArrayList();
+    private final List<JavaLibrary> testJavaLibraries = Lists.newArrayList();
+    private final List<AndroidLibrary> androidTestAndroidLibraries = Lists.newArrayList();
+    private final List<JavaLibrary> androidTestJavaLibraries = Lists.newArrayList();
     private final List<JavaLibrary> allJavaLibraries = Lists.newArrayList();
     private ProductFlavor mergedFlavor;
     private ProductFlavor defaultFlavor;
@@ -121,6 +132,8 @@ public class GradleModelMocker {
     private final Multimap<String, String> splits = ArrayListMultimap.create();
     private ILogger logger;
     private boolean initialized;
+
+    private final Map<String, String> ext = new HashMap<>();
 
     @Language("Groovy")
     private final String gradle;
@@ -302,13 +315,22 @@ public class GradleModelMocker {
                 .thenReturn(null); // don't default to Integer.valueOf(0) !
 
         Dependencies dependencies = mock(Dependencies.class);
+        Dependencies testDependencies = mock(Dependencies.class);
+        Dependencies androidTestDependencies = mock(Dependencies.class);
+
         when(dependencies.getLibraries()).thenReturn(androidLibraries);
+        when(testDependencies.getLibraries()).thenReturn(testAndroidLibraries);
+        when(androidTestDependencies.getLibraries()).thenReturn(androidTestAndroidLibraries);
 
         if (modelVersion.isAtLeast(2, 0, 0)) {
             when(dependencies.getJavaLibraries()).thenReturn(javaLibraries);
+            when(testDependencies.getJavaLibraries()).thenReturn(testJavaLibraries);
+            when(androidTestDependencies.getJavaLibraries()).thenReturn(androidTestJavaLibraries);
         } else {
             // Should really throw org.gradle.tooling.model.UnsupportedMethodException here!
             when(dependencies.getJavaLibraries()).thenThrow(new RuntimeException());
+            when(testDependencies.getJavaLibraries()).thenThrow(new RuntimeException());
+            when(androidTestDependencies.getJavaLibraries()).thenThrow(new RuntimeException());
         }
 
         //mergedFlavor = mock(ProductFlavor.class);
@@ -369,9 +391,23 @@ public class GradleModelMocker {
 
         // Artifacts
         AndroidArtifact artifact = mock(AndroidArtifact.class);
+        JavaArtifact testArtifact = mock(JavaArtifact.class);
+        AndroidArtifact androidTestArtifact = mock(AndroidArtifact.class);
+
+        when(testArtifact.getName()).thenReturn(ARTIFACT_NAME_UNIT_TEST);
+        when(androidTestArtifact.getName()).thenReturn(ARTIFACT_NAME_ANDROID_TEST);
+
+        Collection<JavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
+        Collection<AndroidArtifact> extraAndroidArtifacts = Collections.singletonList(androidTestArtifact);
+
         //noinspection deprecation
         when(artifact.getDependencies()).thenReturn(dependencies);
+        when(testArtifact.getDependencies()).thenReturn(testDependencies);
+        when(androidTestArtifact.getDependencies()).thenReturn(androidTestDependencies);
+
         when(variant.getMainArtifact()).thenReturn(artifact);
+        when(variant.getExtraJavaArtifacts()).thenReturn(extraJavaArtifacts);
+        when(variant.getExtraAndroidArtifacts()).thenReturn(extraAndroidArtifacts);
 
         if (modelVersion.isAtLeast(2, 5, 0, "alpha", 1, false)) {
             DependencyGraphs graphs = createDependencyGraphs();
@@ -671,24 +707,43 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static String getUnquotedValue(String key) {
+    private String getUnquotedValue(String key) {
+        String value = key;
         int index = key.indexOf('\'');
         if (index != -1) {
-            return key.substring(index + 1, key.indexOf('\'', index + 1));
+            value = key.substring(index + 1, key.indexOf('\'', index + 1));
         }
-        index = key.indexOf('"');
-        if (index != -1) {
-            return key.substring(index + 1, key.indexOf('"', index + 1));
+        else if ((index = key.indexOf('"')) != -1) {
+            value = key.substring(index + 1, key.indexOf('"', index + 1));
         }
-        index = key.indexOf('=');
-        if (index != -1) {
-            return key.substring(index + 1);
+        else if ((index = key.indexOf('=')) != -1) {
+            value = key.substring(index + 1);
         }
-        index = key.indexOf(' ');
-        if (index != -1) {
-            return key.substring(index + 1);
+        else if ((index = key.indexOf(' ')) != -1) {
+            value = key.substring(index + 1);
         }
-        return key;
+        return value.indexOf('$') == -1 ? value : doInterpolations(value);
+    }
+
+    @NonNull
+    private String doInterpolations(String value) {
+        StringBuilder sb = new StringBuilder();
+        int lastIndex = 0;
+        int index;
+        while ((index = value.indexOf('$', lastIndex)) != -1) {
+            sb.append(value, lastIndex, index);
+            int end = value.indexOf(' ', index);
+            if (end == -1) end = value.length();
+            String name = value.substring(index+1, end);
+            if (ext.containsKey(name)) {
+                sb.append(ext.get(name));
+            } else {
+                sb.append("$" + name);
+            }
+            lastIndex = end;
+        }
+        sb.append(value, lastIndex, value.length());
+        return sb.toString();
     }
 
     private void line(@NonNull String line, @NonNull String context) {
@@ -729,13 +784,15 @@ public class GradleModelMocker {
         }
 
         String key = context.isEmpty() ? line : context + "." + line;
-        if (key.startsWith("dependencies.compile ")
-                || key.startsWith("dependencies.compile(")
-                || key.startsWith("dependencies.implementation(")
-                || key.startsWith("dependencies.implementation ")) {
+        Matcher m = configurationPattern.matcher(key);
+        if (key.startsWith("ext.")) {
+            String name = key.substring(4, key.indexOf(' '));
+            ext.put(name, getUnquotedValue(key));
+        } else if (m.matches()) {
+            String artifactName = m.group(1);
             String declaration = getUnquotedValue(key);
             if (GradleCoordinate.parseCoordinateString(declaration) != null) {
-                addDependency(declaration, null, false);
+                addDependency(declaration, artifactName, false);
                 return;
             } else {
                 // Group/artifact/version syntax?
@@ -760,7 +817,7 @@ public class GradleModelMocker {
                     }
                     if (group != null && artifact != null && version != null) {
                         declaration = group + ':' + artifact + ':' + version;
-                        addDependency(declaration, null, false);
+                        addDependency(declaration, artifactName, false);
                         return;
                     }
                 }
@@ -894,7 +951,6 @@ public class GradleModelMocker {
             } // else ignore other class paths
         } else if (key.startsWith("android.defaultConfig.testInstrumentationRunner ")
                 || key.contains(".proguardFiles ")
-                || key.startsWith("android.compileSdkVersion ")
                 || key.equals("dependencies.compile fileTree(dir: 'libs', include: ['*.jar'])")
                 || key.startsWith("dependencies.androidTestCompile('")) {
             // Ignored for now
@@ -1333,7 +1389,7 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static ApiVersion createApiVersion(@NonNull String value) {
+    private ApiVersion createApiVersion(@NonNull String value) {
         ApiVersion version = mock(ApiVersion.class);
         String s = value.substring(value.indexOf(' ') + 1);
         if (s.startsWith("'")) {
@@ -1352,7 +1408,7 @@ public class GradleModelMocker {
         return version;
     }
 
-    private void addDependency(String declaration, String scope, boolean isProvided) {
+    private void addDependency(String declaration, String artifact, boolean isProvided) {
         // If it's one of the common libraries, built up the full dependency graph
         // that we know will actually be used
         //
@@ -1381,7 +1437,7 @@ public class GradleModelMocker {
                                     + "|    |    \\--- com.android.support:support-compat:VERSION (*)\n"
                                     + "|    \\--- com.android.support:animated-vector-drawable:VERSION\n"
                                     + "|         \\--- com.android.support:support-vector-drawable:VERSION (*)\n")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
 
         } else if (declaration.startsWith("com.android.support:support-v4:")) {
             String version = declaration.substring("com.android.support:support-v4:".length());
@@ -1401,7 +1457,7 @@ public class GradleModelMocker {
                                     + "|         +--- com.android.support:support-media-compat:VERSION (*)\n"
                                     + "|         +--- com.android.support:support-core-ui:VERSION (*)\n"
                                     + "|         \\--- com.android.support:support-core-utils:VERSION (*)\n")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("com.android.support.constraint:constraint-layout:")) {
             String version =
                     declaration.substring(
@@ -1410,7 +1466,7 @@ public class GradleModelMocker {
                     (""
                                     + "+--- com.android.support.constraint:constraint-layout:VERSION\n"
                                     + "     \\--- com.android.support.constraint:constraint-layout-solver:VERSION\n")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("com.firebase:firebase-client-android:")) {
             String version =
                     declaration.substring("com.firebase:firebase-client-android:".length());
@@ -1422,7 +1478,7 @@ public class GradleModelMocker {
                                     + "          |    +--- com.fasterxml.jackson.core:jackson-annotations:2.2.2\n"
                                     + "          |    \\--- com.fasterxml.jackson.core:jackson-core:2.2.2\n"
                                     + "          \\--- com.firebase:tubesock:0.0.12")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("com.android.support:design:")) {
             // Design library
             String version = declaration.substring("com.android.support:design:".length());
@@ -1434,7 +1490,7 @@ public class GradleModelMocker {
                                     + "|    |    \\--- com.android.support:support-v4:VERSION (*)\n"
                                     + "|    +--- com.android.support:appcompat-v7:VERSION (*)\n"
                                     + "|    \\--- com.android.support:support-v4:VERSION (*)")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("com.google.android.gms:play-services-analytics:")) {
             // Analytics
             String version =
@@ -1446,7 +1502,7 @@ public class GradleModelMocker {
                                     + "|    \\--- com.google.android.gms:play-services-basement:VERSION\n"
                                     + "|         \\--- com.android.support:support-v4:23.0.0 -> 23.4.0\n"
                                     + "|              \\--- com.android.support:support-annotations:23.4.0")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("com.google.android.gms:play-services-gcm:")) {
             // GMS
             String version =
@@ -1457,7 +1513,7 @@ public class GradleModelMocker {
                                     + "|    +--- com.google.android.gms:play-services-base:VERSION (*)\n"
                                     + "|    \\--- com.google.android.gms:play-services-measurement:VERSION\n"
                                     + "|         \\--- com.google.android.gms:play-services-basement:VERSION (*)")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("com.google.android.gms:play-services-appindexing:")) {
             // App Indexing
             String version =
@@ -1468,7 +1524,7 @@ public class GradleModelMocker {
                                     + "+--- com.google.android.gms:play-services-appindexing:VERSION\n"
                                     + "|    \\--- com.google.android.gms:play-services-base:VERSION\n"
                                     + "|         \\--- com.google.android.gms:play-services-basement:VERSION (*)")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk7:")) {
             // Kotlin
             String version =
@@ -1481,7 +1537,7 @@ public class GradleModelMocker {
                                     + "|         \\--- org.jetbrains:annotations:13.0\n"
                                     + "+--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)\n"
                                     + "+--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk8:")) {
             // Kotlin
             String version =
@@ -1494,31 +1550,63 @@ public class GradleModelMocker {
                                     + "|    |    \\--- org.jetbrains:annotations:13.0\n"
                                     + "|    \\--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION\n"
                                     + "|         \\--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)")
-                            .replace("VERSION", version));
+                            .replace("VERSION", version), artifact);
         } else {
             // Look for the library in the dependency graph provided
             Dep dep = graphs.get(declaration);
             if (dep != null) {
-                addLibrary(dep);
+                addLibrary(dep, artifact);
             } else if (isJavaLibrary(declaration)) {
                 // Not found in dependency graphs: create a single Java library
                 JavaLibrary library = createJavaLibrary(declaration, isProvided);
-                javaLibraries.add(library);
+                if (artifact == null || artifact.isEmpty()) {
+                    javaLibraries.add(library);
+                } else if (artifact.equals("test")) {
+                    testJavaLibraries.add(library);
+                } else if (artifact.equals("androidTest")) {
+                    androidTestJavaLibraries.add(library);
+                } else {
+                    error("Unrecognized artifact name: " + artifact);
+                }
             } else {
                 // Not found in dependency graphs: create a single Android library
                 AndroidLibrary library = createAndroidLibrary(declaration, isProvided);
-                androidLibraries.add(library);
+                if (artifact == null || artifact.isEmpty()) {
+                    androidLibraries.add(library);
+                } else if (artifact.equals("test")) {
+                    testAndroidLibraries.add(library);
+                } else if (artifact.equals("androidTest")) {
+                    androidTestAndroidLibraries.add(library);
+                } else {
+                    error("Unrecognized artifact name: " + artifact);
+                }
             }
         }
     }
 
-    private void addTransitiveLibrary(@NonNull String graph) {
+    private void addTransitiveLibrary(@NonNull String graph, String artifact) {
         for (Dep dep : parseDependencyGraph(graph)) {
-            addLibrary(dep);
+            addLibrary(dep, artifact);
         }
     }
 
-    private void addLibrary(@NonNull Dep dep) {
+    private void addLibrary(@NonNull Dep dep, String artifact) {
+        List<AndroidLibrary> androidLibraries;
+        List<JavaLibrary> javaLibraries;
+        if (artifact == null || artifact.isEmpty()) {
+            androidLibraries = this.androidLibraries;
+            javaLibraries = this.javaLibraries;
+        } else if (artifact.equals("test")) {
+            androidLibraries = this.testAndroidLibraries;
+            javaLibraries = this.testJavaLibraries;
+        } else if (artifact.equals("androidTest")) {
+            androidLibraries = this.androidTestAndroidLibraries;
+            javaLibraries = this.androidTestJavaLibraries;
+        } else {
+            error("Unrecognized artifact name: " + artifact);
+            return;
+        }
+
         Library library = dep.createLibrary();
         if (library instanceof AndroidLibrary) {
             androidLibraries.add((AndroidLibrary) library);

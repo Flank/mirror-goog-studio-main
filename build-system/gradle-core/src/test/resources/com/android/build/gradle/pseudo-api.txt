@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4da9c89662bd3d687a5af99490f965818263aa07141141372536892999654b2d
+a1f15cb73bfa1dc50c02533d101bb49346416fc22006b90aec1a31b92a1680bd
 -------------------------------------------------------------------------
 com.android.build.gradle.AndroidConfig
 com.android.build.gradle.AndroidConfig.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
@@ -30,7 +30,6 @@ com.android.build.gradle.AndroidConfig.getJacoco: com.android.build.gradle.inter
 com.android.build.gradle.AndroidConfig.getLibraryRequests: java.util.Collection<com.android.builder.core.LibraryRequest> ()
 com.android.build.gradle.AndroidConfig.getLintOptions: com.android.build.gradle.internal.dsl.LintOptions ()
 com.android.build.gradle.AndroidConfig.getNdkVersion: java.lang.String ()
-com.android.build.gradle.AndroidConfig.getPackageBuildConfig: java.lang.Boolean ()
 com.android.build.gradle.AndroidConfig.getPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions ()
 com.android.build.gradle.AndroidConfig.getProductFlavors: java.util.Collection<? extends com.android.build.gradle.internal.dsl.CoreProductFlavor> ()
 com.android.build.gradle.AndroidConfig.getResourcePrefix: java.lang.String ()
@@ -107,7 +106,6 @@ com.android.build.gradle.BaseExtension.getLibraryRequests: java.util.Collection<
 com.android.build.gradle.BaseExtension.getLintOptions: com.android.build.gradle.internal.dsl.LintOptions ()
 com.android.build.gradle.BaseExtension.getNdkDirectory: java.io.File ()
 com.android.build.gradle.BaseExtension.getNdkVersion: java.lang.String ()
-com.android.build.gradle.BaseExtension.getPackageBuildConfig: java.lang.Boolean ()
 com.android.build.gradle.BaseExtension.getPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions ()
 com.android.build.gradle.BaseExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.BaseExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
@@ -177,10 +175,7 @@ com.android.build.gradle.LibraryExtension.addVariant: void (com.android.build.gr
 com.android.build.gradle.LibraryExtension.aidlPackageWhiteList: void (java.lang.String[])
 com.android.build.gradle.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.LibraryExtension.getLibraryVariants: org.gradle.api.internal.DefaultDomainObjectSet<com.android.build.gradle.api.LibraryVariant> ()
-com.android.build.gradle.LibraryExtension.getPackageBuildConfig: java.lang.Boolean ()
-com.android.build.gradle.LibraryExtension.packageBuildConfig: void (boolean)
 com.android.build.gradle.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
-com.android.build.gradle.LibraryExtension.setPackageBuildConfig: void (boolean)
 com.android.build.gradle.LibraryPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.LibraryPlugin.<init>: com.android.build.gradle.LibraryPlugin ()
 com.android.build.gradle.LibraryPlugin.apply: void (java.lang.Object)

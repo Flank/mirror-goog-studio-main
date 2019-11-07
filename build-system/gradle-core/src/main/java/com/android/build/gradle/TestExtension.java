@@ -13,6 +13,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
+import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
@@ -21,8 +22,7 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
 public class TestExtension extends BaseExtension
         implements TestAndroidConfig, com.android.build.api.dsl.TestExtension {
 
-    private final DefaultDomainObjectSet<ApplicationVariant> applicationVariantList
-            = new DefaultDomainObjectSet<ApplicationVariant>(ApplicationVariant.class);
+    private final DomainObjectSet<ApplicationVariant> applicationVariantList;
 
     private String targetProjectPath = null;
 
@@ -47,6 +47,7 @@ public class TestExtension extends BaseExtension
                 sourceSetManager,
                 extraModelInfo,
                 false); // FIXME figure this out.
+        applicationVariantList = project.getObjects().domainObjectSet(ApplicationVariant.class);
     }
 
     /**
@@ -54,7 +55,7 @@ public class TestExtension extends BaseExtension
      * should be used with Gradle's <code>all</code> iterator to process future items.
      */
     public DefaultDomainObjectSet<ApplicationVariant> getApplicationVariants() {
-        return applicationVariantList;
+        return (DefaultDomainObjectSet<ApplicationVariant>) applicationVariantList;
     }
 
     @Override

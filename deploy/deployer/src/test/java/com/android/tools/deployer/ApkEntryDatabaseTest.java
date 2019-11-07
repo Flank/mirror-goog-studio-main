@@ -116,7 +116,7 @@ public class ApkEntryDatabaseTest {
         dump = db.dump();
         Set<String> dexes = new HashSet<>();
         for (DexClass clazz : dump) {
-            dexes.add(clazz.dex.name);
+            dexes.add(clazz.dex.getName());
         }
         Assert.assertEquals(2, dexes.size());
         Assert.assertTrue(dexes.contains("03.dex"));

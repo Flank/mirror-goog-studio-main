@@ -179,8 +179,9 @@ public class SvgColor {
     private SvgColor() {}
 
     /**
-     * Converts an SVG color value to "#RRGGBB" or "#RGB" format used by vector drawables. The input
-     * color value can be "none" and RGB value, e.g. "rgb(255, 0, 0)", or a color name defined in
+     * Converts an SVG color value to "#RRGGBB" or "#AARRGGBB" format used by vector drawables.
+     * The input color value can be "none" and RGB value, e.g. "rgb(255, 0, 0)",
+     * "rgba(255, 0, 0, 127)", or a color name defined in
      * https://www.w3.org/TR/SVG11/types.html#ColorKeywords.
      *
      * @param svgColorValue the SVG color value to convert
@@ -206,22 +207,10 @@ public class SvgColor {
             if (numbers.length != 3) {
                 throw new IllegalArgumentException(svgColorValue);
             }
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder(7);
             builder.append("#");
             for (int i = 0; i < 3; i++) {
-                String number = numbers[i].trim();
-                int component;
-                try {
-                    if (number.endsWith("%")) {
-                        float value = Float.parseFloat(number.substring(0, number.length() - 1));
-                        component = clampColor(Math.round(value * 255.f / 100.f));
-                    } else {
-                        int value = Integer.parseInt(number);
-                        component = clampColor(value);
-                    }
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException(svgColorValue);
-                }
+                int component = getColorComponent(numbers[i].trim(), svgColorValue);
                 builder.append(String.format("%02X", component));
             }
             assert builder.length() == 7;
@@ -229,11 +218,37 @@ public class SvgColor {
         }
 
         if (color.startsWith("rgba(") && color.endsWith(")")) {
-            // "rgba" is not supported yet.
-            throw new IllegalArgumentException(svgColorValue);
+            String rgb = color.substring(5, color.length() - 1);
+            String[] numbers = rgb.split(",");
+            if (numbers.length != 4) {
+                throw new IllegalArgumentException(svgColorValue);
+            }
+            StringBuilder builder = new StringBuilder(9);
+            builder.append("#");
+            for (int i = 0; i < 4; i++) {
+                int component = getColorComponent(numbers[(i + 3) % 4].trim(), svgColorValue);
+                builder.append(String.format("%02X", component));
+            }
+            assert builder.length() == 9;
+            return builder.toString();
         }
 
         return colorMap.get(color.toLowerCase(Locale.ENGLISH));
+    }
+
+    private static int getColorComponent(
+            @NonNull String colorComponent, @NonNull String svgColorValue) {
+        try {
+            if (colorComponent.endsWith("%")) {
+                float value =
+                        Float.parseFloat(colorComponent.substring(0, colorComponent.length() - 1));
+                return clampColor(Math.round(value * 255.f / 100.f));
+            }
+
+            return clampColor(Integer.parseInt(colorComponent));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(svgColorValue);
+        }
     }
 
     private static int clampColor(int val) {

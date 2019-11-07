@@ -19,7 +19,6 @@ import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.internal.DefaultDomainObjectSet;
 
 /**
  * The {@code android} extension for application plugins.
@@ -30,8 +29,7 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
  */
 public class AppExtension extends TestedExtension {
 
-    private final DefaultDomainObjectSet<ApplicationVariant> applicationVariantList
-            = new DefaultDomainObjectSet<ApplicationVariant>(ApplicationVariant.class);
+    private final DomainObjectSet<ApplicationVariant> applicationVariantList;
 
     private final List<Action<Variant>> variantActionList = new ArrayList<>();
 
@@ -57,6 +55,7 @@ public class AppExtension extends TestedExtension {
                 sourceSetManager,
                 extraModelInfo,
                 isBaseModule);
+        applicationVariantList = project.getObjects().domainObjectSet(ApplicationVariant.class);
     }
 
     /**

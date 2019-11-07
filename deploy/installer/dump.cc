@@ -26,14 +26,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/apk_archive.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor.h"
-#include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/installer/runas_executor.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
@@ -50,14 +48,13 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-void DumpCommand::Run() {
+void DumpCommand::Run(proto::InstallerResponse* response) {
   Phase p("Command Dump");
 
-  proto::DumpResponse* response = new proto::DumpResponse();
-  workspace_.GetResponse().set_allocated_dump_response(response);
+  auto dump_response = response->mutable_dump_response();
 
   for (const std::string& package_name : package_names_) {
-    proto::PackageDump* package_dump = response->add_packages();
+    proto::PackageDump* package_dump = dump_response->add_packages();
     package_dump->set_name(package_name);
 
     GetProcessIds(package_name, package_dump);
@@ -65,19 +62,27 @@ void DumpCommand::Run() {
     // TODO: Since dump performs multiple operations, this should not
     // terminate the command. Processing should continue here.
     if (!GetApks(package_name, package_dump)) {
-      response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
-      response->set_failed_package(package_name);
+      dump_response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
+      dump_response->set_failed_package(package_name);
       return;
     }
   }
 
-  response->set_status(proto::DumpResponse::OK);
+  dump_response->set_status(proto::DumpResponse::OK);
 }
 
 bool DumpCommand::GetApks(const std::string& package_name,
                           proto::PackageDump* package_dump) {
   // Retrieve apks for this package.
-  auto apks_path = RetrieveApks(package_name);
+  std::vector<std::string> apks_path;
+  std::string error_message;
+  CmdCommand cmd(workspace_);
+  if (!cmd.GetApks(package_name, &apks_path, &error_message)) {
+    ErrEvent("Could not find apks for this package: " + package_name);
+    ErrEvent("Error: " + error_message);
+    return false;
+  }
+
   if (apks_path.size() == 0) {
     ErrEvent("Could not find apks for package: " + package_name);
     return false;
@@ -244,28 +249,4 @@ bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
 
   return true;
 }
-
-std::vector<std::string> DumpCommand::RetrieveApks(
-    const std::string& package_name) {
-  Phase p("retrieve_apk_path");
-  std::vector<std::string> apks;
-  // First try with cmd. It may fail since path capability was added to "cmd" in
-  // Android P.
-  CmdCommand cmd(workspace_);
-  std::string error_output;
-  int api = Env::api_level();
-  if (api >= 28) {
-    Phase p("apk_path_via_cmd_package_path");
-    cmd.GetAppApks(package_name, &apks, &error_output);
-  } else if (api >= 24) {
-    Phase p("apk_path_via_cmd_package_dump");
-    cmd.DumpApks(package_name, &apks, &error_output);
-  } else {
-    Phase p("apk_path_via_pm");
-    PackageManager pm(workspace_);
-    pm.GetApks(package_name, &apks, &error_output);
-  }
-  return apks;
-}
-
 }  // namespace deploy

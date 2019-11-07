@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.res.ParseLibraryResourcesTask.Companion
 import com.android.builder.files.SerializableChange
 import com.android.ide.common.resources.FileStatus
 import com.android.resources.ResourceFolderType
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -70,5 +71,95 @@ class ParseLibraryResourcesTaskTest {
             SerializableChange(drawablePng, FileStatus.CHANGED, drawablePng.absolutePath)
         assertThat(canBeProcessedIncrementally(modifiedDrawableXml)).isFalse()
         assertThat(canBeProcessedIncrementally(modifiedDrawablePng)).isTrue()
+    }
+
+    @Test
+    fun testDoFullTaskAction_producesExpectedSymbolTableFile() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val resourcesFolder = createFakeResourceDirectory(parentFolder)
+
+        val platformAttrsRTxtFile = File(parentFolder, "R.txt")
+        val librarySymbolsFile = File(parentFolder, "R-def.txt")
+
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+          inputResDir = resourcesFolder,
+          changedResources = emptyList(),
+          platformAttrsRTxt = platformAttrsRTxtFile,
+          librarySymbolsFile = librarySymbolsFile,
+          incremental = false
+        )
+        doFullTaskAction(params)
+        assertThat(librarySymbolsFile.readLines()).containsExactly(
+          "R_DEF: Internal format may change without notice",
+          "local",
+          "drawable img",
+          "layout main_activity",
+          "layout content_layout",
+          "string greeting"
+        )
+    }
+
+    @Test
+    fun testDoIncrementalTaskAction_producesExpectedSymbolTableFileFromAddedResource() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val resourcesFolder = createFakeResourceDirectory(parentFolder)
+
+        val platformAttrsRTxtFile = File(parentFolder, "R-def.txt")
+        val librarySymbolsFile = File(parentFolder, "Symbols.txt")
+        val addedLayout = File(
+          FileUtils.join(resourcesFolder.path, "/layout"), "second_activity.xml")
+
+        FileUtils.createFile(librarySymbolsFile,
+          "R_DEF: Internal format may change without notice\n" +
+              "local\n" +
+              "drawable img\n" +
+              "layout main_activity\n" +
+              "layout content_layout\n" +
+              "string greeting")
+        FileUtils.createFile(addedLayout, "<root></root>")
+
+        val changedResources = listOf(
+          SerializableChange(addedLayout, FileStatus.NEW, addedLayout.absolutePath)
+        )
+
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+          inputResDir = resourcesFolder,
+          changedResources = changedResources,
+          platformAttrsRTxt = platformAttrsRTxtFile,
+          librarySymbolsFile = librarySymbolsFile,
+          incremental = true
+        )
+
+        doIncrementalTaskAction(params)
+        assertThat(librarySymbolsFile.readLines()).containsExactly(
+          "R_DEF: Internal format may change without notice",
+          "local",
+          "drawable img",
+          "layout main_activity",
+          "layout content_layout",
+          "layout second_activity",
+          "string greeting"
+        )
+    }
+
+    private fun createFakeResourceDirectory(parentFolder : File): File {
+        val resourcesFolder = File(parentFolder, "res")
+        val drawableFolder = File(resourcesFolder, "drawable")
+        val layoutFolder = File(resourcesFolder, "layout")
+        val valuesFolder = File(resourcesFolder, "values")
+
+        val mainActivityFile = File(layoutFolder, "main_activity.xml")
+        val contentLayoutFile = File(layoutFolder, "content_layout.xml")
+        val imageFile = File(drawableFolder, "img.png")
+        val stringsFile = File(valuesFolder, "strings.xml")
+
+        FileUtils.createFile(mainActivityFile, "<root></root>")
+        FileUtils.createFile(contentLayoutFile, "<root></root>")
+        FileUtils.createFile(imageFile, "34324234")
+        FileUtils.createFile(
+          stringsFile,
+          """<resources><string name="greeting">Hello</string></resources>"""
+        )
+        return resourcesFolder
     }
 }

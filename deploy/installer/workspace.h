@@ -29,13 +29,13 @@
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/installer/executor.h"
-#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
 class Workspace {
  public:
-  Workspace(const std::string& executable_path, Executor* executor);
+  Workspace(const std::string& executable_path, const std::string& version,
+            Executor* executor);
 
   bool Valid() const { return base_ != ""; }
 
@@ -43,24 +43,38 @@ class Workspace {
 
   void SetRoot(const std::string& root) { root_ = root; }
 
+  const std::string GetExecPath() const noexcept { return exec_path_; }
+
+  const std::string GetVersion() const noexcept { return version_; }
+
+  const std::string& GetPmPath() const noexcept { return pm_path_; }
+
+  void SetPmPath(const std::string& path) { pm_path_ = path; }
+
+  const std::string& GetCmdPath() const noexcept { return cmd_path_; }
+
+  void SetCmdPath(const std::string& path) { cmd_path_ = path; }
+
   const std::string GetBase() const noexcept { return base_; }
 
   const std::string GetTmpFolder() const noexcept { return tmp_; }
 
+  const MessagePipeWrapper& GetOutput() const noexcept { return output_pipe_; }
+
   Executor& GetExecutor() const noexcept { return *executor_; }
 
   void SetExecutor(Executor* executor) { executor_ = executor; }
-
-  proto::InstallerResponse& GetResponse() noexcept { return response_; }
-
-  void SendResponse() noexcept;
 
   void Init() noexcept;
 
  private:
   static constexpr auto kBasedir = "/data/local/tmp/.studio/";
 
-  static std::string RetrieveBase(const std::string& path) noexcept;
+  const std::string exec_path_;
+  const std::string version_;
+
+  std::string pm_path_;
+  std::string cmd_path_;
 
   std::string base_;
   std::string tmp_;
@@ -69,7 +83,6 @@ class Workspace {
   Executor* executor_;
 
   deploy::MessagePipeWrapper output_pipe_;
-  proto::InstallerResponse response_;
 };
 
 }  // namespace deploy

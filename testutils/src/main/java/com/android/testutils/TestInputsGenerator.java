@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.Pair;
 import com.google.common.io.ByteStreams;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +39,23 @@ public final class TestInputsGenerator {
     /** Generates a jar containing empty classes with the specified names. */
     public static void jarWithEmptyClasses(
             @NonNull Path path, @NonNull Collection<String> classNames) throws Exception {
-        try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(path))) {
+        try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(path))) {
+            jarWithEmptyClasses(outputStream, classNames);
+        }
+    }
+
+    public static byte[] jarWithEmptyClasses(@NonNull Collection<String> classNames)
+            throws Exception {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            jarWithEmptyClasses(outputStream, classNames);
+            return outputStream.toByteArray();
+        }
+    }
+
+    private static void jarWithEmptyClasses(
+            @NonNull OutputStream outputStream, @NonNull Collection<String> classNames)
+            throws Exception {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
             for (String fullName : classNames) {
                 int lastSeparator = fullName.lastIndexOf('/');
                 String pkg = "";
@@ -52,7 +69,7 @@ public final class TestInputsGenerator {
 
                 byte[] byteCode = TestClassesGenerator.emptyClass(pkg, className);
 
-                writeToJar(outputStream, byteCode, fullName + SdkConstants.DOT_CLASS);
+                writeToJar(zipOutputStream, byteCode, fullName + SdkConstants.DOT_CLASS);
             }
         }
     }
@@ -79,7 +96,21 @@ public final class TestInputsGenerator {
 
     public static void writeJarWithEmptyEntries(
             @NonNull Path jar, @NonNull Iterable<String> entries) throws Exception {
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(jar))) {
+        try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(jar))) {
+            jarWithEmptyEntries(outputStream, entries);
+        }
+    }
+
+    public static byte[] jarWithEmptyEntries(@NonNull Iterable<String> entries) throws Exception {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            jarWithEmptyEntries(outputStream, entries);
+            return outputStream.toByteArray();
+        }
+    }
+
+    private static void jarWithEmptyEntries(
+            OutputStream outputStream, @NonNull Iterable<String> entries) throws Exception {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
             for (String name : entries) {
                 zipOutputStream.putNextEntry(new ZipEntry(name));
                 zipOutputStream.closeEntry();

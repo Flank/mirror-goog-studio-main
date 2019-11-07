@@ -58,7 +58,19 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
 
         assertThat(getDexFileCount(output)).isEqualTo(1)
     }
@@ -81,7 +93,19 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
         assertThat(getDexFileCount(output)).isEqualTo(1)
     }
 
@@ -113,7 +137,9 @@ class R8ToolTest {
             toolConfig,
             proguardConfig,
             mainDexConfig,
-            NoOpMessageReceiver()
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatZip(javaRes.toFile()).contains("res.txt")
@@ -155,7 +181,9 @@ class R8ToolTest {
             proguardConfig,
             mainDexConfig,
             NoOpMessageReceiver(),
-            true
+            true,
+            listOf(),
+            null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatZip(javaRes.toFile()).contains("res.txt")
@@ -185,7 +213,19 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
         assertThat(getDexFileCount(output)).isEqualTo(2)
     }
 
@@ -210,7 +250,19 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
         assertThat(getDexFileCount(output)).isEqualTo(2)
     }
 
@@ -235,7 +287,19 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatDex(output.resolve("classes.dex").toFile()).containsClass("Ltest/A;")
         assertThatDex(output.resolve("classes.dex").toFile()).doesNotContainClasses("Ltest/B;")
@@ -286,7 +350,19 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(testClasses), output, listOf(), javaRes, libraries, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(testClasses),
+            output,
+            listOf(),
+            javaRes,
+            libraries,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatDex(output.resolve("classes.dex").toFile())
             .containsClass("Lcom/android/builder/dexing/ExampleClasses\$TestClass;")
@@ -324,7 +400,19 @@ class R8ToolTest {
                     proguardUsageOutput
                 )
             )
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
         assertThat(Files.exists(proguardSeedsOutput)).isTrue()
         assertThat(Files.exists(proguardUsageOutput)).isTrue()
     }
@@ -363,7 +451,9 @@ class R8ToolTest {
                 MessageReceiver { message ->
                     messages.add(message.text)
                     toolNameTags.add(message.toolName!!)
-                }
+                },
+                featureJars = listOf(),
+                featureDexDir = null
             )
             fail("Parsing proguard configuration should fail.")
         } catch (e: Throwable){
@@ -396,10 +486,61 @@ class R8ToolTest {
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
 
         assertThatDex(output.resolve("classes.dex").toFile())
             .containsExactlyClassesIn(listOf("Ltest/A;", "Ltest/B;"))
+    }
+
+    @Test
+    fun testFeatureJars() {
+        val proguardConfig = ProguardConfig(listOf(), null, listOf(), null)
+        val mainDexConfig = MainDexListConfig(listOf(), listOf())
+        val toolConfig = ToolConfig(
+            minSdkVersion = 21,
+            isDebuggable = true,
+            disableTreeShaking = true,
+            disableDesugaring = true,
+            disableMinification = true,
+            r8OutputType = R8OutputType.DEX
+        )
+
+        val classes = tmp.newFolder().toPath().resolve("classes.jar")
+        TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A", "test/B"))
+
+        val featureJar = tmp.newFolder().toPath().resolve("feature.jar")
+        TestInputsGenerator.jarWithEmptyClasses(featureJar, listOf("test/C", "test/D"))
+
+        val output = tmp.newFolder().toPath()
+        val javaRes = tmp.root.resolve("res.jar").toPath()
+        val featureDexDir = tmp.newFolder().toPath()
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            toolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(featureJar),
+            featureDexDir = featureDexDir
+        )
+        assertThat(getDexFileCount(output)).isEqualTo(1)
+        assertThat(getDexFileCount(featureDexDir.resolve("feature"))).isEqualTo(1)
     }
 
     private fun getDexFileCount(dir: Path): Long =

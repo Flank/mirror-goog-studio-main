@@ -17,7 +17,6 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -41,20 +40,20 @@ public class PatchSetGenerator {
     public PatchSetGenerator(ILogger logger) {
         this.logger = logger;
     }
-    public List<Deploy.PatchInstruction> generateFromEntries(
-            List<ApkEntry> localEntries, List<ApkEntry> remoteEntries) {
+    public List<Deploy.PatchInstruction> generateFromApks(
+            List<Apk> localApks, List<Apk> remoteApks) {
         // Build the list of local apks.
-        HashMap<String, Apk> localApks = new HashMap<>();
-        for (ApkEntry file : localEntries) {
-            localApks.put(file.apk.name, file.apk);
+        HashMap<String, Apk> localApkMap = new HashMap<>();
+        for (Apk apk : localApks) {
+            localApkMap.put(apk.name, apk);
         }
 
         // Build the list of remote apks.
-        HashMap<String, Apk> remoteApks = new HashMap<>();
-        for (ApkEntry file : remoteEntries) {
-            remoteApks.put(file.apk.name, file.apk);
+        HashMap<String, Apk> remoteApkMap = new HashMap<>();
+        for (Apk apk : remoteApks) {
+            remoteApkMap.put(apk.name, apk);
         }
-        return generateFromApkSets(remoteApks, localApks);
+        return generateFromApkSets(remoteApkMap, localApkMap);
     }
 
     public List<Deploy.PatchInstruction> generateFromApkSets(

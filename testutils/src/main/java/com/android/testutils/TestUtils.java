@@ -16,7 +16,6 @@
 
 package com.android.testutils;
 
-import static com.android.testutils.WindowsPathUtilsKt.getWindowsShortNameFile;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
@@ -232,7 +231,7 @@ public class TestUtils {
             throw new IllegalArgumentException("File \"" + path + "\" not found at \"" + getWorkspaceRoot() + "\"");
         }
 
-        return getWindowsShortNameFile(f);
+        return f;
     }
 
     /**

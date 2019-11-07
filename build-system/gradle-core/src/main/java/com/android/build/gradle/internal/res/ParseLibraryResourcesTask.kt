@@ -111,68 +111,12 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             if (!params.incremental
                 || !params.changedResources.all { canBeProcessedIncrementally(it) }) {
                 // Non-incremental run.
-                doFullTaskAction()
+                doFullTaskAction(params)
             } else {
                 // All files can be processed incrementally, update the existing table.
-                doIncrementalTaskAction(params.changedResources)
+                doIncrementalTaskAction(params)
             }
         }
-
-        private fun doFullTaskAction() {
-            // IDs do not matter as we will merge all symbols and re-number them in the
-            // GenerateLibraryRFileTask anyway. Give a fake package for the same reason.
-            val symbolTable = parseResourceSourceSetDirectory(
-                params.inputResDir,
-                IdProvider.constant(),
-                getAndroidAttrSymbols(),
-                "local"
-            )
-
-            // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
-            // written in a deterministic way (sorted by type, then by canonical name).
-            SymbolIo.writeRDef(symbolTable, params.librarySymbolsFile.toPath())
-        }
-
-        private fun doIncrementalTaskAction(changedResources: Collection<SerializableChange>) {
-            // Read the symbols from the previous run.
-            val currentSymbols = SymbolIo.readRDef(params.librarySymbolsFile.toPath())
-            val newSymbols = SymbolTable.builder().tablePackage("local")
-            val platformSymbols = getAndroidAttrSymbols()
-
-            val documentBuilderFactory = DocumentBuilderFactory.newInstance()
-            val documentBuilder = try {
-                documentBuilderFactory.newDocumentBuilder()
-            } catch (e: ParserConfigurationException) {
-                throw ResourceDirectoryParseException("Failed to instantiate DOM parser", e)
-            }
-
-            changedResources.forEach { fileChange ->
-                val file = fileChange.file
-                val type = ResourceFolderType.getFolderType(file.parentFile.name)!!
-                // Values and ID generating resources (e.g. layouts) that have a FileStatus
-                // different from NEW should have already been filtered out by
-                // [canBeProcessedIncrementally].
-                // For all other resources (that don't define other resources within them) we just
-                // need to reprocess them if they're new - if only their contents changed we don't
-                // need to do anything.
-                if (fileChange.fileStatus == FileStatus.NEW) {
-                    parseResourceFile(file, type, newSymbols, documentBuilder, platformSymbols)
-                }
-            }
-
-            // If we found at least one new symbol we need to update the R.txt
-            if (!newSymbols.isEmpty()) {
-                newSymbols.addAllIfNotExist(currentSymbols.symbols.values())
-                Files.delete(params.librarySymbolsFile.toPath())
-                SymbolIo.writeRDef(newSymbols.build(), params.librarySymbolsFile.toPath())
-            }
-        }
-
-        private fun getAndroidAttrSymbols() =
-            if (params.platformAttrsRTxt.exists())
-                SymbolIo.readFromAapt(params.platformAttrsRTxt, "android")
-            else
-                SymbolTable.builder().tablePackage("android").build()
     }
 
     class CreateAction(
@@ -233,3 +177,59 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
         }
     }
 }
+
+internal fun doFullTaskAction(parseResourcesParams: ParseLibraryResourcesTask.ParseResourcesParams) {
+    // IDs do not matter as we will merge all symbols and re-number them in the
+    // GenerateLibraryRFileTask anyway. Give a fake package for the same reason.
+    val symbolTable = parseResourceSourceSetDirectory(
+      parseResourcesParams.inputResDir,
+      IdProvider.constant(),
+      getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt),
+      "local"
+    )
+
+    // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
+    // written in a deterministic way (sorted by type, then by canonical name).
+    SymbolIo.writeRDef(symbolTable, parseResourcesParams.librarySymbolsFile.toPath())
+}
+
+internal fun doIncrementalTaskAction(parseResourcesParams: ParseLibraryResourcesTask.ParseResourcesParams) {
+    // Read the symbols from the previous run.
+    val currentSymbols = SymbolIo.readRDef(parseResourcesParams.librarySymbolsFile.toPath())
+    val newSymbols = SymbolTable.builder().tablePackage("local")
+    val platformSymbols = getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt)
+
+    val documentBuilderFactory = DocumentBuilderFactory.newInstance()
+    val documentBuilder = try {
+        documentBuilderFactory.newDocumentBuilder()
+    } catch (e: ParserConfigurationException) {
+        throw ResourceDirectoryParseException("Failed to instantiate DOM parser", e)
+    }
+
+    parseResourcesParams.changedResources.forEach { fileChange ->
+        val file = fileChange.file
+        val type = ResourceFolderType.getFolderType(file.parentFile.name)!!
+        // Values and ID generating resources (e.g. layouts) that have a FileStatus
+        // different from NEW should have already been filtered out by
+        // [canBeProcessedIncrementally].
+        // For all other resources (that don't define other resources within them) we just
+        // need to reprocess them if they're new - if only their contents changed we don't
+        // need to do anything.
+        if (fileChange.fileStatus == FileStatus.NEW) {
+            parseResourceFile(file, type, newSymbols, documentBuilder, platformSymbols)
+        }
+    }
+
+    // If we found at least one new symbol we need to update the R.txt
+    if (!newSymbols.isEmpty()) {
+        newSymbols.addAllIfNotExist(currentSymbols.symbols.values())
+        Files.delete(parseResourcesParams.librarySymbolsFile.toPath())
+        SymbolIo.writeRDef(newSymbols.build(), parseResourcesParams.librarySymbolsFile.toPath())
+    }
+}
+
+private fun getAndroidAttrSymbols(platformAttrsRTxt: File) =
+  if (platformAttrsRTxt.exists())
+      SymbolIo.readFromAapt(platformAttrsRTxt, "android")
+  else
+      SymbolTable.builder().tablePackage("android").build()

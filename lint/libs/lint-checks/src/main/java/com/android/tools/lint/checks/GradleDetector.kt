@@ -32,6 +32,8 @@ import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.MavenRepositories
+import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
+import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
 import com.android.projectmodel.ProjectType
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.AndroidTargetHash
@@ -432,7 +434,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             report(context, statementCookie, NOT_INTERPOLATED, message, fix)
                         }
 
-                        gc = resolveCoordinate(context, gc)
+                        gc = resolveCoordinate(context, property, gc)
                         isResolved = true
                     }
                     if (gc != null) {
@@ -1725,15 +1727,22 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     private fun resolveCoordinate(
-        context: GradleContext,
-        gc: GradleCoordinate
+      context: GradleContext,
+      property: String,
+      gc: GradleCoordinate
     ): GradleCoordinate? {
         assert(gc.revision.contains("$")) { gc.revision }
         val project = context.project
         val variant = project.currentVariant
         if (variant != null) {
-            val dependencies = variant.mainArtifact.dependencies
-            for (library in dependencies.libraries) {
+            val artifact =
+              when {
+                  property.startsWith("androidTest") -> variant.extraAndroidArtifacts.firstOrNull { it.name == ARTIFACT_NAME_ANDROID_TEST }
+                  property.startsWith("test") -> variant.extraJavaArtifacts.firstOrNull { it.name == ARTIFACT_NAME_UNIT_TEST }
+                  else -> variant.mainArtifact
+              } ?: return null
+            val dependencies = artifact.dependencies
+            for (library in dependencies.libraries + dependencies.javaLibraries) {
                 val mc = library.resolvedCoordinates
                 // Even though the method is annotated as non-null, this code can run
                 // after a failed sync and there are observed scenarios where it returns
@@ -1748,14 +1757,13 @@ open class GradleDetector : Detector(), GradleScanner {
                     val revisions = GradleCoordinate.parseRevisionNumber(mc.version)
                     if (!revisions.isEmpty()) {
                         return GradleCoordinate(
-                            mc.groupId, mc.artifactId, revisions, null
+                          mc.groupId, mc.artifactId, revisions, null
                         )
                     }
                     break
                 }
             }
         }
-
         return null
     }
 

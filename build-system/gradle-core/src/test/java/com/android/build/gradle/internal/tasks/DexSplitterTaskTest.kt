@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
@@ -202,7 +201,9 @@ class DexSplitterTaskTest {
                     tmp.newFile("usage.txt").toPath()),
             output = shrunkDexDir,
             outputResources = tmp.newFile("shrunkResources.jar"),
-            mainDexListOutput = null
+            mainDexListOutput = null,
+            featureJars = listOf(),
+            featureDexDir = null
         )
     }
 

@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
@@ -30,7 +31,6 @@
 namespace deploy {
 
 namespace {
-const char* CMD_EXEC = "/system/bin/cmd";
 
 bool IsLeadingSpaceOrTab(const char* buf) {
   return *buf == ' ' || *buf == '\t';
@@ -57,19 +57,57 @@ const char* FindNextLine(const char* buf) {
   }
   return buf + 1;
 }
+
+bool GetProcessRecordField(const std::string& output, const std::string& field,
+                           std::string* value) {
+  const std::string search = field + "=";
+  size_t field_start = output.find(search);
+  if (field_start == std::string::npos) {
+    return false;
+  }
+  field_start += search.size();
+
+  size_t field_end = output.find(" ", field_start);
+  if (field_end == std::string::npos) {
+    return false;
+  }
+
+  *value = output.substr(field_start, field_end - field_start);
+  return true;
+}
 }  // namespace
 
-bool CmdCommand::GetAppApks(const std::string& package_name,
-                            std::vector<std::string>* apks,
-                            std::string* error_string) const noexcept {
-  Trace trace("CmdCommand::GetAppApks");
+bool CmdCommand::GetApks(const std::string& package_name,
+                         std::vector<std::string>* apks,
+                         std::string* error_string) const noexcept {
+  Trace trace("CmdCommand::GetApks");
+  int api = Env::api_level();
+  if (api >= 28) {
+    return GetApksFromPath(cmd_exec_, package_name, apks, error_string);
+  } else if (api >= 24) {
+    return GetApksFromDump(package_name, apks, error_string);
+  } else {
+    return GetApksFromPath(pm_exec_, package_name, apks, error_string);
+  }
+}
+
+bool CmdCommand::GetApksFromPath(const std::string& exec_path,
+                                 const std::string& package_name,
+                                 std::vector<std::string>* apks,
+                                 std::string* error_string) const noexcept {
+  Phase p("CmdCommand::GetApksFromPath");
   std::vector<std::string> parameters;
-  parameters.emplace_back("package");
+
+  // If we're using the cmd executable, we need to specify which utility.
+  if (exec_path == cmd_exec_) {
+    parameters.emplace_back("package");
+  }
+
   parameters.emplace_back("path");
   parameters.emplace_back(package_name);
   std::string out;
   std::string err;
-  bool success = workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, &err);
+  bool success = executor_.Run(exec_path, parameters, &out, &err);
   if (!success) {
     *error_string = err;
     return false;
@@ -96,17 +134,17 @@ bool CmdCommand::GetAppApks(const std::string& package_name,
 //
 // The custom parser simply looks for the "Dexopt state:" header,
 // followed by "[pkg_name]", followed by the "path:" entry.
-bool CmdCommand::DumpApks(const std::string& package_name,
-                          std::vector<std::string>* apks,
-                          std::string* error_string) const noexcept {
-  Trace trace("CmdCommand::DumpApks");
+bool CmdCommand::GetApksFromDump(const std::string& package_name,
+                                 std::vector<std::string>* apks,
+                                 std::string* error_string) const noexcept {
+  Phase p("CmdCommand::GetApksFromDump");
   std::vector<std::string> parameters;
   parameters.emplace_back("package");
   parameters.emplace_back("dump");
   parameters.emplace_back(package_name);
   std::string out;
   std::string err;
-  bool success = workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, &err);
+  bool success = executor_.Run(cmd_exec_, parameters, &out, &err);
   if (!success) {
     *error_string = err;
     return false;
@@ -166,7 +204,7 @@ bool CmdCommand::AttachAgent(int pid, const std::string& agent,
   parameters.emplace_back(agent + "=" + args);
 
   std::string out;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
+  return executor_.Run(cmd_exec_, parameters, &out, error_string);
 }
 
 bool CmdCommand::UpdateAppInfo(const std::string& user_id,
@@ -180,7 +218,7 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
   parameters.emplace_back(package_name);
 
   std::string out;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
+  return executor_.Run(cmd_exec_, parameters, &out, error_string);
 }
 
 bool CmdCommand::CreateInstallSession(
@@ -198,7 +236,7 @@ bool CmdCommand::CreateInstallSession(
   }
 
   std::string err;
-  workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
+  executor_.Run(cmd_exec_, parameters, output, &err);
   std::string match = "Success: created install session [";
   if (output->find(match, 0) != 0) {
     return false;
@@ -221,7 +259,7 @@ bool CmdCommand::CommitInstall(const std::string& session,
   }
 
   std::string err;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
+  return executor_.Run(cmd_exec_, parameters, output, &err);
 }
 
 bool CmdCommand::AbortInstall(const std::string& session,
@@ -232,9 +270,61 @@ bool CmdCommand::AbortInstall(const std::string& session,
   parameters.emplace_back(session);
   output->clear();
   std::string err;
-  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
+  return executor_.Run(cmd_exec_, parameters, output, &err);
 }
 
-void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }
+bool CmdCommand::GetProcessInfo(const std::string& package_name,
+                                std::vector<ProcessRecord>* records) const
+    noexcept {
+  std::vector<std::string> parameters;
+  parameters.emplace_back("activity");
+  parameters.emplace_back("dump");
+  parameters.emplace_back("processes");
+  parameters.emplace_back(package_name);
 
+  std::string output;
+  std::string error;
+  if (!executor_.Run(cmd_exec_, parameters, &output, &error)) {
+    ErrEvent("Failed to get process dump: " + error);
+    return false;
+  }
+
+  size_t record_start = output.find("ProcessRecord");
+  size_t record_end = output.find("ProcessRecord", record_start + 1);
+  size_t section_end = output.find("PID mappings");
+
+  while (record_start != std::string::npos && record_start < section_end) {
+    const std::string record =
+        output.substr(record_start, record_end - record_start);
+
+    // Format of a ProcessRecord entry is:
+    //    ProcessRecord{<id> <pid>:<process_name>/<uid>}
+    size_t name_start = record.find(":") + 1;
+    size_t name_end = record.find("/", name_start);
+
+    ProcessRecord process;
+    process.process_name = record.substr(name_start, name_end - name_start);
+    process.crashing = false;
+    process.not_responding = false;
+
+    std::string crashing;
+    if (GetProcessRecordField(record, "crashing", &crashing)) {
+      std::istringstream ss(crashing);
+      ss >> std::boolalpha >> process.crashing;
+    }
+
+    std::string not_responding;
+    if (GetProcessRecordField(record, "notResponding", &not_responding)) {
+      std::istringstream ss(not_responding);
+      ss >> std::boolalpha >> process.not_responding;
+    }
+
+    records->emplace_back(std::move(process));
+
+    record_start = record_end;
+    record_end = output.find("ProcessRecord", record_end + 1);
+  }
+
+  return true;
+}
 }  // namespace deploy

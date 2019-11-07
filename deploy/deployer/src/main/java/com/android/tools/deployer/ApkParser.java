@@ -17,7 +17,6 @@ package com.android.tools.deployer;
 
 import com.android.SdkConstants;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.tracer.Trace;
 import com.google.devrel.gmscore.tools.apk.arsc.*;
 import java.io.File;
@@ -32,10 +31,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ApkParser {
-    private static final int EOCD_SIGNATURE = 0x06054b50;
+    public static final int EOCD_SIGNATURE = 0x06054b50;
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
     private static final long USHRT_MAX = 65535;
-    private static final int EOCD_SIZE = 22;
+    public static final int EOCD_SIZE = 22;
 
     public static class ApkArchiveMap {
         public static final long UNINITIALIZED = -1;
@@ -64,11 +63,11 @@ public class ApkParser {
     /** A class to manipulate .apk files. */
     public ApkParser() {}
 
-    public List<ApkEntry> parsePaths(List<String> paths) throws DeployerException {
+    public List<Apk> parsePaths(List<String> paths) throws DeployerException {
         try (Trace ignored = Trace.begin("parseApks")) {
-            List<ApkEntry> newFiles = new ArrayList<>();
+            List<Apk> newFiles = new ArrayList<>();
             for (String apkPath : paths) {
-                newFiles.addAll(parse(apkPath));
+                newFiles.add(parse(apkPath));
             }
             return newFiles;
         } catch (IOException e) {
@@ -86,11 +85,11 @@ public class ApkParser {
         return apkDetails;
     }
 
-    private List<ApkEntry> parse(String apkPath) throws IOException, DeployerException {
+    private Apk parse(String apkPath) throws IOException, DeployerException {
         File file = new File(apkPath);
         String absolutePath = file.getAbsolutePath();
         String digest;
-        HashMap<String, ZipUtils.ZipEntry> zipEntries;
+        List<ZipUtils.ZipEntry> zipEntries;
         try (RandomAccessFile raf = new RandomAccessFile(absolutePath, "r");
                 FileChannel fileChannel = raf.getChannel()) {
             ApkArchiveMap map = new ApkArchiveMap();
@@ -101,21 +100,19 @@ public class ApkParser {
         }
         ApkDetails apkDetails = getApkDetails(absolutePath);
 
-        List<ApkEntry> files = new ArrayList<>();
-        Apk apk =
+        Apk.Builder builder =
                 Apk.builder()
                         .setName(apkDetails.fileName)
                         .setChecksum(digest)
                         .setPath(absolutePath)
                         .setPackageName(apkDetails.packageName)
-                        .setTargetPackages(apkDetails.targetPackages)
-                        .setZipEntries(zipEntries)
-                        .build();
+                        .setTargetPackages(apkDetails.targetPackages);
 
-        for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-            files.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
+        for (ZipUtils.ZipEntry entry : zipEntries) {
+            builder.addApkEntry(entry);
         }
-        return files;
+
+        return builder.build();
     }
 
     public static void findSignatureLocation(FileChannel channel, ApkArchiveMap map) {
@@ -201,7 +198,7 @@ public class ApkParser {
         return true;
     }
 
-    private HashMap<String, ZipUtils.ZipEntry> readZipEntries(
+    private List<ZipUtils.ZipEntry> readZipEntries(
             RandomAccessFile randomAccessFile, ApkArchiveMap map) throws IOException {
         ByteBuffer buffer;
         // There is no method to unmap a MappedByteBuffer so we cannot use FileChannel.map() on Windows.

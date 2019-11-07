@@ -91,6 +91,7 @@ cc_test(
     srcs = ["tests.cc"],
     data = [
         "data/app/my.fake.app/sample.apk",
+        "data/dumpOutput.txt",
         "data/patchTest.txt",
     ],
     linkstatic = 1,

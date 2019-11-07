@@ -2733,6 +2733,8 @@ public final class SdkConstants {
             AndroidxName.of("android.databinding.", "InverseBindingMethod");
     public static final AndroidxName INVERSE_BINDING_METHODS_ANNOTATION =
             AndroidxName.of("android.databinding.", "InverseBindingMethods");
+    public static final AndroidxName INVERSE_METHOD_ANNOTATION =
+            AndroidxName.of("android.databinding.", "InverseMethod");
     public static final AndroidxName CLASS_LIVE_DATA =
             AndroidxName.of("android.arch.lifecycle.", "LiveData");
     public static final AndroidxName CLASS_OBSERVABLE_BOOLEAN =

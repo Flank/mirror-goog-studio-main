@@ -86,7 +86,7 @@ class FakeObjectFactory : ObjectFactory {
     }
 
     override fun <T : Any?> property(p0: Class<T>?): Property<T> {
-        TODO("not implemented")
+        return FakeGradleProperty()
     }
 
     override fun <T : Named?> named(p0: Class<T>?, p1: String?): T {

@@ -254,6 +254,12 @@ public class VectorDrawableGeneratorTest extends TestCase {
                 "ERROR @ line 17: <foreignObject> is not supported");
     }
 
+    public void testParseError() throws Exception {
+        checkSvgConversionAndContainsError(
+                "test_parse_error",
+                "ERROR: Element type \"path\" must be followed by either attribute specifications, \">\" or \"/>\".");
+    }
+
     public void testSvgLineToMoveTo() throws Exception {
         checkSvgConversion("test_lineto_moveto");
     }

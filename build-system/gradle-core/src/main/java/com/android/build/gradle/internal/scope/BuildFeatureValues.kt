@@ -22,4 +22,5 @@ package com.android.build.gradle.internal.scope
  */
 interface BuildFeatureValues {
     val jetpackCompose: Boolean
+    val buildConfig: Boolean
 }

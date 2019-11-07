@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "tools/base/deploy/installer/workspace.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
@@ -34,7 +35,7 @@ class Command {
   virtual void ParseParameters(int argc, char** argv) = 0;
 
   // Execute command.
-  virtual void Run() = 0;
+  virtual void Run(proto::InstallerResponse* response) = 0;
 
   bool ReadyToRun() { return ready_to_run_; }
 

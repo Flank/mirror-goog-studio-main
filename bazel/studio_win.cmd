@@ -59,11 +59,6 @@ set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 @rem Extract perfgate data
 %JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\perfgate_data.zip %DISTDIR%\logs\perfgate_logs_collector.log
 
-@rem Save JUnit test results
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
- -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
- -testlogs %DISTDIR%\logs\junit
-
 @echo studio_win.cmd time: %time%
 
 :ENDSCRIPT

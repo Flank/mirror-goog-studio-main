@@ -16,7 +16,6 @@ import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.internal.DefaultDomainObjectSet;
 
 /**
  * Provides test components that are common to {@link AppExtension}, {@link LibraryExtension}, and
@@ -28,11 +27,9 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
 public abstract class TestedExtension extends BaseExtension
         implements TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
-    private final DomainObjectSet<TestVariant> testVariantList =
-            new DefaultDomainObjectSet<TestVariant>(TestVariant.class);
+    private final DomainObjectSet<TestVariant> testVariantList;
 
-    private final DomainObjectSet<UnitTestVariant> unitTestVariantList =
-            new DefaultDomainObjectSet<UnitTestVariant>(UnitTestVariant.class);
+    private final DomainObjectSet<UnitTestVariant> unitTestVariantList;
 
     private String testBuildType = "debug";
 
@@ -58,6 +55,9 @@ public abstract class TestedExtension extends BaseExtension
                 sourceSetManager,
                 extraModelInfo,
                 isBaseModule);
+
+        testVariantList = project.getObjects().domainObjectSet(TestVariant.class);
+        unitTestVariantList = project.getObjects().domainObjectSet(UnitTestVariant.class);
 
         sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX);
         sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX);

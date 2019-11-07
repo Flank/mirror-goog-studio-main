@@ -27,8 +27,10 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -39,7 +41,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * Converts SVG to VectorDrawable's XML.
@@ -201,11 +202,15 @@ public class Svg2Vector {
     private static final Pattern SPACE_OR_COMMA = Pattern.compile("[\\s,]+");
 
     @NonNull
-    private static SvgTree parse(File f) throws IOException, SAXException {
+    private static SvgTree parse(@NonNull File f) throws IOException {
         SvgTree svgTree = new SvgTree();
-        Document doc = svgTree.parse(f);
+        List<String> parseErrors = new ArrayList<>();
+        Document doc = svgTree.parse(f, parseErrors);
+        for (String error : parseErrors) {
+            svgTree.logError(error, null);
+        }
 
-        // Parse svg elements
+        // Get <svg> elements.
         NodeList svgNodes = doc.getElementsByTagName("svg");
         if (svgNodes.getLength() != 1) {
             throw new IllegalStateException("Not a proper SVG file");
@@ -1224,7 +1229,7 @@ public class Svg2Vector {
     @Slow
     @NonNull
     public static String parseSvgToXml(@NonNull File inputSvg, @NonNull OutputStream outStream)
-            throws IOException, SAXException {
+            throws IOException {
         SvgTree svgTree = parse(inputSvg);
         if (svgTree.getHasLeafNode()) {
             writeFile(outStream, svgTree);
