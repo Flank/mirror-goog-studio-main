@@ -158,10 +158,15 @@ public class ImlToIr {
                     JpsLibrary library = libraryDependency.getLibrary();
 
                     if (library == null) {
-                        System.err.println(String.format(
-                                "Module %s: invalid item '%s' in the dependencies list",
-                                jpsModule.getName(),
-                                libraryDependency.getLibraryReference().getLibraryName()));
+                        if (!shouldWarnOnModule(jpsModule)) {
+                            System.err.println(
+                                    String.format(
+                                            "Module %s: invalid item '%s' in the dependencies list",
+                                            jpsModule.getName(),
+                                            libraryDependency
+                                                    .getLibraryReference()
+                                                    .getLibraryName()));
+                        }
                         continue;  // Like IDEA, ignore dependencies on non-existent libraries.
                     }
                     JpsElementReference<? extends JpsCompositeElement> parent = libraryDependency
@@ -274,13 +279,19 @@ public class ImlToIr {
      * cycles) or if it involves our code as well.
      */
     private static boolean isCycleAllowed(List<JpsModule> cycle) {
-        return cycle.stream()
-                .allMatch(
-                        module -> {
-                            String name = module.getName();
-                            return name.startsWith("intellij.platform")
-                                    || name.startsWith("intellij.java");
-                        });
+        return cycle.stream().allMatch(ImlToIr::shouldWarnOnModule);
+    }
+
+    /**
+     * Checks if warnings about the given module should be printed out.
+     *
+     * We don't warn users about modules we don't maintain, i.e. platform modules.
+     */
+    private static boolean shouldWarnOnModule(JpsModule module) {
+        String name = module.getName();
+        return name.startsWith("intellij.platform")
+                || name.startsWith("intellij.c")
+                || name.startsWith("intellij.java");
     }
 
     private static String scopeToColor(IrModule.Scope scope) {
