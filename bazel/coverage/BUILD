@@ -76,6 +76,7 @@ coverage_report(
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
     ],
 )
@@ -145,6 +146,7 @@ coverage_report(
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
     ],
 )
 
@@ -169,6 +171,7 @@ layouteditor_includes = [
 
 layouteditor_tests = [
     "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
     "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
     "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
     "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
@@ -229,6 +232,7 @@ coverage_report(
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
