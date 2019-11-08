@@ -210,7 +210,14 @@ public class ApkInstaller {
         if (result.status == SKIPPED_INSTALL) {
             installed = false;
         } else if (result.status != OK) {
-            throw DeployerException.installFailed(result.status, message);
+            StringBuilder messageBuilder = new StringBuilder("\nList of apks:\n");
+            for (int i = 0; i < apks.size(); i++) {
+                String apkPath = apks.get(i);
+                String line = String.format("[%d] '%s'\n", i, apkPath);
+                messageBuilder.append(line);
+            }
+            messageBuilder.append(message);
+            throw DeployerException.installFailed(result.status, messageBuilder.toString());
         }
         return installed;
     }
