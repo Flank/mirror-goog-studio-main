@@ -41,7 +41,7 @@ val basicActivityTemplate get() = template {
   name = "Basic Activity"
   minApi = 14
   minBuildApi = 16
-  description = "Creates a new basic activity with an app bar."
+  description = "Creates a new basic activity with the Navigation component."
 
   category = Category.Activity
   formFactor = FormFactor.Mobile

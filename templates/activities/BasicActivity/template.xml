@@ -5,7 +5,7 @@
         name="Basic Activity"
         minApi="9"
         minBuildApi="14"
-        description="Creates a new basic activity with an app bar.">
+        description="Creates a new basic activity with the Navigation component.">
 
     <category value="Activity"/>
     <formfactor value="Mobile"/>
