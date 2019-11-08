@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -118,8 +117,7 @@ public class TaskRunner {
         public List<DeployMetric> getMetrics() {
             return tasks.stream()
                     .map(Task::getMetric)
-                    .filter(Objects::nonNull)
-                    .filter(m -> !m.getStatus().equals("Dropped"))
+                    .filter(Result::shouldIncludeMetric)
                     .collect(Collectors.toList());
         }
 
@@ -133,6 +131,13 @@ public class TaskRunner {
 
         public boolean isSuccess() {
             return exception == null;
+        }
+
+        private static boolean shouldIncludeMetric(DeployMetric metric) {
+            if (metric == null) {
+                return false;
+            }
+            return "Success".equals(metric.getStatus()) || "Failed".equals(metric.getStatus());
         }
     }
 
