@@ -1,9 +1,7 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-<#if buildApi == 22>
 import ${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)}
-</#if>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 <#if isNewModule>
@@ -18,9 +16,7 @@ class ${activityClass} : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${layoutName})
         setSupportActionBar(toolbar)
-<#if buildApi == 22>
         toolbar_layout.title = title
-</#if>
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()

@@ -1,9 +1,7 @@
 package ${packageName};
 
 import android.os.Bundle;
-<#if buildApi == 22>
 import ${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)};
-</#if>
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
@@ -25,10 +23,8 @@ public class ${activityClass} extends AppCompatActivity {
         setContentView(R.layout.${layoutName});
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-  <#if buildApi == 22>
         CollapsingToolbarLayout toolBarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         toolBarLayout.setTitle(getTitle());
-  </#if>
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
