@@ -66,7 +66,7 @@ java_test(
 
 java_test(
     name = "testV1Signing",
-    size = "small",
+    size = "medium",
     srcs = [
         "test/src/com/android/signflinger/TestBaseSigning.java",
         "test/src/com/android/signflinger/V1SigningTest.java",
@@ -93,7 +93,7 @@ java_test(
 
 java_test(
     name = "testV2Signing",
-    size = "small",
+    size = "medium",
     srcs = [
         "test/src/com/android/signflinger/V2SigningTest.java",
     ],
@@ -118,7 +118,7 @@ java_test(
 
 java_test(
     name = "testV1andV2Signing",
-    size = "small",
+    size = "medium",
     srcs = [
         "test/src/com/android/signflinger/TestBaseSigning.java",
         "test/src/com/android/signflinger/V1andV2SigningTest.java",
