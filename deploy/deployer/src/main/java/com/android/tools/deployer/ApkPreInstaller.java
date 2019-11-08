@@ -215,9 +215,11 @@ public class ApkPreInstaller {
                                 stream);
                 String stringResponse = new String(rawResponse, "UTF-8");
                 if (!stringResponse.startsWith("Success")) {
+                    adb.abortSession(sessionId);
                     throw DeployerException.preinstallFailed(stringResponse);
                 }
             } catch (IOException e) {
+                adb.abortSession(sessionId);
                 throw DeployerException.preinstallFailed(e.getMessage());
             }
         }

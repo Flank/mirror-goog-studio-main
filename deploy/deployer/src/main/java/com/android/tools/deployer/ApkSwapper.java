@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.idea.protobuf.ByteString;
+import com.android.utils.ILogger;
 import com.google.common.collect.Iterables;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,8 @@ public class ApkSwapper {
     private final Installer installer;
     private final boolean restart;
     private final Map<Integer, ClassRedefiner> redefiners;
+    private final AdbClient adb;
+    private final ILogger logger;
 
     /**
      * @param installer used to perform swaps on device.
@@ -35,10 +38,39 @@ public class ApkSwapper {
      *     process ids
      */
     public ApkSwapper(
-            Installer installer, Map<Integer, ClassRedefiner> redefiners, boolean restart) {
+            Installer installer,
+            Map<Integer, ClassRedefiner> redefiners,
+            boolean restart,
+            AdbClient adb,
+            ILogger logger) {
         this.installer = installer;
         this.redefiners = redefiners;
         this.restart = restart;
+        this.adb = adb;
+        this.logger = logger;
+    }
+
+    // If a session was created and Android Studio (not the device) still owns it, we must
+    // abort it on device in order to avoid a session leak.
+    Void error(
+            ApplicationDumper.Dump unused, String sessionId, DexComparator.ChangedClasses unused2) {
+        // Was a session created?
+        if (sessionId == null) {
+            return null;
+        }
+
+        // At this point, a session was created but may have not been handed to the device.
+        // The session needs to be aborted.
+
+        // TODO: Getting a String and parsing it here is wrong. The parsing should happen
+        // in a dedicated object. To lower the volume of code in this CL I did not refactor
+        // but I will do it in my next CL.
+        String abortResult = adb.abortSession(sessionId);
+        if (!abortResult.startsWith("Success")) {
+            logger.warning("Unable to abandon session: '%s'", abortResult);
+        }
+
+        return null;
     }
 
     /**

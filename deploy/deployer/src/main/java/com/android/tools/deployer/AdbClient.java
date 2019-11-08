@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -181,4 +182,25 @@ public class AdbClient {
         }
     }
 
+    // TODO: Returning a String is not enough since it delegates parsing that String to the caller.
+    // This method should return an AbortSessionResponse object, built on top of a ShellResponse object
+    // with a status code and the raw output string. Parsing the string output should be done in
+    // AbortSessionResponse.
+    public String abortSession(String sessionId) {
+        String prefix =
+                device.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.N)
+                        ? "cmd package"
+                        : "pm";
+
+        String[] command = {prefix, "install-abandon", sessionId};
+
+        String response;
+        try {
+            byte[] bytes = shell(command);
+            response = new String(bytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            response = e.getMessage();
+        }
+        return response;
+    }
 }

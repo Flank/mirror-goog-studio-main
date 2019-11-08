@@ -174,8 +174,8 @@ public class Deployer {
                 runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
 
         // Do the swap
-        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart);
-        runner.create(Tasks.SWAP, swapper::swap, dumps, sessionId, toSwap);
+        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart, adb, logger);
+        runner.create(Tasks.SWAP, swapper::swap, swapper::error, dumps, sessionId, toSwap);
 
         TaskResult result = runner.run();
         result.getMetrics().forEach(metrics::add);

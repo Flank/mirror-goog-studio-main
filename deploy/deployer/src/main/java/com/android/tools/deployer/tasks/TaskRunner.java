@@ -44,7 +44,26 @@ public class TaskRunner {
 
     public <I, O, E extends Enum> Task<O> create(
             E id, ThrowingFunction<I, O> function, Task<I> input) {
-        Callable<O> callable = () -> function.apply(input.future.get());
+        return create(id, function, null, input);
+    }
+
+    public <I, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingFunction<I, O> function,
+            ThrowingFunction<I, Void> errorFunction,
+            Task<I> input) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        return function.apply(input.future.get());
+                    } catch (Exception e) {
+                        if (errorFunction != null) {
+                            I value = getTaskValue(input);
+                            errorFunction.apply(value);
+                        }
+                        throw e;
+                    }
+                };
         Task<O> task = new Task<>(id.name(), callable, input);
         tasks.add(task);
         return task;
@@ -52,12 +71,30 @@ public class TaskRunner {
 
     public <T, U, O, E extends Enum> Task<O> create(
             E id, ThrowingBiFunction<T, U, O> function, Task<T> input1, Task<U> input2) {
+        return create(id, function, null, input1, input2);
+    }
+
+    public <T, U, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingBiFunction<T, U, O> function,
+            ThrowingBiFunction<T, U, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2) {
         Callable<O> callable =
                 () -> {
-                    // The input value is already done
-                    T value1 = input1.future.get();
-                    U value2 = input2.future.get();
-                    return function.apply(value1, value2);
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        return function.apply(value1, value2);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2);
+                        }
+                        throw e;
+                    }
                 };
         Task<O> task = new Task<>(id.name(), callable, input1, input2);
         tasks.add(task);
@@ -70,25 +107,68 @@ public class TaskRunner {
             Task<T> input1,
             Task<U> input2,
             Task<V> input3) {
+        return create(id, function, null, input1, input2, input3);
+    }
+
+    public <T, U, V, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingTriFunction<T, U, V, O> function,
+            ThrowingTriFunction<T, U, V, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3) {
         Callable<O> callable =
                 () -> {
-                    // The input value is already done
-                    T value1 = input1.future.get();
-                    U value2 = input2.future.get();
-                    V value3 = input3.future.get();
-                    return function.apply(value1, value2, value3);
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        V value3 = input3.future.get();
+                        return function.apply(value1, value2, value3);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        V value3 = getTaskValue(input3);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2, value3);
+                        }
+                        throw e;
+                    }
                 };
         Task<O> task = new Task<>(id.name(), callable, input1, input2, input3);
         tasks.add(task);
         return task;
     }
 
+    private <O> O getTaskValue(Task<O> task) {
+        try {
+            return task.get();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void runInternal(ArrayList<Task<?>> batch) throws DeployerException {
         for (Task<?> task : batch) {
             task.run(executor);
         }
+
+        joinAllTasks(batch, false);
+
+        // If any task has throw an exception, retrieve it and throw the first one here.
+        joinAllTasks(batch, true);
+    }
+
+    private void joinAllTasks(ArrayList<Task<?>> batch, boolean throwExceptionOnTaskFail)
+            throws DeployerException {
         for (Task<?> task : batch) {
-            task.get();
+            try {
+                task.get();
+            } catch (Exception e) {
+                if (throwExceptionOnTaskFail) {
+                    throw e;
+                }
+            }
         }
     }
 

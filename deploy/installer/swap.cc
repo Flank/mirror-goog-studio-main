@@ -94,6 +94,7 @@ void SwapCommand::Run(proto::InstallerResponse* response) {
   LogEvent("Got swap request for:" + request_.package_name());
 
   if (!Setup()) {
+    cmd.AbortInstall(install_session, &output);
     response_->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Unable to setup workspace");
     return;

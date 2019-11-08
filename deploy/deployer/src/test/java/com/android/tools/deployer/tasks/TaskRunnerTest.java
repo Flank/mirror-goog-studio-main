@@ -351,4 +351,52 @@ public class TaskRunnerTest {
             throw new RuntimeException(e);
         }
     }
+
+
+    @Test
+    public void testParentFallback() {
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        TaskRunner runner = new TaskRunner(service);
+
+        Task<String> task0 = runner.create("");
+        MockTask parentProb = new MockTask(true);
+        Task<String> parentTask =
+                runner.create(Tasks.TASK1, parentProb::run, parentProb::fail, task0);
+
+        MockTask childProb = new MockTask(false);
+        runner.create(Tasks.TASK2, childProb::run, childProb::fail, parentTask);
+
+        runner.run();
+        service.shutdown();
+
+        Assert.assertTrue("Parent ran", parentProb.ran());
+        Assert.assertTrue("Parent failRan", parentProb.failRan());
+        Assert.assertFalse("Child ran", childProb.ran());
+        Assert.assertTrue("Child failRan", childProb.failRan());
+    }
+
+    @Test
+    public void testChildFallback() {
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        TaskRunner runner = new TaskRunner(service);
+
+        Task<String> task0 = runner.create("");
+        MockTask parentProb = new MockTask(false);
+        Task<String> parentTask =
+                runner.create(Tasks.TASK1, parentProb::run, parentProb::fail, task0);
+
+        MockTask childProb = new MockTask(true);
+        runner.create(Tasks.TASK2, childProb::run, childProb::fail, parentTask);
+
+        runner.run();
+        service.shutdown();
+
+        Assert.assertTrue("Parent ran", parentProb.ran());
+        Assert.assertFalse("Parent failRan", parentProb.failRan());
+        Assert.assertTrue("Child ran", childProb.ran());
+        Assert.assertTrue("Child failRan", childProb.failRan());
+    }
+
+    @Test
+    public void testComplexBranchFallback() {}
 }

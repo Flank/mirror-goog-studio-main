@@ -1240,7 +1240,8 @@ public class DeployerRunnerTest {
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
         }
     }
 
@@ -1350,10 +1351,13 @@ public class DeployerRunnerTest {
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
-                    "/system/bin/cmd package " + (device.getApi() < 28 ? "dump" : "path") + " com.example.simpleapp",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk"); // TODO: Don't we need to abort installation?
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAPREINSTALL_WRITE",
@@ -1508,7 +1512,8 @@ public class DeployerRunnerTest {
                             + " com.example.simpleapp",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAPREINSTALL_WRITE",
