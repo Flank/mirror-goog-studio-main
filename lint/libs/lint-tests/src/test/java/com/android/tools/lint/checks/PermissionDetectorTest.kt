@@ -1169,4 +1169,67 @@ class PermissionDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testPermissionAnnotationsInCompiledJars() {
+        val libJarPath = "jar/jar/annotation_test.jar"
+        val base64JarData = "" +
+                "H4sIAAAAAAAAAAvwZmbhYmDgYAACRRsGJMDJwMLg6xriqOvp56b/7xQDQwCK" +
+                "0h/FzxlqgSwQFgFiuFJfRz9PN9fgED1fN9/EvMy01OIS3bDUouLM/DwrBUM9" +
+                "A14u56LUxJLUFF2nSiuFpMSq1BxerpDEovTUEl2fxKTUHCsFff3UioLUoszc" +
+                "1LySxBz90mKgdv3EosTs1OIM/azEskQgUQTCVol5efkliSVAs+NzMvNK4nm5" +
+                "FEqAFvJy8XIF4PQZCxCDDMCtggOqAqZKhIGDg4OBEU2VHJIqR7hDip1zEouL" +
+                "9ZJBZGugb76woUDt5PNqvF+6naJ3fGlYILNp+r2uCdtWh7hEpa5Wedvq/FSl" +
+                "zerWjcS3vVfmH+VcyV7HYM9leM8ttyUq8aTxvJnf5x1/fL8+r57R4lidcOqe" +
+                "NY9DZatbbrkvnfrbRWO//S6VECXjiS29EZk3T6crz+Q9qvH0TFnOMaW9IjM/" +
+                "fTSKLLx+Sojv0coTTPud1/YK+0nmLg6JqHayKLm067LJ9HMS5bV6m2dumsbI" +
+                "H3Dodd26ubNOrovTWB1R5doucMTJ32ixWuPZ58WTdzrcmd6878+81T632BP3" +
+                "bd4lUKP48OykG/Puh99e/tE1fYbK4fMt2/dtDbivEv/38Z47j9+Gth4XuGer" +
+                "JO4WmG6ww+r1N6vwQqHWw3mXlGVse3smbbCPOGrGrnb+2Cefn53v/lkf/Bai" +
+                "48ItGsJZ7d87c8PLREetL9sVJH2f3ngooPovff8phfPp0Y81EvzfrJava6r7" +
+                "sLDF6nbUxDXJvbmv+RrYZr2RjnhevFLh/eM8UZcoRbMZLGxC8z7W5W08uPLs" +
+                "/89RrPnZJ2//app0dNtRPnb9rntl/5kCvNk5Djy1aZnEyMCwgwmUqBmZuBhw" +
+                "5wBUgJYfULWi5wgE0MaRP/BZjmr1LXiSxa2DA0XHH5QkzMgkwoBIxMgBIIei" +
+                "S4mRUJIO8GZlA6lkBUJDoGoGZhAPALGIOx5HBAAA"
+
+        val customLib = base64gzip(libJarPath, base64JarData)
+        val classPath = classpath(SUPPORT_JAR_PATH, libJarPath)
+
+        lint().files(
+            java(
+                "package test.pkg;\n"
+                        + "\n"
+                        + "import jar.jar.AnnotationsClass;\n"
+                        + "import android.Manifest;\n"
+                        + "import android.support.annotation.RequiresPermission;\n"
+                        + "\n"
+                        + "public class TestClass {\n"
+                        + "\n"
+                        + "    @RequiresPermission(Manifest.permission.BLUETOOTH)\n"
+                        + "    public static void inClassBluetoothAnnotation() {}\n"
+                        + "\n"
+                        + "    public static void callMethod() {\n"
+                        + "        inClassBluetoothAnnotation(); // Missing Bluetooth Permission\n"
+
+                        + "        AnnotationsClass.testBluetoothPermissionAnnotation(); // Missing Bluetooth Permission\n"
+                        + "        AnnotationsClass.testAnyOfLocationPermissionAnnotation(); // Missing Location Permission\n"
+                        + "    }\n"
+                        + "}"
+            ),
+            classPath,
+            SUPPORT_ANNOTATIONS_JAR,
+            customLib)
+            .run()
+            .expect(
+                "src/test/pkg/TestClass.java:13: Error: Missing permissions required by TestClass.inClassBluetoothAnnotation: android.permission.BLUETOOTH [MissingPermission]\n" +
+                        "        inClassBluetoothAnnotation(); // Missing Bluetooth Permission\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/TestClass.java:14: Error: Missing permissions required by AnnotationsClass.testBluetoothPermissionAnnotation: android.permission.BLUETOOTH [MissingPermission]\n" +
+                        "        AnnotationsClass.testBluetoothPermissionAnnotation(); // Missing Bluetooth Permission\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/TestClass.java:15: Error: Missing permissions required by AnnotationsClass.testAnyOfLocationPermissionAnnotation: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION [MissingPermission]\n" +
+                        "        AnnotationsClass.testAnyOfLocationPermissionAnnotation(); // Missing Location Permission\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "3 errors, 0 warnings"
+            )
+    }
 }

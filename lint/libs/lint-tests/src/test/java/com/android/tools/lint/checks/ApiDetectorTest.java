@@ -6331,6 +6331,64 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testTargetApiInCustomJar() {
+        String libraryJarPath = "jar/jar/binks.jar";
+        String base64JarData =
+                ""
+                        + "H4sIAAAAAAAAAAvwZmbhYmDgYAACRRsGJMDJwMLg6xriqOvp56b/7xQDQwCK"
+                        + "UpaLMTuKgSwQFgFiuFJfRz9PN9fgED1fN9/EvMy01OIS3bDUouLM/DwrBUM9"
+                        + "A14u56LUxJLUFF2nSiuFpMSq1BxerpDEovTUEl2fxKTUHCsFff3UioLUoszc"
+                        + "1LySxBz90mKgdv3EosTs1OIM/azEskQgUQTCVjmZeSXxJUAr4nMyk3i5eLkC"
+                        + "cPqHBYhB2nCr4ICqgKkSYeDg4GBgRFMljKTKKTMvu1gvOSexuLjV/7QXs6GI"
+                        + "7cvg41nZtQ6C4u9Wcac/9hNcpSDCNjVql//yhffKfI75LPv/1KvgIfuPwEdn"
+                        + "Q44cP9Ry5/jO73eqP33794nrActuxlM3ViXv7pNtvCWZWfSc6em7hx4LijLV"
+                        + "vBZITgy7/vNwxM2FMuo9W5SFT6eo6P78I7xmR/Wpmu8+ty7s5770+c2UiSHH"
+                        + "ii1DbY7xhj5j+ca2s+zLgl9VjpKGu5dvLbw08aLNQmlP241taonTlq/cqDcl"
+                        + "/mnBArniTVqvlx5ZvJp75pNVZ+Jvir/IWKxcdOrUk2/fjz0498QsLPzJVLbW"
+                        + "TY9nxpxg01rBteb/BZ0Ln7YaTKySuteTrlVm4cBZx3+Dyz8p+rFOiv6N8P55"
+                        + "ivMsNBae2xbWsDoi8XaEWYGYyA2p40ub7hz8JOLysffGA+68lNQ/Zr8yjNZ/"
+                        + "tV//c7r6hsgVWfXAhMXO0a+2dJs1IwPDF0ZQQmNk4mLAnSpRAVoaRdWKnkoR"
+                        + "QBtHmsVnOarVF+AJCrcODhQdn1ASGCOTCAMiiSEHgDCKLglGrAkuwJuVDSTN"
+                        + "CoRqQCVTmEA8AKV33pzQAwAA";
+
+        TestFile customLibraryJar = base64gzip(libraryJarPath, base64JarData);
+        TestFile classPath = classpath(SUPPORT_JAR_PATH, libraryJarPath);
+
+        lint().files(
+                        manifest().minSdk(10),
+                        java(
+                                "package test.pkg;\n"
+                                        + "\n"
+                                        + "import jar.jar.Binks;\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "public class CheckJarAnnotations {\n"
+                                        + "    public static void test() {\n"
+                                        + "        Binks.packageLintTest(); // Should Fail\n"
+                                        + "        Binks.nonLiteralPackageLintTest(); // Should Fail\n"
+                                        + "        classLintTest(); // Should Fail\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(29)\n"
+                                        + "    private void classLintTest() {}\n"
+                                        + "}\n"),
+                        classPath,
+                        SUPPORT_ANNOTATIONS_JAR,
+                        customLibraryJar)
+                .run()
+                .expect(
+                        "src/test/pkg/CheckJarAnnotations.java:8: Error: Call requires API level Q (current min is 10): packageLintTest [NewApi]\n"
+                                + "        Binks.packageLintTest(); // Should Fail\n"
+                                + "              ~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CheckJarAnnotations.java:9: Error: Call requires API level Q (current min is 10): nonLiteralPackageLintTest [NewApi]\n"
+                                + "        Binks.nonLiteralPackageLintTest(); // Should Fail\n"
+                                + "              ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CheckJarAnnotations.java:10: Error: Call requires API level Q (current min is 10): classLintTest [NewApi]\n"
+                                + "        classLintTest(); // Should Fail\n"
+                                + "        ~~~~~~~~~~~~~\n"
+                                + "3 errors, 0 warnings");
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement

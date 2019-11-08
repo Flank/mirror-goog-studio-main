@@ -916,4 +916,76 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             """
         )
     }
+
+    fun testRangeAnnotationsInCompiledJars() {
+        val libJarPath = "jar/jar/annotation_test.jar"
+        val base64JarData = "" +
+                "H4sIAAAAAAAAAAvwZmbhYmDgYAACRRsGJMDJwMLg6xriqOvp56b/7xQDQwCK" +
+                "0h/FzxlqgSwQFgFiuFJfRz9PN9fgED1fN9/EvMy01OIS3bDUouLM/DwrBUM9" +
+                "A14u56LUxJLUFF2nSiuFpMSq1BxerpDEovTUEl2fxKTUHCsFff3UioLUoszc" +
+                "1LySxBz90mKgdv3EosTs1OIM/azEskQgUQTCVol5efkliSVAs+NzMvNK4nm5" +
+                "FEqAFvJy8XIF4PQZCxCDDMCtggOqAqZKhIGDg4OBEU2VHJIqR7hDip1zEouL" +
+                "9ZJBZGtgrH+Uo4Atd4XjFtZMA5HbJtsCMn33XDkxuXdilofBF+UbE74UPtTb" +
+                "9WRT9je9b+VfTy7h/8v4b8W1m9oBqzJ3n3zz5sy5OcbV3349/y7P8O2DUbdK" +
+                "3JJAz8WnHuyd6nWLuS3lbWi/YukS5oMTXnuo2vkcq020+1znMdPJnb/ixmO3" +
+                "XRWzfG4WSxpOsVbOq0n3XbrlaViWqGyrTdc3Sa/DAcW/O6Xt6tTfhCuG7F3Z" +
+                "ZP7Vauv1qL7JvCejeH5+PzTvtYKeaJiE07oS9VOnNmas9pb0fDQnXs/AMKd0" +
+                "B1fPtEZ5Xz29LRvt5sf/1j1+/+krnwsmKxdeTOa/fHTChlvWf4y6ry3dZf4y" +
+                "b/FDtdzjk702mTl/ja/JNU2NnnXxDN9+iU3Lq5LYFqnOrTm6u+htzw/VeFcu" +
+                "7yW375uoLoyZKS/U+X+jvRBzt6/Ki+C7XpeMV8wv++4136ZYeM8+pt9u7SyX" +
+                "tlQXXnJu+3b1NpOOsnedpPYUz2Nnb29U23F/RlxGSkVD+5NiviOsDvNyzn5c" +
+                "Fxj+UKI/wOaYleP0Dz/qL8y0X3D6xg/e2LiWukcL/D+IHBW2WVxhfKyyjjnA" +
+                "m53DTqBGahkjA8NTJlBCZ2TiYsCdK1ABWh5B1YqeSxBAG0eewWc5qtW34MkY" +
+                "tw4OFB1/UJI1I5MIAyJhIweAHIouJUZCyTzAm5UNpJIVCA2BqkWYQTwAgU6w" +
+                "1VsEAAA=";
+
+        val customLib = base64gzip(libJarPath, base64JarData)
+        val classPath = classpath(SUPPORT_JAR_PATH, libJarPath)
+
+        lint().files(
+            java(
+                "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.FloatRange;\n" +
+                        "import android.support.annotation.IntRange;\n" +
+                        "import jar.jar.AnnotationsClass;\n" +
+                        "\n" +
+                        "public class TestClass {\n" +
+                        "  public static void callMethod() {\n" +
+                        "    AnnotationsClass.floatParamBetween0And100(50); // Within Range\n" +
+                        "    AnnotationsClass.floatParamBetween0And100(552); // Outside Range\n" +
+                        "\n" +
+                        "    AnnotationsClass.intParamBetween0And255(51); // Within Range\n" +
+                        "    AnnotationsClass.intParamBetween0And255(551); // Outside Range\n" +
+                        "\n" +
+                        "    inClassIntParamFrom0To255(52); // Within Range\n" +
+                        "    inClassIntParamFrom0To255(550); // Outside Range\n" +
+                        "\n" +
+                        "    inClassFloatParamFrom0To100(53); // Within Range\n" +
+                        "    inClassFloatParamFrom0To100(549); // Outside Range\n" +
+                        "  }\n" +
+                        "\n" +
+                        "  private static void inClassIntParamFrom0To255(@IntRange(from = 0, to = 255) int i) {}\n" +
+                        "  private static void inClassFloatParamFrom0To100(@FloatRange(from = 0, to = 100) float f) {}\n" +
+                        "}\n"
+            ),
+            classPath,
+            SUPPORT_ANNOTATIONS_JAR,
+            customLib)
+            .run()
+            .expect("src/test/pkg/TestClass.java:10: Error: Value must be ≤ 100.0 (was 552) [Range]\n" +
+                    "    AnnotationsClass.floatParamBetween0And100(552); // Outside Range\n" +
+                    "                                              ~~~\n" +
+                    "src/test/pkg/TestClass.java:13: Error: Value must be ≤ 255 (was 551) [Range]\n" +
+                    "    AnnotationsClass.intParamBetween0And255(551); // Outside Range\n" +
+                    "                                            ~~~\n" +
+                    "src/test/pkg/TestClass.java:16: Error: Value must be ≤ 255 (was 550) [Range]\n" +
+                    "    inClassIntParamFrom0To255(550); // Outside Range\n" +
+                    "                              ~~~\n" +
+                    "src/test/pkg/TestClass.java:19: Error: Value must be ≤ 100.0 (was 549) [Range]\n" +
+                    "    inClassFloatParamFrom0To100(549); // Outside Range\n" +
+                    "                                ~~~\n" +
+                    "4 errors, 0 warnings")
+
+    }
 }
