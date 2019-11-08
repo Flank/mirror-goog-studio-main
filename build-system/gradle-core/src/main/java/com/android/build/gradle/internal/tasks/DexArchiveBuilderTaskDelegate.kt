@@ -379,7 +379,10 @@ class DexArchiveBuilderTaskDelegate(
             deletePreviousOutputsFromDirs(inputFileChanges, outputDir)
         }
 
-        val (directoryInputs, jarInputs) = inputFiles.partition { it.isDirectory }
+        val (directoryInputs, jarInputs) =
+            inputFiles
+                .filter { it.exists() }
+                .partition { it.isDirectory }
 
         directoryInputs.forEach { loggerWrapper.verbose("Processing input %s", it.toString()) }
         convertToDexArchive(
