@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 
@@ -32,7 +31,7 @@ class EarlyTaskConfigurationTest {
     @get:Rule
     var project = EmptyActivityProjectBuilder().build()
 
-    @Test
+    @Test // Regression test for bug 139821728
     fun `check that build succeeds when tasks are configured early`() {
         // Force tasks to be configured early
         TestFileUtils.appendToFile(
@@ -42,12 +41,6 @@ class EarlyTaskConfigurationTest {
                 tasks.all { }
             }
             """.trimIndent()
-        )
-
-        // Regression test for bug 139821728
-        TestFileUtils.appendToFile(
-            project.gradlePropertiesFile,
-            "${BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.propertyName}=true"
         )
 
         // Check that the build succeeds

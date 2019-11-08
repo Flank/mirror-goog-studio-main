@@ -178,8 +178,6 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
-import com.android.build.gradle.tasks.ProcessAnnotationsTask;
-import com.android.build.gradle.tasks.ProcessAnnotationsTaskCreationAction;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -1251,14 +1249,8 @@ public abstract class TaskManager {
     public TaskProvider<? extends JavaCompile> createJavacTask(@NonNull final VariantScope scope) {
         taskFactory.register(new JavaPreCompileTask.CreationAction(scope));
 
-        boolean processAnnotationsTaskCreated = ProcessAnnotationsTask.taskShouldBeCreated(scope);
-        if (processAnnotationsTaskCreated) {
-            taskFactory.register(new ProcessAnnotationsTaskCreationAction(scope));
-        }
-
         final TaskProvider<? extends JavaCompile> javacTask =
-                taskFactory.register(
-                        new JavaCompileCreationAction(scope, processAnnotationsTaskCreated));
+                taskFactory.register(new JavaCompileCreationAction(scope));
 
         postJavacCreation(scope);
 

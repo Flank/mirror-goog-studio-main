@@ -111,6 +111,7 @@ enum class RemovedOptions(
     KEEP_TIMESTAMPS_IN_APK(
         "android.keepTimestampsInApk",
         "The ability to keep timestamps in the APK is removed in AGP 3.6"),
+    ENABLE_SEPARATE_ANNOTATION_PROCESSING("android.enableSeparateAnnotationProcessing", "This feature was removed in AGP 4.0"),
 
     ;
 
