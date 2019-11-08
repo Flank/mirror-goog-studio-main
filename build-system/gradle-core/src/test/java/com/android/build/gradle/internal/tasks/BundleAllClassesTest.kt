@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
@@ -53,7 +55,7 @@ class BundleAllClassesTest {
     @Mock private lateinit var variantData: BaseVariantData
     @Mock private lateinit var preJavacClasses: FileCollection
     @Mock private lateinit var postJavacClasses: FileCollection
-    @Mock private lateinit var extension: BaseExtension
+    @Mock private lateinit var extension: BaseExtension<Variant<VariantProperties>, VariantProperties>
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var taskContainer: MutableTaskContainer
     @Mock private lateinit var rClasses: FileCollection

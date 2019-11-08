@@ -44,7 +44,7 @@ class EmptyGlobalMock {
         BaseVariantData::class.java,
         throwUnmocked
     )
-    val extension: BaseExtension = Mockito.mock(
+    val extension: BaseExtension<*, *> = Mockito.mock(
         BaseExtension::class.java,
         throwUnmocked
     )
@@ -63,7 +63,7 @@ class EmptyGlobalMock {
     init {
         // DON'T ADD NEW STUFF HERE JUST TO GET THE TEST TO PASS. See class comment.
         Mockito.doReturn(extension).`when`(global).extension
-        Mockito.doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
+        Mockito.doReturn(externalNativeBuild).`when`(extension).getExternalNativeBuild()
         Mockito.doReturn(cmake).`when`(externalNativeBuild).cmake
         Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
         Mockito.doReturn(join(File("path"), "to", "CMakeLists.txt")).`when`(cmake).path

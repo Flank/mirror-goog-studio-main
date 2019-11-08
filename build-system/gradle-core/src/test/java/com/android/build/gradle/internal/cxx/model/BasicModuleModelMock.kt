@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
@@ -189,7 +191,7 @@ open class BasicModuleModelMock {
         val appFolder = join(projectRootDir, appName)
         val buildDir = File(appFolder, "build")
         val intermediates = File(buildDir, "intermediates")
-        val extension: BaseExtension = mock(
+        val extension: BaseExtension<*, *> = mock(
             BaseExtension::class.java,
             throwUnmocked
         )
@@ -223,10 +225,10 @@ open class BasicModuleModelMock {
         doReturn(extension).`when`(global).extension
 
         doReturn(extension).`when`(global).extension
-        doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
-        doReturn(false).`when`(extension).generatePureSplits
+        doReturn(externalNativeBuild).`when`(extension).getExternalNativeBuild()
+        doReturn(false).`when`(extension).getGeneratePureSplits()
 
-        doReturn(splits).`when`(extension).splits
+        doReturn(splits).`when`(extension).getSplits()
 
         doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
         doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)

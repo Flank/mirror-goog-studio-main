@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -39,7 +41,7 @@ public class SourceSetsTask extends AbstractReportTask {
 
     private final TextReportRenderer mRenderer = new TextReportRenderer();
 
-    private BaseExtension extension;
+    private BaseExtension<Variant<VariantProperties>, VariantProperties> extension;
 
     @Override
     protected ReportRenderer getRenderer() {
@@ -47,7 +49,7 @@ public class SourceSetsTask extends AbstractReportTask {
     }
 
     @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    public BaseExtension getExtension() {
+    public BaseExtension<Variant<VariantProperties>, VariantProperties> getExtension() {
         return extension;
     }
 

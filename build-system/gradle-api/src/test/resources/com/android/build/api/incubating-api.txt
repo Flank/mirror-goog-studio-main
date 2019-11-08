@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c4506f505d0029cf4c881af895f6329dff60dffeb88d53c08ef1e204e37b2c3c
+1505dbe685c6d6a9fc0ec6376719f1c8210bae8d5b345134e879469ab3b04a88
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -65,10 +65,14 @@ com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
-com.android.build.api.variant.Variant
-com.android.build.api.variant.Variant.getName: java.lang.String ()
-com.android.build.api.variant.Variant.getOperations: com.android.build.api.artifact.Operations ()
-com.android.build.api.variant.Variant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
+com.android.build.api.variant.Variant implements com.android.build.api.variant.VariantConfiguration
+com.android.build.api.variant.Variant.getEnabled: boolean ()
+com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<T>)
+com.android.build.api.variant.Variant.setEnabled: void (boolean)
+com.android.build.api.variant.VariantConfiguration
+com.android.build.api.variant.VariantConfiguration.getBuildType: java.lang.String ()
+com.android.build.api.variant.VariantConfiguration.getFlavors: java.util.List<java.lang.String> ()
+com.android.build.api.variant.VariantConfiguration.getName: java.lang.String ()
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()
@@ -84,3 +88,6 @@ com.android.build.api.variant.VariantOutput$OutputType.valueOf: com.android.buil
 com.android.build.api.variant.VariantOutput$OutputType.values: com.android.build.api.variant.VariantOutput$OutputType[] ()
 com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
+com.android.build.api.variant.VariantProperties implements com.android.build.api.variant.VariantConfiguration
+com.android.build.api.variant.VariantProperties.getOperations: com.android.build.api.artifact.Operations ()
+com.android.build.api.variant.VariantProperties.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()

@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo

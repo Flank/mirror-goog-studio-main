@@ -16,6 +16,8 @@
 
 package com.android.build.gradle
 
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -40,8 +42,8 @@ open class BasePlugin: Plugin<Project> {
      * @deprecated Directely call project.extensions.getByName("android") instead.
      */
     @Deprecated("Use project.extensions.getByName(\"android\")")
-    fun getExtension(): BaseExtension {
-        return project.extensions.getByName("android") as BaseExtension
+    fun getExtension(): BaseExtension<Variant<VariantProperties>, VariantProperties> {
+        return project.extensions.getByName("android") as BaseExtension<Variant<VariantProperties>, VariantProperties>
     }
 }
 

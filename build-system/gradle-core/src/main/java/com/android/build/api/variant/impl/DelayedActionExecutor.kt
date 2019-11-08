@@ -14,27 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant
+package com.android.build.api.variant.impl
 
 import org.gradle.api.Action
-import org.gradle.api.Incubating
 
-/**
- * Variant object that contains properties that must be set during configuration time as it
- * changes the build flow for the variant.
- *
- * @param T the [VariantProperties] type associated with this [Variant]
- */
-@Incubating
-interface Variant<T : VariantProperties>: VariantConfiguration {
+open class DelayedActionExecutor<T> {
 
-    /**
-     * Set to True if the variant is active and should be configured, false otherwise.
-     */
-    var enabled: Boolean
+    private val actions = mutableListOf<Action<T>>()
 
-    /**
-     * Runs the [Action] block on the [VariantProperties] object once created.
-     */
-    fun onProperties(action: Action<T>)
+    fun registerAction(action: Action<T>) {
+        actions.add(action)
+    }
+
+    fun executeActions(target: T) {
+        actions.forEach { it.execute(target) }
+    }
 }

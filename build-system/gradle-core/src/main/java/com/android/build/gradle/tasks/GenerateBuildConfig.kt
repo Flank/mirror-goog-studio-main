@@ -206,7 +206,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.versionName.set(project.provider { variantConfiguration.versionName })
             task.versionName.disallowChanges()
-            val mainSplit = variantData.publicVariantApi.outputs.getMainSplit()
+            val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
             task.versionCode.set(mainSplit?.versionCode ?:

@@ -16,25 +16,29 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
- * Variant object that contains properties that must be set during configuration time as it
- * changes the build flow for the variant.
+ * Variant Configuration encapsulates immutable variant properties.
  *
- * @param T the [VariantProperties] type associated with this [Variant]
+ * Those properties are usually calculated from the DSL and cannot be changed once the DSL objects
+ * are locked.
  */
 @Incubating
-interface Variant<T : VariantProperties>: VariantConfiguration {
+interface VariantConfiguration {
+    /**
+     * Variant name, unique within a project.
+     * @return the variant name
+     */
+    val name: String
 
     /**
-     * Set to True if the variant is active and should be configured, false otherwise.
+     * Build Type name, might be replaced with access to locked DSL object once ready
      */
-    var enabled: Boolean
+    val buildType: String
 
     /**
-     * Runs the [Action] block on the [VariantProperties] object once created.
+     * List of flavor names, might be replaced with access to locked DSL objects once ready
      */
-    fun onProperties(action: Action<T>)
+    val flavors: List<String>
 }

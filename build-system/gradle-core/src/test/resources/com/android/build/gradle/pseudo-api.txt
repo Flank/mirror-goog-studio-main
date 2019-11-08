@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a1f15cb73bfa1dc50c02533d101bb49346416fc22006b90aec1a31b92a1680bd
+1851b48f87f33cf7dfaaa8ab24fb6485bf03f233dc19a35b199ae074c15a7224
 -------------------------------------------------------------------------
 com.android.build.gradle.AndroidConfig
 com.android.build.gradle.AndroidConfig.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
@@ -47,6 +47,7 @@ com.android.build.gradle.AppExtension.<init>: com.android.build.gradle.AppExtens
 com.android.build.gradle.AppExtension.addVariant: void (com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.scope.VariantScope)
 com.android.build.gradle.AppExtension.getApplicationVariants: org.gradle.api.DomainObjectSet<com.android.build.gradle.api.ApplicationVariant> ()
 com.android.build.gradle.AppExtension.onVariants: void (org.gradle.api.Action<com.android.build.api.variant.Variant>)
+com.android.build.gradle.AppExtension.onVariantsProperties: void (org.gradle.api.Action<com.android.build.api.variant.VariantProperties>)
 com.android.build.gradle.AppPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.AppPlugin.<init>: com.android.build.gradle.AppPlugin ()
 com.android.build.gradle.AppPlugin.apply: void (java.lang.Object)
@@ -154,7 +155,7 @@ com.android.build.gradle.BasePlugin implements org.gradle.api.Plugin
 com.android.build.gradle.BasePlugin.<init>: com.android.build.gradle.BasePlugin ()
 com.android.build.gradle.BasePlugin.apply: void (java.lang.Object)
 com.android.build.gradle.BasePlugin.apply: void (org.gradle.api.Project)
-com.android.build.gradle.BasePlugin.getExtension: com.android.build.gradle.BaseExtension ()
+com.android.build.gradle.BasePlugin.getExtension: com.android.build.gradle.BaseExtension<com.android.build.api.variant.Variant<com.android.build.api.variant.VariantProperties>, com.android.build.api.variant.VariantProperties> ()
 com.android.build.gradle.BasePluginKt
 com.android.build.gradle.BasePluginKt.getVERSION_CHECK_PLUGIN_ID: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.gradle.DynamicFeaturePlugin extends com.android.build.gradle.BasePlugin

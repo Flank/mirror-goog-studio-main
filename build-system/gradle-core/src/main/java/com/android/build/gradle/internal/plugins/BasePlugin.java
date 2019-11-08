@@ -22,6 +22,8 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
@@ -119,7 +121,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Base class for all Android plugins */
 public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProvider {
 
-    private BaseExtension extension;
+    private BaseExtension<Variant<VariantProperties>, VariantProperties> extension;
 
     private VariantManager variantManager;
 
@@ -161,7 +163,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     }
 
     @NonNull
-    protected abstract BaseExtension createExtension(
+    protected abstract BaseExtension<Variant<VariantProperties>, VariantProperties> createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -184,7 +186,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull BaseExtension extension,
+            @NonNull BaseExtension<Variant<VariantProperties>, VariantProperties> extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
@@ -196,7 +198,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         return variantManager;
     }
 
-    public BaseExtension getExtension() {
+    public BaseExtension<Variant<VariantProperties>, VariantProperties> getExtension() {
         return extension;
     }
 

@@ -2,6 +2,8 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -19,7 +21,7 @@ import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 
 /** {@code android} extension for {@code com.android.test} projects. */
-public class TestExtension extends BaseExtension
+public class TestExtension extends BaseExtension<Variant<VariantProperties>, VariantProperties>
         implements TestAndroidConfig, com.android.build.api.dsl.TestExtension {
 
     private final DomainObjectSet<ApplicationVariant> applicationVariantList;

@@ -1,6 +1,8 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
@@ -24,7 +26,8 @@ import org.gradle.api.file.FileCollection;
  * <p>To learn more about testing Android projects, read <a
  * href="https://developer.android.com/studio/test/index.html">Test Your App</a>.
  */
-public abstract class TestedExtension extends BaseExtension
+public abstract class TestedExtension
+        extends BaseExtension<Variant<VariantProperties>, VariantProperties>
         implements TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
     private final DomainObjectSet<TestVariant> testVariantList;

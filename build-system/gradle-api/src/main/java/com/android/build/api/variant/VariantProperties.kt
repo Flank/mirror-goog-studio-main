@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -13,28 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.api.variant
-
-import org.gradle.api.Action
+import com.android.build.api.artifact.Operations
 import org.gradle.api.Incubating
-
 /**
- * Variant object that contains properties that must be set during configuration time as it
- * changes the build flow for the variant.
- *
- * @param T the [VariantProperties] type associated with this [Variant]
+ * Parent interface for all types of variants.
  */
 @Incubating
-interface Variant<T : VariantProperties>: VariantConfiguration {
-
+interface VariantProperties: VariantConfiguration {
     /**
-     * Set to True if the variant is active and should be configured, false otherwise.
+     * Returns the final list of variant outputs.
+     * @return read only list of [VariantOutput] for this variant.
      */
-    var enabled: Boolean
-
+    val outputs: List<VariantOutput>
     /**
-     * Runs the [Action] block on the [VariantProperties] object once created.
+     * Access to the variant's buildable artifacts for build customization.
      */
-    fun onProperties(action: Action<T>)
+    val operations: Operations
 }

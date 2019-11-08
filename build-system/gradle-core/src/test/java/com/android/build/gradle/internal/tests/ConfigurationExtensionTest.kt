@@ -56,7 +56,7 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
 
     private lateinit var project: Project
     private lateinit var plugin: BasePlugin
-    private lateinit var android: BaseExtension
+    private lateinit var android: BaseExtension<*, *>
     private lateinit var configExtensionMap: Multimap<String, String>
 
     // basic relationship
@@ -243,25 +243,25 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
                 .build()
         android = project.extensions.getByType(pluginType.extensionClass) as BaseExtension
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
-        android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
+        android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION)
         plugin = project.plugins.getPlugin(pluginType.pluginClass) as BasePlugin
 
         // manually call the DSL to configure the project.
         android.flavorDimensions("api", "mode")
 
-        android.productFlavors.createAndConfig("demo") {
+        android.getProductFlavors().createAndConfig("demo") {
             setDimension("mode")
         }
 
-        android.productFlavors.createAndConfig("full") {
+        android.getProductFlavors().createAndConfig("full") {
             setDimension("mode")
         }
 
-        android.productFlavors.createAndConfig("mnc") {
+        android.getProductFlavors().createAndConfig("mnc") {
             setDimension("api")
         }
 
-        android.productFlavors.createAndConfig("lollipop") {
+        android.getProductFlavors().createAndConfig("lollipop") {
             setDimension("api")
         }
 

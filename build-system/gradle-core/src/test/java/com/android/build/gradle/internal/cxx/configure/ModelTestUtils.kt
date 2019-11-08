@@ -64,7 +64,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
                 Pkg.Revision = 17.2.4988734
             """.trimIndent())
     Mockito.doReturn(extension).`when`(global).extension
-    Mockito.doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
+    Mockito.doReturn(externalNativeBuild).`when`(extension).getExternalNativeBuild()
     Mockito.doReturn(cmake).`when`(externalNativeBuild).cmake
     Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
     Mockito.doReturn(FileUtils.join(moduleDir, "src", "CMakeLists.txt")).`when`(cmake).path

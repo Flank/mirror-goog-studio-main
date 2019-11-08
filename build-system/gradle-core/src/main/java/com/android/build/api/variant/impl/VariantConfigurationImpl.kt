@@ -16,24 +16,10 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantConfiguration
-import com.android.build.api.variant.VariantProperties
-import org.gradle.api.Action
-import java.lang.Boolean.TRUE
 
-open class VariantImpl<T: VariantProperties>(variantConfiguration: VariantConfiguration):
-    Variant<T>, VariantConfiguration by variantConfiguration {
-
-    private val actions = DelayedActionExecutor<T>()
-
-    override fun onProperties(action: Action<T>) {
-        actions.registerAction(action)
-    }
-
-    fun executeActions(target: T) {
-        actions.executeActions(target)
-    }
-
-    override var enabled: Boolean = TRUE
-}
+class VariantConfigurationImpl(
+    override val name: String,
+    override val buildType: String,
+    override val flavors: List<String>
+) : VariantConfiguration
