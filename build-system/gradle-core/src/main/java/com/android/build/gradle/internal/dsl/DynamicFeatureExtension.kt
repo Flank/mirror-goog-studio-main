@@ -17,6 +17,11 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureExtension
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.gradle.AbstractAppExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -36,7 +41,7 @@ open class DynamicFeatureExtension(
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo
-) : AppExtension(
+) : AbstractAppExtension<DynamicFeatureVariant, DynamicFeatureVariantProperties>(
     project, projectOptions, globalScope, buildTypes, productFlavors, signingConfigs,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension

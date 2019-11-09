@@ -16,6 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
+import com.android.build.gradle.AppExtension
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter
@@ -101,7 +107,7 @@ class ParseIntegrityConfigTaskTest {
 
         Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
-        Mockito.`when`(globalScope.extension).thenReturn(extension)
+        Mockito.`when`(globalScope.extension).thenReturn(extension as BaseExtension<Variant<VariantProperties>, VariantProperties>)
         Mockito.`when`(variantScope.type).thenReturn(variantType)
         Mockito.`when`(variantScope.fullVariantName).thenReturn("variant")
         Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)

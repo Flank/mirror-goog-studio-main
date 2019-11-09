@@ -27,6 +27,6 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface CommonExtension<T: Variant<U>, U: VariantProperties> {
+interface CommonExtension<VARIANT: Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES: VariantProperties> {
     // TODO(b/140406102)
 }

@@ -26,13 +26,14 @@ import org.gradle.api.file.FileCollection;
  * <p>To learn more about testing Android projects, read <a
  * href="https://developer.android.com/studio/test/index.html">Test Your App</a>.
  */
-public abstract class TestedExtension
-        extends BaseExtension<Variant<VariantProperties>, VariantProperties>
+public abstract class TestedExtension<VARIANT extends Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES extends VariantProperties>
+        extends BaseExtension<VARIANT, VARIANT_PROPERTIES>
         implements TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
     private final DomainObjectSet<TestVariant> testVariantList;
 
     private final DomainObjectSet<UnitTestVariant> unitTestVariantList;
+
 
     private String testBuildType = "debug";
 

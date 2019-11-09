@@ -16,8 +16,8 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.api.variant.DynamicFeatureVariant
 import org.gradle.api.Incubating
 
 /**
@@ -27,6 +27,6 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface DynamicFeatureExtension : CommonExtension<Variant<VariantProperties>, VariantProperties>, ApkExtension, TestedExtension {
+interface DynamicFeatureExtension : CommonExtension<DynamicFeatureVariant, DynamicFeatureVariantProperties>, ApkExtension, TestedExtension {
     // TODO(b/140406102)
 }

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -13,22 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.build.api.dsl
-
-import com.android.build.api.variant.AppVariant
+package com.android.build.api.variant.impl
+import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.AppVariantProperties
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
-import org.gradle.api.Incubating
+import com.android.build.gradle.internal.core.VariantConfiguration
+import com.android.build.gradle.internal.scope.VariantScope
+import org.gradle.api.model.ObjectFactory
 
-/**
- * Extension for the Android Gradle Plugin Application plugin.
- *
- *
- * Only the Android Gradle Plugin should create instances of this interface.
- */
-@Incubating
-interface ApplicationExtension : CommonExtension<AppVariant, AppVariantProperties>, ApkExtension, TestedExtension {
-    // TODO(b/140406102)
-}
+internal class AppVariantPropertiesImpl(
+    val objects: ObjectFactory,
+    val variantScope: VariantScope,
+    val variantConfiguration: VariantConfiguration<*, *, *>,
+    operations: Operations,
+    configuration: com.android.build.api.variant.VariantConfiguration
+) : VariantPropertiesImpl(objects, variantScope, variantConfiguration, operations, configuration), AppVariantProperties

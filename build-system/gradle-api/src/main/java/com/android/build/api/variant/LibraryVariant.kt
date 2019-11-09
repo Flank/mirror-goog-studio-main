@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -13,22 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.build.api.dsl
-
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
+package com.android.build.api.variant
 import org.gradle.api.Incubating
-
 /**
- * Extension for the Android Library Gradle Plugin.
- *
- *
- * Only the Android Gradle Plugin should create instances of this interface.
+ * [Variant] type for library modules
  */
 @Incubating
-interface LibraryExtension : CommonExtension<LibraryVariant, LibraryVariantProperties>, TestedExtension {
-    // TODO(b/140406102)
-}
+interface LibraryVariant: Variant<LibraryVariantProperties>

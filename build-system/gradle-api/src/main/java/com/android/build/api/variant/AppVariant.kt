@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
+package com.android.build.api.variant
 
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
- * Extension for the Android Library Gradle Plugin.
+ * Application specific variant object that contains properties that will determine the variant's
+ * build flow.
  *
+ * For example, an application variant may have minification on or off, or have a different
+ * minSdkVersion from the other variants.
  *
- * Only the Android Gradle Plugin should create instances of this interface.
+ * All these properties must be resolved during configuration time as [org.gradle.api.Task]
+ * representing the variant build flows must be created.
  */
 @Incubating
-interface LibraryExtension : CommonExtension<LibraryVariant, LibraryVariantProperties>, TestedExtension {
-    // TODO(b/140406102)
+interface AppVariant: Variant<AppVariantProperties> {
+
+    var minSdkVersion: Int
 }

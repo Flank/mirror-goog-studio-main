@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.plugins;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.build.api.variant.AppVariant;
+import com.android.build.api.variant.AppVariantProperties;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.PostProcessingBlock;
