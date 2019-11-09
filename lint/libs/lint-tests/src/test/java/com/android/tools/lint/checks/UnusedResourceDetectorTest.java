@@ -670,7 +670,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n")));
     }
 
-    public void testDataBinding() throws Exception {
+    public void testDataBinding_resourcesUsingAtSyntaxAreConsideredUsed() throws Exception {
         // Make sure that resources referenced only via a data binding expression
         // are not counted as unused.
         // Regression test for https://code.google.com/p/android/issues/detail?id=183934
@@ -708,7 +708,41 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "</layout>")));
     }
 
-    public void testDataBindingIds() throws Exception {
+    public void testDataBinding_resourcesUsingRNamespacingAreConsideredUsed() throws Exception {
+        // Make sure that resources referenced only via a data binding expression in the
+        // form of "R.type.name" are not counted as unused.
+        mEnableIds = false;
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        xml(
+                                "res/values/resources.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <item type='dimen' name='largePadding'>20dp</item>\n"
+                                        + "    <item type='dimen' name='smallPadding'>15dp</item>\n"
+                                        + "    <item type='string' name='name'>Name</item>\n"
+                                        + "</resources>"),
+
+                        // Add unit test source which references resources which would otherwise
+                        // be marked as unused
+                        xml(
+                                "res/layout/db.xml",
+                                ""
+                                        + "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\" "
+                                        + "    tools:keep=\"@layout/db\">\n"
+                                        + "   <LinearLayout\n"
+                                        + "       android:orientation=\"vertical\"\n"
+                                        + "       android:layout_width=\"match_parent\"\n"
+                                        + "       android:layout_height=\"match_parent\"\n"
+                                        // Data binding expressions
+                                        + "       android:padding=\"@{large? R.dimen.largePadding : R.dimen.smallPadding}\"\n"
+                                        + "       android:text=\"@{R.string.name}\" />\n"
+                                        + "</layout>")));
+    }
+
+    public void testDataBInding_idsAddedInDataBindingLayoutsAreConsideredUsed() throws Exception {
         // Make sure id's in data binding layouts aren't considered unused
         // (since the compiler will generate accessors for these that
         // may not be visible when running lint on edited sources)
