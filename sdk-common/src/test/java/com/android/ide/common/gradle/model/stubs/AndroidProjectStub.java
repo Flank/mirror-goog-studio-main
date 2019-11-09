@@ -49,6 +49,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
+    @NonNull private final Collection<String> myDynamicFeatures;
     @NonNull private final ViewBindingOptions myViewBindingOptions;
     @Nullable private final String myResourcePrefix;
     private final int myApiVersion;
@@ -79,6 +80,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 Sets.newHashSet("unresolvedDependency"),
                 new JavaCompileOptionsStub(),
                 new AaptOptionsStub(),
+                ImmutableList.of(),
                 new ViewBindingOptionsStub(),
                 new File("buildFolder"),
                 "resourcePrefix",
@@ -110,6 +112,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull Collection<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
             @NonNull AaptOptions aaptOptions,
+            @NonNull Collection<String> dynamicFeatures,
             @NonNull ViewBindingOptions viewBindingOptions,
             @NonNull File buildFolder,
             @Nullable String resourcePrefix,
@@ -138,6 +141,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myUnresolvedDependencies = unresolvedDependencies;
         myJavaCompileOptions = javaCompileOptions;
         myAaptOptions = aaptOptions;
+        myDynamicFeatures = dynamicFeatures;
         myViewBindingOptions = viewBindingOptions;
         myBuildFolder = buildFolder;
         myResourcePrefix = resourcePrefix;
@@ -321,7 +325,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull
     @Override
     public Collection<String> getDynamicFeatures() {
-        return ImmutableList.of();
+        return myDynamicFeatures;
     }
 
     @NonNull
@@ -369,6 +373,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getJavaCompileOptions(), stub.getJavaCompileOptions())
                 && Objects.equals(getBuildFolder(), stub.getBuildFolder())
                 && Objects.equals(getResourcePrefix(), stub.getResourcePrefix())
+                && Objects.equals(getDynamicFeatures(), stub.getDynamicFeatures())
                 && Objects.equals(getViewBindingOptions(), stub.getViewBindingOptions())
                 && Objects.equals(getFlags(), stub.getFlags());
     }
@@ -400,6 +405,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 isLibrary(),
                 getProjectType(),
                 isBaseSplit(),
+                getDynamicFeatures(),
                 getViewBindingOptions(),
                 getFlags());
     }
@@ -463,6 +469,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myProjectType
                 + ", myBaseSplit="
                 + myBaseSplit
+                + ", myDynamicFeatures="
+                + myDynamicFeatures
                 + ", myViewBindingOptions="
                 + myViewBindingOptions
                 + ", myFlags="
