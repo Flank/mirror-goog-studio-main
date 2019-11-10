@@ -339,4 +339,66 @@ public class CutPasteDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testIdsUnresolvable() {
+        //noinspection all // Sample code
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "import android.app.Activity;\n"
+                                        + "import android.view.View;\n"
+                                        + "\n"
+                                        + "public class FindViewByIdTest extends Activity {\n"
+                                        + "    void test() {\n"
+                                        + "        View view1 = findViewById(R.id.view1);\n"
+                                        + "        View view2 = findViewById(R.id.view2);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "public final class R {\n"
+                                        + "    public static final class id {}\n"
+                                        + "}\n"
+                                        + ""))
+                .run()
+                .expectClean();
+    }
+
+    public void testIdsUnresolvable_butStillWrong() {
+        //noinspection all // Sample code
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "import android.app.Activity;\n"
+                                        + "import android.view.View;\n"
+                                        + "\n"
+                                        + "public class FindViewByIdTest extends Activity {\n"
+                                        + "    void test() {\n"
+                                        + "        View view1 = findViewById(test.pkg1.R.id.view1);\n"
+                                        + "        View view2 = findViewById(test.pkg2.R.id.view1);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.pkg1;\n"
+                                        + "public final class R {\n"
+                                        + "    public static final class id {}\n"
+                                        + "}\n"
+                                        + ""),
+                        java(
+                                ""
+                                        + "package test.pkg2;\n"
+                                        + "public final class R {\n"
+                                        + "    public static final class id {\n"
+                                        + "        public static int view1;\n"
+                                        + "        public static int view2;\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + ""))
+                .run()
+                .expectWarningCount(1);
+    }
 }
