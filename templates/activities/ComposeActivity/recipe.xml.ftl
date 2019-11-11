@@ -12,10 +12,9 @@
     <instantiate from="root/src/app_package/MainActivity.kt.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
 
-    <merge from="root://activities/ComposeActivity/build-compose.gradle.ftl"
-                 to="${escapeXmlAttribute(projectOut)}/build.gradle" />
     <merge from="root://activities/common/navigation/navigation-kotlin-build.gradle.ftl"
                  to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+    <setBuildFeature name="compose" value="true" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
 </recipe>
