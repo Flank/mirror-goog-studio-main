@@ -26,8 +26,6 @@ import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_UNKNOWN
  * The variable "name" is already taken in kotlin enums
  */
 enum class NativeBuildSystem(val tag : String) {
-    UNKNOWN(BUILD_SYSTEM_UNKNOWN),
-    GRADLE(BUILD_SYSTEM_GRADLE),
     CMAKE(BUILD_SYSTEM_CMAKE),
     NDK_BUILD(BUILD_SYSTEM_NDK_BUILD);
 }
