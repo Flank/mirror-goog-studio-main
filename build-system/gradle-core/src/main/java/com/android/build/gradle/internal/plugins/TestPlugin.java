@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -78,7 +79,8 @@ public class TestPlugin extends BasePlugin {
                         signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo);
+                        extraModelInfo,
+                        new TestExtensionImpl());
     }
 
     @NonNull

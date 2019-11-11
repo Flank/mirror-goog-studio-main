@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.BuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.BuildType
@@ -116,7 +117,7 @@ abstract class BaseExtension protected constructor(
     private val sourceSetManager: SourceSetManager,
     private val extraModelInfo: ExtraModelInfo,
     private val isBaseModule: Boolean
-) : AndroidConfig {
+) : AndroidConfig, ActionableVariantObjectOperationsExecutor {
 
     private val _transforms: MutableList<Transform> = mutableListOf()
     /** Secondary dependencies for the custom transform. */

@@ -16,6 +16,10 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -78,5 +82,23 @@ public class TestVariantData extends ApkVariantData {
             sb.append(" build");
             return sb.toString();
         }
+    }
+
+    @Override
+    VariantImpl<?> instantiatePublicVariantObject(VariantConfiguration publicVariantConfiguration) {
+        return new com.android.build.api.variant.impl.TestVariantImpl(publicVariantConfiguration);
+    }
+
+    @Override
+    VariantPropertiesImpl instantiatePublicVariantPropertiesObject(
+            VariantConfiguration publicVariantConfiguration) {
+        com.android.build.gradle.internal.core.VariantConfiguration variantConfiguration =
+                super.getVariantConfiguration();
+        return new TestVariantPropertiesImpl(
+                scope.getGlobalScope().getProject().getObjects(),
+                scope,
+                variantConfiguration,
+                scope.getArtifacts().getOperations(),
+                publicVariantConfiguration);
     }
 }

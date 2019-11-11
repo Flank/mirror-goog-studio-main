@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5aa5eb23ca9ec51bf565dcba69007333ad91df3de35e42816f330d6845a6bf27
+aea6bbb5a37aec99eee89d04065be6f514e6b68a90578f1b6e8ed59a0066b1dd
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -72,13 +72,16 @@ com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.CommonExtension
-com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VariantT>)
-com.android.build.api.dsl.CommonExtension.onVariantsProperties: void (org.gradle.api.Action<VariantPropertiesT>)
+com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VARIANT_PROPERTIES, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.onVariantProperties: void (org.gradle.api.Action<VARIANT_PROPERTIES>)
+com.android.build.api.dsl.CommonExtension.onVariants: void (kotlin.jvm.functions.Function1<? super VARIANT, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VARIANT>)
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.AppVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.AppVariant.getMinSdkVersion: int ()
 com.android.build.api.variant.AppVariant.setMinSdkVersion: void (int)
@@ -87,7 +90,9 @@ com.android.build.api.variant.DynamicFeatureVariant implements com.android.build
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
-com.android.build.api.variant.Variant implements com.android.build.api.variant.VariantConfiguration
+com.android.build.api.variant.TestVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.TestVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.Variant implements com.android.build.api.variant.VariantConfiguration, com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.Variant.getEnabled: boolean ()
 com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<T>)
 com.android.build.api.variant.Variant.setEnabled: void (boolean)
@@ -110,6 +115,6 @@ com.android.build.api.variant.VariantOutput$OutputType.valueOf: com.android.buil
 com.android.build.api.variant.VariantOutput$OutputType.values: com.android.build.api.variant.VariantOutput$OutputType[] ()
 com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
-com.android.build.api.variant.VariantProperties implements com.android.build.api.variant.VariantConfiguration
+com.android.build.api.variant.VariantProperties implements com.android.build.api.variant.VariantConfiguration, com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.VariantProperties.getOperations: com.android.build.api.artifact.Operations ()
 com.android.build.api.variant.VariantProperties.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()

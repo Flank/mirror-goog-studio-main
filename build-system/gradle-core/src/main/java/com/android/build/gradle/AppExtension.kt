@@ -35,7 +35,7 @@ import org.gradle.api.Project
  * AppExtension is used directly by build.gradle.kts when configuring project so adding generics
  * declaration is not possible.
  */
-open class AppExtension(
+abstract class AppExtension(
         project: Project,
         projectOptions: ProjectOptions,
         globalScope: GlobalScope,
@@ -46,7 +46,7 @@ open class AppExtension(
         sourceSetManager: SourceSetManager,
         extraModelInfo: ExtraModelInfo,
         isBaseModule: Boolean
-) : TestedExtension(
+) : AbstractAppExtension(
         project,
         projectOptions,
         globalScope,
@@ -57,34 +57,4 @@ open class AppExtension(
         sourceSetManager,
         extraModelInfo,
         isBaseModule
-) {
-    /**
-     * Returns a collection of [build variants](https://developer.android.com/studio/build/build-variants.html) that
-     * the app project includes.
-     *
-     * To process elements in this collection, you should use the
-     * [`all`](https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all-org.gradle.api.Action-)
-     * iterator. That's because the plugin populates this collection only after
-     * the project is evaluated. Unlike the `each` iterator, using `all`
-     * processes future elements as the plugin creates them.
-     *
-     * The following sample iterates through all `applicationVariants` elements to
-     * [inject a build variable into the manifest](https://developer.android.com/studio/build/manifest-build-variables.html):
-     *
-     * ```
-     * android.applicationVariants.all { variant ->
-     *     def mergedFlavor = variant.getMergedFlavor()
-     *     // Defines the value of a build variable you can use in the manifest.
-     *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com/${variant.versionName}"]
-     * }
-     * ```
-     */
-    val applicationVariants: DomainObjectSet<ApplicationVariant> =
-        project.objects.domainObjectSet(ApplicationVariant::class.java)
-
-
-
-    override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
-        applicationVariants.add(variant as ApplicationVariant)
-    }
-}
+)

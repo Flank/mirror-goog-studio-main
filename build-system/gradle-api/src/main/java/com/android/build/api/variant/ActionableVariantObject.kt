@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
+package com.android.build.api.variant
 
-import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantProperties
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Incubating
 
 /**
- * Extension for the Android Test Gradle Plugin.
- *
- *
- * Only the Android Gradle Plugin should create instances of this interface.
+ * Tag interface for interfaces or classes that can be used as parameter to an
+ * [org.gradle.api.Action] or lambda in the Variant API.
  */
 @Incubating
-interface TestExtension : CommonExtension<TestVariant, TestVariantProperties> {
-    // TODO(b/140406102)
-}
+interface ActionableVariantObject

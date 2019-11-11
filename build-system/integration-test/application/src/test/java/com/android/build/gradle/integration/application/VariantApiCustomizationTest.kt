@@ -57,13 +57,13 @@ abstract class CustomTask extends DefaultTask {
 
 
 android {
-    onVariantsProperties { variantProperties ->
-        TaskProvider customTaskProvider = tasks.register(variantProperties.name + "CustomTask", CustomTask.class) {
+    onVariantProperties {  
+        TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class) {
             task ->
                 task.setVersionCode("123")
                 task.getOutputFile().set(new File("/tmp/versionCode.txt"))
         }
-        variantProperties.outputs[0].getVersionCode().set(customTaskProvider.map {
+        outputs[0].getVersionCode().set(customTaskProvider.map {
           task ->
             FileReader fr = new FileReader(task.getOutputFile().getAsFile().get())
             String value = fr.readLine()

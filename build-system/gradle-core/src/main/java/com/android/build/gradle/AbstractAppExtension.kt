@@ -29,7 +29,7 @@ import org.gradle.api.Project
  *
  * For optional apks, this class is used directly.
  */
-open class AbstractAppExtension(
+abstract class AbstractAppExtension(
     project: Project,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
@@ -75,48 +75,10 @@ open class AbstractAppExtension(
      * }
     </pre> *
      */
-    val applicationVariants: DomainObjectSet<ApplicationVariant>
-
-    private val variantActionList = ArrayList<Action<Variant<*>>>()
-    private val variantPropertiesActionList = ArrayList<Action<VariantProperties>>()
-
-    init {
-        applicationVariants = project.objects.domainObjectSet(ApplicationVariant::class.java)
-    }
-
-    /**
-     * Registers an [Action] to be executed on each [Variant] of the project.
-     *
-     * @param action an [Action] taking a [Variant] as a parameter.
-     */
-    @Incubating
-    fun onVariants(action: Action<Variant<*>>) {
-        variantActionList.add(action)
-        // TODO: b/142715610 Resolve when onVariants is called with variants already existing the
-        // applicationVariantList.
-    }
-
-    /**
-     * Registers an [Action] to be executed on each [VariantProperties] of the project.
-     *
-     * @param action an [Action] taking a [VariantProperties] as a parameter.
-     */
-    @Incubating
-    fun onVariantsProperties(action: Action<VariantProperties>) {
-        variantPropertiesActionList.add(action)
-        // TODO: b/142715610 Resolve when onVariants is called with variants already existing the
-        // applicationVariantList.
-    }
+    val applicationVariants: DomainObjectSet<ApplicationVariant> =
+        project.objects.domainObjectSet(ApplicationVariant::class.java)
 
     override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
         applicationVariants.add(variant as ApplicationVariant)
-        // TODO: move these 2 calls from the addVariant method.
-        variantActionList.forEach { action -> action.execute(variantScope.variantData.publicVariantApi) }
-        variantPropertiesActionList.forEach { action ->
-            action.execute(
-                variantScope.variantData.publicVariantPropertiesApi
-            )
-        }
-
     }
 }

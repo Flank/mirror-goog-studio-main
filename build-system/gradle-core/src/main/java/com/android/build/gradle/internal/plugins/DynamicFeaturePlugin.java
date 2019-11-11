@@ -19,9 +19,19 @@ package com.android.build.gradle.internal.plugins;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension;
+import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.options.ProjectOptions;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -54,5 +64,33 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @Override
     protected Class<? extends AppExtension> getExtensionClass() {
         return DynamicFeatureExtension.class;
+    }
+
+    @NonNull
+    @Override
+    protected AppExtension createExtension(
+            @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
+            @NonNull GlobalScope globalScope,
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
+            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        return project.getExtensions()
+                .create(
+                        "android",
+                        getExtensionClass(),
+                        project,
+                        projectOptions,
+                        globalScope,
+                        buildTypeContainer,
+                        productFlavorContainer,
+                        signingConfigContainer,
+                        buildOutputs,
+                        sourceSetManager,
+                        extraModelInfo,
+                        new DynamicFeatureExtensionImpl());
     }
 }

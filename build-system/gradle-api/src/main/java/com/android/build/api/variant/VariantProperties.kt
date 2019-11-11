@@ -21,8 +21,8 @@ import org.gradle.api.Incubating
  * Parent interface for all types of variants.
  */
 @Incubating
-interface VariantProperties: VariantConfiguration {
-    /**
+interface VariantProperties: VariantConfiguration, ActionableVariantObject {
+    /**´
      * Returns the final list of variant outputs.
      * @return read only list of [VariantOutput] for this variant.
      */

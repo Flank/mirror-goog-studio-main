@@ -28,20 +28,31 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface CommonExtension<VariantT: Variant<VariantPropertiesT>, VariantPropertiesT: VariantProperties> {
+interface CommonExtension<VARIANT: Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES: VariantProperties> {
+    // TODO(b/140406102)
+
     /**
-     * Registers an [Action] to be executed on each [Variant] of the project.
-     *
-     * @param action an [Action] taking a [Variant] as a parameter.
+     * Adds a [Action] to be performed on all [Variant] objects associated with this module.
      */
-    fun onVariants(action: Action<VariantT>)
+    fun onVariants(action: Action<VARIANT>)
+
+    /**
+     * Adds a lambda function to be performed on all [Variant] objects associated with his module
+     */
+    fun onVariants(action: VARIANT.() -> Unit)
 
     /**
      * Registers an [Action] to be executed on each [VariantProperties] of the project.
+     * This method is a shortcut for calling [onVariants] followed by [Variant.onProperties].
      *
      * @param action an [Action] taking a [VariantProperties] as a parameter.
      */
-    fun onVariantsProperties(action: Action<VariantPropertiesT>)
+    fun onVariantProperties(action: Action<VARIANT_PROPERTIES>)
 
-    // TODO(b/140406102)
+    /**
+     * Adds a lambda function to be performed on all [VariantProperties] objects associated
+     * with his module
+     */
+    fun onVariantProperties(action: VARIANT_PROPERTIES.() -> Unit)
+
 }

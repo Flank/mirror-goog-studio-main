@@ -1,5 +1,6 @@
 package com.android.build.gradle
 
+import com.android.build.api.variant.TestVariantProperties
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.api.ApplicationVariant
@@ -7,9 +8,11 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -29,7 +32,8 @@ open class TestExtension(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
-    extraModelInfo: ExtraModelInfo
+    extraModelInfo: ExtraModelInfo,
+    publicExtensionImpl: TestExtensionImpl
 ) : BaseExtension(
     project,
     projectOptions,
@@ -41,16 +45,14 @@ open class TestExtension(
     sourceSetManager,
     extraModelInfo,
     false
-), TestAndroidConfig, com.android.build.api.dsl.TestExtension {
+), TestAndroidConfig,
+    com.android.build.api.dsl.TestExtension by publicExtensionImpl,
+    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         project.objects.domainObjectSet(ApplicationVariant::class.java)
 
     private var _targetProjectPath: String? = null
-
-    private val variantActionList : List<Action<Variant<VariantProperties>>> = mutableListOf()
-    private val variantPropertiesActionList : List<Action<VariantProperties>> = mutableListOf()
-
 
     /**
      * The list of Application variants. Since the collections is built after evaluation, it
@@ -93,12 +95,4 @@ open class TestExtension(
 
     override val testBuildType: String?
         get() = null
-
-    override fun onVariants(action: Action<Variant<VariantProperties>>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onVariantsProperties(action: Action<VariantProperties>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 }

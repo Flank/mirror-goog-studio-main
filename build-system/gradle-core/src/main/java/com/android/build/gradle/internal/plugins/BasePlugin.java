@@ -654,6 +654,11 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             apiObjectFactory.create(variantData);
         }
 
+        // now call the public Variant API.
+        // TODO: Move this before our task creation and support other extension than applications.
+        extension.executeVariantOperations(variantScopes);
+        extension.executeVariantPropertiesOperations(variantScopes);
+
         // Make sure no SourceSets were added through the DSL without being properly configured
         // Only do it if we are not restricting to a single variant (with Instant
         // Run or we can find extra source set
