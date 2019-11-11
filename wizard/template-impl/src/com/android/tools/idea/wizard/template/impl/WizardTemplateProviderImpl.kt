@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
 import com.android.tools.idea.wizard.template.impl.basicActivity.basicActivityTemplate
 import com.android.tools.idea.wizard.template.impl.emptyActivity.emptyActivityTemplate
+import com.android.tools.idea.wizard.template.impl.loginActivity.loginActivityTemplate
 import com.android.tools.idea.wizard.template.impl.tabbedActivity.tabbedActivityTemplate
 import com.android.tools.idea.wizard.template.impl.viewModelActivity.viewModelActivityTemplate
 
@@ -28,5 +29,5 @@ import com.android.tools.idea.wizard.template.impl.viewModelActivity.viewModelAc
  */
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
-    basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate)
+    basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate)
 }
