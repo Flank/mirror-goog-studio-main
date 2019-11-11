@@ -5,8 +5,7 @@
 
     <classpath mavenUrl="${resolveDependency("androidx.benchmark:benchmark-gradle-plugin:+", "1.0.0-alpha04")}" />
 
-    <merge from="root/settings.gradle.ftl"
-             to="${escapeXmlAttribute(topOut)}/settings.gradle" />
+    <addIncludeToSettings />
     <copy from="root/benchmark-proguard-rules.pro"
           to="${escapeXmlAttribute(projectOut)}/benchmark-proguard-rules.pro" />
 

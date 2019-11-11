@@ -2,8 +2,7 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <#if isNewProject!false>
-        <merge from="root/settings.gradle.ftl"
-               to="${escapeXmlAttribute(topOut)}/settings.gradle" />
+        <addIncludeToSettings moduleName="${sharedModule}"/>
         <instantiate from="root/build.gradle.ftl"
                      to="${escapeXmlAttribute(serviceProjectOut)}/build.gradle" />
 	<moduleDependency name="${sharedModule}"

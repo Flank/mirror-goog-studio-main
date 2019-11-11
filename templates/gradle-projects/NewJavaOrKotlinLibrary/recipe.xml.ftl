@@ -3,8 +3,7 @@
 <recipe>
     <@kt.addKotlinToBaseProject />
 
-    <merge from="root/settings.gradle.ftl"
-             to="${escapeXmlAttribute(topOut)}/settings.gradle" />
+    <addIncludeToSettings />
     <instantiate from="root/build.gradle.ftl"
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
     <instantiate from="root/src/library_package/Placeholder.${ktOrJavaExt}.ftl"
