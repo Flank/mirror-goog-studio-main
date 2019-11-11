@@ -73,7 +73,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
             @NonNull Dependencies dependencies,
             @NonNull Dependencies compileDependencies,
             @NonNull DependencyGraphs graphs,
-            @NonNull Set<String> names,
+            @NonNull Set<String> ideSetupTaskNames,
             @NonNull Collection<File> folders,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProvider,
@@ -103,7 +103,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 dependencies,
                 compileDependencies,
                 graphs,
-                names,
+                ideSetupTaskNames,
                 folders,
                 variantSourceProvider,
                 multiFlavorSourceProvider);
