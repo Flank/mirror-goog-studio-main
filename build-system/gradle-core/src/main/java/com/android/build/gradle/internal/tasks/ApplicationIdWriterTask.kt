@@ -22,9 +22,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.apache.commons.io.FileUtils
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -39,26 +42,22 @@ import org.gradle.api.tasks.TaskProvider
  * This task is currently used to publish the output as a text resource for others to consume.
  */
 abstract class ApplicationIdWriterTask : NonIncrementalTask() {
-
-    private var applicationIdSupplier: () -> String? = { null }
-
     @get:Input
     @get:Optional
-    val applicationId get() = applicationIdSupplier()
+    abstract val applicationId: Property<String>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
-    var appMetadata: FileCollection? = null
-        private set
+    abstract val appMetadata: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
     override fun doTaskAction() {
-        val resolvedApplicationId = appMetadata?.let {
-            ModuleMetadata.load(it.singleFile).applicationId
-        } ?: applicationId
+        val resolvedApplicationId: String? = appMetadata.singleOrNull()?.let {
+            ModuleMetadata.load(it).applicationId
+        } ?: applicationId.orNull
 
         if (resolvedApplicationId != null) {
             FileUtils.write(outputFile.get().asFile, resolvedApplicationId)
@@ -95,12 +94,16 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                 // a bit dynamic.
                 // TODO replace this with Property<String> which can be fed from the published artifact directly.
                 // b/141650037
-                task.appMetadata = variantScope.getArtifactFileCollection(
+                task.appMetadata.from(variantScope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
-                )
+                ))
             } else {
-                task.applicationIdSupplier = { variantScope.variantConfiguration.applicationId }
+                task.applicationId.set(variantScope.globalScope.project.provider {
+                        variantScope.variantConfiguration.applicationId
+                })
             }
+            task.appMetadata.disallowChanges()
+            task.applicationId.disallowChanges()
         }
     }
 }
