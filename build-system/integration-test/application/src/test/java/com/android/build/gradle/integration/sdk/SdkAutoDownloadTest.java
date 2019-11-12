@@ -27,18 +27,12 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
-import com.android.ide.common.repository.GradleCoordinate;
-import com.android.ide.common.repository.MavenRepositories;
-import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.Revision;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
@@ -224,7 +218,7 @@ public class SdkAutoDownloadTest {
      * downloaded.
      */
     @Test
-    @Ignore("b/65237460")
+    @Ignore("b/144346671")
     public void checkCompileSdkAddonDownloading() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -437,86 +431,6 @@ public class SdkAutoDownloadTest {
                         "Failed to install the following Android SDK packages as some licences have not been accepted");
         assertThat(Throwables.getRootCause(result.getException()).getMessage()).contains("ndk");
     }
-
-    @Ignore("https://issuetracker.google.com/issues/65237460")
-    public void checkDependencies_androidRepository() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + PLATFORM_VERSION
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\""
-                        + System.lineSeparator()
-                        + "dependencies { compile 'com.android.support:support-v4:"
-                        + TestVersions.SUPPORT_LIB_VERSION
-                        + "' }");
-
-        getExecutor().run("assembleDebug");
-
-        checkForLibrary(SdkMavenRepository.ANDROID, "com.android.support", "support-v4", "23.0.0");
-
-        // Check that the Google repo is not automatically installed if an Android library is
-        // missing.
-        assertThat(SdkMavenRepository.GOOGLE.isInstalled(mSdkHome, FileOpUtils.create())).isFalse();
-    }
-
-    @Ignore("https://issuetracker.google.com/issues/65237460")
-    public void checkDependencies_googleRepository() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + PLATFORM_VERSION
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\""
-                        + System.lineSeparator()
-                        + "android.defaultConfig.multiDexEnabled true"
-                        + System.lineSeparator()
-                        + "dependencies { compile 'com.google.android.gms:play-services:"
-                        + TestVersions.PLAY_SERVICES_VERSION
-                        + "' }");
-
-        getExecutor().run("assembleDebug");
-
-        checkForLibrary(
-                SdkMavenRepository.GOOGLE,
-                "com.google.android.gms",
-                "play-services",
-                TestVersions.PLAY_SERVICES_VERSION);
-    }
-
-    @Ignore("https://issuetracker.google.com/issues/65237460")
-    public void checkDependencies_individualRepository() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + PLATFORM_VERSION
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\""
-                        + System.lineSeparator()
-                        + "dependencies { compile 'com.android.support.constraint:constraint-layout-solver:1.0.0-alpha4' }");
-
-        getExecutor().run("assembleDebug");
-
-        checkForLibrary(
-                SdkMavenRepository.ANDROID,
-                "com.android.support.constraint",
-                "constraint-layout-solver",
-                "1.0.0-alpha4");
-
-        assertThat(SdkMavenRepository.GOOGLE.isInstalled(mSdkHome, FileOpUtils.create())).isFalse();
-        assertThat(SdkMavenRepository.ANDROID.isInstalled(mSdkHome, FileOpUtils.create()))
-                .isFalse();
-    }
-
     @NonNull
     private GradleTaskExecutor getExecutor() {
         return getOfflineExecutor().withoutOfflineFlag();
@@ -542,33 +456,6 @@ public class SdkAutoDownloadTest {
                                 AndroidSdkHandler.SDK_TEST_BASE_URL_PROPERTY,
                                 TestUtils.getRemoteSdk()))
                 .withoutOfflineFlag();
-    }
-
-    private void checkForLibrary(
-            @NonNull SdkMavenRepository oldRepository,
-            @NonNull String groupId,
-            @NonNull String artifactId,
-            @NonNull String version) {
-        FileOp fileOp = FileOpUtils.create();
-        GradleCoordinate coordinate =
-                new GradleCoordinate(
-                        groupId, artifactId, new GradleCoordinate.StringComponent(version));
-
-        // Try the new repository first.
-        File repositoryLocation =
-                FileUtils.join(mSdkHome, SdkConstants.FD_EXTRAS, SdkConstants.FD_M2_REPOSITORY);
-
-        File artifactDirectory =
-                MavenRepositories.getArtifactDirectory(repositoryLocation, coordinate);
-
-        if (!artifactDirectory.exists()) {
-            // Try the old repository it's supposed to be in.
-            repositoryLocation = oldRepository.getRepositoryLocation(mSdkHome, true, fileOp);
-            assertNotNull(repositoryLocation);
-            artifactDirectory =
-                    MavenRepositories.getArtifactDirectory(repositoryLocation, coordinate);
-            assertThat(artifactDirectory).exists();
-        }
     }
 
     @Test
@@ -620,7 +507,8 @@ public class SdkAutoDownloadTest {
         FileUtils.delete(licenseFile);
     }
 
-    @Ignore("b/65237460")
+    @Ignore("b/144346671")
+    @Test
     public void checkNoLicenseError_AddonTarget() throws Exception {
         deleteLicense();
         TestFileUtils.appendToFile(
@@ -684,7 +572,8 @@ public class SdkAutoDownloadTest {
                         "build-tools;" + BUILD_TOOLS_VERSION);
     }
 
-    @Ignore("b/65237460")
+    @Ignore("b/144346671")
+    @Test
     public void checkNoLicenseError_MultiplePackages() throws Exception {
         deleteLicense();
 
@@ -755,7 +644,6 @@ public class SdkAutoDownloadTest {
                             PosixFilePermission.OWNER_WRITE,
                             PosixFilePermission.OWNER_EXECUTE);
 
-            //noinspection ThrowFromFinallyBlock
             Files.walk(sdkHomePath).forEach(path -> {
                 try {
                     Files.setPosixFilePermissions(path, readWriteDir);
