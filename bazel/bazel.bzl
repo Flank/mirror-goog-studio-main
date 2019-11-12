@@ -168,12 +168,10 @@ def _iml_module_jar_impl(
     )
 
     providers = []
-    providers += [java_common.create_provider(
-        compile_time_jars = [output_jar],
-        runtime_jars = [output_jar],
-        transitive_compile_time_jars = [output_jar] + transitive_compile_time_jars.to_list(),
-        transitive_runtime_jars = [output_jar] + transitive_runtime_jars.to_list(),
-        use_ijar = False,
+    providers = [JavaInfo(
+        output_jar = output_jar,
+        compile_jar = output_jar,
+        deps = java_deps,
     )]
     providers += exports
 
@@ -207,9 +205,9 @@ def _iml_module_impl(ctx):
     transitive_test_compile_time_jars = depset([ctx.outputs.production_jar], order = "preorder")
 
     for this_dep in ctx.attr.test_deps:
-        if java_common.provider in this_dep:
+        if JavaInfo in this_dep:
             test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
-                this_dep[java_common.provider],
+                this_dep[JavaInfo],
                 test_java_deps,
                 transitive_test_runtime_jars,
                 transitive_test_compile_time_jars,
@@ -227,8 +225,8 @@ def _iml_module_impl(ctx):
     exports = []
     test_exports = []
     for export in ctx.attr.exports:
-        if java_common.provider in export:
-            exports += [export[java_common.provider]]
+        if JavaInfo in export:
+            exports += [export[JavaInfo]]
         if hasattr(export, "module"):
             test_exports += [export.module.test_provider]
 
@@ -376,8 +374,8 @@ def _iml_runtime_impl(ctx):
     module_jars = None
 
     for dep in ctx.attr.runtime_deps:
-        if java_common.provider in dep:
-            providers += [dep[java_common.provider]]
+        if JavaInfo in dep:
+            providers += [dep[JavaInfo]]
         if hasattr(dep, "runtime_info"):
             fail("runtime should not depend on runtime")
         if hasattr(dep, "module"):
@@ -413,8 +411,8 @@ _iml_runtime = rule(
 def _iml_test_module_impl(ctx):
     providers = [ctx.attr.iml_module.module.test_provider]
     for dep in ctx.attr.runtime_deps:
-        if java_common.provider in dep:
-            providers += [dep[java_common.provider]]
+        if JavaInfo in dep:
+            providers += [dep[JavaInfo]]
         if hasattr(dep, "module"):
             providers += [dep.module.test_provider]
     combined = java_common.merge(providers)
@@ -638,8 +636,8 @@ def _iml_project_impl(ctx):
             fail("Don't depend on modules directly: " + str(dep.label))
 
     for dep in ctx.attr.libraries + ctx.attr.modules:
-        if java_common.provider in dep:
-            transitive_data = depset(transitive = [transitive_data, dep[java_common.provider].transitive_runtime_jars])
+        if JavaInfo in dep:
+            transitive_data = depset(transitive = [transitive_data, dep[JavaInfo].transitive_runtime_jars])
 
     text = ""
     transitive_data = depset(direct = module_jars.values(), transitive = [transitive_data])
@@ -768,8 +766,8 @@ def _iml_artifact_impl(ctx):
         )
         jars += [files_jar]
     for module in ctx.attr.modules:
-        if java_common.provider in module:
-            jars += module[java_common.provider].compile_jars.to_list()
+        if JavaInfo in module:
+            jars += module[JavaInfo].compile_jars.to_list()
 
     ctx.actions.run(
         inputs = jars,

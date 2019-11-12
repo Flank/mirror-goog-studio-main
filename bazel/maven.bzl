@@ -11,12 +11,12 @@ def _maven_pom_impl(ctx):
     if ctx.attr.library:
         if ctx.attr.file or ctx.attr.classified_files:
             fail("Cannot set both file and library for a maven_pom.")
-        jars = depset([jar.class_jar for jar in ctx.attr.library.java.outputs.jars], transitive = [jars])
-        clsjars["sources"] = depset(ctx.attr.library.java.source_jars.to_list(), transitive = [clsjars["sources"]])
+        jars = depset([jar.class_jar for jar in ctx.attr.library[JavaInfo].outputs.jars], transitive = [jars])
+        clsjars["sources"] = depset(ctx.attr.library[JavaInfo].source_jars, transitive = [clsjars["sources"]])
         for classifier, library in zip(ctx.attr.classifiers, ctx.attr.classified_libraries):
             if classifier not in clsjars:
                 clsjars[classifier] = depset()
-            clsjars[classifier] = depset(direct = [jar.class_jar for jar in library.java.outputs.jars], transitive = [clsjars[classifier]])
+            clsjars[classifier] = depset(direct = [jar.class_jar for jar in library[JavaInfo].outputs.jars], transitive = [clsjars[classifier]])
 
     if ctx.attr.file:
         if ctx.attr.library or ctx.attr.classified_libraries:

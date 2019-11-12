@@ -26,10 +26,9 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
         arguments = args,
         executable = ctx.executable._kotlinc,
     )
-    return java_common.create_provider(
-        compile_time_jars = [kotlin_jar],
-        runtime_jars = [kotlin_jar],
-        use_ijar = False,
+    return JavaInfo(
+        output_jar = kotlin_jar,
+        compile_jar = kotlin_jar,
     )
 
 def _kotlin_jar_impl(ctx):
@@ -37,8 +36,8 @@ def _kotlin_jar_impl(ctx):
 
     all_deps = depset(direct = ctx.files.deps + ctx.files._kotlin)
     for this_dep in ctx.attr.deps:
-        if hasattr(this_dep, "java"):
-            all_deps = depset(transitive = [all_deps, this_dep.java.transitive_runtime_deps])
+        if JavaInfo in this_dep:
+            all_deps = depset(transitive = [all_deps, this_dep[JavaInfo].transitive_runtime_deps])
 
     merged = [src.path for src in ctx.files.srcs]
     if ctx.attr.package_prefixes:
