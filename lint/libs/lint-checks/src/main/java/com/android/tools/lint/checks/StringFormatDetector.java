@@ -258,7 +258,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
     }
 
     static void addText(StringBuilder sb, Node node) {
-        if (node.getNodeType() == Node.TEXT_NODE) {
+        short nodeType = node.getNodeType();
+        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
             sb.append(stripQuotes(node.getNodeValue().trim()));
         } else {
             NodeList childNodes = node.getChildNodes();

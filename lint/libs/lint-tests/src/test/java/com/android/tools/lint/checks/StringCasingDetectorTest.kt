@@ -124,4 +124,19 @@ class StringCasingDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testCharacterData() {
+        // Regression test for
+        // https://issuetracker.google.com/142533357: Duplicate string doesn't work with CDATA
+        lint().files(
+            xml(
+                "res/values/duplicate_strings.xml",
+                "<resources>\n" +
+                        "    <string name=\"app_name\">lint bug</string>\n" +
+                        "    <string name=\"item_one\"><![CDATA[<b>%1$\\s</b>]]> did something</string>\n" +
+                        "    <string name=\"item_two\"><![CDATA[<b>You</b>]]> did something <![CDATA[<b>%1$\\s</b>]]></string>\n" +
+                        "</resources>"
+            ).indented()
+        ).run().expectClean()
+    }
 }
