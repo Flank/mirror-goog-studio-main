@@ -60,8 +60,7 @@
     -->
     <apply plugin="androidx.navigation.safeargs" />
     <#if generateKotlin>
-        <merge from="root://activities/common/navigation/navigation-kotlin-build.gradle.ftl"
-                 to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+        <requireJavaVersion version="1.8" kotlinSupport="true" />
     </#if>
 </#macro>
 
