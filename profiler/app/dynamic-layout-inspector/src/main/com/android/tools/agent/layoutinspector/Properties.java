@@ -16,10 +16,11 @@
 
 package com.android.tools.agent.layoutinspector;
 
-import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
+import com.android.tools.agent.layoutinspector.property.LayoutParamsTypeTree;
 import com.android.tools.agent.layoutinspector.property.Property;
 import com.android.tools.agent.layoutinspector.property.PropertyType;
 import com.android.tools.agent.layoutinspector.property.ValueType;
@@ -41,7 +42,9 @@ class Properties {
     void writeProperties(View view, long event) {
         mStringTable.clear();
         ViewTypeTree typeTree = new ViewTypeTree();
-        ViewNode<View> node = typeTree.nodeOf(view);
+        LayoutParamsTypeTree layoutTypeTree = new LayoutParamsTypeTree();
+        ViewNode<View, LayoutParams> node =
+                new ViewNode(typeTree.typeOf(view), layoutTypeTree.typeOf(view.getLayoutParams()));
         node.readProperties(view);
         Resource layout = node.getLayoutResource(view);
         if (layout != null) {
@@ -52,25 +55,12 @@ class Properties {
                     toInt(layout.getName()));
         }
 
-        for (Property property : node.getProperties()) {
-            long propertyId = addProperty(event, property);
-            Resource source = property.getSource();
-            if (propertyId != 0) {
-                if (source != null) {
-                    addPropertySource(
-                            propertyId,
-                            toInt(source.getNamespace()),
-                            toInt(source.getType()),
-                            toInt(source.getName()));
-                }
-                for (Resource resolution : property.getResolutionStack()) {
-                    addResolution(
-                            propertyId,
-                            toInt(resolution.getNamespace()),
-                            toInt(resolution.getType()),
-                            toInt(resolution.getName()));
-                }
-            }
+        for (Property property : node.getViewProperties()) {
+            addPropertyAndSourceResolutionStack(event, property, false);
+        }
+
+        for (Property property : node.getLayoutProperties()) {
+            addPropertyAndSourceResolutionStack(event, property, true);
         }
 
         for (Map.Entry<String, Integer> entry : mStringTable.entries()) {
@@ -80,7 +70,29 @@ class Properties {
         mStringTable.clear();
     }
 
-    private long addProperty(long event, Property property) {
+    private void addPropertyAndSourceResolutionStack(
+            long event, Property property, boolean isLayout) {
+        long propertyId = addProperty(event, property, isLayout);
+        Resource source = property.getSource();
+        if (propertyId != 0) {
+            if (source != null) {
+                addPropertySource(
+                        propertyId,
+                        toInt(source.getNamespace()),
+                        toInt(source.getType()),
+                        toInt(source.getName()));
+            }
+            for (Resource resolution : property.getResolutionStack()) {
+                addResolution(
+                        propertyId,
+                        toInt(resolution.getNamespace()),
+                        toInt(resolution.getType()),
+                        toInt(resolution.getName()));
+            }
+        }
+    }
+
+    private long addProperty(long event, Property property, boolean isLayout) {
         PropertyType propertyType = property.getPropertyType();
         ValueType valueType = property.getValueType();
         int name = toInt(propertyType.getName());
@@ -92,28 +104,29 @@ class Properties {
         switch (valueType) {
             case STRING:
             case INT_ENUM:
-                return addIntProperty(event, name, type, toInt((String) value));
+                return addIntProperty(event, name, isLayout, type, toInt((String) value));
             case INT32:
             case INT16:
             case BOOLEAN:
             case BYTE:
             case CHAR:
             case COLOR:
-                return addIntProperty(event, name, type, (int) value);
+                return addIntProperty(event, name, isLayout, type, (int) value);
             case GRAVITY:
             case INT_FLAG:
-                return addIntFlagProperty(event, name, type, (Set<String>) value);
+                return addIntFlagProperty(event, name, isLayout, type, (Set<String>) value);
             case INT64:
-                return addLongProperty(event, name, type, (long) value);
+                return addLongProperty(event, name, isLayout, type, (long) value);
             case DOUBLE:
-                return addDoubleProperty(event, name, type, (double) value);
+                return addDoubleProperty(event, name, isLayout, type, (double) value);
             case FLOAT:
-                return addFloatProperty(event, name, type, (float) value);
+                return addFloatProperty(event, name, isLayout, type, (float) value);
             case RESOURCE:
                 Resource resource = (Resource) value;
                 return addResourceProperty(
                         event,
                         name,
+                        isLayout,
                         type,
                         toInt(resource.getNamespace()),
                         toInt(resource.getType()),
@@ -122,7 +135,8 @@ class Properties {
             case ANIM:
             case ANIMATOR:
             case INTERPOLATOR:
-                return addIntProperty(event, name, type, toInt(value.getClass().getName()));
+                return addIntProperty(
+                        event, name, isLayout, type, toInt(value.getClass().getName()));
             default:
                 return 0;
         }
@@ -132,8 +146,9 @@ class Properties {
         return mStringTable.generateStringId(value);
     }
 
-    private long addIntFlagProperty(long event, int name, int type, Set<String> value) {
-        long propertyEvent = addFlagProperty(event, name, type);
+    private long addIntFlagProperty(
+            long event, int name, boolean isLayout, int type, Set<String> value) {
+        long propertyEvent = addFlagProperty(event, name, isLayout, type);
         for (String flag : value) {
             addFlagPropertyValue(propertyEvent, toInt(flag));
         }
@@ -144,23 +159,32 @@ class Properties {
     private native void addString(long event, int id, String str);
 
     /** Adds an int32 property value into the event protobuf. */
-    private native long addIntProperty(long event, int name, int type, int value);
+    private native long addIntProperty(long event, int name, boolean isLayout, int type, int value);
 
     /** Adds an int64 property value into the event protobuf. */
-    private native long addLongProperty(long event, int name, int type, long value);
+    private native long addLongProperty(
+            long event, int name, boolean isLayout, int type, long value);
 
     /** Adds a double property value into the event protobuf. */
-    private native long addDoubleProperty(long event, int name, int type, double value);
+    private native long addDoubleProperty(
+            long event, int name, boolean isLayout, int type, double value);
 
     /** Adds a float property value into the event protobuf. */
-    private native long addFloatProperty(long event, int name, int type, float value);
+    private native long addFloatProperty(
+            long event, int name, boolean isLayout, int type, float value);
 
     /** Adds a resource property value into the event protobuf. */
     private native long addResourceProperty(
-            long event, int name, int type, int res_namespace, int res_type, int res_name);
+            long event,
+            int name,
+            boolean isLayout,
+            int type,
+            int res_namespace,
+            int res_type,
+            int res_name);
 
     /** Adds a flag property into the event protobuf. */
-    private native long addFlagProperty(long event, int name, int type);
+    private native long addFlagProperty(long event, int name, boolean isLayout, int type);
 
     /** Adds a flag property value into the flag property protobuf. */
     private native void addFlagPropertyValue(long property, int flag);

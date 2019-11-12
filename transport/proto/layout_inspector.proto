@@ -122,14 +122,15 @@ message Property {
   Type type = 3;
   Resource source = 4;
   repeated Resource resolution_stack = 5;
+  bool is_layout = 6;
 
   oneof union {
-    int32 int32_value = 6;
-    int64 int64_value = 7;
-    double double_value = 8;
-    float float_value = 9;
-    Resource resource_value = 10;
-    FlagValue flag_value = 11;
+    int32 int32_value = 7;
+    int64 int64_value = 8;
+    double double_value = 9;
+    float float_value = 10;
+    Resource resource_value = 11;
+    FlagValue flag_value = 12;
   }
 }
 

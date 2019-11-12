@@ -65,10 +65,12 @@ Java_com_android_tools_agent_layoutinspector_Properties_addResolution(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addIntProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type, jint value) {
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
+    jint type, jint value) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   auto *property = event->add_property();
   property->set_name(name);
+  property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
   property->set_int32_value(value);
   return (long)property;
@@ -76,11 +78,12 @@ Java_com_android_tools_agent_layoutinspector_Properties_addIntProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addLongProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type,
-    jlong value) {
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
+    jint type, jlong value) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   auto *property = event->add_property();
   property->set_name(name);
+  property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
   property->set_int64_value(value);
   return (long)property;
@@ -88,11 +91,12 @@ Java_com_android_tools_agent_layoutinspector_Properties_addLongProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addDoubleProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type,
-    jdouble value) {
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
+    jint type, jdouble value) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   auto *property = event->add_property();
   property->set_name(name);
+  property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
   property->set_double_value(value);
   return (long)property;
@@ -100,11 +104,12 @@ Java_com_android_tools_agent_layoutinspector_Properties_addDoubleProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addFloatProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type,
-    jfloat value) {
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
+    jint type, jfloat value) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   auto *property = event->add_property();
   property->set_name(name);
+  property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
   property->set_float_value(value);
   return (long)property;
@@ -112,11 +117,13 @@ Java_com_android_tools_agent_layoutinspector_Properties_addFloatProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addResourceProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type,
-    jint resource_namespace, jint resource_type, jint resource_name) {
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
+    jint type, jint resource_namespace, jint resource_type,
+    jint resource_name) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   auto *property = event->add_property();
   property->set_name(name);
+  property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
   saveResource(property->mutable_resource_value(), resource_namespace,
                resource_type, resource_name);
@@ -133,10 +140,12 @@ Java_com_android_tools_agent_layoutinspector_Properties_addLayoutResource(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addFlagProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type) {
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
+    jint type) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   auto *property = event->add_property();
   property->set_name(name);
+  property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
   return (long)property;
 }
