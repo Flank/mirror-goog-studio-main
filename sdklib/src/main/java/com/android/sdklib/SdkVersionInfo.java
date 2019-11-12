@@ -137,6 +137,7 @@ public class SdkVersionInfo {
             case 27: return "8.1";
             case 28: return "9.0";
             case 29: return "10.0";
+            case 30: return "10.0+";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -193,7 +194,8 @@ public class SdkVersionInfo {
                 return "Pie";
             case 29:
                 return "Q";
-
+            case 30:
+                return "R";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -243,7 +245,8 @@ public class SdkVersionInfo {
             case 27: return "O_MR1";
             case 28: return "P";
             case 29: return "Q";
-            // If you add more versions here, also update #getAndroidName and
+            case 30: return "R";
+            // If you add more versions here, also update #getCodeName and
             // #HIGHEST_KNOWN_API
         }
 
