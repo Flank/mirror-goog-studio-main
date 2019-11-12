@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Expect
@@ -63,7 +62,6 @@ class CacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":app:generateDebugBuildConfig",
-                    ":app:compileDebugShaders",
                     ":app:javaPreCompileDebug",
                     ":app:generateDebugResValues",
                     ":app:compileDebugJavaWithJavac",
@@ -102,6 +100,7 @@ class CacheabilityTest {
                 SKIPPED to setOf(
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
+                    ":app:compileDebugShaders",
                     ":app:processDebugJavaRes",
                     ":app:assembleDebug",
                     ":app:processDebugUnitTestJavaRes",
@@ -163,28 +162,28 @@ class CacheabilityTest {
 
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.
-        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
+        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]
         if (result.findTask(":app:transformNativeLibsWithStripDebugSymbolForDebug") == null) {
             expectedDidWorkTasks =
-                    expectedDidWorkTasks.minus(":app:transformNativeLibsWithStripDebugSymbolForDebug")
+                    expectedDidWorkTasks!!.minus(":app:transformNativeLibsWithStripDebugSymbolForDebug")
         }
 
         // Check that the tasks' states are as expected
         expect.that(result.upToDateTasks)
             .named("UpToDate Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE])
         expect.that(result.fromCacheTasks)
             .named("FromCache Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE])
         expect.that(result.didWorkTasks)
             .named("DidWork Tasks")
             .containsExactlyElementsIn(expectedDidWorkTasks)
         expect.that(result.skippedTasks)
             .named("Skipped Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED])
         expect.that(result.failedTasks)
             .named("Failed Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED])
 
         // Clean up the cache
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
