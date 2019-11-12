@@ -437,14 +437,15 @@ public class SymbolUtilsTest {
                         SymbolTable.builder()
                                 .tablePackage("com.example.app")
                                 .add(
-                                        Symbol.createAndValidateSymbol(
+                                        Symbol.createSymbol(
                                                 ResourceType.STRING, "app_name", 0))
                                 .add(
-                                        Symbol.createAndValidateStyleableSymbol(
+                                        Symbol.createStyleableSymbol(
                                                 "LimitedSizeLinearLayout",
                                                 ImmutableList.of(),
                                                 ImmutableList.of(
-                                                        "android_max_width", "android_max_height")))
+                                                        "android_max_width", "android_max_height"),
+                                                true))
                                 .build());
     }
 
@@ -470,11 +471,12 @@ public class SymbolUtilsTest {
                         SymbolTable.builder()
                                 .tablePackage("com.example.app")
                                 .add(
-                                        Symbol.createAndValidateStyleableSymbol(
+                                        Symbol.createStyleableSymbol(
                                                 "LimitedSizeLinearLayout",
                                                 ImmutableList.of(),
                                                 ImmutableList.of(
-                                                        "android_max_width", "android_max_height")))
+                                                        "android_max_width", "android_max_height"),
+                                                true))
                                 .build());
     }
 }

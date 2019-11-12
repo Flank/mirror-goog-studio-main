@@ -59,11 +59,14 @@ import org.w3c.dom.Node
  * @param idProvider the provider for IDs to assign to the resources
  * @return the symbols for all resources in the file
  */
-fun parseResourceForInlineResources(xmlDocument: Document, idProvider: IdProvider): SymbolTable {
+fun parseResourceForInlineResources(
+        xmlDocument: Document,
+        idProvider: IdProvider,
+        validation: Boolean = true): SymbolTable {
     val root = xmlDocument.documentElement ?:
             throw ResourceValuesXmlParseException("XML document does not have a root element.")
     val builder = SymbolTable.builder()
-    parseChild(root, builder, idProvider)
+    parseChild(root, builder, idProvider, validation)
 
     return builder.build()
 }
@@ -75,20 +78,21 @@ fun parseResourceForInlineResources(xmlDocument: Document, idProvider: IdProvide
 private fun parseChild(
         element: Element,
         builder: SymbolTable.Builder,
-        idProvider: IdProvider) {
+        idProvider: IdProvider,
+        validation: Boolean = true) {
 
     // Check if the node contains any lazy resource declarations.
     val attrs = element.attributes
     for (i in 0 until attrs.length) {
         val attr = attrs.item(i)
-        checkForResources((attr as Attr).value, builder, idProvider)
+        checkForResources((attr as Attr).value, builder, idProvider, validation)
     }
 
     // Parse all of the Element's children as well, in case they contain lazy declarations.
     var current: Node? = element.firstChild
     while (current != null) {
         if (current.nodeType == Node.ELEMENT_NODE) {
-            parseChild((current as Element?)!!, builder, idProvider)
+            parseChild((current as Element?)!!, builder, idProvider, validation)
         }
         current = current.nextSibling
     }
@@ -101,14 +105,16 @@ private fun parseChild(
 private fun checkForResources(
         text: String?,
         builder: SymbolTable.Builder,
-        idProvider: IdProvider) {
+        idProvider: IdProvider,
+        validation: Boolean = true) {
     if (text != null && text.startsWith(SdkConstants.NEW_ID_PREFIX)) {
 
         val name = text.substring(SdkConstants.NEW_ID_PREFIX.length, text.length)
-        val newSymbol = Symbol.createAndValidateSymbol(
+        val newSymbol = Symbol.createSymbol(
                 ResourceType.ID,
                 name,
-                idProvider)
+                idProvider,
+                validation = validation)
         if (!builder.contains(newSymbol)) {
             builder.add(newSymbol)
         }
