@@ -675,13 +675,13 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         }
     }
 
-    /** Adds the id to the set of issues to enable. */
+    /** Adds the id to the set of issues to suppress. */
     public void disable(String id) {
         disable.add(id);
         severities.put(id, SEVERITY_IGNORE);
     }
 
-    /** Adds the ids to the set of issues to enable. */
+    /** Adds the ids to the set of issues to suppess. */
     public void disable(String... ids) {
         for (String id : ids) {
             disable(id);
