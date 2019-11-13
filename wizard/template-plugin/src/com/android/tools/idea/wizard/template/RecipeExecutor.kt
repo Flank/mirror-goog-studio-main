@@ -71,6 +71,11 @@ interface RecipeExecutor {
 
   /** Initializes the variable with [name] to [value] in the ext block of global Gradle build file. */
   fun setExtVar(name: String, value: Any)
+
+  /**
+   * Adds a new build feature to android block. For example, may enable compose.
+   */
+  fun setBuildFeature(name: String, value: Boolean)
 }
 
 enum class SourceSetType {
