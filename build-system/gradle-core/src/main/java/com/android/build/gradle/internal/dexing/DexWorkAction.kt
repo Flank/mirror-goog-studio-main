@@ -93,8 +93,10 @@ fun launchProcessing(
         }
 
         val resolved = rootPath.resolve(relativePath)
-        return resolved in dexWorkActionParams.dexSpec.impactedFiles
-                || resolved in dexWorkActionParams.dexSpec.changedFiles
+        return resolved in dexWorkActionParams.dexSpec.changedFiles ||
+                resolved in
+                (dexWorkActionParams.dexSpec.impactedFiles
+                    ?: error("Incremental desugaring V2 is not yet supported (work in progress)"))
     }
 
     val inputRoots = inputClassFiles.bucketGroup.getRoots()

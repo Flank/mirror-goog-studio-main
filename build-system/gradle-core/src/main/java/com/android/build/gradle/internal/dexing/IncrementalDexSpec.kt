@@ -38,8 +38,11 @@ class IncrementalDexSpec(
     /** The set of all changed files, including those in input files and classpath. */
     val changedFiles: Set<File>,
 
-    /** The set of files that are impacted by the changed files. */
-    val impactedFiles: Set<File>
+    /**
+     * The precomputed set of files that are impacted by the changed files, or `null` if it is
+     * intended to be computed later.
+     */
+    val impactedFiles: Set<File>?
 
 ) : Serializable {
 

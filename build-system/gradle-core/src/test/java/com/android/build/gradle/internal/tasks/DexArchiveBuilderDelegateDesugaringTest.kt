@@ -41,6 +41,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files
@@ -48,7 +50,18 @@ import java.nio.file.Path
 import java.util.Objects
 import java.util.regex.Pattern
 
-class DexArchiveBuilderDelegateDesugaringTest {
+@RunWith(Parameterized::class)
+class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDesugaringV2: Boolean) {
+
+    companion object {
+
+        @Parameterized.Parameters(name = "incrementalDesugaringV2_{0}")
+        @JvmStatic
+        fun parameters() = arrayOf(
+            false
+            //true // Incremental desugaring V2 is not yet supported (work in progress)
+        )
+    }
 
     @Rule
     @JvmField
@@ -474,7 +487,9 @@ class DexArchiveBuilderDelegateDesugaringTest {
                 dxNoOptimizeFlagPresent = false,
                 jumboMode = true
             ),
-            desugaringClasspathChangedClasses = emptySet(),
+            desugarClasspathChangedClasses = emptySet(),
+            incrementalDesugaringV2 = withIncrementalDesugaringV2,
+            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDesugaringV2 },
             projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,
             dexer = DexerTool.D8,

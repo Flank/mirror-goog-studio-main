@@ -76,7 +76,10 @@ import kotlin.test.fail
 
 /** Testing the [DexArchiveBuilderTaskDelegate].  */
 @RunWith(Parameterized::class)
-class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
+class DexArchiveBuilderDelegateTest(
+    private var dexerTool: DexerTool,
+    private val withIncrementalDesugaringV2: Boolean
+) {
 
     private lateinit var cacheDir: File
     private lateinit var userCache: FileCache
@@ -166,6 +169,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
 
     @Test
     fun testCacheUsedForExternalLibOnly() {
+        // Caching is currently not supported when withIncrementalDesugaringV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+
         val projectJar = tmpDir.root.toPath().resolve("projectInput.jar")
         jarWithEmptyClasses(projectJar, ImmutableList.of("$PACKAGE/A"))
 
@@ -238,6 +244,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
 
     @Test
     fun testCacheKeyInputsChanges() {
+        // Caching is currently not supported when withIncrementalDesugaringV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         jarWithEmptyClasses(inputJar, ImmutableList.of())
 
@@ -284,6 +293,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
     fun testD8DesugaringCacheKeys() {
         // Only for D8, Ignore DX
         Assume.assumeTrue(dexerTool == DexerTool.D8)
+
+        // Caching is currently not supported when withIncrementalDesugaringV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
 
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         val emptyLibDir = tmpDir.root.toPath().resolve("emptylibDir")
@@ -655,7 +667,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
             mixedScopeOutputDex = tmpDir.newFolder(),
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = tmpDir.newFile(),
-            desugaringClasspathChangedClasses = emptySet(),
+            desugarClasspathChangedClasses = emptySet(),
+            incrementalDesugaringV2 = withIncrementalDesugaringV2,
+            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDesugaringV2 },
             dexer = dexerTool,
             useGradleWorkers = false,
             projectVariant = "myVariant",
@@ -683,10 +697,13 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters
-        fun setups(): Collection<Array<DexerTool>> {
-            return listOf(arrayOf(DexerTool.DX), arrayOf(DexerTool.D8))
-        }
+        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDesugaringV2_{1}")
+        fun parameters() = listOf(
+            arrayOf(DexerTool.DX, false),
+            // No need to test arrayOf(DexerTool.DX, true) as incrementalDesugaringV2 is only for D8
+            arrayOf(DexerTool.D8, false),
+            arrayOf(DexerTool.D8, true)
+        )
     }
 
     private fun cacheEntriesCount(): Int {
