@@ -307,7 +307,10 @@ class IncrementalJavaCompileWithAPsTest(
             "java.io.Writer",
             "java.util.Collections",
             "java.util.HashSet",
+            "java.util.List",
             "java.util.Set",
+            "java.util.function.Function",
+            "java.util.stream.Collectors",
             "javax.annotation.processing.AbstractProcessor",
             "javax.annotation.processing.RoundEnvironment",
             "javax.lang.model.SourceVersion",
@@ -372,9 +375,14 @@ class IncrementalJavaCompileWithAPsTest(
                         writer.write("\t\tgreetings.append(\"Hello. This message comes from generated code! \");\n");
                         writer.write("\t\tgreetings.append(\"The following types are annotated with @" + annotationFullClassName  + ": \");\n");
 
-                        Set<? extends Element> annotatedTypes = roundEnv.getElementsAnnotatedWith(annotation);
-                        for (Element annotateType : annotatedTypes) {
-                           writer.write("\t\tgreetings.append(\"" + ((TypeElement) annotateType).getQualifiedName() + "; \");\n");
+                        // Sort the annotated types to ensure deterministic output
+                        List<String> sortedAnnotatedTypes =
+                                roundEnv.getElementsAnnotatedWith(annotation).stream()
+                                        .map((Function<Element, String>) element ->
+                                                ((TypeElement) element).getQualifiedName().toString())
+                                        .sorted().collect(Collectors.toList());
+                        for (String annotatedType : sortedAnnotatedTypes) {
+                            writer.write("\t\tgreetings.append(\"" + annotatedType + "; \");\n");
                         }
 
                         writer.write("\t\treturn greetings.toString();\n");
@@ -563,14 +571,7 @@ class IncrementalJavaCompileWithAPsTest(
 
         // In incremental mode, the irrelevant original source files should not be recompiled
         if (incrementalMode) {
-            if (withKapt && withIncrementalAPs) {
-                // EXPECTATION-NOT-MET: This is a limitation of Gradle when Kapt is used and all
-                // annotation processors are incremental. For some reason, Gradle wants to recompile
-                // this file even though it is not required.
-                assertFileHasChanged(mainActivityClass)
-            } else {
-                assertFileHasNotChanged(mainActivityClass)
-            }
+            assertFileHasNotChanged(mainActivityClass)
             assertFileHasNotChanged(annotation1Class2)
             assertFileHasNotChanged(annotation2Class1)
             assertFileHasNotChanged(annotation2Class2)
@@ -593,14 +594,7 @@ class IncrementalJavaCompileWithAPsTest(
                 assertFileHasChanged(annotation1GeneratedClass)
                 assertFileHasChanged(annotation2GeneratedClass)
             } else {
-                if (withIncrementalAPs) {
-                    // EXPECTATION-NOT-MET: This is a limitation of Gradle when Kapt is used and
-                    // all annotation processors are incremental. For some reason, Gradle wants to
-                    // recompile this file even though it is not required.
-                    assertFileHasChanged(annotation1GeneratedClass)
-                } else {
-                    assertFileHasNotChanged(annotation1GeneratedClass)
-                }
+                assertFileHasNotChanged(annotation1GeneratedClass)
                 assertFileHasNotChanged(annotation2GeneratedClass)
             }
         } else {
