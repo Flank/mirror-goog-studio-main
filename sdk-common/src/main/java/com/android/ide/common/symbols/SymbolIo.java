@@ -28,11 +28,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -857,6 +859,58 @@ public final class SymbolIo {
                     writer.write('\n');
                 }
             }
+        }
+    }
+
+    /**
+     * Writes a file listing the resources provided by the resource file.
+     *
+     * <p>This uses the partial r (go/partial-r) format of
+     * {@code "<access qualifier> <java type> <symbol type> <resource name>" }.
+     *
+     * @param table The SymbolTable to be written as a partial R file.
+     * @param file The file path of the file to be written.
+     */
+    public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
+        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
+                PrintWriter pw = new PrintWriter(os)) {
+            // Loop resource types to keep order.
+            for (ResourceType resType : ResourceType.values()) {
+                List<Symbol> symbols = table.getSymbolByResourceType(resType);
+                for (Symbol s : symbols) {
+                    pw.print(s.getResourceVisibility().getName());
+                    pw.print(' ');
+                    pw.print(s.getJavaType().getTypeName());
+                    pw.print(' ');
+                    pw.print(s.getResourceType().getName());
+                    pw.print(' ');
+                    pw.print(s.getName());
+                    pw.print('\n');
+
+                    // Declare styleables having attributes defined in their node
+                    // listed in the children list.
+                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                        Preconditions.checkArgument(
+                                s.getResourceType() == ResourceType.STYLEABLE,
+                                "Only resource type 'styleable' has java type 'int[]'");
+                        List<String> children = s.getChildren();
+                        for (String child : children) {
+                            pw.print(s.getResourceVisibility().getName());
+                            pw.print(' ');
+                            pw.print(SymbolJavaType.INT.getTypeName());
+                            pw.print(' ');
+                            pw.print(ResourceType.STYLEABLE.getName());
+                            pw.print(' ');
+                            pw.print(s.getName());
+                            pw.print('_');
+                            pw.print(SymbolUtils.canonicalizeValueResourceName(child));
+                            pw.print('\n');
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

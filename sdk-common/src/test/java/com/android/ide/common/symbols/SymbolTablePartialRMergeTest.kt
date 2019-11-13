@@ -282,6 +282,7 @@ class SymbolTablePartialRMergeTest {
 
         // Write to a file so it's easier to check contents.
         val writtenResources = mTemporaryFolder.newFile("all-resources.txt")
+
         val expectedLines = listOf(
                 "default int color accent",
                 "default int color main",
@@ -303,8 +304,16 @@ class SymbolTablePartialRMergeTest {
                 "default int styleable dsA_attr3")
 
         Files.write(writtenResources.toPath(), expectedLines, StandardCharsets.UTF_8)
-        val expected = SymbolIo.readFromPartialRFile(writtenResources, "com.boop.beep");
+
+        val expected = SymbolIo.readFromPartialRFile(writtenResources, "com.boop.beep")
         assertThat(result).isEqualTo(expected)
+
+        // Assert that saving the expected symbol table as a file will equal the result.
+        val generatedPartialRFile = mTemporaryFolder.newFile("result-partial-r.txt")
+        SymbolIo.writePartialR(expected, generatedPartialRFile.toPath())
+        assertThat(result).isEqualTo(
+                SymbolIo.readFromPartialRFile(generatedPartialRFile, "com.boop.beep")
+        )
     }
 
     @Test
