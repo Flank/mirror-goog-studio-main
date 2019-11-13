@@ -872,6 +872,11 @@ public final class SdkConstants {
     public static final String EXO_PLAYER_ARTIFACT =
             EXO_PLAYER_GROUP_ID + ":" + EXO_PLAYER_ARTIFACT_ID;
 
+    /* Compose constants */
+    public static final String CLASS_COMPOSE = "androidx.compose.Compose";
+    public static final String CLASS_COMPOSE_VIEW_ADAPTER =
+            "androidx.ui.tooling.preview.ComposeViewAdapter";
+
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
      * and 'mksdcard' for all other platforms.
