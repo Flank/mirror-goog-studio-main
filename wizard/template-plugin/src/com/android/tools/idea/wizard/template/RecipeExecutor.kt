@@ -76,6 +76,11 @@ interface RecipeExecutor {
    * Adds a new build feature to android block. For example, may enable compose.
    */
   fun setBuildFeature(name: String, value: Boolean)
+
+  /**
+   * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.
+   */
+  fun requireJavaVersion(version: String, kotlinSupport: Boolean = false)
 }
 
 enum class SourceSetType {

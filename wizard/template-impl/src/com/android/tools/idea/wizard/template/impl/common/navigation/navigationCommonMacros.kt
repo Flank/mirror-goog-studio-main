@@ -84,7 +84,7 @@ fun RecipeExecutor.addSafeArgsPlugin(generateKotlin: Boolean, moduleOut: File) {
   */
   applyPlugin("androidx.navigation.safeargs")
   if (generateKotlin) {
-    mergeGradleFile(navigationKotlinBuildGradle, moduleOut.resolve("build.gradle"))
+    requireJavaVersion("1.8", true)
   }
 }
 
