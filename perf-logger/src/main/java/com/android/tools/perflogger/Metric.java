@@ -139,11 +139,23 @@ public class Metric {
 
     /** Writes the logged benchmark data out to the test output directory. */
     public void commit() {
+        commit(new File(myOutputDirectory, myMetricName + ".json"));
+    }
+
+    /**
+     * Writes the logged benchmark data out to the test output directory, adding a prefix to the
+     * file name.
+     */
+    public void commit(@NonNull String prefix) {
+        commit(new File(myOutputDirectory, prefix + "_" + myMetricName + ".json"));
+    }
+
+    /** Writes the logged benchmark data out to the given file. */
+    private void commit(@NonNull File outputFile) {
         if (mySamples.isEmpty()) {
             return;
         }
 
-        File outputFile = new File(myOutputDirectory, myMetricName + ".json");
         try (JsonWriter writer = new JsonWriter(new FileWriter(outputFile))) {
             writer.setIndent("  ");
             writer.beginObject().name("metric").value(myMetricName).name("benchmarks").beginArray();
