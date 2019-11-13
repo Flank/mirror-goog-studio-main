@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.core.VariantType
@@ -40,6 +41,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -66,8 +68,6 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
     private lateinit var aaptOptions: AaptOptions
 
-    private lateinit var variantType: VariantType
-
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val uncompressedResources: DirectoryProperty
@@ -90,17 +90,13 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     abstract val mergedManifests: DirectoryProperty
 
     @get:Input
-    var isDebuggableBuildType: Boolean = false
-        private set
+    abstract val debuggableBuildType: Property<Boolean>
 
     @get:Input
-    lateinit var multiOutputPolicy: MultiOutputPolicy
-        private set
+    abstract val multiOutputPolicy: Property<MultiOutputPolicy>
 
-    @Input
-    fun getVariantTypeAsString(): String {
-        return variantType.name
-    }
+    @get:Input
+    abstract val variantTypeName: Property<String>
 
     @Input
     fun getAaptOptionsAsString(): String {
@@ -205,9 +201,13 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
 
             task.buildTypeName = variantData.variantConfiguration.buildType.name
-            task.variantType = variantData.type
-            task.isDebuggableBuildType = variantData.variantConfiguration.buildType.isDebuggable
-            task.multiOutputPolicy = variantData.multiOutputPolicy
+
+            task.variantTypeName.setDisallowChanges(variantData.type.name)
+
+            task.debuggableBuildType
+                .setDisallowChanges(variantData.variantConfiguration.buildType.isDebuggable)
+
+            task.multiOutputPolicy.setDisallowChanges(variantData.multiOutputPolicy)
 
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
