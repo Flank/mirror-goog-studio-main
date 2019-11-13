@@ -28,13 +28,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -872,20 +870,19 @@ public final class SymbolIo {
      * @param file The file path of the file to be written.
      */
     public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
-        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
-                PrintWriter pw = new PrintWriter(os)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(file)) {
             // Loop resource types to keep order.
             for (ResourceType resType : ResourceType.values()) {
                 List<Symbol> symbols = table.getSymbolByResourceType(resType);
                 for (Symbol s : symbols) {
-                    pw.print(s.getResourceVisibility().getName());
-                    pw.print(' ');
-                    pw.print(s.getJavaType().getTypeName());
-                    pw.print(' ');
-                    pw.print(s.getResourceType().getName());
-                    pw.print(' ');
-                    pw.print(s.getName());
-                    pw.print('\n');
+                    writer.write(s.getResourceVisibility().getName());
+                    writer.write(' ');
+                    writer.write(s.getJavaType().getTypeName());
+                    writer.write(' ');
+                    writer.write(s.getResourceType().getName());
+                    writer.write(' ');
+                    writer.write(s.getCanonicalName());
+                    writer.write('\n');
 
                     // Declare styleables having attributes defined in their node
                     // listed in the children list.
@@ -895,16 +892,16 @@ public final class SymbolIo {
                                 "Only resource type 'styleable' has java type 'int[]'");
                         List<String> children = s.getChildren();
                         for (String child : children) {
-                            pw.print(s.getResourceVisibility().getName());
-                            pw.print(' ');
-                            pw.print(SymbolJavaType.INT.getTypeName());
-                            pw.print(' ');
-                            pw.print(ResourceType.STYLEABLE.getName());
-                            pw.print(' ');
-                            pw.print(s.getName());
-                            pw.print('_');
-                            pw.print(SymbolUtils.canonicalizeValueResourceName(child));
-                            pw.print('\n');
+                            writer.write(s.getResourceVisibility().getName());
+                            writer.write(' ');
+                            writer.write(SymbolJavaType.INT.getTypeName());
+                            writer.write(' ');
+                            writer.write(ResourceType.STYLEABLE.getName());
+                            writer.write(' ');
+                            writer.write(s.getCanonicalName());
+                            writer.write('_');
+                            writer.write(SymbolUtils.canonicalizeValueResourceName(child));
+                            writer.write('\n');
                         }
                     }
                 }
