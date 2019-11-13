@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-6e30c9954f468b242435de2da2335d2f11e4b064c426bb7964f060866f61ff78
+1505dbe685c6d6a9fc0ec6376719f1c8210bae8d5b345134e879469ab3b04a88
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -65,14 +65,6 @@ com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
-com.android.build.api.variant.AppVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.AppVariant.getMinSdkVersion: int ()
-com.android.build.api.variant.AppVariant.setMinSdkVersion: void (int)
-com.android.build.api.variant.AppVariantProperties implements com.android.build.api.variant.VariantProperties
-com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
-com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.Variant implements com.android.build.api.variant.VariantConfiguration
 com.android.build.api.variant.Variant.getEnabled: boolean ()
 com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<T>)

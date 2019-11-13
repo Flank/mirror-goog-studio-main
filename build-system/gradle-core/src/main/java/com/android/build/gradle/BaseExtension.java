@@ -117,8 +117,8 @@ import org.gradle.api.tasks.SourceSet;
 // All the public methods are meant to be exposed in the DSL. We can't use lambdas in this class
 // (yet), because the DSL reference generator doesn't understand them.
 @SuppressWarnings({"UnnecessaryInheritDoc", "WeakerAccess", "unused", "Convert2Lambda"})
-public abstract class BaseExtension<VARIANT extends Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES extends VariantProperties>
-        implements AndroidConfig, CommonExtension<VARIANT, VARIANT_PROPERTIES> {
+public abstract class BaseExtension<T extends Variant<U>, U extends VariantProperties>
+        implements AndroidConfig, CommonExtension<T, U> {
 
     /** Secondary dependencies for the custom transform. */
     private final List<List<Object>> transformDependencies = Lists.newArrayList();

@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tests
 
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.VariantManager

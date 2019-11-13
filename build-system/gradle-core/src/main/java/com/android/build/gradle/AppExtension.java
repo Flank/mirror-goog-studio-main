@@ -1,62 +1,128 @@
-/*
- * Copyright (C) 2019 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.AppVariant;
-import com.android.build.api.variant.AppVariantProperties;
+import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantProperties;
+import com.android.build.gradle.api.ApplicationVariant;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.ProjectOptions;
+import java.util.ArrayList;
+import java.util.List;
+import org.gradle.api.Action;
+import org.gradle.api.DomainObjectSet;
+import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 
 /**
- * AppExtension is used directly by build.gradle.kts when configuring project so adding generics
- * declaration is not possible.
+ * The {@code android} extension for application plugins.
+ *
+ * <p>For the base module, see {@link com.android.build.gradle.BaseExtension}
+ *
+ * <p>For optional apks, this class is used directly.
  */
-public class AppExtension extends AbstractAppExtension<AppVariant, AppVariantProperties> {
+public class AppExtension extends TestedExtension {
 
-public AppExtension(
-        @NonNull Project project,
-        @NonNull ProjectOptions projectOptions,
-        @NonNull GlobalScope globalScope,
-        @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
-        @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
-        @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
-        @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-        @NonNull SourceSetManager sourceSetManager,
-        @NonNull ExtraModelInfo extraModelInfo,
-        boolean isBaseModule) {
+    private final DomainObjectSet<ApplicationVariant> applicationVariantList;
+
+    private final List<Action<Variant>> variantActionList = new ArrayList<>();
+    private final List<Action<VariantProperties>> variantPropertiesActionList = new ArrayList<>();
+
+    public AppExtension(
+            @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
+            @NonNull GlobalScope globalScope,
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
+            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
+            @NonNull ExtraModelInfo extraModelInfo,
+            boolean isBaseModule) {
         super(
-        project,
-        projectOptions,
-        globalScope,
-        buildTypes,
-        productFlavors,
-        signingConfigs,
-        buildOutputs,
-        sourceSetManager,
-        extraModelInfo,
-        isBaseModule);
-        }
+                project,
+                projectOptions,
+                globalScope,
+                buildTypes,
+                productFlavors,
+                signingConfigs,
+                buildOutputs,
+                sourceSetManager,
+                extraModelInfo,
+                isBaseModule);
+        applicationVariantList = project.getObjects().domainObjectSet(ApplicationVariant.class);
+    }
+
+    /**
+     * Returns a collection of <a
+     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a> that
+     * the app project includes.
+     *
+     * <p>To process elements in this collection, you should use the <a
+     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
+     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * processes future elements as the plugin creates them.
+     *
+     * <p>The following sample iterates through all <code>applicationVariants</code> elements to <a
+     * href="https://developer.android.com/studio/build/manifest-build-variables.html">inject a
+     * build variable into the manifest</a>:
+     *
+     * <pre>
+     * android.applicationVariants.all { variant -&gt;
+     *     def mergedFlavor = variant.getMergedFlavor()
+     *     // Defines the value of a build variable you can use in the manifest.
+     *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com/${variant.versionName}"]
+     * }
+     * </pre>
+     */
+    public DomainObjectSet<ApplicationVariant> getApplicationVariants() {
+        return applicationVariantList;
+    }
+
+    /**
+     * Registers an {@link Action} to be executed on each {@link Variant} of the project.
+     *
+     * @param action an {@link Action} taking a {@link Variant} as a parameter.
+     */
+    @Incubating
+    public void onVariants(Action<Variant> action) {
+        variantActionList.add(action);
+        // TODO: b/142715610 Resolve when onVariants is called with variants already existing the
+        // applicationVariantList.
+    }
+
+    /**
+     * Registers an {@link Action} to be executed on each {@link VariantProperties} of the project.
+     *
+     * @param action an {@link Action} taking a {@link VariantProperties} as a parameter.
+     */
+    @Incubating
+    public void onVariantsProperties(Action<VariantProperties> action) {
+        variantPropertiesActionList.add(action);
+        // TODO: b/142715610 Resolve when onVariants is called with variants already existing the
+        // applicationVariantList.
+    }
+
+
+    @Override
+    public void addVariant(BaseVariant variant, VariantScope variantScope) {
+        applicationVariantList.add((ApplicationVariant) variant);
+        // TODO: move these 2 calls from the addVariant method.
+        variantActionList.forEach(
+                action -> action.execute(variantScope.getVariantData().getPublicVariantApi()));
+        variantPropertiesActionList.forEach(
+                action ->
+                        action.execute(
+                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
+
+    }
 }

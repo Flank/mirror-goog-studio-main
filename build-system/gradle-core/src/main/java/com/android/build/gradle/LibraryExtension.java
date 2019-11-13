@@ -1,9 +1,6 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.LibraryVariantProperties;
-import com.android.build.api.variant.Variant;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
@@ -31,7 +28,7 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
  * href="https://developer.android.com/studio/projects/android-library.html">create an Android
  * library</a>.
  */
-public class LibraryExtension extends TestedExtension<com.android.build.api.variant.LibraryVariant, LibraryVariantProperties>
+public class LibraryExtension extends TestedExtension
         implements com.android.build.api.dsl.LibraryExtension {
 
     private final DomainObjectSet<LibraryVariant> libraryVariantList;

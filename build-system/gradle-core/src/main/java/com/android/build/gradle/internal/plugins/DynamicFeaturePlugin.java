@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AbstractAppExtension;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
@@ -53,7 +52,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
 
     @NonNull
     @Override
-    protected Class<? extends AbstractAppExtension> getExtensionClass() {
+    protected Class<? extends AppExtension> getExtensionClass() {
         return DynamicFeatureExtension.class;
     }
 }

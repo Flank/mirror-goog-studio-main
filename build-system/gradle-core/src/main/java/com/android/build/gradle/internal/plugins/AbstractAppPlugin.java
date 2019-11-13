@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.plugins;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AbstractAppExtension;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -58,7 +57,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected AbstractAppExtension createExtension(
+    protected AppExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -84,7 +83,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
     }
 
     @NonNull
-    protected abstract Class<? extends AbstractAppExtension> getExtensionClass();
+    protected abstract Class<? extends AppExtension> getExtensionClass();
 
     @NonNull
     @Override
