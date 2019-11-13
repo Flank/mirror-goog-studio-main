@@ -80,7 +80,7 @@ jni_library = rule(
             cfg = android_common.multi_cpu_configuration,
             allow_files = True,
         ),
-        "$zipper": attr.label(
+        "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
             executable = True,
