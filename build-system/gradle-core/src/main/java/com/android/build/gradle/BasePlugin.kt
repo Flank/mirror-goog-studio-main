@@ -42,8 +42,8 @@ open class BasePlugin: Plugin<Project> {
      * @deprecated Directely call project.extensions.getByName("android") instead.
      */
     @Deprecated("Use project.extensions.getByName(\"android\")")
-    fun getExtension(): BaseExtension<Variant<VariantProperties>, VariantProperties> {
-        return project.extensions.getByName("android") as BaseExtension<Variant<VariantProperties>, VariantProperties>
+    fun getExtension(): BaseExtension {
+        return project.extensions.getByName("android") as BaseExtension
     }
 }
 

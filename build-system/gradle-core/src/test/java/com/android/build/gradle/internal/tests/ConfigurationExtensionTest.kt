@@ -56,7 +56,7 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
 
     private lateinit var project: Project
     private lateinit var plugin: BasePlugin
-    private lateinit var android: BaseExtension<*, *>
+    private lateinit var android: BaseExtension
     private lateinit var configExtensionMap: Multimap<String, String>
 
     // basic relationship

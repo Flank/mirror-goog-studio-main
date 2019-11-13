@@ -26,8 +26,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.Variant;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.api.dsl.DslScope;
@@ -55,7 +53,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private final Project project;
-    @NonNull private BaseExtension<Variant<VariantProperties>, VariantProperties> extension;
+    @NonNull private BaseExtension extension;
     @NonNull private final SdkComponents sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
@@ -104,8 +102,7 @@ public class GlobalScope implements TransformGlobalScope {
         this.lintChecks = project.getConfigurations().detachedConfiguration();
     }
 
-    public void setExtension(
-            @NonNull BaseExtension<Variant<VariantProperties>, VariantProperties> extension) {
+    public void setExtension(@NonNull BaseExtension extension) {
         this.extension = checkNotNull(extension);
     }
 
@@ -126,7 +123,7 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    public BaseExtension<Variant<VariantProperties>, VariantProperties> getExtension() {
+    public BaseExtension getExtension() {
         return extension;
     }
 

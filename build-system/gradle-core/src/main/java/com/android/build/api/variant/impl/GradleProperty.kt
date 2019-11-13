@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * to the new Variant API. It is unclear if this wrapper will remain once conversion is done.
  */
 open class GradleProperty<T>(
-    private val property: Property<T>) : PropertyInternal<T>, Property<T> {
+    private val property: Property<T>) : PropertyInternal<T>, ProviderInternal<T>, Property<T> {
 
     override fun getOrElse(p0: T): T {
         return property.getOrElse(p0)

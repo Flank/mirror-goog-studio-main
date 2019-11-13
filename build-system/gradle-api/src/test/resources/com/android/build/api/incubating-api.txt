@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1505dbe685c6d6a9fc0ec6376719f1c8210bae8d5b345134e879469ab3b04a88
+7ec1cda951f6d59a4882778cc652ae9b8398d1e9860bd1f622a0d8d3e37aec0a
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -60,11 +60,21 @@ com.android.build.api.dsl.BuildFeatures.getCompose: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.setBuildConfig: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setCompose: void (java.lang.Boolean)
 com.android.build.api.dsl.CommonExtension
+com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VariantT>)
+com.android.build.api.dsl.CommonExtension.onVariantsProperties: void (org.gradle.api.Action<VariantPropertiesT>)
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.AppVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.AppVariant.getMinSdkVersion: int ()
+com.android.build.api.variant.AppVariant.setMinSdkVersion: void (int)
+com.android.build.api.variant.AppVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.Variant implements com.android.build.api.variant.VariantConfiguration
 com.android.build.api.variant.Variant.getEnabled: boolean ()
 com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<T>)

@@ -51,7 +51,7 @@ open class SdkComponents(
         fun createSdkComponents(
             project: Project,
             projectOptions: ProjectOptions,
-            extensionSupplier: Supplier<BaseExtension<Variant<VariantProperties>, VariantProperties>?>,
+            extensionSupplier: Supplier<BaseExtension>,
             logger: ILogger,
             evalIssueReporter: EvalIssueReporter): SdkComponents {
 

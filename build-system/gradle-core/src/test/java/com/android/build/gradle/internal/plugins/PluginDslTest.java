@@ -67,7 +67,7 @@ public class PluginDslTest {
 
     @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
     private BasePlugin plugin;
-    private BaseExtension<?, ?> android;
+    private BaseExtension android;
     private Project project;
     private VariantChecker checker;
     private final TestProjects.Plugin pluginType;

@@ -1,21 +1,25 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.LibraryVariantProperties;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.options.ProjectOptions;
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -34,6 +38,11 @@ public class LibraryExtension extends TestedExtension
     private final DomainObjectSet<LibraryVariant> libraryVariantList;
 
     private Collection<String> aidlPackageWhiteList = null;
+
+    private List<Action<com.android.build.api.variant.LibraryVariant>> variantActionList =
+            new ArrayList<>();
+    private List<Action<LibraryVariantProperties>> variantPropertiesActionList = new ArrayList<>();
+
 
     public LibraryExtension(
             @NonNull Project project,
@@ -89,6 +98,15 @@ public class LibraryExtension extends TestedExtension
     @Override
     public void addVariant(BaseVariant variant, VariantScope variantScope) {
         libraryVariantList.add((LibraryVariant) variant);
+        LibraryVariantData variantData = (LibraryVariantData) variantScope.getVariantData();
+        for (Action<com.android.build.api.variant.LibraryVariant> action : variantActionList) {
+            action.execute(
+                    (com.android.build.api.variant.LibraryVariant)
+                            variantData.getPublicVariantApi());
+        }
+        for (Action<LibraryVariantProperties> action : variantPropertiesActionList) {
+            action.execute((LibraryVariantProperties) variantData.getPublicVariantPropertiesApi());
+        }
     }
 
     public void aidlPackageWhiteList(String ... aidlFqcns) {
@@ -106,4 +124,15 @@ public class LibraryExtension extends TestedExtension
     public Collection<String> getAidlPackageWhiteList() {
         return aidlPackageWhiteList;
     }
+
+    @Override
+    public void onVariants(@NonNull Action<com.android.build.api.variant.LibraryVariant> action) {
+        variantActionList.add(action);
+    }
+
+    @Override
+    public void onVariantsProperties(@NonNull Action<LibraryVariantProperties> action) {
+        variantPropertiesActionList.add(action);
+    }
+
 }

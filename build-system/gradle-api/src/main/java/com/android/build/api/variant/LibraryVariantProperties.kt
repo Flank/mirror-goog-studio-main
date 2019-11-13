@@ -13,25 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.variant
 
-package com.android.build.api.dsl
-
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
-import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/**
- * Common extension properties for the Android Application. Library and Dynamic Feature Plugins.
- *
- *
- * Only the Android Gradle Plugin should create instances of this interface.
- */
+/** [VariantProperties] for Library projects */
 @Incubating
-interface CommonExtension<VariantT: Variant<VariantPropertiesT>, VariantPropertiesT: VariantProperties> {
-    fun onVariants(action: Action<VariantT>)
+interface LibraryVariantProperties : VariantProperties {
 
-    fun onVariantsProperties(action: Action<VariantPropertiesT>)
-
-    // TODO(b/140406102)
 }

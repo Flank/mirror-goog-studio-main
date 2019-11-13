@@ -25,6 +25,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.AppVariantImpl;
+import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -171,9 +173,10 @@ public abstract class BaseVariantData {
                         variantConfiguration.getBuildType().getName(),
                         variantConfiguration.getFlavorNamesWithDimensionNames());
 
-        publicVariantAPI = new VariantImpl(publicVariantConfiguration);
+        // TODO: Instantiate the correct subtypes here.
+        publicVariantAPI = new AppVariantImpl(publicVariantConfiguration);
         publicVariantPropertiesImpl =
-                new VariantPropertiesImpl(
+                new AppVariantPropertiesImpl(
                         globalScope.getProject().getObjects(),
                         scope,
                         variantConfiguration,
@@ -221,7 +224,7 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public VariantImpl getPublicVariantApi() {
+    public VariantImpl<?> getPublicVariantApi() {
         return publicVariantAPI;
     }
 

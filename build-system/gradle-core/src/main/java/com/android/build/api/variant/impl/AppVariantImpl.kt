@@ -13,22 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.variant.impl
 
-package com.android.build.api.dsl
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.VariantConfiguration
 
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
-import org.gradle.api.Incubating
-
-/**
- * Extension for the Android Library Gradle Plugin.
- *
- *
- * Only the Android Gradle Plugin should create instances of this interface.
- */
-@Incubating
-interface LibraryExtension : CommonExtension<LibraryVariant, LibraryVariantProperties>, TestedExtension {
-    // TODO(b/140406102)
+class AppVariantImpl(
+    variantConfiguration: VariantConfiguration
+) : VariantImpl<AppVariantProperties>(variantConfiguration), AppVariant {
+    override var minSdkVersion = 1
 }

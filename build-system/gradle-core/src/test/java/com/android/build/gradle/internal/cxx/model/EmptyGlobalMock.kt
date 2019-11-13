@@ -44,7 +44,7 @@ class EmptyGlobalMock {
         BaseVariantData::class.java,
         throwUnmocked
     )
-    val extension: BaseExtension<*, *> = Mockito.mock(
+    val extension: BaseExtension = Mockito.mock(
         BaseExtension::class.java,
         throwUnmocked
     )

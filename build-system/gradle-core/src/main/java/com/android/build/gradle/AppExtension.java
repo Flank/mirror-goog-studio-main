@@ -1,8 +1,6 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.Variant;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -14,27 +12,24 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
-import java.util.ArrayList;
-import java.util.List;
-import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
-import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 
 /**
  * The {@code android} extension for application plugins.
  *
- * <p>For the base module, see {@link com.android.build.gradle.BaseExtension}
+ * <p>For the base application, see {@link
+ * com.android.build.gradle.internal.dsl.BaseAppModuleExtension}, which is superseded by {@link
+ * com.android.build.api.dsl.ApplicationExtension}
  *
- * <p>For optional apks, this class is used directly.
+ * <p>For dynamic features see {@link
+ * com.android.build.gradle.internal.dsl.DynamicFeatureExtension}, which is superseded by {@link
+ * com.android.build.api.dsl.DynamicFeatureExtension}
  */
 public class AppExtension extends TestedExtension {
 
     private final DomainObjectSet<ApplicationVariant> applicationVariantList;
-
-    private final List<Action<Variant>> variantActionList = new ArrayList<>();
-    private final List<Action<VariantProperties>> variantPropertiesActionList = new ArrayList<>();
 
     public AppExtension(
             @NonNull Project project,
@@ -88,41 +83,8 @@ public class AppExtension extends TestedExtension {
         return applicationVariantList;
     }
 
-    /**
-     * Registers an {@link Action} to be executed on each {@link Variant} of the project.
-     *
-     * @param action an {@link Action} taking a {@link Variant} as a parameter.
-     */
-    @Incubating
-    public void onVariants(Action<Variant> action) {
-        variantActionList.add(action);
-        // TODO: b/142715610 Resolve when onVariants is called with variants already existing the
-        // applicationVariantList.
-    }
-
-    /**
-     * Registers an {@link Action} to be executed on each {@link VariantProperties} of the project.
-     *
-     * @param action an {@link Action} taking a {@link VariantProperties} as a parameter.
-     */
-    @Incubating
-    public void onVariantsProperties(Action<VariantProperties> action) {
-        variantPropertiesActionList.add(action);
-        // TODO: b/142715610 Resolve when onVariants is called with variants already existing the
-        // applicationVariantList.
-    }
-
-
     @Override
     public void addVariant(BaseVariant variant, VariantScope variantScope) {
         applicationVariantList.add((ApplicationVariant) variant);
-        // TODO: move these 2 calls from the addVariant method.
-        variantActionList.forEach(
-                action -> action.execute(variantScope.getVariantData().getPublicVariantApi()));
-        variantPropertiesActionList.forEach(
-                action ->
-                        action.execute(
-                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
-
     }
 }

@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
@@ -191,7 +189,7 @@ open class BasicModuleModelMock {
         val appFolder = join(projectRootDir, appName)
         val buildDir = File(appFolder, "build")
         val intermediates = File(buildDir, "intermediates")
-        val extension: BaseExtension<*, *> = mock(
+        val extension: BaseExtension = mock(
             BaseExtension::class.java,
             throwUnmocked
         )
