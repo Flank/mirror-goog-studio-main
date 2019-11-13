@@ -267,4 +267,20 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")
     }
+
+    @Test
+    fun `generateJsonModel task always runs`() {
+        val generationRecord = project.file(".cxx/cmake/debug/armeabi-v7a/json_generation_record.json")
+        project.executor().with(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK, true).run("assembleDebug")
+        assertThat(generationRecord).exists()
+        var stateModificationTime = generationRecord.lastModified()
+        assertThat(stateModificationTime).isNotEqualTo(0)
+        project.executor().with(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK, true).run("assembleDebug")
+        assertThat(generationRecord).exists()
+        assertThat(generationRecord.lastModified()).isGreaterThan(stateModificationTime)
+        stateModificationTime = generationRecord.lastModified()
+        project.executor().with(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK, false).run("assembleDebug")
+        assertThat(generationRecord).exists()
+        assertThat(generationRecord.lastModified()).isGreaterThan(stateModificationTime)
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,6 +98,9 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
             task.generator = generator;
             task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
             GradleVariantConfiguration config = getVariantScope().getVariantConfiguration();
+
+            // Task should always run.
+            task.getOutputs().upToDateWhen(task1 -> false);
 
             if (artifacts.hasFinalProduct(
                             InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
