@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
@@ -49,36 +50,34 @@ import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
 
-abstract class DexFileDependenciesTask
-@Inject constructor(objectFactory: ObjectFactory) :
-    NonIncrementalTask() {
+abstract class DexFileDependenciesTask: NonIncrementalTask() {
 
     @get:OutputDirectory
-    val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
+    abstract val outputDirectory: DirectoryProperty
 
     @get:Optional
     @get:OutputFile
-    val outputKeepRules: RegularFileProperty = objectFactory.fileProperty()
+    abstract val outputKeepRules: RegularFileProperty
 
     @get:Classpath
-    val classes: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val classes: ConfigurableFileCollection
 
     @get:CompileClasspath
-    val classpath: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val classpath: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
-    val bootClasspath: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val bootClasspath: ConfigurableFileCollection
 
     @get:Input
-    val minSdkVersion: Property<Int> = objectFactory.property(Int::class.java)
+    abstract val minSdkVersion: Property<Int>
 
     @get:Input
-    val debuggable: Property<Boolean> = objectFactory.property(Boolean::class.java)
+    abstract val debuggable: Property<Boolean>
 
     @get:Optional
     @get:Input
-    val libConfiguration: Property<String> = objectFactory.property(String::class.java)
+    abstract val libConfiguration: Property<String>
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -184,17 +183,18 @@ abstract class DexFileDependenciesTask
 
         override fun configure(task: DexFileDependenciesTask) {
             super.configure(task)
-            task.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
+            task.debuggable
+                .setDisallowChanges(variantScope.variantConfiguration.buildType.isDebuggable)
             task.classes.from(
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.FILE,
                     AndroidArtifacts.ArtifactType.PROCESSED_JAR
                 )
-            )
+            ).disallowChanges()
             val minSdkVersion =
                 variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
-            task.minSdkVersion.set(minSdkVersion)
+            task.minSdkVersion.setDisallowChanges(minSdkVersion)
             if (minSdkVersion < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(
                     variantScope.getArtifactFileCollection(
@@ -205,12 +205,17 @@ abstract class DexFileDependenciesTask
                 )
                 task.bootClasspath.from(variantScope.globalScope.bootClasspath)
             }
+
+            task.classpath.disallowChanges()
+            task.bootClasspath.disallowChanges()
+
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
 
             if (variantScope.isCoreLibraryDesugaringEnabled) {
                 task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
             }
+            task.libConfiguration.disallowChanges()
         }
     }
 }
