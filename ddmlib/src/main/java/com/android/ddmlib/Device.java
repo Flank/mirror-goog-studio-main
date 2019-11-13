@@ -763,6 +763,18 @@ final class Device implements IDevice {
         return null;
     }
 
+    @Override
+    public void forceStop(String applicationName) {
+        try {
+            // Force kills the app in case it's in the crashed state.
+            executeShellCommand("am force-stop " + applicationName, new NullOutputReceiver());
+        } catch (IOException
+                | TimeoutException
+                | AdbCommandRejectedException
+                | ShellCommandUnresponsiveException ignored) {
+        }
+    }
+
     void addClient(Client client) {
         synchronized (mClients) {
             mClients.add(client);
