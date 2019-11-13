@@ -20,7 +20,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.tools.deployer.DeployerException;
-import com.android.tools.deployer.tasks.TaskRunner.Task;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;

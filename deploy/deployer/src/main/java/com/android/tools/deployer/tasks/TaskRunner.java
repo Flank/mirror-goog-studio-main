@@ -16,20 +16,12 @@
 
 package com.android.tools.deployer.tasks;
 
-import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerException;
-import com.android.tools.tracer.Trace;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
 
 public class TaskRunner {
 
@@ -100,62 +92,21 @@ public class TaskRunner {
         }
     }
 
-    public static final class Result {
-        private final DeployerException exception;
-        private final List<Task<?>> tasks;
-
-        public Result(List<Task<?>> tasks) {
-            this(tasks, null);
-        }
-
-        public Result(List<Task<?>> tasks, DeployerException exception) {
-            this.tasks = tasks;
-            this.exception = exception;
-        }
-
-        /** @return the metrics for completed tasks, filtering out non-started and dropped tasks. */
-        public List<DeployMetric> getMetrics() {
-            return tasks.stream()
-                    .map(Task::getMetric)
-                    .filter(Result::shouldIncludeMetric)
-                    .collect(Collectors.toList());
-        }
-
-        /**
-         * @return the exception that was thrown if the execution was not a success. Returns null if
-         *     the execution succeeded.
-         */
-        public DeployerException getException() {
-            return exception;
-        }
-
-        public boolean isSuccess() {
-            return exception == null;
-        }
-
-        private static boolean shouldIncludeMetric(DeployMetric metric) {
-            if (metric == null) {
-                return false;
-            }
-            return "Success".equals(metric.getStatus()) || "Failed".equals(metric.getStatus());
-        }
-    }
-
     /**
      * Runs and waits for all the pending tasks to be executed.
      *
      * <p>If no tasks are pending this is a no-op, except that it will wait for the existing running
      * tasks to end.
      */
-    public Result run() {
+    public TaskResult run() {
         running.acquireUninterruptibly();
         ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         try {
             tasks.clear();
             runInternal(batch);
-            return new Result(batch);
+            return new TaskResult(batch);
         } catch (DeployerException e) {
-            return new Result(batch, e);
+            return new TaskResult(batch, e);
         } finally {
             running.release();
         }
@@ -188,62 +139,6 @@ public class TaskRunner {
      */
     public void runAsync() {
         runAsync(executor);
-    }
-
-    public static class Task<T> {
-        private final Callable<T> callable;
-        private final Task<?>[] inputs;
-        private final SettableFuture<T> future;
-        private DeployMetric metric;
-
-        // Only can be created through the interface enforcing a no-cycle dependency graph.
-        Task(String name, Callable<T> callable, Task<?>... inputs) {
-            this.future = SettableFuture.create();
-            this.inputs = inputs;
-            this.callable =
-                    () -> {
-                        String status = "Not Started";
-                        metric = new DeployMetric(name);
-                        try (Trace ignored = Trace.begin(name)) {
-                            T value = callable.call();
-                            status = "Success";
-                            return value;
-                        } catch (ExecutionException e) {
-                            // Dropped this task because one of the previous task failed.
-                            status = "Dropped";
-                            throw e;
-                        } catch (Throwable t) {
-                            status = "Failed";
-                            throw t;
-                        } finally {
-                            metric.finish(status);
-                        }
-                    };
-        }
-
-        public T get() throws DeployerException {
-            try {
-                return future.get();
-            } catch (InterruptedException e) {
-                throw DeployerException.interrupted(e.getMessage());
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof DeployerException) {
-                    throw (DeployerException) e.getCause();
-                } else {
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
-
-        public void run(Executor executor) {
-            List<? extends SettableFuture<?>> futures =
-                    Arrays.stream(inputs).map(t -> t.future).collect(Collectors.toList());
-            future.setFuture(Futures.whenAllComplete(futures).call(callable, executor));
-        }
-
-        public DeployMetric getMetric() {
-            return metric;
-        }
     }
 
     public interface ThrowingFunction<I, O> {
