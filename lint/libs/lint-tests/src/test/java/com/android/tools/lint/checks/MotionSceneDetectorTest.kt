@@ -88,4 +88,31 @@ class MotionSceneDetectorTest : AbstractCheckTest() {
                 -                 app:customPixelDimension="4sp"/>
             """)
     }
+
+    fun testMultipleOnClickInTransition() {
+        lint().files(
+            xml("res/xml/multiple_onclick_in_transition.xml",
+                """
+                <MotionScene
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        xmlns:motion="http://schemas.android.com/apk/res-auto">
+                    <Transition>
+                        <OnClick motion:clickAction="toggle"  />
+                        <OnClick motion:clickAction="transitionToEnd"  />
+                    </Transition>
+                </MotionScene>
+                """
+            ).indented()).run()
+            .expect("""
+                res/xml/multiple_onclick_in_transition.xml:6: Error: Can only have one OnClick per Transition. [MotionSceneFileValidationError]
+                        <OnClick motion:clickAction="transitionToEnd"  />
+                         ~~~~~~~
+                1 errors, 0 warnings
+            """)
+            .expectFixDiffs("""
+                Fix for res/xml/multiple_onclick_in_transition.xml line 6: Delete additional OnClick:
+                @@ -6 +6
+                -         <OnClick motion:clickAction="transitionToEnd"  />
+            """)
+    }
 }

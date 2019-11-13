@@ -94,27 +94,23 @@ class MotionSceneDetector : ResourceXmlDetector() {
         // TODO: Check that there are not multiple constraints with the same id
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitLayout(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
         // TODO: Check that only layout attributes are specified
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitMotion(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
         // TODO: Check that only motion attributes are specified
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitPropertySet(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
         // TODO: Check that only property set attributes are specified
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitTransform(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
         // TODO: Check that only transform attributes are specified
     }
 
@@ -144,12 +140,30 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun visitTransition(context: XmlContext, element: Element) {
+        checkMultipleOnClicks(context, element)
         for (child in XmlUtils.getSubTags(element)) {
             when (child.tagName) {
                 KEY_FRAME_SET -> visitKeyFrameSet(context, child)
                 ON_SWIPE -> visitOnSwipe(context, child)
                 ON_CLICK -> visitOnClick(context, child)
             }
+        }
+    }
+
+    private fun checkMultipleOnClicks(context: XmlContext, element: Element) {
+        XmlUtils.getSubTags(element).filter { it.tagName == ON_CLICK }.drop(1).forEach { onClickElement ->
+            context.report(
+              MOTION_SCENE_FILE_VALIDATION_ERROR,
+              onClickElement,
+              context.getNameLocation(onClickElement),
+              "Can only have one `${ON_CLICK}` per `${TRANSITION}`.",
+              LintFix.create()
+                .name("Delete additional $ON_CLICK")
+                .replace()
+                .with("")
+                .range(context.getLocation(onClickElement))
+                .build()
+            )
         }
     }
 
@@ -174,9 +188,8 @@ class MotionSceneDetector : ResourceXmlDetector() {
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitKeyPosition(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
     }
 
     private fun visitKeyCycle(context: XmlContext, element: Element) {
@@ -197,19 +210,16 @@ class MotionSceneDetector : ResourceXmlDetector() {
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitKeyTrigger(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitOnSwipe(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitOnClick(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
     }
 
     private fun visitStateSet(context: XmlContext, element: Element) {
@@ -228,9 +238,25 @@ class MotionSceneDetector : ResourceXmlDetector() {
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun visitVariant(context: XmlContext, element: Element) {
-        // TODO: Check that there are no child elements
+        checkNoSubTags(context, element)
+    }
+
+    private fun checkNoSubTags(context: XmlContext, element: Element) {
+        XmlUtils.getSubTags(element).forEach { subTag ->
+            context.report(
+              MOTION_SCENE_FILE_VALIDATION_ERROR,
+              subTag,
+              context.getNameLocation(subTag),
+              "`${element.tagName}` can not have any child tags.",
+              LintFix.create()
+                .name("Delete ${subTag.tagName}")
+                .replace()
+                .with("")
+                .range(context.getLocation(subTag))
+                .build()
+            )
+        }
     }
 
     companion object {
