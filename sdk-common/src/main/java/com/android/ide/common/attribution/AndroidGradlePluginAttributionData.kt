@@ -26,26 +26,25 @@ import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
-import java.lang.Exception
 
 data class AndroidGradlePluginAttributionData(
     /**
      * A map that maps a task name to its class name
      * ex: mergeDevelopmentDebugResources -> com.android.build.gradle.tasks.MergeResources
      */
-    val taskNameToClassNameMap: Map<String, String>,
+    val taskNameToClassNameMap: Map<String, String> = emptyMap(),
 
     /**
      * Contains registered tasks that are not cacheable.
      */
-    val noncacheableTasks: Set<String>,
+    val noncacheableTasks: Set<String> = emptySet(),
 
     /**
      * Contains a list of tasks sharing the same outputs.
      * The key of the map represents the absolute path to the file or the directory output and the
      * key contains a list of tasks declaring this file or directory as their output.
      */
-    val tasksSharingOutput: Map<String, List<String>>
+    val tasksSharingOutput: Map<String, List<String>> = emptyMap()
 ) : Serializable {
     companion object {
         fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
