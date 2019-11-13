@@ -196,21 +196,21 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
 
         infoln("check expected build outputs")
         for (config in miniConfigs) {
-            for (library in config.libraries.keys) {
-                val libraryValue = config.libraries[library]!!
-                checkState(!Strings.isNullOrEmpty(libraryValue.artifactName))
-                if (targets.isNotEmpty() && !targets.contains(libraryValue.artifactName)) {
+            for (library in config.libraries.values) {
+                checkState(!Strings.isNullOrEmpty(library.artifactName))
+                if (targets.isNotEmpty() && !targets.contains(library.artifactName)) {
                     continue
                 }
-                if (buildSteps.stream().noneMatch { step -> step.libraries.contains(libraryValue) }) {
+                if (buildSteps.stream().noneMatch { step -> step.libraries.contains(library) }) {
                     // Only need to check existence of output files we expect to create
                     continue
                 }
-                if (!libraryValue.output!!.exists()) {
+                val output = library.output!!
+                if (!output.exists()) {
                     throw GradleException(
-                        "Expected output file at ${libraryValue.output} for target ${libraryValue.artifactName} but there was none")
+                        "Expected output file at $output for target ${library.artifactName} but there was none")
                 }
-                if (libraryValue.abi == null) {
+                if (library.abi == null) {
                     throw GradleException("Expected NativeLibraryValue to have non-null abi")
                 }
 
@@ -224,23 +224,30 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
                 // (2) ExternalNativeCleanTask calls the individual clean targets for everything
                 //     that was built. This should cover the source of the copy but it is up to the
                 //     CMakeLists.txt or Android.mk author to ensure this.
-                val abi = Abi.getByName(libraryValue.abi!!) ?: throw RuntimeException(
+                val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
                     "Unknown ABI seen $(ibraryValue.abi}"
                 )
                 val expectedOutputFile = FileUtils.join(
                     generator.get().variant.objFolder,
                     abi.tag,
-                    libraryValue.output!!.name
+                    output.name
                 )
-                if (!FileUtils.isSameFile(libraryValue.output!!, expectedOutputFile)) {
+                if (!FileUtils.isSameFile(output, expectedOutputFile)) {
                     infoln("external build set its own library output location for " +
-                            "'${libraryValue.output!!.name}', copy to expected location")
+                            "'${output.name}', copy to expected location")
 
                     if (expectedOutputFile.parentFile.mkdirs()) {
                         infoln("created folder ${expectedOutputFile.parentFile}")
                     }
-                    infoln("copy file ${libraryValue.output} to $expectedOutputFile")
-                    Files.copy(libraryValue.output!!, expectedOutputFile)
+                    infoln("copy file ${library.output} to $expectedOutputFile")
+                    Files.copy(output, expectedOutputFile)
+                }
+
+                for (runtimeFile in library.runtimeFiles) {
+                    Files.copy(
+                        runtimeFile,
+                        FileUtils.join(generator.get().variant.objFolder, abi.tag, runtimeFile.name)
+                    )
                 }
             }
         }
