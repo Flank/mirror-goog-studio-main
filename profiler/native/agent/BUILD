@@ -42,6 +42,7 @@ cc_library(
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
     ],
+    alwayslink = 1,
 )
 
 jni_library(

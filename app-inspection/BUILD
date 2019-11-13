@@ -16,6 +16,7 @@ cc_library(
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/proto:cc_proto",
     ],
+    alwayslink = 1,
 )
 
 cc_library(
@@ -60,6 +61,7 @@ cc_library(
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
     ],
+    alwayslink = 1,
 )
 
 # to compile app-inspection with experimental code run following command:
