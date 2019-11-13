@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.TypedefRemover
 import com.android.utils.FileUtils
@@ -42,6 +43,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import com.android.builder.packaging.JarCreator
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
@@ -77,18 +79,15 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     abstract val typedefRecipe: RegularFileProperty
 
     @get:Classpath
-    abstract var mainScopeClassFiles: FileCollection
-        protected set
+    abstract val mainScopeClassFiles: ConfigurableFileCollection
 
     // We can't use @Classpath as it ignores empty directories which may still be used as resources.
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract var mainScopeResourceFiles: FileCollection
-        protected set
+    abstract val mainScopeResourceFiles: ConfigurableFileCollection
 
     @get:Classpath
-    abstract var localScopeInputFiles: FileCollection
-        protected set
+    abstract val localScopeInputFiles: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val mainClassLocation: RegularFileProperty
@@ -97,12 +96,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     abstract val localJarsLocation: DirectoryProperty
 
     @get:Input
-    lateinit var jarCreatorType: JarCreatorType
-        private set
+    abstract val jarCreatorType: Property<JarCreatorType>
 
     @get:Input
-    var isDebugBuild: Boolean = false
-        private set
+    abstract val debugBuild: Property<Boolean>
 
     override fun doTaskAction() {
         // non incremental task, need to clear out outputs.
@@ -133,8 +130,8 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             } else {
                 null
             },
-            jarCreatorType,
-            if (isDebugBuild) Deflater.BEST_SPEED else null
+            jarCreatorType.get(),
+            if (debugBuild.get()) Deflater.BEST_SPEED else null
         )
     }
 
@@ -332,9 +329,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             )
             task.packageName.disallowChanges()
 
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType.setDisallowChanges(variantScope.jarCreatorType)
 
-            task.isDebugBuild = variantScope.variantConfiguration.buildType.isDebuggable
+            task.debugBuild
+                .setDisallowChanges(variantScope.variantConfiguration.buildType.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES
@@ -345,7 +343,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              * Need to check if they exist during the task action [mergeInputsToLocation],
              * which means gradle will have to deal with possibly non-existent files in the cache
              */
-            task.mainScopeClassFiles =
+            task.mainScopeClassFiles.from(
                 if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES)) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
@@ -364,8 +362,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                                         && scopes.contains(Scope.PROJECT)
                             })
                 }
+            )
+            task.mainScopeClassFiles.disallowChanges()
 
-            task.mainScopeResourceFiles =
+            task.mainScopeResourceFiles.from(
                 if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
@@ -377,13 +377,20 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                                     && scopes.contains(Scope.PROJECT)
                         }
                 }
-            task.localScopeInputFiles = variantScope.transformManager
-                .getPipelineOutputAsFileCollection {contentTypes, scopes ->
-                    (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
-                            || contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES))
-                            && scopes.intersect(
-                        TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS).isNotEmpty()
-                            && !scopes.contains(Scope.PROJECT)}
+            )
+            task.mainScopeResourceFiles.disallowChanges()
+
+            task.localScopeInputFiles.from(
+                variantScope.transformManager
+                    .getPipelineOutputAsFileCollection { contentTypes, scopes ->
+                        (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
+                                || contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES))
+                                && scopes.intersect(
+                            TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS).isNotEmpty()
+                                && !scopes.contains(Scope.PROJECT)
+                    }
+            )
+            task.localScopeInputFiles.disallowChanges()
         }
     }
 
