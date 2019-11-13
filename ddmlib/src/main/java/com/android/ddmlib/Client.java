@@ -537,7 +537,8 @@ public class Client extends JdwpAgent {
     }
 
     /**
-     * Sends a kill message to the VM.
+     * Sends a kill message to the VM. This doesn't necessarily work if the VM is in a crashed
+     * state.
      */
     public void kill() {
         try {
