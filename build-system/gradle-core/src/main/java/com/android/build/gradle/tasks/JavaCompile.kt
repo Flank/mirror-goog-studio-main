@@ -30,6 +30,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.util.PatternSet
 import java.util.concurrent.Callable
 
 /**
@@ -114,7 +115,9 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
         val sourcesToCompile = Callable { listOf(variantScope.variantData.javaSources) }
-        task.source = task.project.files(sourcesToCompile).asFileTree
+        // Include only java sources, otherwise we hit b/144249620.
+        val javaSourcesFilter = PatternSet().include("**/*.java")
+        task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
 
         task.options.isIncremental = variantScope.globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
