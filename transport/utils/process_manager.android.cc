@@ -27,7 +27,8 @@ int ProcessManager::GetPidForBinary(const std::string& binary_name) const {
 
   // Search process
   for (Process process : processes) {
-    if (process.binary_name == binary_name) {
+    if (GetCanonicalName(process.binary_name) ==
+        GetCanonicalName(binary_name)) {
       return process.pid;
     }
   }
