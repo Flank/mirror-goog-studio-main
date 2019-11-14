@@ -67,6 +67,12 @@ public class IrToBazel {
             String rel = workspace.relativize(bazelModule.getBaseDir()).toString();
 
             Package pkg = bazel.findPackage(rel);
+            if (pkg == null) {
+                throw new RuntimeException(
+                        "Could not find package for module "
+                                + rel
+                                + " (does it not have a BUILD file yet?)");
+            }
             ImlModule iml = new ImlModule(pkg, config.nameRule(pkg.getName(), rel, name));
             rules.put(bazelModule, iml);
 
