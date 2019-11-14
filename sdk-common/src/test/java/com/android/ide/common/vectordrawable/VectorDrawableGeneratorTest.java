@@ -289,6 +289,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_lineto_moveto_viewbox5");
     }
 
+    public void testSvgImplicitLineToAfterMoveTo() throws Exception {
+        checkSvgConversion("test_implicit_lineto_after_moveto");
+    }
+
     public void testSvgColorFormats() throws Exception {
         checkSvgConversion("test_color_formats");
     }

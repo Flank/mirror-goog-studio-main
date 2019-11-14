@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15.842" height="16" viewBox="0 0 15.842 16">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #4d495b;
+      }
+    </style>
+  </defs>
+  <g id="set-alarm" transform="translate(-2.55)">
+    <g id="access-alarms" transform="translate(2.55)">
+      <path id="Path_3001" data-name="Path 3001" class="cls-1" d="M18.392,3.089,14.748,0l-1.03,1.188,3.644,3.089ZM7.223,1.267,6.194.079,2.55,3.089,3.58,4.277Zm3.644,3.644H9.679V9.663l3.723,2.3.634-.951-3.168-1.9Zm-.4-3.168A7.129,7.129,0,1,0,17.6,8.871,7.1,7.1,0,0,0,10.471,1.743Zm0,12.673a5.545,5.545,0,1,1,5.545-5.545A5.51,5.51,0,0,1,10.471,14.416Z" transform="translate(-2.55)"/>
+    </g>
+  </g>
+</svg>
