@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
+import com.android.build.gradle.internal.transforms.testdata.ClassWithDesugarApi
 import com.android.build.gradle.internal.transforms.testdata.Dog
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
@@ -35,6 +36,7 @@ import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
+import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThat
@@ -64,10 +66,13 @@ import org.junit.runners.Parameterized
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileFilter
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -415,6 +420,82 @@ class DexArchiveBuilderDelegateTest(
     }
 
     @Test
+    fun testCachingExternalLibsForCoreLibraryDesugaring() {
+        Assume.assumeTrue(dexerTool == DexerTool.D8)
+        Assume.assumeFalse(withIncrementalDesugaringV2)
+
+        val inputJar = tmpDir.root.toPath().resolve("input.jar")
+        TestInputsGenerator.pathWithClasses(
+            inputJar,
+            ImmutableList.of<Class<*>>(ClassWithDesugarApi::class.java)
+        )
+        val externalLibsOutputKeepRules = tmpDir.newFolder("keep_rules")
+        // 1 round, no shrinking, cache misses as cache is empty
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        expectedCacheEntryCount++
+        expectedCacheMisses++
+        checkCache()
+
+        // 2 round, same as round 1, cache hits
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        checkCache()
+
+        // 3 round, shrining enabled, cache misses as there is no cache for keep rule files and we
+        // have to re-process the input
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutputKeepRules =  externalLibsOutputKeepRules,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        // expectedCacheEntryCount is increased by two: one is for dex outputs, the other one is
+        // for keep_rule outputs
+        expectedCacheEntryCount += 2
+        expectedCacheMisses += 2
+        checkCache()
+
+        // 4 round, same as round 1, cache hits
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        checkCache()
+
+        // 5 round, same as round 3, cache hits
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutputKeepRules =  externalLibsOutputKeepRules,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        checkCache()
+
+        // 6 round, there is no libConfiguration compared with round 1, cache misses
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8
+        ).doProcess()
+        expectedCacheEntryCount++
+        expectedCacheMisses++
+        checkCache()
+    }
+
+    @Test
     fun testIncrementalUnchangedDirInput() {
         val input = tmpDir.newFolder("classes").toPath()
         dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"))
@@ -646,6 +727,7 @@ class DexArchiveBuilderDelegateTest(
         desugaringClasspath: Set<File> = emptySet(),
         libConfiguration: String? = null,
         projectOutputKeepRules: File? = null,
+        externalLibsOutputKeepRules: File? = null,
         numberOfBuckets: Int = 1
     ): DexArchiveBuilderTaskDelegate {
         return DexArchiveBuilderTaskDelegate(
@@ -663,7 +745,7 @@ class DexArchiveBuilderDelegateTest(
             subProjectOutputDex = tmpDir.newFolder(),
             subProjectOutputKeepRules = null,
             externalLibsOutputDex = externalLibsOutput,
-            externalLibsOutputKeepRules = null,
+            externalLibsOutputKeepRules = externalLibsOutputKeepRules,
             mixedScopeOutputDex = tmpDir.newFolder(),
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = tmpDir.newFile(),
@@ -704,6 +786,7 @@ class DexArchiveBuilderDelegateTest(
             arrayOf(DexerTool.D8, false),
             arrayOf(DexerTool.D8, true)
         )
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.5.0")
     }
 
     private fun cacheEntriesCount(): Int {

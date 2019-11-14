@@ -343,6 +343,7 @@ public final class GradleTestProject implements TestRule {
         this.kotlinVersion = rootProject.kotlinVersion;
         this.outputLogOnFailure = rootProject.outputLogOnFailure;
         this.heapSize = rootProject.getHeapSize();
+        this.additionalMavenRepo = rootProject.additionalMavenRepo;
     }
 
     public static Path getGradleUserHome(File buildDir) {

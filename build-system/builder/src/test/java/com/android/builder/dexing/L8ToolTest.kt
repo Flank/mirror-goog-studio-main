@@ -42,7 +42,7 @@ class L8ToolTest {
         runL8(
             desugarJar,
             output,
-            getFileContentFromJar(desugarConfigJar),
+            desugarConfig,
             bootClasspath,
             20,
             null)
@@ -56,22 +56,6 @@ class L8ToolTest {
     companion object {
         val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar").toPath())
         val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.1"))
-        val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.5.0").toFile()
-    }
-
-    private fun getFileContentFromJar(file: File): String {
-        val stringBuilder = StringBuilder()
-        JarFile(file).use { jarFile ->
-            val jarEntry = jarFile.getJarEntry("META-INF/desugar/d8/desugar.json")
-            BufferedReader(InputStreamReader(jarFile.getInputStream(jarEntry)))
-                .use { bufferedReader ->
-                    var line = bufferedReader.readLine()
-                    while (line != null) {
-                        stringBuilder.append(line)
-                        line = bufferedReader.readLine()
-                    }
-                }
-        }
-        return stringBuilder.toString()
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.5.0")
     }
 }

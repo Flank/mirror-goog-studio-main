@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
-import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DexWorkAction
+import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.dexing.IncrementalDexSpec
 import com.android.build.gradle.internal.dexing.launchProcessing
@@ -134,7 +134,8 @@ class DexArchiveBuilderTaskDelegate(
             dxDexParams.dxNoOptimizeFlagPresent,
             dexParams.minSdkVersion,
             dexParams.debuggable,
-            dexer
+            dexer,
+            dexParams.coreLibDesugarConfig
         )
 
     private val changedFiles =
@@ -242,7 +243,8 @@ class DexArchiveBuilderTaskDelegate(
                             outputDir: File,
                             outputKeepRules: File?,
                             useAndroidBuildCache: Boolean,
-                            cacheableItems: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? ->
+                            cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?,
+                            cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? ->
                         processClassFromInput(
                             inputFiles = classes,
                             inputFileChanges = changedClasses,
@@ -254,7 +256,8 @@ class DexArchiveBuilderTaskDelegate(
                             classpathKey = classpathServiceKey!!,
                             classpath = classpath,
                             enableCaching = useAndroidBuildCache,
-                            cacheableItems = cacheableItems
+                            cacheableDexes = cacheableDexes,
+                            cacheableKeepRules = cacheableKeepRules
                         )
                     }
                     processInputType(
@@ -263,7 +266,8 @@ class DexArchiveBuilderTaskDelegate(
                         projectOutputDex,
                         projectOutputKeepRules,
                         false, // useAndroidBuildCache
-                        null // cacheableItems
+                        null, // cacheableDexes
+                        null // cacheableKeepRules
                     )
                     processInputType(
                         subProjectClasses,
@@ -271,7 +275,8 @@ class DexArchiveBuilderTaskDelegate(
                         subProjectOutputDex,
                         subProjectOutputKeepRules,
                         false, // useAndroidBuildCache
-                        null // cacheableItems
+                        null, // cacheableDexes
+                        null // cacheableKeepRules
                     )
                     processInputType(
                         mixedScopeClasses,
@@ -279,22 +284,26 @@ class DexArchiveBuilderTaskDelegate(
                         mixedScopeOutputDex,
                         mixedScopeOutputKeepRules,
                         false, // useAndroidBuildCache
-                        null // cacheableItems
+                        null, // cacheableDexes
+                        null // cacheableKeepRules
                     )
                     // Caching is currently not supported when isImpactedFilesComputedLazily == true
-                    // TODO (b/141460382) Enable external libs caching when core library desugaring is enabled in release build
-                    val enableCachingForExternalLibs =
-                        !isImpactedFilesComputedLazily && externalLibsOutputKeepRules == null
-                    val cacheableItems: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
+                    val enableCachingForExternalLibs = !isImpactedFilesComputedLazily
+                    val cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
                         mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
                             .takeIf { enableCachingForExternalLibs }
+                    val cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
+                        mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
+                            .takeIf { enableCachingForExternalLibs }
+                    val shrinkDesugarLibrary = externalLibsOutputKeepRules != null
                     processInputType(
                         externalLibClasses,
                         externalLibChangedClasses,
                         externalLibsOutputDex,
                         externalLibsOutputKeepRules,
                         enableCachingForExternalLibs,
-                        cacheableItems
+                        cacheableDexes,
+                        cacheableKeepRules
                     )
 
                     // all work items have been submitted, now wait for completion.
@@ -305,8 +314,11 @@ class DexArchiveBuilderTaskDelegate(
                     }
 
                     // and finally populate the caches.
-                    if (cacheableItems != null && cacheableItems.isNotEmpty()) {
-                        cacheHandler.populateCache(cacheableItems)
+                    if (cacheableDexes != null && cacheableDexes.isNotEmpty()) {
+                        cacheHandler.populateDexCache(cacheableDexes, shrinkDesugarLibrary)
+                    }
+                    if (cacheableKeepRules != null && cacheableKeepRules.isNotEmpty()) {
+                        cacheHandler.populateKeepRuleCache(cacheableKeepRules, shrinkDesugarLibrary)
                     }
 
                     loggerWrapper.verbose("Done with all dex archive conversions")
@@ -396,8 +408,9 @@ class DexArchiveBuilderTaskDelegate(
         classpathKey: ClasspathServiceKey,
         classpath: List<Path>,
         enableCaching: Boolean,
-        // cacheableItems is not null iff enableCaching == true
-        cacheableItems: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?
+        // cacheableDexes/cacheableKeepRules is not null iff enableCaching == true
+        cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?,
+        cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?
     ) {
         if (!isIncremental) {
             FileUtils.cleanOutputDir(outputDir)
@@ -412,17 +425,19 @@ class DexArchiveBuilderTaskDelegate(
                 .filter { it.exists() }
                 .partition { it.isDirectory }
 
-        directoryInputs.forEach { loggerWrapper.verbose("Processing input %s", it.toString()) }
-        convertToDexArchive(
-            inputs = DirectoryBucketGroup(directoryInputs, numberOfBuckets),
-            outputDir = outputDir,
-            isIncremental = isIncremental,
-            bootClasspath = bootClasspathKey,
-            classpath = classpathKey,
-            changedFiles = changedFiles,
-            impactedFiles = impactedFiles,
-            outputKeepRulesDir = outputKeepRules
-        )
+        if (directoryInputs.isNotEmpty()) {
+            directoryInputs.forEach { loggerWrapper.verbose("Processing input %s", it.toString()) }
+            convertToDexArchive(
+                inputs = DirectoryBucketGroup(directoryInputs, numberOfBuckets),
+                outputDir = outputDir,
+                isIncremental = isIncremental,
+                bootClasspath = bootClasspathKey,
+                classpath = classpathKey,
+                changedFiles = changedFiles,
+                impactedFiles = impactedFiles,
+                outputKeepRulesDir = outputKeepRules
+            )
+        }
 
         for (input in jarInputs) {
             loggerWrapper.verbose("Processing input %s", input.toString())
@@ -439,7 +454,7 @@ class DexArchiveBuilderTaskDelegate(
                 DesugaringDontCache
             }
 
-            val dexArchives = convertJarToDexArchive(
+            val dexOutputs = convertJarToDexArchive(
                 isIncremental = isIncremental,
                 jarInput = input,
                 outputDir = outputDir,
@@ -450,14 +465,23 @@ class DexArchiveBuilderTaskDelegate(
                 cacheInfo = cacheInfo,
                 outputKeepRulesDir = outputKeepRules
             )
-            if (cacheInfo != DesugaringDontCache && dexArchives.isNotEmpty()) {
-                cacheableItems!!.add(
+            if (cacheInfo != DesugaringDontCache && dexOutputs.dexes.isNotEmpty()) {
+                cacheableDexes!!.add(
                     DexArchiveBuilderCacheHandler.CacheableItem(
                         input,
-                        dexArchives,
+                        dexOutputs.dexes,
                         cacheInfo.orderedD8DesugaringDependencies
                     )
                 )
+                if (dexOutputs.keepRules.isNotEmpty()) {
+                    cacheableKeepRules!!.add(
+                        DexArchiveBuilderCacheHandler.CacheableItem(
+                            input,
+                            dexOutputs.keepRules,
+                            cacheInfo.orderedD8DesugaringDependencies
+                        )
+                    )
+                }
             }
         }
     }
@@ -554,7 +578,7 @@ class DexArchiveBuilderTaskDelegate(
         impactedFiles: Set<File>?,
         cacheInfo: D8DesugaringCacheInfo,
         outputKeepRulesDir: File?
-    ): List<File> {
+    ): DexOutputs {
         if (isImpactedFilesComputedLazily) {
             check(impactedFiles == null)
             return convertToDexArchive(
@@ -572,25 +596,49 @@ class DexArchiveBuilderTaskDelegate(
             // avoidance and caching is possible.
             checkNotNull(impactedFiles)
             if (isIncremental && jarInput !in changedFiles && jarInput !in impactedFiles) {
-                return listOf()
+                return DexOutputs()
             }
 
             if (cacheInfo !== DesugaringDontCache) {
-                val cachedVersion = cacheHandler.getCachedVersionIfPresent(
-                    jarInput, cacheInfo.orderedD8DesugaringDependencies
+                val shrinkDesugarLibrary = outputKeepRulesDir != null
+                val cachedDex = cacheHandler.getCachedDexIfPresent(
+                    jarInput, cacheInfo.orderedD8DesugaringDependencies, shrinkDesugarLibrary
                 )
-                if (cachedVersion != null) {
-                    val outputFile = getDexOutputForJar(jarInput, outputDir, null)
-                    Files.copy(
-                        cachedVersion.toPath(),
-                        outputFile.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING
-                    )
-                    // no need to try to cache an already cached version.
-                    return listOf()
+                val cachedKeepRule = cacheHandler.getCachedKeepRuleIfPresent(
+                    jarInput, cacheInfo.orderedD8DesugaringDependencies, shrinkDesugarLibrary
+                )
+
+                if (outputKeepRulesDir == null) {
+                    if (cachedDex != null) {
+                        val outputFile = getDexOutputForJar(jarInput, outputDir, null)
+                        Files.copy(
+                            cachedDex.toPath(),
+                            outputFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING
+                        )
+                        // no need to try to cache an already cached version.
+                        return DexOutputs()
+                    }
+                } else {
+                    // cachedDex and cachedKeepRule must be both null or both non-null. Something
+                    // must have gone wrong if one of them is null and the other is not.
+                    if ((cachedDex == null) xor (cachedKeepRule == null)) {
+                        loggerWrapper.warning("One of the cached dex outputs is missing. " +
+                                "Re-dex without using existing cached outputs.")
+                    }
+                    if (cachedDex != null && cachedKeepRule != null) {
+                        val outputFile = getDexOutputForJar(jarInput, outputDir, null)
+                        Files.copy(
+                            cachedDex.toPath(),
+                            outputFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING
+                        )
+                        FileUtils.copyDirectory(cachedKeepRule, outputKeepRulesDir)
+                        // no need to try to cache an already cached version.
+                        return DexOutputs()
+                    }
                 }
             }
-
             return convertToDexArchive(
                 inputs = JarBucketGroup(jarInput, numberOfBuckets),
                 outputDir = outputDir,
@@ -617,10 +665,10 @@ class DexArchiveBuilderTaskDelegate(
         changedFiles: Set<File>,
         impactedFiles: Set<File>?,
         outputKeepRulesDir: File?
-    ): List<File> {
+    ): DexOutputs {
         inputs.getRoots().forEach { loggerWrapper.verbose("Dexing ${it.absolutePath}") }
 
-        val dexArchives = mutableListOf<File>()
+        val dexOutputs = DexOutputs()
         for (bucketId in 0 until numberOfBuckets) {
             // For directory inputs, we prefer dexPerClass mode to support incremental dexing per
             // class, but dexPerClass mode is not supported by D8 when generating keep rules for
@@ -654,8 +702,9 @@ class DexArchiveBuilderTaskDelegate(
                 }
             }
 
-            dexArchives.add(preDexOutputFile)
+            dexOutputs.addDex(preDexOutputFile)
             val classBucket = ClassBucket(inputs, bucketId)
+            outputKeepRuleFile?.let { dexOutputs.addKeepRule(it) }
             val parameters = DexWorkActionParams(
                 dexer = dexer,
                 dexSpec = IncrementalDexSpec(
@@ -719,7 +768,7 @@ class DexArchiveBuilderTaskDelegate(
                 }
             }
         }
-        return dexArchives
+        return dexOutputs
     }
 
     private fun getClasspath(withDesugaring: Boolean): List<Path> {
@@ -792,6 +841,19 @@ class DexArchiveBuilderTaskDelegate(
                 )
             }
         }
+    }
+}
+
+private class DexOutputs {
+    val dexes = mutableListOf<File>()
+    val keepRules = mutableListOf<File>()
+
+    fun addDex(file: File) {
+        dexes.add(file)
+    }
+
+    fun addKeepRule(file: File) {
+        keepRules.add(file)
     }
 }
 

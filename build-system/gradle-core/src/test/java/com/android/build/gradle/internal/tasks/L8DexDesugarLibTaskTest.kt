@@ -51,7 +51,7 @@ class L8DexDesugarLibTaskTest {
         val params = L8DexParams(
             desugarJar,
             output,
-            getDesugarLibConfigContent(desugarConfigJar),
+            desugarConfig,
             bootClasspath,
             20,
             setOf(keepRulesFile1, keepRulesFile2)
@@ -68,22 +68,6 @@ class L8DexDesugarLibTaskTest {
     companion object {
         val bootClasspath = TestUtils.getPlatformFile("android.jar")
         val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.1").toFile())
-        val desugarConfigJar = TestUtils.getDesugarLibConfigJarWithVersion("0.5.0").toFile()
-    }
-
-    private fun getDesugarLibConfigContent(file: File) : String {
-        val stringBuilder = StringBuilder()
-        JarFile(file).use { jarFile ->
-            val jarEntry = jarFile.getJarEntry("META-INF/desugar/d8/desugar.json")
-            BufferedReader(InputStreamReader(jarFile.getInputStream(jarEntry)))
-                .use { bufferedReader ->
-                    var line = bufferedReader.readLine()
-                    while (line != null) {
-                        stringBuilder.append(line)
-                        line = bufferedReader.readLine()
-                    }
-                }
-        }
-        return stringBuilder.toString()
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.5.0")
     }
 }
