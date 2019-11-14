@@ -655,10 +655,11 @@ class DexArchiveBuilderTaskDelegate(
             }
 
             dexArchives.add(preDexOutputFile)
+            val classBucket = ClassBucket(inputs, bucketId)
             val parameters = DexWorkActionParams(
                 dexer = dexer,
                 dexSpec = IncrementalDexSpec(
-                    inputClassFiles = ClassBucket(inputs, bucketId),
+                    inputClassFiles = classBucket,
                     outputPath = preDexOutputFile,
                     dexParams = dexParams.toDexParametersForWorkers(
                         dexPerClass,
@@ -668,7 +669,12 @@ class DexArchiveBuilderTaskDelegate(
                     ),
                     isIncremental = isIncremental,
                     changedFiles = changedFiles,
-                    impactedFiles = impactedFiles
+                    impactedFiles = impactedFiles,
+                    desugarGraphFile = if (impactedFiles == null) {
+                        getDesugarGraphFile(desugarGraphDir!!, classBucket)
+                    } else {
+                        null
+                    }
                 ),
                 dxDexParams = dxDexParams
             )
@@ -764,6 +770,28 @@ class DexArchiveBuilderTaskDelegate(
     private fun getKeepRulesOutputForJar(input: File, outputDir: File, bucketId: Int): File {
         val hash = inputJarHashesValues.getValue(input)
         return outputDir.resolve("${hash}_$bucketId")
+    }
+
+    /** Returns the file containing the desugaring graph when processing a [ClassBucket]. */
+    private fun getDesugarGraphFile(desugarGraphDir: File, classBucket: ClassBucket): File {
+        return when (classBucket.bucketGroup) {
+            is DirectoryBucketGroup -> File(
+                desugarGraphDir,
+                "dirs_bucket_${classBucket.bucketNumber}/graph.bin"
+            )
+            is JarBucketGroup -> {
+                // Use the hash of the jar's path instead of its contents as we don't need to worry
+                // about cache relocatability (the desugaring graph is not cached). If later on we
+                // want to use the content hash, keep in mind that the jar may have been removed
+                // (note that inputJarHashesValues contains hashes of removed jars too).
+                val jarFilePath = (classBucket.bucketGroup as JarBucketGroup).jarFile.path
+                File(
+                    desugarGraphDir,
+                    "jar_${Hashing.sha256().hashUnencodedChars(jarFilePath)}_" +
+                            "bucket_${classBucket.bucketNumber}/graph.bin"
+                )
+            }
+        }
     }
 }
 

@@ -17,6 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.tools.r8.CompilationMode;
@@ -26,6 +27,7 @@ import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.StringConsumer.FileConsumer;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,7 +51,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     }
 
     @Override
-    public void convert(@NonNull Stream<ClassFileEntry> input, @NonNull Path output)
+    public void convert(
+            @NonNull Stream<ClassFileEntry> input,
+            @NonNull Path output,
+            @Nullable DependencyGraphUpdater<File> desugarGraphUpdater)
             throws DexArchiveBuilderException {
         D8DiagnosticsHandler d8DiagnosticsHandler = new InterceptingDiagnosticsHandler();
         try {
@@ -98,6 +103,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 builder.setDisableDesugaring(true);
             }
 
+            // TODO: Call D8's new API with desugarGraphUpdater
             D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
         } catch (Throwable e) {
             throw getExceptionToRethrow(e, d8DiagnosticsHandler);

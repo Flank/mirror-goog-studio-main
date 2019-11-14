@@ -69,7 +69,7 @@ public class DxDexArchiveBuilderTest {
         try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(name)) {
             Stream<ClassFileEntry> stream =
                     ImmutableList.<ClassFileEntry>of(new TestClassFileEntry(name, is)).stream();
-            archiveBuilder.convert(stream, outputArchive);
+            archiveBuilder.convert(stream, outputArchive, null /* desugarGraphUpdater */);
         }
         String descriptor = name.substring(0, name.length() - ".class".length());
         Path dexedClass = outputArchive.resolve(descriptor + ".dex");
