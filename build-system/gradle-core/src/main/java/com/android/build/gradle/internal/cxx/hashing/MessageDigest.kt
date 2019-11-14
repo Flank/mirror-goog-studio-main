@@ -40,7 +40,7 @@ fun MessageDigest.toBase36(): String {
     val sb = StringBuilder()
     for (byte in digest()) {
         val signExtended = byte - Byte.MIN_VALUE
-        sb.append(Integer.toString(signExtended, Character.MAX_RADIX))
+        sb.append(signExtended.toString(Character.MAX_RADIX))
     }
     return sb.toString()
 }

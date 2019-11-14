@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
+import java.io.File
 
 /**
  * Construct a [CxxVariantModel], careful to be lazy with module-level fields.
@@ -61,13 +63,15 @@ fun createCxxVariantModel(
             baseVariantData.variantConfiguration.buildType.isDebuggable
         override val validAbiList by lazy {
             AbiConfigurator(
-                module.ndkSupportedAbiList,
-                module.ndkDefaultAbiList,
-                buildSystem.externalNativeBuildAbiFilters,
-                buildSystem.ndkAbiFilters,
-                module.splitsAbiFilterSet,
-                module.project.isBuildOnlyTargetAbiEnabled,
-                module.project.ideBuildTargetAbi
+                module.cxxFolder,
+                AbiConfigurationKey(
+                    module.ndkSupportedAbiList,
+                    module.ndkDefaultAbiList,
+                    buildSystem.externalNativeBuildAbiFilters,
+                    buildSystem.ndkAbiFilters,
+                    module.splitsAbiFilterSet,
+                    module.project.isBuildOnlyTargetAbiEnabled,
+                    module.project.ideBuildTargetAbi)
             ).validAbis.toList()
         }
     }

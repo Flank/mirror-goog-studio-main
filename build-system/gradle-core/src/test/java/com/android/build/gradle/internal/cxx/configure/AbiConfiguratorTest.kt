@@ -18,12 +18,20 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
+import com.android.utils.FileUtils.join
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
 
 class AbiConfiguratorTest {
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     companion object {
         val ALL_ABI = Abi.getDefaultValues().toList()
         val ALL_ABI_AS_STRING = ALL_ABI.map(Abi::getTag)
@@ -42,14 +50,17 @@ class AbiConfiguratorTest {
             .toSet(),
         ideBuildOnlyTargetAbi: Boolean = false,
         ideBuildTargetAbi: String? = null): AbiConfigurator {
+        val folder = tmpFolder.newFolder()
         return AbiConfigurator(
+            folder,
+            AbiConfigurationKey(
                 ndkHandlerSupportedAbis,
                 ndkHandlerDefaultAbis,
                 externalNativeBuildAbiFilters,
                 ndkConfigAbiFilters,
                 splitsFilterAbis,
                 ideBuildOnlyTargetAbi,
-                ideBuildTargetAbi)
+                ideBuildTargetAbi))
     }
 
     @After
