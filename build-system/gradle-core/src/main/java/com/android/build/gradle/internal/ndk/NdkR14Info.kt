@@ -22,7 +22,7 @@ import java.io.File
 /**
  * NdkInfo for r14.
  */
-class NdkR14Info(val root: File) : DefaultNdkInfo(root) {
+open class NdkR14Info(val root: File) : DefaultNdkInfo(root) {
 
     override fun getToolchainAbi(abi: Abi): Abi {
         return if (abi == Abi.MIPS) {

@@ -103,6 +103,10 @@ public class CheckAll {
                     "ndkRsHelloCompute",
                     "renderscriptNdk",
 
+                    // Doesn't work with the version of the NDK that's in ndk-bundle. Enable after
+                    // moving all test projects off ndk-bundle and onto ndk.
+                    "prefabApp",
+
                     // Component model is currently disabled.
                     "ndkSanAngeles2",
                     "ndkVariants",

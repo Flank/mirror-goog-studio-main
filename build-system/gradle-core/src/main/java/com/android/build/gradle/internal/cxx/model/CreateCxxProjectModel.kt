@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.profile.ProfilerInitializer
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -73,5 +74,14 @@ fun createCxxProjectModel(global : GlobalScope) : CxxProjectModel {
                     ?: gradle.rootProject.buildDir.resolve(ProfilerInitializer.PROFILE_DIRECTORY)
                 return profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
             }
+
+        override val isPrefabEnabled: Boolean = global.projectOptions.get(BooleanOption.ENABLE_PREFAB)
+        override val prefabClassPath: File? by lazy {
+            if (isPrefabEnabled) {
+                getPrefabFromMaven(global)
+            } else {
+                null
+            }
+        }
     }
 }

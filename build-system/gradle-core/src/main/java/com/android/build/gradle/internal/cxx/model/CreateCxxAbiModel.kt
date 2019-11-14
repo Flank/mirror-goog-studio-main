@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
+import java.io.File
 
 /**
  * Construct a [CxxAbiModel], careful to be lazy with module level fields.
@@ -75,8 +76,10 @@ fun createCxxAbiModel(
                 null
             }
         }
+
         override val buildSettings by lazy {
             createBuildSettingsFromFile(variant.module.buildSettingsFile)
         }
+        override val prefabFolder: File = variant.prefabDirectory.resolve(abi.tag)
     }
 }

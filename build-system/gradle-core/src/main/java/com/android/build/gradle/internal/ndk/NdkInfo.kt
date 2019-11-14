@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.sdklib.AndroidVersion
 import java.io.File
 
@@ -42,6 +43,9 @@ interface NdkInfo {
 
     /** Return the executable for removing debug symbols from a shared object.  */
     fun getStripExecutable(abi: Abi): File
+
+    /** Returns the default STL for the given build system. */
+    fun getDefaultStl(buildSystem: NativeBuildSystem): Stl
 
     /** Returns the STL shared object file matching the given STL/ABI pair. */
     fun getStlSharedObjectFile(stl: Stl, abi: Abi): File

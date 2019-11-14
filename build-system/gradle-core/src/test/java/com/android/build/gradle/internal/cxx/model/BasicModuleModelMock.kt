@@ -35,7 +35,9 @@ import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.ndk.NdkR19Info
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -44,6 +46,8 @@ import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.invocation.Gradle
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
@@ -115,6 +119,10 @@ open class BasicModuleModelMock {
         GlobalScope::class.java,
         throwUnmocked
     )
+    val variantScope = mock(
+        VariantScope::class.java,
+        throwUnmocked
+    )
 
     val externalNativeBuild: ExternalNativeBuild = mock(
         ExternalNativeBuild::class.java,
@@ -134,8 +142,8 @@ open class BasicModuleModelMock {
             throwUnmocked
     ))
     val baseVariantData = mock(
-        BaseVariantData::class.java,
-        throwUnmocked
+            BaseVariantData::class.java,
+            throwUnmocked
     )
     val coreExternalNativeBuildOptions = mock(
         ExternalNativeBuildOptions::class.java,
@@ -207,6 +215,8 @@ open class BasicModuleModelMock {
             VariantImpl::class.java,
             throwUnmocked
         )
+        val prefabArtifactCollection = mock(ArtifactCollection::class.java, throwUnmocked)
+        val prefabFileCollection = mock(FileCollection::class.java, throwUnmocked)
 
         doReturn(project).`when`(global).project
         doReturn(intermediates).`when`(global).intermediatesDir
@@ -222,6 +232,14 @@ open class BasicModuleModelMock {
 
         doReturn(splits).`when`(extension).splits
 
+        doReturn(baseVariantData).`when`(variantScope).variantData
+        doReturn(prefabArtifactCollection).`when`(variantScope).getArtifactCollection(
+            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.ALL,
+            AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
+        )
+        doReturn(prefabFileCollection).`when`(prefabArtifactCollection).artifactFiles
+        doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
         doReturn(variantDslInfo).`when`(baseVariantData).variantDslInfo
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(variantDslInfo).ndkConfig
@@ -285,6 +303,8 @@ open class BasicModuleModelMock {
             .get(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)
         doReturn(true)
             .`when`(projectOptions).get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+        doReturn(false)
+            .`when`(projectOptions).get(BooleanOption.ENABLE_PREFAB)
         doReturn(true)
             .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
         doReturn(null)

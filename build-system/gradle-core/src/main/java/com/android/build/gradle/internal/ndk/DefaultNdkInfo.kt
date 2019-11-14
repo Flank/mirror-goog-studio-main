@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
 import com.android.build.gradle.internal.cxx.configure.PlatformConfigurator
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
@@ -193,6 +194,11 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
             .toList()
 
     override val supportedStls = Stl.values().toList()
+
+    override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
+        NativeBuildSystem.CMAKE -> Stl.GNUSTL_STATIC
+        NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM
+    }
 
     override fun getStlSharedObjectFile(stl: Stl, abi: Abi): File {
         val stlBasePath = rootDirectory.resolve(when (stl) {

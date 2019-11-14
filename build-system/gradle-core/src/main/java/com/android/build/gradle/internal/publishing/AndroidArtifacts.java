@@ -124,6 +124,8 @@ public class AndroidArtifacts {
 
     private static final String TYPE_NAVIGATION_JSON = "android-navigation-json";
 
+    private static final String TYPE_PREFAB_PACKAGE = "android-prefab";
+
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
@@ -279,6 +281,14 @@ public class AndroidArtifacts {
         DEFINED_ONLY_SYMBOL_LIST(TYPE_DEFINED_ONLY_SYMBOL),
         JNI(TYPE_JNI),
         SHARED_JNI(TYPE_SHARED_JNI),
+
+        /**
+         * A directory containing a Prefab package.json file and associated modules.
+         *
+         * <p>Processed by Prefab to generate inputs for ExternalNativeBuild modules to consume
+         * dependencies from AARs. https://google.github.io/prefab/
+         */
+        PREFAB_PACKAGE(TYPE_PREFAB_PACKAGE),
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS),
         PUBLIC_RES(TYPE_PUBLIC_RES),
         UNFILTERED_PROGUARD_RULES(TYPE_UNFILTERED_PROGUARD_RULES),

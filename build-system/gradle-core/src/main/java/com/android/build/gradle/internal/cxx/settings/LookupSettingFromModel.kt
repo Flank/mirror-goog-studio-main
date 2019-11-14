@@ -47,6 +47,7 @@ fun CxxAbiModel.resolveMacroValue(macro : Macro) : String {
         Macro.NDK_PLATFORM -> "android-$abiPlatformVersion"
         Macro.NDK_PLATFORM_CODE -> platformCode()
         Macro.NDK_SYSTEM_VERSION -> "$abiPlatformVersion"
+        Macro.NDK_PREFAB_PATH -> prefabFolder.resolve("prefab").toString()
         else -> variant.resolveMacroValue(macro)
     }
 }

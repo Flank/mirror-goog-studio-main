@@ -214,6 +214,9 @@ fun tryCreateCxxModuleModel(
         override val ndkDefaultAbiList by lazy {
             ndkHandler.ndkPlatform.getOrThrow().defaultAbis
         }
+        override val ndkDefaultStl: Stl by lazy {
+            ndkHandler.ndkPlatform.getOrThrow().ndkInfo.getDefaultStl(buildSystem)
+        }
         override val makeFile = makeFile
         override val buildSystem = buildSystem
         override val splitsAbiFilterSet by lazy {

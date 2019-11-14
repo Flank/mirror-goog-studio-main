@@ -100,6 +100,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:prefab_repo",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
         "//tools/base/third_party/kotlin:kotlin-m2repository",

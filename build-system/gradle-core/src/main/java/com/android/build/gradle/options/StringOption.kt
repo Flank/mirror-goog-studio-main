@@ -65,6 +65,12 @@ enum class StringOption(
     // The exact version of Android Studio used, e.g. 2.4.0.6
     IDE_ANDROID_STUDIO_VERSION(AndroidProject.PROPERTY_STUDIO_VERSION, ApiStage.Stable),
 
+    // User-specified path to Prefab jar to return from getPrefabFromMaven.
+    PREFAB_CLASSPATH("android.prefabClassPath", ApiStage.Experimental),
+
+    // User-specified Prefab version to pull from Maven in getPrefabFromMaven.
+    PREFAB_VERSION("android.prefabVersion", ApiStage.Experimental),
+
     // Jetifier: List of regular expressions for libraries that should not be jetified
     JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Experimental),
 

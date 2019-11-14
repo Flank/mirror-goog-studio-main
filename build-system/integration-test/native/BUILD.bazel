@@ -69,8 +69,10 @@ DEPS = [
 MAVEN_REPOS = [
     "//tools/base/build-system:gradle_plugin_no_databinding_repo",
     "//tools/base/build-system/integration-test:androidx_latest",
+    "//tools/base/build-system/integration-test:prefab_repo",
     "//tools/base/build-system/integration-test:support_library_latest",
     "//tools/base/build-system/integration-test/native:prebuilts",
+    "//tools/base/third_party/kotlin:kotlin-m2repository",
 ]
 
 WINDOWS_DISABLED_TAG = [
@@ -258,6 +260,16 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "PrefabTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    # TODO(danalbert): CMake doesn't find packages when called by Gradle.
+    tags = ["no_windows"],
     deps = DEPS,
 )
 

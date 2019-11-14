@@ -46,7 +46,7 @@ class CMakeSettingsDefaultConfigurationGoldenFileTest {
                 result += ""
                 result += "```"
                 BasicCmakeMock().let {
-                    result += getCmakeServerDefaultEnvironment().toJsonString().lines()
+                    result += it.abi.getCmakeServerDefaultEnvironment().toJsonString().lines()
                 }
                 result += "```"
                 result

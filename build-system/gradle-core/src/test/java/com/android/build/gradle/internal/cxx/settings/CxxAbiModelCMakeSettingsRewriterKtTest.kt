@@ -271,12 +271,12 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             setup(this, 1)
 
-            val variant1 = createCxxVariantModel(module, baseVariantData)
+            val variant1 = createCxxVariantModel(module, variantScope)
             val result1 = createCxxAbiModel(variant1, abi1, global, baseVariantData).rewriteCxxAbiModelWithCMakeSettings()
             result1.toJsonString() // Force all lazy values
 
             setup(this, 2)
-            val variant2 = createCxxVariantModel(module, baseVariantData)
+            val variant2 = createCxxVariantModel(module, variantScope)
             val result2 = createCxxAbiModel(variant2, abi2, global, baseVariantData).rewriteCxxAbiModelWithCMakeSettings()
             result2.toJsonString() // Force all lazy values
 

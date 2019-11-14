@@ -31,7 +31,10 @@ import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import com.google.common.base.Supplier
@@ -41,6 +44,7 @@ import org.mockito.Mockito
 
 fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAbiModel {
     val global = Mockito.mock(GlobalScope::class.java)
+    val projectOptions = Mockito.mock(ProjectOptions::class.java)
     val extension = Mockito.mock(BaseExtension::class.java)
     val externalNativeBuild = Mockito.mock(ExternalNativeBuild::class.java)
     val cmake = Mockito.mock(CmakeOptions::class.java)
@@ -50,6 +54,8 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
+    val variantScope = Mockito.mock(VariantScope::class.java)
+    Mockito.doReturn(baseVariantData).`when`(variantScope).variantData
     projectParentFolder.create()
     val projectDir = projectParentFolder.newFolder("project")
     val moduleDir = join(projectDir, "module")
@@ -69,6 +75,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
     Mockito.doReturn(FileUtils.join(moduleDir, "src", "CMakeLists.txt")).`when`(cmake).path
     Mockito.doReturn(project).`when`(global).project
+    Mockito.doReturn(projectOptions).`when`(global).projectOptions
     Mockito.doReturn(projectDir).`when`(project).rootDir
     Mockito.doReturn(moduleDir).`when`(project).projectDir
     Mockito.doReturn(sdkComponents).`when`(global).sdkComponents
@@ -77,12 +84,12 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(buildDir).`when`(project).buildDir
     Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
     Mockito.doReturn("debug").`when`(baseVariantData).name
+    Mockito.doReturn(false).`when`(projectOptions).get(BooleanOption.ENABLE_PREFAB)
     val module = tryCreateCxxModuleModel(global)!!
-    val variant = createCxxVariantModel(module, baseVariantData)
-    val abi = createCxxAbiModel(
+    val variant = createCxxVariantModel(module, variantScope)
+    return createCxxAbiModel(
         variant,
         Abi.X86,
         global,
         baseVariantData)
-    return abi
 }

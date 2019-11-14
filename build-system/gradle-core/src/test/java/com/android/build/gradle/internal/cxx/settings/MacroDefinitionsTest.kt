@@ -94,7 +94,7 @@ class MacroDefinitionsTest {
             )!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData
+                it.variantScope
             )
             val abi = createCxxAbiModel(
                 variant,

@@ -106,6 +106,11 @@ interface CxxModuleModel {
     val ndkDefaultAbiList: List<Abi>
 
     /**
+     * The default STL that will be used by the given NDK version if the user does not select one.
+     */
+    val ndkDefaultStl: Stl
+
+    /**
      * Information about minimum and maximum platform along with mapping between platform
      * and platform code. Will be null if the NDK is so old it doesn't have meta/platforms.json.
      */

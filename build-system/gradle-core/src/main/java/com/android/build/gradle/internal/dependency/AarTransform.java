@@ -20,6 +20,7 @@ import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FD_JNI;
+import static com.android.SdkConstants.FD_PREFAB_PACKAGE;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
@@ -95,6 +96,7 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
             ArtifactType.RES_STATIC_LIBRARY,
             ArtifactType.RES_SHARED_STATIC_LIBRARY,
+            ArtifactType.PREFAB_PACKAGE,
         };
     }
 
@@ -209,6 +211,9 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                                 input,
                                 DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR),
                         transformOutputs);
+                break;
+            case PREFAB_PACKAGE:
+                outputIfExists(new File(input, FD_PREFAB_PACKAGE), transformOutputs);
                 break;
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);

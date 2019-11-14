@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito
@@ -38,6 +39,10 @@ class EmptyGlobalMock {
     private val throwUnmocked = RuntimeExceptionAnswer()
     val global: GlobalScope = Mockito.mock(
         GlobalScope::class.java,
+        throwUnmocked
+    )
+    val variant: VariantScope = Mockito.mock(
+        VariantScope::class.java,
         throwUnmocked
     )
     val baseVariantData: BaseVariantData = Mockito.mock(

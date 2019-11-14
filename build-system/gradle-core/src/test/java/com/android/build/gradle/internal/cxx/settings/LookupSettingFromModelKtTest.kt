@@ -41,7 +41,7 @@ class LookupSettingFromModelKtTest {
             val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variantScope)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86_64,
@@ -70,7 +70,7 @@ class LookupSettingFromModelKtTest {
             }
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variantScope)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86_64,

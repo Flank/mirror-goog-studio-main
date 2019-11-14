@@ -236,6 +236,19 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             result.add("NDK_APPLICATION_MK=" + applicationMk.getAbsolutePath());
         }
 
+        if (!abi.getVariant().getPrefabPackageDirectoryList().isEmpty()) {
+            if (abi.getVariant().getModule().getNdkVersion().getMajor() < 21) {
+                // These cannot be automatically imported prior to NDK r21 which started handling
+                // NDK_GRADLE_INJECTED_IMPORT_PATH, but the user can add that search path explicitly
+                // for older releases.
+                // TODO(danalbert): Include a link to the docs page when it is published.
+                // This can be worked around on older NDKs, but it's too verbose to include in the
+                // warning message.
+                warnln("Prefab packages cannot be automatically imported until NDK r21.");
+            }
+            result.add("NDK_GRADLE_INJECTED_IMPORT_PATH=" + abi.getPrefabFolder().toString());
+        }
+
         // APP_ABI and NDK_ALL_ABIS work together. APP_ABI is the specific ABI for this build.
         // NDK_ALL_ABIS is the universe of all ABIs for this build. NDK_ALL_ABIS is set to just the
         // current ABI. If we don't do this, then ndk-build will erase build artifacts for all abis

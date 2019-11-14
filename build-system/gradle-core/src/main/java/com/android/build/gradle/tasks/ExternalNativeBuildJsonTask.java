@@ -65,7 +65,7 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
     protected void doTaskAction() throws ProcessException, IOException {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(evalIssueReporter)) {
-            generator.get().build(execOperations::exec);
+            generator.get().build(execOperations::exec, execOperations::javaexec);
         }
     }
 

@@ -130,6 +130,10 @@ class CxxModuleModelTest {
                     if (type.isPrimitive) {
                         return
                     }
+                    // Part of a companion object. Not interesting.
+                    if (type.typeName == "com.google.gson.Gson") {
+                        return
+                    }
                 }
                 fail("Unrecognized type: ${type.javaClass} ${type.typeName}")
             }
@@ -182,6 +186,9 @@ class CxxModuleModelTest {
                         }
                     }
                 }
+                if (typeName.endsWith("PrefabConfigurationState")) {
+                    return
+                }
                 fail(type.toGenericString())
             }
             else -> {
@@ -205,9 +212,12 @@ class CxxModuleModelTest {
             File::class.java -> {
                 assertThat(method.name.endsWith("Folder") ||
                         method.name.endsWith("File") ||
-                        method.name.endsWith("Exe"))
-                    .named("vals with File type must end with Folder, File, or Exe: " +
-                            method.toGenericString()
+                        method.name.endsWith("Exe") ||
+                        method.name.endsWith("Path") ||
+                        method.name.endsWith("Directory"))
+                    .named(
+                        "vals with File type must end with Folder, File, Exe, Path, or " +
+                                "Directory: ${method.toGenericString()}"
                     )
                     .isTrue()
             }

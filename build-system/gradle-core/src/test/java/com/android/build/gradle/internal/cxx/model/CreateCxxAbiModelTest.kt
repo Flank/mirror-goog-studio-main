@@ -33,7 +33,7 @@ class CreateCxxAbiModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variant)
             createCxxAbiModel(variant, Abi.X86, it.global, it.baseVariantData)
         }
     }
@@ -45,7 +45,7 @@ class CreateCxxAbiModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variantScope)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
@@ -72,7 +72,7 @@ class CreateCxxAbiModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variantScope)
             val abi = createCxxAbiModel(variant, Abi.X86, it.global, it.baseVariantData)
             assertThat(abi.cxxBuildFolder.path
                     .replace("\\", "/"))

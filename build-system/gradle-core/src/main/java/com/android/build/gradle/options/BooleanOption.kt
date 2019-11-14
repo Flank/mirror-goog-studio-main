@@ -84,6 +84,8 @@ enum class BooleanOption(
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.Supported),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
 
+    ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
+
     /* ---------------------
      * EXPERIMENTAL FEATURES
      */

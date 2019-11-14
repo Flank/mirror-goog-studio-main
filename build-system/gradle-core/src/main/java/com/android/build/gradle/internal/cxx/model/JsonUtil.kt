@@ -126,7 +126,9 @@ data class CxxProjectModelData(
     override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
     override val rootBuildGradleFolder: File = File("."),
     override val sdkFolder: File = File("."),
-    override val chromeTraceJsonFolder: File? = null
+    override val chromeTraceJsonFolder: File? = null,
+    override val isPrefabEnabled: Boolean = false,
+    override val prefabClassPath: File? = null
 ) : CxxProjectModel
 
 private fun CxxProjectModel.toData() = CxxProjectModelData(
@@ -137,7 +139,9 @@ private fun CxxProjectModel.toData() = CxxProjectModelData(
     isCmakeBuildCohabitationEnabled = isCmakeBuildCohabitationEnabled,
     isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
     rootBuildGradleFolder = rootBuildGradleFolder,
-    sdkFolder = sdkFolder
+    sdkFolder = sdkFolder,
+    isPrefabEnabled = isPrefabEnabled,
+    prefabClassPath = prefabClassPath
 )
 
 /**
@@ -163,6 +167,7 @@ data class CxxModuleModelData(
     override val ndkMetaAbiList: List<AbiInfo> = listOf(),
     override val ndkMetaPlatforms: NdkMetaPlatforms? = NdkMetaPlatforms(),
     override val ndkSupportedAbiList: List<Abi> = listOf(),
+    override val ndkDefaultStl: Stl = Stl.NONE,
     override val ndkVersion: Revision = Revision.parseRevision("0.0.0"),
     override val project: CxxProjectModelData = CxxProjectModelData(),
     override val splitsAbiFilterSet: Set<String> = setOf(),
@@ -188,6 +193,7 @@ private fun CxxModuleModel.toData() = CxxModuleModelData(
     ndkMetaAbiList = ndkMetaAbiList,
     ndkMetaPlatforms = ndkMetaPlatforms,
     ndkSupportedAbiList = ndkSupportedAbiList,
+    ndkDefaultStl = ndkDefaultStl,
     ndkVersion = ndkVersion,
     project = project.toData(),
     splitsAbiFilterSet = splitsAbiFilterSet,
@@ -223,7 +229,9 @@ internal data class CxxVariantModelData(
     override val module: CxxModuleModelData = CxxModuleModelData(),
     override val objFolder: File = File("."),
     override val variantName: String = "",
-    override val validAbiList: List<Abi> = listOf()
+    override val validAbiList: List<Abi> = listOf(),
+    override val prefabDirectory: File = File("."),
+    override val prefabPackageDirectoryList: List<File> = listOf()
 ) : CxxVariantModel
 
 private fun CxxVariantModel.toData() =
@@ -237,7 +245,9 @@ private fun CxxVariantModel.toData() =
         module = module.toData(),
         objFolder = objFolder,
         validAbiList = validAbiList,
-        variantName = variantName
+        variantName = variantName,
+        prefabDirectory = prefabDirectory,
+        prefabPackageDirectoryList = prefabPackageDirectoryList
     )
 
 /**
@@ -253,7 +263,8 @@ internal data class CxxAbiModelData(
     override val cxxBuildFolder: File = File("."),
     override val info: AbiInfo = AbiInfo(),
     override val originalCxxBuildFolder: File = File("."),
-    override val variant: CxxVariantModelData = CxxVariantModelData()
+    override val variant: CxxVariantModelData = CxxVariantModelData(),
+    override val prefabFolder: File = File(".")
 ) : CxxAbiModel {
     override val services: CxxServiceRegistry
         get() = throw RuntimeException("Cannot use services from deserialized CxxAbiModel")
@@ -267,7 +278,8 @@ private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
     cxxBuildFolder = cxxBuildFolder,
     info = info,
     originalCxxBuildFolder = originalCxxBuildFolder,
-    variant = variant.toData()
+    variant = variant.toData(),
+    prefabFolder = prefabFolder
 )
 
 /**
@@ -290,3 +302,27 @@ private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
     effectiveConfiguration = effectiveConfiguration
 )
 
+/**
+ * Prefab configuration state to be persisted to disk.
+ *
+ * Prefab configuration state needs to be persisted to disk because changes in configuration
+ * require model regeneration.
+ */
+data class PrefabConfigurationState(
+    val enabled: Boolean,
+    val prefabPath: File?,
+    val packages: List<File>
+) {
+    fun toJsonString(): String {
+        return StringWriter()
+            .also { writer -> GSON.toJson(this, writer) }
+            .toString()
+    }
+
+    companion object {
+        @JvmStatic
+        fun fromJson(json: String): PrefabConfigurationState {
+            return GSON.fromJson(json, PrefabConfigurationState::class.java)
+        }
+    }
+}

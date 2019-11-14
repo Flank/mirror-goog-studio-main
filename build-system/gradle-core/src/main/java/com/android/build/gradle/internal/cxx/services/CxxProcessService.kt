@@ -18,15 +18,18 @@ package com.android.build.gradle.internal.cxx.services
 
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.process.ProcessOutputJunction
+import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.ide.common.process.JavaProcessInfo
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.process.ProcessOutputHandler
 import org.gradle.api.Action
 import org.gradle.api.logging.Logging
+import org.gradle.process.BaseExecSpec
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
+import org.gradle.process.JavaExecSpec
 import java.io.File
 
 /**
@@ -71,8 +74,24 @@ internal fun createProcessJunctionService(
                     outputBaseName,
                     logPrefix,
                     { message -> Logging.getLogger(CxxProcessService::class.java).lifecycle(message) },
-                    { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler, execOperation: (Action<in ExecSpec>) -> ExecResult ->
-                        GradleProcessExecutor(execOperation).execute(processInfo, outputHandler)
+                    { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler, baseExecOperation: (Action<in BaseExecSpec>) -> ExecResult ->
+                        if (processInfo is JavaProcessInfo) {
+                            @Suppress("UNCHECKED_CAST")
+                            val javaExecOperation =
+                                baseExecOperation as (Action<in JavaExecSpec>) -> ExecResult
+                            GradleJavaProcessExecutor(javaExecOperation).execute(
+                                processInfo,
+                                outputHandler
+                            )
+                        } else {
+                            @Suppress("UNCHECKED_CAST")
+                            val execOperation =
+                                baseExecOperation as (Action<in ExecSpec>) -> ExecResult
+                            GradleProcessExecutor(execOperation).execute(
+                                processInfo,
+                                outputHandler
+                            )
+                        }
                     })
             }
         }

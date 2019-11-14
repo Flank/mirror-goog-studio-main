@@ -2838,4 +2838,6 @@ public final class SdkConstants {
 
     /** Folder where configuration files for R8 and other tools are located in jar files */
     public static final String TOOLS_CONFIGURATION_FOLDER = "meta-inf/" + COM_ANDROID_TOOLS_FOLDER;
+
+    public static final String FD_PREFAB_PACKAGE = "prefab";
 }
