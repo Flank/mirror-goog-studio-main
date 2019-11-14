@@ -272,6 +272,9 @@ cc_test(
         "install_server.cc",
         "install_server.h",
         "install_server_test.cc",
+        "overlay.cc",
+        "overlay.h",
+        "overlay_test.cc",
     ],
     args = [
         "$(location :executor_test_helper)",
