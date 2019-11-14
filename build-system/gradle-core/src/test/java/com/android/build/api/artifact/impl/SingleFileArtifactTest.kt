@@ -17,6 +17,8 @@
 package com.android.build.api.artifact.impl
 
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.OutputFile
 
 /**
  * Unit tests for [SingleArtifact<RegularFile>]
@@ -27,5 +29,8 @@ class SingleFileArtifactTest:
         { directory, name -> directory.file(name) },
         { tasks, name -> tasks.register(name, FileProducerTask::class.java)}) {
 
-    internal abstract class FileProducerTask: ProducerTask<RegularFile>()
+    internal abstract class FileProducerTask: ProducerTask<RegularFile>() {
+        @OutputFile
+        abstract override fun getOutputFile(): RegularFileProperty
+    }
 }

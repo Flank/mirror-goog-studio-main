@@ -41,6 +41,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Nullable private final String myInstrumentedTestTaskName;
     @Nullable private final String myBundleTaskName;
     @Nullable private final String myApkFromBundleTaskName;
+    @Nullable private final CodeShrinker myCodeShrinker;
     private final boolean mySigned;
 
     public AndroidArtifactStub() {
@@ -59,6 +60,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myBundleTaskName = "bundleTaskName";
         myApkFromBundleTaskName = "apkFromBundleTaskNam";
         mySigned = true;
+        myCodeShrinker = null;
     }
 
     public AndroidArtifactStub(
@@ -71,7 +73,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
             @NonNull Dependencies dependencies,
             @NonNull Dependencies compileDependencies,
             @NonNull DependencyGraphs graphs,
-            @NonNull Set<String> names,
+            @NonNull Set<String> ideSetupTaskNames,
             @NonNull Collection<File> folders,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProvider,
@@ -89,6 +91,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
             @Nullable String instrumentedTestTaskName,
             @Nullable String bundleTaskName,
             @Nullable String apkFromBundleTaskName,
+            @Nullable CodeShrinker codeShrinker,
             boolean signed) {
         super(
                 name,
@@ -100,7 +103,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 dependencies,
                 compileDependencies,
                 graphs,
-                names,
+                ideSetupTaskNames,
                 folders,
                 variantSourceProvider,
                 multiFlavorSourceProvider);
@@ -118,6 +121,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myInstrumentedTestTaskName = instrumentedTestTaskName;
         myBundleTaskName = bundleTaskName;
         myApkFromBundleTaskName = apkFromBundleTaskName;
+        myCodeShrinker = codeShrinker;
         mySigned = signed;
     }
 
@@ -191,6 +195,12 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Override
     public String getApkFromBundleTaskName() {
         return myApkFromBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public CodeShrinker getCodeShrinker() {
+        return myCodeShrinker;
     }
 
     @Override

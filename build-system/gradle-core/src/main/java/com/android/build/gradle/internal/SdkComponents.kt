@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
@@ -49,7 +51,7 @@ open class SdkComponents(
         fun createSdkComponents(
             project: Project,
             projectOptions: ProjectOptions,
-            extensionSupplier: Supplier<BaseExtension?>,
+            extensionSupplier: Supplier<BaseExtension>,
             logger: ILogger,
             evalIssueReporter: EvalIssueReporter): SdkComponents {
 

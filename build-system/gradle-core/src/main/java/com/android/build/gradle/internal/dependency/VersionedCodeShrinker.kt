@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import com.android.builder.dexing.getR8Version
 import com.google.common.annotations.VisibleForTesting
 import proguard.ProGuard

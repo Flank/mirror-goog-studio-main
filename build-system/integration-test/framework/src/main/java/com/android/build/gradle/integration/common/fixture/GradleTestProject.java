@@ -667,7 +667,16 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     public static String mavenSnippet(@NonNull Path repo) {
-        return String.format("maven { url '%s' }\n", repo.toUri().toString());
+        return String.format(
+                ""
+                        + "maven {\n"
+                        + "  url '%s'\n"
+                        + "  metadataSources {\n"
+                        + "    mavenPom()\n"
+                        + "    artifact()\n"
+                        + "  }\n"
+                        + " }\n",
+                repo.toUri().toString());
     }
 
     @NonNull

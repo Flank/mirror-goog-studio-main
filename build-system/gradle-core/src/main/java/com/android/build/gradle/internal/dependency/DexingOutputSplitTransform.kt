@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
@@ -59,15 +58,11 @@ abstract class DexingOutputSplitTransform : TransformAction<DexingOutputSplitTra
     }
 }
 
-fun registerDexingOutputSplitTransform(
-    dependencyHandler: DependencyHandler,
-    variantScopes: Collection<VariantScope>) {
-    variantScopes.forEach {
-        if (!it.variantConfiguration.buildType.isDebuggable) {
-            registerTransformWithOutputType(dependencyHandler, true)
-            registerTransformWithOutputType(dependencyHandler, false)
-        }
-    }
+fun registerDexingOutputSplitTransform(dependencyHandler: DependencyHandler) {
+    // In release builds we can shrink the core java libraries as part of the D8 pipeline,
+    // even if R8 is not used.
+    registerTransformWithOutputType(dependencyHandler, true)
+    registerTransformWithOutputType(dependencyHandler, false)
 }
 
 private fun registerTransformWithOutputType(dependencyHandler: DependencyHandler, toDex: Boolean) {

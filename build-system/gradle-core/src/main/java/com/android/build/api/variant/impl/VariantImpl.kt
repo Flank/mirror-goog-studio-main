@@ -16,54 +16,24 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantOutput
-import com.android.build.gradle.internal.core.VariantConfiguration
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.options.BooleanOption
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
+import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.variant.VariantProperties
+import org.gradle.api.Action
+import java.lang.Boolean.TRUE
 
-internal class VariantImpl(
-    override val name: String,
-    private val objects: ObjectFactory,
-    private val variantScope: VariantScope,
-    private val variantConfiguration: VariantConfiguration<*,*,*>,
-    override val operations: Operations
-    ) : Variant {
+open class VariantImpl<T: VariantProperties>(variantConfiguration: VariantConfiguration):
+    Variant<T>, VariantConfiguration by variantConfiguration {
 
-    private val variantOutputs= mutableListOf<VariantOutput>()
+    private val actions = DelayedActionExecutor<T>()
 
-    fun addVariantOutput(apkData: ApkData): VariantOutputImpl {
-
-        // the DSL objects are now locked, if the versionCode is provided, use that
-        // otherwise use the lazy manifest reader to extract the value from the manifest
-        // file.
-        val versionCode = variantConfiguration.mergedFlavor.versionCode ?: -1
-        val versionCodeProperty = initializeProperty(Int::class.java, "$name::versionCode")
-        if (versionCode <= 0) {
-            versionCodeProperty.set(
-                variantScope.globalScope.project.provider<Int> {
-                    variantConfiguration.versionCodeSerializableSupplier.asInt
-                })
-        } else {
-            versionCodeProperty.set(versionCode)
-        }
-        return VariantOutputImpl(versionCodeProperty,
-            VariantOutput.OutputType.valueOf(apkData.type.name)).also { variantOutputs.add(it) }
+    override fun onProperties(action: Action<T>) {
+        actions.registerAction(action)
     }
 
-    override val outputs: VariantOutputList
-        get() = VariantOutputList(variantOutputs.toList())
-
-    private fun <T> initializeProperty(type: Class<T>, id: String):  Property<T>  {
-        return if (variantScope.globalScope.projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
-            GradleProperty.safeReadingBeforeExecution(id,
-                objects.property(type))
-        } else {
-            objects.property(type)
-        }
+    fun executeActions(target: T) {
+        actions.executeActions(target)
     }
+
+    override var enabled: Boolean = TRUE
 }

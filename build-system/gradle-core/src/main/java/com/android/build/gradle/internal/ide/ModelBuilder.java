@@ -957,7 +957,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getBundleTask() == null
                         ? scope.getTaskName("bundle")
                         : taskContainer.getBundleTask().getName(),
-                ExtractApksTask.Companion.getTaskName(scope));
+                ExtractApksTask.Companion.getTaskName(scope),
+                scope.getCodeShrinker());
     }
 
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {

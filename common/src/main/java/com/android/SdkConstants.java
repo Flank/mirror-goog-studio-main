@@ -362,6 +362,8 @@ public final class SdkConstants {
     public static final String FD_MAIN = "main"; //$NON-NLS-1$
     /** Default test source set folder name, i.e. "androidTest" */
     public static final String FD_TEST = "androidTest"; //$NON-NLS-1$
+    /** Default unit test source set folder name, i.e. "test" */
+    public static final String FD_UNIT_TEST = "test"; //$NON-NLS-1$
     /** Default java code folder name, i.e. "java" */
     public static final String FD_JAVA = "java"; //$NON-NLS-1$
     /** Default native code folder name, i.e. "jni" */
@@ -2400,6 +2402,41 @@ public final class SdkConstants {
         public static final String ATTR_SWITCH_TEXT_OFF = "switchTextOff";
     }
 
+    public static class MotionSceneTags {
+        public static final String MOTION_SCENE = "MotionScene";
+        public static final String TRANSITION = "Transition";
+        public static final String STATE_SET = "StateSet";
+        public static final String CONSTRAINT_SET = "ConstraintSet";
+        public static final String CONSTRAINT = "Constraint";
+        public static final String KEY_FRAME_SET = "KeyFrameSet";
+        public static final String KEY_ATTRIBUTE = "KeyAttribute";
+        public static final String KEY_CYCLE = "KeyCycle";
+        public static final String KEY_POSITION = "KeyPosition";
+        public static final String KEY_TRIGGER = "KeyTrigger";
+        public static final String KEY_TIME_CYCLE = "KeyTimeCycle";
+        public static final String ON_CLICK = "OnClick";
+        public static final String ON_SWIPE = "OnSwipe";
+        public static final String LAYOUT = "Layout";
+        public static final String MOTION = "Motion";
+        public static final String PROPERTY_SET = "PropertySet";
+        public static final String TRANSFORM = "Transform";
+        public static final String CUSTOM_ATTRIBUTE = "CustomAttribute";
+        public static final String STATE = "State";
+        public static final String VARIANT = "Variant";
+    }
+
+    public static class MotionSceneAttributes {
+        public static final String ATTR_CUSTOM_ATTRIBUTE_NAME = "attributeName";
+        public static final String ATTR_CUSTOM_COLOR_VALUE = "customColorValue";
+        public static final String ATTR_CUSTOM_COLOR_DRAWABLE_VALUE = "customColorDrawableValue";
+        public static final String ATTR_CUSTOM_INTEGER_VALUE = "customIntegerValue";
+        public static final String ATTR_CUSTOM_FLOAT_VALUE = "customFloatValue";
+        public static final String ATTR_CUSTOM_STRING_VALUE = "customStringValue";
+        public static final String ATTR_CUSTOM_DIMENSION_VALUE = "customDimension";
+        public static final String ATTR_CUSTOM_PIXEL_DIMENSION_VALUE = "customPixelDimension";
+        public static final String ATTR_CUSTOM_BOOLEAN_VALUE = "customBoolean";
+    }
+
     // Text Alignment values.
     public static class TextAlignment {
         public static final String NONE = "none"; //$NON-NLS-1$
@@ -2619,7 +2656,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "5.6.1";
+    public static final String GRADLE_MINIMUM_VERSION = "6.0-rc-1";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

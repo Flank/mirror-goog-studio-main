@@ -40,21 +40,17 @@
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
 <#macro copyIconCommands destination>
-    <#if buildApi gte 26 && targetApi gte 26>
-        <#-- Copy adaptive-icons -->
-        <copy from="root/res/mipmap-anydpi-v26/ic_launcher.xml"
-                to="${destination}/mipmap-anydpi-v26/ic_launcher.xml" />
-        <copy from="root/res/drawable/ic_launcher_background.xml"
-                to="${destination}/drawable/ic_launcher_background.xml" />
-        <copy from="root/res/drawable-v24/ic_launcher_foreground.xml"
-                to="${destination}/drawable-v24/ic_launcher_foreground.xml" />
-        <copy from="root/res/mipmap-anydpi-v26/ic_launcher_round.xml"
-                to="${destination}/mipmap-anydpi-v26/ic_launcher_round.xml" />
-    </#if>
-    <#if buildApi gte 25 && targetApi gte 25>
-        <@copyMipmap destination=escapeXmlAttribute(destination)
-                            icon="ic_launcher_round.png" />
-    </#if>
+    <#-- Copy adaptive-icons -->
+    <copy from="root/res/mipmap-anydpi-v26/ic_launcher.xml"
+            to="${destination}/mipmap-anydpi-v26/ic_launcher.xml" />
+    <copy from="root/res/drawable/ic_launcher_background.xml"
+            to="${destination}/drawable/ic_launcher_background.xml" />
+    <copy from="root/res/drawable-v24/ic_launcher_foreground.xml"
+            to="${destination}/drawable-v24/ic_launcher_foreground.xml" />
+    <copy from="root/res/mipmap-anydpi-v26/ic_launcher_round.xml"
+            to="${destination}/mipmap-anydpi-v26/ic_launcher_round.xml" />
+    <@copyMipmap destination=escapeXmlAttribute(destination)
+                        icon="ic_launcher_round.png" />
 
     <@copyMipmap destination=escapeXmlAttribute(destination) icon="ic_launcher.png" />
 </#macro>
@@ -79,10 +75,8 @@
 <#if !isLibraryProject>
     <instantiate from="root/res/values/styles.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
-    <#if buildApi gte 22>
-        <copy from="root/res/values/colors.xml"
-                to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
-    </#if>
+    <copy from="root/res/values/colors.xml"
+            to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
 </#if>
 
 <#if includeCppSupport>

@@ -102,7 +102,6 @@ val CxxAbiModel.objFolder: File
     get() = when(variant.module.buildSystem) {
         NativeBuildSystem.CMAKE -> FileUtils.join(cxxBuildFolder, "CMakeFiles")
         NativeBuildSystem.NDK_BUILD -> FileUtils.join(variant.objFolder, abi.tag)
-        else -> throw RuntimeException(variant.module.buildSystem.toString())
     }
 
 /**

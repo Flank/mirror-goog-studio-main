@@ -232,6 +232,7 @@ gradle_build(
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
+    gradle_version = "5.5",
     output_file = "3.3.2.aar",
     output_file_source = "outputs/aar/3.3.2.aar",
     repos = [
@@ -324,6 +325,7 @@ maven_repo(
 gradle_build(
     name = "3.0.0_check",
     build_file = "tests/3.0.0/build.gradle",
+    gradle_version = "5.5",
     output_file = "3.0.0_dependencies_list.txt",
     output_file_source = "dependencies_list.txt",
     repos = [

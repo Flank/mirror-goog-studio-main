@@ -157,7 +157,9 @@ public class ApiObjectFactory {
                         apkData -> {
                             // set the version on the new api variant object.
                             VariantOutputImpl variantOutput =
-                                    variantData.getPublicVariantApi().addVariantOutput(apkData);
+                                    variantData
+                                            .getPublicVariantPropertiesApi()
+                                            .addVariantOutput(apkData.getType());
                             apkData.setVariantOutput(variantOutput);
 
                             apkData.setVersionName(config.getVersionNameSerializableSupplier());

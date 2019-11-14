@@ -151,6 +151,7 @@ public class JarTestSuiteRunner extends Suite {
         List<Class<?>> testClasses = new ArrayList<>();
         final Set<String> excludeClassNames = new HashSet<>();
         String name = System.getProperty("test.suite.jar");
+        String excludedPackages = System.getProperty("test.excluded.packages");
         if (name != null) {
             final ClassLoader loader = JarTestSuite.class.getClassLoader();
             if (loader instanceof URLClassLoader) {
@@ -164,7 +165,8 @@ public class JarTestSuiteRunner extends Suite {
                     addManifestClassPath(url, urls);
                 }
             }
-            excludeClassNames.addAll(androidCoreClassNamesToExclude(name, testClasses));
+            excludeClassNames.addAll(
+                    classNamesToExcludeFromExcludedPackagess(excludedPackages, testClasses));
             excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
         }
         return testClasses.stream().filter(c -> !excludeClassNames.contains(c.getCanonicalName())).toArray(Class<?>[]::new);
@@ -207,71 +209,53 @@ public class JarTestSuiteRunner extends Suite {
     }
 
     /**
-     * Returns the set of class names to exclude if processing the "intellij.android.core.tests"
-     * module. This is temporary on Windows only until we can re-enable all tests. The tracking bug
-     * for this temporary workaround is b/141868211.
+     * Returns the set of class names to exclude from the list of package prefixes stored in the
+     * {@code excludedPackages} comma delimited string
      */
-    private static Set<String> androidCoreClassNamesToExclude(
-            String jarFileName, List<Class<?>> testClasses) {
-        // We only process the android.core package
-        if (!"intellij.android.core.tests_test.jar".equals(jarFileName)) {
+    private static Set<String> classNamesToExcludeFromExcludedPackagess(
+            String excludedPackages, List<Class<?>> testClasses) {
+        if (excludedPackages == null || excludedPackages.isEmpty()) {
             return Collections.emptySet();
         }
 
-        // We only do this for Windows, as the target already pass on other plaforms
-        if (OsType.getHostOs() != OsType.WINDOWS) {
-            return Collections.emptySet();
-        }
-
-        //
-        // Exclude classes from all packages except the white-listed ones
-        //
-
-        // Set up the hard-coded white list of packages that pass tests
-        Set<String> packagesToInclude = new HashSet<>();
-        packagesToInclude.add("com.android.tools.idea.actions");
-        packagesToInclude.add("com.android.tools.idea.apk");
-        packagesToInclude.add("com.android.tools.idea.avdmanager");
-        packagesToInclude.add("com.android.tools.idea.completion");
-        packagesToInclude.add("com.android.tools.idea.explorer");
+        // Compute list of package prefixes as specified in the "excludedPackages" argument
+        Set<String> packagesToExclude =
+                Arrays.stream(excludedPackages.split(",")).collect(Collectors.toSet());
 
         // Compute list of classes included in the above list
         Set<String> allClassNames =
                 testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
-        Set<String> classesToInclude = new HashSet<>();
+        Set<String> classesToExclude = new HashSet<>();
         Set<String> usedPackages = new HashSet<>();
         for (String className : allClassNames) {
-            if (isWhiteListed(packagesToInclude, usedPackages, className)) {
-                classesToInclude.add(className);
+            if (isBlackListed(packagesToExclude, usedPackages, className)) {
+                classesToExclude.add(className);
             }
         }
 
-        // Sanity check: usedPackages and packagesToInclude must be equal, otherwise, we have
-        // a typo in the white-list, or maybe the package has been renamed or moved to another JAR.
+        // Sanity check: usedPackages and packagesToExclude must be equal, otherwise, we have
+        // a typo in the black-list, or maybe the package has been renamed or moved to another JAR.
         // We check this just to make sure this code does not get outdated.
-        Set<String> unusedPackages = new HashSet<>(packagesToInclude);
+        Set<String> unusedPackages = new HashSet<>(packagesToExclude);
         unusedPackages.removeAll(usedPackages);
         if (!unusedPackages.isEmpty()) {
             throw new RuntimeException(
-                    "At least one package in the list of white listed packages does not "
+                    "At least one package in the list of black listed packages does not "
                             + "contain any test class. The package(s) may have been renamed or moved to "
-                            + "another module. Please update this code to match the change. "
-                            + "The list of orphaned package(s) is: ["
-                            + String.join(", ", unusedPackages)
+                            + "another module. Please update the 'test_excluded_packages' attribute in the BUILD file "
+                            + "to match the change. The list of orphaned package(s) is: ["
+                            + unusedPackages.stream().sorted().collect(Collectors.joining(", "))
                             + "].");
         }
 
-        // The set of classes to exclude is the set of all classes minus the set of classes to
-        // include
-        allClassNames.removeAll(classesToInclude);
-        return allClassNames;
+        return classesToExclude;
     }
 
     /**
      * Returns {@code true} if the package of className is prefixed by at least one of the package
      * prefix from the packagePrefixes set.
      */
-    private static boolean isWhiteListed(
+    private static boolean isBlackListed(
             Set<String> packagePrefixes, Set<String> usedPackagePrefixes, String className) {
         String dottedName = className;
         while (true) {

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle
 
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

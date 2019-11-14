@@ -22,14 +22,9 @@
     <merge from="root/res/values-round/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values-round/strings.xml" />
 
-<#if buildApi gte 26>
     <instantiate from="root/res/layout/blank_activity.xml.ftl"
             to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
     <dependency mavenUrl="com.android.support:wear:+" />
-<#else>
-    <instantiate from="root/res/layout/blank_activity_prev.xml.ftl"
-            to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
-</#if>
 
     <instantiate from="root/src/app_package/BlankActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />

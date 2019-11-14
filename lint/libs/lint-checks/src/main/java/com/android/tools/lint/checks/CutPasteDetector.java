@@ -132,11 +132,22 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
         if (first instanceof UReferenceExpression) {
             UReferenceExpression psiReferenceExpression = (UReferenceExpression) first;
             String id = psiReferenceExpression.getResolvedName();
+            if (id == null) {
+                if (psiReferenceExpression.getReferenceNameElement() != null) {
+                    // Directly fall back to the unqualified selector, which is what 'resolvedName'
+                    // would ever return anyway.  This checker assumes that due to resource merging,
+                    // pkg1.R.id.foo is equivalent to pkg2.R.id.foo.
+                    id = psiReferenceExpression.getReferenceNameElement().asRenderString();
+                } else {
+                    // Give up to avoid false positives.
+                    return;
+                }
+            }
+
             UElement operand =
                     (first instanceof UQualifiedReferenceExpression)
                             ? ((UQualifiedReferenceExpression) first).getReceiver()
                             : null;
-
             if (operand instanceof UReferenceExpression) {
                 UReferenceExpression type = (UReferenceExpression) operand;
                 if (RESOURCE_CLZ_ID.equals(type.getResolvedName())) {

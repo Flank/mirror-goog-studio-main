@@ -32,8 +32,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
-import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
-import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
+import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToDefaultVariant;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
@@ -46,6 +45,8 @@ import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
+import static com.android.builder.model.CodeShrinker.PROGUARD;
+import static com.android.builder.model.CodeShrinker.R8;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -97,6 +98,7 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.packaging.ApkCreatorType;
+import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -244,7 +246,15 @@ public class VariantScopeImpl implements VariantScope {
                 Configuration config = variantDependency.getElements(configType);
                 Preconditions.checkNotNull(
                         config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(config, artifact, artifactType);
+                if (configType.isPublicationConfig()) {
+                    String classifier = null;
+                    if (configType.isClassifierRequired()) {
+                        classifier = getFullVariantName();
+                    }
+                    publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
+                } else {
+                    publishArtifactToConfiguration(config, artifact, artifactType);
+                }
             }
         }
     }

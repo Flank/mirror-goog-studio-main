@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.publishing
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS
@@ -328,7 +330,8 @@ private val RUNTIME_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> = Immutabl
 private val API_AND_RUNTIME_ELEMENTS: ImmutableList<PublishedConfigType> = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS)
 private val REVERSE_METADATA_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> = ImmutableList.of(
     REVERSE_METADATA_ELEMENTS)
-private val API_AND_RUNTIME_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(API_PUBLICATION, RUNTIME_PUBLICATION)
+private val API_AND_RUNTIME_PUBLICATION: ImmutableList<PublishedConfigType> =
+    ImmutableList.of(API_PUBLICATION, RUNTIME_PUBLICATION, ALL_API_PUBLICATION, ALL_RUNTIME_PUBLICATION)
 private val APK_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
     PublishedConfigType.APK_PUBLICATION)
 private val AAB_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(

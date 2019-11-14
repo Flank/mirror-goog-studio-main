@@ -82,4 +82,14 @@ class AppAndLibNoBuildConfigTest {
                 .contains("Build Type 'debug' contains custom BuildConfig fields, but the feature is disabled.")
         }
     }
+
+    @Test
+    fun `ensure no buildConfig won't break dexing when no other java source file exists`() {
+        project.getSubproject(":app").buildFile.appendText("""
+
+            android.sourceSets.main.java.exclude "**/*.java"
+        """.trimIndent())
+
+        project.execute("app:assembleDebug")
+    }
 }

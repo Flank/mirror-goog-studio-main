@@ -189,8 +189,7 @@ class JetifierTest(private val withKotlin: Boolean) {
             .run("assembleDebug")
         result.stderr.use {
             assertThat(it).contains(
-                "Failed to transform artifact 'doNotJetifyLib.jar" +
-                        " (com.example.javalib:doNotJetifyLib:1.0)"
+                "Failed to transform doNotJetifyLib-1.0.jar (com.example.javalib:doNotJetifyLib:1.0)"
             )
         }
 

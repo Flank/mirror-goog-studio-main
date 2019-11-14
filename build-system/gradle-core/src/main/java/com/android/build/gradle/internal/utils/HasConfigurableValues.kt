@@ -26,6 +26,11 @@ fun ConfigurableFileCollection.fromDisallowChanges(vararg arg: Any) {
     disallowChanges()
 }
 
+fun <T> Property<T>.setDisallowChanges(value: T) {
+    set(value)
+    disallowChanges()
+}
+
 fun <T> Property<T>.setDisallowChanges(value: Provider<T>) {
     set(value)
     disallowChanges()

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
 import com.android.SdkConstants.COM_ANDROID_TOOLS_FOLDER
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.ide.common.repository.GradleVersion
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType

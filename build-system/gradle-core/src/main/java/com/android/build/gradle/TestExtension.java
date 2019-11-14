@@ -2,6 +2,8 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -12,7 +14,11 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.ProjectOptions;
+import java.util.ArrayList;
+import java.util.List;
+import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -25,6 +31,9 @@ public class TestExtension extends BaseExtension
     private final DomainObjectSet<ApplicationVariant> applicationVariantList;
 
     private String targetProjectPath = null;
+
+    private List<Action<Variant<VariantProperties>>> variantActionList = new ArrayList<>();
+    private List<Action<VariantProperties>> variantPropertiesActionList = new ArrayList<>();
 
     public TestExtension(
             @NonNull Project project,
@@ -61,6 +70,14 @@ public class TestExtension extends BaseExtension
     @Override
     public void addVariant(BaseVariant variant, VariantScope variantScope) {
         applicationVariantList.add((ApplicationVariant) variant);
+        BaseVariantData variantData = variantScope.getVariantData();
+        for (Action<Variant<VariantProperties>> action : variantActionList) {
+            //noinspection unchecked // TODO: Have a subtype for Android Test too.
+            action.execute((Variant<VariantProperties>) variantData.getPublicVariantApi());
+        }
+        for (Action<VariantProperties> action : variantPropertiesActionList) {
+            action.execute(variantData.getPublicVariantPropertiesApi());
+        }
     }
 
     /**
@@ -107,5 +124,15 @@ public class TestExtension extends BaseExtension
     @Override
     public String getTestBuildType() {
         return null;
+    }
+
+    @Override
+    public void onVariants(Action<Variant<VariantProperties>> action) {
+        variantActionList.add(action);
+    }
+
+    @Override
+    public void onVariantsProperties(Action<VariantProperties> action) {
+        variantPropertiesActionList.add(action);
     }
 }

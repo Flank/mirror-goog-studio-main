@@ -223,10 +223,10 @@ open class BasicModuleModelMock {
         doReturn(extension).`when`(global).extension
 
         doReturn(extension).`when`(global).extension
-        doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
-        doReturn(false).`when`(extension).generatePureSplits
+        doReturn(externalNativeBuild).`when`(extension).getExternalNativeBuild()
+        doReturn(false).`when`(extension).getGeneratePureSplits()
 
-        doReturn(splits).`when`(extension).splits
+        doReturn(splits).`when`(extension).getSplits()
 
         doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
         doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)

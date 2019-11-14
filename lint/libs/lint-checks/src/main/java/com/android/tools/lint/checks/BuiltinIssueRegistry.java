@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 365;
+    public static final int INITIAL_CAPACITY = 367;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -246,6 +246,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MissingClassDetector.INSTANTIATABLE);
         issues.add(MissingClassDetector.MISSING);
         issues.add(MissingIdDetector.ISSUE);
+        issues.add(MotionLayoutDetector.INVALID_SCENE_FILE_REFERENCE);
+        issues.add(MotionSceneDetector.MOTION_SCENE_FILE_VALIDATION_ERROR);
         issues.add(NamespaceDetector.CUSTOM_VIEW);
         issues.add(NamespaceDetector.RES_AUTO);
         issues.add(NamespaceDetector.REDUNDANT);
@@ -431,7 +433,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 105;
+                initialSize += 107;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }

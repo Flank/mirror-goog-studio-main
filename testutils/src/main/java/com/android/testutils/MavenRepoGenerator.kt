@@ -15,7 +15,6 @@
  */
 package com.android.testutils
 
-import java.lang.StringBuilder
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -23,9 +22,16 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
 
     class Library(
         mavenCoordinate: String,
-        val jar: ByteArray,
+        val packaging: String,
+        val artifact: ByteArray,
         vararg dependencies: String
     ) {
+        constructor(
+            mavenCoordinate: String,
+            jar: ByteArray,
+            vararg dependencies: String
+        ) : this(mavenCoordinate, "jar", jar, *dependencies)
+
         val mavenCoordinate = MavenCoordinate.parse(mavenCoordinate)
         val dependencies = dependencies.map { MavenCoordinate.parse(it) }
 
@@ -41,10 +47,11 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
                 |  <groupId>${mavenCoordinate.groupId}</groupId>
                 |  <artifactId>${mavenCoordinate.artifactId}</artifactId>
                 |  <version>${mavenCoordinate.version}</version>
-                |  <dependencies>
-                |""".trimMargin()
-            )
-
+                |""".trimMargin())
+            if (packaging != "jar") {
+                sb.append( "  <packaging>$packaging</packaging>\n")
+            }
+            sb.append("  <dependencies>\n")
             for (dependency in dependencies) {
                 sb.append(
                     """
@@ -99,7 +106,7 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
         libraries.forEach {
             val dir = rootDir.resolve(it.mavenCoordinate.getDirName())
             Files.createDirectories(dir)
-            Files.write(dir.resolve(it.mavenCoordinate.getFileName("jar")), it.jar)
+            Files.write(dir.resolve(it.mavenCoordinate.getFileName(it.packaging)), it.artifact)
             Files.write(
                 dir.resolve(it.mavenCoordinate.getFileName("pom")),
                 it.generatePom().toByteArray()

@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.*;
@@ -48,11 +50,20 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     protected static final String LOCAL_HOST = "127.0.0.1";
     protected static final int RETURN_VALUE_TIMEOUT = 1000;
 
+    protected static final Collection<String> ALL_ART_FLAGS =
+            Arrays.asList(null, "-Xopaque-jni-ids:true");
+
     protected FakeAndroidDriver android;
 
     protected LocalTestAgentBasedClassRedefiner redefiner;
 
     protected TemporaryFolder dexLocation;
+
+    protected final String artFlag;
+
+    public AgentBasedClassRedefinerTestBase(String artFlag) {
+        this.artFlag = artFlag;
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -65,7 +76,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         };
         File dotStudio = new File(root, "/data/data/" + PACKAGE + "/code_cache/.studio");
         dotStudio.mkdirs();
-        android = new FakeAndroidDriver(LOCAL_HOST, env);
+        android = new FakeAndroidDriver(LOCAL_HOST, -1, artFlag, env);
         android.start();
 
         redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation);
@@ -194,7 +205,9 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         protected void stopServer() {
             try {
                 System.out.println("Waiting for server to exit");
-                server.waitFor();
+                if (server != null) {
+                    server.waitFor();
+                }
                 System.out.println("Server exited");
             } catch (InterruptedException e) {
                 System.err.println(e);

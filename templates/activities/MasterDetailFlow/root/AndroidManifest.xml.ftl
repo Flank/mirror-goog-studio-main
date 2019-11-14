@@ -16,7 +16,7 @@
         <activity android:name="${packageName}.${DetailName}Activity"
             android:label="@string/title_${detail_name}"
             android:theme="@style/${themeNameNoActionBar}"
-            <#if buildApi gte 16>android:parentActivityName="${packageName}.${CollectionName}Activity"</#if>>
+            android:parentActivityName="${packageName}.${CollectionName}Activity">
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${packageName}.${CollectionName}Activity" />
         </activity>

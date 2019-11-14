@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.ClassField;
+import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
@@ -73,6 +74,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @Nullable private final String instrumentedTestTaskName;
     @Nullable private final String bundleTaskName;
     @Nullable private final String apkFromBundleTaskName;
+    @Nullable private final CodeShrinker codeShrinker;
 
     AndroidArtifactImpl(
             @NonNull String name,
@@ -102,7 +104,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @Nullable TestOptions testOptions,
             @Nullable String instrumentedTestTaskName,
             @Nullable String bundleTaskName,
-            @Nullable String apkFromBundleTaskName) {
+            @Nullable String apkFromBundleTaskName,
+            @Nullable CodeShrinker codeShrinker) {
         super(
                 name,
                 assembleTaskName,
@@ -133,6 +136,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.instrumentedTestTaskName = instrumentedTestTaskName;
         this.bundleTaskName = bundleTaskName;
         this.apkFromBundleTaskName = apkFromBundleTaskName;
+        this.codeShrinker = codeShrinker;
     }
 
     private EarlySyncBuildOutput getOutputFor(
@@ -324,6 +328,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(testOptions, that.testOptions)
                 && Objects.equals(instrumentedTestTaskName, that.instrumentedTestTaskName)
                 && Objects.equals(bundleTaskName, that.bundleTaskName)
+                && Objects.equals(codeShrinker, that.codeShrinker)
                 && Objects.equals(apkFromBundleTaskName, that.apkFromBundleTaskName);
     }
 
@@ -347,6 +352,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 testOptions,
                 instrumentedTestTaskName,
                 bundleTaskName,
+                codeShrinker,
                 apkFromBundleTaskName);
     }
 
@@ -367,6 +373,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("testOptions", testOptions)
                 .add("instrumentedTestTaskName", instrumentedTestTaskName)
                 .add("bundleTaskName", bundleTaskName)
+                .add("codeShrinker", codeShrinker)
                 .add("apkFromBundleTaskName", apkFromBundleTaskName)
                 .toString();
     }
@@ -393,5 +400,11 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @Override
     public String getApkFromBundleTaskName() {
         return apkFromBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public CodeShrinker getCodeShrinker() {
+        return codeShrinker;
     }
 }

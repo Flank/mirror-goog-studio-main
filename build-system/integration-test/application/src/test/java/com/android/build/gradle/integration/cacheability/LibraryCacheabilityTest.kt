@@ -61,7 +61,6 @@ class LibraryCacheabilityTest {
                     ":lib:preReleaseBuild"
                 ),
                 FROM_CACHE to setOf(
-                    ":lib:compileReleaseShaders",
                     ":lib:compileReleaseJavaWithJavac",
                     ":lib:copyReleaseJniLibsProjectAndLocalJars",
                     ":lib:extractReleaseAnnotations",
@@ -98,6 +97,7 @@ class LibraryCacheabilityTest {
                     ":lib:assembleRelease",
                     ":lib:compileReleaseAidl",
                     ":lib:compileReleaseRenderscript",
+                    ":lib:compileReleaseShaders",
                     ":lib:processReleaseJavaRes"
                 ),
                 FAILED to setOf()
@@ -142,28 +142,28 @@ class LibraryCacheabilityTest {
 
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.
-        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
+        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]
         if (result.findTask(":lib:transformNativeLibsWithStripDebugSymbolForRelease") == null) {
             expectedDidWorkTasks =
-                    expectedDidWorkTasks.minus(":lib:transformNativeLibsWithStripDebugSymbolForRelease")
+                    expectedDidWorkTasks!!.minus(":lib:transformNativeLibsWithStripDebugSymbolForRelease")
         }
 
         // Check that the tasks' states are as expected
         expect.that(result.upToDateTasks)
             .named("UpToDate Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE])
         expect.that(result.fromCacheTasks)
             .named("FromCache Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE])
         expect.that(result.didWorkTasks)
             .named("DidWork Tasks")
             .containsExactlyElementsIn(expectedDidWorkTasks)
         expect.that(result.skippedTasks)
             .named("Skipped Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED])
         expect.that(result.failedTasks)
             .named("Failed Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED])
 
         // Clean up the cache
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)

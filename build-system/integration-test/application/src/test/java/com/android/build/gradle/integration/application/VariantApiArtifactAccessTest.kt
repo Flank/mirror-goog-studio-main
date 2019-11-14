@@ -61,13 +61,13 @@ abstract class CustomTask extends DefaultTask {
 
 
 android {
-    onVariants { variant ->
-        TaskProvider customTaskProvider = tasks.register(variant.name + "CustomTask", CustomTask.class)
+    onVariantsProperties { variantProperties ->
+        TaskProvider customTaskProvider = tasks.register(variantProperties.name + "CustomTask", CustomTask.class)
         customTaskProvider.configure {
             task ->
-                task.getApkLocation().set(variant.operations.get(PublicArtifactType.APK.INSTANCE))
+                task.getApkLocation().set(variantProperties.operations.get(PublicArtifactType.APK.INSTANCE))
                 Provider<Directory> outputDir = getProject().getLayout().getBuildDirectory()
-                task.getOutputFile().set(outputDir.file(variant.name + "/" + variant.name + "CustomTask/out.txt"))
+                task.getOutputFile().set(outputDir.file(variantProperties.name + "/" + variantProperties.name + "CustomTask/out.txt"))
         }
     }
 }

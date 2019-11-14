@@ -19,6 +19,8 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
@@ -360,8 +362,21 @@ public class LibraryTaskManager extends TaskManager {
                 apiPub, new ConfigurationVariantMapping("compile", false));
         component.addVariantsFromConfiguration(
                 runtimePub, new ConfigurationVariantMapping("runtime", false));
-
         project.getComponents().add(component);
+
+        AdhocComponentWithVariants allVariants =
+                (AdhocComponentWithVariants) project.getComponents().findByName("all");
+        if (allVariants == null) {
+            allVariants = globalScope.getComponentFactory().adhoc("all");
+            project.getComponents().add(allVariants);
+        }
+        final Configuration allApiPub = variantDependencies.getElements(ALL_API_PUBLICATION);
+        allVariants.addVariantsFromConfiguration(
+                allApiPub, new ConfigurationVariantMapping("compile", true));
+        final Configuration allRuntimePub =
+                variantDependencies.getElements(ALL_RUNTIME_PUBLICATION);
+        allVariants.addVariantsFromConfiguration(
+                allRuntimePub, new ConfigurationVariantMapping("runtime", true));
 
         // Old style publishing. This is likely to go away at some point.
         if (extension

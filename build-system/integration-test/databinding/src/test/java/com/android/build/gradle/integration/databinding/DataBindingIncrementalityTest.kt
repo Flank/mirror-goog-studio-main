@@ -699,9 +699,8 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // The relevant (original or generated) source files should be recompiled
         expect.that(changedFiles)
             .named("Recompiled classes")
-            .containsAllOf(
+            .containsAtLeast(
                 libData1Class,
-                libData2Class,
                 libGeneratedDataBinderMapperClass,
                 libGeneratedLayout1BindingClass,
                 libGeneratedLayout2BindingClass,
@@ -723,14 +722,16 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             expect.that(changedFiles)
                 .named("Recompiled classes")
                 .containsNoneOf(
-                    libLoner1Class,
-                    libLoner2Class
+                    libData2Class,
+                    libLoner2Class,
+                    libLoner1Class
                 )
         } else {
             // These classes are still recompiled in non-incremental mode
             expect.that(changedFiles)
                 .named("Recompiled classes")
-                .containsAllOf(
+                .containsAtLeast(
+                    libData2Class,
                     libLoner1Class,
                     libLoner2Class
                 )
@@ -788,9 +789,8 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // The relevant (original or generated) source files should be recompiled
         expect.that(changedFiles)
             .named("Recompiled classes")
-            .containsAllOf(
+            .containsAtLeast(
                 libData1Class,
-                libData2Class,
                 libGeneratedDataBinderMapperClass,
                 libGeneratedLayout1BindingClass,
                 libGeneratedLayout2BindingClass,
@@ -805,6 +805,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             expect.that(changedFiles)
                 .named("Recompiled classes")
                 .containsNoneOf(
+                    libData2Class,
                     libLoner1Class,
                     libLoner2Class
                 )
@@ -812,7 +813,8 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
             // These classes are still recompiled in non-incremental mode
             expect.that(changedFiles)
                 .named("Recompiled classes")
-                .containsAllOf(
+                .containsAtLeast(
+                    libData2Class,
                     libLoner1Class,
                     libLoner2Class
                 )
@@ -884,10 +886,8 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // The relevant (original or generated) source files should be recompiled
         expect.that(changedFiles)
             .named("Recompiled classes")
-            .containsAllOf(
+            .containsAtLeast(
                 libLoner1Class,
-                libData1Class,
-                libData2Class,
                 libGeneratedDataBinderMapperClass,
                 libGeneratedLayout1BindingClass,
                 libGeneratedLayout2BindingClass,
@@ -901,12 +901,18 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         if (withIncrementalDB) {
             expect.that(changedFiles)
                 .named("Recompiled classes")
-                .doesNotContain(libLoner2Class)
+                .containsNoneOf(
+                    libData1Class,
+                    libData2Class,
+                    libLoner2Class)
         } else {
             // These classes are still recompiled in non-incremental mode
             expect.that(changedFiles)
                 .named("Recompiled classes")
-                .contains(libLoner2Class)
+                .containsAtLeast(
+                    libData1Class,
+                    libData2Class,
+                    libLoner2Class)
         }
         expect.that(changedFiles)
             .named("Recompiled classes")

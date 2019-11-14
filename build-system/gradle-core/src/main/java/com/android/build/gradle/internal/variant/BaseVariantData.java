@@ -24,7 +24,12 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.AppVariantImpl;
+import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -124,6 +129,7 @@ public abstract class BaseVariantData {
     private final MutableTaskContainer taskContainer;
     public TextResource applicationIdTextResource;
     private final VariantImpl publicVariantAPI;
+    private final VariantPropertiesImpl publicVariantPropertiesImpl;
 
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
@@ -161,13 +167,21 @@ public abstract class BaseVariantData {
                                 recorder),
                         this);
 
-        publicVariantAPI =
-                new VariantImpl(
-                        scope.getFullVariantName(),
+        VariantConfiguration publicVariantConfiguration =
+                new VariantConfigurationImpl(
+                        variantConfiguration.getFullName(),
+                        variantConfiguration.getBuildType().getName(),
+                        variantConfiguration.getFlavorNamesWithDimensionNames());
+
+        // TODO: Instantiate the correct subtypes here.
+        publicVariantAPI = new AppVariantImpl(publicVariantConfiguration);
+        publicVariantPropertiesImpl =
+                new AppVariantPropertiesImpl(
                         globalScope.getProject().getObjects(),
                         scope,
                         variantConfiguration,
-                        scope.getArtifacts().getOperations());
+                        scope.getArtifacts().getOperations(),
+                        publicVariantConfiguration);
 
         outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantConfiguration);
 
@@ -210,8 +224,13 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public VariantImpl getPublicVariantApi() {
+    public VariantImpl<?> getPublicVariantApi() {
         return publicVariantAPI;
+    }
+
+    @NonNull
+    public VariantPropertiesImpl getPublicVariantPropertiesApi() {
+        return publicVariantPropertiesImpl;
     }
 
     @NonNull

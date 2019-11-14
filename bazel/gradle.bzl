@@ -7,7 +7,7 @@ def _gradle_build_impl(ctx):
         for source, dest in zip(ctx.attr.output_file_sources, ctx.outputs.output_file_destinations):
             outputs += [dest]
             args += ["--output", source, dest.path]
-    distribution = ctx.attr._distribution.files.to_list()[0]
+    distribution = ctx.attr.distribution.files.to_list()[0]
     args += ["--distribution", distribution.path]
     for repo in ctx.files.repos:
         args += ["--repo", repo.path]
@@ -35,10 +35,7 @@ _gradle_build_rule = rule(
         ),
         "repos": attr.label_list(allow_files = True),
         "output_log": attr.output(),
-        "_distribution": attr.label(
-            default = Label("//tools/base/build-system:gradle-distrib"),
-            allow_files = True,
-        ),
+        "distribution": attr.label(allow_files = True),
         "_gradlew": attr.label(
             executable = True,
             cfg = "host",
@@ -52,6 +49,7 @@ _gradle_build_rule = rule(
 def gradle_build(
         name = None,
         build_file = None,
+        gradle_version = None,
         data = [],
         output_file = None,
         output_file_source = None,
@@ -73,10 +71,13 @@ def gradle_build(
         output_file_destinations += [output_file_destination]
         output_file_sources += [output_file_source_name]
 
+    distribution = "//tools/base/build-system:gradle-distrib" + ("-" + gradle_version if (gradle_version) else "")
+
     _gradle_build_rule(
         name = name,
         build_file = build_file,
         data = data,
+        distribution = distribution,
         output_file_sources = output_file_sources,
         output_file_destinations = output_file_destinations,
         output_log = name + ".log",

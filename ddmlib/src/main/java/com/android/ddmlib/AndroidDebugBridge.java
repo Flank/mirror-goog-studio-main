@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,6 +39,7 @@ import java.io.InputStreamReader;
 import java.lang.Thread.State;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -657,6 +659,8 @@ public class AndroidDebugBridge {
         T process(Process process, BufferedReader r) throws IOException;
     }
 
+    /** @deprecated Use {@link #execute} which lets you inject an executor */
+    @Deprecated
     private static <T> ListenableFuture<T> runAdb(
             @NonNull final File adb, AdbOutputProcessor<T> resultParser, String... command) {
         final SettableFuture<T> future = SettableFuture.create();
@@ -756,15 +760,11 @@ public class AndroidDebugBridge {
 
     @NonNull
     public static ListenableFuture<String> getVirtualDeviceId(
-            @NonNull File adb, @NonNull IDevice device) {
-        return runAdb(
-                adb,
-                AndroidDebugBridge::processVirtualDeviceIdCommandOutput,
-                "-s",
-                device.getSerialNumber(),
-                "emu",
-                "avd",
-                "id");
+            @NonNull ListeningExecutorService service, @NonNull File adb, @NonNull IDevice device) {
+        List<String> command =
+                Arrays.asList(adb.toString(), "-s", device.getSerialNumber(), "emu", "avd", "id");
+
+        return execute(service, command, AndroidDebugBridge::processVirtualDeviceIdCommandOutput);
     }
 
     /**
@@ -797,6 +797,27 @@ public class AndroidDebugBridge {
         assert !result.isEmpty();
 
         return result;
+    }
+
+    @NonNull
+    private static <T> ListenableFuture<T> execute(
+            @NonNull ListeningExecutorService service,
+            @NonNull List<String> command,
+            @NonNull AdbOutputProcessor<T> processor) {
+        return service.submit(
+                () -> {
+                    ProcessBuilder builder = new ProcessBuilder(command);
+                    builder.redirectErrorStream(true);
+
+                    Process process = builder.start();
+
+                    try (BufferedReader in =
+                            new BufferedReader(
+                                    new InputStreamReader(
+                                            process.getInputStream(), StandardCharsets.UTF_8))) {
+                        return processor.process(process, in);
+                    }
+                });
     }
 
     /**

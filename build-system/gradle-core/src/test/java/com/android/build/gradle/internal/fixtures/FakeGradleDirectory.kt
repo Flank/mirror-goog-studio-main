@@ -17,12 +17,17 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.file.Directory
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
 
 class FakeGradleDirectory(private val dir: File): Directory {
+    override fun files(vararg p0: Any?): FileCollection {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun getAsFileTree(): FileTree {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

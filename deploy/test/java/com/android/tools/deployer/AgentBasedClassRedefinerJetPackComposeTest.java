@@ -16,10 +16,23 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import java.util.Collection;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class AgentBasedClassRedefinerJetPackComposeTest extends AgentBasedClassRedefinerTestBase {
+
+    @Parameterized.Parameters
+    public static Collection<String> artFlags() {
+        return ALL_ART_FLAGS;
+    }
+
+    public AgentBasedClassRedefinerJetPackComposeTest(String artFlag) {
+        super(artFlag);
+    }
 
     @Test
     public void testReComposeApplyChanges() throws Exception {

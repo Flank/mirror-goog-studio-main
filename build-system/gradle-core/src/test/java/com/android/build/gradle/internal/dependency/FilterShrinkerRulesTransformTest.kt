@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeFilterShrinkerRulesParameters
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation

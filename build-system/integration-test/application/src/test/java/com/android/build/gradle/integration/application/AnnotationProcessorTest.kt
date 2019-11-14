@@ -178,54 +178,6 @@ class AnnotationProcessorTest {
     }
 
     @Test
-    fun precompileCheck() {
-        TestFileUtils.appendToFile(
-            project.getSubproject(":app").buildFile,
-            """
-            dependencies {
-            api project(':lib-compiler')
-                api project(':lib')
-            }
-            """.trimIndent()
-        )
-
-        val result = project.executor().expectFailure().run("assembleDebug")
-        val message = result.failureMessage
-        assertThat(message).contains("Annotation processors must be explicitly declared now")
-        assertThat(message).contains("- lib-compiler.jar (project :lib-compiler)")
-    }
-
-    /**
-     * Test compile classpath is being added to processor path.
-     */
-    @Test
-    fun compileClasspathIncludedInProcessor() {
-        val emptyJar = project.getSubproject("app").file("empty.jar")
-        assertThat(emptyJar.createNewFile()).isTrue()
-
-        TestFileUtils.appendToFile(
-            project.getSubproject(":app").buildFile,
-            """
-            android {
-                defaultConfig {
-                    javaCompileOptions {
-                        annotationProcessorOptions {
-                            includeCompileClasspath = true
-                        }
-                    }
-                }
-            }
-            dependencies {
-                api project(':lib-compiler')
-                annotationProcessor files('empty.jar')
-            }
-            """.trimIndent()
-        )
-
-        project.executor().run("assembleDebug")
-    }
-
-    @Test
     fun androidAptPluginFail() {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,

@@ -32,6 +32,5 @@
     <instantiate from="root/src/app_package/ui/main/SectionsPagerAdapter.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/ui/main/SectionsPagerAdapter.${ktOrJavaExt}" />
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
 </recipe>

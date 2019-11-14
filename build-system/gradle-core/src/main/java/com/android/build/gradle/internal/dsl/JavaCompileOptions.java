@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import javax.inject.Inject;
@@ -30,13 +31,15 @@ public class JavaCompileOptions implements com.android.build.gradle.api.JavaComp
     private AnnotationProcessorOptions annotationProcessorOptions;
 
     @VisibleForTesting
-    public JavaCompileOptions() {
-        annotationProcessorOptions = new AnnotationProcessorOptions();
+    public JavaCompileOptions(DeprecationReporter deprecationReporter) {
+        annotationProcessorOptions = new AnnotationProcessorOptions(deprecationReporter);
     }
 
     @Inject
-    public JavaCompileOptions(ObjectFactory objectFactory) {
-        annotationProcessorOptions = objectFactory.newInstance(AnnotationProcessorOptions.class);
+    public JavaCompileOptions(
+            ObjectFactory objectFactory, DeprecationReporter deprecationReporter) {
+        annotationProcessorOptions =
+                objectFactory.newInstance(AnnotationProcessorOptions.class, deprecationReporter);
     }
 
     /**

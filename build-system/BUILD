@@ -105,7 +105,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "5.6.1"
+GRADLE_VERSION = "6.0-rc-1"
 
 GRADLE_NIGHTLY = "5.7-20190815220048+0000"
 

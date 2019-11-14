@@ -16,7 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -68,16 +73,36 @@ public class RepoTest {
     }
 
     @Test
-    public void repo() throws IOException, InterruptedException {
+    public void repo() throws IOException, InterruptedException, ProcessException {
         // publish the libraries in the order needed to build each
         util.execute("clean", "publishJavaPublicationToMavenRepository");
-        baseLibrary.execute("clean", "publishReleasePublicationToMavenRepository");
-        library.execute(
-                "clean",
-                "publishReleasePublicationToMavenRepository",
-                "publishDebugPublicationToMavenRepository");
+        baseLibrary.execute("clean", "publish");
+        library.execute("clean", "publish");
 
-        // build the app which should consume all the libraries.
-        app.execute("clean", "assembleDebug", "assembleRelease");
+        // build should fail because app cannot choose between free/paid variant of the library
+        app.executor().expectFailure().run("clean", "assembleDebug", "assembleRelease");
+
+        // specify disambiguation rule for the free/paid variant of the library.
+        TestFileUtils.appendToFile(
+                app.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "  defaultConfig {\n"
+                        + "    missingDimensionStrategy 'price', 'free'\n"
+                        + "  }\n"
+                        + "\n}");
+        app.executor().run("clean", "assembleDebug", "assembleRelease");
+
+        Apk debugApk = app.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(debugApk)
+                .containsClass("Lcom/example/android/multiproject/library/DebugFoo;");
+        assertThatApk(debugApk)
+                .doesNotContainClass("Lcom/example/android/multiproject/library/ReleaseFoo;");
+
+        Apk releaseApk = app.getApk(GradleTestProject.ApkType.RELEASE);
+        assertThatApk(releaseApk)
+                .containsClass("Lcom/example/android/multiproject/library/ReleaseFoo;");
+        assertThatApk(releaseApk)
+                .doesNotContainClass("Lcom/example/android/multiproject/library/DebugFoo;");
     }
 }

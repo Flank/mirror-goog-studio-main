@@ -347,7 +347,8 @@ public class InstantAppModelBuilder
                         null,
                         null,
                         null,
-                        null);
+                        null,
+                        variantScope.getCodeShrinker());
 
         return new VariantImpl(
                 variantConfiguration.getFullName(),

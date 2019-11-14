@@ -21,9 +21,12 @@ import org.gradle.api.Transformer
 import org.gradle.api.internal.provider.HasConfigurableValueInternal
 import org.gradle.api.internal.provider.PropertyInternal
 import org.gradle.api.internal.provider.ProviderInternal
+import org.gradle.api.internal.provider.ScalarSupplier
+import org.gradle.api.internal.provider.ValueSanitizer
 import org.gradle.api.internal.tasks.TaskDependencyResolveContext
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.internal.DisplayName
 import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -37,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * to the new Variant API. It is unclear if this wrapper will remain once conversion is done.
  */
 open class GradleProperty<T>(
-    private val property: Property<T>) : PropertyInternal<T>, Property<T> {
+    private val property: Property<T>) : PropertyInternal<T>, ProviderInternal<T>, Property<T> {
 
     override fun getOrElse(p0: T): T {
         return property.getOrElse(p0)
@@ -119,11 +122,6 @@ open class GradleProperty<T>(
         (property as PropertyInternal<T>).attachProducer(p0)
     }
 
-    override fun withFinalValue(): ProviderInternal<T> {
-        @Suppress("UNCHECKED_CAST")
-        return (property as ProviderInternal<T>).withFinalValue()
-    }
-
     override fun implicitFinalizeValue() {
         (property as HasConfigurableValueInternal).implicitFinalizeValue()
     }
@@ -136,6 +134,27 @@ open class GradleProperty<T>(
     override fun setFromAnyValue(p0: Any) {
         @Suppress("UNCHECKED_CAST")
         (property as PropertyInternal<T>).setFromAnyValue(p0)
+    }
+
+    override fun attachDisplayName(p0: DisplayName) {
+        (property as PropertyInternal<*>).attachDisplayName(p0)
+    }
+
+    override fun asSupplier(
+        p0: DisplayName,
+        p1: Class<in T>,
+        p2: ValueSanitizer<in T>
+    ): ScalarSupplier<T> {
+        @Suppress("UNCHECKED_CAST")
+        return (property as ProviderInternal<T>).asSupplier(p0, p1, p2)
+    }
+
+    override fun isValueProducedByTask(): Boolean {
+        return (property as ProviderInternal<*>).isValueProducedByTask
+    }
+
+    override fun isContentProducedByTask(): Boolean {
+        return (property as ProviderInternal<*>).isContentProducedByTask
     }
 
     companion object {

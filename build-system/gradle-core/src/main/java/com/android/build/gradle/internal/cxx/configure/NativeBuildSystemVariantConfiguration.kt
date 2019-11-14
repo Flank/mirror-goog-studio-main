@@ -53,7 +53,7 @@ fun createNativeBuildSystemVariantConfig(
             config.externalNativeBuildOptions.externalNativeCmakeOptions?.abiFilters ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
             config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.abiFilters ?: setOf()
-        else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
+    }
 
     /**
      * Get the set of abiFilters from the ndk part of the DSL. For example,
@@ -87,7 +87,7 @@ fun createNativeBuildSystemVariantConfig(
             config.externalNativeBuildOptions.externalNativeCmakeOptions?.arguments ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
             config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.arguments ?: listOf()
-        else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
+    }
 
     /**
      * The set of build system c flags from the externalNativeBuild part of the DSL. For example,
@@ -107,7 +107,7 @@ fun createNativeBuildSystemVariantConfig(
             config.externalNativeBuildOptions.externalNativeCmakeOptions?.getcFlags() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
             config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.getcFlags() ?: listOf()
-        else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
+    }
 
     /**
      * The set of build system c++ flags from the externalNativeBuild part of the DSL. For example,
@@ -127,7 +127,7 @@ fun createNativeBuildSystemVariantConfig(
             config.externalNativeBuildOptions.externalNativeCmakeOptions?.cppFlags ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
             config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.cppFlags ?: listOf()
-        else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
+    }
 
     /**
      * The set of build system c++ targets from the externalNativeBuild part of the DSL. For example,
@@ -147,7 +147,7 @@ fun createNativeBuildSystemVariantConfig(
             config.externalNativeBuildOptions.externalNativeCmakeOptions?.targets ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
             config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.targets ?: setOf()
-        else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
+    }
 
     return NativeBuildSystemVariantConfig(
         externalNativeBuildAbiFilters,

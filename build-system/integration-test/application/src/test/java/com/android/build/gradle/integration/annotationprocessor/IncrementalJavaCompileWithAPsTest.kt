@@ -31,11 +31,9 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -49,26 +47,18 @@ import java.io.File
 @RunWith(FilterableParameterized::class)
 class IncrementalJavaCompileWithAPsTest(
     private val withKapt: Boolean,
-    private val withSeparateAP: Boolean,
     private val withIncrementalAPs: Boolean
 ) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "kapt_{0}_separateAP_{1}_incrementalAPs_{2}")
+        @Parameterized.Parameters(name = "kapt_{0}_incrementalAPs_{1}")
         @JvmStatic
         fun parameters() = listOf(
-            // When Kapt is used, process-annotations task is not created and JavaCompile
-            // performs incremental compilation regardless of the values of the other two
-            // parameters. Therefore, testing one scenario is good enough (as we want to save test
-            // execution time).
-            arrayOf(true, true, false),
-
-            // When Kapt is not used, test all four scenarios
-            arrayOf(false, true, true),
-            arrayOf(false, true, false),
-            arrayOf(false, false, true),
-            arrayOf(false, false, false)
+            arrayOf(false, false),
+            arrayOf(false, true),
+            arrayOf(true, false),
+            arrayOf(true, true)
         )
 
         private const val APP_MODULE = ":app"
@@ -104,16 +94,13 @@ class IncrementalJavaCompileWithAPsTest(
         private const val ANNOTATION_2_PROCESSOR = "Annotation2Processor"
 
         private const val CLEAN_TASK = "$APP_MODULE:clean"
-        private const val PROCESS_ANNOTATIONS_TASK = "$APP_MODULE:processDebugAnnotationsWithJavac"
+        private const val KAPT_TASK = "$APP_MODULE:kaptDebugKotlin"
         private const val COMPILE_TASK = "$APP_MODULE:compileDebugJavaWithJavac"
     }
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(setUpTestProject())
         .withKotlinGradlePlugin(withKapt)
-        .addGradleProperties(
-            "${BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.propertyName}=$withSeparateAP"
-        )
         .create()
 
     private fun setUpTestProject(): TestProject {
@@ -312,7 +299,7 @@ class IncrementalJavaCompileWithAPsTest(
      */
     private fun addAggregatingProcessorClass(
         builder: JavaSourceFileBuilder,
-        processorName: String
+        @Suppress("SameParameterValue") processorName: String
     ) {
         builder.addImports(
             "java.io.IOException",
@@ -320,7 +307,10 @@ class IncrementalJavaCompileWithAPsTest(
             "java.io.Writer",
             "java.util.Collections",
             "java.util.HashSet",
+            "java.util.List",
             "java.util.Set",
+            "java.util.function.Function",
+            "java.util.stream.Collectors",
             "javax.annotation.processing.AbstractProcessor",
             "javax.annotation.processing.RoundEnvironment",
             "javax.lang.model.SourceVersion",
@@ -385,9 +375,14 @@ class IncrementalJavaCompileWithAPsTest(
                         writer.write("\t\tgreetings.append(\"Hello. This message comes from generated code! \");\n");
                         writer.write("\t\tgreetings.append(\"The following types are annotated with @" + annotationFullClassName  + ": \");\n");
 
-                        Set<? extends Element> annotatedTypes = roundEnv.getElementsAnnotatedWith(annotation);
-                        for (Element annotateType : annotatedTypes) {
-                           writer.write("\t\tgreetings.append(\"" + ((TypeElement) annotateType).getQualifiedName() + "; \");\n");
+                        // Sort the annotated types to ensure deterministic output
+                        List<String> sortedAnnotatedTypes =
+                                roundEnv.getElementsAnnotatedWith(annotation).stream()
+                                        .map((Function<Element, String>) element ->
+                                                ((TypeElement) element).getQualifiedName().toString())
+                                        .sorted().collect(Collectors.toList());
+                        for (String annotatedType : sortedAnnotatedTypes) {
+                            writer.write("\t\tgreetings.append(\"" + annotatedType + "; \");\n");
                         }
 
                         writer.write("\t\treturn greetings.toString();\n");
@@ -530,10 +525,10 @@ class IncrementalJavaCompileWithAPsTest(
 
         // Check the tasks' status. Checking this once in this test is good enough, the other tests
         // don't need to repeat this check.
-        if (withKapt || !withSeparateAP) {
-            assertThat(fullBuildResult.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
+        if (withKapt) {
+            assertThat(fullBuildResult.getTask(KAPT_TASK)).didWork()
         } else {
-            assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
+            assertThat(fullBuildResult.findTask(KAPT_TASK)).isNull()
         }
         assertThat(fullBuildResult.getTask(COMPILE_TASK)).didWork()
 
@@ -563,28 +558,20 @@ class IncrementalJavaCompileWithAPsTest(
         }
 
         /*
-         * EXPECTATION: If (1) Kapt is used, (2) the separateAnnotationProcessing flag is enabled,
-         * or (3) all of the annotation processors are incremental, compilation should be
-         * incremental.
+         * EXPECTATION: If (1) Kapt is used, or (2) all of the annotation processors are
+         * incremental, compilation should be incremental.
          */
-        val incrementalMode = withKapt || withSeparateAP || withIncrementalAPs
+        val incrementalMode = withKapt || withIncrementalAPs
 
         // This is the case when JavaCompile performs both annotation processing and compilation
-        val annotationProcessingByJavaCompile = !withKapt && !withSeparateAP
+        val annotationProcessingByJavaCompile = !withKapt
 
         // The relevant original source files should be recompiled always
         assertFileHasChanged(annotation1Class1)
 
         // In incremental mode, the irrelevant original source files should not be recompiled
         if (incrementalMode) {
-            if (annotationProcessingByJavaCompile) {
-                // EXPECTATION-NOT-MET: This is a limitation of Gradle. mainActivityClass references
-                // the generated source files and Gradle considers mainActivityClass as relevant to
-                // the change even though the re-generated source files' contents haven't changed.
-                assertFileHasChanged(mainActivityClass)
-            } else {
-                assertFileHasNotChanged(mainActivityClass)
-            }
+            assertFileHasNotChanged(mainActivityClass)
             assertFileHasNotChanged(annotation1Class2)
             assertFileHasNotChanged(annotation2Class1)
             assertFileHasNotChanged(annotation2Class2)
@@ -616,10 +603,10 @@ class IncrementalJavaCompileWithAPsTest(
         }
 
         // Check the tasks' status
-        if (withKapt || !withSeparateAP) {
-            assertThat(result.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
+        if (withKapt) {
+            assertThat(result.getTask(KAPT_TASK)).didWork()
         } else {
-            assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
+            assertThat(result.findTask(KAPT_TASK)).isNull()
         }
         assertThat(result.getTask(COMPILE_TASK)).didWork()
     }
@@ -650,14 +637,13 @@ class IncrementalJavaCompileWithAPsTest(
         }
 
         /*
-         * EXPECTATION: If (1) Kapt is used, (2) the separateAnnotationProcessing flag is enabled,
-         * or (3) all of the annotation processors are incremental, compilation should be
-         * incremental.
+         * EXPECTATION: If (1) Kapt is used, or (2) all of the annotation processors are
+         * incremental, compilation should be incremental.
          */
-        val incrementalMode = withKapt || withSeparateAP || withIncrementalAPs
+        val incrementalMode = withKapt || withIncrementalAPs
 
         // This is the case when JavaCompile performs both annotation processing and compilation
-        val annotationProcessingByJavaCompile = !withKapt && !withSeparateAP
+        val annotationProcessingByJavaCompile = !withKapt
 
         // None of the original source files are changed, so in incremental mode, none of them
         // should be recompiled
@@ -705,10 +691,10 @@ class IncrementalJavaCompileWithAPsTest(
         }
 
         // Check the tasks' status
-        if (withKapt || !withSeparateAP) {
-            assertThat(result.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
+        if (withKapt) {
+            assertThat(result.getTask(KAPT_TASK)).didWork()
         } else {
-            assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
+            assertThat(result.findTask(KAPT_TASK)).isNull()
         }
         if (incrementalMode) {
             if (annotationProcessingByJavaCompile) {
@@ -736,7 +722,7 @@ class IncrementalJavaCompileWithAPsTest(
          */
         // This is the case when JavaCompile performs both annotation processing and
         // compilation
-        val annotationProcessingByJavaCompile = !withKapt && !withSeparateAP
+        val annotationProcessingByJavaCompile = !withKapt
 
         // None of the generated source files should be re-generated
         if (annotationProcessingByJavaCompile) {
@@ -749,11 +735,10 @@ class IncrementalJavaCompileWithAPsTest(
         }
 
         /*
-         * EXPECTATION: If (1) Kapt is used, (2) the separateAnnotationProcessing flag is enabled,
-         * or (3) all of the annotation processors are incremental, compilation should be
-         * incremental.
+         * EXPECTATION: If (1) Kapt is used, or (2) all of the annotation processors are
+         * incremental, compilation should be incremental.
          */
-        val incrementalMode = withKapt || withSeparateAP || withIncrementalAPs
+        val incrementalMode = withKapt || withIncrementalAPs
 
         // The relevant original source files should be recompiled always
         assertFileHasChanged(annotation1Class1)
@@ -785,69 +770,11 @@ class IncrementalJavaCompileWithAPsTest(
         }
 
         // Check the tasks' status
-        if (withKapt || !withSeparateAP) {
-            assertThat(result.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
+        if (withKapt) {
+            assertThat(result.getTask(KAPT_TASK)).wasUpToDate()
         } else {
-            assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).wasUpToDate()
+            assertThat(result.findTask(KAPT_TASK)).isNull()
         }
         assertThat(result.getTask(COMPILE_TASK)).didWork()
-    }
-
-    @Test
-    fun `ensure correct build when no annotation processors are present`() {
-        // This test is needed only when annotation processing is done by process-annotations task.
-        // It checks the Java compiler's behavior when the -proc:only option is specified but no
-        // annotation processors are present. See ProcessAnnotationsTaskCreationAction.
-        assumeTrue(!withKapt && withSeparateAP && !withIncrementalAPs)
-
-        val appDir = project.getSubproject(APP_MODULE).testDir
-        val appBuildFile = project.getSubproject(APP_MODULE).buildFile
-        val mainActivityPackagePath = MAIN_ACTIVITY_PACKAGE.replace('.', '/')
-
-        // Remove annotation processors from the build files
-        if (withKapt) {
-            TestFileUtils.searchAndReplace(
-                appBuildFile,
-                "kapt ",
-                "// kapt "
-            )
-        } else {
-            TestFileUtils.searchAndReplace(
-                appBuildFile,
-                "annotationProcessor",
-                "// annotationProcessor"
-            )
-        }
-
-        // Update the project so that it does not use any generated source files
-        for (generatedClass in listOf(ANNOTATION_1_GENERATED_CLASS, ANNOTATION_2_GENERATED_CLASS)) {
-            TestFileUtils.searchAndReplace(
-                File("$appDir/$SOURCE_DIR/$mainActivityPackagePath/$MAIN_ACTIVITY.java"),
-                "new $GENERATED_PACKAGE.$generatedClass().toString()",
-                "\"Hello\""
-            )
-        }
-
-        val fullBuildResult = runFullBuild()
-
-        // Source files should not be generated
-        assertThat(annotation1GeneratedJavaFile).doesNotExist()
-        assertThat(annotation2GeneratedJavaFile).doesNotExist()
-
-        assertThat(annotation1GeneratedClass).doesNotExist()
-        assertThat(annotation2GeneratedClass).doesNotExist()
-
-        // Original source files should be compiled
-        assertThat(mainActivityClass).exists()
-        assertThat(annotation1Class1).exists()
-        assertThat(annotation1Class2).exists()
-        assertThat(annotation2Class1).exists()
-        assertThat(annotation2Class2).exists()
-
-        // Check the tasks' status
-        // Process-annotations task should be skipped since no annotation processors are present
-        // (regression test for bug 140602661).
-        assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).wasSkipped()
-        assertThat(fullBuildResult.getTask(COMPILE_TASK)).didWork()
     }
 }

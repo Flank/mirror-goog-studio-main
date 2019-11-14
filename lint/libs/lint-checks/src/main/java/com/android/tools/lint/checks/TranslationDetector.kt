@@ -234,6 +234,26 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 }
             }
 
+            if (defaultLocale != null && context.driver.phase == 1) {
+                val parentFolderName = context.file.parentFile.name
+                val folderLanguage = getLanguageTagFromFolder(parentFolderName)
+                if (folderLanguage != null) {
+                    val defaultLanguage = defaultLocale.substringBefore("-")
+                    if (folderLanguage != defaultLanguage) {
+                        context.report(
+                            MISSING,
+                            context.getValueLocation(
+                                root.getAttributeNodeNS(
+                                    TOOLS_URI,
+                                    ATTR_LOCALE
+                                )
+                            ),
+                            "Suspicious `tools:locale` declaration of language `$defaultLanguage`; the parent folder `$parentFolderName` implies language $folderLanguage"
+                        )
+                    }
+                }
+            }
+
             // Visit top level children within the resource file
             var child = XmlUtils.getFirstSubTag(root)
             while (child != null) {

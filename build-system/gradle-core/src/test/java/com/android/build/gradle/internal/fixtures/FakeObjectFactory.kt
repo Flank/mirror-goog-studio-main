@@ -21,6 +21,7 @@ import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.SourceDirectorySet
@@ -39,6 +40,10 @@ import java.lang.reflect.Constructor
  *
  */
 class FakeObjectFactory : ObjectFactory {
+    override fun fileTree(): ConfigurableFileTree {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun <T : Any?> domainObjectContainer(p0: Class<T>): NamedDomainObjectContainer<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

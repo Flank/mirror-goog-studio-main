@@ -43,7 +43,8 @@ class MavenRepoGeneratorTest {
                         "libc".toByteArray(),
                         "com.example:liba:1",
                         "com.example:libb:1"
-                    )
+                    ),
+                    MavenRepoGenerator.Library("com.example:libaar:1", "aar", "aar".toByteArray())
                 )
             )
 
@@ -122,6 +123,22 @@ class MavenRepoGeneratorTest {
                               <version>1</version>
                               <scope>compile</scope>
                             </dependency>
+                          </dependencies>
+                        </project>
+                        """.trimIndent(),
+                    "com/example/libaar/1/libaar-1.aar" to "aar",
+                    "com/example/libaar/1/libaar-1.pom" to """
+                        <?xml version="1.0" encoding="UTF-8"?>
+                        <project
+                            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+                            xmlns="http://maven.apache.org/POM/4.0.0"
+                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                          <modelVersion>4.0.0</modelVersion>
+                          <groupId>com.example</groupId>
+                          <artifactId>libaar</artifactId>
+                          <version>1</version>
+                          <packaging>aar</packaging>
+                          <dependencies>
                           </dependencies>
                         </project>
                         """.trimIndent()

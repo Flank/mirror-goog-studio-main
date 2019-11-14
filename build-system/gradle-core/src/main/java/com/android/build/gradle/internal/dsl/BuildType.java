@@ -21,13 +21,13 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
+import com.android.builder.model.CodeShrinker;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
@@ -98,7 +98,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         javaCompileOptions =
                 objectFactory.newInstance(
                         com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
-                        objectFactory);
+                        objectFactory,
+                        dslScope.getDeprecationReporter());
         shaderOptions = objectFactory.newInstance(ShaderOptions.class);
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =

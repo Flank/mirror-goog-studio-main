@@ -60,6 +60,24 @@ fun publishArtifactToConfiguration(
         }
 }
 
+@JvmOverloads
+fun publishArtifactToDefaultVariant(
+    configuration: Configuration,
+    file: Any,
+    artifactType: AndroidArtifacts.ArtifactType,
+    classifier: String? = null
+) {
+    val type = artifactType.type
+
+    configuration.outgoing.artifact(
+        file
+    ) { artifact ->
+        artifact.type = type
+        classifier?.let { artifact.classifier = classifier }
+    }
+}
+
+
 /**
  * This method creates a unique ConfigurationVariant name based on the artifactType and
  * attributeMap, which is important because all items in a NamedDomainObjectContainer must have

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFilesProvider
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import java.io.File
 
 /**

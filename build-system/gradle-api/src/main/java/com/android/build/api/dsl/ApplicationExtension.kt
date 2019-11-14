@@ -16,6 +16,10 @@
 
 package com.android.build.api.dsl
 
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Incubating
 
 /**
@@ -25,6 +29,6 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface ApplicationExtension : CommonExtension, ApkExtension, TestedExtension {
+interface ApplicationExtension : CommonExtension<AppVariant, AppVariantProperties>, ApkExtension, TestedExtension {
     // TODO(b/140406102)
 }

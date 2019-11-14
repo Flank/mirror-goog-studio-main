@@ -16,15 +16,31 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Test the R class field verification. */
+@RunWith(Parameterized.class)
 public class AgentBasedClassRedefinerRClassTest extends AgentBasedClassRedefinerTestBase {
+    @Parameterized.Parameters
+    public static Collection<String> artFlags() {
+        return ALL_ART_FLAGS;
+    }
+
+    public AgentBasedClassRedefinerRClassTest(String artFlag) {
+        super(artFlag);
+    }
+
     @Test
-    public void testRClassRedefine() throws Exception {
+    public void testRClassRedefineRename() throws Exception {
+        // TODO: ART doesn't support removal yet.
+        Assume.assumeTrue(artFlag == null);
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
@@ -49,5 +65,21 @@ public class AgentBasedClassRedefinerRClassTest extends AgentBasedClassRedefiner
                 fieldErrors.get("FIELD_B"), Deploy.JvmtiError.Details.Type.FIELD_REMOVED);
         Assert.assertTrue(fieldErrors.containsKey("FIELD_C"));
         Assert.assertEquals(fieldErrors.get("FIELD_C"), Deploy.JvmtiError.Details.Type.FIELD_ADDED);
+    }
+
+    @Test
+    public void testRClassRedefineAddId() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        Deploy.SwapRequest request = createRequest("app.R$id", "app/R$id.dex", false);
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
+
+        // No need to verify the content of the id because those are inlined.
     }
 }

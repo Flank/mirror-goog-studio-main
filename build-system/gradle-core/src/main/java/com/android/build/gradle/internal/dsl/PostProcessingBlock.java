@@ -26,7 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.ProguardFilesProvider;
-import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.builder.model.CodeShrinker;
 import com.android.utils.HelpfulEnumConverter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

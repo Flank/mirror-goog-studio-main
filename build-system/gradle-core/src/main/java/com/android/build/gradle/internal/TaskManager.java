@@ -84,7 +84,6 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -179,8 +178,6 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
-import com.android.build.gradle.tasks.ProcessAnnotationsTask;
-import com.android.build.gradle.tasks.ProcessAnnotationsTaskCreationAction;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -193,6 +190,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -1251,14 +1249,8 @@ public abstract class TaskManager {
     public TaskProvider<? extends JavaCompile> createJavacTask(@NonNull final VariantScope scope) {
         taskFactory.register(new JavaPreCompileTask.CreationAction(scope));
 
-        boolean processAnnotationsTaskCreated = ProcessAnnotationsTask.taskShouldBeCreated(scope);
-        if (processAnnotationsTaskCreated) {
-            taskFactory.register(new ProcessAnnotationsTaskCreationAction(scope));
-        }
-
         final TaskProvider<? extends JavaCompile> javacTask =
-                taskFactory.register(
-                        new JavaCompileCreationAction(scope, processAnnotationsTaskCreated));
+                taskFactory.register(new JavaCompileCreationAction(scope));
 
         postJavacCreation(scope);
 

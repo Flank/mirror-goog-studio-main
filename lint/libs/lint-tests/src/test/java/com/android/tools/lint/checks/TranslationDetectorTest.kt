@@ -1005,6 +1005,46 @@ class TranslationDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testSuspiciousLocale() {
+        lint().files(
+            xml(
+                "res/values/strings.xml",
+                """
+                <resources xmlns:android="http://schemas.android.com/apk/res/android">
+                    <string name="name">Name</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-en/strings.xml",
+                """
+                <resources
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools" tools:locale="en-US">
+                    <string name="name">Name (en)</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-nb/strings.xml",
+                """
+                <resources
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+                    <string name="name">Name (nb)</string>
+                </resources>
+                """
+            ).indented()
+        ).run().expect(
+            """
+                res/values-nb/strings.xml:3: Error: Suspicious tools:locale declaration of language en; the parent folder values-nb implies language nb [MissingTranslation]
+                    xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+                                                                                 ~~
+                1 errors, 0 warnings
+                """
+        )
+    }
+
     fun testConfigKeys() {
         // Some developer services create config files merged with your project, but in some
         // versions they were missing a translatable="false" entry. Since we know these aren't

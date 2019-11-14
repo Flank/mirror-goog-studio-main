@@ -17,11 +17,24 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Test cases where the agent fail to redefine classes for various reasons. */
+@RunWith(Parameterized.class)
 public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefinerTestBase {
+
+    @Parameterized.Parameters
+    public static Collection<String> artFlags() {
+        return ALL_ART_FLAGS;
+    }
+
+    public AgentBasedClassRedefinerFailureTest(String artFlag) {
+        super(artFlag);
+    }
 
     @Test
     public void testFailHotSwap() throws Exception {

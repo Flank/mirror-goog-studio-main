@@ -49,7 +49,10 @@ interface DeprecationReporter {
         ENABLE_R8("in a future version of the Android Gradle plugin, and will no longer " +
                 "allow you to disable R8"),
         USE_PROPERTIES("in a future version of the Android Gradle Plugin, Gradle " +
-                "Properties must be used to change Variant information.")
+                "Properties must be used to change Variant information."),
+        INCLUDE_COMPILE_CLASSPATH("soon. It does not do anything and AGP no longer " +
+                "includes annotation processors added on your project's compile classpath"
+        )
     }
 
     /**

@@ -78,7 +78,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
@@ -100,6 +99,7 @@ import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -900,7 +900,7 @@ public class VariantManager implements VariantModel {
             configuration.registerTransform(dependencies);
         }
 
-        registerDexingOutputSplitTransform(dependencies, variantScopes);
+        registerDexingOutputSplitTransform(dependencies);
     }
 
     private static <F, T> List<T> convert(

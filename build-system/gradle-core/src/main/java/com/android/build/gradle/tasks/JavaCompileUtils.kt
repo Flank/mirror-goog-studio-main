@@ -114,14 +114,7 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
 fun JavaCompile.configureAnnotationProcessorPath(scope: VariantScope) {
-    val processorOptions = scope.variantConfiguration.javaCompileOptions.annotationProcessorOptions
-
     var processorPath = scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
-    if (java.lang.Boolean.TRUE == processorOptions.includeCompileClasspath) {
-        // We need to query for PROCESSED_JAR instead of CLASSES because annotation processors
-        // require both classes and resources
-        processorPath = processorPath.plus(scope.getJavaClasspath(COMPILE_CLASSPATH, PROCESSED_JAR))
-    }
     this.options.annotationProcessorPath = processorPath
 }
 
@@ -141,17 +134,14 @@ data class SerializableArtifact(
  * NOTE: The format of the annotation processor names is currently not consistent. If the processors
  * are specified from the DSL's annotation processor options, the format is
  * "com.example.processor.SampleProcessor". If the processors are auto-detected on the annotation
- * processor or compile classpath, the format is
- * "processor.jar (com.example.processor:processor:1.0)".
+ * processor classpath, the format is "processor.jar (com.example.processor:processor:1.0)".
  *
  * @return the map from annotation processors to Boolean values indicating whether they are
  * incremental or not
  */
 fun detectAnnotationProcessors(
-    apOptionIncludeCompileClasspath: Boolean?,
     apOptionClassNames: List<String>,
-    processorClasspath: Collection<SerializableArtifact>,
-    compileClasspath: Collection<SerializableArtifact>
+    processorClasspath: Collection<SerializableArtifact>
 ): Map<String, Boolean> {
     val processors = mutableMapOf<String, Boolean>()
 
@@ -165,14 +155,9 @@ fun detectAnnotationProcessors(
         }
     } else {
         // If the processor names are not specified, the Java compiler will auto-detect them on the
-        // annotation processor or compile classpath.
+        // annotation processor classpath.
         val processorArtifacts = mutableMapOf<SerializableArtifact, Boolean>()
         processorArtifacts.putAll(detectAnnotationProcessors(processorClasspath))
-
-        // Add those on the compile classpath only when includeCompileClasspath is true.
-        if (java.lang.Boolean.TRUE == apOptionIncludeCompileClasspath) {
-            processorArtifacts.putAll(detectAnnotationProcessors(compileClasspath))
-        }
 
         processors.putAll(processorArtifacts.mapKeys { it.key.displayName })
     }

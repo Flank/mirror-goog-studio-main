@@ -597,6 +597,25 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             ),
             java(
                 "" +
+                        // Access from within granular SDKs should not flag errors
+                        "package com.google.mlkit.foo.bar;\n" +
+                        "\n" +
+                        "import test.pkg.internal.HiddenInPackage;\n" +
+                        "\n" +
+                        "public class HideTest {\n" +
+                        "    public void test() {\n" +
+                        "        HiddenInPackage hp = new HiddenInPackage();!\n" +
+                        "        HiddenInPackage.test();\n" +
+                        "        HiddenClass hc = new HiddenClass();\n" +
+                        "        HiddenClass.test();\n" +
+                        "        PublicClass pc = new PublicClass();\n" +
+                        "        PublicClass.hiddenMethod();\n" +
+                        "        PublicClass.normalMethod();\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            java(
+                "" +
                         "package test.pkg.internal;\n" +
                         "\n" +
                         "public class HiddenInPackage {\n" +

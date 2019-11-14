@@ -35,7 +35,6 @@ import static com.android.SdkConstants.REFERENCE_STYLE;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
-import static com.android.SdkConstants.TAG_STRING;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_SAFE;
@@ -923,9 +922,13 @@ public class ResourceUsageModel {
                             value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)) {
                         // Data binding expression: there could be multiple references here
                         int length = value.length();
-                        int index = value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)
-                                ? PREFIX_TWOWAY_BINDING_EXPR.length()
-                                : PREFIX_BINDING_EXPR.length();
+                        int startIndex =
+                                value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)
+                                        ? PREFIX_TWOWAY_BINDING_EXPR.length()
+                                        : PREFIX_BINDING_EXPR.length();
+
+                        // Find resource references that look like "@string/", "@drawable/", etc.
+                        int index = startIndex;
                         while (true) {
                             index = value.indexOf('@', index);
                             if (index == -1) {
@@ -955,6 +958,36 @@ public class ResourceUsageModel {
                                 from.addReference(resource);
                             }
 
+                            index = end;
+                        }
+
+                        // Find resource references that look like "R.string", "R.drawable", etc.
+                        index = startIndex;
+                        while (true) {
+                            index = value.indexOf("R.", index);
+                            if (index == -1) {
+                                break;
+                            }
+                            int end = index + 2;
+                            char previousChar = value.charAt(index - 1);
+                            // The previous character of 'R' should not be able to form an identifier.
+                            // For example, character 's' could connect 'R' and form "sR" which does
+                            // not represent the resource class anymore.
+                            if (end < length && !Character.isJavaIdentifierPart(previousChar)) {
+                                while (end < length
+                                        && (Character.isJavaIdentifierPart(value.charAt(end))
+                                                || value.charAt(end) == '.')) {
+                                    end++;
+                                }
+                                // Get a substring "type.name" from "R.type.name" and split it into [type, name].
+                                String[] tokens = value.substring(startIndex + 2, end).split("\\.");
+                                if (tokens.length == 2) {
+                                    ResourceType type = ResourceType.fromClassName(tokens[0]);
+                                    if (type != null) {
+                                        from.addReference(addResource(type, tokens[1], null));
+                                    }
+                                }
+                            }
                             index = end;
                         }
                     }

@@ -16,29 +16,25 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.artifact.Operations
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
- * Parent interface for all types of variants.
+ * Variant object that contains properties that must be set during configuration time as it
+ * changes the build flow for the variant.
+ *
+ * @param T the [VariantProperties] type associated with this [Variant]
  */
 @Incubating
-interface Variant {
+interface Variant<T : VariantProperties>: VariantConfiguration {
 
     /**
-     * Variant name, unique within a project.
-     * @return the variant name
+     * Set to True if the variant is active and should be configured, false otherwise.
      */
-    val name: String
+    var enabled: Boolean
 
     /**
-     * Returns the final list of variant outputs.
-     * @return read only list of [VariantOutput] for this variant.
+     * Runs the [Action] block on the [VariantProperties] object once created.
      */
-    val outputs: List<VariantOutput>
-
-    /**
-     * Access to the variant's buildable artifacts for build customization.
-     */
-    val operations: Operations
+    fun onProperties(action: Action<T>)
 }

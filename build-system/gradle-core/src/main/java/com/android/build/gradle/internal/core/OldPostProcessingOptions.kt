@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.getProguardFiles
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import org.gradle.api.Project
 import java.io.File
 

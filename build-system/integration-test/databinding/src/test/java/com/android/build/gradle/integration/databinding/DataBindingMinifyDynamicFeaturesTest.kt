@@ -20,7 +20,7 @@ package com.android.build.gradle.integration.databinding
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.build.gradle.internal.scope.CodeShrinker
+import com.android.builder.model.CodeShrinker
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.apk.Apk
 import org.junit.Before
