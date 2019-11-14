@@ -206,9 +206,9 @@ class VdPath extends VdElement {
                 @NonNull Point2D.Float currentPoint,
                 @NonNull Point2D.Float currentSegmentStartPoint,
                 char previousType) {
-            // For horizontal and vertical lines, we have to convert to LineTo with 2 parameters
+            // For horizontal and vertical lines, we have to convert to LineTo with 2 parameters.
             // And for arcTo, we also need to isolate the parameters for transformation.
-            // Therefore a looping will be necessary for such commands.
+            // Therefore looping will be necessary for such commands.
             //
             // Note that if the matrix is translation only, then we can save many computations.
             int paramsLen = mParams.length;
