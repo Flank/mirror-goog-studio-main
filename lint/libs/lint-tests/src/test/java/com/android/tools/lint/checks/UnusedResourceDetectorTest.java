@@ -708,37 +708,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "</layout>")));
     }
 
-    public void testDataBindingResourceClass() throws Exception {
-        // Make sure that resources referenced only via a data binding expression in the
-        // form of "R.type.name" are not counted as unused.
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        xml(
-                                "res/values/resources.xml",
-                                ""
-                                        + "<resources>\n"
-                                        + "    <item type='string' name='happy'>Happy</item>\n"
-                                        + "</resources>"),
-
-                        // Add unit test source which references resources which would otherwise
-                        // be marked as unused
-                        xml(
-                                "res/layout/db.xml",
-                                ""
-                                        + "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\""
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\" "
-                                        + "    tools:keep=\"@layout/db\">\n"
-                                        + "   <LinearLayout\n"
-                                        + "       android:orientation=\"vertical\"\n"
-                                        + "       android:layout_width=\"match_parent\"\n"
-                                        + "       android:layout_height=\"match_parent\"\n"
-                                        // Data binding expressions
-                                        + "       android:text=\"@{R.string.happy}\" />\n"
-                                        + "</layout>")));
-    }
-
     public void testDataBindingIds() throws Exception {
         // Make sure id's in data binding layouts aren't considered unused
         // (since the compiler will generate accessors for these that
