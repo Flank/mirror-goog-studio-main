@@ -29,6 +29,7 @@ enum class Category {
   AIDL,
   Widget,
   Google,
+  Compose,
   Other,
 }
 

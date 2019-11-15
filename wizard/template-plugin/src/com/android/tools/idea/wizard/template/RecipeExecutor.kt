@@ -55,7 +55,8 @@ interface RecipeExecutor {
    *
    * @param mavenCoordinate coordinate of dependency to be added in Maven format (e.g androidx.appcompat:appcompat:1.1.0).
    * @param configuration Gradle configuration to use.
-   * */
+   * @param minRev If [minRev] is present, [minRev] or a higher number is used as the version of the dependency.
+   */
   fun addDependency(mavenCoordinate: String, configuration: String = "compile", minRev: String? = null)
 
   /**
