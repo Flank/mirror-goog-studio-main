@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TaskStateList
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
@@ -44,6 +45,9 @@ class CacheabilityTestHelper private constructor(
         )
 
     private var didExecute = false
+
+    private val extraExecutorOperations: MutableList<(GradleTaskExecutor) -> GradleTaskExecutor> =
+        mutableListOf()
 
     companion object {
         /**
@@ -152,14 +156,48 @@ class CacheabilityTestHelper private constructor(
     }
 
     /**
+     * Adds extra operations to be executed on the executor before running tasks
+     * For instance, (operation1, operation2, operation3) will result in
+     * operation1(executor), operation2(executor), operation3(executor) being run, with the
+     * previous return value being passed to the next operation.
+     * 
+     * @param operations a series of lambdas describing extra operations.
+     */
+    fun withExecutorOperations(vararg operations: (GradleTaskExecutor) -> GradleTaskExecutor):
+            CacheabilityTestHelper {
+        extraExecutorOperations.addAll(operations)
+        return this
+    }
+
+    /**
      * Runs the specified tasks on both projects
      */
     fun withTasks(vararg tasks: String): CacheabilityTestHelper {
+        // Reset the result
+        taskResults.getValue(UP_TO_DATE).clear()
+        taskResults.getValue(FROM_CACHE).clear()
+        taskResults.getValue(DID_WORK).clear()
+        taskResults.getValue(SKIPPED).clear()
+        taskResults.getValue(FAILED).clear()
+
+        val chainExtraExecutorOperations = { it: GradleTaskExecutor ->
+            /* Simulates chain calling for additional operations
+             * similar to executor.operation1().operation2().operation3()...
+             */
+            var executor = it
+            for (operation in extraExecutorOperations) {
+                executor = operation(executor)
+            }
+
+            executor
+        }
+
         // Build the first project
         projectCopy1
             .executor()
             .withArgument("--build-cache")
             .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.toString())
+            .run(chainExtraExecutorOperations)
             .run(tasks.asList())
 
         // Check that the build cache has been populated
@@ -171,6 +209,7 @@ class CacheabilityTestHelper private constructor(
                 .executor()
                 .withArgument("--build-cache")
                 .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.toString())
+                .run(chainExtraExecutorOperations)
                 .run(tasks.asList())
 
         taskResults.getValue(UP_TO_DATE).addAll(result.upToDateTasks)
