@@ -31,6 +31,10 @@ interface RecipeExecutor {
   /** Merges the given XML source into the given destination file (or just writes it if the destination file does not exist). */
   fun mergeXml(source: String, to: File)
 
+  /** Merges the given Gradle source into the given destination file (or just writes it if the destination file does not exist). */
+  @Deprecated("Avoid merging Gradle files, add to an existing file programmatically instead")
+  fun mergeGradleFile(source: String, to: File)
+
   /**
    * Creates a directory at the specified location (if not already present).
    * This will also create any parent directories that don't exist, as well.
