@@ -29,9 +29,10 @@ data class VersionedCodeShrinker(val shrinker: CodeShrinker, val version: String
         fun of(codeShrinker: CodeShrinker) = when (codeShrinker) {
             CodeShrinker.PROGUARD -> VersionedCodeShrinker(
                 CodeShrinker.PROGUARD,
-                parseProguardVersion(getProguardVersionString())
+                parseVersionString(getProguardVersionString())
             )
-            CodeShrinker.R8 -> VersionedCodeShrinker(CodeShrinker.R8, getR8Version())
+            CodeShrinker.R8 -> VersionedCodeShrinker(CodeShrinker.R8,
+                parseVersionString(getR8Version()))
         }
 
         private val versionPattern = """[^\s.]+(?:\.[^\s.]+)+""".toRegex()
@@ -48,15 +49,15 @@ data class VersionedCodeShrinker(val shrinker: CodeShrinker, val version: String
         }
 
         @VisibleForTesting
-        internal fun parseProguardVersion(version: String): String {
+        internal fun parseVersionString(version: String): String {
             val matcher = versionPattern.find(version)
             return if (matcher != null) {
                 LoggerWrapper.getLogger(VersionedCodeShrinker::class.java)
-                    .verbose("Parsed ProGuard version: ${matcher.groupValues[0]}")
+                    .verbose("Parsed shrinker version: ${matcher.groupValues[0]}")
                 matcher.groupValues[0]
             } else {
                 LoggerWrapper.getLogger(VersionedCodeShrinker::class.java)
-                    .warning("Cannot parse ProGuard version, assuming 0.0.0")
+                    .warning("Cannot parse shrinker version, assuming 0.0.0")
                 "0.0.0"
             }
         }
