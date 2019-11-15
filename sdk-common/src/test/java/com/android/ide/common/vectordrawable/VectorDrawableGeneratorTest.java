@@ -558,7 +558,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
     }
 
     public void testSvgImageOnly() throws Exception {
-        checkSvgConversionAndContainsError("test_image_only", "ERROR: No vector content found");
+        checkSvgConversionAndContainsError("test_image_only",
+                                           "ERROR @ line 11: <image> is not supported");
     }
 
     // Clip Path Tests

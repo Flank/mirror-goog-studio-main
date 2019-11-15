@@ -169,6 +169,7 @@ public class Svg2Vector {
             "stop",
             // Graphics elements.
             "ellipse",
+            "image",
             "text",
             // Light source elements.
             "feDistantLight",
