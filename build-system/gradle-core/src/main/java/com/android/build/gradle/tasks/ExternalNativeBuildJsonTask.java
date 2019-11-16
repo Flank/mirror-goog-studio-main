@@ -42,6 +42,15 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
     private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
 
+    public ExternalNativeBuildJsonTask() {
+        this.getOutputs()
+                .upToDateWhen(
+                        task -> {
+                            getLogger().debug("Generate json model is always run.");
+                            return false;
+                        });
+    }
+
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -98,9 +107,6 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
             task.generator = generator;
             task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
             GradleVariantConfiguration config = getVariantScope().getVariantConfiguration();
-
-            // Task should always run.
-            task.getOutputs().upToDateWhen(task1 -> false);
 
             if (artifacts.hasFinalProduct(
                             InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
