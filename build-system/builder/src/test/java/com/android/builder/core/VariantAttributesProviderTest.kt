@@ -151,33 +151,33 @@ class VariantAttributesProviderTest {
     fun testVersionNameFromFlavorWithSuffix() {
         mergedFlavor.versionName = "1.0"
         buildType.versionNameSuffix = "-DEBUG"
-        assertThat(provider.versionName).isEqualTo("1.0-DEBUG")
+        assertThat(provider.getVersionName()).isEqualTo("1.0-DEBUG")
     }
 
     @Test
     fun testVersionNameWithSuffixOnly() {
         buildType.versionNameSuffix = "-DEBUG"
 
-        assertThat(provider.versionName).isEqualTo("-DEBUG")
+        assertThat(provider.getVersionName()).isEqualTo("-DEBUG")
     }
 
     @Test
     fun testVersionNameFromManifest() {
         `when`(manifestSupplier.versionName).thenReturn("MANIFEST")
-        assertThat(provider.versionName).isEqualTo("MANIFEST")
+        assertThat(provider.getVersionName()).isEqualTo("MANIFEST")
     }
 
     @Test
     fun testVersionCodeFromManifest() {
         `when`(manifestSupplier.versionCode).thenReturn(34)
-        assertThat(provider.versionCode).isEqualTo(34)
+        assertThat(provider.getVersionCode()).isEqualTo(34)
     }
 
     @Test
     fun testVersionCodeFromFlavor() {
         mergedFlavor.versionCode = 32
 
-        assertThat(provider.versionCode).isEqualTo(32)
+        assertThat(provider.getVersionCode()).isEqualTo(32)
     }
 
     @Test

@@ -171,6 +171,29 @@ public class VariantConfigurationTest {
                 .isEqualTo(DefaultApiVersion.create(new Integer(-1)));
     }
 
+    @Test
+    public void testGetVersionCode() {
+
+        mDefaultConfig.setVersionCode(42);
+
+        VariantConfiguration variant = getVariant();
+
+        assertThat(variant.getVersionCode()).isEqualTo(42);
+    }
+
+    @Test
+    public void testGetVersionName() {
+
+        mDefaultConfig.setVersionName("foo");
+        mDefaultConfig.setVersionNameSuffix("-bar");
+        mBuildType.setVersionNameSuffix("-baz");
+
+        VariantConfiguration variant = getVariant();
+
+        assertThat(variant.getVersionName()).isEqualTo("foo-bar-baz");
+    }
+
+
     private VariantConfiguration getVariant() {
         return getVariant(null /*signingOverride*/);
     }

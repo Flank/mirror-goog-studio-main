@@ -19,7 +19,9 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.VariantOutput
 import org.gradle.api.provider.Property
 
-internal class VariantOutputImpl(override val versionCode: Property<Int>,
+internal class VariantOutputImpl(
+    override val versionCode: Property<Int>,
+    override val versionName: Property<String>,
     val type: VariantOutput.OutputType
 ) : VariantOutput {
 

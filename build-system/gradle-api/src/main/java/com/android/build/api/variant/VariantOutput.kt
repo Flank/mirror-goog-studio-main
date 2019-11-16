@@ -44,12 +44,21 @@ interface VariantOutput {
     }
 
     /**
-     * Returns a modifiable [Property] representing the variant output version.
+     * Returns a modifiable [Property] representing the variant output version code.
      *
      * This will be initialized with the variant's merged flavor value or read from the manifest
      * file if unset.
      */
     val versionCode: Property<Int>
+
+    /**
+     * Returns a modifiable [Property] representing the variant output version name.
+     *
+     * This will be initialized with the variant's merged flavor value, or it will be read from the
+     * manifest source file if it's not set via the DSL, or it will be null if it's also not set in
+     * the manifest.
+     */
+    val versionName: Property<String>
 
     /** Returns the output type of the referenced APK. */
     val outputType: String

@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -257,11 +258,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
-            task.versionCode.set(mainSplit?.versionCode
-                ?: task.project.provider(config::getVersionCode))
+            task.versionCode.set(
+                mainSplit?.versionCode ?: task.project.provider(config::getVersionCode)
+            )
             task.versionCode.disallowChanges()
-            task.versionName.set(task.project.provider { config.versionName })
-            task.versionName.disallowChanges()
+            task.versionName.setDisallowChanges(
+                mainSplit?.versionName ?: task.project.provider(config::getVersionName)
+            )
 
             task.mainSplit = variantData.outputScope.mainSplit
 

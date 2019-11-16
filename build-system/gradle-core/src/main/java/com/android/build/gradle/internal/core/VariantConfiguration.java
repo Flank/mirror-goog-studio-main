@@ -710,34 +710,57 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the version name for this variant. This could be coming from the manifest or
-     * could be overridden through the product flavors, and can have a suffix specified by
-     * the build type.
+     * Returns the version name for this variant. This could be specified by the product flavors,
+     * or, if not, it could be coming from the manifest. A suffix may be specified by the build
+     * type.
      *
-     * @return the version name
+     * @return the version name or null if none defined
      */
     @Nullable
     public String getVersionName() {
-        return mVariantAttributesProvider.getVersionName();
+        return getVersionName(false);
     }
 
     /**
-     * Returns the version code for this variant. This could be coming from the manifest or
-     * could be overridden through the product flavors, and can have a suffix specified by
-     * the build type.
+     * Returns the version name for this variant. This could be specified by the product flavors,
+     * or, if not, it could be coming from the manifest. A suffix may be specified by the build
+     * type.
      *
-     * @return the version code or -1 if there was non defined.
+     * @param ignoreManifest whether or not the manifest is ignored when getting the version code
+     * @return the version name or null if none defined
+     */
+    @Nullable
+    public String getVersionName(boolean ignoreManifest) {
+        return mVariantAttributesProvider.getVersionName(ignoreManifest);
+    }
+
+    /**
+     * Returns the version code for this variant. This could be specified by the product flavors,
+     * or, if not, it could be coming from the manifest.
+     *
+     * @return the version code or -1 if there was none defined.
      */
     public int getVersionCode() {
-        return mVariantAttributesProvider.getVersionCode();
+        return getVersionCode(false);
     }
 
-    public Supplier<String> getVersionNameSerializableSupplier() {
-        return mVariantAttributesProvider.getVersionNameSerializableSupplier();
+    /**
+     * Returns the version code for this variant. This could be specified by the product flavors,
+     * or, if not, it could be coming from the manifest.
+     *
+     * @param ignoreManifest whether or not the manifest is ignored when getting the version code
+     * @return the version code or -1 if there was none defined.
+     */
+    public int getVersionCode(boolean ignoreManifest) {
+        return mVariantAttributesProvider.getVersionCode(ignoreManifest);
     }
 
-    public IntSupplier getVersionCodeSerializableSupplier() {
-        return mVariantAttributesProvider.getVersionCodeSerializableSupplier();
+    public Supplier<String> getManifestVersionNameSupplier() {
+        return mVariantAttributesProvider.getManifestVersionNameSupplier();
+    }
+
+    public IntSupplier getManifestVersionCodeSupplier() {
+        return mVariantAttributesProvider.getManifestVersionCodeSupplier();
     }
 
     private static final String DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner";

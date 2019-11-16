@@ -19,15 +19,12 @@ package com.android.build.api.variant.impl
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.Operations
 import com.android.build.gradle.internal.core.VariantConfiguration
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,6 +33,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.util.function.IntSupplier
+import java.util.function.Supplier
 
 /**
  * Tests for [VariantPropertiesImpl]
@@ -47,8 +45,6 @@ class VariantPropertiesImplTest {
     @Mock lateinit var variantScope: VariantScope
     @Mock lateinit var globalScope: GlobalScope
     @Mock lateinit var variantConfiguration: VariantConfiguration<*, *, *>
-    @Mock lateinit var mergedFlavor: ProductFlavor
-    @Mock lateinit var apkData: ApkData
     @Mock lateinit var operations: Operations
     @Mock lateinit var publicConfiguration: com.android.build.api.variant.VariantConfiguration
 
@@ -58,34 +54,57 @@ class VariantPropertiesImplTest {
     fun setup() {
         MockitoAnnotations.initMocks(this)
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        Mockito.`when`(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
         Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
     }
 
     @Test
-    fun testConfiguredVersion() {
+    fun testManifestProvidedVersion() {
         val properties = VariantPropertiesImpl(
             project.objects, variantScope, variantConfiguration, operations, publicConfiguration)
-        Mockito.`when`(variantConfiguration.versionCodeSerializableSupplier).thenReturn(
-            IntSupplier { 10 })
+        Mockito.`when`(variantConfiguration.manifestVersionCodeSupplier)
+            .thenReturn(IntSupplier { 10 })
+        Mockito.`when`(variantConfiguration.manifestVersionNameSupplier)
+            .thenReturn(Supplier<String?> { "foo" })
 
         properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(10)
+        Truth.assertThat(properties.outputs[0].versionName.get()).isEqualTo("foo")
     }
 
     @Test
     fun testDslProvidedVersion() {
         val properties = VariantPropertiesImpl(
             project.objects, variantScope, variantConfiguration, operations, publicConfiguration)
-        Mockito.`when`(mergedFlavor.versionCode).thenReturn(23)
+        Mockito.`when`(variantConfiguration.getVersionCode(true)).thenReturn(23)
+        Mockito.`when`(variantConfiguration.getVersionName(true)).thenReturn("bar")
 
         properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(23)
+        Truth.assertThat(properties.outputs[0].versionName.get()).isEqualTo("bar")
+    }
+
+    @Test
+    fun testManifestAndDslProvidedVersions() {
+        val properties = VariantPropertiesImpl(
+            project.objects, variantScope, variantConfiguration, operations, publicConfiguration)
+        Mockito.`when`(variantConfiguration.manifestVersionCodeSupplier)
+            .thenReturn(IntSupplier { 10 })
+        Mockito.`when`(variantConfiguration.manifestVersionNameSupplier)
+            .thenReturn(Supplier<String?> { "foo" })
+        Mockito.`when`(variantConfiguration.getVersionCode(true)).thenReturn(23)
+        Mockito.`when`(variantConfiguration.getVersionName(true)).thenReturn("bar")
+
+        properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
+        Truth.assertThat(properties.outputs).hasSize(1)
+
+        // we expect the DSL-provided versions to trump the manifest-provided versions.
+        Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(23)
+        Truth.assertThat(properties.outputs[0].versionName.get()).isEqualTo("bar")
     }
 }

@@ -16,13 +16,12 @@
 
 package com.android.builder.core
 
-import com.google.common.base.Preconditions.checkState
-
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
+import com.google.common.base.Preconditions.checkState
 import com.google.common.base.Strings
-import java.io.Serializable
 import java.io.File
+import java.io.Serializable
 import java.util.function.IntSupplier
 import java.util.function.Supplier
 
@@ -88,46 +87,46 @@ class VariantAttributesProvider(
         get() = manifestSupplier.split
 
     /**
-     * Returns the version name for this variant. This could be coming from the manifest or could be
-     * overridden through the product flavors, and can have a suffix specified by the build type.
+     * Returns the version name for this variant. This could be specified by the product flavors,
+     * or, if not, it could be coming from the manifest. A suffix may be specified by the build
+     * type.
      *
-     * @return the version name
+     * @param ignoreManifest whether or not the manifest is ignored when getting the version name
+     * @return the version name or null if none defined
      */
-    val versionName: String?
-        get() {
-            var versionName = mergedFlavor.versionName
-            var versionSuffix = mergedFlavor.versionNameSuffix
+    fun getVersionName(ignoreManifest: Boolean = false): String? {
+        var versionName = mergedFlavor.versionName
 
-            if (versionName == null && !isTestVariant) {
-                versionName = manifestSupplier.versionName
-            }
-
-            versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
-                    buildType.versionNameSuffix, versionSuffix)
-
-            if (versionSuffix != null && !versionSuffix.isEmpty()) {
-                versionName = Strings.nullToEmpty(versionName) + versionSuffix
-            }
-
-            return versionName
+        if (versionName == null && !isTestVariant && !ignoreManifest) {
+            versionName = manifestSupplier.versionName
         }
+
+        val versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
+            buildType.versionNameSuffix, mergedFlavor.versionNameSuffix)
+
+        if (versionSuffix != null && versionSuffix.isNotEmpty()) {
+            versionName = Strings.nullToEmpty(versionName) + versionSuffix
+        }
+
+        return versionName
+    }
 
     /**
-     * Returns the version code for this variant. This could be coming from the manifest or could be
-     * overridden through the product flavors, and can have a suffix specified by the build type.
+     * Returns the version code for this variant. This could be specified by the product flavors,
+     * or, if not, it could be coming from the manifest.
      *
-     * @return the version code or -1 if there was non defined.
+     * @param ignoreManifest whether or not the manifest is ignored when getting the version code
+     * @return the version code or -1 if there was none defined.
      */
-    val versionCode: Int
-        get() {
-            var versionCode = mergedFlavor.versionCode ?: -1
+    fun getVersionCode(ignoreManifest: Boolean = false): Int {
+        var versionCode = mergedFlavor.versionCode ?: -1
 
-            if (versionCode == -1 && !isTestVariant) {
-                versionCode = manifestSupplier.versionCode
-            }
-
-            return versionCode
+        if (versionCode == -1 && !isTestVariant && !ignoreManifest) {
+            versionCode = manifestSupplier.versionCode
         }
+
+        return versionCode
+    }
 
     /**
      * Returns the instrumentation runner, found in the build file or manifest file
@@ -237,43 +236,41 @@ class VariantAttributesProvider(
         }
     }
 
-    val versionNameSerializableSupplier: Supplier<String?>
+    val manifestVersionNameSupplier: Supplier<String?>
         get() {
             val file = if (isTestVariant) null else manifestFile
             val versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
                 buildType.versionNameSuffix, mergedFlavor.versionNameSuffix
             )
-            return SerializableStringSupplier(
+            return ManifestVersionNameSupplier(
                 file,
                 manifestSupplier.isManifestFileRequired,
-                mergedFlavor.versionName,
                 versionSuffix
             )
         }
 
-    val versionCodeSerializableSupplier: IntSupplier
+    val manifestVersionCodeSupplier: IntSupplier
         get() {
             val file = if (isTestVariant) null else manifestFile
-            return SerializableIntSupplier(
+            return ManifestVersionCodeSupplier(
                 file,
                 manifestSupplier.isManifestFileRequired)
         }
 
-    private class SerializableStringSupplier(
+    private class ManifestVersionNameSupplier(
             private val manifestFile: File? = null,
             private val isManifestFileRequired: Boolean,
-            private val versionName: String? = null,
-            private val versionSuffix: String? = null) : Supplier<String?>, Serializable {
-
-        private var cachedVersionName: String? = null
+            private val versionSuffix: String? = null
+    ) : Supplier<String?>, Serializable {
+        private var isCached: Boolean = false
+        private var versionName: String? = null
 
         override fun get(): String? {
-            if (cachedVersionName != null) {
-                return cachedVersionName
+            if (isCached) {
+                return versionName
             }
-            cachedVersionName = versionName
-            if (cachedVersionName == null && manifestFile != null) {
-                cachedVersionName = DefaultManifestParser(
+            if (manifestFile != null) {
+                versionName = DefaultManifestParser(
                     manifestFile,
                     { true },
                     isManifestFileRequired,
@@ -281,18 +278,19 @@ class VariantAttributesProvider(
                 ).versionName
             }
 
-            if (versionSuffix != null && !versionSuffix.isEmpty()) {
-                cachedVersionName = Strings.nullToEmpty(cachedVersionName) + versionSuffix
+            if (versionSuffix != null && versionSuffix.isNotEmpty()) {
+                versionName = Strings.nullToEmpty(versionName) + versionSuffix
             }
 
-            return cachedVersionName
+            isCached = true
+            return versionName
         }
     }
 
-    private class SerializableIntSupplier(
+    private class ManifestVersionCodeSupplier(
                 private val manifestFile: File? = null,
-                private val isManifestFileRequired: Boolean) : IntSupplier, Serializable
-    {
+                private val isManifestFileRequired: Boolean
+    ) : IntSupplier, Serializable {
         private var isCached: Boolean = false
         private var versionCode: Int = -1
 
