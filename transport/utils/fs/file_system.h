@@ -141,6 +141,14 @@ class FileSystem {
   virtual bool AppendFile(const std::string &dpath,
                           const std::string &spath) = 0;
 
+  // Move the file from the first path to the second path. The caller should
+  // ensure the first file is not in write mode and that the second file either
+  // doesn't exist or is also not in write mode. The caller should also not
+  // call this method with the same path for both arguments.
+  // Returns true on success.
+  virtual bool MoveFile(const std::string &fpath_from,
+                        const std::string &fpath_to) = 0;
+
  protected:
   virtual bool HasDir(const std::string &dpath) const = 0;
 
@@ -186,13 +194,6 @@ class FileSystem {
   // Read a file's contents all in one pass. This will return the empty string
   // if the file at the target path is in write mode.
   virtual std::string GetFileContents(const std::string &fpath) const = 0;
-
-  // Move the file from the first path to the second path. The caller should
-  // ensure the first file is not in write mode and that the second file either
-  // doesn't exist or is also not in write mode. The caller should also not
-  // call this method with the same path for both arguments.
-  virtual bool MoveFile(const std::string &fpath_from,
-                        const std::string &fpath_to) = 0;
 
   // Returns true if the file is in write mode. See also |OpenWriteMode| and
   // |Close|

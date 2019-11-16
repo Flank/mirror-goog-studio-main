@@ -138,8 +138,8 @@ ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
     auto trace_type =
         ongoing_capture->configuration.user_options().trace_type();
     if (trace_type == proto::CpuTraceType::SIMPLEPERF) {
-      stop_status = simpleperf_manager_->StopProfiling(
-          app_name, need_trace, cpu_config_.simpleperf_host(), &error_message);
+      stop_status = simpleperf_manager_->StopProfiling(app_name, need_trace,
+                                                       &error_message);
     } else if (trace_type == proto::CpuTraceType::ATRACE) {
       if (UsePerfetto()) {
         stop_status = perfetto_manager_->StopProfiling(&error_message);

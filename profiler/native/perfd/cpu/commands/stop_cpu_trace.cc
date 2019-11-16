@@ -76,8 +76,8 @@ void Stop(Daemon* daemon, const profiler::proto::Command command_data,
       oss << CurrentProcess::dir() << kCacheLocation << capture->trace_id;
       std::string to_file_name = oss.str();
       DiskFileSystem fs;
-      bool move_failed = fs.MoveFile(from_file_name, to_file_name);
-      if (move_failed) {
+      bool move_success = fs.MoveFile(from_file_name, to_file_name);
+      if (!move_success) {
         stop_status->set_status(TraceStopStatus::CANNOT_READ_FILE);
         stop_status->set_error_message("Failed to read trace from device");
       }

@@ -24,6 +24,9 @@
 
 #include "perfd/cpu/simpleperf.h"
 #include "proto/cpu.grpc.pb.h"
+#include "utils/fs/disk_file_system.h"
+#include "utils/fs/file_system.h"
+#include "utils/fs/memory_file_system.h"
 
 namespace profiler {
 
@@ -49,11 +52,20 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
+  // For production.
   SimpleperfManager()
-      : SimpleperfManager(std::unique_ptr<Simpleperf>(new Simpleperf())) {}
+      : SimpleperfManager(std::unique_ptr<Simpleperf>(new Simpleperf()),
+                          std::unique_ptr<FileSystem>(new DiskFileSystem())) {}
+  // For testing.
+  SimpleperfManager(std::unique_ptr<Simpleperf> simpleperf)
+      : SimpleperfManager(std::move(simpleperf),
+                          std::unique_ptr<FileSystem>(new MemoryFileSystem())) {
+  }
 
-  explicit SimpleperfManager(std::unique_ptr<Simpleperf> simpleperf)
-      : simpleperf_(std::move(simpleperf)) {}
+  explicit SimpleperfManager(std::unique_ptr<Simpleperf> simpleperf,
+                             std::unique_ptr<FileSystem> file_system)
+      : simpleperf_(std::move(simpleperf)),
+        file_system_(std::move(file_system)) {}
 
   ~SimpleperfManager();
 
@@ -69,13 +81,9 @@ class SimpleperfManager {
                       int sampling_interval_us, const std::string &trace_path,
                       std::string *error, bool is_startup_profiling = false);
   // Stops simpleperf process that is currently profiling |app_name|.
-  // If |need_result|, convert the raw data to the processed data in a file.
-  // |report_sample_on_host| indicates if the report-sample command should run
-  // on the host instead of the device. Always cleans up raw data file and log
-  // file.
+  // If |need_result|, copies the resulting data into the trace file.
   profiler::proto::TraceStopStatus::Status StopProfiling(
-      const std::string &app_name, bool need_result, bool report_sample_on_host,
-      std::string *error);
+      const std::string &app_name, bool need_result, std::string *error);
   // Returns true if the app is currently being profiled by a simpleperf
   // process.
   bool IsProfiling(const std::string &app_name);
@@ -90,14 +98,10 @@ class SimpleperfManager {
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
   std::unique_ptr<Simpleperf> simpleperf_;
+  std::unique_ptr<FileSystem> file_system_;
 
   // Wait until simpleperf process has returned.
   bool WaitForSimpleperf(const OnGoingProfiling &ongoing_recording,
-                         std::string *error) const;
-
-  // Convert a trace file from simpleperf binary format to protobuf.
-  // Source and Destination are determined by |ongoing_recording| values.
-  bool ConvertRawToProto(const OnGoingProfiling &ongoing_recording,
                          std::string *error) const;
 
   // Copies a trace file in simpleperf binary format to |trace_path|, defined in

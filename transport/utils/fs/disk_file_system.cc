@@ -161,7 +161,7 @@ string DiskFileSystem::GetFileContents(const string &fpath) const {
 
 bool DiskFileSystem::MoveFile(const string &fpath_from,
                               const string &fpath_to) {
-  return rename(fpath_from.c_str(), fpath_to.c_str());
+  return rename(fpath_from.c_str(), fpath_to.c_str()) == 0;
 }
 
 bool DiskFileSystem::IsOpenForWrite(const string &fpath) const {

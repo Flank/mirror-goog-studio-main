@@ -205,12 +205,11 @@ void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
       // "cache/complete" is where the generic bytes rpc fetches contents from.
       oss << CurrentProcess::dir() << "cache/complete/" << capture->trace_id;
       DiskFileSystem fs;
-      // DiskFileSystem::MoveFile returns true when it fails.
       // TODO b/133321803 save this move by having Daemon generate a path in the
       // byte cache that traces can output contents to directly.
-      bool move_failed =
+      bool move_success =
           fs.MoveFile(capture->configuration.temp_path(), oss.str());
-      if (move_failed) {
+      if (!move_success) {
         capture->stop_status.set_status(TraceStopStatus::CANNOT_READ_FILE);
         capture->stop_status.set_error_message(
             "Failed to read trace from device");
