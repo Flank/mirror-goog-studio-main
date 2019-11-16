@@ -161,7 +161,6 @@ final class HandleHello extends ChunkHandler {
         if (cd.getPid() == pid) {
             cd.setVmIdentifier(vmIdent);
             cd.setClientDescription(appName);
-            cd.isDdmAware(true);
 
             if (validUserId) {
                 cd.setUserId(userId);
