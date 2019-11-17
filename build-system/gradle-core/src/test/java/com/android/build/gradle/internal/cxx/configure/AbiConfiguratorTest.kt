@@ -18,14 +18,12 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
-import com.android.utils.FileUtils.join
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
 
 class AbiConfiguratorTest {
     @Rule
@@ -277,7 +275,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "armeabi-v7a,armeabi")
         assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
+        assertThat(logger.infos).containsExactly(
             "ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI, ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly()
@@ -291,7 +289,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "armeabi-v7a,armeabi")
         assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
+        assertThat(logger.infos).containsExactly(
             "ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI, ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly()
@@ -308,7 +306,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "armeabi-v7a,x86_64")
         assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
+        assertThat(logger.infos).containsExactly(
             "ABIs [armeabi-v7a,x86_64] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly(Abi.X86_64)
@@ -321,6 +319,6 @@ class AbiConfiguratorTest {
             ideBuildTargetAbi = " x86, x86_64 ")
         assertThat(logger.errors).isEmpty()
         assertThat(logger.warnings).isEmpty()
-        assertThat(configurator.validAbis).containsExactly(Abi.X86, Abi.X86_64)
+        assertThat(configurator.validAbis).containsExactly(Abi.X86)
     }
 }

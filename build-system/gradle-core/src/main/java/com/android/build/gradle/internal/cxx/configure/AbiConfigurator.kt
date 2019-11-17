@@ -18,17 +18,14 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.hashing.shortSha256Of
-import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.json.readJsonFile
 import com.android.build.gradle.internal.cxx.json.writeJsonFile
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.options.StringOption
 import com.android.utils.FileUtils.join
-import com.google.common.base.Charsets
-import com.google.gson.GsonBuilder
 import java.io.File
-import java.nio.file.Files
 
 data class AbiConfigurationKey(
     val ndkHandlerSupportedAbis: Collection<Abi>,
@@ -37,24 +34,29 @@ data class AbiConfigurationKey(
     val ndkConfigAbiFilters: Set<String>,
     val splitsFilterAbis: Set<String>,
     val ideBuildOnlyTargetAbi: Boolean,
-    val ideBuildTargetAbi: String?)
+    val ideBuildTargetAbi: String?
+)
 
 data class AbiConfiguration(
     val allAbis: List<String>,
-    val validAbis: List<Abi>)
+    val validAbis: List<Abi>
+)
 
 /**
  * This class is responsible for determining which ABIs are needed for the build based on the
  * relevant contents of build.gradle DSL.
  */
 class AbiConfigurator(
-        private val abiConfigurationCacheFolder: File,
-        private val key : AbiConfigurationKey) {
+    abiConfigurationCacheFolder: File,
+    private val key: AbiConfigurationKey
+) {
 
-    private val configuration : AbiConfiguration
+    private val configuration: AbiConfiguration
     private val keyHash = shortSha256Of(key)
-    private val abiConfigurationKeyFile = join(abiConfigurationCacheFolder, "abi_configuration_key_${keyHash}.json")
-    private val abiConfigurationValueFile = join(abiConfigurationCacheFolder, "abi_configuration_${keyHash}.json")
+    private val abiConfigurationKeyFile =
+        join(abiConfigurationCacheFolder, "abi_configuration_key_${keyHash}.json")
+    private val abiConfigurationValueFile =
+        join(abiConfigurationCacheFolder, "abi_configuration_${keyHash}.json")
     val allAbis: Collection<String> get() = configuration.allAbis
     val validAbis: Collection<Abi> get() = configuration.validAbis
 
@@ -62,12 +64,12 @@ class AbiConfigurator(
     private fun sortAndJoinAbiStrings(elements: Collection<String>): String {
         return elements.sorted().joinToString(", ")
     }
+
     private fun sortAndJoinAbi(elements: Collection<Abi>): String {
         return elements.sorted().joinToString(", ")
     }
 
-    private fun readPrior() : AbiConfiguration?
-    {
+    private fun readPrior(): AbiConfiguration? {
         if (!abiConfigurationKeyFile.exists()) return null
         if (!abiConfigurationValueFile.exists()) return null
         val keyRead = readJsonFile(abiConfigurationKeyFile, AbiConfigurationKey::class.java)
@@ -77,7 +79,7 @@ class AbiConfigurator(
 
     init {
         with(key) {
-            val priorValue =  readPrior()
+            val priorValue = readPrior()
             if (priorValue != null) {
                 configuration = priorValue
             } else {
@@ -96,8 +98,8 @@ class AbiConfigurator(
                     )
                 }
 
-                val allAbis : List<String>
-                val validAbis : List<Abi>
+                val allAbis: List<String>
+                val validAbis: List<Abi>
                 val configurationAbis: Collection<Abi>
                 if (userChosenAbis.isEmpty()) {
                     // The user didn't explicitly name any ABIs so return the default set
@@ -142,7 +144,7 @@ class AbiConfigurator(
                         configurationAbis.toList()
                     } else {
                         val invalidAbis = injectedAbis.filter { Abi.getByName(it) == null }
-                        if (!invalidAbis.isEmpty()) {
+                        if (invalidAbis.isNotEmpty()) {
                             // The user (or android studio) selected some illegal ABIs. Give a warning and
                             // continue on.
                             warnln(
@@ -154,23 +156,27 @@ class AbiConfigurator(
 
                         val legalButNotTargetedByConfiguration =
                             injectedLegalAbis subtract configurationAbis
-                        if (legalButNotTargetedByConfiguration.isNotEmpty()) {
-                            // The user (or android studio) selected some ABIs that are valid but that
-                            // aren't targeted by this build configuration. Warn but continue on with any
-                            // ABIs that were valid.
-                            warnln(
-                                "ABIs [$ideBuildTargetAbi] set by " +
-                                        "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
-                                        "flag contained '${sortAndJoinAbi(
-                                            legalButNotTargetedByConfiguration
-                                        )}' " +
-                                        "not targeted by this project."
-                            )
-                            // Keep ABIs actually targeted
-                            (injectedLegalAbis intersect configurationAbis).toList()
-                        } else {
-                            injectedLegalAbis
-                        }
+                        val validAbisInPreferenceOrder =
+                            if (legalButNotTargetedByConfiguration.isNotEmpty()) {
+                                // The user (or android studio) selected some ABIs that are valid but that
+                                // aren't targeted by this build configuration.
+                                infoln(
+                                    "ABIs [$ideBuildTargetAbi] set by " +
+                                            "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
+                                            "flag contained '${sortAndJoinAbi(
+                                                legalButNotTargetedByConfiguration
+                                            )}' " +
+                                            "not targeted by this project."
+                                )
+                                // Keep ABIs actually targeted
+                                (injectedLegalAbis intersect configurationAbis).toList()
+                            } else {
+                                injectedLegalAbis
+                            }
+
+                        // When Android Studio sends multiple ABIs it is meant as a precedence list
+                        // we build the first one that is available in this project.
+                        validAbisInPreferenceOrder.take(1)
                     }
                 } else {
                     validAbis = configurationAbis.toList()
