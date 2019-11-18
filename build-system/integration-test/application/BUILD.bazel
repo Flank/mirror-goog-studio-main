@@ -194,6 +194,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-idling-resource/3.2.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/ext/junit/1.1.1:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/rules/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.2.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/ui/ui-android-text/0.1.0-dev02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/ui/ui-animation-core/0.1.0-dev02:aar",
