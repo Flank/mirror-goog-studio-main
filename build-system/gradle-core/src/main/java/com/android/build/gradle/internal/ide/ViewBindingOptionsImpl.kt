@@ -27,15 +27,6 @@ import java.io.Serializable
 data class ViewBindingOptionsImpl(private val enabled: Boolean) : ViewBindingOptions, Serializable {
     companion object {
         private const val serialVersionUID = 1L
-
-        @JvmStatic
-        fun create(
-            viewBindingOptions: com.android.build.gradle.api.ViewBindingOptions
-        ): ViewBindingOptions {
-            return ViewBindingOptionsImpl(
-                viewBindingOptions.isEnabled
-            )
-        }
     }
 
     override fun isEnabled(): Boolean = enabled

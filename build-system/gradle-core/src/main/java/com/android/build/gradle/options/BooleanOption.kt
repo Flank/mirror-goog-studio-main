@@ -60,6 +60,7 @@ enum class BooleanOption(
     // This is a PUBLIC API.
     BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, Option.Status.STABLE),
     BUILD_FEATURE_DATABINDING("android.defaults.buildfeatures.databinding", false, Option.Status.STABLE),
+    BUILD_FEATURE_VIEWBINDING("android.defaults.buildfeatures.viewbinding", false, Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Experimental stage, not yet enabled by default

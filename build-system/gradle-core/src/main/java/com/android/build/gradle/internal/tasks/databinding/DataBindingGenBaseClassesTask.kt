@@ -196,7 +196,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             // needed to decide whether data binding should encode errors or not
             task.encodeErrors = variantScope.globalScope
                 .projectOptions[BooleanOption.IDE_INVOKED_FROM_IDE]
-            task.enableViewBinding = variantScope.globalScope.extension.viewBinding.isEnabled
+            task.enableViewBinding = variantScope.globalScope.buildFeatures.viewBinding
         }
     }
 

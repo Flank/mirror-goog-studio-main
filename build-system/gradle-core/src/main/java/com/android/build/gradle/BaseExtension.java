@@ -245,13 +245,18 @@ public abstract class BaseExtension implements AndroidConfig {
         jacoco = objectFactory.newInstance(JacocoOptions.class);
         adbOptions = objectFactory.newInstance(AdbOptions.class);
         splits = objectFactory.newInstance(Splits.class, objectFactory);
-        viewBinding = objectFactory.newInstance(ViewBindingOptionsImpl.class);
         buildFeatures = objectFactory.newInstance(BuildFeaturesImpl.class);
         composeOptions = objectFactory.newInstance(ComposeOptionsImpl.class);
 
         dataBinding =
                 objectFactory.newInstance(
                         DataBindingOptions.class,
+                        buildFeatures,
+                        projectOptions,
+                        globalScope.getDslScope());
+        viewBinding =
+                objectFactory.newInstance(
+                        ViewBindingOptionsImpl.class,
                         buildFeatures,
                         projectOptions,
                         globalScope.getDslScope());

@@ -731,7 +731,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             final BuildFeatureValues features = globalScope.getBuildFeatures();
             final boolean isDataBindingEnabled = features.getDataBinding();
-            boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
+            boolean isViewBindingEnabled = features.getViewBinding();
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.
                 task.dataBindingLayoutProcessor =

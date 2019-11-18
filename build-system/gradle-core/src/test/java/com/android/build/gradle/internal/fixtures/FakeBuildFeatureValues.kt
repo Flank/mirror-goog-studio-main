@@ -21,5 +21,5 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 class FakeBuildFeatureValues(
     override val jetpackCompose: Boolean = false,
     override val buildConfig: Boolean = true,
-    override val dataBinding: Boolean = false) : BuildFeatureValues {
-}
+    override val dataBinding: Boolean = false,
+    override val viewBinding: Boolean = false) : BuildFeatureValues

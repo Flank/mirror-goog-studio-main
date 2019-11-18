@@ -30,7 +30,6 @@ import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
-import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -635,10 +634,8 @@ public abstract class BaseVariantData {
                 sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC));
             }
 
-            BaseExtension extension = scope.getGlobalScope().getExtension();
             final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
-            boolean isViewBindingEnabled = extension.getViewBinding().isEnabled();
-            if (features.getDataBinding() || isViewBindingEnabled) {
+            if (features.getDataBinding() || features.getViewBinding()) {
                 if (scope.getTaskContainer().getDataBindingExportBuildInfoTask() != null) {
                     sourceSets.add(
                             project.fileTree(scope.getClassOutputForDataBinding())

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-96698f9d7269af61001ac93b1105a31f58ba3af05a2ae13e34bb7edc5b3c816e
+2cbfed799cbff8301dc164bdf10fd9d581aad7a53bc0806418fcf7011be3f3c7
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -58,9 +58,11 @@ com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getCompose: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getDataBinding: java.lang.Boolean ()
+com.android.build.api.dsl.BuildFeatures.getViewBinding: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.setBuildConfig: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setCompose: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setDataBinding: void (java.lang.Boolean)
+com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VariantT>)
 com.android.build.api.dsl.CommonExtension.onVariantsProperties: void (org.gradle.api.Action<VariantPropertiesT>)

@@ -25,18 +25,19 @@ import org.gradle.api.Incubating
 interface BuildFeatures {
     /**
      * Flag to enable Compose feature.
-     * Setting the value to null resets to the default value
+     * Setting the value to `null` resets to the default value
      *
-     * Default value is false.
+     * Default value is `false`.
      *
      * More information available about this feature at: TBD
      **/
     var compose: Boolean?
 
     /**
-     * Flag to enable/disable generation of the BuildConfig class.
+     * Flag to enable/disable generation of the `BuildConfig` class.
      *
-     * Setting the value to null resets to the default value.
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
      *
      * You can override the default for this for all projects in your build by adding the line
      *     android.defaults.buildfeatures.buildconfig=true
@@ -48,13 +49,29 @@ interface BuildFeatures {
 
     /**
      * Flag to enable Data Binding.
-     * Setting the value to null resets to the default value.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `false`.
      *
      * You can override the default for this for all projects in your build by adding the line
-     *     android.defaults.buildfeatures.databinding=true
-     * in the gradle.properties file at the root project of your build.
+     *     `android.defaults.buildfeatures.databinding=true`
+     * in the `gradle.properties` file at the root project of your build.
      *
      * More information about this feature at: TBD
      */
     var dataBinding: Boolean?
+
+    /**
+     * Flag to enable View Binding.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `false`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.viewbinding=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var viewBinding: Boolean?
 }

@@ -2308,8 +2308,7 @@ public abstract class TaskManager {
 
     private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
         final BuildFeatureValues features = variantScope.getGlobalScope().getBuildFeatures();
-        boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
-        if (!features.getDataBinding() && !viewBindingEnabled) {
+        if (!features.getDataBinding() && !features.getViewBinding()) {
             return;
         }
         final BaseVariantData variantData = variantScope.getVariantData();
@@ -2339,9 +2338,8 @@ public abstract class TaskManager {
 
     protected void createDataBindingTasksIfNecessary(@NonNull VariantScope scope) {
         final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
-        boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
         boolean dataBindingEnabled = features.getDataBinding();
-        if (!dataBindingEnabled && !viewBindingEnabled) {
+        if (!dataBindingEnabled && !features.getViewBinding()) {
             return;
         }
         createDataBindingMergeBaseClassesTask(scope);

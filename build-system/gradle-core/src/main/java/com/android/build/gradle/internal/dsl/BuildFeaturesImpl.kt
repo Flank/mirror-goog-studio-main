@@ -22,4 +22,5 @@ open class BuildFeaturesImpl : BuildFeatures {
     override var compose: Boolean? = null
     override var buildConfig: Boolean? = null
     override var dataBinding: Boolean? = null
+    override var viewBinding: Boolean? = null
 }

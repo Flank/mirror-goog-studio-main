@@ -24,4 +24,5 @@ interface BuildFeatureValues {
     val jetpackCompose: Boolean
     val buildConfig: Boolean
     val dataBinding: Boolean
+    val viewBinding: Boolean
 }
