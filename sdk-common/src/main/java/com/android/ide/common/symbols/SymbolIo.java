@@ -862,53 +862,72 @@ public final class SymbolIo {
     }
 
     /**
-     * Writes a file listing the resources provided by the resource file.
+     * Writes a file listing the resources provided by the SymbolTable in partial-R.txt format.
      *
-     * <p>This uses the partial r (go/partial-r) format of
-     * {@code "<access qualifier> <java type> <symbol type> <resource name>" }.
+     * <p>This uses the partial r (go/partial-r) format of {@code "<access qualifier> <java type>
+     * <symbol type> <resource name>" }.
      *
      * @param table The SymbolTable to be written as a partial R file.
      * @param file The file path of the file to be written.
      */
-    public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
-        try (BufferedWriter writer = Files.newBufferedWriter(file)) {
-            // Loop resource types to keep order.
-            for (ResourceType resType : ResourceType.values()) {
-                List<Symbol> symbols = table.getSymbolByResourceType(resType);
-                for (Symbol s : symbols) {
-                    writer.write(s.getResourceVisibility().getName());
-                    writer.write(' ');
-                    writer.write(s.getJavaType().getTypeName());
-                    writer.write(' ');
-                    writer.write(s.getResourceType().getName());
-                    writer.write(' ');
-                    writer.write(s.getCanonicalName());
-                    writer.write('\n');
+    public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file)
+            throws IOException {
+        BufferedWriter writer = Files.newBufferedWriter(file);
+        generatePartialRContents(table, writer);
+        writer.close();
+    }
 
-                    // Declare styleables having attributes defined in their node
-                    // listed in the children list.
-                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
-                        Preconditions.checkArgument(
-                                s.getResourceType() == ResourceType.STYLEABLE,
-                                "Only resource type 'styleable' has java type 'int[]'");
-                        List<String> children = s.getChildren();
-                        for (String child : children) {
-                            writer.write(s.getResourceVisibility().getName());
-                            writer.write(' ');
-                            writer.write(SymbolJavaType.INT.getTypeName());
-                            writer.write(' ');
-                            writer.write(ResourceType.STYLEABLE.getName());
-                            writer.write(' ');
-                            writer.write(s.getCanonicalName());
-                            writer.write('_');
-                            writer.write(SymbolUtils.canonicalizeValueResourceName(child));
-                            writer.write('\n');
-                        }
+    /**
+     * Returns a String listing the resources provided by the SymbolTable in partial-R.txt format.
+     *
+     * <p>This uses the partial r (go/partial-r) format of {@code "<access qualifier> <java type>
+     * <symbol type> <resource name>" }.
+     *
+     * @param table The SymbolTable to be written as a partial R file.
+     */
+    public static String getPartialRContentsAsString(@NonNull SymbolTable table)
+            throws IOException {
+        StringBuilder sb = new StringBuilder();
+        generatePartialRContents(table, sb);
+        return sb.toString();
+    }
+
+    private static void generatePartialRContents(@NonNull SymbolTable table, Appendable appendable)
+            throws IOException {
+        // Loop resource types to keep order.
+        for (ResourceType resType : ResourceType.values()) {
+            List<Symbol> symbols = table.getSymbolByResourceType(resType);
+            for (Symbol s : symbols) {
+                appendable.append(s.getResourceVisibility().getName());
+                appendable.append(' ');
+                appendable.append(s.getJavaType().getTypeName());
+                appendable.append(' ');
+                appendable.append(s.getResourceType().getName());
+                appendable.append(' ');
+                appendable.append(s.getCanonicalName());
+                appendable.append('\n');
+
+                // Declare styleables having attributes defined in their node
+                // listed in the children list.
+                if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                    Preconditions.checkArgument(
+                            s.getResourceType() == ResourceType.STYLEABLE,
+                            "Only resource type 'styleable' has java type 'int[]'");
+                    List<String> children = s.getChildren();
+                    for (String child : children) {
+                        appendable.append(s.getResourceVisibility().getName());
+                        appendable.append(' ');
+                        appendable.append(SymbolJavaType.INT.getTypeName());
+                        appendable.append(' ');
+                        appendable.append(ResourceType.STYLEABLE.getName());
+                        appendable.append(' ');
+                        appendable.append(s.getCanonicalName());
+                        appendable.append('_');
+                        appendable.append(SymbolUtils.canonicalizeValueResourceName(child));
+                        appendable.append('\n');
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 

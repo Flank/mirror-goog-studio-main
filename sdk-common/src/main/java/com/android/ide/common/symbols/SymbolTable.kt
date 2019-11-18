@@ -255,10 +255,6 @@ abstract class SymbolTable protected constructor() {
          */
         internal fun addFromPartial(table: SymbolTable): Builder {
             table.symbols.values().forEach {
-                Preconditions.checkArgument(
-                        it.resourceVisibility != ResourceVisibility.UNDEFINED,
-                        "Resource visibility needs to be defined for partial files.")
-
                 if (!this.symbols.contains(it.resourceType, it.canonicalName)) {
                     // If this symbol hasn't been encountered yet, simply add it as is.
                     this.symbols.put(it.resourceType, it.canonicalName, it)

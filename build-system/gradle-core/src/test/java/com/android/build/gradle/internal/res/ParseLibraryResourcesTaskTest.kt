@@ -29,6 +29,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import javax.xml.parsers.DocumentBuilderFactory
 
 @RunWith(Parameterized::class)
 class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds: Boolean) {
@@ -65,21 +66,30 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
         val drawablePng = File(drawableDir, "img.png")
 
         val removedFile =
-            SerializableChange(valuesFile, FileStatus.REMOVED, valuesFile.absolutePath)
+                SerializableChange(valuesFile, FileStatus.REMOVED, valuesFile.absolutePath)
         val addedFile =
-            SerializableChange(valuesFile, FileStatus.NEW, valuesFile.absolutePath)
+                SerializableChange(valuesFile, FileStatus.NEW, valuesFile.absolutePath)
         val modifiedValuesFile =
-            SerializableChange(valuesFile, FileStatus.CHANGED, valuesFile.absolutePath)
-        assertThat(canBeProcessedIncrementally(removedFile)).isFalse()
-        assertThat(canBeProcessedIncrementally(addedFile)).isTrue()
-        assertThat(canBeProcessedIncrementally(modifiedValuesFile)).isFalse()
-
+                SerializableChange(valuesFile, FileStatus.CHANGED, valuesFile.absolutePath)
         val modifiedDrawableXml =
-            SerializableChange(drawableXml, FileStatus.CHANGED, drawableXml.absolutePath)
+                SerializableChange(drawableXml, FileStatus.CHANGED, drawableXml.absolutePath)
         val modifiedDrawablePng =
-            SerializableChange(drawablePng, FileStatus.CHANGED, drawablePng.absolutePath)
-        assertThat(canBeProcessedIncrementally(modifiedDrawableXml)).isFalse()
-        assertThat(canBeProcessedIncrementally(modifiedDrawablePng)).isTrue()
+                SerializableChange(drawablePng, FileStatus.CHANGED, drawablePng.absolutePath)
+
+        if (!enablePartialRIncrementalBuilds) {
+            assertThat(canBeProcessedIncrementallyWithRDef(removedFile))
+                    .isFalse()
+            assertThat(canBeProcessedIncrementallyWithRDef(addedFile))
+                    .isTrue()
+            assertThat(canBeProcessedIncrementallyWithRDef(modifiedValuesFile))
+                    .isFalse()
+            assertThat(canBeProcessedIncrementallyWithRDef(modifiedDrawableXml))
+                    .isFalse()
+        }
+        assertThat(canBeProcessedIncrementallyWithRDef(addedFile))
+                .isTrue()
+        assertThat(canBeProcessedIncrementallyWithRDef(modifiedDrawablePng))
+                .isTrue()
     }
 
     @Test
@@ -100,7 +110,9 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
           partialRDir = partialRDirectory,
           enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
         )
+
         doFullTaskAction(params)
+
         assertThat(librarySymbolsFile.readLines()).containsExactly(
           "R_DEF: Internal format may change without notice",
           "local",
@@ -130,6 +142,7 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
                 partialRDir = partialRDirectory,
                 enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
         )
+
         doFullTaskAction(params)
 
         val createdPartialRFiles = partialRDirectory.walkTopDown()
@@ -148,10 +161,10 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
     fun testDoIncrementalTaskAction_producesExpectedSymbolTableFileFromAddedResource() {
         val parentFolder = temporaryFolder.newFolder("parent")
         val resourcesFolder = createFakeResourceDirectory(parentFolder)
+        val partialRFolder = createPartialRDirectory(File(parentFolder, SdkConstants.FD_PARTIAL_R))
 
         val platformAttrsRTxtFile = File(parentFolder, "R-def.txt")
         val librarySymbolsFile = File(parentFolder, "Symbols.txt")
-        val partialRFiles = temporaryFolder.newFolder(SdkConstants.FD_PARTIAL_R)
         val addedLayout = File(
           FileUtils.join(resourcesFolder.path, "layout"), "second_activity.xml")
 
@@ -161,7 +174,8 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
               "drawable img\n" +
               "layout main_activity\n" +
               "layout content_layout\n" +
-              "string greeting")
+              "string greeting\n"+
+              "string farewell")
         FileUtils.createFile(addedLayout, "<root></root>")
 
         val changedResources = listOf(
@@ -174,11 +188,16 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
           platformAttrsRTxt = platformAttrsRTxtFile,
           librarySymbolsFile = librarySymbolsFile,
           incremental = true,
-          partialRDir = partialRFiles,
+          partialRDir = partialRFolder,
           enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
         )
 
-        doIncrementalTaskAction(params)
+        if (enablePartialRIncrementalBuilds){
+            doIncrementalPartialRTaskAction(params)
+        } else {
+            doIncrementalRDefTaskAction(params)
+        }
+
         assertThat(librarySymbolsFile.readLines()).containsExactly(
           "R_DEF: Internal format may change without notice",
           "local",
@@ -186,16 +205,146 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
           "layout main_activity",
           "layout content_layout",
           "layout second_activity",
+          "string farewell",
           "string greeting"
         )
+    }
+
+    @Test
+    fun testDoIncrementalTaskAction_producesExpectedSymbolTableFileFromModifiedResource() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val resourcesFolder = createFakeResourceDirectory(parentFolder)
+        val partialRFolder = createPartialRDirectory(File(parentFolder, SdkConstants.FD_PARTIAL_R))
+
+        val platformAttrsRTxtFile = File(parentFolder, "R-def.txt")
+        val librarySymbolsFile = File(parentFolder, "Symbols.txt")
+        val modifiedLayout =
+                File(FileUtils.join(resourcesFolder.path, "layout"), "second_activity.xml")
+        val modifiedLayoutPartialR =
+                File(partialRFolder, "layout_second_activity.xml.flat-R.txt")
+
+        FileUtils.createFile(librarySymbolsFile,
+                "R_DEF: Internal format may change without notice\n" +
+                        "local\n" +
+                        "drawable img\n" +
+                        "layout main_activity\n" +
+                        "layout content_layout\n" +
+                        "layout second_activity\n" +
+                        "id chipOne\n" +
+                        "string greeting\n" +
+                        "string farewell")
+        FileUtils.createFile(modifiedLayoutPartialR,
+                "undefined int layout second_activity\n" +
+                        "undefined int id chipOne"
+        )
+        FileUtils.createFile(modifiedLayout,
+                """<root>
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOne"/>
+                     </root>""")
+        FileUtils.writeToFile(modifiedLayout,
+                """<root>
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTwo"/>
+                     </root>""")
+        val changedResources = listOf(
+                SerializableChange(modifiedLayout, FileStatus.CHANGED, modifiedLayout.absolutePath)
+        )
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+                inputResDir = resourcesFolder,
+                changedResources = changedResources,
+                platformAttrsRTxt = platformAttrsRTxtFile,
+                librarySymbolsFile = librarySymbolsFile,
+                incremental = true,
+                partialRDir = partialRFolder,
+                enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
+        )
+
+        if (enablePartialRIncrementalBuilds) {
+            doIncrementalPartialRTaskAction(params)
+            assertThat(librarySymbolsFile.readLines()).containsExactly(
+                    "R_DEF: Internal format may change without notice",
+                    "local",
+                    "drawable img",
+                    "id chipTwo",
+                    "layout main_activity",
+                    "layout content_layout",
+                    "layout second_activity",
+                    "string farewell",
+                    "string greeting"
+            )
+            assertThat(librarySymbolsFile.readLines()).doesNotContain("id chipOne")
+        }
+        parentFolder.delete()
+    }
+
+    @Test
+    fun testDoIncrementalTaskAction_producesExpectedSymbolTableFileFromRemovedResource() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val resourcesFolder = createFakeResourceDirectory(parentFolder)
+        val partialRFolder = createPartialRDirectory(File(parentFolder, SdkConstants.FD_PARTIAL_R))
+
+        val platformAttrsRTxtFile = File(parentFolder, "R-def.txt")
+        val librarySymbolsFile = File(parentFolder, "Symbols.txt")
+        val removedLayout = File(
+                FileUtils.join(resourcesFolder.path, "layout"), "second_activity.xml")
+        val removedLayoutPartialR = File(partialRFolder, "layout_second_activity.xml.flat-R.txt")
+
+        FileUtils.createFile(librarySymbolsFile,
+                "R_DEF: Internal format may change without notice\n" +
+                        "local\n" +
+                        "drawable img\n" +
+                        "layout main_activity\n" +
+                        "layout content_layout\n" +
+                        "layout second_activity\n" +
+                        "id chipOne\n" +
+                        "string greeting\n" +
+                        "string farewell")
+        FileUtils.createFile(removedLayout,
+                """<root>
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOne"/>
+                     </root>""")
+        FileUtils.createFile(removedLayoutPartialR,
+                "undefined int layout second_activity\n" +
+                "undefined int id chipOne")
+        FileUtils.delete(removedLayout)
+        val changedResources = listOf(
+                SerializableChange(removedLayout, FileStatus.REMOVED, removedLayout.absolutePath)
+        )
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+                inputResDir = resourcesFolder,
+                changedResources = changedResources,
+                platformAttrsRTxt = platformAttrsRTxtFile,
+                librarySymbolsFile = librarySymbolsFile,
+                incremental = true,
+                partialRDir = partialRFolder,
+                enablePartialRIncrementalBuilds = true
+        )
+
+        if (enablePartialRIncrementalBuilds) {
+            doIncrementalPartialRTaskAction(params)
+            assertThat(librarySymbolsFile.readLines()).containsExactly(
+                    "R_DEF: Internal format may change without notice",
+                    "local",
+                    "drawable img",
+                    "layout main_activity",
+                    "layout content_layout",
+                    "string farewell",
+                    "string greeting"
+            )
+        }
     }
 
     @Test
     fun testGenerateResourceSymbolTables_generatesExpectedSymbolTables() {
         val parentFolder = temporaryFolder.newFolder("parent")
         val fakeResourceDirectory = createFakeResourceDirectory(parentFolder)
+        val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
-        val symbolTables = generateResourceSymbolTables(fakeResourceDirectory, null).toTypedArray()
+        val symbolTables = getResourceDirectorySymbolTables(
+                fakeResourceDirectory, null, documentBuilder)
+                .toTypedArray()
 
         assertThat(symbolTables.count()).isEqualTo(4)
         assertThat(symbolTables[0].symbolTable.symbols.values().toList().toString()).isEqualTo(
@@ -214,14 +363,17 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
         val parentFolder = temporaryFolder.newFolder("parent")
         val fakeResourceDirectory = createFakeResourceDirectory(parentFolder)
         val partialRFileDirectory = File(parentFolder, "partialR")
+        val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
         val emptyPlatformAttrSymbolTable = SymbolTable.builder().build()
         val symbolTables =
-                generateResourceSymbolTables(fakeResourceDirectory, emptyPlatformAttrSymbolTable)
+                getResourceDirectorySymbolTables(fakeResourceDirectory,
+                        emptyPlatformAttrSymbolTable, documentBuilder)
 
-        savePartialRFilesToDirectory(symbolTables, partialRFileDirectory)
+        writeSymbolTablesToPartialRFiles(symbolTables, partialRFileDirectory)
 
-        val createdPartialRFiles = partialRFileDirectory.walkTopDown().toList().filter { it.isFile }
+        val createdPartialRFiles =
+                partialRFileDirectory.walkTopDown().toList().filter { it.isFile }
         assertThat(createdPartialRFiles.size).isEqualTo(4)
         assertThat(createdPartialRFiles
                 .first { it.name == "values_strings.arsc.flat-R.txt" }
@@ -264,5 +416,19 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
               <string name="farewell">Goodbye</string></resources>"""
         )
         return resourcesFolder
+    }
+
+    private fun createPartialRDirectory(partialRFolder: File): File {
+        val partialRMap = mapOf(
+                "values_strings.arsc.flat-R.txt" to "undefined int string farewell\n" +
+                        "undefined int string greeting",
+                "layout_main_activity.xml.flat-R.txt" to "undefined int layout main_activity",
+                "layout_content_layout.xml.flat-R.txt" to "undefined int layout content_layout",
+                "drawable_img.png.flat-R.txt" to "undefined int drawable img"
+        )
+        partialRMap.forEach { (fileName, fileContent) ->
+            FileUtils.createFile(File(partialRFolder, fileName), fileContent)
+        }
+        return partialRFolder
     }
 }
