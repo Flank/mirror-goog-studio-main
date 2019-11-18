@@ -63,11 +63,13 @@ public class DataBindingIntegrationTestAppsTest {
 
     @Before
     public void clean() throws IOException, InterruptedException {
-        project.execute("clean");
+        project.executor().withFailOnWarning(false).run("clean");
     }
 
     @Test
     public void compile() throws Exception {
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
+        project.executor()
+                .withFailOnWarning(false)
+                .run("assembleDebug", "assembleDebugAndroidTest");
     }
 }

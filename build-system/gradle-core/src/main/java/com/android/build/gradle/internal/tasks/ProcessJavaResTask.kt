@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import java.io.File
@@ -70,6 +71,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
             for (sourceProvider in variantScope.variantConfiguration.sortedSourceProviders) {
                 task.from((sourceProvider as AndroidSourceSet).resources.sourceFiles)
             }
+            task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         }
     }
 }

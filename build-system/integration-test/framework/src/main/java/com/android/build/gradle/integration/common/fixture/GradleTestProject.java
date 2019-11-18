@@ -1519,7 +1519,7 @@ public final class GradleTestProject implements TestRule {
             TestFileUtils.appendToFile(
                     getSettingsFile(),
                     "buildCache {\n"
-                            + "    local(DirectoryBuildCache) {\n"
+                            + "    local {\n"
                             + "        directory = \""
                             + absoluteFile.getPath().replace("\\", "\\\\")
                             + "\"\n"

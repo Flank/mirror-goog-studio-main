@@ -43,7 +43,7 @@ public class GradleVersionCheckTest {
 
 
         try {
-            project.executor().run("help");
+            project.executor().withFailOnWarning(false).run("help");
         } catch (Exception e) {
             assertThat(Throwables.getRootCause(e).getMessage())
                     .contains(

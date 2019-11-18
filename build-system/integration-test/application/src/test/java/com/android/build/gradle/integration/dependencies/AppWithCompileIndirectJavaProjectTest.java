@@ -85,7 +85,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
         appendToFile(
                 project.getSubproject("jar").getBuildFile(),
-                "\ndependencies { compile 'com.google.guava:guava:19.0' }");
+                "\ndependencies { api 'com.google.guava:guava:19.0' }");
     }
 
     @AfterClass

@@ -70,7 +70,7 @@ class CacheabilityTestHelper private constructor(
     private fun setBuildCacheDirForProject(project: GradleTestProject, buildCacheDir: File) {
         val buildCacheString =
             """|buildCache {
-            |    local(DirectoryBuildCache) {
+            |    local {
             |        directory = "${buildCacheDir.path.replace("\\", "\\\\")}"
             |    }
             |}""".trimMargin("|")

@@ -100,9 +100,10 @@ class MultiCompositeBuildTest {
     @Before
     fun setup() {
         modelContainer = project.getSubproject("TestCompositeApp")
-                .model()
-                .level(modelLevel)
-                .fetchAndroidProjects()
+            .model()
+            .withFailOnWarning(false)
+            .level(modelLevel)
+            .fetchAndroidProjects()
 
         val rootDir = project.testDir
 

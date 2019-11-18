@@ -85,6 +85,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     private boolean offline = true;
     private boolean sdkInLocalProperties = false;
     private boolean localAndroidSdkHome = false;
+    private boolean failOnWarning = true;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -190,6 +191,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return with(BooleanOption.ENABLE_SDK_DOWNLOAD, true);
     }
 
+    public final T withFailOnWarning(boolean failOnWarning) {
+        this.failOnWarning = failOnWarning;
+        return (T) this;
+    }
+
     protected final List<String> getArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
         arguments.addAll(this.arguments);
@@ -204,6 +210,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         if (offline) {
             arguments.add("--offline");
+        }
+        if (failOnWarning) {
+            arguments.add("--warning-mode=fail");
         }
 
         if (!sdkInLocalProperties) {
