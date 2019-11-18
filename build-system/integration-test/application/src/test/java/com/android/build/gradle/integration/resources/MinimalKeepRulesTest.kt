@@ -51,10 +51,13 @@ class MinimalKeepRulesTest {
 
         val rules = project.getIntermediateFile("aapt_proguard_file", "debug", "aapt_rules.txt")
 
-        project.executor().with(BooleanOption.MINIMAL_KEEP_RULES, true).run("assembleDebug")
+        project.executor().run("assembleDebug") // Verify the default behavior.
         assertThat(rules).contains("-keep class com.custom.MyView { <init>(android.content.Context, android.util.AttributeSet); }")
 
-        project.executor().with(BooleanOption.MINIMAL_KEEP_RULES, false).run("clean", "assembleDebug")
+        project.executor().with(BooleanOption.MINIMAL_KEEP_RULES, false).run("assembleDebug")
         assertThat(rules).contains("-keep class com.custom.MyView { <init>(...); }")
+
+        project.executor().with(BooleanOption.MINIMAL_KEEP_RULES, true).run("assembleDebug")
+        assertThat(rules).contains("-keep class com.custom.MyView { <init>(android.content.Context, android.util.AttributeSet); }")
     }
 }
