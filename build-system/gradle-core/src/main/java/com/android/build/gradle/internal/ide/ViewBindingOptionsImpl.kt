@@ -36,9 +36,6 @@ data class ViewBindingOptionsImpl(private val enabled: Boolean) : ViewBindingOpt
                 viewBindingOptions.isEnabled
             )
         }
-
-        @JvmStatic
-        fun createDummy() : ViewBindingOptions = ViewBindingOptionsImpl(false)
     }
 
     override fun isEnabled(): Boolean = enabled
