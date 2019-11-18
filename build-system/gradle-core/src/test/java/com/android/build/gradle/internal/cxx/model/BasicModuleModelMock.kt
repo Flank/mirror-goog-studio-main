@@ -47,7 +47,6 @@ import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.gradle.api.invocation.Gradle
 import org.mockito.Mockito
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
@@ -307,7 +306,6 @@ open class BasicModuleModelMock {
 
         val ndkInfo = NdkR19Info(ndkFolder)
         doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
-        doNothing().`when`(ndkHandler).writeNdkLocatorRecord(any())
         doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
         doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(join(sdkDir, "cmake", defaultCmakeVersion.toString())).`when`(cmakeFinder)

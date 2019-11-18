@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
@@ -48,17 +49,19 @@ class AbiConfiguratorTest {
             .toSet(),
         ideBuildOnlyTargetAbi: Boolean = false,
         ideBuildTargetAbi: String? = null): AbiConfigurator {
-        val folder = tmpFolder.newFolder()
-        return AbiConfigurator(
-            folder,
-            AbiConfigurationKey(
-                ndkHandlerSupportedAbis,
-                ndkHandlerDefaultAbis,
-                externalNativeBuildAbiFilters,
-                ndkConfigAbiFilters,
-                splitsFilterAbis,
-                ideBuildOnlyTargetAbi,
-                ideBuildTargetAbi))
+        return CachingEnvironment(tmpFolder.newFolder()).use {
+            AbiConfigurator(
+                AbiConfigurationKey(
+                    ndkHandlerSupportedAbis,
+                    ndkHandlerDefaultAbis,
+                    externalNativeBuildAbiFilters,
+                    ndkConfigAbiFilters,
+                    splitsFilterAbis,
+                    ideBuildOnlyTargetAbi,
+                    ideBuildTargetAbi
+                )
+            )
+        }
     }
 
     @After

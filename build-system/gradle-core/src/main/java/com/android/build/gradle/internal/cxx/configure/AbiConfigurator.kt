@@ -17,15 +17,11 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.hashing.shortSha256Of
-import com.android.build.gradle.internal.cxx.json.readJsonFile
-import com.android.build.gradle.internal.cxx.json.writeJsonFile
+import com.android.build.gradle.internal.cxx.caching.cache
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.options.StringOption
-import com.android.utils.FileUtils.join
-import java.io.File
 
 data class AbiConfigurationKey(
     val ndkHandlerSupportedAbis: Collection<Abi>,
@@ -47,16 +43,9 @@ data class AbiConfiguration(
  * relevant contents of build.gradle DSL.
  */
 class AbiConfigurator(
-    abiConfigurationCacheFolder: File,
     private val key: AbiConfigurationKey
 ) {
-
     private val configuration: AbiConfiguration
-    private val keyHash = shortSha256Of(key)
-    private val abiConfigurationKeyFile =
-        join(abiConfigurationCacheFolder, "abi_configuration_key_${keyHash}.json")
-    private val abiConfigurationValueFile =
-        join(abiConfigurationCacheFolder, "abi_configuration_${keyHash}.json")
     val allAbis: Collection<String> get() = configuration.allAbis
     val validAbis: Collection<Abi> get() = configuration.validAbis
 
@@ -69,21 +58,9 @@ class AbiConfigurator(
         return elements.sorted().joinToString(", ")
     }
 
-    private fun readPrior(): AbiConfiguration? {
-        if (!abiConfigurationKeyFile.exists()) return null
-        if (!abiConfigurationValueFile.exists()) return null
-        val keyRead = readJsonFile(abiConfigurationKeyFile, AbiConfigurationKey::class.java)
-        if (keyRead != key) return null
-        return readJsonFile(abiConfigurationValueFile, AbiConfiguration::class.java)
-    }
-
     init {
         with(key) {
-            val priorValue = readPrior()
-            if (priorValue != null) {
-                configuration = priorValue
-            } else {
-
+            configuration = cache(key) {
                 val ndkHandlerSupportedAbiStrings = ndkHandlerSupportedAbis.map(Abi::getTag)
                 val userChosenAbis =
                     externalNativeBuildAbiFilters union splitsFilterAbis union ndkConfigAbiFilters
@@ -192,12 +169,7 @@ class AbiConfigurator(
                         )
                     }
                 }
-                configuration = AbiConfiguration(allAbis, validAbis)
-
-                // Cache the result of ABI configuration. This saves configuration time and also
-                // removes duplicated warning and info messages.
-                writeJsonFile(abiConfigurationKeyFile, key)
-                writeJsonFile(abiConfigurationValueFile, configuration)
+                AbiConfiguration(allAbis, validAbis)
             }
         }
     }

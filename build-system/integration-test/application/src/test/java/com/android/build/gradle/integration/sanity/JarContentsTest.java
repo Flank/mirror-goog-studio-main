@@ -365,6 +365,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/",
                 "com/android/build/gradle/internal/cxx/attribution/",
                 "com/android/build/gradle/internal/cxx/cmake/",
+                "com/android/build/gradle/internal/cxx/caching/",
                 "com/android/build/gradle/internal/cxx/configure/",
                 "com/android/build/gradle/internal/cxx/hashing/",
                 "com/android/build/gradle/internal/cxx/json/",
