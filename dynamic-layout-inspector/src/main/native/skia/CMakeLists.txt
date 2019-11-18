@@ -10,7 +10,7 @@ include_directories("../../../../../../../external/skia/include/core")
 include_directories("../../../../../../../external/skia/include/utils")
 include_directories("../../../../../../../external/grpc-grpc/include")
 include_directories("../../../../../../../external/protobuf/src")
-include_directories("../../../../../../../bazel-genfiles/tools/base/dynamic-layout-inspector/proto")
+include_directories("../../../../../../../bazel-bin/tools/base/dynamic-layout-inspector/proto")
 
 add_executable(skia
         server.cc

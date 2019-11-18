@@ -19,7 +19,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../bazel-genfiles/tools/base/deploy/proto/deploy_java_proto.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/deploy/proto/deploy_java_proto.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -53,7 +53,7 @@
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../bazel-genfiles/tools/base/deploy/installer/tests/fake_device_proto.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/deploy/installer/tests/fake_device_proto.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

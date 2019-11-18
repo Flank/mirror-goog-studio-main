@@ -142,4 +142,4 @@ bazel build //tools/base/aspects-agent:aspects_agent
 Now the agent is located at:
 
 ```
-$SRC/bazel-genfiles/tools/base/aspects-agenent/aspects_agent.jar
+$SRC/bazel-bin/tools/base/aspects-agenent/aspects_agent.jar
