@@ -669,6 +669,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_style_short_version");
     }
 
+    public void testSvgStyleCombined() throws Exception {
+        checkSvgConversion("test_style_combined");
+    }
+
     // Gradient tests start here
     // The following gradient test files currently fail and do not have corresponding test cases:
     // test_gradient_linear_transform_matrix
