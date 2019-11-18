@@ -74,8 +74,8 @@ class LocalFileHeader {
         virtualEntry.putShort((short) 0); // Version needed
         virtualEntry.putShort((short) 0); // general purpose flag
         virtualEntry.putShort(COMPRESSION_NONE);
-        virtualEntry.putShort((short) 0); // time
-        virtualEntry.putShort((short) 0); // date
+        virtualEntry.putShort(CentralDirectoryRecord.DEFAULT_TIME);
+        virtualEntry.putShort(CentralDirectoryRecord.DEFAULT_DATE);
         virtualEntry.putInt(0); // CRC-32
         virtualEntry.putInt(0); // compressed size
         virtualEntry.putInt(0); // uncompressed size
@@ -94,8 +94,8 @@ class LocalFileHeader {
         buffer.putShort((short) 0); // Version needed
         buffer.putShort((short) 0); // general purpose flag
         buffer.putShort(compressionFlag);
-        buffer.putShort((short) 0); // time
-        buffer.putShort((short) 0); // date
+        buffer.putShort(CentralDirectoryRecord.DEFAULT_TIME);
+        buffer.putShort(CentralDirectoryRecord.DEFAULT_DATE);
         buffer.putInt(crc);
         buffer.putInt(Ints.longToUint(compressedSize));
         buffer.putInt(Ints.longToUint(uncompressedSize));
