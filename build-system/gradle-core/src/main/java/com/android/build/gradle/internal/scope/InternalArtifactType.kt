@@ -167,6 +167,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object DEFINED_ONLY_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     //Resources defined within the current module.
     object LOCAL_ONLY_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Partial R.txt directory
+    object LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // public.txt output
     object PUBLIC_RES: InternalArtifactType<RegularFile>(FILE), Replaceable
     object SHRUNK_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable

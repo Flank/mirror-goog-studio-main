@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res
 
+import com.android.SdkConstants
 import com.android.builder.files.SerializableChange
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.SymbolTable
@@ -25,12 +26,21 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class ParseLibraryResourcesTaskTest {
+@RunWith(Parameterized::class)
+class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds: Boolean) {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun enablePartialRIncrementalBuilds() = arrayOf(true, false)
+    }
 
     @Test
     fun testCanGenerateSymbols() {
@@ -79,13 +89,16 @@ class ParseLibraryResourcesTaskTest {
 
         val platformAttrsRTxtFile = File(parentFolder, "R.txt")
         val librarySymbolsFile = File(parentFolder, "R-def.txt")
+        val partialRDirectory = File(parentFolder, SdkConstants.FD_PARTIAL_R)
 
         val params = ParseLibraryResourcesTask.ParseResourcesParams(
           inputResDir = resourcesFolder,
           changedResources = emptyList(),
           platformAttrsRTxt = platformAttrsRTxtFile,
           librarySymbolsFile = librarySymbolsFile,
-          incremental = false
+          incremental = false,
+          partialRDir = partialRDirectory,
+          enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
         )
         doFullTaskAction(params)
         assertThat(librarySymbolsFile.readLines()).containsExactly(
@@ -100,12 +113,45 @@ class ParseLibraryResourcesTaskTest {
     }
 
     @Test
+    fun testDoFullTaskAction_producesExpectedPartialRFiles() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val resourcesFolder = createFakeResourceDirectory(parentFolder)
+
+        val platformAttrsRTxtFile = File(parentFolder, "R.txt")
+        val librarySymbolsFile = File(parentFolder, "R-def.txt")
+        val partialRDirectory = File(parentFolder, SdkConstants.FD_PARTIAL_R)
+
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+                inputResDir = resourcesFolder,
+                changedResources = emptyList(),
+                platformAttrsRTxt = platformAttrsRTxtFile,
+                librarySymbolsFile = librarySymbolsFile,
+                incremental = false,
+                partialRDir = partialRDirectory,
+                enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
+        )
+        doFullTaskAction(params)
+
+        val createdPartialRFiles = partialRDirectory.walkTopDown()
+                .toList().filter { it.isFile }.sortedBy { it.name }
+        if (enablePartialRIncrementalBuilds){
+            assertThat(createdPartialRFiles.size).isEqualTo(4)
+            assertThat(createdPartialRFiles[1].name).isEqualTo("layout_content_layout.xml.flat-R.txt")
+            assertThat(createdPartialRFiles[3].readLines()).containsExactly(
+                    "undefined int string farewell", "undefined int string greeting")
+        } else {
+            assertThat(createdPartialRFiles.size).isEqualTo(0)
+        }
+    }
+
+    @Test
     fun testDoIncrementalTaskAction_producesExpectedSymbolTableFileFromAddedResource() {
         val parentFolder = temporaryFolder.newFolder("parent")
         val resourcesFolder = createFakeResourceDirectory(parentFolder)
 
         val platformAttrsRTxtFile = File(parentFolder, "R-def.txt")
         val librarySymbolsFile = File(parentFolder, "Symbols.txt")
+        val partialRFiles = temporaryFolder.newFolder(SdkConstants.FD_PARTIAL_R)
         val addedLayout = File(
           FileUtils.join(resourcesFolder.path, "layout"), "second_activity.xml")
 
@@ -127,7 +173,9 @@ class ParseLibraryResourcesTaskTest {
           changedResources = changedResources,
           platformAttrsRTxt = platformAttrsRTxtFile,
           librarySymbolsFile = librarySymbolsFile,
-          incremental = true
+          incremental = true,
+          partialRDir = partialRFiles,
+          enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
         )
 
         doIncrementalTaskAction(params)
