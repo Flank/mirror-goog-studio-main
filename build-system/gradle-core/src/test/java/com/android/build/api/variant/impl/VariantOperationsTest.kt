@@ -17,6 +17,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.google.common.truth.Truth
@@ -31,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class VariantOperationsTest {
 
     @Test
-    fun multipleActionsTest() {
+    fun unfilteredScopesTest() {
         val counter = AtomicInteger(0)
         val operations = VariantOperations<AppVariant>(VariantScopeTransformers.toVariant)
         for (i in 1..5) {
@@ -50,5 +52,43 @@ class VariantOperationsTest {
 
         operations.executeOperations<AppVariant>(variantScopes)
         Truth.assertThat(counter.get()).isEqualTo(15) // 5x3
+    }
+
+    @Test
+    fun singleFilteredScopesTest() {
+        val atomicCounter = AtomicInteger(0)
+        val variantOperation = VariantOperations<Variant<*>>(VariantScopeTransformers.toVariant)
+        variantOperation.addFilteredAction(FilteredVariantOperation(
+            specificType = Variant::class.java,
+            action = Action { atomicCounter.incrementAndGet() })
+        )
+        variantOperation.executeOperations<Variant<VariantProperties>>(listOf(createVariantScope()))
+        Truth.assertThat(atomicCounter.get()).isEqualTo(1)
+    }
+
+    @Test
+    fun multipleFilteredScopesTest() {
+        val atomicCounter = AtomicInteger(0)
+        val variantOperation = VariantOperations<Variant<*>>(
+            VariantScopeTransformers.toVariant)
+        variantOperation.addFilteredAction(
+            FilteredVariantOperation(
+                specificType = Variant::class.java,
+                action = Action { atomicCounter.incrementAndGet() }
+            )
+        )
+        variantOperation.executeOperations<Variant<VariantProperties>>(listOf(createVariantScope(),
+            createVariantScope(),
+            createVariantScope()))
+        Truth.assertThat(atomicCounter.get()).isEqualTo(3)
+    }
+
+    private fun createVariantScope(): VariantScope {
+        val variantScope = Mockito.mock(VariantScope::class.java)
+        val variantData = Mockito.mock(BaseVariantData::class.java)
+        val publicVariantApi = Mockito.mock(VariantImpl::class.java)
+        Mockito.`when`(variantScope.variantData).thenReturn(variantData)
+        Mockito.`when`(variantData.publicVariantApi).thenReturn(publicVariantApi)
+        return variantScope
     }
 }

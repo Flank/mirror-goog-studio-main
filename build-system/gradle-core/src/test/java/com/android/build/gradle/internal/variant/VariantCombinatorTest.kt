@@ -37,12 +37,12 @@ class VariantCombinatorTest {
             },
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "debug",
+                    variantName = "debug",
                     buildType = "debug",
                     flavors = emptyList()
                 ),
                 VariantConfigurationImpl(
-                    name = "release",
+                    variantName = "release",
                     buildType = "release",
                     flavors = emptyList()
                 )
@@ -69,22 +69,22 @@ class VariantCombinatorTest {
             },
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "flavor1Debug",
+                    variantName = "flavor1Debug",
                     buildType = "debug",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Debug",
+                    variantName = "flavor2Debug",
                     buildType = "debug",
                     flavors = listOf("flavor2")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1Release",
+                    variantName = "flavor1Release",
                     buildType = "release",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Release",
+                    variantName = "flavor2Release",
                     buildType = "release",
                     flavors = listOf("flavor2")
                 )
@@ -118,42 +118,42 @@ class VariantCombinatorTest {
             flavorList = listOf("one", "two"),
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "flavor1FlavorADebug",
+                    variantName = "flavor1FlavorADebug",
                     buildType = "debug",
                     flavors = listOf("flavor1", "flavorA")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1FlavorBDebug",
+                    variantName = "flavor1FlavorBDebug",
                     buildType = "debug",
                     flavors = listOf("flavor1", "flavorB")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2FlavorADebug",
+                    variantName = "flavor2FlavorADebug",
                     buildType = "debug",
                     flavors = listOf("flavor2", "flavorA")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2FlavorBDebug",
+                    variantName = "flavor2FlavorBDebug",
                     buildType = "debug",
                     flavors = listOf("flavor2", "flavorB")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1FlavorARelease",
+                    variantName = "flavor1FlavorARelease",
                     buildType = "release",
                     flavors = listOf("flavor1", "flavorA")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1FlavorBRelease",
+                    variantName = "flavor1FlavorBRelease",
                     buildType = "release",
                     flavors = listOf("flavor1", "flavorB")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2FlavorARelease",
+                    variantName = "flavor2FlavorARelease",
                     buildType = "release",
                     flavors = listOf("flavor2", "flavorA")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2FlavorBRelease",
+                    variantName = "flavor2FlavorBRelease",
                     buildType = "release",
                     flavors = listOf("flavor2", "flavorB")
                 )
@@ -167,7 +167,7 @@ class VariantCombinatorTest {
             given = variantModel { },
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "main",
+                    variantName = "main",
                     buildType = null,
                     flavors = emptyList()
                 )
@@ -190,12 +190,12 @@ class VariantCombinatorTest {
             },
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "flavor1",
+                    variantName = "flavor1",
                     buildType = null,
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2",
+                    variantName = "flavor2",
                     buildType = null,
                     flavors = listOf("flavor2")
                 )
@@ -223,22 +223,22 @@ class VariantCombinatorTest {
             flavorList = listOf("one"),
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "flavor1Debug",
+                    variantName = "flavor1Debug",
                     buildType = "debug",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Debug",
+                    variantName = "flavor2Debug",
                     buildType = "debug",
                     flavors = listOf("flavor2")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1Release",
+                    variantName = "flavor1Release",
                     buildType = "release",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Release",
+                    variantName = "flavor2Release",
                     buildType = "release",
                     flavors = listOf("flavor2")
                 )
@@ -265,22 +265,22 @@ class VariantCombinatorTest {
             },
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "flavor1Debug",
+                    variantName = "flavor1Debug",
                     buildType = "debug",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Debug",
+                    variantName = "flavor2Debug",
                     buildType = "debug",
                     flavors = listOf("flavor2")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1Release",
+                    variantName = "flavor1Release",
                     buildType = "release",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Release",
+                    variantName = "flavor2Release",
                     buildType = "release",
                     flavors = listOf("flavor2")
                 )
@@ -315,22 +315,22 @@ class VariantCombinatorTest {
             },
             expected = listOf(
                 VariantConfigurationImpl(
-                    name = "flavor1Debug",
+                    variantName = "flavor1Debug",
                     buildType = "debug",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Debug",
+                    variantName = "flavor2Debug",
                     buildType = "debug",
                     flavors = listOf("flavor2")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor1Release",
+                    variantName = "flavor1Release",
                     buildType = "release",
                     flavors = listOf("flavor1")
                 ),
                 VariantConfigurationImpl(
-                    name = "flavor2Release",
+                    variantName = "flavor2Release",
                     buildType = "release",
                     flavors = listOf("flavor2")
                 )

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -13,33 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.api.variant
 
+import org.gradle.api.Action
 import org.gradle.api.Incubating
-import org.gradle.api.Named
+import java.util.regex.Pattern
 
 /**
- * Variant Configuration encapsulates immutable variant properties.
- *
- * Those properties are usually calculated from the DSL and cannot be changed once the DSL objects
- * are locked.
+ * Filter for [Variant] or [VariantProperties] with a product flavor.
  */
 @Incubating
-interface VariantConfiguration: Named {
-//    /**
-//     * Variant name, unique within a project.
-//     * @return the variant name
-//     */
-//    val name: String
-
+interface FlavoredVariantFilterBuilder<T: ActionableVariantObject> {
     /**
-     * Build Type name, might be replaced with access to locked DSL object once ready
+     * Specifies the build type this filter should apply when filtering variants.
      */
-    val buildType: String?
-
-    /**
-     * List of flavor names, might be replaced with access to locked DSL objects once ready
-     */
-    val flavors: List<String>
+    fun withBuildType(buildType: String, action: Action<T>)
 }

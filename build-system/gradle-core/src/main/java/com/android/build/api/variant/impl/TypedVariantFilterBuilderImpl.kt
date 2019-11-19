@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -13,15 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.variant.impl
+import com.android.build.api.variant.ActionableVariantObject
+import com.android.build.api.variant.TypedVariantFilterBuilder
 
-package com.android.build.api.variant
-
-import org.gradle.api.Incubating
-import org.gradle.api.Named
-
-/**
- * Tag interface for interfaces or classes that can be used as parameter to an
- * [org.gradle.api.Action] or lambda in the Variant API.
- */
-@Incubating
-interface ActionableVariantObject: Named
+internal class TypedVariantFilterBuilderImpl<T: ActionableVariantObject, U: T>(
+    private val operations: VariantOperations<in T>,
+    private val type: Class<U>)
+    : TypedVariantFilterBuilder<U> by GenericVariantFilterBuilderImpl<U>(operations, type) {
+}

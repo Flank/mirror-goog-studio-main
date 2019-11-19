@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2f171454ea45a74d88e50f91f06bf5cda2b078b1f237e4841d1d081fb9404c15
+12f4d792329e781b64a5fea59f2f4d2f4cb4de4ed779ac15950178bfed07c586
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -178,8 +178,10 @@ com.android.build.gradle.LibraryExtension.executeVariantOperations: void (java.u
 com.android.build.gradle.LibraryExtension.executeVariantPropertiesOperations: void (java.util.List<? extends com.android.build.gradle.internal.scope.VariantScope>)
 com.android.build.gradle.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.LibraryExtension.getLibraryVariants: org.gradle.api.internal.DefaultDomainObjectSet<com.android.build.gradle.api.LibraryVariant> ()
+com.android.build.gradle.LibraryExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.LibraryVariantProperties> ()
 com.android.build.gradle.LibraryExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryVariantProperties, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.onVariantProperties: void (org.gradle.api.Action<com.android.build.api.variant.LibraryVariantProperties>)
+com.android.build.gradle.LibraryExtension.onVariants: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.LibraryVariant> ()
 com.android.build.gradle.LibraryExtension.onVariants: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryVariant, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.onVariants: void (org.gradle.api.Action<com.android.build.api.variant.LibraryVariant>)
 com.android.build.gradle.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
@@ -222,8 +224,10 @@ com.android.build.gradle.TestExtension.getApplicationVariants: org.gradle.api.in
 com.android.build.gradle.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestExtension.getTargetVariant: java.lang.String ()
 com.android.build.gradle.TestExtension.getTestBuildType: java.lang.String ()
+com.android.build.gradle.TestExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.TestVariantProperties> ()
 com.android.build.gradle.TestExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.TestVariantProperties, kotlin.Unit>)
 com.android.build.gradle.TestExtension.onVariantProperties: void (org.gradle.api.Action<com.android.build.api.variant.TestVariantProperties>)
+com.android.build.gradle.TestExtension.onVariants: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.TestVariant> ()
 com.android.build.gradle.TestExtension.onVariants: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.TestVariant, kotlin.Unit>)
 com.android.build.gradle.TestExtension.onVariants: void (org.gradle.api.Action<com.android.build.api.variant.TestVariant>)
 com.android.build.gradle.TestExtension.setTargetProjectPath: void (java.lang.String)

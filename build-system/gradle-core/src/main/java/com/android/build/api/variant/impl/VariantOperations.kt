@@ -21,29 +21,38 @@ import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.Action
 
 /**
- * Contains a list of registered [Action] on an instance of [T] plus services like
+ * Contains a list of registered [Action] on an instance of [VariantObjectT] plus services like
  * executing these actions.
  *
- * @param T is either a [com.android.build.api.variant.Variant] or
+ * @param VariantObjectT is either a [com.android.build.api.variant.Variant] or
  * [com.android.build.api.variant.VariantProperties]´
- * @param transformer the function to transform a [VariantScope] into an instance of [T]
+ * @param transformer the function to transform a [VariantScope] into an instance of [VariantObjectT]
  */
-class VariantOperations<T: ActionableVariantObject>(
+class VariantOperations<VariantObjectT: ActionableVariantObject>(
     val transformer: VariantScopeTransformers
 ) {
-    val actions= mutableListOf<Action<T>>()
+    val actions= mutableListOf<Action<VariantObjectT>>()
+    val filteredActions= mutableListOf<FilteredVariantOperation<out VariantObjectT>>()
+
+    fun addFilteredAction(action: FilteredVariantOperation<out VariantObjectT>) {
+        filteredActions.add(action)
+    }
 
     /**
      * Executes all registered actions provided the list of [VariantScope].
      *
-     * @param variantScopes instances of [VariantScope] to get instances of [T] from.
+     * @param variantScopes instances of [VariantScope] to get instances of [VariantObjectT] from.
      */
-    inline fun <reified U : T> executeOperations(variantScopes: List<VariantScope>) {
+    inline fun <reified U : VariantObjectT> executeOperations(variantScopes: List<VariantScope>) {
         variantScopes.forEach { variantScope ->
             val variantObject = transformer.transform(variantScope, U::class.java)
             if (variantObject != null) {
                 actions.forEach { action -> action.execute(variantObject) }
             }
+        }
+
+        filteredActions.forEach { filteredAction ->
+            filteredAction.execute(transformer, variantScopes)
         }
     }
 }

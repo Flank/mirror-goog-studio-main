@@ -24,7 +24,11 @@ import com.google.common.collect.ImmutableList
  * and [toString].
  */
 data class VariantConfigurationImpl(
-    override val name: String,
+    val variantName: String,
     override val buildType: String? = null,
     override val flavors: List<String> = ImmutableList.of()
-) : VariantConfiguration
+) : VariantConfiguration {
+    override fun getName(): String {
+        return variantName
+    }
+}

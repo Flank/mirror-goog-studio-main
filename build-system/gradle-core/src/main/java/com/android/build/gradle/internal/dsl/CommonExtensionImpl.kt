@@ -25,18 +25,20 @@ import com.android.build.api.variant.AppVariant
 import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.api.variant.impl.VariantScopeTransformers
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.Action
 
-open class CommonExtensionImpl<VARIANT : Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES : VariantProperties>
+abstract class CommonExtensionImpl<VARIANT : Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES : VariantProperties>
     : CommonExtension<VARIANT, VARIANT_PROPERTIES> {
 
     protected val variantOperations = VariantOperations<VARIANT>(VariantScopeTransformers.toVariant)
@@ -69,6 +71,16 @@ class ApplicationExtensionImpl: CommonExtensionImpl<AppVariant, AppVariantProper
     override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
         variantPropertiesOperations.executeOperations<AppVariantProperties>(variantScopes)
     }
+
+    override fun onVariants(): GenericVariantFilterBuilder<AppVariant> {
+        return GenericVariantFilterBuilderImpl(
+            variantOperations, AppVariant::class.java)
+    }
+
+    override fun onVariantProperties(): GenericVariantFilterBuilder<AppVariantProperties> {
+        return GenericVariantFilterBuilderImpl(
+            variantPropertiesOperations, AppVariantProperties::class.java)
+    }
 }
 
 class DynamicFeatureExtensionImpl: CommonExtensionImpl<DynamicFeatureVariant, DynamicFeatureVariantProperties>(), DynamicFeatureExtension, ActionableVariantObjectOperationsExecutor {
@@ -78,6 +90,16 @@ class DynamicFeatureExtensionImpl: CommonExtensionImpl<DynamicFeatureVariant, Dy
 
     override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
         variantPropertiesOperations.executeOperations<DynamicFeatureVariantProperties>(variantScopes)
+    }
+
+    override fun onVariants(): GenericVariantFilterBuilder<DynamicFeatureVariant> {
+        return GenericVariantFilterBuilderImpl(
+            variantOperations, DynamicFeatureVariant::class.java)
+    }
+
+    override fun onVariantProperties(): GenericVariantFilterBuilder<DynamicFeatureVariantProperties> {
+        return GenericVariantFilterBuilderImpl(
+            variantPropertiesOperations, DynamicFeatureVariantProperties::class.java)
     }
 }
 
@@ -89,6 +111,16 @@ class LibraryExtensionImpl: CommonExtensionImpl<LibraryVariant, LibraryVariantPr
     override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
         variantPropertiesOperations.executeOperations<LibraryVariantProperties>(variantScopes)
     }
+
+    override fun onVariants(): GenericVariantFilterBuilder<LibraryVariant> {
+        return GenericVariantFilterBuilderImpl(
+            variantOperations, LibraryVariant::class.java)
+    }
+
+    override fun onVariantProperties(): GenericVariantFilterBuilder<LibraryVariantProperties> {
+        return GenericVariantFilterBuilderImpl(
+            variantPropertiesOperations, LibraryVariantProperties::class.java)
+    }
 }
 
 class TestExtensionImpl: CommonExtensionImpl<TestVariant, TestVariantProperties>(), TestExtension, ActionableVariantObjectOperationsExecutor {
@@ -98,5 +130,15 @@ class TestExtensionImpl: CommonExtensionImpl<TestVariant, TestVariantProperties>
 
     override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
         variantPropertiesOperations.executeOperations<TestVariantProperties>(variantScopes)
+    }
+
+    override fun onVariants(): GenericVariantFilterBuilder<TestVariant> {
+        return GenericVariantFilterBuilderImpl(
+            variantOperations, TestVariant::class.java)
+    }
+
+    override fun onVariantProperties(): GenericVariantFilterBuilder<TestVariantProperties> {
+        return GenericVariantFilterBuilderImpl(
+            variantPropertiesOperations, TestVariantProperties::class.java)
     }
 }

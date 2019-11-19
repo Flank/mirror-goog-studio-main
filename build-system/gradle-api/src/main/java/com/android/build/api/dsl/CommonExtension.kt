@@ -16,6 +16,7 @@
 
 package com.android.build.api.dsl
 
+import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Action
@@ -42,6 +43,14 @@ interface CommonExtension<VARIANT: Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTI
     fun onVariants(action: VARIANT.() -> Unit)
 
     /**
+     * Creates a filter on [Variant] objects for this module. The filter will reduce the set of
+     * applicable variants to run an action on.
+     *
+     * @return a [GenericVariantFilterBuilder] of [VARIANT]
+     */
+    fun onVariants(): GenericVariantFilterBuilder<VARIANT>
+
+    /**
      * Registers an [Action] to be executed on each [VariantProperties] of the project.
      * This method is a shortcut for calling [onVariants] followed by [Variant.onProperties].
      *
@@ -55,4 +64,11 @@ interface CommonExtension<VARIANT: Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTI
      */
     fun onVariantProperties(action: VARIANT_PROPERTIES.() -> Unit)
 
+    /**
+     * Creates a filter on [VariantProperties] objects for this module. The filter will reduce the
+     * set of application variants to run an action on.
+     *
+     * @areturn a [GenericVariantFilterBuilder] of [VARIANT_PROPERTIES]
+     */
+    fun onVariantProperties(): GenericVariantFilterBuilder<VARIANT_PROPERTIES>
 }

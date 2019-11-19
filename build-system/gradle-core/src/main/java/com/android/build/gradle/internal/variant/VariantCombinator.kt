@@ -55,13 +55,13 @@ class VariantCombinator(
      */
     private fun computeFlavorLessVariants() : List<VariantConfiguration> {
         return if (variantModel.buildTypes.isEmpty()) {
-            ImmutableList.of(VariantConfigurationImpl(name = "main"))
+            ImmutableList.of(VariantConfigurationImpl(variantName = "main"))
         } else {
             val builder = ImmutableList.builder<VariantConfiguration>()
 
             for (buildType in variantModel.buildTypes.keys) {
                 builder.add(VariantConfigurationImpl(
-                    name = buildType,
+                    variantName = buildType,
                     buildType = buildType))
             }
 
@@ -105,7 +105,7 @@ class VariantCombinator(
             return flavorCombos.map {
                 val flavorNames = it.getFlavorNames()
                 VariantConfigurationImpl(
-                    name = computeVariantName(
+                    variantName = computeVariantName(
                         flavorNames = flavorNames,
                         buildType = null,
                         type = variantType
@@ -120,7 +120,7 @@ class VariantCombinator(
                 builder.addAll(flavorCombos.map {
                     val flavors = it.getFlavorNames()
                     VariantConfigurationImpl(
-                        name = computeVariantName(flavors, buildType, variantType),
+                        variantName = computeVariantName(flavors, buildType, variantType),
                         buildType = buildType,
                         flavors = flavors
                     )
