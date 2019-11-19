@@ -92,6 +92,7 @@ public class DeployerRunnerTest {
         cachedDb = File.createTempFile("cached_db", ".bin");
         cachedDb.delete();
         new SqlApkFileDatabase(cachedDb, null);
+        cachedDb.deleteOnExit();
     }
 
     @Before
@@ -110,6 +111,7 @@ public class DeployerRunnerTest {
         AndroidDebugBridge.enableFakeAdbServerMode(myAdbServer.getPort());
 
         File dbFile = File.createTempFile("test_db", ".bin");
+        dbFile.deleteOnExit();
         FileUtils.copyFile(cachedDb, dbFile);
         db = new SqlApkFileDatabase(dbFile, null);
 
