@@ -22,7 +22,6 @@ cc_library(
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/agent",
-        "//tools/base/transport/agent:jni_wrappers",
         "//tools/base/transport/agent:jvmti_helper",
         "//tools/base/transport/proto:cc_proto",
     ],

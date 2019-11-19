@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef APP_INSPECTION_INSPECTOR_COMMAND_H_
-#define APP_INSPECTION_INSPECTOR_COMMAND_H_
+#ifndef APP_INSPECTION_AGENT_COMMAND_H_
+#define APP_INSPECTION_AGENT_COMMAND_H_
 
 #include <jni.h>
 
@@ -23,4 +23,4 @@ class AppInspectionAgentCommand {
  public:
   static void RegisterAppInspectionCommandHandler(JavaVM* vm);
 };
-#endif  // APP_INSPECTION_INSPECTOR_COMMAND_H_
+#endif  // APP_INSPECTION_AGENT_COMMAND_H_
