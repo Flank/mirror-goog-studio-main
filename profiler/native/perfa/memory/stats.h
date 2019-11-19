@@ -18,6 +18,7 @@
 #define MEMORY_AGENT_STATS_H
 
 #include <unistd.h>
+
 #include <atomic>
 #include <unordered_map>
 #include <unordered_set>
@@ -125,7 +126,8 @@ class TimingStats {
     }
     long total = time_[tag].load();
     long max = max_[tag].load();
-    Log::V(">> %s: Total=%ld, Count=%d, Max=%ld, Average=%ld", ToString(tag),
+    Log::V(Log::Tag::PROFILER,
+           ">> %s: Total=%ld, Count=%d, Max=%ld, Average=%ld", ToString(tag),
            total, count, max, total / count);
   }
 

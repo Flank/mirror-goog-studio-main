@@ -38,7 +38,8 @@ class AndroidJobServiceEngineJobHandlerTransform : public Transform {
     if (!mi_start.InstrumentMethod(
             ir::MethodId(GetClassName(), "ackStartMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
-      Log::E("Error instrumenting JobHandler.ackStartMessage");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting JobHandler.ackStartMessage");
     }
 
     // ackStopMessage is non-abstract and calls onStopJob.
@@ -50,7 +51,8 @@ class AndroidJobServiceEngineJobHandlerTransform : public Transform {
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "ackStopMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
-      Log::E("Error instrumenting JobHandler.ackStopMessage");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting JobHandler.ackStopMessage");
     }
   }
 };

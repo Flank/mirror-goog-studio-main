@@ -16,6 +16,7 @@
 #include "sessions_manager.h"
 
 #include <algorithm>
+
 #include "daemon/daemon.h"
 #include "proto/profiler.pb.h"
 #include "utils/process_manager.h"
@@ -126,10 +127,10 @@ void SessionsManager::SendOrQueueEventsForSession(
   bool session_is_live = false;
   ProcessManager process_manager;
   int32_t pid = process_manager.GetPidForBinary(app_name);
-  Log::D("Found pid for '%s': %d", app_name.c_str(), pid);
+  Log::D(Log::Tag::PROFILER, "Found pid for '%s': %d", app_name.c_str(), pid);
   if (pid >= 0) {
     for (auto it = sessions_.begin(); it != sessions_.end(); it++) {
-      Log::D("Session: %d", (*it)->IsActive());
+      Log::D(Log::Tag::PROFILER, "Session: %d", (*it)->IsActive());
       if ((*it)->info().pid() == pid && (*it)->IsActive()) {
         session_is_live = true;
         break;

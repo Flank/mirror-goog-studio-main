@@ -16,6 +16,7 @@
 #include "perfd/commands/begin_session.h"
 
 #include <unistd.h>
+
 #include <string>
 
 #include "perfd/sessions/sessions_manager.h"
@@ -60,7 +61,8 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
             ++count;
           }
           if (count == kAgentStatusRetries) {
-            Log::W("[BeginSession] Agent not yet attached.");
+            Log::W(Log::Tag::PROFILER,
+                   "[BeginSession] Agent not yet attached.");
           }
         } else {
           // Agent is unattachable.

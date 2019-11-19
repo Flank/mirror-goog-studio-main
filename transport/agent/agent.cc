@@ -20,6 +20,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <cassert>
 #include <mutex>
 #include <sstream>
@@ -122,7 +123,8 @@ void Agent::SubmitAgentTasks(const std::vector<AgentServiceTask>& tasks) {
           SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(agent_stub(), ctx);
           if (!error_per_task_logged && !status.ok()) {
-            Log::E("Agent::SubmitAgentTasks error_code=%d '%s' '%s'",
+            Log::E(Log::Tag::TRANSPORT,
+                   "Agent::SubmitAgentTasks error_code=%d '%s' '%s'",
                    status.error_code(), status.error_message().data(),
                    status.error_details().data());
             error_per_task_logged = true;
@@ -370,8 +372,8 @@ void Agent::RunCommandHandlerThread() {
   while (command_stream_reader_->Read(&command)) {
     auto search = command_handlers_.find(command.type());
     if (search != command_handlers_.end()) {
-      Log::V("Handling agent command %d for pid: %d.", command.type(),
-             command.pid());
+      Log::V(Log::Tag::TRANSPORT, "Handling agent command %d for pid: %d.",
+             command.type(), command.pid());
       (search->second)(&command);
     }
   }
@@ -432,7 +434,7 @@ void Agent::OpenCommandStream() {
     command_handler_thread_.join();
   }
   command_handler_thread_ = std::thread(&Agent::RunCommandHandlerThread, this);
-  Log::V("Agent command stream started.");
+  Log::V(Log::Tag::TRANSPORT, "Agent command stream started.");
 }
 
 }  // namespace profiler

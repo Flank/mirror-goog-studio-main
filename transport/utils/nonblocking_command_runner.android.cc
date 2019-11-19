@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "nonblocking_command_runner.h"
-
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <sstream>
 
+#include "nonblocking_command_runner.h"
 #include "utils/log.h"
 #include "utils/thread_name.h"
 
@@ -50,15 +50,18 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
   int stdout_pipe[2];
 
   if (log_command_) {
-    Log::D("Forking Command: %s", executable_path_.c_str());
+    Log::D(Log::Tag::TRANSPORT, "Forking Command: %s",
+           executable_path_.c_str());
   }
 
   if (pipe(stdin_pipe) == -1) {
-    Log::E("Failed to open stdin pipe: %s.", strerror(errno));
+    Log::E(Log::Tag::TRANSPORT, "Failed to open stdin pipe: %s.",
+           strerror(errno));
     return false;
   }
   if (pipe(stdout_pipe) == -1) {
-    Log::E("Failed to open stdout pipe: %s.", strerror(errno));
+    Log::E(Log::Tag::TRANSPORT, "Failed to open stdout pipe: %s.",
+           strerror(errno));
     return false;
   }
   child_process_id_ = fork();
@@ -86,7 +89,7 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
            (char* const*)env_args);
     // if we get here at all, an error occurred, but we are in the child
     // process, so just exit
-    Log::W("Child process exited with code %d", errno);
+    Log::W(Log::Tag::TRANSPORT, "Child process exited with code %d", errno);
     _exit(EXIT_FAILURE);
   } else if (child_process_id_ > 0) {
     // parent continues here

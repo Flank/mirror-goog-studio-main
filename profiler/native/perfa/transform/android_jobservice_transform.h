@@ -35,7 +35,7 @@ class AndroidJobServiceTransform : public Transform {
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "jobFinished",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
-      Log::E("Error instrumenting JobService.jobFinished");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting JobService.jobFinished");
     }
   }
 };

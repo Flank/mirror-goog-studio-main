@@ -37,6 +37,7 @@ class AndroidFragmentTransform : public Transform {
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "performResume", "()V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting android.support.v4.app.Fragment.performResume");
     }
 
@@ -49,6 +50,7 @@ class AndroidFragmentTransform : public Transform {
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "performPause", "()V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting android.support.v4.app.Fragment.performPause");
     }
   }

@@ -38,7 +38,8 @@ class AndroidPowerManagerTransform : public Transform {
     if (!mi.InstrumentMethod(ir::MethodId(
             GetClassName(), "newWakeLock",
             "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
-      Log::E("Error instrumenting PowerManager.newWakeLock");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting PowerManager.newWakeLock");
     }
   }
 };

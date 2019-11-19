@@ -155,7 +155,7 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
       } break;
 
       default:
-        Log::V("Unhandled details type (%d)", type);
+        Log::V(Log::Tag::PROFILER, "Unhandled details type (%d)", type);
         break;
     }
   }

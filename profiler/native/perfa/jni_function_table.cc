@@ -63,7 +63,7 @@ bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
   if (g_original_native_table == nullptr) {
     jvmtiError error = jvmti_env->GetJNIFunctionTable(&g_original_native_table);
     if (error != JVMTI_ERROR_NONE || g_original_native_table == nullptr) {
-      Log::E("Failed obtain original JNI table.");
+      Log::E(Log::Tag::PROFILER, "Failed obtain original JNI table.");
       return false;
     }
   }
@@ -85,10 +85,10 @@ bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
   g_gref_listener = gref_listener;
   error = jvmti_env->SetJNIFunctionTable(&new_native_table);
   if (error != JVMTI_ERROR_NONE) {
-    Log::E("Failed to set new JNI table");
+    Log::E(Log::Tag::PROFILER, "Failed to set new JNI table");
     return false;
   }
-  Log::V("New JNI table set");
+  Log::V(Log::Tag::PROFILER, "New JNI table set");
 
   return true;
 }

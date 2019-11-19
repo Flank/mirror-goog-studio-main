@@ -35,7 +35,8 @@ class AndroidDebugTransform : public Transform {
         "onStartMethodTracing"));
     if (!mi_start.InstrumentMethod(ir::MethodId(
             GetClassName(), "startMethodTracing", "(Ljava/lang/String;)V"))) {
-      Log::E("Error instrumenting Debug.startMethodTracing(String)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting Debug.startMethodTracing(String)");
     }
 
     // Instrument stopMethodTracing() at exit.
@@ -45,7 +46,7 @@ class AndroidDebugTransform : public Transform {
         "onStopMethodTracing"));
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "stopMethodTracing", "()V"))) {
-      Log::E("Error instrumenting Debug.stopMethodTracing");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting Debug.stopMethodTracing");
     }
 
     // Instrument fixTracePath() at entry.
@@ -56,7 +57,8 @@ class AndroidDebugTransform : public Transform {
     if (!mi_fix_entry.InstrumentMethod(
             ir::MethodId(GetClassName(), "fixTracePath",
                          "(Ljava/lang/String;)Ljava/lang/String;"))) {
-      Log::E("Error instrumenting Debug.fixTracePath entry");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting Debug.fixTracePath entry");
     }
 
     // Instrument fixTracePath() at exit.
@@ -67,7 +69,7 @@ class AndroidDebugTransform : public Transform {
     if (!mi_fix_exit.InstrumentMethod(
             ir::MethodId(GetClassName(), "fixTracePath",
                          "(Ljava/lang/String;)Ljava/lang/String;"))) {
-      Log::E("Error instrumenting Debug.fixTracePath exit");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting Debug.fixTracePath exit");
     }
   }
 };

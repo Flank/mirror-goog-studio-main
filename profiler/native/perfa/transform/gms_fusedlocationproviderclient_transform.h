@@ -41,16 +41,17 @@ class GmsFusedLocationProviderClientTransform : public Transform {
             "(Lcom/google/android/gms/location/LocationRequest;"
             "Lcom/google/android/gms/location/LocationCallback;"
             "Landroid/os/Looper;)Lcom/google/android/gms/tasks/Task;"))) {
-      Log::E(
-          "Error instrumenting "
-          "FusedLocationProviderClient.requestLocationUpdates("
-          "LocationCallback)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting "
+             "FusedLocationProviderClient.requestLocationUpdates("
+             "LocationCallback)");
     }
     if (!mi_req.InstrumentMethod(ir::MethodId(
             GetClassName(), "requestLocationUpdates",
             "(Lcom/google/android/gms/location/LocationRequest;Landroid/app/"
             "PendingIntent;)Lcom/google/android/gms/tasks/Task;"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting "
           "FusedLocationProviderClient.requestLocationUpdates(PendingIntent)");
     }
@@ -65,16 +66,17 @@ class GmsFusedLocationProviderClientTransform : public Transform {
             ir::MethodId(GetClassName(), "removeLocationUpdates",
                          "(Lcom/google/android/gms/location/LocationCallback;)"
                          "Lcom/google/android/gms/tasks/Task;"))) {
-      Log::E(
-          "Error instrumenting "
-          "FusedLocationProviderClient.removeLocationUpdates("
-          "LocationCallback)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting "
+             "FusedLocationProviderClient.removeLocationUpdates("
+             "LocationCallback)");
     }
     if (!mi_rmv.InstrumentMethod(
             ir::MethodId(GetClassName(), "removeLocationUpdates",
                          "(Landroid/app/PendingIntent;)"
                          "Lcom/google/android/gms/tasks/Task;"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting "
           "FusedLocationProviderClient.removeLocationUpdates(PendingIntent)");
     }

@@ -39,7 +39,8 @@ class AndroidPendingIntentTransform : public Transform {
             ir::MethodId(GetClassName(), "getActivity",
                          "(Landroid/content/Context;ILandroid/content/Intent;I"
                          "Landroid/os/Bundle;)Landroid/app/PendingIntent;"))) {
-      Log::E("Error instrumenting PendingIntent.getActivity");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting PendingIntent.getActivity");
     }
 
     slicer::MethodInstrumenter mi_service(dex_ir);
@@ -53,7 +54,8 @@ class AndroidPendingIntentTransform : public Transform {
             ir::MethodId(GetClassName(), "getService",
                          "(Landroid/content/Context;ILandroid/content/Intent;I)"
                          "Landroid/app/PendingIntent;"))) {
-      Log::E("Error instrumenting PendingIntent.getService");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting PendingIntent.getService");
     }
 
     slicer::MethodInstrumenter mi_broadcast(dex_ir);
@@ -67,7 +69,8 @@ class AndroidPendingIntentTransform : public Transform {
             ir::MethodId(GetClassName(), "getBroadcast",
                          "(Landroid/content/Context;ILandroid/content/Intent;I)"
                          "Landroid/app/PendingIntent;"))) {
-      Log::E("Error instrumenting PendingIntent.getBroadcast");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting PendingIntent.getBroadcast");
     }
   }
 };

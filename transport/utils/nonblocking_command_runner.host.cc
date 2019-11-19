@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "nonblocking_command_runner.h"
-
 #include <string.h>
-
 #include <utils/log.h>
+
+#include "nonblocking_command_runner.h"
 
 using profiler::Log;
 using std::string;
@@ -33,7 +32,8 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
   // This version of the file only runs on host and doesn't actually fork a
   // command.
   if (log_command_) {
-    Log::D("Mock command forking: %s", executable_path_.c_str());
+    Log::D(Log::Tag::TRANSPORT, "Mock command forking: %s",
+           executable_path_.c_str());
   }
   return true;
 }

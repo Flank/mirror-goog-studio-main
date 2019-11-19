@@ -34,7 +34,7 @@ class JavaUrlTransform : public Transform {
         "wrapURLConnection"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "openConnection",
                                           "()Ljava/net/URLConnection;"))) {
-      Log::E("Error instrumenting URL.openConnection");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting URL.openConnection");
     }
   }
 };

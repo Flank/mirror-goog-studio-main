@@ -16,6 +16,7 @@
 #include "perfd/cpu/cpu_config.h"
 
 #include <stdio.h>
+
 #include <string>
 
 #include "proto/common.pb.h"
@@ -41,7 +42,8 @@ bool GetCpuConfig(const string& freq_file, int32_t* frequency_in_khz) {
     *frequency_in_khz = atoi(buffer.c_str());
     return true;
   }
-  Log::D("Could not open CPU config file: %s\n", freq_file.c_str());
+  Log::D(Log::Tag::PROFILER, "Could not open CPU config file: %s\n",
+         freq_file.c_str());
   return false;
 }
 

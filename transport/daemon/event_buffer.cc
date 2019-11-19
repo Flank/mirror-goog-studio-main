@@ -52,7 +52,8 @@ void EventBuffer::WriteEventsTo(EventWriter* writer) {
     // If so we log a warning and clamp the events to the size of our ring
     // buffer.
     if (events_added_ > events_.size()) {
-      Log::W("Writing events thread missed sending %d events.",
+      Log::W(Log::Tag::TRANSPORT,
+             "Writing events thread missed sending %d events.",
              (int)(events_added_ - events_.size()));
       events_added_ = events_.size();
     }

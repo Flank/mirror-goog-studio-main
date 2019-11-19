@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <cstring>
 #include <sstream>
 #include <string>
@@ -90,7 +91,8 @@ void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
   SplitRecordCommand(command_buffer, argv);
 
   // Execute the simpleperf record command.
-  Log::D("Running Simpleperf: '%s'", record_command.c_str());
+  Log::D(Log::Tag::PROFILER, "Running Simpleperf: '%s'",
+         record_command.c_str());
   execvp(*argv, argv);
 }
 
@@ -108,7 +110,7 @@ bool Simpleperf::ReportSample(const string& input_path,
   parameters << " ";
   parameters << "-o ";
   parameters << output_path;
-  Log::D("Simpleperf report-sample command: %s %s",
+  Log::D(Log::Tag::PROFILER, "Simpleperf report-sample command: %s %s",
          simpleperf_binary_abspath.c_str(), parameters.str().c_str());
 
   return simpleperf_report.Run(parameters.str(), output);

@@ -13,44 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "log.h"
-
 #include <android/log.h>
+
+#include "log.h"
 
 namespace profiler {
 
-void Log::V(const char *fmt, ...) {
+void Log::V(const char* tag, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  __android_log_vprint(ANDROID_LOG_VERBOSE, kTag, fmt, args);
+  __android_log_vprint(ANDROID_LOG_VERBOSE, tag, fmt, args);
   va_end(args);
 }
 
-void Log::D(const char *fmt, ...) {
+void Log::D(const char* tag, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  __android_log_vprint(ANDROID_LOG_DEBUG, kTag, fmt, args);
+  __android_log_vprint(ANDROID_LOG_DEBUG, tag, fmt, args);
   va_end(args);
 }
 
-void Log::I(const char *fmt, ...) {
+void Log::I(const char* tag, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  __android_log_vprint(ANDROID_LOG_INFO, kTag, fmt, args);
+  __android_log_vprint(ANDROID_LOG_INFO, tag, fmt, args);
   va_end(args);
 }
 
-void Log::W(const char *fmt, ...) {
+void Log::W(const char* tag, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  __android_log_vprint(ANDROID_LOG_WARN, kTag, fmt, args);
+  __android_log_vprint(ANDROID_LOG_WARN, tag, fmt, args);
   va_end(args);
 }
 
-void Log::E(const char *fmt, ...) {
+void Log::E(const char* tag, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  __android_log_vprint(ANDROID_LOG_ERROR, kTag, fmt, args);
+  __android_log_vprint(ANDROID_LOG_ERROR, tag, fmt, args);
   va_end(args);
 }
 

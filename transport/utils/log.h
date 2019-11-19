@@ -26,24 +26,30 @@ namespace profiler {
 class Log {
  public:
   // Log a message at the verbose level
-  static void V(const char *msg, ...) __attribute__((format(printf, 1, 2)));
+  static void V(const char *tag, const char *msg, ...)
+      __attribute__((format(printf, 2, 3)));
 
   // Log a message at the debug level
-  static void D(const char *msg, ...) __attribute__((format(printf, 1, 2)));
+  static void D(const char *tag, const char *msg, ...)
+      __attribute__((format(printf, 2, 3)));
 
   // Log a message at the info level
-  static void I(const char *msg, ...) __attribute__((format(printf, 1, 2)));
+  static void I(const char *tag, const char *msg, ...)
+      __attribute__((format(printf, 2, 3)));
 
   // Log a message at the warning level
-  static void W(const char *msg, ...) __attribute__((format(printf, 1, 2)));
+  static void W(const char *tag, const char *msg, ...)
+      __attribute__((format(printf, 2, 3)));
 
   // Log a message at the error level
-  static void E(const char *msg, ...) __attribute__((format(printf, 1, 2)));
+  static void E(const char *tag, const char *msg, ...)
+      __attribute__((format(printf, 2, 3)));
 
- private:
-  static void Handle(const char level, const char *fmt, va_list args);
-
-  static constexpr const char *const kTag = "StudioProfiler";
+  struct Tag {
+    static constexpr const char *const TRANSPORT = "StudioTransport";
+    static constexpr const char *const PROFILER = "StudioProfiler";
+    static constexpr const char *const APPINSPECT = "AppInspection";
+  };
 };
 
 }  // namespace profiler

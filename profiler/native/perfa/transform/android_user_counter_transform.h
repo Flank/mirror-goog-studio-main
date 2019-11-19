@@ -38,7 +38,8 @@ class AndroidUserCounterTransform : public Transform {
         true);
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "recordEvent",
                                           "(Ljava/lang/String;I)V"))) {
-      Log::E("Error instrumenting EventProfiler.recordEvent");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting EventProfiler.recordEvent");
     }
   }
 };

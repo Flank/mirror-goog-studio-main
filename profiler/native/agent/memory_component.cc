@@ -79,7 +79,7 @@ void MemoryComponent::OpenControlStream() {
       std::thread(&MemoryComponent::RunMemoryControlThread, this);
 
   is_control_stream_started_ = true;
-  Log::V("Memory control stream started.");
+  Log::V(Log::Tag::PROFILER, "Memory control stream started.");
 }
 
 void MemoryComponent::RegisterMemoryControlHandler(

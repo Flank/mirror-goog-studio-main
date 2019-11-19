@@ -37,7 +37,7 @@ class AndroidAlarmManagerListenerWrapperTransform : public Transform {
             "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
             "wrapListenerOnAlarm"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "run", "()V"))) {
-      Log::E("Error instrumenting ListenerWrapper.run");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting ListenerWrapper.run");
     }
   }
 };

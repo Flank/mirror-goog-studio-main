@@ -38,7 +38,8 @@ class AndroidLocationManagerListenerTransportTransform : public Transform {
                      "wrapOnLocationChanged"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "_handleMessage",
                                           "(Landroid/os/Message;)V"))) {
-      Log::E("Error instrumenting LocationListener.onLocationChanged");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting LocationListener.onLocationChanged");
     }
   }
 };

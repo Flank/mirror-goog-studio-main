@@ -39,7 +39,7 @@ class AndroidJobSchedulerImplTransform : public Transform {
                      "onScheduleJobExit"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "schedule",
                                           "(Landroid/app/job/JobInfo;)I"))) {
-      Log::E("Error instrumenting JobScheduler.schedule");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting JobScheduler.schedule");
     }
   }
 };

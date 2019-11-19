@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <jni.h>
+
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
 #include "app_inspection_service.h"
@@ -21,6 +22,7 @@
 #include "utils/log.h"
 
 using app_inspection::ServiceResponse;
+using profiler::Log;
 
 namespace app_inspection {
 
@@ -134,7 +136,8 @@ void AddEntryTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
   profiler::JStringWrapper method_str(env, method_name);
   std::size_t found = method_str.get().find("(");
   if (found == std::string::npos) {
-    profiler::Log::E(
+    Log::E(
+        Log::Tag::APPINSPECT
         "Method should be in the format $method_name($signature)$return_type, "
         "but was %s",
         method_str.get().c_str());
@@ -153,7 +156,8 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
   profiler::JStringWrapper method_str(env, method_name);
   std::size_t found = method_str.get().find("(");
   if (found == std::string::npos) {
-    profiler::Log::E(
+    Log::E(
+        Log::Tag::APPINSPECT
         "Method should be in the format $method_name($signature)$return_type, "
         "but was %s",
         method_str.get().c_str());
@@ -166,7 +170,7 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
 }
 
 #endif
-}  // namespace profiler
+}  // namespace app_inspection
 
 extern "C" {
 JNIEXPORT void JNICALL
@@ -213,7 +217,7 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegis
   app_inspection::AddEntryTransformation(env, servicePtr, originClass,
                                          originMethod);
 #else
-  profiler::Log::E("REGISTER ENTRY HOOK NOT IMPLEMENTED");
+  Log::E(Log::Tag::APPINSPECT, "REGISTER ENTRY HOOK NOT IMPLEMENTED");
 #endif
 }
 
@@ -225,7 +229,7 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegis
   app_inspection::AddExitTransformation(env, servicePtr, originClass,
                                         originMethod);
 #else
-  profiler::Log::E("REGISTER EXIT HOOK NOT IMPLEMENTED");
+  Log::E(Log::Tag::APPINSPECT, "REGISTER EXIT HOOK NOT IMPLEMENTED");
 #endif
 }
 
@@ -235,7 +239,7 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeFindI
 #ifdef APP_INSPECTION_EXPERIMENT
   return app_inspection::FindInstances(env, servicePtr, jclass);
 #else
-  profiler::Log::E("FIND INSTANCES NOT IMPLEMENTED");
+  Log::E(Log::Tag::APPINSPECT, "FIND INSTANCES NOT IMPLEMENTED");
   auto result = env->NewObjectArray(0, jclass, NULL);
   return result;
 #endif

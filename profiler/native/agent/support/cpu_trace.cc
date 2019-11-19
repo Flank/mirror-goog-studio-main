@@ -117,12 +117,14 @@ void TraceMonitor::CheckFixTracePathCall(int32_t tid,
   // called on the same thread as startMethodTracing.
   if (tid != ongoing_start_request_.thread_id()) {
     Log::E(
+        Log::Tag::PROFILER,
         "startMethodTracing called from thread %d but fixTracePath enters from "
         "thread %d",
         ongoing_start_request_.thread_id(), tid);
   }
   if (path_as_seen != ongoing_start_request_.start().arg_trace_path()) {
     Log::E(
+        Log::Tag::PROFILER,
         "startMethodTracing called with '%s' but fixTracePath called with '%s'",
         ongoing_start_request_.start().arg_trace_path().c_str(),
         path_as_seen.c_str());
@@ -130,9 +132,11 @@ void TraceMonitor::CheckFixTracePathCall(int32_t tid,
 }
 
 void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
-  Log::D("TraceMonitor::SubmitStartEvent '%s'", fixed_path.c_str());
+  Log::D(Log::Tag::PROFILER, "TraceMonitor::SubmitStartEvent '%s'",
+         fixed_path.c_str());
   if (api_initiated_trace_in_progress_) {
     Log::W(
+        Log::Tag::PROFILER,
         "API-initiated tracing is already in progress; the call is ignored.");
   }
 
@@ -140,6 +144,7 @@ void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
   // called on the same thread as startMethodTracing.
   if (tid != ongoing_start_request_.thread_id()) {
     Log::E(
+        Log::Tag::PROFILER,
         "startMethodTracing called from thread %d but fixTracePath exits from "
         "thread %d",
         ongoing_start_request_.thread_id(), tid);
@@ -186,9 +191,9 @@ void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
             if (!response.start_operation_allowed()) {
               // This start operation isn't allowed. Ignore it.
               Reset();
-              Log::W(
-                  "Debug.startMethodTracing(String) called while tracing is "
-                  "already in progress; the call is ignored.");
+              Log::W(Log::Tag::PROFILER,
+                     "Debug.startMethodTracing(String) called while tracing is "
+                     "already in progress; the call is ignored.");
             }
           } else {
             // Not receiving a response from daemon. This task will be retried
@@ -202,9 +207,9 @@ void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
 bool TraceMonitor::ReadTraceContent(const string& trace_path,
                                     string* trace_content) {
   if (trace_path.empty()) {
-    Log::E(
-        "Trace path not processed by fixTracePath() when "
-        "stopMethodTracing() is called");
+    Log::E(Log::Tag::PROFILER,
+           "Trace path not processed by fixTracePath() when "
+           "stopMethodTracing() is called");
     return false;
   }
 
@@ -219,7 +224,7 @@ void TraceMonitor::SubmitStopEvent(int tid) {
   int32_t pid = getpid();
   string trace_content;
   ReadTraceContent(confirmed_trace_path_, &trace_content);
-  Log::D("TraceMonitor::SubmitStopEvent '%s' size=%zu",
+  Log::D(Log::Tag::PROFILER, "TraceMonitor::SubmitStopEvent '%s' size=%zu",
          confirmed_trace_path_.c_str(), trace_content.size());
   // We are done with the cached data. Reset so that the next API tracing call
   // proceeds as normal while the tasks below run asynchonrously.

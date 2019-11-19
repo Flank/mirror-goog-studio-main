@@ -14,21 +14,20 @@
  * limitations under the License.
  *
  */
-#include "jvmti.h"
-
 #include <dlfcn.h>
+
 #include <fstream>
 #include <string>
 
 #include "agent/agent.h"
+#include "commands/app_inspection_agent_command.h"
+#include "commands/echo_agent_command.h"
+#include "commands/layoutinspector_agent_command.h"
+#include "jvmti.h"
 #include "jvmti_helper.h"
 #include "perfa/perfa.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
-
-#include "commands/app_inspection_agent_command.h"
-#include "commands/echo_agent_command.h"
-#include "commands/layoutinspector_agent_command.h"
 
 using profiler::Agent;
 using profiler::Log;
@@ -68,7 +67,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
 
   if (options == nullptr) {
-    Log::E("Config file parameter was not specified");
+    Log::E(Log::Tag::TRANSPORT, "Config file parameter was not specified");
     return JNI_ERR;
   }
 
@@ -76,7 +75,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   AgentConfig config;
   if (!ParseConfigFromPath(options, &config)) {
-    Log::E("Failed to parse config from %s", options);
+    Log::E(Log::Tag::TRANSPORT, "Failed to parse config from %s", options);
     return JNI_ERR;
   }
   Agent::Instance(config);
@@ -105,7 +104,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     Agent::Instance().StartHeartbeat();
     // Perf-test currently waits on this message to determine that agent is
     // connected to daemon.
-    Log::V("Transport agent connected to daemon.");
+    Log::V(Log::Tag::TRANSPORT, "Transport agent connected to daemon.");
   });
 
   return JNI_OK;

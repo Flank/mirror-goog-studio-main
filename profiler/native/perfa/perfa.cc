@@ -14,22 +14,17 @@
  * limitations under the License.
  *
  */
-#include "jvmti.h"
-
 #include <string>
 #include <unordered_map>
 
 #include "agent/agent.h"
 #include "agent/jvmti_helper.h"
 #include "agent/scoped_local_ref.h"
+#include "jvmti.h"
 #include "memory/memory_tracking_env.h"
 #include "proto/transport.grpc.pb.h"
-#include "utils/device_info.h"
-#include "utils/log.h"
-
 #include "slicer/reader.h"
 #include "slicer/writer.h"
-
 #include "transform/android_activitythread_transform.h"
 #include "transform/android_alarmmanager_listenerwrapper_transform.h"
 #include "transform/android_alarmmanager_transform.h"
@@ -52,6 +47,8 @@
 #include "transform/okhttp3_okhttpclient_transform.h"
 #include "transform/okhttp_okhttpclient_transform.h"
 #include "transform/transform.h"
+#include "utils/device_info.h"
+#include "utils/log.h"
 
 using profiler::Agent;
 using profiler::Log;
@@ -121,7 +118,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   dex::Reader reader(class_data, class_data_len);
   auto class_index = reader.FindClassIndex(desc.c_str());
   if (class_index == dex::kNoIndex) {
-    Log::V("Could not find class index for %s", name);
+    Log::V(Log::Tag::PROFILER, "Could not find class index for %s", name);
     return;
   }
 
@@ -138,7 +135,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
   *new_class_data_len = new_image_size;
   *new_class_data = new_image;
-  Log::V("Transformed class: %s", name);
+  Log::V(Log::Tag::PROFILER, "Transformed class: %s", name);
 }
 
 // Populate the map of transforms we want to apply to different classes.
@@ -319,7 +316,7 @@ void InitializeProfiler(JavaVM* vm, jvmtiEnv* jvmti_env,
 
   // Perf-test currently waits on this message to determine that agent
   // has finished profiler initialization.
-  Log::V("Profiler initialization complete on agent.");
+  Log::V(Log::Tag::PROFILER, "Profiler initialization complete on agent.");
 }
 
 void SetupPerfa(JavaVM* vm, jvmtiEnv* jvmti_env,

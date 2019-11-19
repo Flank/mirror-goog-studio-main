@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <sstream>
 
 #include "utils/bash_command.h"
@@ -58,7 +59,8 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
                                        bool is_startup_profiling) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU: StartProfiling simplerperf");
-  Log::D("Profiler:Received query to profile %s", app_name.c_str());
+  Log::D(Log::Tag::PROFILER, "Profiler:Received query to profile %s",
+         app_name.c_str());
 
   if (IsProfiling(app_name)) {
     error->append("Simpleperf is already running; start tracing failed.");
@@ -74,7 +76,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
       error->append("Unable to get process id to profile.");
       return false;
     }
-    Log::D("%s app has pid:%d", app_name.c_str(), pid);
+    Log::D(Log::Tag::PROFILER, "%s app has pid:%d", app_name.c_str(), pid);
   }
 
   if (!simpleperf_->EnableProfiling()) {
@@ -112,8 +114,8 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
     default: {  // Perfd Process
       entry.simpleperf_pid = forkpid;
       profiled_[app_name] = entry;
-      Log::D("Registered app %s profiled by %d", app_name.c_str(),
-             entry.simpleperf_pid);
+      Log::D(Log::Tag::PROFILER, "Registered app %s profiled by %d",
+             app_name.c_str(), entry.simpleperf_pid);
     }
   }
   return true;
@@ -127,10 +129,11 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
     const std::string &app_name, bool need_result, std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling simpleperf");
-  Log::D("Profiler:Stopping profiling for %s", app_name.c_str());
+  Log::D(Log::Tag::PROFILER, "Profiler:Stopping profiling for %s",
+         app_name.c_str());
   if (!IsProfiling(app_name)) {
     string msg = "This app was not being profiled.";
-    Log::D("%s", msg.c_str());
+    Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
     error->append("\n");
     error->append(msg);
     return TraceStopStatus::NO_ONGOING_PROFILING;
@@ -142,7 +145,8 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
 
   ProcessManager pm;
   pid_t current_pid = pm.GetPidForBinary(app_name);
-  Log::D("%s app has pid:%d", app_name.c_str(), current_pid);
+  Log::D(Log::Tag::PROFILER, "%s app has pid:%d", app_name.c_str(),
+         current_pid);
 
   TraceStopStatus::Status status = TraceStopStatus::SUCCESS;
   if (need_result) {
@@ -151,7 +155,7 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
       string msg = "App died since profiling started.";
       error->append("\n");
       error->append(msg);
-      Log::D("%s", msg.c_str());
+      Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
       status = TraceStopStatus::APP_PROCESS_DIED;
     }
 
@@ -163,7 +167,7 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
       string msg = "Recorded pid and current app pid do not match: Aborting";
       error->append("\n");
       error->append(msg);
-      Log::D("%s", msg.c_str());
+      Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
       status = TraceStopStatus::APP_PID_CHANGED;
     }
   }
@@ -175,7 +179,7 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
   if (!pm.IsPidAlive(ongoing_recording.simpleperf_pid)) {
     string msg = "Simpleperf died while profiling. Logfile :" +
                  ongoing_recording.log_file_path;
-    Log::D("%s", msg.c_str());
+    Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
     *error = msg;
     status = TraceStopStatus::PROFILER_PROCESS_DIED;
   } else {
@@ -204,7 +208,7 @@ TraceStopStatus::Status SimpleperfManager::StopProfiling(
 bool SimpleperfManager::StopSimpleperf(
     const OnGoingProfiling &ongoing_recording, string *error) const {
   // Ask simpleperf to stop profiling this app.
-  Log::D("Sending SIGTERM to simpleperf(%d).",
+  Log::D(Log::Tag::PROFILER, "Sending SIGTERM to simpleperf(%d).",
          ongoing_recording.simpleperf_pid);
   bool kill_simpleperf_result = simpleperf_->KillSimpleperf(
       ongoing_recording.simpleperf_pid, ongoing_recording.process_name);
@@ -213,7 +217,7 @@ bool SimpleperfManager::StopSimpleperf(
     string msg = "Failed to send SIGTERM to simpleperf";
     error->append("\n");
     error->append(msg);
-    Log::D("%s", msg.c_str());
+    Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
     return false;
   }
   return true;
@@ -234,7 +238,7 @@ bool SimpleperfManager::CopyRawToTrace(
       ongoing_recording.raw_trace_path, ongoing_recording.trace_path);
   if (!move_trace_success) {
     string msg = "Unable to copy simpleperf raw trace.";
-    Log::D("%s", msg.c_str());
+    Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
     error->append("\n");
     error->append(msg);
     return false;
@@ -252,7 +256,7 @@ bool SimpleperfManager::WaitForSimpleperf(
   if (wait_result == -1) {
     string msg = "waitpid failed with message: ";
     msg += strerror(errno);
-    Log::D("%s", msg.c_str());
+    Log::D(Log::Tag::PROFILER, "%s", msg.c_str());
     error->append("\n");
     error->append(msg);
     return false;
@@ -264,7 +268,7 @@ bool SimpleperfManager::WaitForSimpleperf(
     msg << "Simpleperf did not exit as expected. Logfile: ";
     msg << ongoing_recording.log_file_path << ". ";
     msg << "Exit status: " << status;
-    Log::D("%s", msg.str().c_str());
+    Log::D(Log::Tag::PROFILER, "%s", msg.str().c_str());
     error->append("\n");
     error->append(msg.str());
     return false;

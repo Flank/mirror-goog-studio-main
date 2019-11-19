@@ -40,7 +40,7 @@ class Okhttp3ClientTransform : public Transform {
         "insertInterceptor"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "networkInterceptors",
                                           "()Ljava/util/List;"))) {
-      Log::E("Error instrumenting OkHttp3 OkHttpClient");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting OkHttp3 OkHttpClient");
     }
   }
 };

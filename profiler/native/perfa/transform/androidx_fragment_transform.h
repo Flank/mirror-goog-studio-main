@@ -37,6 +37,7 @@ class AndroidXFragmentTransform : public Transform {
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "performResume", "()V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting androidx.fragment.app.Fragment.performResume");
     }
 
@@ -48,7 +49,8 @@ class AndroidXFragmentTransform : public Transform {
         true);
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "performPause", "()V"))) {
-      Log::E("Error instrumenting androidx.fragment.app.Fragment.performPause");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting androidx.fragment.app.Fragment.performPause");
     }
   }
 };

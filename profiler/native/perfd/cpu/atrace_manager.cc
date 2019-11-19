@@ -15,7 +15,6 @@
  *
  */
 #include "atrace_manager.h"
-#include "atrace.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -24,8 +23,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <sstream>
 
+#include "atrace.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
@@ -77,7 +78,8 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
 
   dumps_created_ = 0;
   Trace trace("CPU: StartProfiling atrace");
-  Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
+  Log::D(Log::Tag::PROFILER, "Profiler:Received query to profile %s",
+         app_pkg_name.c_str());
   // Build entry to keep track of what is being profiled.
   profiled_app_.trace_path = trace_path;
   profiled_app_.app_pkg_name = app_pkg_name;
@@ -163,7 +165,8 @@ TraceStopStatus::Status AtraceManager::StopProfiling(
     const std::string &app_pkg_name, bool need_result, std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling atrace");
-  Log::D("Profiler:Stopping profiling for %s", app_pkg_name.c_str());
+  Log::D(Log::Tag::PROFILER, "Profiler:Stopping profiling for %s",
+         app_pkg_name.c_str());
   is_profiling_ = false;
   // Should occur after is_profiling is set to false to stop our polling
   // thread.
@@ -204,7 +207,7 @@ void AtraceManager::Shutdown() {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:Shutdown atrace");
   if (is_profiling_) {
-    Log::D("Profiler:Shutdown atrace");
+    Log::D(Log::Tag::PROFILER, "Profiler:Shutdown atrace");
     is_profiling_ = false;
     atrace_->HardStop();
   }

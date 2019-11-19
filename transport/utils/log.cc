@@ -14,47 +14,12 @@
  * limitations under the License.
  */
 #include "log.h"
+
 #include <cstdio>
 
-namespace profiler {
-
-void Log::V(const char *fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  Handle('V', fmt, args);
-  va_end(args);
-}
-
-void Log::D(const char *fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  Handle('D', fmt, args);
-  va_end(args);
-}
-
-void Log::I(const char *fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  Handle('I', fmt, args);
-  va_end(args);
-}
-
-void Log::W(const char *fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  Handle('W', fmt, args);
-  va_end(args);
-}
-
-void Log::E(const char *fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  Handle('E', fmt, args);
-  va_end(args);
-}
-
-void Log::Handle(const char level, const char *fmt, va_list args) {
-  printf("%s[%c]: ", kTag, level);
+namespace {
+void Handle(const char *tag, const char level, const char *fmt, va_list args) {
+  printf("%s[%c]: ", tag, level);
   vprintf(fmt, args);
   printf("\n");
   // If debuging threading issues with test uncomment line below
@@ -62,6 +27,44 @@ void Log::Handle(const char level, const char *fmt, va_list args) {
   // Note: This may impact chance of threading issue to occur however
   // you will have log statements printed as they get called.
   // fflush(stdout);
+}
+}  // namespace
+
+namespace profiler {
+
+void Log::V(const char *tag, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Handle(tag, 'V', fmt, args);
+  va_end(args);
+}
+
+void Log::D(const char *tag, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Handle(tag, 'D', fmt, args);
+  va_end(args);
+}
+
+void Log::I(const char *tag, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Handle(tag, 'I', fmt, args);
+  va_end(args);
+}
+
+void Log::W(const char *tag, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Handle(tag, 'W', fmt, args);
+  va_end(args);
+}
+
+void Log::E(const char *tag, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Handle(tag, 'E', fmt, args);
+  va_end(args);
 }
 
 }  // namespace profiler

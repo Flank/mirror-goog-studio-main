@@ -15,6 +15,7 @@
  */
 
 #include <cstring>
+
 #include "daemon/connector.h"
 #include "daemon/daemon.h"
 #include "echo.h"
@@ -37,9 +38,11 @@ DEFINE_string(config_file, profiler::kDaemonConfigDefaultPath,
               "Path to daemon config file");
 DEFINE_string(connect, "", "Communicate with an agent");
 
+using profiler::Log;
+
 void RegisterTransports(profiler::Daemon* daemon) {
   if (profiler::Perfd::Initialize(daemon) != 0) {
-    profiler::Log::E("Failed to initialize perfd");
+    Log::E(Log::Tag::TRANSPORT, "Failed to initialize perfd");
   }
 
   // Initializing the agent to handle daemon commands. This is only needed if

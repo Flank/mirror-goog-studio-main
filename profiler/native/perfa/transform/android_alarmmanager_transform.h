@@ -39,7 +39,7 @@ class AndroidAlarmManagerTransform : public Transform {
             "Landroid/app/AlarmManager$OnAlarmListener;Ljava/lang/String;"
             "Landroid/os/Handler;Landroid/os/WorkSource;"
             "Landroid/app/AlarmManager$AlarmClockInfo;)V"))) {
-      Log::E("Error instrumenting AlarmManager.setImpl");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting AlarmManager.setImpl");
     }
 
     // Instrument cancel(PendingIntent) and cancel(OnAlarmListener).
@@ -49,12 +49,14 @@ class AndroidAlarmManagerTransform : public Transform {
         "wrapCancel"));
     if (!mi_cancel.InstrumentMethod(ir::MethodId(
             GetClassName(), "cancel", "(Landroid/app/PendingIntent;)V"))) {
-      Log::E("Error instrumenting AlarmManager.cancel(PendingIntent)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting AlarmManager.cancel(PendingIntent)");
     }
     if (!mi_cancel.InstrumentMethod(
             ir::MethodId(GetClassName(), "cancel",
                          "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
-      Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting AlarmManager.cancel(OnAlarmListener)");
     }
   }
 };

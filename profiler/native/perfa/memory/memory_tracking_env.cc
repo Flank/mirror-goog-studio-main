@@ -355,7 +355,7 @@ bool MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
         ScopedLocalRef<jclass> klass(jni, classes[i]);
         RegisterNewClass(jvmti_, jni, klass.get());
       }
-      Log::V("Loaded classes: %d", class_count);
+      Log::V(Log::Tag::PROFILER, "Loaded classes: %d", class_count);
       Deallocate(jvmti_, classes);
 
       // Should have found java/lang/Class at this point.
@@ -378,7 +378,7 @@ bool MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   // Tag and send all objects already allocated on the heap unless they are
   // already tagged.
   IterateThroughHeap();
-  Log::V("Tracking initialization took: %lldns",
+  Log::V(Log::Tag::PROFILER, "Tracking initialization took: %lldns",
          (long long)stopwatch.GetElapsed());
 
   return true;
@@ -421,7 +421,8 @@ bool MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
  * to filter allocation events.
  */
 void MemoryTrackingEnv::SetSamplingRate(int32_t sampling_num_interval) {
-  Log::V("Update live memory tracking sampling rate from %d to %d",
+  Log::V(Log::Tag::PROFILER,
+         "Update live memory tracking sampling rate from %d to %d",
          sampling_num_interval_, sampling_num_interval);
 
   if (sampling_num_interval == sampling_num_interval_) {
@@ -446,7 +447,7 @@ void MemoryTrackingEnv::SetSamplingRate(int32_t sampling_num_interval) {
     IterateThroughHeap();
   }
 
-  Log::V("Setting sampling rate took: %lldns",
+  Log::V(Log::Tag::PROFILER, "Setting sampling rate took: %lldns",
          (long long)stopwatch.GetElapsed());
 }
 
@@ -492,7 +493,7 @@ void MemoryTrackingEnv::SetAllocationCallbacksStatus(bool enabled) {
 void MemoryTrackingEnv::SetJNIRefCallbacksStatus(bool enabled) {
   GlobalRefListener* ref_listener = enabled ? this : nullptr;
   if (!RegisterJniTableListener(jvmti_, ref_listener)) {
-    Log::E("Error while registering new JNI table.");
+    Log::E(Log::Tag::PROFILER, "Error while registering new JNI table.");
   }
 }
 
@@ -551,19 +552,20 @@ void MemoryTrackingEnv::LogGcFinish() {
   timing_stats_.Track(TimingStats::kGc, gc_end_ns - last_gc_start_ns_);
 
 #ifndef NDEBUG
-  Log::V(">> [MEM AGENT STATS DUMP BEGIN]");
-  Log::V(">> Timing(ns)");
+  Log::V(Log::Tag::PROFILER, ">> [MEM AGENT STATS DUMP BEGIN]");
+  Log::V(Log::Tag::PROFILER, ">> Timing(ns)");
   for (int i = 0; i < TimingStats::kTimingTagCount; i++) {
     timing_stats_.Print(static_cast<TimingStats::TimingTag>(i));
   }
-  Log::V(">> Memory(bytes)");
+  Log::V(Log::Tag::PROFILER, ">> Memory(bytes)");
   for (int i = 0; i < kMemTagCount; i++) {
-    Log::V(">> %s: Total=%ld, Max=%ld", MemTagToString((MemTag)i),
-           g_total_used[i].load(), g_max_used[i].load());
+    Log::V(Log::Tag::PROFILER, ">> %s: Total=%ld, Max=%ld",
+           MemTagToString((MemTag)i), g_total_used[i].load(),
+           g_max_used[i].load());
   }
   allocation_event_queue_.PrintStats();
   stack_trie_.PrintStats();
-  Log::V(">> [MEM AGENT STATS DUMP END]");
+  Log::V(Log::Tag::PROFILER, ">> [MEM AGENT STATS DUMP END]");
 #endif
 }
 
@@ -572,11 +574,11 @@ void MemoryTrackingEnv::HandleControlSignal(
   int32_t new_sampling_num_interval;
   switch (request->control_case()) {
     case MemoryControlRequest::kEnableRequest:
-      Log::V("Live memory tracking enabled.");
+      Log::V(Log::Tag::PROFILER, "Live memory tracking enabled.");
       StartLiveTracking(request->enable_request().timestamp());
       break;
     case MemoryControlRequest::kDisableRequest:
-      Log::V("Live memory tracking disabled.");
+      Log::V(Log::Tag::PROFILER, "Live memory tracking disabled.");
       StopLiveTracking(request->disable_request().timestamp());
       break;
     case MemoryControlRequest::kSetSamplingRateRequest:
@@ -588,7 +590,7 @@ void MemoryTrackingEnv::HandleControlSignal(
     case MemoryControlRequest::CONTROL_NOT_SET:
     // Fall through.
     default:
-      Log::V("Unknown memory control signal.");
+      Log::V(Log::Tag::PROFILER, "Unknown memory control signal.");
   }
 }
 
@@ -934,7 +936,8 @@ void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch,
           if (!memory_map_.Update()) {
             // Reading memory map has failed. Report it and keep going,
             // because the old map is still intact and can still be used.
-            Log::E("Failed reading memory map from: /proc/%d/maps", getpid());
+            Log::E(Log::Tag::PROFILER,
+                   "Failed reading memory map from: /proc/%d/maps", getpid());
           }
           memory_map_is_updated = true;
         }
