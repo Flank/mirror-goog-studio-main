@@ -27,6 +27,7 @@ import com.android.tools.idea.wizard.template.StringParameter
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.TemplateData
+import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
@@ -46,6 +47,7 @@ val tabbedActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {

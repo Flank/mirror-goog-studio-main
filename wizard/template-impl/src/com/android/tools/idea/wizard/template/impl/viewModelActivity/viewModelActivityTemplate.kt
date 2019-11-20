@@ -29,6 +29,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
+import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
 import com.android.tools.idea.wizard.template.impl.common.navigation.underscoreToCamelCase
@@ -47,6 +48,7 @@ val viewModelActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
 
     val activityClass = stringParameter {
       name = "Activity Name"
