@@ -82,7 +82,9 @@ fun runR8(
     messageReceiver: MessageReceiver,
     useFullR8: Boolean = false,
     featureJars: Collection<Path>,
-    featureDexDir: Path?
+    featureDexDir: Path?,
+    libConfiguration: String? = null,
+    outputKeepRules: Path? = null
 ) {
     val logger: Logger = Logger.getLogger("R8")
     if (logger.isLoggable(Level.FINE)) {
@@ -93,6 +95,7 @@ fun runR8(
         logger.fine("Program classes: $inputClasses")
         logger.fine("Java resources: $inputJavaResources")
         logger.fine("Library classes: $libraries")
+        outputKeepRules?.let{ logger.fine("Keep rules for shrinking desugar lib: $it") }
     }
     val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver, "R8"))
 
@@ -110,6 +113,11 @@ fun runR8(
             mainDexListConfig.mainDexListOutput?.let {
                 r8CommandBuilder.setMainDexListConsumer(StringConsumer.FileConsumer(it))
             }
+        }
+        if (libConfiguration != null) {
+            r8CommandBuilder
+                .addSpecialLibraryConfiguration(libConfiguration)
+                .setDesugaredLibraryKeepRuleConsumer(StringConsumer.FileConsumer(outputKeepRules!!))
         }
     }
 

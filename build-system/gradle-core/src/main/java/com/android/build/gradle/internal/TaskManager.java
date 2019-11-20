@@ -2003,6 +2003,7 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTask(variantScope);
         if (shrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(variantScope);
+            maybeCreateDexDesugarLibTask(variantScope, false);
             return;
         }
 

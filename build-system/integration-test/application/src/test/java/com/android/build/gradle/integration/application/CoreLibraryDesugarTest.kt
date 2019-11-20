@@ -19,11 +19,13 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.JavaSourceFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
@@ -316,6 +318,45 @@ class CoreLibraryDesugarTest {
         assertTrue { outputFile.lastModified() == cacheTimeStamp }
     }
 
+    @Test
+    fun testKeepRulesGenerationAndConsumptionForMinifyBuild() {
+        app.buildFile.appendText("""
+
+            android.buildTypes.release.minifyEnabled = true
+        """.trimIndent())
+        // In the onCreate method of HelloWorld activity class, the getText() method with desugar
+        // APIs needs to be called. Otherwise, R8 would shrink this getText() method and therefore
+        // not generating keep rules for those desugar APIs.
+        TestFileUtils.searchAndReplace(
+            FileUtils.join(app.mainSrcDir, "com/example/helloworld/HelloWorld.java"),
+            "// onCreate",
+            "getText();"
+        )
+
+        val result =
+            project.executor()
+                .withLoggingLevel(LoggingLevel.DEBUG)
+                .run("app:assembleRelease")
+
+        val keepRulesOutputDir =
+            InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
+        val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
+                "    java.lang.Object get();$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
+                "    j\$.util.stream.Stream stream(java.util.Collection);$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.stream.Stream {$lineSeparator" +
+                "    j\$.util.Optional findFirst();$lineSeparator" +
+                "}$lineSeparator"
+        assertTrue { collectKeepRulesUnderDirectory(keepRulesOutputDir) == expectedKeepRules }
+
+        // check keep rules file is consumed by L8 tool
+        val consumedKeepRulesFile = File(keepRulesOutputDir, "release/output").absolutePath
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains("[L8] Keep rules: $consumedKeepRulesFile")
+        }
+    }
 
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
@@ -385,4 +426,6 @@ class CoreLibraryDesugarTest {
         private const val LIBRARY_PACKAGE = "com.example.lib"
         private const val CACHE_DIR = "agp_cache_dir"
     }
+
+    private val lineSeparator: String = System.lineSeparator()
 }
