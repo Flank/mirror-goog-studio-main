@@ -19,6 +19,9 @@ import com.android.utils.usLocaleCapitalize
 import com.google.common.base.CaseFormat
 import com.google.common.base.Strings.emptyToNull
 import com.android.tools.idea.wizard.template.AssetNameConverter.Type
+import com.google.common.io.Resources
+import java.io.File
+import java.net.URL
 
 data class GradleVersion(val major: Int, val minor: Int, val micro: Int) {
   operator fun compareTo(other: GradleVersion) = when {
@@ -82,3 +85,12 @@ private val kotlinKeywords = listOf(
   "throw", "return", "break", "continue", "object", "if", "try", "else", "while", "do", "when", "interface", "typeof")
 
 fun underlinesToCamelCase(string: String): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
+
+/**
+ * Finds a resource given a file path and a context class. The implementation takes cares of the details of different file path
+ * separators in different operating systems.
+ */
+fun findResource(contextClass: Class<Any>, from: File) : URL {
+  // Windows file paths use '\', but resources are always '/', and they need to start at root.
+  return Resources.getResource(contextClass, "/${from.path.replace('\\', '/')}")
+}
