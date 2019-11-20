@@ -28,6 +28,9 @@ class BuildFeatureValuesImpl(
     // add new flags here with computation:
     // dslFeatures.flagX ?: projectOptions[BooleanOption.FlagX]
 
+    override val aidl: Boolean
+        get() = dslBuildFeatures.aidl ?: projectOptions[BooleanOption.BUILD_FEATURE_AIDL]
+
     override val jetpackCompose: Boolean
         get() = dslBuildFeatures.compose ?: false
 
@@ -36,6 +39,15 @@ class BuildFeatureValuesImpl(
 
     override val dataBinding: Boolean
         get() = dslBuildFeatures.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
+
+    override val renderScript: Boolean
+        get() = dslBuildFeatures.renderScript ?: projectOptions[BooleanOption.BUILD_FEATURE_RENDERSCRIPT]
+
+    override val resValues: Boolean
+        get() = dslBuildFeatures.resValues ?: projectOptions[BooleanOption.BUILD_FEATURE_RESVALUES]
+
+    override val shaders: Boolean
+        get() = dslBuildFeatures.shaders ?: projectOptions[BooleanOption.BUILD_FEATURE_SHADERS]
 
     override val viewBinding: Boolean
         get() = dslBuildFeatures.viewBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_VIEWBINDING]

@@ -52,6 +52,11 @@ public abstract class BaseVariantFactory implements VariantFactory {
 
     @Override
     public void validateModel(@NonNull VariantModel model) {
+        validateBuildConfig(model);
+        validateResValues(model);
+    }
+
+    void validateBuildConfig(@NonNull VariantModel model) {
         if (!globalScope.getBuildFeatures().getBuildConfig()) {
             EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 
@@ -82,4 +87,37 @@ public abstract class BaseVariantFactory implements VariantFactory {
             }
         }
     }
+
+    void validateResValues(@NonNull VariantModel model) {
+        if (!globalScope.getBuildFeatures().getResValues()) {
+            EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+
+            if (!model.getDefaultConfig().getProductFlavor().getResValues().isEmpty()) {
+                issueReporter.reportError(
+                        Type.GENERIC,
+                        "defaultConfig contains custom resource values, but the feature is disabled.");
+            }
+
+            for (BuildTypeData buildType : model.getBuildTypes().values()) {
+                if (!buildType.getBuildType().getResValues().isEmpty()) {
+                    issueReporter.reportError(
+                            Type.GENERIC,
+                            String.format(
+                                    "Build Type '%s' contains custom resource values, but the feature is disabled.",
+                                    buildType.getBuildType().getName()));
+                }
+            }
+
+            for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
+                if (!productFlavor.getProductFlavor().getResValues().isEmpty()) {
+                    issueReporter.reportError(
+                            Type.GENERIC,
+                            String.format(
+                                    "Product Flavor '%s' contains custom resource values, but the feature is disabled.",
+                                    productFlavor.getProductFlavor().getName()));
+                }
+            }
+        }
+    }
+
 }

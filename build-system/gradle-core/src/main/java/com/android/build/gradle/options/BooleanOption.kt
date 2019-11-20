@@ -58,8 +58,12 @@ enum class BooleanOption(
     // ---------------
     // FEATURE Default Values
     // This is a PUBLIC API.
+    BUILD_FEATURE_AIDL("android.defaults.buildfeatures.aidl", true, Option.Status.STABLE),
     BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, Option.Status.STABLE),
     BUILD_FEATURE_DATABINDING("android.defaults.buildfeatures.databinding", false, Option.Status.STABLE),
+    BUILD_FEATURE_RENDERSCRIPT("android.defaults.buildfeatures.renderscript", true, Option.Status.STABLE),
+    BUILD_FEATURE_RESVALUES("android.defaults.buildfeatures.resvalues", true, Option.Status.STABLE),
+    BUILD_FEATURE_SHADERS("android.defaults.buildfeatures.shaders", true, Option.Status.STABLE),
     BUILD_FEATURE_VIEWBINDING("android.defaults.buildfeatures.viewbinding", false, Option.Status.STABLE),
 
     // ---------------

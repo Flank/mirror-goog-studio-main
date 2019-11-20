@@ -21,8 +21,12 @@ package com.android.build.gradle.internal.scope
  * account default values coming via [com.android.build.gradle.options.BooleanOption]
  */
 interface BuildFeatureValues {
+    val aidl: Boolean
     val jetpackCompose: Boolean
     val buildConfig: Boolean
     val dataBinding: Boolean
+    val renderScript: Boolean
+    val resValues: Boolean
+    val shaders: Boolean
     val viewBinding: Boolean
 }

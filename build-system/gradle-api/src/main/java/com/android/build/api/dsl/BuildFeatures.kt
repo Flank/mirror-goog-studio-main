@@ -24,6 +24,20 @@ import org.gradle.api.Incubating
 @Incubating
 interface BuildFeatures {
     /**
+     * Flag to enable AIDL compilation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.aidl=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var aidl: Boolean?
+
+    /**
      * Flag to enable Compose feature.
      * Setting the value to `null` resets to the default value
      *
@@ -60,6 +74,48 @@ interface BuildFeatures {
      * More information about this feature at: TBD
      */
     var dataBinding: Boolean?
+
+    /**
+     * Flag to enable RenderScript compilation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.renderscript=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var renderScript: Boolean?
+
+    /**
+     * Flag to enable Resource Values generation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.resvalues=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var resValues: Boolean?
+
+    /**
+     * Flag to enable Shader compilation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.shaders=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var shaders: Boolean?
 
     /**
      * Flag to enable View Binding.

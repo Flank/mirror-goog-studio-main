@@ -748,6 +748,7 @@ public final class GradleTestProject implements TestRule {
      *
      * @param name name of the subProject, or the subProject's gradle project path
      */
+    @NonNull
     public GradleTestProject getSubproject(String name) {
         return new GradleTestProject(name, rootProject, heapSize);
     }

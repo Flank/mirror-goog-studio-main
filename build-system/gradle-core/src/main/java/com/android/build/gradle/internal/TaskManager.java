@@ -197,6 +197,7 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
+import com.android.manifmerger.MergeType;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
@@ -813,17 +814,19 @@ public abstract class TaskManager {
     }
 
     public void createRenderscriptTask(@NonNull VariantScope scope) {
-        final MutableTaskContainer taskContainer = scope.getTaskContainer();
+        if (scope.getGlobalScope().getBuildFeatures().getRenderScript()) {
+            final MutableTaskContainer taskContainer = scope.getTaskContainer();
 
-        TaskProvider<RenderscriptCompile> rsTask =
-                taskFactory.register(new RenderscriptCompile.CreationAction(scope));
+            TaskProvider<RenderscriptCompile> rsTask =
+                    taskFactory.register(new RenderscriptCompile.CreationAction(scope));
 
-        GradleVariantConfiguration config = scope.getVariantConfiguration();
+            GradleVariantConfiguration config = scope.getVariantConfiguration();
 
-        TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
-        // only put this dependency if rs will generate Java code
-        if (!config.getRenderscriptNdkModeEnabled()) {
-            TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), rsTask);
+            TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
+            // only put this dependency if rs will generate Java code
+            if (!config.getRenderscriptNdkModeEnabled()) {
+                TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), rsTask);
+            }
         }
     }
 
@@ -958,12 +961,13 @@ public abstract class TaskManager {
         }
     }
 
-    public void createGenerateResValuesTask(
-            @NonNull VariantScope scope) {
-        TaskProvider<GenerateResValues> generateResValuesTask =
-                taskFactory.register(new GenerateResValues.CreationAction(scope));
-        TaskFactoryUtils.dependsOn(
-                scope.getTaskContainer().getResourceGenTask(), generateResValuesTask);
+    public void createGenerateResValuesTask(@NonNull VariantScope scope) {
+        if (scope.getGlobalScope().getBuildFeatures().getResValues()) {
+            TaskProvider<GenerateResValues> generateResValuesTask =
+                    taskFactory.register(new GenerateResValues.CreationAction(scope));
+            TaskFactoryUtils.dependsOn(
+                    scope.getTaskContainer().getResourceGenTask(), generateResValuesTask);
+        }
     }
 
     public void createApkProcessResTask(
@@ -1219,24 +1223,29 @@ public abstract class TaskManager {
     }
 
     public void createAidlTask(@NonNull VariantScope scope) {
-        MutableTaskContainer taskContainer = scope.getTaskContainer();
+        if (scope.getGlobalScope().getBuildFeatures().getAidl()) {
+            MutableTaskContainer taskContainer = scope.getTaskContainer();
 
-        TaskProvider<AidlCompile> aidlCompileTask =
-                taskFactory.register(new AidlCompile.CreationAction(scope));
+            TaskProvider<AidlCompile> aidlCompileTask =
+                    taskFactory.register(new AidlCompile.CreationAction(scope));
 
-        TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
+            TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
+        }
     }
 
     public void createShaderTask(@NonNull VariantScope scope) {
-        // merge the shader folders together using the proper priority.
-        taskFactory.register(
-                new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
+        if (scope.getGlobalScope().getBuildFeatures().getShaders()) {
+            // merge the shader folders together using the proper priority.
+            taskFactory.register(
+                    new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
 
-        // compile the shaders
-        TaskProvider<ShaderCompile> shaderCompileTask =
-                taskFactory.register(new ShaderCompile.CreationAction(scope));
+            // compile the shaders
+            TaskProvider<ShaderCompile> shaderCompileTask =
+                    taskFactory.register(new ShaderCompile.CreationAction(scope));
 
-        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
+            TaskFactoryUtils.dependsOn(
+                    scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
+        }
     }
 
     protected abstract void postJavacCreation(@NonNull final VariantScope scope);
