@@ -6,12 +6,12 @@ import com.android.aaptcompiler.testutils.ContainerReader
 import com.android.aaptcompiler.testutils.TableEntry
 import com.android.aaptcompiler.testutils.parseNameOrFail
 import com.google.common.truth.Truth
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import kotlin.test.fail
 
 class ResourceCompilerTest {
   @Rule
