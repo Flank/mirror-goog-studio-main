@@ -28,7 +28,6 @@ class ConnectionImpl extends Connection {
 
     @Override
     public void sendEvent(byte[] data) {
-        Responses.sendEvent(data, data.length, mInspectorId);
+        Responses.sendRaw(mInspectorId, data, data.length);
     }
-
 }

@@ -22,6 +22,7 @@ import static com.android.tools.profiler.app.inspection.ServiceLayer.TIMEOUT_SEC
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.android.tools.app.inspection.AppInspection;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand;
@@ -36,7 +37,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
@@ -69,9 +69,13 @@ public class AppInspectionTest {
     public void createThenDispose() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector("test.inspector", onDevicePath)),
+                SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
-        assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(disposeInspector("test.inspector")),
+                SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
@@ -79,45 +83,59 @@ public class AppInspectionTest {
     public void doubleInspectorCreation() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector("test.inspector", onDevicePath)),
+                SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), ERROR);
-        assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), SUCCESS);
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector("test.inspector", onDevicePath)),
+                ERROR);
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(disposeInspector("test.inspector")),
+                SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @Test
     public void disposeNonexistent() throws Exception {
-        assertResponseStatus(serviceLayer.sendCommand(disposeInspector("test.inspector")), ERROR);
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(disposeInspector("test.inspector")), ERROR);
     }
 
     @Test
     public void createFailsWithUnknownInspectorId() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(serviceLayer.sendCommand(createInspector("foo", onDevicePath)), ERROR);
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(createInspector("foo", onDevicePath)),
+                ERROR);
     }
 
     @Test
     public void createFailsIfInspectorDexIsNonexistent() throws Exception {
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", "random_file")), ERROR);
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector("test.inspector", "random_file")),
+                ERROR);
     }
 
     @Test
     public void sendRawCommand() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector("test.inspector", onDevicePath)), SUCCESS);
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector("test.inspector", onDevicePath)),
+                SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         byte[] commandBytes = new byte[] {1, 2, 127};
         assertRawResponse(
-                serviceLayer.sendCommand(rawCommandInspector("test.inspector", commandBytes)),
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector("test.inspector", commandBytes)),
                 commandBytes);
         assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + Arrays.toString(commandBytes));
-        List<AppInspectionEvent> events = serviceLayer.consumeCollectedEvents();
-        assertThat(events).hasSize(1);
-        assertThat(events.get(0).getRawEvent().getContent().toByteArray())
+        AppInspection.AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+        assertThat(serviceLayer.hasEventToCollect()).isFalse();
+        assertThat(event.getRawEvent().getContent().toByteArray())
                 .isEqualTo(new byte[] {8, 92, 43});
     }
 
@@ -125,12 +143,17 @@ public class AppInspectionTest {
     public void handleInspectorCrashDuringSendCommand() throws Exception {
         String inspectorId = "test.exception.inspector";
         assertResponseStatus(
-                serviceLayer.sendCommand(createInspector(inspectorId, injectInspectorDex())),
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         byte[] commandBytes = new byte[] {1, 2, 127};
+        serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        AppInspection.AppInspectionEvent crashEvent = serviceLayer.consumeCollectedEvent();
+        assertThat(serviceLayer.hasEventToCollect()).isFalse();
+
         assertCrashEvent(
-                serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes)),
+                crashEvent,
                 inspectorId,
                 "Inspector "
                         + inspectorId
@@ -142,7 +165,7 @@ public class AppInspectionTest {
     public void inspectorEnvironmentNoOp() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
-                serviceLayer.sendCommand(
+                serviceLayer.sendCommandAndGetResponse(
                         createInspector("test.environment.inspector", onDevicePath)),
                 SUCCESS);
         assertInput(androidDriver, "FIND INSTANCES NOT IMPLEMENTED");
@@ -153,9 +176,9 @@ public class AppInspectionTest {
     private static AppInspectionCommand rawCommandInspector(
             String inspectorId, byte[] commandData) {
         return AppInspectionCommand.newBuilder()
+                .setInspectorId(inspectorId)
                 .setRawInspectorCommand(
                         RawCommand.newBuilder()
-                                .setInspectorId(inspectorId)
                                 .setContent(ByteString.copyFrom(commandData))
                                 .build())
                 .build();
@@ -163,36 +186,36 @@ public class AppInspectionTest {
 
     private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
         return AppInspectionCommand.newBuilder()
+                .setInspectorId(inspectorId)
                 .setCreateInspectorCommand(
-                        CreateInspectorCommand.newBuilder()
-                                .setInspectorId(inspectorId)
-                                .setDexPath(dexPath)
-                                .build())
+                        CreateInspectorCommand.newBuilder().setDexPath(dexPath).build())
                 .build();
     }
 
     private static AppInspectionCommand disposeInspector(String inspectorId) {
         return AppInspectionCommand.newBuilder()
-                .setDisposeInspectorCommand(
-                        DisposeInspectorCommand.newBuilder().setInspectorId(inspectorId).build())
+                .setInspectorId(inspectorId)
+                .setDisposeInspectorCommand(DisposeInspectorCommand.newBuilder().build())
                 .build();
     }
 
-    private static void assertResponseStatus(AppInspectionEvent event, Status expected) {
-        assertThat(event.hasResponse()).isTrue();
-        assertThat(event.getResponse().getStatus()).isEqualTo(expected);
+    private static void assertResponseStatus(
+            AppInspection.AppInspectionResponse response, Status expected) {
+        assertThat(response.hasServiceResponse()).isTrue();
+        assertThat(response.getServiceResponse().getStatus()).isEqualTo(expected);
     }
 
     private static void assertCrashEvent(
             AppInspectionEvent event, String inspectorId, String message) {
         assertThat(event.hasCrashEvent()).isTrue();
-        assertThat(event.getCrashEvent().getInspectorId()).isEqualTo(inspectorId);
+        assertThat(event.getInspectorId()).isEqualTo(inspectorId);
         assertThat(event.getCrashEvent().getErrorMessage()).isEqualTo(message);
     }
 
-    private static void assertRawResponse(AppInspectionEvent event, byte[] responseContent) {
-        assertThat(event.hasRawEvent()).isTrue();
-        assertThat(event.getRawEvent().getContent().toByteArray()).isEqualTo(responseContent);
+    private static void assertRawResponse(
+            AppInspection.AppInspectionResponse response, byte[] responseContent) {
+        assertThat(response.hasRawResponse()).isTrue();
+        assertThat(response.getRawResponse().getContent().toByteArray()).isEqualTo(responseContent);
     }
 
     private static String injectInspectorDex() throws IOException {

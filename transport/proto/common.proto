@@ -115,7 +115,8 @@ message Event {
     LAYOUT_INSPECTOR = 1101;
 
     // App inspection prefix = 1200.
-    APP_INSPECTION = 1201;
+    APP_INSPECTION_EVENT = 1201;
+    APP_INSPECTION_RESPONSE = 1202;
   }
 
   // Fixed ID for pre-determined EventGroup. Event.Type is reserved for data
@@ -230,6 +231,7 @@ message Event {
 
     // App inspection prefix = 1200;
     app_inspection.AppInspectionEvent app_inspection_event = 1200;
+    app_inspection.AppInspectionResponse app_inspection_response = 1201;
   }
 }
 

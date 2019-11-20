@@ -19,14 +19,11 @@ package com.android.tools.agent.app.inspection;
 class Responses {
     public static native void replyError(int commandId, String errorMessage);
 
-    public static native void replyCrash(int commandId, String inspectorId, String errorMessage);
-
     public static native void replySuccess(int commandId);
 
-    public static native void sendEvent(
-            int commandId, byte[] eventData, int length, String inspectorId);
+    public static native void replyRaw(int commandId, byte[] responseData, int length);
 
-    static void sendEvent(byte[] eventData, int length, String inspectorId) {
-        sendEvent(0, eventData, length, inspectorId);
-    }
+    public static native void sendCrash(String inspectorId, String errorMessage);
+
+    public static native void sendRaw(String inspectorId, byte[] eventData, int length);
 }

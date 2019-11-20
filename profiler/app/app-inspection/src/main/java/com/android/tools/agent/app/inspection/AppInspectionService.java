@@ -16,9 +16,9 @@
 
 package com.android.tools.agent.app.inspection;
 
-import static com.android.tools.agent.app.inspection.Responses.replyCrash;
 import static com.android.tools.agent.app.inspection.Responses.replyError;
 import static com.android.tools.agent.app.inspection.Responses.replySuccess;
+import static com.android.tools.agent.app.inspection.Responses.sendCrash;
 
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
@@ -133,13 +133,13 @@ public class AppInspectionService {
         if (inspector == null) {
             replyError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
+            return;
         }
         try {
-            inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(inspectorId, commandId));
+            inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(commandId));
         } catch (Throwable t) {
             t.printStackTrace();
-            replyCrash(
-                    commandId,
+            sendCrash(
                     inspectorId,
                     "Inspector "
                             + inspectorId

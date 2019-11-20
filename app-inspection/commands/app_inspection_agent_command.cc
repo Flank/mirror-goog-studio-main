@@ -49,10 +49,10 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
 
         auto& app_command = command->app_inspection_command();
         int32_t command_id = app_command.command_id();
+        jstring inspector_id =
+            jni_env->NewStringUTF(app_command.inspector_id().c_str());
         if (app_command.has_create_inspector_command()) {
           auto& create_inspector = app_command.create_inspector_command();
-          jstring inspector_id =
-              jni_env->NewStringUTF(create_inspector.inspector_id().c_str());
           jstring dex_path =
               jni_env->NewStringUTF(create_inspector.dex_path().c_str());
           jmethodID create_inspector_method =
@@ -62,16 +62,12 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
                                   inspector_id, dex_path, command_id);
         } else if (app_command.has_dispose_inspector_command()) {
           auto& dispose_inspector = app_command.dispose_inspector_command();
-          jstring inspector_id =
-              jni_env->NewStringUTF(dispose_inspector.inspector_id().c_str());
           jmethodID dispose_inspector_method = jni_env->GetMethodID(
               service_class, "disposeInspector", "(Ljava/lang/String;I)V");
           jni_env->CallVoidMethod(service, dispose_inspector_method,
                                   inspector_id, command_id);
         } else if (app_command.has_raw_inspector_command()) {
           auto& raw_inspector_command = app_command.raw_inspector_command();
-          jstring inspector_id = jni_env->NewStringUTF(
-              raw_inspector_command.inspector_id().c_str());
           const std::string& cmd = raw_inspector_command.content();
           jbyteArray raw_command = jni_env->NewByteArray(cmd.length());
           jni_env->SetByteArrayRegion(raw_command, 0, cmd.length(),

@@ -19,66 +19,66 @@ package app_inspection;
 option java_package = "com.android.tools.app.inspection";
 option java_outer_classname = "AppInspection";
 
-// Union of all commands.
-// See descriptions of command next to their types declaration
+// A command originates from the host and should *always* get a response.
+// (If no response comes, it means the device likely crashed or ANR'd)
+// A command may additionally generate zero or more events.
 message AppInspectionCommand {
+  // Uniquely identifies the inspector that sent this event.
+  // Used by studio to route to appropriate event handler.
+  // This id is defined by inspector's owner. (e.g “androidx.workmanager")
+  string inspector_id = 1;
   // DO NOT USE.
   // A unique id associated with this command. To be set by inspection service
   // when sending command to inspector.
-  uint32 command_id = 1;
+  uint32 command_id = 2;
   oneof union {
-    CreateInspectorCommand create_inspector_command = 2;
-    DisposeInspectorCommand dispose_inspector_command = 3;
-    RawCommand raw_inspector_command = 4;
+    CreateInspectorCommand create_inspector_command = 3;
+    DisposeInspectorCommand dispose_inspector_command = 4;
+    RawCommand raw_inspector_command = 5;
   }
 }
 
 // A command to create an inspector and register it as a listener
 // for incoming commands.
 message CreateInspectorCommand {
-  // Unique id for an inspector that is used for routing of commands and events
-  // to this inspector.
-  // This id is defined by inspector's owner. (e.g “androidx.workmanager")
-  string inspector_id = 1;
   // On device path to the jar that has a dexed code of the given inspector.
-  string dex_path = 2;
+  string dex_path = 1;
 }
 
-// A command to dispose the inspector with the given inspector_id.
+// A command to dispose the inspector.
 // Service layer won't keep reference to an inspector anymore.
 // All events from and commands to it will be ignored
 // This command will be propagated to inspector instance as well, so it should react accordingly.
 // For example, if an inspector was listening for db changes, it should unregister
 // itself.
-message DisposeInspectorCommand {
-  string inspector_id = 1;
-}
+message DisposeInspectorCommand {}
 
 // Opaque command to an inspector.
 message RawCommand {
-  // inspector_id identifies an inspector that should handle this command
-  string inspector_id = 1;
-  // An opaque serialized command, inspectors themselves define serialization format
-  bytes content = 2;
+  bytes content = 1;
 }
 
-// Union of all events and responses.
-message AppInspectionEvent {
-  // Unique id associated with the command that triggered this event or 0 if not
-  // needed.
+// A response is sent from the device to answer a command.
+message AppInspectionResponse {
   uint32 command_id = 1;
   oneof union {
-    ServiceResponse response = 2;
-    RawEvent raw_event = 3;
-    CrashEvent crash_event = 4;
+    ServiceResponse service_response = 2;
+    RawResponse raw_response = 3;
   }
 }
 
-// Response to service commands: EnableAppInspectionCommand, DisableAppInspectionCommand,
-// CreateInspectorCommand, DisposeInspectorCommand.
-//
-// It will be send as an event with the command_id that
-// is set to id of originating command.
+// An event is initiated from device, informing the UI it should probably update.
+message AppInspectionEvent {
+  // Uniquely identifies the inspector that sent this event.
+  // Used by studio to route to appropriate event handler.
+  string inspector_id = 1;
+  oneof union {
+    RawEvent raw_event = 2;
+    CrashEvent crash_event = 3;
+  }
+}
+
+// Response sent in reply for all of the "...InspectorCommand" commands.
 message ServiceResponse {
   enum Status {
     SUCCESS = 0;
@@ -90,18 +90,19 @@ message ServiceResponse {
   string error_message = 2;
 }
 
+// Opaque response from an inspector.
+message RawResponse {
+  bytes content = 1;
+}
+
 // Opaque event from an inspector.
 message RawEvent {
-  // inspector_id identifies an inspector that sent given event
-  string inspector_id = 1;
   // An opaque serialized event, inspectors themselves define serialization format
-  bytes content = 2;
+  bytes content = 1;
 }
 
 // Sent when inspector encounters an unrecoverable error.
 message CrashEvent {
-  // inspector_id identifies an inspector that crashed
-  string inspector_id = 1;
   // a string message about the crash
-  string error_message = 2;
+  string error_message = 1;
 }
