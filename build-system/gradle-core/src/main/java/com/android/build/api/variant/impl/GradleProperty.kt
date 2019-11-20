@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant.impl
 
+import org.gradle.api.Action
 import org.gradle.api.Task
 import org.gradle.api.Transformer
 import org.gradle.api.internal.provider.HasConfigurableValueInternal
@@ -153,8 +154,8 @@ open class GradleProperty<T>(
         return (property as ProviderInternal<*>).isValueProducedByTask
     }
 
-    override fun isContentProducedByTask(): Boolean {
-        return (property as ProviderInternal<*>).isContentProducedByTask
+    override fun visitProducerTasks(p0: Action<in Task>) {
+        return (property as ProviderInternal<*>).visitProducerTasks(p0)
     }
 
     companion object {

@@ -54,5 +54,5 @@ class BasicInstantExecutionTest {
     }
 
     private fun executor(): GradleTaskExecutor =
-        project.executor().withLoggingLevel(LoggingLevel.LIFECYCLE).withArgument("-Dorg.gradle.unsafe.instant-execution")
+        project.executor().withLoggingLevel(LoggingLevel.LIFECYCLE).withArgument("-Dorg.gradle.unsafe.instant-execution=true")
 }

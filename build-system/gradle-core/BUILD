@@ -144,7 +144,8 @@ kotlin_test(
     ],
     # TODO: Remove the blacklist, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
-    deps = [
+    # Specify gradle-api jar first, as kotlin-daemon-client contains older net.rubygrapefruit.platform classes
+    deps = ["//tools/base/build-system:gradle-api"] + [
         ":gradle-core",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.1:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.5.0:jar",
@@ -152,7 +153,6 @@ kotlin_test(
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apkzlib",
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
