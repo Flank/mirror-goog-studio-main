@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -78,7 +77,7 @@ public interface VariantFactory {
     }
 
     @NonNull
-    Collection<VariantType> getVariantConfigurationTypes();
+    VariantType getVariantType();
 
     boolean hasTestScope();
 

@@ -2519,25 +2519,18 @@ public abstract class TaskManager {
      * @param variantScopes the list of variant scopes.
      * @param flavorCount the number of flavors
      * @param flavorDimensionCount whether there are flavor dimensions at all.
-     * @param variantTypeCount the number of variant types generated.
      */
     public void createAnchorAssembleTasks(
-            @NonNull List<VariantScope> variantScopes,
-            int flavorCount,
-            int flavorDimensionCount,
-            int variantTypeCount) {
+            @NonNull List<VariantScope> variantScopes, int flavorCount, int flavorDimensionCount) {
 
         // sub anchor tasks that the main 'assemble' and 'bundle task will depend.
         List<TaskProvider<? extends Task>> subAssembleTasks = Lists.newArrayList();
         List<TaskProvider<? extends Task>> subBundleTasks = Lists.newArrayList();
 
-        // There are 3 different scenarios:
+        // There are 2 different scenarios:
         // 1. There are 1+ flavors. In this case the variant-specific assemble task is
         //    different from all the assemble<BuildType> or assemble<Flavor>
-        // 2. There is no flavor but this is a feature plugin that has 2 different variants for
-        //    the same build type (aar + feature), so we still create a specific assemble<buildType>
-        //    which depends on the variant specific assemble task.
-        // 3. Else, the assemble<BuildType> is the same as the variant specific assemble task.
+        // 2. Else, the assemble<BuildType> is the same as the variant specific assemble task.
 
         // Case #1
         if (flavorCount > 0) {
@@ -2624,78 +2617,8 @@ public abstract class TaskManager {
                                     }));
                 }
             }
-
-        } else if (variantTypeCount > 1) {
-            // Case #2
-
-            // loop on the variants and record their build type usage.
-            // map from build type to the variant-specific assemble/bundle tasks
-            ListMultimap<String, TaskProvider<? extends Task>> assembleMap =
-                    ArrayListMultimap.create();
-            ListMultimap<String, TaskProvider<? extends Task>> bundleMap =
-                    ArrayListMultimap.create();
-
-            for (VariantScope variantScope : variantScopes) {
-                final VariantType variantType = variantScope.getType();
-                if (!variantType.isTestComponent()) {
-                    final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-                    final GradleVariantConfiguration variantConfig =
-                            variantScope.getVariantConfiguration();
-
-                    assembleMap.put(
-                            variantConfig.getBuildType().getName(),
-                            taskContainer.getAssembleTask());
-
-                    // fill the bundle map only if the variant supports bundles.
-                    if (variantType.isBaseModule()) {
-                        TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
-
-                        bundleMap.put(variantConfig.getBuildType().getName(), bundleTask);
-                    }
-                }
-            }
-
-            // loop over the map of build-type to create tasks for each, setting a dependency
-            // on the variant-specific task.
-            // these keys should be the same for bundle and assemble
-            Set<String> dimensionKeys = assembleMap.keySet();
-
-            for (String dimensionKey : dimensionKeys) {
-                final String dimensionName = StringHelper.usLocaleCapitalize(dimensionKey);
-
-                // create the task and add it to the list
-                subAssembleTasks.add(
-                        taskFactory.register(
-                                "assemble" + dimensionName,
-                                task -> {
-                                    task.setDescription(
-                                            "Assembles main outputs for all "
-                                                    + dimensionName
-                                                    + " variants.");
-                                    task.setGroup(BasePlugin.BUILD_GROUP);
-                                    task.dependsOn(assembleMap.get(dimensionKey));
-                                }));
-
-                List<TaskProvider<? extends Task>> subBundleMap = bundleMap.get(dimensionKey);
-                if (!subBundleMap.isEmpty()) {
-
-                    // create the task and add it to the list
-                    subBundleTasks.add(
-                            taskFactory.register(
-                                    "bundle" + dimensionName,
-                                    task -> {
-                                        task.setDescription(
-                                                "Assembles bundles for all "
-                                                        + dimensionName
-                                                        + " variants.");
-                                        task.setGroup(BasePlugin.BUILD_GROUP);
-                                        task.dependsOn(subBundleMap);
-                                    }));
-                }
-            }
         } else {
-            // Case #3
-
+            // Case #2
             for (VariantScope variantScope : variantScopes) {
                 final VariantType variantType = variantScope.getType();
                 if (!variantType.isTestComponent()) {
@@ -2751,15 +2674,7 @@ public abstract class TaskManager {
 
     @NonNull
     private String getAssembleTaskName(VariantScope scope, @NonNull String prefix) {
-        String taskName;
-        if (variantFactory.getVariantConfigurationTypes().size() == 1) {
-            taskName = scope.getTaskName(prefix);
-        } else {
-            taskName =
-                    StringHelper.appendCapitalized(
-                            prefix, scope.getVariantConfiguration().getFullName());
-        }
-        return taskName;
+        return scope.getTaskName(prefix);
     }
 
     public void createBundleTask(@NonNull final BaseVariantData variantData) {

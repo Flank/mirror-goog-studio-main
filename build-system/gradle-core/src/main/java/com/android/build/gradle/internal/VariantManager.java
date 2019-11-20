@@ -1340,9 +1340,8 @@ public class VariantManager implements VariantModel {
      */
     private void createVariantDataForProductFlavors(
             @NonNull List<ProductFlavor> productFlavorList) {
-        for (VariantType variantType : variantFactory.getVariantConfigurationTypes()) {
-            createVariantDataForProductFlavorsAndVariantType(productFlavorList, variantType);
-        }
+        createVariantDataForProductFlavorsAndVariantType(
+                productFlavorList, variantFactory.getVariantType());
     }
 
     private void createVariantDataForProductFlavorsAndVariantType(

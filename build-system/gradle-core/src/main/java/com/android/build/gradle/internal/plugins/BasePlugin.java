@@ -688,10 +688,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
 
         taskManager.createAnchorAssembleTasks(
-                variantScopes,
-                extension.getProductFlavors().size(),
-                flavorDimensionCount,
-                variantFactory.getVariantConfigurationTypes().size());
+                variantScopes, extension.getProductFlavors().size(), flavorDimensionCount);
 
         // now publish all variant artifacts.
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
