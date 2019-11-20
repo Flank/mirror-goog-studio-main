@@ -17,6 +17,7 @@
 package com.android.aaptcompiler.android
 
 import com.android.aaptcompiler.StringPool
+import com.android.aaptcompiler.parseFloat
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.text.Charsets
@@ -596,15 +597,21 @@ fun stringToFloat(string: String): ResValue? {
     }
   }
 
-  // Kotlin does not parse hex floating point numbers that do not have exponent identifier. I.e.
-  // "0x23.b" does not parse. "0x23.bp0" will. So we append "p0" where we need it, to enforce
-  // consistency with C++ floating point parsing.
-  if (stringToParse.contains("0x", true) && !stringToParse.contains('p', true)) {
-    stringToParse += "p0"
-  }
+  // attempt fast floating point parsing first
+  var parsedValue = parseFloat(stringToParse)
 
-  var parsedValue = stringToParse.toFloatOrNull()
-  parsedValue ?: return null
+  // Resort to back up parsing if the fast parsing fails to create a floating point value.
+  if (parsedValue == null) {
+    // Kotlin does not parse hex floating point numbers that do not have exponent identifier. I.e.
+    // "0x23.b" does not parse. "0x23.bp0" will. So we append "p0" where we need it, to enforce
+    // consistency with C++ floating point parsing.
+    if (stringToParse.contains("0x", true) && !stringToParse.contains('p', true)) {
+      stringToParse += "p0"
+    }
+
+    parsedValue = stringToParse.toFloatOrNull()
+    parsedValue ?: return null
+  }
 
   if (entry != null) {
     // Treat as a Unit.
