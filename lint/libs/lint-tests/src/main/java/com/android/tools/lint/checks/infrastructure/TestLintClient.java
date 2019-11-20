@@ -991,7 +991,8 @@ public class TestLintClient extends LintCliClient {
             repository.update(merger);
 
             // Make tests stable: sort the item lists!
-            for (ListMultimap<String, ResourceItem> multimap : repository.getFullTable().values()) {
+            for (ListMultimap<String, ResourceItem> multimap :
+                    repository.getResourceTable().values()) {
                 ResourceRepositories.sortItemLists(multimap);
             }
 
@@ -999,7 +1000,7 @@ public class TestLintClient extends LintCliClient {
             // to do that here.
             // TODO: namespaces
             Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                    repository.getFullTable().row(ResourceNamespace.TODO());
+                    repository.getResourceTable().row(ResourceNamespace.TODO());
             ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
             if (layouts != null) {
                 for (ResourceItem item : layouts.values()) {

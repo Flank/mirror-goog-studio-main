@@ -81,7 +81,6 @@ import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -96,6 +95,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -1032,7 +1032,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
                 // Make tests stable: sort the item lists!
                 for (ListMultimap<String, ResourceItem> multimap :
-                        repository.getFullTable().values()) {
+                        repository.getResourceTable().values()) {
                     ResourceRepositories.sortItemLists(multimap);
                 }
 
@@ -1040,7 +1040,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 // to do that here.
                 // TODO: namespaces
                 Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                        repository.getFullTable().row(RES_AUTO);
+                        repository.getResourceTable().row(RES_AUTO);
                 ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
                 if (layouts != null) {
                     for (ResourceItem item : layouts.values()) {
@@ -1053,7 +1053,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                             continue;
                         }
                         try {
-                            String xml = Files.toString(file, Charsets.UTF_8);
+                            String xml = Files.toString(file, StandardCharsets.UTF_8);
                             Document document = XmlUtils.parseDocumentSilently(xml, true);
                             assertNotNull(document);
                             Set<String> ids = Sets.newHashSet();
