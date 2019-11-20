@@ -24,6 +24,7 @@ interface BuildFeatureValues {
     val aidl: Boolean
     val compose: Boolean
     val buildConfig: Boolean
+    val buildType: Boolean
     val dataBinding: Boolean
     val renderScript: Boolean
     val resValues: Boolean

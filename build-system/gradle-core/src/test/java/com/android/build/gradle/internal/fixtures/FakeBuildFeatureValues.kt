@@ -22,6 +22,7 @@ class FakeBuildFeatureValues(
     override val aidl: Boolean = false,
     override val compose: Boolean = false,
     override val buildConfig: Boolean = true,
+    override val buildType: Boolean = false,
     override val dataBinding: Boolean = false,
     override val renderScript: Boolean = false,
     override val resValues: Boolean = false,

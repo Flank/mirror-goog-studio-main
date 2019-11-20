@@ -642,7 +642,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        List<VariantScope> variantScopes = variantManager.createAndroidTasks();
+        List<VariantScope> variantScopes = variantManager.createVariantsAndTasks();
 
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(
@@ -660,11 +660,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         extension.executeVariantPropertiesOperations(variantScopes);
 
         // Make sure no SourceSets were added through the DSL without being properly configured
-        // Only do it if we are not restricting to a single variant (with Instant
-        // Run or we can find extra source set
-        if (projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME) == null) {
-            sourceSetManager.checkForUnconfiguredSourceSets();
-        }
+        sourceSetManager.checkForUnconfiguredSourceSets();
 
         // must run this after scopes are created so that we can configure kotlin
         // kapt tasks

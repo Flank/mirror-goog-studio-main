@@ -105,6 +105,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
@@ -358,37 +359,20 @@ public class VariantManager implements VariantModel {
         return variantScopes;
     }
 
-    /**
-     * Returns the {@link BaseVariantData} for every {@link VariantScope} known. Don't use this, get
-     * the {@link VariantScope}s instead.
-     *
-     * @see #getVariantScopes()
-     * @deprecated Kept only not to break the Kotlin plugin.
-     */
-    @NonNull
-    @Deprecated
-    public List<BaseVariantData> getVariantDataList() {
-        List<BaseVariantData> result = Lists.newArrayListWithExpectedSize(variantScopes.size());
-        for (VariantScope variantScope : variantScopes) {
-            result.add(variantScope.getVariantData());
-        }
-        return result;
-    }
-
-    /** Variant/Task creation entry point. */
-    public List<VariantScope> createAndroidTasks() {
+    /** Creates the variants and their tasks. */
+    public List<VariantScope> createVariantsAndTasks() {
         variantFactory.validateModel(this);
         variantFactory.preVariantWork(project);
 
         if (variantScopes.isEmpty()) {
-            populateVariantDataList();
+            computeVariantList();
         }
 
         // Create top level test tasks.
         taskManager.createTopLevelTestTasks(!productFlavors.isEmpty());
 
         for (final VariantScope variantScope : variantScopes) {
-            createTasksForVariantData(variantScope);
+            createTasksForVariant(variantScope);
         }
 
         taskManager.createReportTasks(variantScopes);
@@ -397,7 +381,7 @@ public class VariantManager implements VariantModel {
     }
 
     /** Create tasks for the specified variant. */
-    public void createTasksForVariantData(final VariantScope variantScope) {
+    public void createTasksForVariant(final VariantScope variantScope) {
         final BaseVariantData variantData = variantScope.getVariantData();
         final VariantType variantType = variantData.getType();
         final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
@@ -1039,10 +1023,9 @@ public class VariantManager implements VariantModel {
         return "____" + name;
     }
 
-    /**
-     * Create all variants.
-     */
-    public void populateVariantDataList() {
+    /** Create all variants. */
+    @VisibleForTesting
+    public void computeVariantList() {
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
         if (productFlavors.isEmpty()) {
@@ -1340,12 +1323,7 @@ public class VariantManager implements VariantModel {
      */
     private void createVariantDataForProductFlavors(
             @NonNull List<ProductFlavor> productFlavorList) {
-        createVariantDataForProductFlavorsAndVariantType(
-                productFlavorList, variantFactory.getVariantType());
-    }
-
-    private void createVariantDataForProductFlavorsAndVariantType(
-            @NonNull List<ProductFlavor> productFlavorList, @NonNull VariantType variantType) {
+        VariantType variantType = variantFactory.getVariantType();
 
         BuildTypeData testBuildTypeData = null;
         if (extension instanceof TestedAndroidConfig) {
@@ -1367,46 +1345,23 @@ public class VariantManager implements VariantModel {
         Action<com.android.build.api.variant.VariantFilter> variantFilterAction =
                 extension.getVariantFilter();
 
-        final String restrictedProject =
-                projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_PROJECT);
-        final boolean restrictVariants = restrictedProject != null;
-
-        // compare the project name if the type is not a lib.
-        final boolean projectMatch;
-        final String restrictedVariantName;
-        if (restrictVariants) {
-            projectMatch = variantType.isApk() && project.getPath().equals(restrictedProject);
-            restrictedVariantName = projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME);
-        } else {
-            projectMatch = false;
-            restrictedVariantName = null;
-        }
-
         for (BuildTypeData buildTypeData : buildTypes.values()) {
             boolean ignore = false;
 
-            if (restrictVariants || variantFilterAction != null) {
+            if (variantFilterAction != null) {
                 variantFilter.reset(
                         defaultConfig,
                         buildTypeData.getBuildType(),
                         variantType,
                         productFlavorList);
 
-                if (restrictVariants) {
-                    if (projectMatch) {
-                        // get the app project, compare to this one, and if a match only accept
-                        // the variant being built.
-                        ignore = !variantFilter.getName().equals(restrictedVariantName);
-                    }
-                } else {
-                    try {
-                        // variantFilterAction != null always true here.
-                        variantFilterAction.execute(variantFilter);
-                    } catch (Throwable t) {
-                        throw new ExternalApiUsageException(t);
-                    }
-                    ignore = variantFilter.isIgnore();
+                try {
+                    // variantFilterAction != null always true here.
+                    variantFilterAction.execute(variantFilter);
+                } catch (Throwable t) {
+                    throw new ExternalApiUsageException(t);
                 }
+                ignore = variantFilter.isIgnore();
             }
 
             if (!ignore) {
