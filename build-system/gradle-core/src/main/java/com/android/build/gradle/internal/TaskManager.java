@@ -197,7 +197,6 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
-import com.android.manifmerger.MergeType;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
@@ -489,7 +488,7 @@ public abstract class TaskManager {
     public void configureKotlinPluginTasksForComposeIfNecessary(
             GlobalScope globalScope, List<VariantScope> variantScopes) {
 
-        boolean composeIsEnabled = globalScope.getBuildFeatures().getJetpackCompose();
+        boolean composeIsEnabled = globalScope.getBuildFeatures().getCompose();
         if (!composeIsEnabled) {
             return;
         }

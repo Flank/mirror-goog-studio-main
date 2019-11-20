@@ -22,7 +22,7 @@ package com.android.build.gradle.internal.scope
  */
 interface BuildFeatureValues {
     val aidl: Boolean
-    val jetpackCompose: Boolean
+    val compose: Boolean
     val buildConfig: Boolean
     val dataBinding: Boolean
     val renderScript: Boolean

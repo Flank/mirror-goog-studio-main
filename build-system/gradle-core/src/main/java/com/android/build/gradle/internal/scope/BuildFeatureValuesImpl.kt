@@ -31,7 +31,7 @@ class BuildFeatureValuesImpl(
     override val aidl: Boolean
         get() = dslBuildFeatures.aidl ?: projectOptions[BooleanOption.BUILD_FEATURE_AIDL]
 
-    override val jetpackCompose: Boolean
+    override val compose: Boolean
         get() = dslBuildFeatures.compose ?: false
 
     override val buildConfig: Boolean

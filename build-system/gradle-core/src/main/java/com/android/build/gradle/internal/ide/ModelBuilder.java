@@ -449,7 +449,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         flags.put(
                 AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE,
-                globalScope.getBuildFeatures().getJetpackCompose());
+                globalScope.getBuildFeatures().getCompose());
 
         boolean transitiveRClass =
                 !globalScope.getProjectOptions().get(BooleanOption.NAMESPACED_R_CLASS);
