@@ -49,6 +49,7 @@ public class Result implements Serializable {
         ERROR_ANIM_NOT_FOUND,
         ERROR_NOT_A_DRAWABLE,
         ERROR_REFLECTION,
+        ERROR_RENDER_TASK,
         ERROR_UNKNOWN;
 
         private Result mResult;
