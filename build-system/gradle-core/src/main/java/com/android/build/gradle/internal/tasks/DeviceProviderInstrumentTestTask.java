@@ -92,6 +92,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
+import org.gradle.process.ExecOperations;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
@@ -122,6 +123,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     private boolean codeCoverageEnabled;
     private TestOptions.Execution testExecution;
     private Configuration dependencies;
+    @NonNull private final ExecOperations execOperations;
 
     /**
      * The workers object is of type ExecutorServiceAdapter instead of WorkerExecutorFacade to
@@ -137,8 +139,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @Nullable private Collection<String> installOptions;
 
     @Inject
-    public DeviceProviderInstrumentTestTask(ObjectFactory objectFactory) {
+    public DeviceProviderInstrumentTestTask(
+            ObjectFactory objectFactory, @NonNull ExecOperations execOperations) {
         coverageDir = objectFactory.directoryProperty();
+        this.execOperations = execOperations;
     }
 
     @Override
@@ -181,7 +185,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
-            GradleProcessExecutor gradleProcessExecutor = new GradleProcessExecutor(getProject());
+            GradleProcessExecutor gradleProcessExecutor =
+                    new GradleProcessExecutor(execOperations::exec);
             success =
                     deviceProvider.use(
                             () -> {

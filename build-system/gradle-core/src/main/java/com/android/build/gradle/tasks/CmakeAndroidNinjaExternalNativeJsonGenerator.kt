@@ -23,6 +23,11 @@ import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.Action
+import org.gradle.process.ExecOperations
+import org.gradle.process.ExecResult
+import org.gradle.process.ExecSpec
+import java.util.function.Function
 
 /**
  * This strategy uses the older custom CMake (version 3.6) that directly generates the JSON file as
@@ -35,7 +40,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     stats: GradleBuildVariant.Builder
 ) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
 
-    override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
+    override fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: Function<Action<in ExecSpec>, ExecResult>): String {
         // buildCommandArgs is set in CMake server json generation
         if(abi.getBuildCommandArguments().isNotEmpty()){
             warnln("buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below.")
@@ -50,6 +55,6 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
         )
             .logStderrToInfo()
             .logStdoutToInfo()
-            .executeAndReturnStdoutString()
+            .executeAndReturnStdoutString(execOperations::apply)
     }
 }

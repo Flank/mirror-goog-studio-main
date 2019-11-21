@@ -23,7 +23,10 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.process.ProcessOutputHandler
+import org.gradle.api.Action
 import org.gradle.api.logging.Logging
+import org.gradle.process.ExecResult
+import org.gradle.process.ExecSpec
 import java.io.File
 
 /**
@@ -53,7 +56,6 @@ fun CxxModuleModel.createProcessOutputJunction(
  * Create and register a [CxxProcessService] for creating [ProcessOutputJunction].
  */
 internal fun createProcessJunctionService(
-    global: GlobalScope,
     services: CxxServiceRegistryBuilder) {
     services.registerFactory(PROCESS_SERVICE_KEY) {
         object : CxxProcessService {
@@ -69,8 +71,8 @@ internal fun createProcessJunctionService(
                     outputBaseName,
                     logPrefix,
                     { message -> Logging.getLogger(CxxProcessService::class.java).lifecycle(message) },
-                    { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler ->
-                        GradleProcessExecutor(global.project).execute(processInfo, outputHandler)
+                    { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler, execOperation: (Action<in ExecSpec>) -> ExecResult ->
+                        GradleProcessExecutor(execOperation).execute(processInfo, outputHandler)
                     })
             }
         }

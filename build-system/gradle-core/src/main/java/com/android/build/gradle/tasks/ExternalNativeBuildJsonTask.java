@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
+import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
@@ -35,14 +36,18 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.process.ExecOperations;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
 
     private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
+    @NonNull private final ExecOperations execOperations;
 
-    public ExternalNativeBuildJsonTask() {
+    @Inject
+    public ExternalNativeBuildJsonTask(@NonNull ExecOperations execOperations) {
+        this.execOperations = execOperations;
         this.getOutputs()
                 .upToDateWhen(
                         task -> {
@@ -60,7 +65,7 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
     protected void doTaskAction() throws ProcessException, IOException {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(evalIssueReporter)) {
-            generator.get().build();
+            generator.get().build(execOperations::exec);
         }
     }
 

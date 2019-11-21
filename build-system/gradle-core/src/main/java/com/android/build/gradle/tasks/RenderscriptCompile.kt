@@ -48,9 +48,11 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
+import javax.inject.Inject
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
@@ -99,6 +101,9 @@ abstract class RenderscriptCompile : NdkTask() {
 
     @get:OutputDirectory
     abstract val libOutputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
     // get the import folders. If the .rsh files are not directly under the import folders,
     // we need to get the leaf folders, as this is what llvm-rs-cc expects.
@@ -235,7 +240,7 @@ abstract class RenderscriptCompile : NdkTask() {
             abiFilters,
             LoggerWrapper(logger)
         )
-        processor.build(GradleProcessExecutor(project), processOutputHandler)
+        processor.build(GradleProcessExecutor(execOperations::exec), processOutputHandler)
     }
 
     // ----- CreationAction -----

@@ -43,6 +43,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.Serializable
 import java.nio.file.FileSystems
@@ -70,6 +71,9 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
     lateinit var excludePatterns: List<String>
         private set
 
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
     @Input
     @Optional
     fun getStripExecutablesMap(): Map<Abi, File>? {
@@ -94,7 +98,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             outputDir.get().asFile,
             excludePatterns,
             stripToolFinderProvider,
-            GradleProcessExecutor(project),
+            GradleProcessExecutor(execOperations::exec),
             null
         ).run()
     }
@@ -106,7 +110,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             outputDir.get().asFile,
             excludePatterns,
             stripToolFinderProvider,
-            GradleProcessExecutor(project),
+            GradleProcessExecutor(execOperations::exec),
             changedInputs
         ).run()
     }

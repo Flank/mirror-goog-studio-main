@@ -48,6 +48,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
+import org.gradle.process.ExecOperations;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does clean steps with them.
@@ -59,6 +61,12 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
     private EvalIssueReporter evalIssueReporter;
     private CxxVariantModel variant;
     private List<CxxAbiModel> abis;
+    @NonNull private final ExecOperations execOperations;
+
+    @Inject
+    public ExternalNativeCleanTask(@NonNull ExecOperations execOperations) {
+        this.execOperations = execOperations;
+    }
 
     @Override
     protected void doTaskAction() throws ProcessException, IOException {
@@ -121,11 +129,11 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
                             "android_gradle_clean_" + commandIndex,
                             processBuilder,
                             getLogger(),
-                            new GradleProcessExecutor(getProject()),
+                            new GradleProcessExecutor(execOperations::exec),
                             "")
                     .logStderrToInfo()
                     .logStdoutToInfo()
-                    .execute();
+                    .execute(execOperations::exec);
         }
     }
 

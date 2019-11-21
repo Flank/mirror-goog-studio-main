@@ -48,6 +48,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import org.gradle.api.Action;
+import org.gradle.process.ExecResult;
+import org.gradle.process.ExecSpec;
 
 /**
  * ndk-build JSON generation logic. This is separated from the corresponding ndk-build task so that
@@ -160,7 +164,10 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     @NonNull
     @Override
-    String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException {
+    String executeProcess(
+            @NonNull CxxAbiModel abi,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
+            throws ProcessException, IOException {
         return createProcessOutputJunction(
                         abi.getVariant().getModule(),
                         CxxAbiModelKt.getSoFolder(abi),
@@ -168,7 +175,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                         getProcessBuilder(abi),
                         "")
                 .logStderrToInfo()
-                .executeAndReturnStdoutString();
+                .executeAndReturnStdoutString(execOperation::apply);
     }
 
     @NonNull

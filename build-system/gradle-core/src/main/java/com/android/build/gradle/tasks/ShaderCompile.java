@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -54,6 +55,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
+import org.gradle.process.ExecOperations;
 
 /**
  * Task to compile Shaders.
@@ -91,6 +93,12 @@ public abstract class ShaderCompile extends NonIncrementalTask {
     private List<String> defaultArgs = ImmutableList.of();
     private Map<String, List<String>> scopedArgs = ImmutableMap.of();
 
+    @NonNull private final ExecOperations execOperations;
+
+    @Inject
+    public ShaderCompile(@NonNull ExecOperations execOperations) {
+        this.execOperations = execOperations;
+    }
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -149,7 +157,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                                 outputDir,
                                 defaultArgs,
                                 scopedArgs,
-                                new GradleProcessExecutor(getProject()),
+                                new GradleProcessExecutor(execOperations::exec),
                                 processOutputHandler,
                                 workers);
 

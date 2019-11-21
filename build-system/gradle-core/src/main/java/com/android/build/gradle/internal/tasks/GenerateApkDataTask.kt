@@ -54,6 +54,8 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
 
 /** Task to generate micro app data res file.  */
 abstract class GenerateApkDataTask : NonIncrementalTask() {
@@ -87,6 +89,9 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
     @get:Input
     abstract val mainPkgName: Property<String>
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
     override fun doTaskAction() {
         // always empty output dir.
@@ -151,7 +156,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         aapt2Executable: File
     ) {
 
-        val parser = ApkInfoParser(aapt2Executable, GradleProcessExecutor(project))
+        val parser = ApkInfoParser(aapt2Executable, GradleProcessExecutor(execOperations::exec))
         val apkInfo = parser.parseApk(apkFile)
 
         if (apkInfo.packageName != mainPkgName) {

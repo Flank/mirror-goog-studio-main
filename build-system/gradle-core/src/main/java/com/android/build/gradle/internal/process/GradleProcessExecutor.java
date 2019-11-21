@@ -17,19 +17,21 @@
 package com.android.build.gradle.internal.process;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfo;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
-import org.gradle.api.Project;
 import org.gradle.process.ExecResult;
 import org.gradle.process.ExecSpec;
 
@@ -38,11 +40,11 @@ import org.gradle.process.ExecSpec;
  */
 public class GradleProcessExecutor implements ProcessExecutor {
 
-    @NonNull
-    private final Project project;
+    @NonNull private final Function<Action<? super ExecSpec>, ExecResult> execOperations;
 
-    public GradleProcessExecutor(@NonNull Project project) {
-        this.project = project;
+    public GradleProcessExecutor(
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperations) {
+        this.execOperations = execOperations;
     }
 
     @NonNull
@@ -74,12 +76,15 @@ public class GradleProcessExecutor implements ProcessExecutor {
 
         ExecResult result;
         try {
-            result = project.exec(new ExecAction(processInfo, output));
+            result = execOperations.apply(new ExecAction(processInfo, output));
         } finally {
             try {
                 output.close();
             } catch (IOException e) {
-                project.getLogger().warn("Exception while closing sub process streams", e);
+                LoggerWrapper.getLogger(GradleProcessExecutor.class)
+                        .warning(
+                                "Exception while closing sub process streams: "
+                                        + Throwables.getStackTraceAsString(e));
             }
         }
         try {
