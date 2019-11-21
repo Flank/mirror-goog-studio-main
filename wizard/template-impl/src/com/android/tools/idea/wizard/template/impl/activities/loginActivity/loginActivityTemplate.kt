@@ -39,10 +39,10 @@ import java.io.File
 
 val loginActivityTemplate
   get() = template {
-    revision = 6
+    revision = 1
     name = "Login Activity"
     description = "Creates a new login activity, allowing users to enter an email address and password to log in or to register with your application."
-    minApi = 8
+    minApi = 14
     minBuildApi = 14
 
     category = Category.Activity
@@ -53,14 +53,14 @@ val loginActivityTemplate
     val activityClass = stringParameter {
       name = "Activity Name"
       default = "LoginActivity"
-      help = "The name of the activity class to create "
+      help = "The name of the activity class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     layoutName = stringParameter {
       name = "Layout Name"
       default = "activity_login"
-      help = "The name of the layout to create for the activity "
+      help = "The name of the layout to create for the activity"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { activityToLayout(activityClass.value) }
     }
@@ -68,7 +68,7 @@ val loginActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "Sign in"
-      help = "The name of the activity. "
+      help = "The name of the activity."
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }
@@ -76,7 +76,7 @@ val loginActivityTemplate
 
     val packageName = stringParameter {
       name = "Package name"
-      default = "com.mycompany.myapp "
+      default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
     }
 
@@ -91,7 +91,7 @@ val loginActivityTemplate
     thumb { File("template_login_activity.png") }
 
     recipe = { data: TemplateData ->
-      loginActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, packageName.value)
+      loginActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, layoutName.value, packageName.value)
     }
 
   }

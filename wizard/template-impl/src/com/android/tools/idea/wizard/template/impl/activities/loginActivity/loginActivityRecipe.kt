@@ -50,9 +50,10 @@ import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.
 fun RecipeExecutor.loginActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
+  activityTitle: String,
   layoutName: String,
-  packageName: String) {
-
+  packageName: String
+) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val apis = moduleData.apis
   val buildApi = apis.buildApi!!
@@ -77,8 +78,8 @@ fun RecipeExecutor.loginActivityRecipe(
                               isLauncher = moduleData.isNew, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNew),
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
-  mergeXml(stringsXml(simpleName, activityClass, moduleData.isNew), resOut.resolve("values/strings.xml"))
-  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApiLevel!!), resOut.resolve("layout/${layoutName}.xml"))
+  mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNew), resOut.resolve("values/strings.xml"))
+  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApiLevel), resOut.resolve("layout/${layoutName}.xml"))
 
   val loginActivity = when (projectData.language) {
     Language.Java -> loginActivityJava(layoutName, packageName, useAndroidX)
