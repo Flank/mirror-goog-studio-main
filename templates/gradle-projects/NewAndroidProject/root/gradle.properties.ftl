@@ -33,3 +33,7 @@ android.enableJetifier=true
 # Kotlin code style for this project: "official" or "obsolete":
 kotlin.code.style=official
 </#if>
+
+<#if overridePathCheck??>
+android.overridePathCheck=true
+</#if>
