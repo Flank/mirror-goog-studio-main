@@ -35,7 +35,7 @@ class GmsFusedLocationProviderClientTransform : public Transform {
         ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
                      "FusedLocationProviderClientWrapper;",
                      "wrapRequestLocationUpdates"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi_req.InstrumentMethod(ir::MethodId(
             GetClassName(), "requestLocationUpdates",
             "(Lcom/google/android/gms/location/LocationRequest;"
@@ -61,7 +61,7 @@ class GmsFusedLocationProviderClientTransform : public Transform {
         ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
                      "FusedLocationProviderClientWrapper;",
                      "wrapRemoveLocationUpdates"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi_rmv.InstrumentMethod(
             ir::MethodId(GetClassName(), "removeLocationUpdates",
                          "(Lcom/google/android/gms/location/LocationCallback;)"

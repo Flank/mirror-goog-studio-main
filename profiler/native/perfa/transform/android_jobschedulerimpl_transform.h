@@ -33,7 +33,7 @@ class AndroidJobSchedulerImplTransform : public Transform {
     mi.AddTransformation<slicer::EntryHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "onScheduleJobEntry"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     mi.AddTransformation<slicer::ExitHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "onScheduleJobExit"));

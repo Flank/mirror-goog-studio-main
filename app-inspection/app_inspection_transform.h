@@ -43,7 +43,7 @@ class AppInspectionTransform {
             ir::MethodId("Lcom/android/tools/agent/app/inspection/"
                          "AppInspectionService$ExperimentalCapabilities;",
                          "onEntry"),
-            true);
+            slicer::EntryHook::Tweak::ThisAsObject);
       } else {
         mi.AddTransformation<VoidExitHook>(
             ir::MethodId("Lcom/android/tools/agent/app/inspection/"

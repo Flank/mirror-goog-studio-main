@@ -34,7 +34,7 @@ class AndroidJobServiceEngineJobHandlerTransform : public Transform {
     mi_start.AddTransformation<slicer::EntryHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "wrapOnStartJob"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi_start.InstrumentMethod(
             ir::MethodId(GetClassName(), "ackStartMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
@@ -47,7 +47,7 @@ class AndroidJobServiceEngineJobHandlerTransform : public Transform {
     mi_stop.AddTransformation<slicer::EntryHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "wrapOnStopJob"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "ackStopMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {

@@ -34,7 +34,7 @@ class OkhttpClientTransform : public Transform {
         ir::MethodId("Lcom/android/tools/profiler/support/network/okhttp/"
                      "OkHttp2Wrapper;",
                      "setOkHttpClassLoader"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
         "insertInterceptor"));

@@ -33,7 +33,7 @@ class AndroidFragmentTransform : public Transform {
         ir::MethodId(
             "Lcom/android/tools/profiler/support/event/FragmentWrapper;",
             "wrapOnResume"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "performResume", "()V"))) {
       Log::E(
@@ -46,7 +46,7 @@ class AndroidFragmentTransform : public Transform {
         ir::MethodId(
             "Lcom/android/tools/profiler/support/event/FragmentWrapper;",
             "wrapOnPause"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "performPause", "()V"))) {
       Log::E(
