@@ -1,3 +1,3 @@
 <#if appTitle?has_content>
-rootProject.name='${appTitle}'
+rootProject.name = "${appTitle}"
 </#if>
