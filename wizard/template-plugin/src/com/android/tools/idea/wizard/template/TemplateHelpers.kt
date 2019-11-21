@@ -50,6 +50,15 @@ fun activityToLayout(activityName: String, layoutName: String? = null): String =
   else
     ""
 
+/** Converts a Fragment class name into a suitable layout name. */
+fun fragmentToLayout(fragmentName: String, layoutName: String? = null): String =
+  if (fragmentName.isNotEmpty())
+    AssetNameConverter(Type.FRAGMENT, fragmentName)
+      .overrideLayoutPrefix(layoutName ?: "fragment")
+      .getValue(Type.LAYOUT)
+  else
+    ""
+
 /** Similar to [camelCaseToUnderlines], but strips off common class suffixes such as "Activity", "Fragment", etc. */
 fun classToResource(name: String): String =
   if (name.isNotEmpty())
