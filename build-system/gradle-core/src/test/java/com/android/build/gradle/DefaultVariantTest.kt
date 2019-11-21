@@ -369,7 +369,7 @@ class DefaultVariantTest {
             TestProjects.Plugin.LIBRARY -> project.plugins.getPlugin(LibraryPlugin::class.java)
         }
 
-        plugin.variantManager.computeVariantList()
+        plugin.variantManager.computeVariants()
 
         val syncIssuesHandler = FakeSyncIssueHandler()
         val defaultVariant =

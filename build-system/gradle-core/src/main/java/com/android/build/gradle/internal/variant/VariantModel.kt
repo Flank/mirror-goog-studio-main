@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.build.gradle.internal.variant
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.builder.model.SigningConfig;
-import java.util.Map;
+import com.android.build.gradle.internal.BuildTypeData
+import com.android.build.gradle.internal.ProductFlavorData
+import com.android.build.gradle.internal.dsl.CoreProductFlavor
+import com.android.builder.model.SigningConfig
 
 /**
  * Provides information about the build types, product flavors and signing configurations.
  */
-public interface VariantModel {
+interface VariantModel {
 
-    @NonNull
-    ProductFlavorData<CoreProductFlavor> getDefaultConfig();
+    val defaultConfig: ProductFlavorData<out CoreProductFlavor>
 
-    @NonNull
-    Map<String, BuildTypeData> getBuildTypes();
+    val buildTypes: Map<String, BuildTypeData>
 
-    @NonNull
-    Map<String, ProductFlavorData<CoreProductFlavor>> getProductFlavors();
+    val productFlavors: Map<String, ProductFlavorData<out CoreProductFlavor>>
 
-    @NonNull
-    Map<String, ? extends SigningConfig> getSigningConfigs();
+    val signingConfigs: Map<String, SigningConfig>
 }

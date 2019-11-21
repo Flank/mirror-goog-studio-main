@@ -88,7 +88,9 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
+import com.android.build.gradle.internal.variant.VariantCombinator;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
@@ -112,7 +114,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
@@ -175,7 +176,8 @@ public class VariantManager implements VariantModel {
     @NonNull private final Map<String, BuildTypeData> buildTypes;
     @NonNull private final VariantFilter variantFilter;
     @NonNull private final List<VariantScope> variantScopes;
-    @NonNull private final Map<String, ProductFlavorData<CoreProductFlavor>> productFlavors;
+    @NonNull
+    private final Map<String, ProductFlavorData<? extends CoreProductFlavor>> productFlavors;
     @NonNull private final Map<String, SigningConfig> signingConfigs;
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
@@ -259,7 +261,7 @@ public class VariantManager implements VariantModel {
 
     @Override
     @NonNull
-    public Map<String, ProductFlavorData<CoreProductFlavor>> getProductFlavors() {
+    public Map<String, ProductFlavorData<? extends CoreProductFlavor>> getProductFlavors() {
         return productFlavors;
     }
 
@@ -361,7 +363,7 @@ public class VariantManager implements VariantModel {
         variantFactory.preVariantWork(project);
 
         if (variantScopes.isEmpty()) {
-            computeVariantList();
+            computeVariants();
         }
 
         // Create top level test tasks.
@@ -1027,56 +1029,47 @@ public class VariantManager implements VariantModel {
 
     /** Create all variants. */
     @VisibleForTesting
-    public void computeVariantList() {
+    public void computeVariants() {
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
-        if (productFlavors.isEmpty()) {
-            configureDependencies();
-            createVariantDataForProductFlavors(Collections.emptyList());
-        } else {
-            // ensure that there is always a dimension
-            if (flavorDimensionList == null || flavorDimensionList.isEmpty()) {
-                globalScope
-                        .getErrorHandler()
-                        .reportError(
-                                EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
-                                "All flavors must now belong to a named flavor dimension."
-                                        + " Learn more at "
-                                        + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");
-            } else if (flavorDimensionList.size() == 1) {
-                // if there's only one dimension, auto-assign the dimension to all the flavors.
-                String dimensionName = flavorDimensionList.get(0);
-                for (ProductFlavorData<CoreProductFlavor> flavorData : productFlavors.values()) {
-                    CoreProductFlavor flavor = flavorData.getProductFlavor();
-                    if (flavor.getDimension() == null && flavor instanceof DefaultProductFlavor) {
-                        ((DefaultProductFlavor) flavor).setDimension(dimensionName);
-                    }
-                }
-            }
+        VariantCombinator computer =
+                new VariantCombinator(
+                        this,
+                        globalScope.getErrorHandler(),
+                        variantFactory.getVariantType(),
+                        flavorDimensionList);
 
-            // can only call this after we ensure all flavors have a dimension.
-            configureDependencies();
+        List<com.android.build.api.variant.VariantConfiguration> variants =
+                computer.computeVariants();
 
-            // Create iterable to get GradleProductFlavor from ProductFlavorData.
-            Iterable<CoreProductFlavor> flavorDsl =
-                    Iterables.transform(
-                            productFlavors.values(),
-                            ProductFlavorData::getProductFlavor);
+        configureDependencies();
 
-            // Get a list of all combinations of product flavors.
-            List<ProductFlavorCombo<CoreProductFlavor>> flavorComboList =
-                    ProductFlavorCombo.createCombinations(
-                            flavorDimensionList,
-                            flavorDsl);
+        // get some info related to testing
+        BuildTypeData testBuildTypeData = getTestBuildTypeData();
 
-            for (ProductFlavorCombo<CoreProductFlavor>  flavorCombo : flavorComboList) {
-                //noinspection unchecked
-                createVariantDataForProductFlavors(
-                        (List<ProductFlavor>) (List) flavorCombo.getFlavorList());
-            }
+        // loop on all the new variant objects to create the legacy ones.
+        for (com.android.build.api.variant.VariantConfiguration variant : variants) {
+            createVariantDataForProductFlavors(variant, testBuildTypeData);
         }
 
         configureVariantArtifactTransforms(variantScopes);
+    }
+
+    @Nullable
+    private BuildTypeData getTestBuildTypeData() {
+        BuildTypeData testBuildTypeData = null;
+        if (extension instanceof TestedAndroidConfig) {
+            TestedAndroidConfig testedExtension = (TestedAndroidConfig) extension;
+
+            testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
+            if (testBuildTypeData == null) {
+                throw new RuntimeException(
+                        String.format(
+                                "Test Build Type '%1$s' does not" + " exist.",
+                                testedExtension.getTestBuildType()));
+            }
+        }
+        return testBuildTypeData;
     }
 
     private BaseVariantData createVariantDataForVariantType(
@@ -1116,8 +1109,8 @@ public class VariantManager implements VariantModel {
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
         for (ProductFlavor productFlavor : productFlavorList) {
-            ProductFlavorData<CoreProductFlavor> data = productFlavors.get(
-                    productFlavor.getName());
+            ProductFlavorData<? extends CoreProductFlavor> data =
+                    productFlavors.get(productFlavor.getName());
 
             String dimensionName = productFlavor.getDimension();
             if (dimensionName == null) {
@@ -1285,8 +1278,8 @@ public class VariantManager implements VariantModel {
 
 
         for (CoreProductFlavor productFlavor : productFlavorList) {
-            ProductFlavorData<CoreProductFlavor> data = productFlavors
-                    .get(productFlavor.getName());
+            ProductFlavorData<? extends CoreProductFlavor> data =
+                    productFlavors.get(productFlavor.getName());
 
             String dimensionName = productFlavor.getDimension();
             if (dimensionName == null) {
@@ -1317,59 +1310,49 @@ public class VariantManager implements VariantModel {
     }
 
     /**
-     * Creates VariantData for a specified list of product flavor.
-     *
-     * This will create VariantData for all build types of the given flavors.
-     *
-     * @param productFlavorList the flavor(s) to build.
+     * Creates VariantData for a specific {@link com.android.build.api.variant.VariantConfiguration}
      */
     private void createVariantDataForProductFlavors(
-            @NonNull List<ProductFlavor> productFlavorList) {
+            @NonNull com.android.build.api.variant.VariantConfiguration variantConfiguration,
+            @Nullable BuildTypeData testBuildTypeData) {
         VariantType variantType = variantFactory.getVariantType();
 
-        BuildTypeData testBuildTypeData = null;
-        if (extension instanceof TestedAndroidConfig) {
-            TestedAndroidConfig testedExtension = (TestedAndroidConfig) extension;
+        // first run the filter API
+        Action<com.android.build.api.variant.VariantFilter> variantFilterAction =
+                extension.getVariantFilter();
 
-            testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
-            if (testBuildTypeData == null) {
-                throw new RuntimeException(
-                        String.format(
-                                "Test Build Type '%1$s' does not" + " exist.",
-                                testedExtension.getTestBuildType()));
+        CoreProductFlavor defaultConfig = defaultConfigData.getProductFlavor();
+
+        BuildTypeData buildTypeData = buildTypes.get(variantConfiguration.getBuildType());
+        CoreBuildType buildType = buildTypeData.getBuildType();
+
+        // get the list of ProductFlavor from the list of flavor name
+        List<ProductFlavor> productFlavorList =
+                variantConfiguration
+                        .getFlavors()
+                        .stream()
+                        .map(it -> productFlavors.get(it).getProductFlavor())
+                        .collect(Collectors.toList());
+
+        boolean ignore = false;
+
+        if (variantFilterAction != null) {
+            variantFilter.reset(defaultConfig, buildType, variantType, productFlavorList);
+
+            try {
+                // variantFilterAction != null always true here.
+                variantFilterAction.execute(variantFilter);
+            } catch (Throwable t) {
+                throw new ExternalApiUsageException(t);
             }
+            ignore = variantFilter.isIgnore();
         }
 
         BaseVariantData variantForAndroidTest = null;
 
-        CoreProductFlavor defaultConfig = defaultConfigData.getProductFlavor();
-
-        Action<com.android.build.api.variant.VariantFilter> variantFilterAction =
-                extension.getVariantFilter();
-
-        for (BuildTypeData buildTypeData : buildTypes.values()) {
-            boolean ignore = false;
-
-            if (variantFilterAction != null) {
-                variantFilter.reset(
-                        defaultConfig,
-                        buildTypeData.getBuildType(),
-                        variantType,
-                        productFlavorList);
-
-                try {
-                    // variantFilterAction != null always true here.
-                    variantFilterAction.execute(variantFilter);
-                } catch (Throwable t) {
-                    throw new ExternalApiUsageException(t);
-                }
-                ignore = variantFilter.isIgnore();
-            }
-
             if (!ignore) {
-                BaseVariantData variantData =
-                        createVariantDataForVariantType(
-                                buildTypeData.getBuildType(), productFlavorList, variantType);
+            BaseVariantData variantData =
+                    createVariantDataForVariantType(buildType, productFlavorList, variantType);
                 addVariant(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
@@ -1446,7 +1429,6 @@ public class VariantManager implements VariantModel {
                     addVariant(unitTestVariantData);
                 }
             }
-        }
 
         if (variantForAndroidTest != null) {
             TestVariantData androidTestVariantData =
@@ -1709,7 +1691,8 @@ public class VariantManager implements VariantModel {
         for (BuildTypeData buildTypeData : buildTypes.values()) {
             buildTypeData.getBuildType().getIsDefault().finalizeValue();
         }
-        for (ProductFlavorData<CoreProductFlavor> productFlavorData : productFlavors.values()) {
+        for (ProductFlavorData<? extends CoreProductFlavor> productFlavorData :
+                productFlavors.values()) {
             ((com.android.build.gradle.internal.dsl.ProductFlavor)
                             productFlavorData.getProductFlavor())
                     .getIsDefault()
@@ -1768,7 +1751,7 @@ public class VariantManager implements VariantModel {
         // Using ArrayListMultiMap to preserve sorting of flavor names.
         ArrayListMultimap<String, String> userDefaults = ArrayListMultimap.create();
 
-        for (ProductFlavorData<CoreProductFlavor> flavor : productFlavors.values()) {
+        for (ProductFlavorData<? extends CoreProductFlavor> flavor : productFlavors.values()) {
             com.android.build.gradle.internal.dsl.ProductFlavor productFlavor =
                     (com.android.build.gradle.internal.dsl.ProductFlavor) flavor.getProductFlavor();
             String dimension = productFlavor.getDimension();

@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;

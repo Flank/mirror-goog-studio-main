@@ -35,7 +35,7 @@ interface VariantConfiguration {
     /**
      * Build Type name, might be replaced with access to locked DSL object once ready
      */
-    val buildType: String
+    val buildType: String?
 
     /**
      * List of flavor names, might be replaced with access to locked DSL objects once ready

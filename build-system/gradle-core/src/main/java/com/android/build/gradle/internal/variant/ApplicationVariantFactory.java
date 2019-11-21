@@ -25,7 +25,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;

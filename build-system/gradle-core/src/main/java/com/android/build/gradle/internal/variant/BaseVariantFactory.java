@@ -21,7 +21,6 @@ import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROI
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
