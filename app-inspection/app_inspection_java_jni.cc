@@ -137,7 +137,7 @@ void AddEntryTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
   std::size_t found = method_str.get().find("(");
   if (found == std::string::npos) {
     Log::E(
-        Log::Tag::APPINSPECT
+        Log::Tag::APPINSPECT,
         "Method should be in the format $method_name($signature)$return_type, "
         "but was %s",
         method_str.get().c_str());
@@ -157,7 +157,7 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
   std::size_t found = method_str.get().find("(");
   if (found == std::string::npos) {
     Log::E(
-        Log::Tag::APPINSPECT
+        Log::Tag::APPINSPECT,
         "Method should be in the format $method_name($signature)$return_type, "
         "but was %s",
         method_str.get().c_str());
