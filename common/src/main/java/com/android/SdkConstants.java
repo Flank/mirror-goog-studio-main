@@ -251,6 +251,12 @@ public final class SdkConstants {
     public static final String FN_LD_MIPS =
             "mipsel-linux-android-ld" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
+    /**
+     * 64 bit (host) renderscript support linker for all ABIs (with extension for the current OS)
+     */
+    public static final String FN_LLD =
+            "lld" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
     /** adb executable (with extension for the current OS) */
     public static final String FN_ADB =
             "adb" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

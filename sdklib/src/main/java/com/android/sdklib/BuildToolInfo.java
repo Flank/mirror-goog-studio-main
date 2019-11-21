@@ -34,6 +34,7 @@ import static com.android.SdkConstants.FN_LD_ARM64;
 import static com.android.SdkConstants.FN_LD_MIPS;
 import static com.android.SdkConstants.FN_LD_X86;
 import static com.android.SdkConstants.FN_LD_X86_64;
+import static com.android.SdkConstants.FN_LLD;
 import static com.android.SdkConstants.FN_RENDERSCRIPT;
 import static com.android.SdkConstants.FN_SPLIT_SELECT;
 import static com.android.SdkConstants.FN_ZIPALIGN;
@@ -59,6 +60,7 @@ import static com.android.sdklib.BuildToolInfo.PathId.LD_ARM64;
 import static com.android.sdklib.BuildToolInfo.PathId.LD_MIPS;
 import static com.android.sdklib.BuildToolInfo.PathId.LD_X86;
 import static com.android.sdklib.BuildToolInfo.PathId.LD_X86_64;
+import static com.android.sdklib.BuildToolInfo.PathId.LLD;
 import static com.android.sdklib.BuildToolInfo.PathId.LLVM_RS_CC;
 import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
@@ -145,6 +147,9 @@ public class BuildToolInfo {
 
         /** OS Path to aapt2. */
         AAPT2("24.0.0 rc2"),
+
+        /** OS Path to the LLD linker. */
+        LLD("99.99.99"),
 
         /** OS Path to aapt2 that supports daemon mode. */
         // TODO(imorlowska): figure out which build tools will include the daemon mode.
@@ -360,6 +365,7 @@ public class BuildToolInfo {
         add(LD_X86, FN_LD_X86);
         add(LD_X86_64, FN_LD_X86_64);
         add(LD_MIPS, FN_LD_MIPS);
+        add(LLD, FN_LLD);
         add(ZIP_ALIGN, FN_ZIPALIGN);
         add(JACK, FN_JACK);
         add(JILL, FN_JILL);
