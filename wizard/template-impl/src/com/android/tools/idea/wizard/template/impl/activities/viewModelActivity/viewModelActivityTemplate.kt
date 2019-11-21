@@ -32,9 +32,9 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.underscoreToCamelCase
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
+import com.android.tools.idea.wizard.template.underscoreToCamelCase
 import viewModelActivityRecipe
 import java.io.File
 

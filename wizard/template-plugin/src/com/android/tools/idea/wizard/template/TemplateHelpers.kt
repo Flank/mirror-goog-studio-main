@@ -58,6 +58,10 @@ fun classToResource(name: String): String =
 
 fun camelCaseToUnderlines(string: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, string)
 
+fun underscoreToCamelCase(
+  string: String
+): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
+
 fun escapeKotlinIdentifier(identifier: String): String =
   identifier.split(".").joinToString(".") { if (it in kotlinKeywords) "`$it`" else it }
 

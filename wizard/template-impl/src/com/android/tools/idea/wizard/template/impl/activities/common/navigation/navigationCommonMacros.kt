@@ -17,12 +17,8 @@ package com.android.tools.idea.wizard.template.impl.activities.common.navigation
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.RecipeExecutor
+import com.android.tools.idea.wizard.template.underscoreToCamelCase
 import java.io.File
-
-// TODO(qumeric): move it and make it work
-fun underscoreToCamelCase(
-  string: String
-): String = string // CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
 
 // TODO(qumeric)
 fun RecipeExecutor.saveFragmentAndViewModel(
