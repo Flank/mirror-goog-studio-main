@@ -69,7 +69,7 @@ val fullscreenActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "FullscreenActivity"
-      help = "The name of the activity. "
+      help = "The name of the activity."
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }
@@ -78,7 +78,7 @@ val fullscreenActivityTemplate
     val isLauncher = booleanParameter {
       name = "Launcher Activity"
       default = false
-      help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher "
+      help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
     }
 
     val packageName = stringParameter {
@@ -98,6 +98,9 @@ val fullscreenActivityTemplate
     thumb { File("template_fullscreen_activity.png") }
 
     recipe = { data: TemplateData ->
-      fullscreenActivityRecipe(data as ModuleTemplateData, activityClass.value, isLauncher.value, layoutName.value, packageName.value)
+      fullscreenActivityRecipe(
+        data as ModuleTemplateData,
+        activityClass.value, activityTitle.value, isLauncher.value, layoutName.value, packageName.value
+      )
     }
   }
