@@ -1947,28 +1947,34 @@ public abstract class TaskManager {
         List<Transform> customTransforms = extension.getTransforms();
         List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
 
+        boolean registeredExternalTransform = false;
         for (int i = 0, count = customTransforms.size(); i < count; i++) {
             Transform transform = customTransforms.get(i);
 
             List<Object> deps = customTransformsDependencies.get(i);
-            transformManager.addTransform(
-                    taskFactory,
-                    variantScope,
-                    transform,
-                    null,
-                    task -> {
-                        if (!deps.isEmpty()) {
-                            task.dependsOn(deps);
-                        }
-                    },
-                    taskProvider -> {
-                        // if the task is a no-op then we make assemble task depend on it.
-                        if (transform.getScopes().isEmpty()) {
-                            TaskFactoryUtils.dependsOn(
-                                    variantScope.getTaskContainer().getAssembleTask(),
-                                    taskProvider);
-                        }
-                    });
+            registeredExternalTransform |=
+                    transformManager
+                            .addTransform(
+                                    taskFactory,
+                                    variantScope,
+                                    transform,
+                                    null,
+                                    task -> {
+                                        if (!deps.isEmpty()) {
+                                            task.dependsOn(deps);
+                                        }
+                                    },
+                                    taskProvider -> {
+                                        // if the task is a no-op then we make assemble task depend on it.
+                                        if (transform.getScopes().isEmpty()) {
+                                            TaskFactoryUtils.dependsOn(
+                                                    variantScope
+                                                            .getTaskContainer()
+                                                            .getAssembleTask(),
+                                                    taskProvider);
+                                        }
+                                    })
+                            .isPresent();
         }
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
@@ -2023,7 +2029,7 @@ public abstract class TaskManager {
             taskFactory.register(new D8MainDexListTask.CreationAction(variantScope, true));
         }
 
-        createDexTasks(variantScope, dexingType);
+        createDexTasks(variantScope, dexingType, registeredExternalTransform);
 
         maybeCreateResourcesShrinkerTasks(variantScope);
 
@@ -2089,7 +2095,9 @@ public abstract class TaskManager {
      * archives in order to enable incremental dexing support.
      */
     private void createDexTasks(
-            @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
+            @NonNull VariantScope variantScope,
+            @NonNull DexingType dexingType,
+            boolean registeredExternalTransform) {
         DefaultDexOptions dexOptions;
         if (variantScope.getVariantData().getType().isTestComponent()) {
             // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
@@ -2109,7 +2117,7 @@ public abstract class TaskManager {
                                         BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM));
         boolean enableDexingArtifactTransform =
                 globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
-                        && extension.getTransforms().isEmpty()
+                        && !registeredExternalTransform
                         && !minified
                         && supportsDesugaring
                         && !appliesCustomClassTransforms(variantScope, projectOptions);
