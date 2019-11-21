@@ -2,7 +2,7 @@
 <template
     format="5"
     revision="6"
-    name="Blank Wear Activity"
+    name="Blank Activity"
     constraints="androidx"
     minApi="23"
     minBuildApi="23"
