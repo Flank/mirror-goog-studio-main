@@ -558,10 +558,37 @@ interface AndroidConfig {
     val testBuildType: String?
 
     /**
-     * Name of the NDK version that will be used when building native code.
+     * Requires the specified NDK version to be used.
      *
-     * The value null means that no particular NDK version is requested. In this case, the latest
-     * available NDK will be used.
+     * <p>Use this to specify a fixed NDK version. Without this, each new version of the Android
+     * Gradle Plugin will choose a specific version of NDK to use, so upgrading the plugin also
+     * means upgrading the NDK. Locking to a specific version can increase repeatability of the
+     * build.
+     *
+     * <pre>
+     * android {
+     *     // Use a fixed NDK version
+     *     ndkVersion '20.1.5948944'
+     * }
+     * </pre>
+     *
+     * <p> The required format of the version is <code>major.minor.build</code>. It's not legal to
+     * specify less precision.
+     * <p> If <code>ndk.dir</code> is specified in <code>local.properties</code> file then the NDK
+     * that it points to must match the <code>android.ndkVersion</code>.
+     *
+     * <p> Prior to Android Gradle Plugin version 3.5, the highest installed version of NDK will
+     * be used.
+     * <p> In Android Gradle Plugin 3.4, specifying <code>android.ndkVersion</code> was not an
+     * error, but the value would be ignored.
+     * <p> Prior to Android Gradle Plugin version 3.4, it was illegal to specify
+     * <code>android.ndkVersion</code>.
+     *
+     * <p>For additional information about NDK installation see <a
+     * href="https://developer.android.com/studio/projects/install-ndk">Install and configure
+     * the NDK</a>.
+     *
+     * @param version the NDK to use.
      */
     val ndkVersion: String?
 

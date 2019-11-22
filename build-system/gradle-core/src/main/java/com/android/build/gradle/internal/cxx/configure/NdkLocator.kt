@@ -113,7 +113,7 @@ private fun findNdkPathImpl(
         warnln("Support for ANDROID_NDK_HOME is deprecated and will be removed in the future. Use android.ndkVersion in build.gradle instead.")
     }
 
-    // Record that a location was consider and rejected and for what reason
+    // Record that a location was considered and rejected and for what reason
     fun considerAndReject(location: Location, reason: String) {
         infoln("Rejected ${location.ndkRoot} ${location.type.tag} because $reason")
     }
@@ -436,20 +436,6 @@ data class NdkLocatorRecord(
  * If the user specifies android.ndkVersion in build.gradle then that version must be available
  * or it is an error. If no such version is specifies then the highest version available is
  * used.
- *
- * The value android.ndkVersion in build.gradle can be partial. In this case, the existing parts
- * of the version must match the found NDK(s). By example, this works as follows:
- *
- * build.gradle NDK        is acceptable
- * ------------ ---------- -------------
- * 18.1.12346   18.1.12346 yes
- * 18.1.12346   18.1.12345 no
- * 18.1         18.1.12346 yes
- * 18.2         18.1.12346 no
- * 18           18.1.12346 yes
- * 19           18.1.12346 no
- *
- * If multiple NDKs satisfy the version then the highest NDK is taken.
  *
  * Failure behaviour -- even if there is a failure, this function tries to at least return *some*
  * NDK so that the gradle Sync can continue.
