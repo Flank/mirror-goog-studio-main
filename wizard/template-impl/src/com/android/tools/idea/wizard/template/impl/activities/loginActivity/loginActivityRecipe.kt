@@ -72,7 +72,7 @@ fun RecipeExecutor.loginActivityRecipe(
   val isDynamicFeature = moduleData.baseFeature != null
   val simpleName = activityToLayout(activityClass)
   generateThemeStyles(moduleData.themesData.main, isDynamicFeature, useMaterial2, resOut, baseFeatureResOut)
-  generateManifestStrings(activityClass, activityClass, resOut, baseFeatureResOut, moduleData.isNew, generateActivityTitle = false,
+  generateManifestStrings(activityClass, activityClass, resOut, baseFeatureResOut, moduleData.isNew, generateActivityTitle = true,
                           isDynamicFeature = isDynamicFeature)
   mergeXml(androidManifestXml(activityClass, simpleName,
                               isLauncher = moduleData.isNew, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNew),
