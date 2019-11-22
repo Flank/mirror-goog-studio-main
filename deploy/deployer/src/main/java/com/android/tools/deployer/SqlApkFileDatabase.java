@@ -42,7 +42,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
     // The SQLite use this property to determine where to temporary extract the .so / .dll during init.
     private static final String SQLITE_JDBC_TEMP_DIR_PROPERTY = "org.sqlite.tmpdir";
 
-    public static final int MAX_DEXFILES_ENTRY = 200;
+    public static final int DEFAULT_MAX_DEXFILE_ENTRIES = 200;
 
     // Purely a value-based check. No plans to make the cache database forward / backward compatible.
     //  IE: All tables will be dropped if version number on the file does not match this number.
@@ -58,7 +58,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
     private static final String CURRENT_DATABASE_VERSION_STRING =
             CURRENT_SCHEMA_VERSION_NUMBER + "|" + CURRENT_CHECKSUM_TOOL_VERSION;
     private final String databaseVersion;
-    private final int maxDexFilesEntries;
+    private int maxDexFilesEntries;
     private Connection connection;
 
     /**
@@ -68,7 +68,11 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
      *     it will continue to use the OS's temp dir.
      */
     public SqlApkFileDatabase(File file, String nativeLibraryTmpDir) {
-        this(file, nativeLibraryTmpDir, CURRENT_DATABASE_VERSION_STRING, MAX_DEXFILES_ENTRY);
+        this(
+                file,
+                nativeLibraryTmpDir,
+                CURRENT_DATABASE_VERSION_STRING,
+                DEFAULT_MAX_DEXFILE_ENTRIES);
     }
 
     public SqlApkFileDatabase(
@@ -165,7 +169,9 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                 "END;");
     }
 
-    private void flushOldCache() {
+    private void flushOldCache(int numDexFiles) {
+        // we roughly let two versions of the project stay in cache.
+        maxDexFilesEntries = Math.max(maxDexFilesEntries, numDexFiles * 2);
         try {
             executeUpdate(
                     "DELETE FROM dexfiles WHERE id < (SELECT * FROM (SELECT id from dexfiles ORDER BY id DESC LIMIT "
@@ -224,6 +230,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
 
     @Override
     public void addClasses(Collection<DexClass> allClasses) {
+        int numDex = 0;
         try {
             Map<Apk, Multimap<ApkEntry, DexClass>> map = new HashMap<>();
             for (DexClass clazz : allClasses) {
@@ -238,6 +245,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                 Multimap<ApkEntry, DexClass> classes = entry.getValue();
                 List<Integer> ids = new ArrayList<>();
                 for (ApkEntry dex : classes.keySet()) {
+                    numDex++;
                     int id = addDexFile(dex.getChecksum(), dex.getName());
                     ids.add(id);
                     // TODO: Verify if writing all the classses in one go would help
@@ -245,7 +253,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                 }
                 addDexFiles(entry.getKey().checksum, ids);
             }
-            flushOldCache();
+            flushOldCache(numDex);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
