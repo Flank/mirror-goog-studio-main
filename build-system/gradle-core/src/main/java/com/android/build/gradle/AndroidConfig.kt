@@ -51,6 +51,7 @@ import java.io.File
  * DO NOT ADD ANYTHING THERE.
  *
  */
+@Suppress("DEPRECATION")
 @Deprecated("Use {@link BaseExtension} instead.")
 interface AndroidConfig {
 

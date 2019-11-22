@@ -23,11 +23,10 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -283,20 +282,20 @@ public class GradleVariantConfiguration extends VariantConfiguration {
     private void mergeOptions() {
         computeMergedOptions(
                 mergedJavaCompileOptions,
-                CoreProductFlavor::getJavaCompileOptions,
-                CoreBuildType::getJavaCompileOptions,
+                BaseFlavor::getJavaCompileOptions,
+                BuildType::getJavaCompileOptions,
                 MergedJavaCompileOptions::reset,
                 MergedJavaCompileOptions::append);
         computeMergedOptions(
                 mergedNdkConfig,
-                CoreProductFlavor::getNdkConfig,
-                CoreBuildType::getNdkConfig,
+                BaseFlavor::getNdkConfig,
+                BuildType::getNdkConfig,
                 MergedNdkConfig::reset,
                 MergedNdkConfig::append);
         computeMergedOptions(
                 mergedExternalNativeBuildOptions,
-                CoreProductFlavor::getExternalNativeBuildOptions,
-                CoreBuildType::getExternalNativeBuildOptions,
+                BaseFlavor::getExternalNativeBuildOptions,
+                BuildType::getExternalNativeBuildOptions,
                 MergedExternalNativeBuildOptions::reset,
                 MergedExternalNativeBuildOptions::append);
     }
@@ -340,25 +339,25 @@ public class GradleVariantConfiguration extends VariantConfiguration {
     /**
      * Merge a specific option in GradleVariantConfiguration.
      *
-     * It is assumed that merged option type with a method to reset and append is created for the
+     * <p>It is assumed that merged option type with a method to reset and append is created for the
      * option being merged.
      *
-     * The order of priority is BuildType, ProductFlavors, and default config.  ProductFlavor added
-     * earlier has higher priority than ProductFlavor added later.
+     * <p>The order of priority is BuildType, ProductFlavors, and default config. ProductFlavor
+     * added earlier has higher priority than ProductFlavor added later.
      *
      * @param option The merged option store in the GradleVariantConfiguration.
      * @param productFlavorOptionGetter A Function to return the option from a ProductFlavor.
      * @param buildTypeOptionGetter A Function to return the option from a BuildType.
      * @param reset A method to return 'option' to its default state.
-     * @param append A BiConsumer to combine two options into one.  Option in second input argument
-     *               takes priority and overwrite option in the first input argument.
+     * @param append A BiConsumer to combine two options into one. Option in second input argument
+     *     takes priority and overwrite option in the first input argument.
      * @param <CoreOptionT> The core type of the option being merge.
      * @param <MergedOptionT> The merge option type.
      */
     private <CoreOptionT, MergedOptionT> void computeMergedOptions(
             @NonNull MergedOptionT option,
-            @NonNull Function<CoreProductFlavor, CoreOptionT> productFlavorOptionGetter,
-            @NonNull Function<CoreBuildType, CoreOptionT> buildTypeOptionGetter,
+            @NonNull Function<BaseFlavor, CoreOptionT> productFlavorOptionGetter,
+            @NonNull Function<BuildType, CoreOptionT> buildTypeOptionGetter,
             @NonNull Consumer<MergedOptionT> reset,
             @NonNull BiConsumer<MergedOptionT, CoreOptionT> append) {
         reset.accept(option);
@@ -481,7 +480,7 @@ public class GradleVariantConfiguration extends VariantConfiguration {
 
         keys.addAll(getDefaultConfig().getShaders().getScopedGlslcArgs().keySet());
 
-        for (CoreProductFlavor flavor : getProductFlavors()) {
+        for (ProductFlavor flavor : getProductFlavors()) {
             keys.addAll(flavor.getShaders().getScopedGlslcArgs().keySet());
         }
 

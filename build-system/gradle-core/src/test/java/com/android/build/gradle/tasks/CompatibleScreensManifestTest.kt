@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -28,7 +29,7 @@ import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.DefaultProductFlavor
+import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
@@ -59,7 +60,8 @@ class CompatibleScreensManifestTest {
     @Mock internal lateinit var scope: VariantScope
     @Mock private lateinit var outputScope: OutputScope
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
-    @Mock private lateinit var productFlavor: DefaultProductFlavor
+    @Suppress("DEPRECATION")
+    @Mock private lateinit var mergedFlavor: MergedFlavor
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer
 
@@ -81,8 +83,8 @@ class CompatibleScreensManifestTest {
         `when`(scope.taskContainer).thenReturn(taskContainer)
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
-        `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
-        `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(productFlavor)
+        `when`<ApiVersion>(mergedFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
+        `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
         `when`(variantConfiguration.fullName).thenReturn("fullName")
         `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)

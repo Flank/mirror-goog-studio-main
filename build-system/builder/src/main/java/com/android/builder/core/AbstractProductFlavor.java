@@ -38,12 +38,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The configuration of a product flavor.
+ * Builder-level implementation of ProductFlavor.
  *
- * This is also used to describe the default configuration of all builds, even those that
- * do not contain any flavors.
+ * <p>This is also used to describe the default configuration of all builds, even those that do not
+ * contain any flavors.
+ *
+ * @deprecated This is deprecated, use DSL objects directly.
  */
-public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavor {
+@Deprecated
+public abstract class AbstractProductFlavor extends BaseConfigImpl implements ProductFlavor {
     private static final long serialVersionUID = 1L;
 
     @NonNull
@@ -92,19 +95,18 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /**
      * Creates a ProductFlavor with a given name.
      *
-     * Names can be important when dealing with flavor groups.
-     * @param name the name of the flavor.
+     * <p>Names can be important when dealing with flavor groups.
      *
+     * @param name the name of the flavor.
      * @see BuilderConstants#MAIN
      */
-    public DefaultProductFlavor(@NonNull String name) {
+    public AbstractProductFlavor(@NonNull String name) {
         mName = name;
         mVectorDrawablesOptions = new DefaultVectorDrawablesOptions();
     }
 
-    public DefaultProductFlavor(
-            @NonNull String name,
-            @NonNull DefaultVectorDrawablesOptions vectorDrawablesOptions) {
+    public AbstractProductFlavor(
+            @NonNull String name, @NonNull DefaultVectorDrawablesOptions vectorDrawablesOptions) {
         mName = name;
         mVectorDrawablesOptions = vectorDrawablesOptions;
     }
@@ -830,12 +832,12 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                                 overlay.getVectorDrawables().getUseSupportLibrary(),
                                 getVectorDrawables().getUseSupportLibrary()));
 
-        if (overlay instanceof DefaultProductFlavor) {
+        if (overlay instanceof AbstractProductFlavor) {
             if (missingDimensionSelections == null) {
                 missingDimensionSelections = Maps.newHashMap();
             }
             missingDimensionSelections.putAll(
-                    ((DefaultProductFlavor) overlay).getMissingDimensionStrategies());
+                    ((AbstractProductFlavor) overlay).getMissingDimensionStrategies());
         }
 
         // no need to merge missingDimensionStrategies, it's not queried from the merged flavor.
@@ -892,11 +894,11 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
             setMultiDexKeepFile(thatProductFlavor.getMultiDexKeepFile());
             setMultiDexKeepProguard(thatProductFlavor.getMultiDexKeepProguard());
         }
-        if (that instanceof DefaultProductFlavor) {
-            DefaultProductFlavor thatDefaultProductFlavor = (DefaultProductFlavor) that;
+        if (that instanceof AbstractProductFlavor) {
+            AbstractProductFlavor thatAbstractProductFlavor = (AbstractProductFlavor) that;
             // the objects inside the map are immutable, so it's fine to keep them.
             missingDimensionSelections =
-                    Maps.newHashMap(thatDefaultProductFlavor.getMissingDimensionStrategies());
+                    Maps.newHashMap(thatAbstractProductFlavor.getMissingDimensionStrategies());
         }
     }
 

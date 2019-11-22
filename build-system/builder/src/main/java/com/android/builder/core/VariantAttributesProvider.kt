@@ -54,7 +54,7 @@ class VariantAttributesProvider(
         get() {
             var idName = mergedFlavor.applicationId
 
-            val idSuffix = DefaultProductFlavor.mergeApplicationIdSuffix(
+            val idSuffix = AbstractProductFlavor.mergeApplicationIdSuffix(
                     buildType.applicationIdSuffix,
                     mergedFlavor.applicationIdSuffix)
 
@@ -101,7 +101,7 @@ class VariantAttributesProvider(
             versionName = manifestSupplier.versionName
         }
 
-        val versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
+        val versionSuffix = AbstractProductFlavor.mergeVersionNameSuffix(
             buildType.versionNameSuffix, mergedFlavor.versionNameSuffix)
 
         if (versionSuffix != null && versionSuffix.isNotEmpty()) {
@@ -239,7 +239,7 @@ class VariantAttributesProvider(
     val manifestVersionNameSupplier: Supplier<String?>
         get() {
             val file = if (isTestVariant) null else manifestFile
-            val versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
+            val versionSuffix = AbstractProductFlavor.mergeVersionNameSuffix(
                 buildType.versionNameSuffix, mergedFlavor.versionNameSuffix
             )
             return ManifestVersionNameSupplier(

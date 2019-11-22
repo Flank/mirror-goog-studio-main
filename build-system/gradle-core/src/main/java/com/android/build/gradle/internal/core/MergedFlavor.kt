@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.builder.core.DefaultProductFlavor
+import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
@@ -25,8 +25,8 @@ import com.google.common.collect.Lists
 /**
  * The merger of the default config and all of a variant's flavors (if any)
  */
-class MergedFlavor(
-        name: String, val issueReporter: EvalIssueReporter) : DefaultProductFlavor(name) {
+public class MergedFlavor(
+        name: String, val issueReporter: EvalIssueReporter) : AbstractProductFlavor(name) {
 
     companion object {
 
@@ -60,8 +60,8 @@ class MergedFlavor(
         fun mergeFlavors(
                 lowestPriority: ProductFlavor,
                 flavors: List<ProductFlavor>,
-                issueReporter: EvalIssueReporter): DefaultProductFlavor {
-            val mergedFlavor = MergedFlavor.clone(lowestPriority, issueReporter)
+                issueReporter: EvalIssueReporter): MergedFlavor {
+            val mergedFlavor = clone(lowestPriority, issueReporter)
             for (flavor in Lists.reverse(flavors)) {
                 mergedFlavor.mergeWithHigherPriorityFlavor(flavor)
             }
@@ -76,9 +76,9 @@ class MergedFlavor(
             var applicationIdSuffix = lowestPriority.applicationIdSuffix
             var versionNameSuffix = lowestPriority.versionNameSuffix
             for (mFlavor in flavors) {
-                applicationIdSuffix = DefaultProductFlavor.mergeApplicationIdSuffix(
+                applicationIdSuffix = mergeApplicationIdSuffix(
                         mFlavor.applicationIdSuffix, applicationIdSuffix)
-                versionNameSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
+                versionNameSuffix = mergeVersionNameSuffix(
                         mFlavor.versionNameSuffix, versionNameSuffix)
             }
             mergedFlavor.applicationIdSuffix = applicationIdSuffix

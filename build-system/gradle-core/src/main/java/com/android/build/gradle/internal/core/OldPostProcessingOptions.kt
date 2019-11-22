@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.core
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
-import com.android.build.gradle.internal.dsl.CoreBuildType
+import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.getProguardFiles
 import com.android.builder.model.CodeShrinker
 import org.gradle.api.Project
@@ -29,10 +29,10 @@ import java.io.File
  * This is an implementation of PostProcessingOptions interface for the old DSL
  */
 class OldPostProcessingOptions(
-    private val coreBuildType: CoreBuildType,
+    private val buildType: BuildType,
     private val project: Project
 ) : PostProcessingOptions {
-    override fun getProguardFiles(type: ProguardFileType): Collection<File> = coreBuildType.getProguardFiles(type)
+    override fun getProguardFiles(type: ProguardFileType): Collection<File> = buildType.getProguardFiles(type)
 
     override fun getDefaultProguardFiles(): List<File> =
         listOf(ProguardFiles.getDefaultProguardFile(ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName, project))
@@ -40,10 +40,10 @@ class OldPostProcessingOptions(
     override fun getPostprocessingFeatures(): PostprocessingFeatures? = null
 
     override fun getCodeShrinker() = when {
-        !coreBuildType.isMinifyEnabled -> null
-        coreBuildType.isUseProguard == true -> CodeShrinker.PROGUARD
+        !buildType.isMinifyEnabled -> null
+        buildType.isUseProguard == true -> CodeShrinker.PROGUARD
         else -> CodeShrinker.R8
     }
 
-    override fun resourcesShrinkingEnabled(): Boolean = coreBuildType.isShrinkResources
+    override fun resourcesShrinkingEnabled(): Boolean = buildType.isShrinkResources
 }

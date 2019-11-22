@@ -23,7 +23,13 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.MoreObjects;
 
-public class DefaultBuildType extends BaseConfigImpl implements BuildType {
+/**
+ * Builder-level implementation of BuildType.
+ *
+ * @deprecated This is deprecated, use DSL objects directly.
+ */
+@Deprecated
+public abstract class AbstractBuildType extends BaseConfigImpl implements BuildType {
     private static final long serialVersionUID = 1L;
 
     private final String mName;
@@ -39,7 +45,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
     private boolean mZipAlignEnabled = true;
 
-    public DefaultBuildType(@NonNull String name) {
+    public AbstractBuildType(@NonNull String name) {
         mName = name;
     }
 
@@ -47,6 +53,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
      * Copies all properties from the given build type.
      *
      * <p>It can be used like this:
+     *
      * <pre>
      * android.buildTypes {
      *     customBuildType {
@@ -56,7 +63,7 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
      * }
      * </pre>
      */
-    public DefaultBuildType initWith(BuildType that) {
+    public AbstractBuildType initWith(BuildType that) {
         _initWith(that);
 
         setDebuggable(that.isDebuggable());

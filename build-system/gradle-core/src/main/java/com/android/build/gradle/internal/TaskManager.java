@@ -68,9 +68,9 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -2569,7 +2569,7 @@ public abstract class TaskManager {
                             taskContainer.getAssembleTask();
                     assembleMap.put(variantConfig.getBuildType().getName(), assembleTask);
 
-                    for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
+                    for (ProductFlavor flavor : variantConfig.getProductFlavors()) {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
@@ -2584,7 +2584,7 @@ public abstract class TaskManager {
 
                         bundleMap.put(variantConfig.getBuildType().getName(), bundleTask);
 
-                        for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
+                        for (ProductFlavor flavor : variantConfig.getProductFlavors()) {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 

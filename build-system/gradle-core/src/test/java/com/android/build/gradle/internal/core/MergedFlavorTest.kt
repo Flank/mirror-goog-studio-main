@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.DefaultProductFlavor
+import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.internal.CopyOfTester
@@ -28,21 +28,21 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 
+@Suppress("DEPRECATION")
 class MergedFlavorTest {
 
-    private lateinit var defaultFlavor: DefaultProductFlavor
-    private lateinit var defaultFlavor2: DefaultProductFlavor
-    private lateinit var custom: DefaultProductFlavor
-    private lateinit var custom2: DefaultProductFlavor
+    private lateinit var defaultFlavor: AbstractProductFlavor
+    private lateinit var defaultFlavor2: AbstractProductFlavor
+    private lateinit var custom: AbstractProductFlavor
+    private lateinit var custom2: AbstractProductFlavor
     private lateinit var issueReporter: EvalIssueReporter
 
     @Before
     fun setUp() {
-        defaultFlavor = DefaultProductFlavor("default")
-        defaultFlavor2 =
-            DefaultProductFlavor("default2")
+        defaultFlavor = ProductFlavorImpl("default")
+        defaultFlavor2 = ProductFlavorImpl("default2")
 
-        custom = DefaultProductFlavor("custom")
+        custom = ProductFlavorImpl("custom")
         custom.minSdkVersion = DefaultApiVersion(42)
         custom.targetSdkVersion = DefaultApiVersion(43)
         custom.renderscriptTargetApi = 17
@@ -63,7 +63,7 @@ class MergedFlavorTest {
         custom.versionNameSuffix = "custom"
         custom.applicationIdSuffix = "custom"
 
-        custom2 = DefaultProductFlavor("custom2")
+        custom2 = ProductFlavorImpl("custom2")
         custom2.addResourceConfigurations("ldpi", "hdpi")
         custom2.addManifestPlaceholders(
                 ImmutableMap.of<String, Any>("two", "twoValueBis", "three", "threeValue"))
@@ -86,7 +86,7 @@ class MergedFlavorTest {
 
         CopyOfTester
                 .assertAllGettersCalled(
-                        DefaultProductFlavor::class.java, custom,
+                        AbstractProductFlavor::class.java, custom,
                         { MergedFlavor.clone(it, issueReporter) })
     }
 
@@ -184,7 +184,7 @@ class MergedFlavorTest {
 
     @Test
     fun testMergeMultiple() {
-        val custom3 = DefaultProductFlavor("custom3")
+        val custom3 = ProductFlavorImpl("custom3")
         custom3.minSdkVersion = DefaultApiVersion(102)
         custom3.applicationIdSuffix = "custom3"
         custom3.versionNameSuffix = "custom3"
@@ -203,7 +203,7 @@ class MergedFlavorTest {
 
     @Test
     fun testSecondDimensionOverwritesDefault() {
-        val custom3 = DefaultProductFlavor("custom3")
+        val custom3 = ProductFlavorImpl("custom3")
         custom3.minSdkVersion = DefaultApiVersion(102)
 
         val flavor =
@@ -240,3 +240,5 @@ class MergedFlavorTest {
         }
     }
 }
+
+private class ProductFlavorImpl(name: String) : AbstractProductFlavor(name)

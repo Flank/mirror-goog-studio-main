@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.MergedFlavor;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
@@ -71,8 +72,6 @@ import com.android.build.gradle.internal.dependency.VersionedCodeShrinker;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
@@ -98,10 +97,9 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.builder.core.AbstractProductFlavor.DimensionRequest;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.core.DefaultProductFlavor;
-import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
@@ -428,7 +426,7 @@ public class VariantManager implements VariantModel {
             }
 
             // 4. the flavors.
-            for (CoreProductFlavor productFlavor : testProductFlavors) {
+            for (ProductFlavor productFlavor : testProductFlavors) {
                 testVariantSourceSets.add(
                         this.productFlavors
                                 .get(productFlavor.getName())
@@ -546,7 +544,7 @@ public class VariantManager implements VariantModel {
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection(
             @NonNull GradleVariantConfiguration config) {
-        DefaultProductFlavor mergedFlavors = config.getMergedFlavor();
+        MergedFlavor mergedFlavors = config.getMergedFlavor();
         ObjectFactory factory = project.getObjects();
 
         return mergedFlavors
@@ -1248,7 +1246,7 @@ public class VariantManager implements VariantModel {
     public TestVariantData createTestVariantData(
             BaseVariantData testedVariantData,
             VariantType type) {
-        CoreBuildType buildType = testedVariantData.getVariantConfiguration().getBuildType();
+        BuildType buildType = testedVariantData.getVariantConfiguration().getBuildType();
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
         GradleVariantConfiguration testedConfig = testedVariantData.getVariantConfiguration();
@@ -1274,7 +1272,7 @@ public class VariantManager implements VariantModel {
                         this::canParseManifest);
 
 
-        for (CoreProductFlavor productFlavor : productFlavorList) {
+        for (ProductFlavor productFlavor : productFlavorList) {
             ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getName());
 
             String dimensionName = productFlavor.getDimension();
@@ -1320,7 +1318,7 @@ public class VariantManager implements VariantModel {
         DefaultConfig defaultConfig = defaultConfigData.getProductFlavor();
 
         BuildTypeData buildTypeData = buildTypes.get(variantConfiguration.getBuildType());
-        CoreBuildType buildType = buildTypeData.getBuildType();
+        BuildType buildType = buildTypeData.getBuildType();
 
         // get the list of ProductFlavor from the list of flavor name
         List<ProductFlavor> productFlavorList =
@@ -1617,12 +1615,12 @@ public class VariantManager implements VariantModel {
             int f1Score = 0;
             int f2Score = 0;
 
-            for (CoreProductFlavor flavor : v1.getVariantConfiguration().getProductFlavors()) {
+            for (ProductFlavor flavor : v1.getVariantConfiguration().getProductFlavors()) {
                 if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
                     f1Score++;
                 }
             }
-            for (CoreProductFlavor flavor : v2.getVariantConfiguration().getProductFlavors()) {
+            for (ProductFlavor flavor : v2.getVariantConfiguration().getProductFlavors()) {
                 if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
                     f2Score++;
                 }
@@ -1687,8 +1685,7 @@ public class VariantManager implements VariantModel {
         for (BuildTypeData buildTypeData : buildTypes.values()) {
             buildTypeData.getBuildType().getIsDefault().finalizeValue();
         }
-        for (ProductFlavorData<? extends CoreProductFlavor> productFlavorData :
-                productFlavors.values()) {
+        for (ProductFlavorData<? extends BaseFlavor> productFlavorData : productFlavors.values()) {
             ((com.android.build.gradle.internal.dsl.ProductFlavor)
                             productFlavorData.getProductFlavor())
                     .getIsDefault()
@@ -1747,7 +1744,7 @@ public class VariantManager implements VariantModel {
         // Using ArrayListMultiMap to preserve sorting of flavor names.
         ArrayListMultimap<String, String> userDefaults = ArrayListMultimap.create();
 
-        for (ProductFlavorData<? extends CoreProductFlavor> flavor : productFlavors.values()) {
+        for (ProductFlavorData<? extends BaseFlavor> flavor : productFlavors.values()) {
             com.android.build.gradle.internal.dsl.ProductFlavor productFlavor =
                     (com.android.build.gradle.internal.dsl.ProductFlavor) flavor.getProductFlavor();
             String dimension = productFlavor.getDimension();

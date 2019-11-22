@@ -18,12 +18,10 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.BaseFlavor;
 
-/**
- * Class containing a ProductFlavor and associated data (sourcesets)
- */
-public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimensionData {
+/** Class containing a ProductFlavor and associated data (sourcesets) */
+public class ProductFlavorData<T extends BaseFlavor> extends VariantDimensionData {
     @NonNull private final T productFlavor;
 
     ProductFlavorData(

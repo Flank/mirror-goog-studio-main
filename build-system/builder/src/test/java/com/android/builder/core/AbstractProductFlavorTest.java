@@ -16,17 +16,19 @@
 
 package com.android.builder.core;
 
+import com.android.annotations.NonNull;
 import com.android.builder.internal.ClassFieldImpl;
 import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 
-public class DefaultProductFlavorTest extends TestCase {
+@SuppressWarnings("deprecation")
+public class AbstractProductFlavorTest extends TestCase {
 
-    private DefaultProductFlavor custom;
+    private AbstractProductFlavor custom;
 
     @Override
     protected void setUp() throws Exception {
-        custom = new DefaultProductFlavor("custom");
+        custom = new ProductFlavorImpl("custom");
         custom.setMinSdkVersion(new DefaultApiVersion(42));
         custom.setTargetSdkVersion(new DefaultApiVersion(43));
         custom.setRenderscriptTargetApi(17);
@@ -49,8 +51,14 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void test_initWith() {
-        DefaultProductFlavor flavor = new DefaultProductFlavor(custom.getName());
+        AbstractProductFlavor flavor = new ProductFlavorImpl(custom.getName());
         flavor._initWith(custom);
         assertEquals(custom.toString(), flavor.toString());
+    }
+
+    private static final class ProductFlavorImpl extends AbstractProductFlavor {
+        public ProductFlavorImpl(@NonNull String name) {
+            super(name);
+        }
     }
 }

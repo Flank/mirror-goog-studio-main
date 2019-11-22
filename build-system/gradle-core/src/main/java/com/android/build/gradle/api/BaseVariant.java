@@ -96,15 +96,13 @@ public interface BaseVariant {
     @NonNull
     DomainObjectCollection<BaseVariantOutput> getOutputs();
 
-    /**
-     * Returns the {@link com.android.builder.core.DefaultBuildType} for this build variant.
-     */
+    /** Returns the {@link BuildType} for this build variant. */
     @NonNull
     BuildType getBuildType();
 
     /**
-     * Returns a {@link com.android.builder.core.DefaultProductFlavor} that represents the merging
-     * of the default config and the flavors of this build variant.
+     * Returns a {@link ProductFlavor} that represents the merging of the default config and the
+     * flavors of this build variant.
      */
     @NonNull
     ProductFlavor getMergedFlavor();
@@ -117,8 +115,7 @@ public interface BaseVariant {
     JavaCompileOptions getJavaCompileOptions();
 
     /**
-     * Returns the list of {@link com.android.builder.core.DefaultProductFlavor} for this build
-     * variant.
+     * Returns the list of {@link ProductFlavor} for this build variant.
      *
      * <p>This is always non-null but could be empty.
      */

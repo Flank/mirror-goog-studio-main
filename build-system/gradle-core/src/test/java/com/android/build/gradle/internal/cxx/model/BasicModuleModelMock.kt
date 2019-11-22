@@ -20,6 +20,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
@@ -208,8 +209,8 @@ open class BasicModuleModelMock {
             BuildType::class.java,
             throwUnmocked
         )
-        val productFlavor = mock(
-            ProductFlavor::class.java,
+        val mergedFlavor = mock(
+            MergedFlavor::class.java,
             throwUnmocked
         )
 
@@ -232,12 +233,12 @@ open class BasicModuleModelMock {
             .externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
         doReturn(buildType).`when`(gradleVariantConfiguration).buildType
-        doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
+        doReturn(mergedFlavor).`when`(gradleVariantConfiguration).mergedFlavor
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
         doReturn(true).`when`(buildType).isDebuggable
-        doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
+        doReturn(minSdkVersion).`when`(mergedFlavor).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }

@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantAttributesProvider;
 import com.android.builder.core.VariantType;
@@ -128,7 +127,7 @@ public class VariantConfiguration {
      */
     private final VariantConfiguration mTestedConfig;
 
-    @NonNull private DefaultProductFlavor mMergedFlavor;
+    @NonNull private MergedFlavor mMergedFlavor;
 
     /**
      * Variant-specific build Config fields.
@@ -542,9 +541,7 @@ public class VariantConfiguration {
         mFlavors.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
-        mMergedFlavor =
-                (DefaultProductFlavor)
-                        MergedFlavor.mergeFlavors(mDefaultConfig, mFlavors, mIssueReporter);
+        mMergedFlavor = MergedFlavor.mergeFlavors(mDefaultConfig, mFlavors, mIssueReporter);
         mVariantAttributesProvider.setMergedFlavor(mMergedFlavor);
         // reset computed names to null so it will be recomputed.
         mFlavorName = null;
@@ -601,7 +598,7 @@ public class VariantConfiguration {
     }
 
     @NonNull
-    public DefaultProductFlavor getMergedFlavor() {
+    public MergedFlavor getMergedFlavor() {
         return mMergedFlavor;
     }
 
@@ -1167,10 +1164,10 @@ public class VariantConfiguration {
     }
 
     public int getRenderscriptTarget() {
-        DefaultProductFlavor mergedFlavor = getMergedFlavor();
-
-        int targetApi = mergedFlavor.getRenderscriptTargetApi() != null ?
-                mergedFlavor.getRenderscriptTargetApi() : -1;
+        int targetApi =
+                mMergedFlavor.getRenderscriptTargetApi() != null
+                        ? mMergedFlavor.getRenderscriptTargetApi()
+                        : -1;
         int minSdk = getMinSdkVersionValue();
 
         return targetApi > minSdk ? targetApi : minSdk;

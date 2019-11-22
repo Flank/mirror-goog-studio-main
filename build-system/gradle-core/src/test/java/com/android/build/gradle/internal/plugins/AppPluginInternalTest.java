@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
@@ -28,7 +29,6 @@ import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.DefaultBuildType;
 import com.android.builder.model.SigningConfig;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
@@ -416,12 +416,11 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
 
         // check that the debug buildType has the updated debug signing config.
-        DefaultBuildType buildType =
-                (DefaultBuildType)
-                        plugin.getVariantManager()
-                                .getBuildTypes()
-                                .get(BuilderConstants.DEBUG)
-                                .getBuildType();
+        BuildType buildType =
+                plugin.getVariantManager()
+                        .getBuildTypes()
+                        .get(BuilderConstants.DEBUG)
+                        .getBuildType();
         SigningConfig signingConfig = buildType.getSigningConfig();
         TestCase.assertEquals(
                 plugin.getVariantManager().getSigningConfigs().get(BuilderConstants.DEBUG),

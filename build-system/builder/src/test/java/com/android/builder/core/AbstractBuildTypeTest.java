@@ -16,16 +16,24 @@
 
 package com.android.builder.core;
 
+import com.android.annotations.NonNull;
 import com.android.testutils.internal.CopyOfTester;
 import org.junit.Test;
 
-public class DefaultBuildTypeTest {
+@SuppressWarnings("deprecation")
+public class AbstractBuildTypeTest {
 
     @Test
     public void testInitWith() throws Exception {
         CopyOfTester.assertAllGettersCalled(
-                DefaultBuildType.class,
-                new DefaultBuildType("debug"),
-                original -> new DefaultBuildType(original.getName()).initWith(original));
+                AbstractBuildType.class,
+                new BuildTypeImpl("debug"),
+                original -> new BuildTypeImpl(original.getName()).initWith(original));
+    }
+
+    private static final class BuildTypeImpl extends AbstractBuildType {
+        public BuildTypeImpl(@NonNull String name) {
+            super(name);
+        }
     }
 }
