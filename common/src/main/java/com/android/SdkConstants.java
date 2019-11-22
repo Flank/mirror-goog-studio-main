@@ -1280,6 +1280,7 @@ public final class SdkConstants {
     public static final String ATTR_AUTHORITIES = "authorities"; //$NON-NLS-1$
     public static final String ATTR_MULTIPROCESS = "multiprocess"; //$NON-NLS-1$
     public static final String ATTR_SPLIT = "split";
+    public static final String ATTR_SHARED_USER_ID = "sharedUserId";
     public static final String ATTR_FUNCTIONAL_TEST = "functionalTest";
     public static final String ATTR_HANDLE_PROFILING = "handleProfiling";
     public static final String ATTR_TARGET_PACKAGE = "targetPackage";
