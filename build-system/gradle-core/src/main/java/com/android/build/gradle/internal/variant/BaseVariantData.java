@@ -273,11 +273,6 @@ public abstract class BaseVariantData {
     public abstract String getDescription();
 
     @NonNull
-    public String getApplicationId() {
-        return variantConfiguration.getApplicationId();
-    }
-
-    @NonNull
     public VariantType getType() {
         return variantConfiguration.getType();
     }

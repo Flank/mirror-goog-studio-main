@@ -17,11 +17,19 @@
 package com.android.build.api.variant
 import com.android.build.api.artifact.Operations
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
+
 /**
  * Parent interface for all types of variants.
  */
 @Incubating
 interface VariantProperties: VariantConfiguration, ActionableVariantObject {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     */
+    val applicationId: Property<String>
+
     /**´
      * Returns the final list of variant outputs.
      * @return read only list of [VariantOutput] for this variant.

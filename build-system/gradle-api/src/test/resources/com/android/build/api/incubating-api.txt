@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d2c074e088f503b65909c979c3263c77f6fce225719de06c4f8a5f726f16f88b
+4adf50b2dc6b34aeadcc464faeabed1fbc9ccb2bdddd804ab399e62108d7c0b4
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -136,5 +136,6 @@ com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.VariantOutput.getVersionName: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.VariantProperties implements com.android.build.api.variant.VariantConfiguration, com.android.build.api.variant.ActionableVariantObject
+com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.VariantProperties.getOperations: com.android.build.api.artifact.Operations ()
 com.android.build.api.variant.VariantProperties.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()

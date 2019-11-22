@@ -17,15 +17,19 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.AppVariantProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantConfiguration
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
+import javax.inject.Inject
 
-internal class AppVariantPropertiesImpl(
-    val objects: ObjectFactory,
-    val variantScope: VariantScope,
-    val variantConfiguration: VariantConfiguration<*, *, *>,
+internal open class AppVariantPropertiesImpl @Inject constructor(
+    dslScope: DslScope,
+    variantScope: VariantScope,
     operations: Operations,
     configuration: com.android.build.api.variant.VariantConfiguration
-) : VariantPropertiesImpl(objects, variantScope, variantConfiguration, operations, configuration),
-    AppVariantProperties
+) : VariantPropertiesImpl(dslScope, variantScope, operations, configuration),
+    AppVariantProperties {
+}

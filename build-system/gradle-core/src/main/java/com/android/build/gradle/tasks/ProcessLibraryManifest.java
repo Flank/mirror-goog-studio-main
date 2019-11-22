@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -345,13 +346,16 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
     public static class CreationAction extends VariantTaskCreationAction<ProcessLibraryManifest> {
 
+        private final VariantProperties variantProperties;
         /**
          * {@code EagerTaskCreationAction} for the library process manifest task.
          *
          * @param scope The library variant scope.
          */
-        public CreationAction(@NonNull VariantScope scope) {
+        public CreationAction(
+                @NonNull VariantProperties variantProperties, @NonNull VariantScope scope) {
             super(scope);
+            this.variantProperties = variantProperties;
         }
 
         @NonNull
@@ -461,7 +465,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.versionName.disallowChanges();
             task.versionCode.set(task.getProject().provider(config::getVersionCode));
             task.versionCode.disallowChanges();
-            task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.packageOverride.set(variantProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));

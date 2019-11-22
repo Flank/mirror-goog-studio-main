@@ -45,7 +45,7 @@ class BundleTestDataImpl(
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
-    override fun getApplicationId(): String = testVariantData.applicationId
+    override fun getApplicationId(): String = testVariantData.variantConfiguration.applicationId
 
     override fun getTestedApplicationId(): String? =
         testVariantData.variantConfiguration.testedApplicationId

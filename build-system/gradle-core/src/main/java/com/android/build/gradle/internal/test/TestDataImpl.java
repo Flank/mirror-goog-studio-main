@@ -77,7 +77,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     @Override
     public String getApplicationId() {
-        return testVariantData.getApplicationId();
+        return testVariantData.getVariantConfiguration().getApplicationId();
     }
 
     @Nullable

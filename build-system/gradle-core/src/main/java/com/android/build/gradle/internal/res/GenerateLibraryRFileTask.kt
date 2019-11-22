@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
@@ -224,8 +226,10 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     }
 
 
-    class CreationAction(variantScope: VariantScope, val isLibrary: Boolean)
-        : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantScope) {
+    internal class CreationAction(
+        private val variantProperties: VariantPropertiesImpl,
+        val isLibrary: Boolean)
+        : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantProperties.variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "RFile")
@@ -268,10 +272,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             task.platformAttrRTxt = variantScope.globalScope.platformAttrs
 
-            task.applicationId.set(task.project.provider {
-                variantScope.variantData.variantConfiguration.applicationId
-            })
-            task.applicationId.disallowChanges()
+            task.applicationId.setDisallowChanges(variantProperties.applicationId)
 
             val namespacedRClass = projectOptions[BooleanOption.NAMESPACED_R_CLASS]
             val compileClasspathLibraryRClasses = projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]

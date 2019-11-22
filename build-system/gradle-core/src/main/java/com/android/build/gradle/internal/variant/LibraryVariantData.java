@@ -122,11 +122,14 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
             VariantConfiguration publicVariantConfiguration) {
         com.android.build.gradle.internal.core.VariantConfiguration variantConfiguration =
                 super.getVariantConfiguration();
-        return new LibraryVariantPropertiesImpl(
-                scope.getGlobalScope().getProject().getObjects(),
-                scope,
-                variantConfiguration,
-                scope.getArtifacts().getOperations(),
-                publicVariantConfiguration);
+        return scope.getGlobalScope()
+                .getProject()
+                .getObjects()
+                .newInstance(
+                        LibraryVariantPropertiesImpl.class,
+                        scope.getGlobalScope().getDslScope(),
+                        scope,
+                        scope.getArtifacts().getOperations(),
+                        publicVariantConfiguration);
     }
 }

@@ -94,11 +94,14 @@ public class TestVariantData extends ApkVariantData {
             VariantConfiguration publicVariantConfiguration) {
         com.android.build.gradle.internal.core.VariantConfiguration variantConfiguration =
                 super.getVariantConfiguration();
-        return new TestVariantPropertiesImpl(
-                scope.getGlobalScope().getProject().getObjects(),
-                scope,
-                variantConfiguration,
-                scope.getArtifacts().getOperations(),
-                publicVariantConfiguration);
+        return scope.getGlobalScope()
+                .getProject()
+                .getObjects()
+                .newInstance(
+                        TestVariantPropertiesImpl.class,
+                        scope.getGlobalScope().getDslScope(),
+                        scope,
+                        scope.getArtifacts().getOperations(),
+                        publicVariantConfiguration);
     }
 }

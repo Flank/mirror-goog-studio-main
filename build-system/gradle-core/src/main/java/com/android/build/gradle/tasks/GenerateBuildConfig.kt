@@ -15,8 +15,8 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -173,10 +173,10 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- Config Action -----
 
-    class CreationAction(scope: VariantScope) :
-        VariantTaskCreationAction<GenerateBuildConfig>(scope) {
+    internal class CreationAction(private val variantProperties: VariantPropertiesImpl) :
+        VariantTaskCreationAction<GenerateBuildConfig>(variantProperties.variantScope) {
 
-        override val name: String = scope.getTaskName("generate", "BuildConfig")
+        override val name: String = variantScope.getTaskName("generate", "BuildConfig")
 
         override val type: Class<GenerateBuildConfig> = GenerateBuildConfig::class.java
 
@@ -198,11 +198,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             })
             task.buildConfigPackageName.disallowChanges()
 
-            task.appPackageName.set(project.provider {
-                variantConfiguration.applicationId.takeUnless {
-                    variantConfiguration.type.isAar
-                }
-            })
+            if (!variantConfiguration.type.isAar) {
+                task.appPackageName.set(variantProperties.applicationId)
+            }
             task.appPackageName.disallowChanges()
 
             val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()

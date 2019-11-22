@@ -17,21 +17,27 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.VariantOutput
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.api.variant.VariantProperties
-import com.android.build.gradle.internal.core.VariantConfiguration
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 
 internal open class VariantPropertiesImpl(
-    private val objects: ObjectFactory,
-    private val variantScope: VariantScope,
-    private val variantConfiguration: VariantConfiguration<*,*,*>,
+    val dslScope: DslScope,
+    val variantScope: VariantScope,
     override val operations: Operations,
     configuration: com.android.build.api.variant.VariantConfiguration
 ) : VariantProperties, com.android.build.api.variant.VariantConfiguration by configuration{
+
     private val variantOutputs= mutableListOf<VariantOutput>()
+    private val variantConfiguration = variantScope.variantConfiguration
+
+    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java).apply {
+        setDisallowChanges(dslScope.providerFactory.provider { variantConfiguration.applicationId })
+    }
+
     fun addVariantOutput(outputType: com.android.build.VariantOutput.OutputType): VariantOutputImpl {
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
@@ -67,9 +73,9 @@ internal open class VariantPropertiesImpl(
 
     private fun <T> initializeProperty(type: Class<T>, id: String):  Property<T>  {
         return if (variantScope.globalScope.projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
-            GradleProperty.safeReadingBeforeExecution(id, objects.property(type))
+            GradleProperty.safeReadingBeforeExecution(id, dslScope.objectFactory.property(type))
         } else {
-            objects.property(type)
+            dslScope.objectFactory.property(type)
         }
     }
 }

@@ -321,7 +321,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         extraModelInfo.getDeprecationReporter(),
                         objectFactory,
                         project.getLogger(),
-                        new BuildFeatureValuesImpl(projectOptions));
+                        new BuildFeatureValuesImpl(projectOptions),
+                        project.getProviders());
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);

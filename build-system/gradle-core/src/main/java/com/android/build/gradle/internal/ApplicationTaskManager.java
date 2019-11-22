@@ -383,12 +383,16 @@ public class ApplicationTaskManager extends TaskManager {
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
         if (variantScope.getType().isBaseModule()) {
-            taskFactory.register(new ModuleMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.register(
+                    new ModuleMetadataWriterTask.CreationAction(
+                            variantScope.getVariantData().getPublicVariantPropertiesApi()));
         }
 
         // TODO b/141650037 - Only the base App should create this task.
         TaskProvider<? extends Task> applicationIdWriterTask =
-                taskFactory.register(new ApplicationIdWriterTask.CreationAction(variantScope));
+                taskFactory.register(
+                        new ApplicationIdWriterTask.CreationAction(
+                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.

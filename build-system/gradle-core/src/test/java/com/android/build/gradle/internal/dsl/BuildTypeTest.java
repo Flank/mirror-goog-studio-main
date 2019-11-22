@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.plugins.AppPlugin;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.builder.core.BuilderConstants;
@@ -51,7 +52,8 @@ public class BuildTypeTest {
                     new NoOpDeprecationReporter(),
                     new FakeObjectFactory(),
                     new FakeLogger(),
-                    new FakeBuildFeatureValues());
+                    new FakeBuildFeatureValues(),
+                    new FakeProviderFactory());
 
 
     @Before

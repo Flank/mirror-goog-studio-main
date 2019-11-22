@@ -22,11 +22,13 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ProviderFactory
 
 class DslScopeImpl(
         override val issueReporter: EvalIssueReporter,
         override val deprecationReporter: DeprecationReporter,
         override val objectFactory: ObjectFactory,
         override val logger: Logger,
-        override val buildFeatures: BuildFeatureValues
+        override val buildFeatures: BuildFeatureValues,
+        override val providerFactory: ProviderFactory
 ) : DslScope

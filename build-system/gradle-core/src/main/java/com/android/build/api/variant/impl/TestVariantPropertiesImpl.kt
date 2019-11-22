@@ -18,13 +18,16 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.TestVariantProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ProviderFactory
+import javax.inject.Inject
 
-internal class TestVariantPropertiesImpl(private val objects: ObjectFactory,
-    private val variantScope: VariantScope,
-    private val variantConfiguration: com.android.build.gradle.internal.core.VariantConfiguration<*, *, *>,
+internal open class TestVariantPropertiesImpl @Inject constructor(
+    dslScope: DslScope,
+    variantScope: VariantScope,
     override val operations: Operations,
     publicVariantConfiguration: com.android.build.api.variant.VariantConfiguration):
-    VariantPropertiesImpl(objects, variantScope, variantConfiguration, operations, publicVariantConfiguration), TestVariantProperties{
+    VariantPropertiesImpl(dslScope, variantScope, operations, publicVariantConfiguration), TestVariantProperties{
 }

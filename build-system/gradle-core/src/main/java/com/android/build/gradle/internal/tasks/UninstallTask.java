@@ -57,7 +57,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws DeviceException, ExecutionException {
         final Logger logger = getLogger();
-        final String applicationId = variant.getApplicationId();
+        final String applicationId = variant.getVariantConfiguration().getApplicationId();
 
         logger.info("Uninstalling app: {}", applicationId);
 

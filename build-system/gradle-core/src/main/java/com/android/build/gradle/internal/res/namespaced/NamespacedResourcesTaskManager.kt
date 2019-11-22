@@ -103,6 +103,7 @@ class NamespacedResourcesTaskManager(
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
        taskFactory.register(
            LinkApplicationAndroidResourcesTask.NamespacedCreationAction(
+               variantScope.variantData.publicVariantPropertiesApi,
                variantScope,
                useAaptToGenerateLegacyMultidexMainDexProguardRules,
                baseName

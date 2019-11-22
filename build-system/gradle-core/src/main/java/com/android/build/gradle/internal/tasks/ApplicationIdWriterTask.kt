@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -25,7 +27,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -66,8 +67,8 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ApplicationIdWriterTask>(variantScope) {
+    internal class CreationAction(private val variantProperties: VariantPropertiesImpl) :
+        VariantTaskCreationAction<ApplicationIdWriterTask>(variantProperties.variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ApplicationId")
@@ -98,9 +99,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                     COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
                 ))
             } else {
-                task.applicationId.set(variantScope.globalScope.project.provider {
-                        variantScope.variantConfiguration.applicationId
-                })
+                task.applicationId.setDisallowChanges(variantProperties.applicationId)
             }
             task.appMetadata.disallowChanges()
             task.applicationId.disallowChanges()

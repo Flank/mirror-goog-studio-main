@@ -795,11 +795,14 @@ public abstract class TaskManager {
             @NonNull VariantScope variantScope) {
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
-                        variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
+                        variantScope.getVariantData().getPublicVariantPropertiesApi(),
+                        !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
     public void createMergeLibManifestsTask(@NonNull VariantScope scope) {
-        taskFactory.register(new ProcessLibraryManifest.CreationAction(scope));
+        taskFactory.register(
+                new ProcessLibraryManifest.CreationAction(
+                        scope.getVariantData().getPublicVariantPropertiesApi(), scope));
     }
 
     protected void createProcessTestManifestTask(
@@ -953,7 +956,9 @@ public abstract class TaskManager {
     public void createBuildConfigTask(@NonNull VariantScope scope) {
         if (scope.getGlobalScope().getBuildFeatures().getBuildConfig()) {
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
-                    taskFactory.register(new GenerateBuildConfig.CreationAction(scope));
+                    taskFactory.register(
+                            new GenerateBuildConfig.CreationAction(
+                                    scope.getVariantData().getPublicVariantPropertiesApi()));
 
             TaskFactoryUtils.dependsOn(
                     scope.getTaskContainer().getSourceGenTask(), generateBuildConfigTask);
@@ -1087,7 +1092,9 @@ public abstract class TaskManager {
 
             // Generate the R class for a library using both local symbols and symbols
             // from dependencies.
-            taskFactory.register(new GenerateLibraryRFileTask.CreationAction(scope, isLibrary()));
+            taskFactory.register(
+                    new GenerateLibraryRFileTask.CreationAction(
+                            scope.getVariantData().getPublicVariantPropertiesApi(), isLibrary()));
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
@@ -1128,7 +1135,7 @@ public abstract class TaskManager {
                     @NonNull String baseName) {
 
         return new LinkApplicationAndroidResourcesTask.CreationAction(
-                scope,
+                scope.getVariantData().getPublicVariantPropertiesApi(),
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                 sourceArtifactType,
                 baseName,
@@ -1362,7 +1369,9 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @Nullable FileCollection config) {
         TaskProvider<GenerateApkDataTask> generateMicroApkTask =
-                taskFactory.register(new GenerateApkDataTask.CreationAction(scope, config));
+                taskFactory.register(
+                        new GenerateApkDataTask.CreationAction(
+                                scope.getVariantData().getPublicVariantPropertiesApi(), config));
 
         // the merge res task will need to run after this one.
         TaskFactoryUtils.dependsOn(

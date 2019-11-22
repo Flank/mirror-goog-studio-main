@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -74,8 +74,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         declaration.save(outputFile.get().asFile)
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ModuleMetadataWriterTask>(variantScope) {
+    internal class CreationAction(private val variantProperties: VariantPropertiesImpl) :
+        VariantTaskCreationAction<ModuleMetadataWriterTask>(variantProperties.variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ModuleMetadata")
@@ -95,16 +95,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
         override fun configure(task: ModuleMetadataWriterTask) {
             super.configure(task)
-
-            // default value of the app ID to publish. This may get overwritten by something
-            // coming from an application module.
-            task.applicationId.set(task.project.provider {
-                variantScope.variantConfiguration.applicationId
-            })
-            task.applicationId.disallowChanges()
-
+            task.applicationId.set(variantProperties.applicationId)
             task.outputScope = variantScope.variantData.outputScope
-
             task.debuggable = variantScope.variantConfiguration.buildType.isDebuggable
         }
     }
