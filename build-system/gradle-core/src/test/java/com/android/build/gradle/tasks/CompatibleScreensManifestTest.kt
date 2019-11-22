@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.DefaultApiVersion
+import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
@@ -58,7 +59,7 @@ class CompatibleScreensManifestTest {
     @Mock internal lateinit var scope: VariantScope
     @Mock private lateinit var outputScope: OutputScope
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
-    @Mock private lateinit var productFlavor: ProductFlavor
+    @Mock private lateinit var productFlavor: DefaultProductFlavor
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer
 

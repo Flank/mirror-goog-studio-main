@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
+import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantOutput
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.api.variant.VariantProperties
@@ -28,8 +29,8 @@ internal open class VariantPropertiesImpl(
     val dslScope: DslScope,
     val variantScope: VariantScope,
     override val operations: Operations,
-    configuration: com.android.build.api.variant.VariantConfiguration
-) : VariantProperties, com.android.build.api.variant.VariantConfiguration by configuration{
+    configuration: VariantConfiguration
+) : VariantProperties, VariantConfiguration by configuration{
 
     private val variantOutputs= mutableListOf<VariantOutput>()
     private val variantConfiguration = variantScope.variantConfiguration

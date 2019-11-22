@@ -24,12 +24,13 @@ import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIX
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
+import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CmakeOptions
-import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
@@ -41,7 +42,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.model.ProductFlavor
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
@@ -204,8 +204,8 @@ open class BasicModuleModelMock {
             Splits::class.java,
             throwUnmocked
         )
-        val coreBuildType = mock(
-            CoreBuildType::class.java,
+        val buildType = mock(
+            BuildType::class.java,
             throwUnmocked
         )
         val productFlavor = mock(
@@ -231,12 +231,12 @@ open class BasicModuleModelMock {
         doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
             .externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
-        doReturn(coreBuildType).`when`(gradleVariantConfiguration).buildType
+        doReturn(buildType).`when`(gradleVariantConfiguration).buildType
         doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(true).`when`(coreBuildType).isDebuggable
+        doReturn(true).`when`(buildType).isDebuggable
         doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder

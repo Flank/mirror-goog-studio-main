@@ -45,8 +45,7 @@ import org.gradle.api.provider.Provider;
  */
 public abstract class AbstractTestDataImpl implements TestData {
 
-    @NonNull
-    private final VariantConfiguration<?, ?, ?> testVariantConfig;
+    @NonNull private final VariantConfiguration testVariantConfig;
 
     @NonNull
     private Map<String, String> extraInstrumentationTestRunnerArgs;
@@ -58,7 +57,7 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Nullable protected final FileCollection testedApksDir;
 
     public AbstractTestDataImpl(
-            @NonNull VariantConfiguration<?, ?, ?> testVariantConfig,
+            @NonNull VariantConfiguration testVariantConfig,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {
         this.testVariantConfig = checkNotNull(testVariantConfig);

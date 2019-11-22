@@ -38,7 +38,7 @@ public class VariantFilter implements com.android.build.api.variant.VariantFilte
 
     private ProductFlavor defaultConfig;
     private BuildType buildType;
-    private List<ProductFlavor> flavors;
+    private List<? extends ProductFlavor> flavors;
     private VariantType type;
     private String name;
 
@@ -50,7 +50,7 @@ public class VariantFilter implements com.android.build.api.variant.VariantFilte
             @NonNull ProductFlavor defaultConfig,
             @NonNull BuildType buildType,
             @NonNull VariantType type,
-            @Nullable List<ProductFlavor> flavors) {
+            @Nullable List<? extends ProductFlavor> flavors) {
         ignore = false;
         this.defaultConfig = defaultConfig;
         this.buildType = buildType;

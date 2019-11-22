@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.variant
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.impl.VariantConfigurationImpl
 import com.android.build.gradle.internal.errors.SyncIssueHandler
-import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 import com.android.utils.appendCapitalized
@@ -171,9 +170,7 @@ class VariantCombinator(
                 val productFlavor = flavor.productFlavor
                 val dim = productFlavor.dimension
                 if (dim == null) {
-                    if (productFlavor is DefaultProductFlavor) {
-                        productFlavor.setDimension(fakeDimension)
-                    }
+                    productFlavor.setDimension(fakeDimension)
                 } else {
                     dimensions.add(dim)
                 }
@@ -191,7 +188,7 @@ class VariantCombinator(
             val dimensionName = flavorDimensionList[0]
             for (flavorData in variantModel.productFlavors.values) {
                 val flavor = flavorData.productFlavor
-                if (flavor.dimension == null && flavor is DefaultProductFlavor) {
+                if (flavor.dimension == null) {
                     flavor.setDimension(dimensionName)
                 }
             }

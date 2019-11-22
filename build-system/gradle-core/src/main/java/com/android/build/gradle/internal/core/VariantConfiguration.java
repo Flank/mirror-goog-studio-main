@@ -22,20 +22,21 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.ManifestAttributeSupplier;
-import com.android.builder.core.MergedFlavor;
 import com.android.builder.core.VariantAttributesProvider;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.rendering.api.ResourceNamespace;
@@ -64,18 +65,14 @@ import java.util.function.Supplier;
 /**
  * A Variant configuration.
  *
- * Variants are made from the combination of:
+ * <p>Variants are made from the combination of:
  *
- * - a build type (base interface BuildType), and its associated sources.
- * - a default configuration (base interface ProductFlavor), and its associated sources.
- * - a optional list of product flavors (base interface ProductFlavor) and their associated sources.
- * - dependencies (both jar and aar).
- *
- * @param <T> the type used for the Build Type.
- * @param <D> the type used for the default config
- * @param <F> the type used for the product flavors.
+ * <p>- a build type (base interface BuildType), and its associated sources. - a default
+ * configuration (base interface ProductFlavor), and its associated sources. - a optional list of
+ * product flavors (base interface ProductFlavor) and their associated sources. - dependencies (both
+ * jar and aar).
  */
-public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, F extends ProductFlavor> {
+public class VariantConfiguration {
 
     /**
      * Full, unique name of the variant in camel case, including BuildType and Flavors (and Test)
@@ -100,19 +97,17 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     private String mDirName;
     private List<String> mDirSegments;
 
-    @NonNull
-    private final D mDefaultConfig;
+    @NonNull private final DefaultConfig mDefaultConfig;
     @NonNull
     private final SourceProvider mDefaultSourceProvider;
 
-    @NonNull
-    private final T mBuildType;
+    @NonNull private final BuildType mBuildType;
     /** SourceProvider for the BuildType. Can be null */
     @Nullable
     private final SourceProvider mBuildTypeSourceProvider;
 
     private final List<String> mFlavorDimensionNames = Lists.newArrayList();
-    private final List<F> mFlavors = Lists.newArrayList();
+    private final List<ProductFlavor> mFlavors = Lists.newArrayList();
     private final List<SourceProvider> mFlavorSourceProviders = Lists.newArrayList();
 
     /** Variant specific source provider, may be null */
@@ -131,10 +126,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      *
      * @see VariantType#isTestComponent()
      */
-    private final VariantConfiguration<T, D, F> mTestedConfig;
+    private final VariantConfiguration mTestedConfig;
 
-    @NonNull
-    private ProductFlavor mMergedFlavor;
+    @NonNull private DefaultProductFlavor mMergedFlavor;
 
     /**
      * Variant-specific build Config fields.
@@ -174,10 +168,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @param signingConfigOverride an optional Signing override to be used for signing.
      */
     public VariantConfiguration(
-            @NonNull D defaultConfig,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
-            @NonNull T buildType,
+            @NonNull BuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable SigningConfig signingConfigOverride,
@@ -209,13 +203,13 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @param signingConfigOverride an optional Signing override to be used for signing.
      */
     public VariantConfiguration(
-            @NonNull D defaultConfig,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
-            @NonNull T buildType,
+            @NonNull BuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
-            @Nullable VariantConfiguration<T, D, F> testedConfig,
+            @Nullable VariantConfiguration testedConfig,
             @Nullable SigningConfig signingConfigOverride,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull BooleanSupplier isInExecutionPhase) {
@@ -286,8 +280,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @return the name of the variant
      */
     @NonNull
-    public static <B extends BuildType> String computeRegularVariantName(
-            @NonNull String flavorName, @NonNull B buildType, @NonNull VariantType type) {
+    public static String computeRegularVariantName(
+            @NonNull String flavorName,
+            @NonNull com.android.builder.model.BuildType buildType,
+            @NonNull VariantType type) {
         StringBuilder sb = new StringBuilder();
 
         if (!flavorName.isEmpty()) {
@@ -344,19 +340,21 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the flavor name for a variant composed of the given flavors, including all
-     * flavor names in camel case (starting with a lower case).
+     * Returns the flavor name for a variant composed of the given flavors, including all flavor
+     * names in camel case (starting with a lower case).
      *
-     * If the flavor list is empty, then an empty string is returned.
+     * <p>If the flavor list is empty, then an empty string is returned.
      *
      * @param flavors the list of flavors
      * @return the flavor name or an empty string.
      */
-    public static <F extends ProductFlavor> String computeFlavorName(@NonNull List<F> flavors) {
+    public static String computeFlavorName(
+            @NonNull List<? extends com.android.builder.model.ProductFlavor> flavors) {
         if (flavors.isEmpty()) {
             return "";
         } else {
-            return StringHelper.combineAsCamelCase(flavors, F::getName);
+            return StringHelper.combineAsCamelCase(
+                    flavors, com.android.builder.model.ProductFlavor::getName);
         }
     }
 
@@ -446,7 +444,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
 
             if (!mFlavors.isEmpty()) {
-                builder.add(StringHelper.combineAsCamelCase(mFlavors, F::getName));
+                builder.add(StringHelper.combineAsCamelCase(mFlavors, ProductFlavor::getName));
             }
 
             builder.add(mBuildType.getName());
@@ -473,7 +471,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         if (!mFlavors.isEmpty()) {
-            for (F flavor : mFlavors) {
+            for (ProductFlavor flavor : mFlavors) {
                 sb.append(flavor.getName());
             }
 
@@ -526,26 +524,27 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /**
      * Add a new configured ProductFlavor.
      *
-     * If multiple flavors are added, the priority follows the order they are added when it
-     * comes to resolving Android resources overlays (ie earlier added flavors supersedes
-     * latter added ones).
+     * <p>If multiple flavors are added, the priority follows the order they are added when it comes
+     * to resolving Android resources overlays (ie earlier added flavors supersedes latter added
+     * ones).
      *
      * @param productFlavor the configured product flavor
      * @param sourceProvider the source provider for the product flavor
      * @param dimensionName the name of the dimension associated with the flavor
-     *
      * @return the config object
      */
     @NonNull
     public VariantConfiguration addProductFlavor(
-            @NonNull F productFlavor,
+            @NonNull ProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider,
             @NonNull String dimensionName) {
 
         mFlavors.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
-        mMergedFlavor = MergedFlavor.mergeFlavors(mDefaultConfig, mFlavors, mIssueReporter);
+        mMergedFlavor =
+                (DefaultProductFlavor)
+                        MergedFlavor.mergeFlavors(mDefaultConfig, mFlavors, mIssueReporter);
         mVariantAttributesProvider.setMergedFlavor(mMergedFlavor);
         // reset computed names to null so it will be recomputed.
         mFlavorName = null;
@@ -592,7 +591,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     @NonNull
-    public D getDefaultConfig() {
+    public DefaultConfig getDefaultConfig() {
         return mDefaultConfig;
     }
 
@@ -602,12 +601,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     @NonNull
-    public ProductFlavor getMergedFlavor() {
+    public DefaultProductFlavor getMergedFlavor() {
         return mMergedFlavor;
     }
 
     @NonNull
-    public T getBuildType() {
+    public BuildType getBuildType() {
         return mBuildType;
     }
 
@@ -623,11 +622,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return !mFlavors.isEmpty();
     }
 
-    /**
-     * Returns the product flavors. Items earlier in the list override later items.
-     */
+    /** Returns the product flavors. Items earlier in the list override later items. */
     @NonNull
-    public List<F> getProductFlavors() {
+    public List<ProductFlavor> getProductFlavors() {
         return mFlavors;
     }
 
@@ -1170,7 +1167,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     public int getRenderscriptTarget() {
-        ProductFlavor mergedFlavor = getMergedFlavor();
+        DefaultProductFlavor mergedFlavor = getMergedFlavor();
 
         int targetApi = mergedFlavor.getRenderscriptTargetApi() != null ?
                 mergedFlavor.getRenderscriptTargetApi() : -1;
@@ -1251,7 +1248,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             fillFieldList(fullList, usedFieldNames, list);
         }
 
-        for (F flavor : mFlavors) {
+        for (ProductFlavor flavor : mFlavors) {
             list = flavor.getBuildConfigFields().values();
             if (!list.isEmpty()) {
                 fullList.add("Fields from product flavor: " + flavor.getName());
@@ -1369,7 +1366,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             fillFieldList(fullList, usedFieldNames, list);
         }
 
-        for (F flavor : mFlavors) {
+        for (ProductFlavor flavor : mFlavors) {
             list = flavor.getResValues().values();
             if (!list.isEmpty()) {
                 fullList.add("Values from product flavor: " + flavor.getName());

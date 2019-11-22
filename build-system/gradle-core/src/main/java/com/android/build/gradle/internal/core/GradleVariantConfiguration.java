@@ -23,10 +23,13 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -57,8 +60,7 @@ import java.util.function.Function;
  *
  * <p>It also adds support for Ndk support that is not ready to go in the builder library.
  */
-public class GradleVariantConfiguration
-        extends VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> {
+public class GradleVariantConfiguration extends VariantConfiguration {
 
     @NonNull private final ProjectOptions projectOptions;
     @NonNull
@@ -73,13 +75,11 @@ public class GradleVariantConfiguration
     @VisibleForTesting
     GradleVariantConfiguration(
             @NonNull ProjectOptions projectOptions,
-            @Nullable
-                    VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
-                            testedConfig,
-            @NonNull CoreProductFlavor defaultConfig,
+            @Nullable VariantConfiguration testedConfig,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
-            @NonNull CoreBuildType buildType,
+            @NonNull BuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable SigningConfig signingConfigOverride,
@@ -152,10 +152,10 @@ public class GradleVariantConfiguration
         @NonNull
         GradleVariantConfiguration create(
                 @NonNull ProjectOptions projectOptions,
-                @NonNull CoreProductFlavor defaultConfig,
+                @NonNull DefaultConfig defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
                 @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
-                @NonNull CoreBuildType buildType,
+                @NonNull BuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
                 @Nullable SigningConfig signingConfigOverride,
@@ -164,15 +164,15 @@ public class GradleVariantConfiguration
     }
 
     /** Builder for non-testing variant configurations */
-    private static class VariantConfigurationBuilder implements Builder{
+    private static class VariantConfigurationBuilder implements Builder {
         @Override
         @NonNull
         public GradleVariantConfiguration create(
                 @NonNull ProjectOptions projectOptions,
-                @NonNull CoreProductFlavor defaultConfig,
+                @NonNull DefaultConfig defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
                 @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
-                @NonNull CoreBuildType buildType,
+                @NonNull BuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
                 @Nullable SigningConfig signingConfigOverride,
@@ -207,10 +207,10 @@ public class GradleVariantConfiguration
         @Override
         public GradleVariantConfiguration create(
                 @NonNull ProjectOptions projectOptions,
-                @NonNull CoreProductFlavor defaultConfig,
+                @NonNull DefaultConfig defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
                 @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
-                @NonNull CoreBuildType buildType,
+                @NonNull BuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
                 @Nullable SigningConfig signingConfigOverride,
@@ -305,7 +305,7 @@ public class GradleVariantConfiguration
     @NonNull
     @Override
     public VariantConfiguration addProductFlavor(
-            @NonNull CoreProductFlavor productFlavor,
+            @NonNull ProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider,
             @NonNull String dimensionName) {
         checkNotNull(productFlavor);
@@ -369,7 +369,7 @@ public class GradleVariantConfiguration
         }
 
         // reverse loop for proper order
-        final List<CoreProductFlavor> flavors = getProductFlavors();
+        final List<ProductFlavor> flavors = getProductFlavors();
         for (int i = flavors.size() - 1 ; i >= 0 ; i--) {
             CoreOptionT flavorOption = productFlavorOptionGetter.apply(flavors.get(i));
             if (flavorOption != null) {
@@ -403,7 +403,7 @@ public class GradleVariantConfiguration
 
         // cant use merge flavor as it's not a prop on the base class.
         // reverse loop for proper order
-        List<CoreProductFlavor> flavors = getProductFlavors();
+        List<ProductFlavor> flavors = getProductFlavors();
         for (int i = flavors.size() - 1; i >= 0; i--) {
             for (String option : flavors.get(i).getShaders().getGlslcArgs()) {
                 optionMap.put(getKey(option), option);
@@ -445,7 +445,7 @@ public class GradleVariantConfiguration
             // 2. the flavors.
             // cant use merge flavor as it's not a prop on the base class.
             // reverse loop for proper order
-            List<CoreProductFlavor> flavors = getProductFlavors();
+            List<ProductFlavor> flavors = getProductFlavors();
             for (int i = flavors.size() - 1; i >= 0; i--) {
                 // global
                 for (String option : flavors.get(i).getShaders().getGlslcArgs()) {

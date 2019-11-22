@@ -27,8 +27,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -545,8 +543,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.configure(task);
             Project project = task.getProject();
 
-            final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
-                    getVariantScope().getVariantConfiguration();
+            final VariantConfiguration config = getVariantScope().getVariantConfiguration();
 
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a

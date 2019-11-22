@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
-import com.android.build.gradle.internal.dsl.CoreProductFlavor
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.builder.model.SigningConfig
 
 /**
@@ -26,11 +27,11 @@ import com.android.builder.model.SigningConfig
  */
 interface VariantModel {
 
-    val defaultConfig: ProductFlavorData<out CoreProductFlavor>
+    val defaultConfig: ProductFlavorData<DefaultConfig>
 
     val buildTypes: Map<String, BuildTypeData>
 
-    val productFlavors: Map<String, ProductFlavorData<out CoreProductFlavor>>
+    val productFlavors: Map<String, ProductFlavorData<ProductFlavor>>
 
     val signingConfigs: Map<String, SigningConfig>
 }

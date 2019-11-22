@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.scope.VariantScope
@@ -166,7 +167,7 @@ class FilteredVariantOperationTest {
         Mockito.`when`(variantData.publicVariantApi).thenReturn(publicVariantApi)
         Mockito.`when`(publicVariantApi.name).thenReturn(name)
         if (buildTypeName != null) {
-            val buildType = Mockito.mock(CoreBuildType::class.java)
+            val buildType = Mockito.mock(BuildType::class.java)
             Mockito.`when`(variantConfiguration.buildType).thenReturn(buildType)
             Mockito.`when`(buildType.name).thenReturn(buildTypeName)
         }

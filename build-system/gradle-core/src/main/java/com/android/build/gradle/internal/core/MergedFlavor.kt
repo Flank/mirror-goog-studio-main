@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.builder.core
+package com.android.build.gradle.internal.core
 
+import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
@@ -59,7 +60,7 @@ class MergedFlavor(
         fun mergeFlavors(
                 lowestPriority: ProductFlavor,
                 flavors: List<ProductFlavor>,
-                issueReporter: EvalIssueReporter): ProductFlavor {
+                issueReporter: EvalIssueReporter): DefaultProductFlavor {
             val mergedFlavor = MergedFlavor.clone(lowestPriority, issueReporter)
             for (flavor in Lists.reverse(flavors)) {
                 mergedFlavor.mergeWithHigherPriorityFlavor(flavor)

@@ -20,11 +20,11 @@ import static com.android.build.gradle.options.IntegerOption.IDE_TARGET_DEVICE_A
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.VectorDrawablesOptions;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.core.DefaultVectorDrawablesOptions;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.FakeEvalIssueReporter;
 import com.google.common.collect.ImmutableMap;
@@ -36,18 +36,17 @@ import org.mockito.MockitoAnnotations;
 /** Test cases for {@link GradleVariantConfiguration}. */
 public class GradleVariantConfigurationTest {
 
-    @Mock CoreBuildType buildType;
-    @Mock CoreProductFlavor coreProductFlavor;
+    @Mock BuildType buildType;
+    @Mock DefaultConfig defaultConfig;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        when(coreProductFlavor.getName()).thenReturn("mockCoreProductFlavor");
-        when(coreProductFlavor.getVectorDrawables())
-                .thenReturn(new DefaultVectorDrawablesOptions());
-        when(coreProductFlavor.getMinSdkVersion()).thenReturn(new DefaultApiVersion(16));
-        when(coreProductFlavor.getTargetSdkVersion()).thenReturn(new DefaultApiVersion(20));
+        when(defaultConfig.getName()).thenReturn("mockCoreProductFlavor");
+        when(defaultConfig.getVectorDrawables()).thenReturn(new VectorDrawablesOptions());
+        when(defaultConfig.getMinSdkVersion()).thenReturn(new DefaultApiVersion(16));
+        when(defaultConfig.getTargetSdkVersion()).thenReturn(new DefaultApiVersion(20));
     }
 
     @Test
@@ -99,7 +98,7 @@ public class GradleVariantConfigurationTest {
                 new ProjectOptions(
                         ImmutableMap.of(IDE_TARGET_DEVICE_API.getPropertyName(), deviceApiVersion)),
                 null,
-                coreProductFlavor,
+                defaultConfig,
                 new MockSourceProvider("src/main"),
                 null,
                 buildType,

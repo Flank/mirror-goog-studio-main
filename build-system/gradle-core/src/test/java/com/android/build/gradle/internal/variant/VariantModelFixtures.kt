@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
+import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.builder.errors.FakeEvalIssueReporter
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Project
@@ -59,15 +61,7 @@ class VariantModelBuilder {
 
     fun toModel() : VariantModel {
         val project = Mockito.mock(Project::class.java)
-        val dslScope: DslScope = DslScopeImpl(
-            FakeEvalIssueReporter(),
-            FakeDeprecationReporter(),
-            FakeObjectFactory(),
-            FakeLogger(),
-            FakeBuildFeatureValues(),
-            FakeProviderFactory()
-        )
-
+        val dslScope: DslScope = createFakeDslScope()
 
         val buildTypes = buildTypeBuilder.types.map {
             val btData = Mockito.mock(BuildTypeData::class.java)
@@ -95,8 +89,8 @@ class VariantModelBuilder {
         }.associateBy { it.productFlavor.name }
 
         @Suppress("UNCHECKED_CAST")
-        val defaultConfig: ProductFlavorData<ProductFlavor> =
-            Mockito.mock(ProductFlavorData::class.java) as ProductFlavorData<ProductFlavor>
+        val defaultConfig: ProductFlavorData<DefaultConfig> =
+            Mockito.mock(ProductFlavorData::class.java) as ProductFlavorData<DefaultConfig>
 
         return FakeVariantModel(
             defaultConfig,
@@ -129,7 +123,7 @@ class FlavorContentBuilder {
 }
 
 class FakeVariantModel(
-    override val defaultConfig: ProductFlavorData<ProductFlavor>,
+    override val defaultConfig: ProductFlavorData<DefaultConfig>,
     override val buildTypes: Map<String, BuildTypeData>,
     override val productFlavors: Map<String, ProductFlavorData<ProductFlavor>>,
     override val signingConfigs: Map<String, SigningConfig>

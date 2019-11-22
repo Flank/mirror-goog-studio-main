@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.builder.core
+package com.android.build.gradle.internal.core
 
+import com.android.builder.core.DefaultApiVersion
+import com.android.builder.core.DefaultProductFlavor
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.internal.CopyOfTester
@@ -37,7 +39,8 @@ class MergedFlavorTest {
     @Before
     fun setUp() {
         defaultFlavor = DefaultProductFlavor("default")
-        defaultFlavor2 = DefaultProductFlavor("default2")
+        defaultFlavor2 =
+            DefaultProductFlavor("default2")
 
         custom = DefaultProductFlavor("custom")
         custom.minSdkVersion = DefaultApiVersion(42)
@@ -189,7 +192,11 @@ class MergedFlavorTest {
         val flavor =
                 MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), issueReporter)
 
-        assertThat(flavor.minSdkVersion).isEqualTo(DefaultApiVersion(102))
+        assertThat(flavor.minSdkVersion).isEqualTo(
+            DefaultApiVersion(
+                102
+            )
+        )
         assertThat(flavor.versionNameSuffix).isEqualTo("customcustom3custom2")
         assertThat(flavor.applicationIdSuffix).isEqualTo("custom.custom3.custom2")
     }
@@ -201,7 +208,11 @@ class MergedFlavorTest {
 
         val flavor =
                 MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), issueReporter)
-        assertThat(flavor.minSdkVersion).isEqualTo(DefaultApiVersion(102))
+        assertThat(flavor.minSdkVersion).isEqualTo(
+            DefaultApiVersion(
+                102
+            )
+        )
         assertThat(flavor.applicationId).isEqualTo("com.custom2.app")
         assertThat(flavor.versionNameSuffix).isEqualTo("customcustom2")
         assertThat(flavor.applicationIdSuffix).isEqualTo("custom.custom2")

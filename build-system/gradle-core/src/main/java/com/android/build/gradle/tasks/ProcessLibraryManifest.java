@@ -22,8 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -418,8 +416,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
-            VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
-                    getVariantScope().getVariantConfiguration();
+            VariantConfiguration config = getVariantScope().getVariantConfiguration();
 
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 

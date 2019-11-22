@@ -18,18 +18,16 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.TaskProvider;
+import com.android.build.gradle.internal.dsl.BuildType;
 
 /**
  * Class containing a BuildType and associated data (Sourceset for instance).
  */
 public class BuildTypeData extends VariantDimensionData {
-    @NonNull private final CoreBuildType buildType;
+    @NonNull private final BuildType buildType;
 
     BuildTypeData(
-            @NonNull CoreBuildType buildType,
+            @NonNull BuildType buildType,
             @NonNull DefaultAndroidSourceSet sourceSet,
             @Nullable DefaultAndroidSourceSet androidTestSourceSet,
             @Nullable DefaultAndroidSourceSet unitTestSourceSet) {
@@ -39,7 +37,7 @@ public class BuildTypeData extends VariantDimensionData {
     }
 
     @NonNull
-    public CoreBuildType getBuildType() {
+    public BuildType getBuildType() {
         return buildType;
     }
 }
