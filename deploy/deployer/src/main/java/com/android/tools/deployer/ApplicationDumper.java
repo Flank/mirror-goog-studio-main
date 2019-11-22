@@ -144,21 +144,27 @@ public class ApplicationDumper {
     }
 
     private static Deploy.Arch GetArch(Deploy.DumpResponse response) throws DeployerException {
-        List<Deploy.PackageDump> packages = response.getPackagesList();
-        Deploy.Arch arch = packages.get(0).getArch();
-        for (int i = 1; i < packages.size(); i++) {
-            if (!arch.equals(packages.get(i).getArch())) {
+        Deploy.Arch result = Deploy.Arch.ARCH_UNKNOWN;
+        String lastPackageWithKnowArch = null;
+        for (Deploy.PackageDump pkg : response.getPackagesList()) {
+            Deploy.Arch arch = pkg.getArch();
+            if (arch.equals(Deploy.Arch.ARCH_UNKNOWN)) {
+                continue;
+            } else if (!result.equals(Deploy.Arch.ARCH_UNKNOWN) && !result.equals(arch)) {
                 throw DeployerException.dumpMixedArch(
-                        packages.get(0).getName()
+                        lastPackageWithKnowArch
+                                + " is "
+                                + result
+                                + " while "
+                                + pkg.getName()
                                 + " is "
                                 + arch
-                                + " while "
-                                + packages.get(i).getName()
-                                + " is "
-                                + packages.get(i).getArch()
                                 + ".");
+            } else {
+                result = arch;
+                lastPackageWithKnowArch = pkg.getName();
             }
         }
-        return arch;
+        return result;
     }
 }

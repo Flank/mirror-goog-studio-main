@@ -17,6 +17,8 @@ package com.android.tools.deployer;
 
 import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
@@ -130,12 +132,14 @@ public class ApplicationDumperTest {
                                 Deploy.PackageDump.newBuilder()
                                         .setName("target")
                                         .addProcesses(1)
-                                        .addProcesses(2))
+                                        .addProcesses(2)
+                                        .setArch(Deploy.Arch.ARCH_64_BIT))
                         .addPackages(
                                 Deploy.PackageDump.newBuilder()
                                         .setName("instrument")
                                         .addProcesses(3)
-                                        .addProcesses(4))
+                                        .addProcesses(4)
+                                        .setArch(Deploy.Arch.ARCH_UNKNOWN))
                         .build();
 
         Installer installer = Mockito.mock(Installer.class);
@@ -152,5 +156,43 @@ public class ApplicationDumperTest {
                 new ApplicationDumper(installer).dump(ImmutableList.of(dumpApk)).packagePids;
         assertEquals(ImmutableList.of(1, 2), pids.get("target"));
         assertEquals(ImmutableList.of(3, 4), pids.get("instrument"));
+    }
+
+    @Test
+    public void testMixedArch() throws Exception {
+        Deploy.DumpResponse response =
+                Deploy.DumpResponse.newBuilder()
+                        .addPackages(
+                                Deploy.PackageDump.newBuilder()
+                                        .setName("target")
+                                        .addProcesses(1)
+                                        .addProcesses(2)
+                                        .setArch(Deploy.Arch.ARCH_64_BIT))
+                        .addPackages(
+                                Deploy.PackageDump.newBuilder()
+                                        .setName("instrument")
+                                        .addProcesses(3)
+                                        .addProcesses(4)
+                                        .setArch(Deploy.Arch.ARCH_32_BIT))
+                        .build();
+
+        Installer installer = Mockito.mock(Installer.class);
+        Mockito.when(installer.dump(ImmutableList.of("instrument", "target"))).thenReturn(response);
+
+        Apk dumpApk =
+                Apk.builder()
+                        .setPackageName("instrument")
+                        .setTargetPackages(ImmutableList.of("target"))
+                        .addApkEntry("", 0)
+                        .build();
+
+        try {
+            new ApplicationDumper(installer).dump(ImmutableList.of(dumpApk));
+            fail("DeployerException should have been thrown.");
+        } catch (DeployerException e) {
+            assertTrue(
+                    e.getMessage()
+                            .contains("Application with process in both 32 and 64 bit mode."));
+        }
     }
 }
