@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 
@@ -28,6 +29,9 @@ class BuildFeatureValuesImpl(
     // add new flags here with computation:
     // dslFeatures.flagX ?: projectOptions[BooleanOption.FlagX]
 
+    // ------------------
+    // Common flags
+
     override val aidl: Boolean
         get() = dslBuildFeatures.aidl ?: projectOptions[BooleanOption.BUILD_FEATURE_AIDL]
 
@@ -36,9 +40,6 @@ class BuildFeatureValuesImpl(
 
     override val buildConfig: Boolean
         get() = dslBuildFeatures.buildConfig ?: projectOptions[BooleanOption.BUILD_FEATURE_BUILDCONFIG]
-
-    override val buildType: Boolean
-        get() = true
 
     override val dataBinding: Boolean
         get() = dslBuildFeatures.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
@@ -54,4 +55,19 @@ class BuildFeatureValuesImpl(
 
     override val viewBinding: Boolean
         get() = dslBuildFeatures.viewBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_VIEWBINDING]
+
+    // ------------------
+    // Application flags
+
+    // ------------------
+    // Dynamic-Feature flags
+
+    // ------------------
+    // Library flags
+
+    override val buildType: Boolean
+        get() = true
+
+    // ------------------
+    // Test flags
 }

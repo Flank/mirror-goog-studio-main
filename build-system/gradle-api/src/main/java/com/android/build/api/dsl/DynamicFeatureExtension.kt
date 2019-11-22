@@ -33,6 +33,7 @@ interface DynamicFeatureExtension<
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig> :
     CommonExtension<
+            DynamicFeatureBuildFeatures,
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,

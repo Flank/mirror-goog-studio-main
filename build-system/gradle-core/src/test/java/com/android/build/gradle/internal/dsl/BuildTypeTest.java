@@ -50,7 +50,7 @@ public class BuildTypeTest {
             FakeDslScope.createFakeDslScope(
                     new NoOpIssueReporter(),
                     new NoOpDeprecationReporter(),
-                    new FakeObjectFactory(),
+                    FakeObjectFactory.getFactory(),
                     new FakeLogger(),
                     new FakeBuildFeatureValues(),
                     new FakeProviderFactory());

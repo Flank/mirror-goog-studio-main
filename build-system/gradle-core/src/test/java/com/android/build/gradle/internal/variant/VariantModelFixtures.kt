@@ -23,14 +23,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
-import com.android.build.gradle.internal.fixtures.FakeLogger
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.fixtures.FakeProviderFactory
-import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.build.gradle.internal.variant2.createFakeDslScope
-import com.android.builder.errors.FakeEvalIssueReporter
 import org.gradle.api.Project
 import org.mockito.Mockito
 

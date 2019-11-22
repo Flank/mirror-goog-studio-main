@@ -18,6 +18,7 @@ package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
@@ -33,6 +34,7 @@ interface LibraryExtension<
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig>
     : CommonExtension<
+        LibraryBuildFeatures,
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,

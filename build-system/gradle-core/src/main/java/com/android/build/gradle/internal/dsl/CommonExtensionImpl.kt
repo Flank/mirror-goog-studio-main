@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.variant.Variant
@@ -28,6 +29,7 @@ import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
+        BuildFeaturesT: BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT: DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
@@ -39,12 +41,21 @@ abstract class CommonExtensionImpl<
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
     override val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
 ) : CommonExtension<
+        BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,
         SigningConfigT,
         VariantT,
         VariantPropertiesT> {
+
+    fun buildFeatures(action: Action<BuildFeaturesT>) {
+        action.execute(buildFeatures)
+    }
+
+    override fun buildFeatures(action: BuildFeaturesT.() -> Unit) {
+        action(buildFeatures)
+    }
 
     protected val variantOperations =
         VariantOperations<VariantT>(VariantScopeTransformers.toVariant)

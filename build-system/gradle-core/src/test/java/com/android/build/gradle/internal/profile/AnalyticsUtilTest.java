@@ -68,7 +68,7 @@ public class AnalyticsUtilTest {
 
     @Test
     public void splitConverterTest() {
-        Splits splits = new Splits(new FakeObjectFactory());
+        Splits splits = new Splits(FakeObjectFactory.getFactory());
         // Defaults
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);

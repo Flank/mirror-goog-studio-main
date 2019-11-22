@@ -151,31 +151,13 @@ abstract class BaseExtension protected constructor(
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
     private val transformList: MutableList<Transform> = Lists.newArrayList()
 
-
-    val buildFeatures: BuildFeatures =
-        objectFactory.newInstance(BuildFeaturesImpl::class.java)
-
     @Incubating
     @get:Incubating
     val composeOptions: ComposeOptions =
         objectFactory.newInstance(ComposeOptionsImpl::class.java)
 
-    override val dataBinding: DataBindingOptions =
-        objectFactory.newInstance(
-            DataBindingOptions::class.java,
-            buildFeatures,
-            projectOptions,
-            globalScope.dslScope
-        )
-
-    val viewBinding: ViewBindingOptions =
-        objectFactory.newInstance(
-            ViewBindingOptionsImpl::class.java,
-            buildFeatures,
-            projectOptions,
-            globalScope.dslScope
-        )
-
+    abstract override val dataBinding: DataBindingOptions
+    abstract val viewBinding: ViewBindingOptions
 
     final override var buildToolsRevision: Revision =
         ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
@@ -715,10 +697,6 @@ abstract class BaseExtension protected constructor(
     // For compatibility with FeatureExtension.
     override val baseFeature: Boolean
         get() = isBaseModule
-
-    fun buildFeatures(action: Action<BuildFeatures>) {
-        action.execute(buildFeatures)
-    }
 
     @Incubating
     fun composeOptions(action: Action<ComposeOptions>) {

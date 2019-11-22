@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fixtures
+package com.android.build.api.dsl
 
-import org.gradle.api.model.ObjectFactory
-import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.api.Incubating
 
 /**
- * a fake [ObjectFactory] to use in tests.
- *
+ * A list of build features that can be disabled or enabled in an Android Test project.
  */
-class FakeObjectFactory  {
-    companion object {
-        @JvmStatic
-        fun getFactory() : ObjectFactory {
-            return ProjectBuilder.builder().build().objects
-        }
-    }
+@Incubating
+interface TestBuildFeatures : BuildFeatures {
 }

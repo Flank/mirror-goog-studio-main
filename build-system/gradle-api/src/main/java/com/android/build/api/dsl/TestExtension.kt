@@ -33,6 +33,7 @@ interface TestExtension<
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig> :
     CommonExtension<
+            TestBuildFeatures,
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,

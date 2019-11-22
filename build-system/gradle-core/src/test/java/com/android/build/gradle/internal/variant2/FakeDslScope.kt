@@ -35,7 +35,7 @@ import org.gradle.api.provider.ProviderFactory
 fun createFakeDslScope(
     issueReporter: EvalIssueReporter = FakeEvalIssueReporter(),
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
-    objectFactory : ObjectFactory = FakeObjectFactory(),
+    objectFactory : ObjectFactory = FakeObjectFactory.getFactory(),
     logger: Logger = FakeLogger(),
     buildFeatures: BuildFeatureValues = FakeBuildFeatureValues(),
     providerFactory: ProviderFactory = FakeProviderFactory(),

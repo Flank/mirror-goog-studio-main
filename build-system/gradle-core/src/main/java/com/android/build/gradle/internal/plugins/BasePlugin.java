@@ -22,6 +22,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
@@ -446,7 +447,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         // link the extension buildFeature to the BuildFeatureValues in DslScope
         ((BuildFeatureValuesImpl) globalScope.getDslScope().getBuildFeatures())
-                .setDslBuildFeatures(extension.getBuildFeatures());
+                .setDslBuildFeatures(((CommonExtension) extension).getBuildFeatures());
 
         globalScope.setExtension(extension);
 

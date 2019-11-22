@@ -1,19 +1,24 @@
 package com.android.build.gradle
 
+import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
+import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
+import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -27,7 +32,7 @@ open class TestExtension(
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
-    publicExtensionImpl: TestExtensionImpl
+    private val publicExtensionImpl: TestExtensionImpl
 ) : BaseExtension(
     project,
     projectOptions,
@@ -48,6 +53,29 @@ open class TestExtension(
         project.objects.domainObjectSet(ApplicationVariant::class.java)
 
     private var _targetProjectPath: String? = null
+
+    override val dataBinding: DataBindingOptions =
+        project.objects.newInstance(
+            DataBindingOptions::class.java,
+            publicExtensionImpl.buildFeatures,
+            projectOptions,
+            globalScope.dslScope
+        )
+
+    override val viewBinding: ViewBindingOptions =
+        project.objects.newInstance(
+            ViewBindingOptionsImpl::class.java,
+            publicExtensionImpl.buildFeatures,
+            projectOptions,
+            globalScope.dslScope
+        )
+
+    // this is needed because the impl class needs this but the interface does not,
+    // so CommonExtension does not define it, which means, that even though it's part of
+    // TestExtensionImpl, the implementation by delegate does not bring it.
+    fun buildFeatures(action: Action<TestBuildFeatures>) {
+        publicExtensionImpl.buildFeatures(action)
+    }
 
     /**
      * The list of Application variants. Since the collections is built after evaluation, it

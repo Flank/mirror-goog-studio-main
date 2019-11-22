@@ -18,9 +18,6 @@ package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.model.AndroidProject
-import com.android.build.gradle.options.Option.Status.EXPERIMENTAL
-import com.android.build.gradle.options.Option.Status.STABLE
-import com.android.build.gradle.options.Option.Status.REMOVED
 
 enum class BooleanOption(
     override val propertyName: String,

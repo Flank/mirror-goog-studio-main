@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.TestVariant
@@ -34,6 +35,7 @@ class TestExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
+            TestBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
@@ -52,6 +54,10 @@ class TestExtensionImpl(
             ProductFlavor,
             SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
+
+    override val buildFeatures: TestBuildFeatures =
+        dslScope.objectFactory.newInstance(TestBuildFeaturesImpl::class.java)
+
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<TestVariant>(variantScopes)
     }

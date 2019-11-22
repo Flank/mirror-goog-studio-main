@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.LibraryVariant
@@ -34,6 +35,7 @@ class LibraryExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
+            LibraryBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
@@ -48,6 +50,10 @@ class LibraryExtensionImpl(
     ),
     LibraryExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
+
+    override val buildFeatures: LibraryBuildFeatures =
+        dslScope.objectFactory.newInstance(LibraryBuildFeaturesImpl::class.java)
+
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<LibraryVariant>(variantScopes)
     }

@@ -17,12 +17,15 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
+import org.gradle.api.plugins.ExtensionAware
 
 /**
- * The list of build features that can be disabled or enabled in an Android project.
+ * A list of build features that can be disabled or enabled in an Android project.
+ *
+ * This list applies to all plugin types.
  */
 @Incubating
-interface BuildFeatures {
+interface BuildFeatures : ExtensionAware {
     /**
      * Flag to enable AIDL compilation.
      *

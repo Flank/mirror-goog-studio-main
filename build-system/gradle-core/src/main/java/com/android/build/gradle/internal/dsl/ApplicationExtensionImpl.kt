@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.AppVariant
 import com.android.build.api.variant.AppVariantProperties
@@ -34,6 +35,7 @@ class ApplicationExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
+            ApplicationBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
@@ -52,6 +54,10 @@ class ApplicationExtensionImpl(
             ProductFlavor,
             SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
+
+    override val buildFeatures: ApplicationBuildFeatures =
+        dslScope.objectFactory.newInstance(ApplicationBuildFeaturesImpl::class.java)
+
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<AppVariant>(variantScopes)
     }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5e8536616f18e3cb9acbbc0610d2f1216ea9e0411e5c8726d79ba631db19474f
+1e18337a242eefe3d7bf9367118f3a46ec0dfafebc29e42881978d60191be844
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -53,8 +53,9 @@ com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.dsl.ApkExtension
+com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
-com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildFeatures.getAidl: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getCompose: java.lang.Boolean ()
@@ -73,10 +74,12 @@ com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named
 com.android.build.api.dsl.CommonExtension
+com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
 com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (int)
 com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (org.gradle.api.Action<DefaultConfigT>)
+com.android.build.api.dsl.CommonExtension.getBuildFeatures: BuildFeaturesT ()
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
@@ -92,10 +95,13 @@ com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.A
 com.android.build.api.dsl.CommonExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
 com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
+com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
@@ -33,6 +34,7 @@ class DynamicFeatureExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 )  :
     CommonExtensionImpl<
+            DynamicFeatureBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
@@ -48,6 +50,10 @@ class DynamicFeatureExtensionImpl(
 
     DynamicFeatureExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
+
+    override val buildFeatures: DynamicFeatureBuildFeatures =
+        dslScope.objectFactory.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
+
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<DynamicFeatureVariant>(variantScopes)
     }
