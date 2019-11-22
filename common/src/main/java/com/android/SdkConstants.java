@@ -1238,6 +1238,7 @@ public final class SdkConstants {
     public static final String TAG_LAYER_LIST = "layer-list"; //$NON-NLS-1$
     public static final String TAG_PATH = "path";
     public static final String TAG_RIPPLE = "ripple";
+    public static final String TAG_ROTATE = "rotate";
     public static final String TAG_SHAPE = "shape";
     public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
     public static final String TAG_TRANSITION = "transition"; //$NON-NLS-1$
