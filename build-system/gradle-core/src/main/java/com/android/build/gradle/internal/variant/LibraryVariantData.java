@@ -120,8 +120,6 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     @Override
     VariantPropertiesImpl instantiatePublicVariantPropertiesObject(
             VariantConfiguration publicVariantConfiguration) {
-        com.android.build.gradle.internal.core.VariantConfiguration variantConfiguration =
-                super.getVariantConfiguration();
         return scope.getGlobalScope()
                 .getProject()
                 .getObjects()

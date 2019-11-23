@@ -18,8 +18,8 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantOutput
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.api.variant.VariantProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption

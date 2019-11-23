@@ -29,10 +29,8 @@ import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.ProductFlavor
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.base.Joiner
@@ -84,7 +82,7 @@ class CompatibleScreensManifestTest {
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
         `when`<ApiVersion>(mergedFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
-        `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
+        `when`<MergedFlavor>(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
         `when`(variantConfiguration.fullName).thenReturn("fullName")
         `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)

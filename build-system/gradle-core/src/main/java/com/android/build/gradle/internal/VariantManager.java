@@ -37,6 +37,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
+import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -46,7 +47,6 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.MergedFlavor;
-import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
 import com.android.build.gradle.internal.dependency.AarToClassTransform;
@@ -1035,8 +1035,7 @@ public class VariantManager implements VariantModel {
                         variantFactory.getVariantType(),
                         flavorDimensionList);
 
-        List<com.android.build.api.variant.VariantConfiguration> variants =
-                computer.computeVariants();
+        List<VariantConfiguration> variants = computer.computeVariants();
 
         configureDependencies();
 
@@ -1044,7 +1043,7 @@ public class VariantManager implements VariantModel {
         BuildTypeData testBuildTypeData = getTestBuildTypeData();
 
         // loop on all the new variant objects to create the legacy ones.
-        for (com.android.build.api.variant.VariantConfiguration variant : variants) {
+        for (VariantConfiguration variant : variants) {
             createVariantDataForProductFlavors(variant, testBuildTypeData);
         }
 
@@ -1083,7 +1082,8 @@ public class VariantManager implements VariantModel {
                                 sourceSet,
                                 getParser(
                                         sourceSet.getManifestFile(),
-                                        VariantConfiguration.isManifestFileRequired(variantType)),
+                                        GradleVariantConfiguration.isManifestFileRequired(
+                                                variantType)),
                                 buildTypeData.getBuildType(),
                                 buildTypeData.getSourceSet(),
                                 variantType,
@@ -1265,7 +1265,7 @@ public class VariantManager implements VariantModel {
                         testSourceSet != null
                                 ? getParser(
                                         testSourceSet.getManifestFile(),
-                                        VariantConfiguration.isManifestFileRequired(type))
+                                        GradleVariantConfiguration.isManifestFileRequired(type))
                                 : null,
                         buildTypeData.getTestSourceSet(type),
                         type,
@@ -1303,11 +1303,9 @@ public class VariantManager implements VariantModel {
         return testVariantData;
     }
 
-    /**
-     * Creates VariantData for a specific {@link com.android.build.api.variant.VariantConfiguration}
-     */
+    /** Creates VariantData for a specific {@link VariantConfiguration} */
     private void createVariantDataForProductFlavors(
-            @NonNull com.android.build.api.variant.VariantConfiguration variantConfiguration,
+            @NonNull VariantConfiguration variantConfiguration,
             @Nullable BuildTypeData testBuildTypeData) {
         VariantType variantType = variantFactory.getVariantType();
 

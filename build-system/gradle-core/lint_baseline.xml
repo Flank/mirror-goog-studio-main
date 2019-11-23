@@ -90,22 +90,6 @@
     </issue>
 
     <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(1)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantConfiguration.java"
-            line="850"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(-1)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantConfiguration.java"
-            line="877"/>
-    </issue>
-
-    <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location

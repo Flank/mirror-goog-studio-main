@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.VariantConfiguration;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -45,7 +45,7 @@ import org.gradle.api.provider.Provider;
  */
 public abstract class AbstractTestDataImpl implements TestData {
 
-    @NonNull private final VariantConfiguration testVariantConfig;
+    @NonNull private final GradleVariantConfiguration testVariantConfig;
 
     @NonNull
     private Map<String, String> extraInstrumentationTestRunnerArgs;
@@ -57,7 +57,7 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Nullable protected final FileCollection testedApksDir;
 
     public AbstractTestDataImpl(
-            @NonNull VariantConfiguration testVariantConfig,
+            @NonNull GradleVariantConfiguration testVariantConfig,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {
         this.testVariantConfig = checkNotNull(testVariantConfig);
