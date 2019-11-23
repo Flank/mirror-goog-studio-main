@@ -25,8 +25,10 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
         --define=meta_android_build_number=${build_number} \
         --profile=${dist_dir}/mac-profile-${build_number}.json.gz \
         -- \
-	//tools/base/... \
-	-//tools/base/build-system/...
+        //tools/... \
+        -//tools/base/build-system/integration-test/... \
+        -//tools/adt/idea/android-lang:intellij.android.lang.tests_tests \
+        -//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests
 
 readonly bazel_status=$?
 
