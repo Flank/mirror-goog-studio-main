@@ -218,7 +218,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task
                 .sourceDirs
-                .set(project.provider(variantConfiguration::getAidlSourceList))
+                .set(project.provider { variantConfiguration.aidlSourceList })
             task.sourceDirs.disallowChanges()
 
             // This is because aidl may be in the same folder as Java and we want to restrict to

@@ -22,10 +22,9 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 
-/**
- * Implementation of CoreExternalNativeBuildOptions used to merge multiple configs together.
- */
-public class MergedExternalNativeBuildOptions implements CoreExternalNativeBuildOptions {
+/** Implementation of CoreExternalNativeBuildOptions used to merge multiple configs together. */
+public class MergedExternalNativeBuildOptions
+        implements CoreExternalNativeBuildOptions, MergedOptions<CoreExternalNativeBuildOptions> {
 
     @NonNull
     private final MergedExternalNativeNdkBuildOptions ndkBuild =
@@ -33,11 +32,13 @@ public class MergedExternalNativeBuildOptions implements CoreExternalNativeBuild
     @NonNull
     private final MergedExternalNativeCmakeOptions cmake = new MergedExternalNativeCmakeOptions();
 
+    @Override
     public void reset() {
         ndkBuild.reset();
         cmake.reset();
     }
 
+    @Override
     public void append(@NonNull CoreExternalNativeBuildOptions options) {
         ndkBuild.append(options.getExternalNativeNdkBuildOptions());
         cmake.append(options.getExternalNativeCmakeOptions());

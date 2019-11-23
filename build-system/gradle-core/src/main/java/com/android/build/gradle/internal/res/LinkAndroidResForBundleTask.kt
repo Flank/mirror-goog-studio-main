@@ -63,6 +63,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.Callable
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
@@ -259,11 +260,15 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
             task.versionCode.set(
-                mainSplit?.versionCode ?: task.project.provider(config::getVersionCode)
+                mainSplit?.versionCode ?: task.project.provider {
+                    config.versionCode
+                }
             )
             task.versionCode.disallowChanges()
             task.versionName.setDisallowChanges(
-                mainSplit?.versionName ?: task.project.provider(config::getVersionName)
+                mainSplit?.versionName ?: task.project.provider {
+                    config.versionName
+                }
             )
 
             task.mainSplit = variantData.outputScope.mainSplit

@@ -211,7 +211,7 @@ fun Iterable<String>.combineAsCamelCase(): String {
 }
 
 fun <T> combineAsCamelCase(
-    objectList: Collection<T>, mapFunction: Function<T, String>
+    objectList: Collection<T>, mapFunction: (T) -> String
 ): String {
     val sb = StringBuilder(objectList.size * 20)
     combineAsCamelCase(sb, objectList, mapFunction)
@@ -221,16 +221,16 @@ fun <T> combineAsCamelCase(
 fun <T> combineAsCamelCase(
     sb: StringBuilder,
     objectList: Collection<T>,
-    mapFunction: Function<T, String>
+    mapFunction: (T) -> String
 ) {
 
     var first = true
-    for (`object` in objectList) {
+    for (obj in objectList) {
         if (first) {
-            sb.append(mapFunction.apply(`object`))
+            sb.append(mapFunction(obj))
             first = false
         } else {
-            sb.appendCapitalized(mapFunction.apply(`object`))
+            sb.appendCapitalized(mapFunction(obj))
         }
     }
 }

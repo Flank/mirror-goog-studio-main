@@ -97,9 +97,9 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             task.partialRFiles.set(variantScope.artifacts.getOperations().getAll(
                 MultipleArtifactType.PARTIAL_R_FILES))
             task.packageForR.set(
-                variantScope.globalScope.project.provider(
-                    variantScope.variantConfiguration::getOriginalApplicationId
-                )
+                variantScope.globalScope.project.provider {
+                    variantScope.variantConfiguration.originalApplicationId
+                }
             )
             task.packageForR.disallowChanges()
         }

@@ -181,9 +181,9 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantConfiguration.dirName)
 
-            task.packageForR.set(variantScope.globalScope.project.provider(
-                variantScope.variantConfiguration::getOriginalApplicationId
-            ))
+            task.packageForR.set(variantScope.globalScope.project.provider {
+                variantScope.variantConfiguration.originalApplicationId
+            })
             task.packageForR.disallowChanges()
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)

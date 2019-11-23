@@ -206,11 +206,12 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
-            task.versionCode.set(mainSplit?.versionCode ?:
-                task.project.provider(variantConfiguration::getVersionCode))
-            task.versionCode.disallowChanges()
-            task.versionName.setDisallowChanges(mainSplit?.versionName ?:
-                task.project.provider(variantConfiguration::getVersionName))
+            task.versionCode.setDisallowChanges(
+                mainSplit?.versionCode
+                    ?: task.project.provider { variantConfiguration.versionCode })
+            task.versionName.setDisallowChanges(
+                mainSplit?.versionName
+                    ?: task.project.provider { variantConfiguration.versionName })
 
             task.debuggable.set(project.provider { variantConfiguration.buildType.isDebuggable })
             task.debuggable.disallowChanges()
