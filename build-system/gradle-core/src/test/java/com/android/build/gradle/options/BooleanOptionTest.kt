@@ -26,10 +26,16 @@ class BooleanOptionTest {
     fun `check Boolean options are put in correct order`() {
         // Expected order of Boolean options
         val order = listOf(
-            Option.Status.STABLE::class.java,
-            Option.Status.EXPERIMENTAL::class.java,
-            Option.Status.Deprecated::class.java,
-            Option.Status.REMOVED::class.java
+            ApiStage.Stable::class.java,
+            FeatureStage.Supported::class.java,
+            ApiStage.Experimental::class.java,
+            FeatureStage.Experimental::class.java,
+            FeatureStage.SoftlyEnforced::class.java,
+            ApiStage.Deprecated::class.java,
+            FeatureStage.Deprecated::class.java,
+            FeatureStage.Enforced::class.java,
+            ApiStage.Removed::class.java,
+            FeatureStage.Removed::class.java
         )
 
         val options =
@@ -39,11 +45,11 @@ class BooleanOptionTest {
         var lastOption: BooleanOption? = null
         options.forEach {
             if (lastOption != null
-                && order.indexOf(it.status.javaClass) < order.indexOf(lastOption!!.status.javaClass)
+                && order.indexOf(it.stage.javaClass) < order.indexOf(lastOption!!.stage.javaClass)
             ) {
                 fail(
-                    "Boolean option `${lastOption!!.name}` with status `${lastOption!!.status.javaClass.simpleName}`" +
-                            " should be positioned after Boolean option `${it.name}` with status `${it.status.javaClass.simpleName}`." +
+                    "Boolean option `${lastOption!!.name}` with stage `${lastOption!!.stage.javaClass.name}`" +
+                            " should be positioned after Boolean option `${it.name}` with stage `${it.stage.javaClass.name}`." +
                             " Rearrange their positions to put them in the correct groups."
                 )
             }
