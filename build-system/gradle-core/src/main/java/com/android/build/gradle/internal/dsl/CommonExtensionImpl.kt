@@ -24,28 +24,28 @@ import com.android.build.api.variant.impl.VariantScopeTransformers
 import org.gradle.api.Action
 
 /** Internal implementation of the 'new' DSL interface */
-abstract class CommonExtensionImpl<VARIANT : Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES : VariantProperties>
-    : CommonExtension<VARIANT, VARIANT_PROPERTIES> {
+abstract class CommonExtensionImpl<VariantT : Variant<VariantPropertiesT>, VariantPropertiesT : VariantProperties>
+    : CommonExtension<VariantT, VariantPropertiesT> {
 
     protected val variantOperations =
-        VariantOperations<VARIANT>(VariantScopeTransformers.toVariant)
-    protected val variantPropertiesOperations = VariantOperations<VARIANT_PROPERTIES>(
+        VariantOperations<VariantT>(VariantScopeTransformers.toVariant)
+    protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>(
         VariantScopeTransformers.toVariantProperties
     )
 
-    override fun onVariants(action: Action<VARIANT>) {
+    override fun onVariants(action: Action<VariantT>) {
         variantOperations.actions.add(action)
     }
 
-    override fun onVariants(action: (VARIANT) -> Unit) {
+    override fun onVariants(action: (VariantT) -> Unit) {
         variantOperations.actions.add(Action { action.invoke(it) } )
     }
 
-    override fun onVariantProperties(action: Action<VARIANT_PROPERTIES>) {
+    override fun onVariantProperties(action: Action<VariantPropertiesT>) {
         variantPropertiesOperations.actions.add(action)
     }
 
-    override fun onVariantProperties(action: (VARIANT_PROPERTIES) -> Unit) {
+    override fun onVariantProperties(action: (VariantPropertiesT) -> Unit) {
         variantPropertiesOperations.actions.add(Action { action.invoke(it) } )
     }
 }
