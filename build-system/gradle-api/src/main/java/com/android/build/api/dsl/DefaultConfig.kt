@@ -16,30 +16,17 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.DynamicFeatureVariantProperties
 import org.gradle.api.Incubating
 
 /**
- * Extension for the Android Dynamic Feature Gradle Plugin.
+ * Specifies defaults for variant properties that the Android plugin applies to all build variants.
  *
+ * You can override any `defaultConfig` property when [configuring product
+ * flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors).
  *
- * Only the Android Gradle Plugin should create instances of this interface.
+ * @see [ProductFlavor]
  */
 @Incubating
-interface DynamicFeatureExtension<
-        BuildTypeT : BuildType,
-        DefaultConfigT : DefaultConfig,
-        ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig> :
-    CommonExtension<
-            BuildTypeT,
-            DefaultConfigT,
-            ProductFlavorT,
-            SigningConfigT,
-            DynamicFeatureVariant,
-            DynamicFeatureVariantProperties>,
-    ApkExtension,
-    TestedExtension {
+interface DefaultConfig {
     // TODO(b/140406102)
 }

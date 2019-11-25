@@ -55,14 +55,11 @@ class BaseAppModuleExtensionTest {
         Mockito.`when`(defaultConfig.vectorDrawables).thenReturn(vectorDrawablesOptions)
         Mockito.`when`(defaultConfig.name).thenReturn("default")
         Mockito.`when`(objectFactory.newInstance(any(Class::class.java), ArgumentMatchers.any()))
-            .thenAnswer { invocation ->
-                if (invocation.arguments[0] == DefaultConfig::class.java)
-                    defaultConfig
-                else Mockito.mock(invocation.arguments[0] as Class<*>)
-            }
+            .thenAnswer { invocation -> Mockito.mock(invocation.arguments[0] as Class<*>) }
         Mockito.`when`(objectFactory.domainObjectSet(any(Class::class.java))).thenReturn(Mockito.mock(DomainObjectSet::class.java))
         val extension = ApplicationExtensionImpl(
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
+            defaultConfig,
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
         )

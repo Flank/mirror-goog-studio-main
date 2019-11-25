@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -58,7 +59,7 @@ open class LibraryExtension(
     sourceSetManager,
     extraModelInfo,
     false
-), com.android.build.api.dsl.LibraryExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+), com.android.build.api.dsl.LibraryExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =

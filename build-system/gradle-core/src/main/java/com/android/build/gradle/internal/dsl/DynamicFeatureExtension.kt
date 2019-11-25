@@ -45,6 +45,10 @@ internal open class DynamicFeatureExtension(
 ) : AppExtension(
     project, projectOptions, globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
-), DynamicFeatureExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+), DynamicFeatureExtension<
+        BuildType,
+        DefaultConfig,
+        ProductFlavor,
+        SigningConfig> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 }

@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
@@ -82,6 +83,7 @@ public class AppPlugin extends AbstractAppPlugin {
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
@@ -99,6 +101,7 @@ public class AppPlugin extends AbstractAppPlugin {
                         extraModelInfo,
                         new ApplicationExtensionImpl(
                                 buildTypeContainer,
+                                defaultConfig,
                                 productFlavorContainer,
                                 signingConfigContainer));
     }

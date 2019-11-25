@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dependency.ConstraintHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -166,6 +167,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
@@ -425,12 +427,20 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         globalScope.getDslScope(),
                         new DelayedActionsExecutor());
 
+        DefaultConfig defaultConfig =
+                objectFactory.newInstance(
+                        DefaultConfig.class,
+                        BuilderConstants.MAIN,
+                        project,
+                        globalScope.getDslScope());
+
         extension =
                 createExtension(
                         project,
                         projectOptions,
                         globalScope,
                         buildTypeContainer,
+                        defaultConfig,
                         productFlavorContainer,
                         signingConfigContainer,
                         buildOutputs,

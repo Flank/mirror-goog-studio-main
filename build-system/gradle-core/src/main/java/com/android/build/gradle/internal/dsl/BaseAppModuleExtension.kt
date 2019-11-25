@@ -44,7 +44,7 @@ open class BaseAppModuleExtension(
     sourceSetManager,
     extraModelInfo,
     true
-), ApplicationExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+), ApplicationExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     var dynamicFeatures: MutableSet<String> = mutableSetOf()

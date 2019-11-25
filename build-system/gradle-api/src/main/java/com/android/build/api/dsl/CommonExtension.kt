@@ -32,6 +32,7 @@ import org.gradle.api.NamedDomainObjectContainer
 @Incubating
 interface CommonExtension<
         BuildTypeT : BuildType,
+        DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         VariantT : Variant<VariantPropertiesT>,
@@ -113,6 +114,30 @@ interface CommonExtension<
      * see [ProductFlavor]
      */
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
+
+
+    /**
+     * Specifies defaults for variant properties that the Android plugin applies to all build
+     * variants.
+     *
+     * You can override any `defaultConfig` property when
+     * [configuring product flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors)
+     *
+     * For more information about the properties you can configure in this block, see [DefaultConfig].
+     */
+    val defaultConfig: DefaultConfigT
+
+    /**
+     * Specifies defaults for variant properties that the Android plugin applies to all build
+     * variants.
+     *
+     * You can override any `defaultConfig` property when
+     * [configuring product flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors)
+     *
+     * For more information about the properties you can configure in this block, see [DefaultConfig].
+     */
+    fun defaultConfig(action: Action<DefaultConfigT>)
+
 
     /**
      * Encapsulates signing configurations that you can apply to [ ] and [ ] configurations.

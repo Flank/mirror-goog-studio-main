@@ -7,6 +7,7 @@ import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
@@ -36,7 +37,11 @@ open class TestExtension(
     extraModelInfo,
     false
 ), TestAndroidConfig,
-    com.android.build.api.dsl.TestExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+    com.android.build.api.dsl.TestExtension<
+            BuildType,
+            DefaultConfig,
+            ProductFlavor,
+            SigningConfig> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =

@@ -27,20 +27,27 @@ import org.gradle.api.NamedDomainObjectContainer
 /** Internal implementation of the 'new' DSL interface */
 class TestExtensionImpl(
     buildTypes: NamedDomainObjectContainer<BuildType>,
+    defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
             BuildType,
+            DefaultConfig,
             ProductFlavor,
             SigningConfig,
             TestVariant,
             TestVariantProperties>(
         buildTypes,
+        defaultConfig,
         productFlavors,
         signingConfigs
     ),
-    TestExtension<BuildType, ProductFlavor, SigningConfig>,
+    TestExtension<
+            BuildType,
+            DefaultConfig,
+            ProductFlavor,
+            SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<TestVariant>(variantScopes)

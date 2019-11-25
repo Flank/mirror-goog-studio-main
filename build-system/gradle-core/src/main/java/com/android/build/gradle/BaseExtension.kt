@@ -123,13 +123,6 @@ abstract class BaseExtension protected constructor(
 
     private val objectFactory = project.objects
 
-    override val defaultConfig: DefaultConfig =
-        objectFactory.newInstance(
-            DefaultConfig::class.java,
-            BuilderConstants.MAIN,
-            project,
-            globalScope.dslScope
-        )
     override val aaptOptions: AaptOptions =
         objectFactory.newInstance(
             AaptOptions::class.java,
@@ -213,19 +206,9 @@ abstract class BaseExtension protected constructor(
         // running task, so that we can install all the found APKs before running tests.
         createAndroidTestUtilConfiguration()
 
-        sourceSetManager.setUpSourceSet(defaultConfig.name)
-        setDefaultConfigValues()
+        sourceSetManager.setUpSourceSet(SdkConstants.FD_MAIN)
     }
 
-    private fun setDefaultConfigValues() {
-        val densities = Density.getRecommendedValuesForDevice()
-        val strings = Sets.newHashSetWithExpectedSize<String>(densities.size)
-        for (density in densities) {
-            strings.add(density.resourceValue)
-        }
-        defaultConfig.vectorDrawables.setGeneratedDensities(strings)
-        defaultConfig.vectorDrawables.useSupportLibrary = false
-    }
 
     /**
      * Disallow further modification on the extension.
@@ -435,19 +418,6 @@ abstract class BaseExtension protected constructor(
     override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
         get() = sourceSetManager.sourceSetsContainer
 
-    /**
-     * Specifies defaults for variant properties that the Android plugin applies to all build
-     * variants.
-     *
-     * You can override any `defaultConfig` property when
-     * [configuring product flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors)
-     *
-     * For more information about the properties you can configure in this block, see [ProductFlavor].
-     */
-    fun defaultConfig(action: Action<DefaultConfig>) {
-        checkWritability()
-        action.execute(defaultConfig)
-    }
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).
@@ -771,6 +741,9 @@ abstract class BaseExtension protected constructor(
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
     abstract override val buildTypes: NamedDomainObjectContainer<BuildType>
     abstract fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
+
+    abstract override val defaultConfig: DefaultConfig
+    abstract fun defaultConfig(action: Action<DefaultConfig>)
 
     abstract override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
     abstract fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)

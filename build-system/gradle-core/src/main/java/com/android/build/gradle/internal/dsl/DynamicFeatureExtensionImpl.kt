@@ -26,21 +26,24 @@ import org.gradle.api.NamedDomainObjectContainer
 
 class DynamicFeatureExtensionImpl(
     buildTypes: NamedDomainObjectContainer<BuildType>,
+    defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 )  :
     CommonExtensionImpl<
             BuildType,
+            DefaultConfig,
             ProductFlavor,
             SigningConfig,
             DynamicFeatureVariant,
             DynamicFeatureVariantProperties>(
         buildTypes,
+        defaultConfig,
         productFlavors,
         signingConfigs
     ),
 
-    DynamicFeatureExtension<BuildType, ProductFlavor, SigningConfig>,
+    DynamicFeatureExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<DynamicFeatureVariant>(variantScopes)

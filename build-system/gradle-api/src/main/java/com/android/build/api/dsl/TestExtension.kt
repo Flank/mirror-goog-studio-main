@@ -29,10 +29,12 @@ import org.gradle.api.Incubating
 @Incubating
 interface TestExtension<
         BuildTypeT : BuildType,
+        DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig> :
     CommonExtension<
             BuildTypeT,
+            DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
             TestVariant,
