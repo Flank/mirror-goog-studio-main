@@ -37,12 +37,12 @@ import java.util.function.Supplier
  * @param manifestFile the file for the manifest.
  */
 class VariantAttributesProvider(
-        var mergedFlavor: ProductFlavor,
+        private val mergedFlavor: ProductFlavor,
         private val buildType: BuildType,
         private val isTestVariant: Boolean,
         private val manifestSupplier: ManifestAttributeSupplier,
         private val manifestFile: File,
-        var fullName: String) {
+        private val fullName: String) {
 
     /**
      * Returns the application id override value coming from the Product Flavor and/or the Build

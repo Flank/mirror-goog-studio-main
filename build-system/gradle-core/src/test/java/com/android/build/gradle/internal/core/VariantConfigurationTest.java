@@ -65,6 +65,7 @@ public class VariantConfigurationTest {
 
         mDefaultConfig = new DefaultConfig("main", project, dslScope);
         mFlavorConfig = new ProductFlavor("flavor", project, dslScope);
+        mFlavorConfig.setDimension("dimension1");
         mBuildType = new BuildType("debug", project, dslScope);
         srcDir = tmp.newFolder("src");
         mIssueReporter = new FakeEvalIssueReporter();
@@ -149,7 +150,7 @@ public class VariantConfigurationTest {
     @Test
     public void testGetMinSdkVersion() {
 
-        ApiVersion minSdkVersion = DefaultApiVersion.create(new Integer(5));
+        ApiVersion minSdkVersion = DefaultApiVersion.create(5);
         mDefaultConfig.setMinSdkVersion(minSdkVersion);
 
         GradleVariantConfiguration variant = getVariant();
@@ -171,7 +172,7 @@ public class VariantConfigurationTest {
     @Test
     public void testGetTargetSdkVersion() {
 
-        ApiVersion targetSdkVersion = DefaultApiVersion.create(new Integer(9));
+        ApiVersion targetSdkVersion = DefaultApiVersion.create(9);
         mDefaultConfig.setTargetSdkVersion(targetSdkVersion);
 
         GradleVariantConfiguration variant = getVariant();
@@ -184,8 +185,7 @@ public class VariantConfigurationTest {
 
         GradleVariantConfiguration variant = getVariant();
 
-        assertThat(variant.getTargetSdkVersion())
-                .isEqualTo(DefaultApiVersion.create(new Integer(-1)));
+        assertThat(variant.getTargetSdkVersion()).isEqualTo(DefaultApiVersion.create(-1));
     }
 
     @Test
@@ -216,22 +216,21 @@ public class VariantConfigurationTest {
     }
 
     private GradleVariantConfiguration getVariant(SigningConfig signingOverride) {
-        GradleVariantConfiguration variant =
-                new GradleVariantConfiguration(
-                        projectOptions,
-                        null,
+        VariantBuilder builder =
+                VariantBuilder.getBuilder(
+                        VariantTypeImpl.BASE_APK,
                         mDefaultConfig,
                         new MockSourceProvider("main"),
-                        null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantTypeImpl.BASE_APK,
                         signingOverride,
+                        null /*manifest supplier*/,
+                        projectOptions,
                         mIssueReporter,
                         () -> true);
 
-        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
+        builder.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"));
 
-        return variant;
+        return builder.createVariantConfig();
     }
 }

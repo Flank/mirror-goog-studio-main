@@ -15,10 +15,7 @@
  */
 package com.android.build.gradle.internal.core
 
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.TestAndroidConfig
 import com.android.build.gradle.api.JavaCompileOptions
-import com.android.build.gradle.internal.core.MergedFlavor.Companion.clone
 import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
@@ -50,9 +47,7 @@ import com.android.ide.common.resources.ResourceSet
 import com.android.sdklib.AndroidVersion
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
-import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Joiner
-import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -76,26 +71,32 @@ import java.util.function.Supplier
  * jar and aar).
  */
 open class GradleVariantConfiguration internal constructor(
-    projectOptions: ProjectOptions,
-    testedConfig: GradleVariantConfiguration?,
-    defaultConfig: DefaultConfig,
-    defaultSourceProvider: SourceProvider,
-    mainManifestAttributeSupplier: ManifestAttributeSupplier?,
-    buildType: BuildType,
-    buildTypeSourceProvider: SourceProvider?,
-    type: VariantType,
-    signingConfigOverride: SigningConfig?,
-    issueReporter: EvalIssueReporter,
+    val fullName: String,
+    val flavorName: String,
+    val type: VariantType,
+    val defaultConfig: DefaultConfig,
+    private val defaultSourceProvider: SourceProvider,
+    val buildType: BuildType,
+    private val buildTypeSourceProvider: SourceProvider? = null,
+    /** The list of product flavors. Items earlier in the list override later items.  */
+    val productFlavors: List<ProductFlavor>,
+    private val flavorSourceProviders: List<SourceProvider>,
+    /** MultiFlavors specific source provider, may be null  */
+    val multiFlavorSourceProvider: SourceProvider? = null,
+    /** Variant specific source provider, may be null  */
+    val variantSourceProvider: SourceProvider? = null,
+    private val signingConfigOverride: SigningConfig? = null,
+    manifestAttributeSupplier: ManifestAttributeSupplier? = null,
+    /**
+     * Optional tested config in case this variant is used for testing another variant.
+     *
+     * @see VariantType.isTestComponent
+     */
+    val testedConfig: GradleVariantConfiguration? = null,
+    private val projectOptions: ProjectOptions,
+    private val issueReporter: EvalIssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) {
-    /**
-     * Full, unique name of the variant in camel case, including BuildType and Flavors (and Test)
-     */
-    private var mFullName: String? = null
-    /**
-     * Flavor Name of the variant, including all flavors in camel case (starting with a lower case).
-     */
-    private var mFlavorName: String? = null
     /**
      * Full, unique name of the variant, including BuildType, flavors and test, dash separated.
      * (similar to full name but with dashes)
@@ -107,113 +108,26 @@ open class GradleVariantConfiguration internal constructor(
      */
     private var mDirName: String? = null
     private var mDirSegments: List<String>? = null
-    val defaultConfig: DefaultConfig
-    val defaultSourceSet: SourceProvider
-    val buildType: BuildType
-    /** The SourceProvider for the BuildType. Can be null.  */
-    /** SourceProvider for the BuildType. Can be null  */
-    val buildTypeSourceSet: SourceProvider?
-    private val mFlavorDimensionNames: MutableList<String> =
-        Lists.newArrayList()
-    private val mFlavors: MutableList<ProductFlavor> =
-        Lists.newArrayList()
-    private val mFlavorSourceProviders: MutableList<SourceProvider> =
-        Lists.newArrayList()
-    /**
-     * Returns the variant specific source provider
-     *
-     * @return the source provider or null if none has been provided.
-     */
-    /**
-     * Sets the variant-specific source provider.
-     *
-     * @param sourceProvider the source provider for the product flavor
-     * @return the config object
-     */
-    /** Variant specific source provider, may be null  */
-    var variantSourceProvider: SourceProvider? = null
-    /**
-     * Sets the variant-specific source provider.
-     *
-     * @param sourceProvider the source provider for the product flavor
-     * @return the config object
-     */
-    /** MultiFlavors specific source provider, may be null  */
-    var multiFlavorSourceProvider: SourceProvider? = null
-    val type: VariantType
-    /**
-     * Optional tested config in case this variant is used for testing another variant.
-     *
-     * @see VariantType.isTestComponent
-     */
-    val testedConfig: GradleVariantConfiguration?
+
     var mergedFlavor: MergedFlavor
         private set
+
     /** Variant-specific build Config fields.  */
-    private val mBuildConfigFields: MutableMap<String, ClassField> =
-        Maps.newTreeMap()
+    private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
+
     /** Variant-specific res values.  */
-    private val mResValues: MutableMap<String, ClassField> =
-        Maps.newTreeMap()
-    /**
-     * Signing Override to be used instead of any signing config provided by Build Type or Product
-     * Flavors.
-     */
-    private val mSigningConfigOverride: SigningConfig?
+    private val mResValues: MutableMap<String, ClassField> = Maps.newTreeMap()
+
     /**
      * For reading the attributes from the main manifest file in the default source set, combining
      * the results with the current flavor.
      */
     private val mVariantAttributesProvider: VariantAttributesProvider
-    /** For recording sync issues.  */
-    protected val issueReporter: EvalIssueReporter
-    private val projectOptions: ProjectOptions
+
     private val mergedNdkConfig = MergedNdkConfig()
     private val mergedExternalNativeBuildOptions =
         MergedExternalNativeBuildOptions()
     private val mergedJavaCompileOptions = MergedJavaCompileOptions()
-    /**
-     * Creates a [GradleVariantConfiguration] for a testing variant derived from this variant.
-     */
-    open fun getMyTestConfig(
-        defaultSourceProvider: SourceProvider,
-        mainManifestAttributeSupplier: ManifestAttributeSupplier?,
-        buildTypeSourceProvider: SourceProvider?,
-        type: VariantType,
-        isInExecutionPhase: BooleanSupplier
-    ): GradleVariantConfiguration? {
-        return GradleVariantConfiguration(
-            projectOptions,
-            this,
-            defaultConfig,
-            defaultSourceProvider,
-            mainManifestAttributeSupplier,
-            buildType,
-            buildTypeSourceProvider,
-            type,
-            signingConfig,
-            issueReporter,
-            isInExecutionPhase
-        )
-    }
-
-    /**
-     * Returns the full, unique name of the variant in camel case (starting with a lower case),
-     * including BuildType, Flavors and Test (if applicable).
-     *
-     * @return the name of the variant
-     */
-    val fullName: String
-        get() {
-            if (mFullName == null) {
-                mFullName = computeRegularVariantName(
-                    flavorName,
-                    buildType,
-                    type
-                )
-            }
-            return mFullName!!
-        }
 
     /**
      * Returns a full name that includes the given splits name.
@@ -238,20 +152,6 @@ open class GradleVariantConfiguration internal constructor(
     }
 
     /**
-     * Returns the flavor name of the variant, including all flavors in camel case (starting with a
-     * lower case). If the variant has no flavor, then an empty string is returned.
-     *
-     * @return the flavor name or an empty string.
-     */
-    val flavorName: String
-        get() {
-            if (mFlavorName == null) {
-                mFlavorName = computeFlavorName(mFlavors)
-            }
-            return mFlavorName!!
-        }
-
-    /**
      * Returns the full, unique name of the variant, including BuildType, flavors and test, dash
      * separated. (similar to full name but with dashes)
      *
@@ -261,8 +161,8 @@ open class GradleVariantConfiguration internal constructor(
         get() {
             if (mBaseName == null) {
                 val sb = StringBuilder()
-                if (mFlavors.isNotEmpty()) {
-                    for (pf in mFlavors) {
+                if (productFlavors.isNotEmpty()) {
+                    for (pf in productFlavors) {
                         sb.append(pf.name).append('-')
                     }
                 }
@@ -283,8 +183,8 @@ open class GradleVariantConfiguration internal constructor(
      */
     fun computeBaseNameWithSplits(splitName: String): String {
         val sb = StringBuilder()
-        if (mFlavors.isNotEmpty()) {
-            for (pf in mFlavors) {
+        if (productFlavors.isNotEmpty()) {
+            for (pf in productFlavors) {
                 sb.append(pf.name).append('-')
             }
         }
@@ -327,10 +227,10 @@ open class GradleVariantConfiguration internal constructor(
                 if (type.isTestComponent) {
                     builder.add(type.prefix)
                 }
-                if (!mFlavors.isEmpty()) {
+                if (!productFlavors.isEmpty()) {
                     builder.add(
                         combineAsCamelCase(
-                            mFlavors, ProductFlavor::getName
+                            productFlavors, ProductFlavor::getName
                         )
                     )
                 }
@@ -354,8 +254,8 @@ open class GradleVariantConfiguration internal constructor(
         if (type.isTestComponent) {
             sb.append(type.prefix).append("/")
         }
-        if (!mFlavors.isEmpty()) {
-            for (flavor in mFlavors) {
+        if (!productFlavors.isEmpty()) {
+            for (flavor in productFlavors) {
                 sb.append(flavor.name)
             }
             sb.append('/')
@@ -377,78 +277,28 @@ open class GradleVariantConfiguration internal constructor(
      */
     val flavorNamesWithDimensionNames: List<String>
         get() {
-            if (mFlavors.isEmpty()) {
+            if (productFlavors.isEmpty()) {
                 return emptyList()
             }
             val names: List<String>
-            val count = mFlavors.size
+            val count = productFlavors.size
             if (count > 1) {
                 names =
                     Lists.newArrayListWithCapacity(count * 2)
                 for (i in 0 until count) {
-                    names.add(mFlavors[i].name)
-                    names.add(mFlavorDimensionNames[i])
+                    names.add(productFlavors[i].name)
+                    names.add(productFlavors[i].dimension)
                 }
             } else {
-                names = listOf(mFlavors[0].name)
+                names = listOf(productFlavors[0].name)
             }
             return names
         }
 
-    /**
-     * Add a new configured ProductFlavor.
-     *
-     *
-     * If multiple flavors are added, the priority follows the order they are added when it comes
-     * to resolving Android resources overlays (ie earlier added flavors supersedes latter added
-     * ones).
-     *
-     * @param productFlavor the configured product flavor
-     * @param sourceProvider the source provider for the product flavor
-     * @param dimensionName the name of the dimension associated with the flavor
-     */
-    fun addProductFlavor(
-        productFlavor: ProductFlavor,
-        sourceProvider: SourceProvider,
-        dimensionName: String
-    ) {
-        Preconditions.checkNotNull(
-            productFlavor
-        )
-        Preconditions.checkNotNull(
-            sourceProvider
-        )
-        Preconditions.checkNotNull(dimensionName)
-        mFlavors.add(productFlavor)
-        mFlavorSourceProviders.add(sourceProvider)
-        mFlavorDimensionNames.add(dimensionName)
-        mergedFlavor = mergeFlavors(defaultConfig, mFlavors, issueReporter)
-        mVariantAttributesProvider.mergedFlavor = mergedFlavor
-        // reset computed names to null so it will be recomputed.
-        mFullName = null
-        mFlavorName = null
-        mVariantAttributesProvider.fullName = fullName
-        mergeOptions()
-    }
 
     fun hasFlavors(): Boolean {
-        return mFlavors.isNotEmpty()
+        return productFlavors.isNotEmpty()
     }
-
-    /** Returns the product flavors. Items earlier in the list override later items.  */
-    val productFlavors: List<ProductFlavor>
-        get() = mFlavors
-
-    /**
-     * Returns the list of SourceProviders for the flavors.
-     *
-     *
-     * The list is ordered from higher priority to lower priority.
-     *
-     * @return the list of Source Providers for the flavors. Never null.
-     */
-    val flavorSourceProviders: List<SourceProvider>
-        get() = mFlavorSourceProviders
 
     private val testedPackage: String
         private get() = if (testedConfig != null) testedConfig.applicationId else ""
@@ -689,7 +539,7 @@ open class GradleVariantConfiguration internal constructor(
      * manifest file may change during that time.
      */
     val mainManifestFilePath: File
-        get() = defaultSourceSet.manifestFile
+        get() = defaultSourceProvider.manifestFile
 
     /**
      * Returns the path to the main manifest file if it exists, or `null` otherwise (e.g., the main
@@ -720,20 +570,18 @@ open class GradleVariantConfiguration internal constructor(
     val sortedSourceProviders: List<SourceProvider>
         get() {
             val providers: MutableList<SourceProvider> =
-                Lists.newArrayListWithExpectedSize(
-                    mFlavorSourceProviders.size + 4
-                )
+                Lists.newArrayListWithExpectedSize(flavorSourceProviders.size + 4)
 
             // first the default source provider
-            providers.add(defaultSourceSet)
+            providers.add(defaultSourceProvider)
             // the list of flavor must be reversed to use the right overlay order.
-            for (n in mFlavorSourceProviders.indices.reversed()) {
-                providers.add(mFlavorSourceProviders[n])
+            for (n in flavorSourceProviders.indices.reversed()) {
+                providers.add(flavorSourceProviders[n])
             }
             // multiflavor specific overrides flavor
             multiFlavorSourceProvider?.let(providers::add)
             // build type overrides flavors
-            buildTypeSourceSet?.let(providers::add)
+            buildTypeSourceProvider?.let(providers::add)
             // variant specific overrides all
             variantSourceProvider?.let(providers::add)
 
@@ -752,9 +600,9 @@ open class GradleVariantConfiguration internal constructor(
             }
 
             variantSourceProvider?.let(gatherManifest)
-            buildTypeSourceSet?.let(gatherManifest)
+            buildTypeSourceProvider?.let(gatherManifest)
             multiFlavorSourceProvider?.let(gatherManifest)
-            mFlavorSourceProviders.forEach(gatherManifest)
+            flavorSourceProviders.forEach(gatherManifest)
 
             return inputs
         }
@@ -779,7 +627,7 @@ open class GradleVariantConfiguration internal constructor(
         val resourceSets: MutableList<ResourceSet> =
             Lists.newArrayList()
         val mainResDirs =
-            defaultSourceSet.resDirectories
+            defaultSourceProvider.resDirectories
         // the main + generated res folders are in the same ResourceSet
         var resourceSet = ResourceSet(
             BuilderConstants.MAIN, ResourceNamespace.RES_AUTO, null, validateEnabled
@@ -787,8 +635,8 @@ open class GradleVariantConfiguration internal constructor(
         resourceSet.addSources(mainResDirs)
         resourceSets.add(resourceSet)
         // the list of flavor must be reversed to use the right overlay order.
-        for (n in mFlavorSourceProviders.indices.reversed()) {
-            val sourceProvider = mFlavorSourceProviders[n]
+        for (n in flavorSourceProviders.indices.reversed()) {
+            val sourceProvider = flavorSourceProviders[n]
             val flavorResDirs = sourceProvider.resDirectories
 
             // we need the same of the flavor config, but it's in a different list.
@@ -813,7 +661,7 @@ open class GradleVariantConfiguration internal constructor(
         }
 
         // build type overrides the flavors
-        buildTypeSourceSet?.let {
+        buildTypeSourceProvider?.let {
             val typeResDirs = it.resDirectories
             resourceSet = ResourceSet(
                 buildType.name,
@@ -856,18 +704,18 @@ open class GradleVariantConfiguration internal constructor(
     ): List<AssetSet> {
         val assetSets = mutableListOf<AssetSet>()
 
-        val mainResDirs = function.apply(defaultSourceSet)
+        val mainResDirs = function.apply(defaultSourceProvider)
         // the main + generated asset folders are in the same AssetSet
         var assetSet = AssetSet(BuilderConstants.MAIN)
         assetSet.addSources(mainResDirs)
         assetSets.add(assetSet)
         // the list of flavor must be reversed to use the right overlay order.
-        for (n in mFlavorSourceProviders.indices.reversed()) {
-            val sourceProvider = mFlavorSourceProviders[n]
+        for (n in flavorSourceProviders.indices.reversed()) {
+            val sourceProvider = flavorSourceProviders[n]
             val flavorResDirs = function.apply(sourceProvider)
             // we need the same of the flavor config, but it's in a different list.
 // This is fine as both list are parallel collections with the same number of items.
-            assetSet = AssetSet(mFlavors[n].name)
+            assetSet = AssetSet(productFlavors[n].name)
             assetSet.addSources(flavorResDirs)
             assetSets.add(assetSet)
         }
@@ -881,8 +729,8 @@ open class GradleVariantConfiguration internal constructor(
         }
 
         // build type overrides flavors
-        if (buildTypeSourceSet != null) {
-            val typeResDirs = function.apply(buildTypeSourceSet)
+        if (buildTypeSourceProvider != null) {
+            val typeResDirs = function.apply(buildTypeSourceProvider)
             assetSet = AssetSet(buildType.name)
             assetSet.addSources(typeResDirs)
             assetSets.add(assetSet)
@@ -983,7 +831,7 @@ open class GradleVariantConfiguration internal constructor(
                 fullList.add("Fields from build type: " + buildType.name)
                 fillFieldList(fullList, usedFieldNames, list)
             }
-            for (flavor in mFlavors) {
+            for (flavor in productFlavors) {
                 list = flavor.buildConfigFields.values
                 if (!list.isEmpty()) {
                     fullList.add("Fields from product flavor: " + flavor.name)
@@ -1015,8 +863,8 @@ open class GradleVariantConfiguration internal constructor(
             // start from the lowest priority and just add it all. Higher priority fields
             // will replace lower priority ones.
             mergedMap.putAll(defaultConfig.buildConfigFields)
-            for (i in mFlavors.indices.reversed()) {
-                mergedMap.putAll(mFlavors[i].buildConfigFields)
+            for (i in productFlavors.indices.reversed()) {
+                mergedMap.putAll(productFlavors[i].buildConfigFields)
             }
             mergedMap.putAll(buildType.buildConfigFields)
             mergedMap.putAll(mBuildConfigFields)
@@ -1038,8 +886,8 @@ open class GradleVariantConfiguration internal constructor(
             // will replace lower priority ones.
             val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
             mergedMap.putAll(defaultConfig.resValues)
-            for (i in mFlavors.indices.reversed()) {
-                mergedMap.putAll(mFlavors[i].resValues)
+            for (i in productFlavors.indices.reversed()) {
+                mergedMap.putAll(productFlavors[i].resValues)
             }
             mergedMap.putAll(buildType.resValues)
             mergedMap.putAll(mResValues)
@@ -1073,7 +921,7 @@ open class GradleVariantConfiguration internal constructor(
                 fullList.add("Values from build type: " + buildType.name)
                 fillFieldList(fullList, usedFieldNames, list)
             }
-            for (flavor in mFlavors) {
+            for (flavor in productFlavors) {
                 list = flavor.resValues.values
                 if (!list.isEmpty()) {
                     fullList.add("Values from product flavor: " + flavor.name)
@@ -1093,8 +941,8 @@ open class GradleVariantConfiguration internal constructor(
             if (type.isDynamicFeature) {
                 return null
             }
-            if (mSigningConfigOverride != null) {
-                return mSigningConfigOverride
+            if (signingConfigOverride != null) {
+                return signingConfigOverride
             }
             val signingConfig: SigningConfig? = buildType.signingConfig
             return signingConfig ?: mergedFlavor.signingConfig
@@ -1298,8 +1146,8 @@ open class GradleVariantConfiguration internal constructor(
             mergedOption.append(defaultOption)
         }
         // reverse loop for proper order
-        for (i in mFlavors.indices.reversed()) {
-            val flavorOption = mFlavors[i].getFlavorOption()
+        for (i in productFlavors.indices.reversed()) {
+            val flavorOption = productFlavors[i].getFlavorOption()
             if (flavorOption != null) {
                 mergedOption.append(flavorOption)
             }
@@ -1331,8 +1179,8 @@ open class GradleVariantConfiguration internal constructor(
             }
             // cant use merge flavor as it's not a prop on the base class.
             // reverse loop for proper order
-            for (i in mFlavors.indices.reversed()) {
-                for (option in mFlavors[i].shaders.glslcArgs) {
+            for (i in productFlavors.indices.reversed()) {
+                for (option in productFlavors[i].shaders.glslcArgs) {
                     optionMap[getKey(option)] = option
                 }
             }
@@ -1378,12 +1226,12 @@ open class GradleVariantConfiguration internal constructor(
                 // 2. the flavors.
                 // cant use merge flavor as it's not a prop on the base class.
                 // reverse loop for proper order
-                for (i in mFlavors.indices.reversed()) { // global
-                    for (option in mFlavors[i].shaders.glslcArgs) {
+                for (i in productFlavors.indices.reversed()) { // global
+                    for (option in productFlavors[i].shaders.glslcArgs) {
                         optionMap[getKey(option)] = option
                     }
                     // scoped.
-                    for (option in mFlavors[i].shaders.scopedGlslcArgs[key]) {
+                    for (option in productFlavors[i].shaders.scopedGlslcArgs[key]) {
                         optionMap[getKey(option)] = option
                     }
                 }
@@ -1406,7 +1254,7 @@ open class GradleVariantConfiguration internal constructor(
             val keys: MutableSet<String> =
                 Sets.newHashSet()
             keys.addAll(defaultConfig.shaders.scopedGlslcArgs.keySet())
-            for (flavor in mFlavors) {
+            for (flavor in productFlavors) {
                 keys.addAll(flavor.shaders.scopedGlslcArgs.keySet())
             }
             keys.addAll(buildType.shaders.scopedGlslcArgs.keySet())
@@ -1511,58 +1359,24 @@ open class GradleVariantConfiguration internal constructor(
     }
 
     init {
-        Preconditions.checkNotNull(defaultConfig)
-        Preconditions.checkNotNull(
-            defaultSourceProvider
-        )
-        Preconditions.checkNotNull(
-            buildType
-        )
-        Preconditions.checkNotNull(type)
-        Preconditions.checkArgument(
-            !type.isTestComponent || testedConfig != null,
-            "You have to specify the tested variant for this variant type."
-        )
-        Preconditions.checkArgument(
-            type.isTestComponent || testedConfig == null,
-            "This variant type doesn't need a tested variant."
-        )
-        this.defaultConfig =
-            Preconditions.checkNotNull(defaultConfig)
-        defaultSourceSet =
-            Preconditions.checkNotNull(
-                defaultSourceProvider
-            )
-        this.buildType =
-            Preconditions.checkNotNull(
-                buildType
-            )
-        buildTypeSourceSet = buildTypeSourceProvider
-        this.type =
-            Preconditions.checkNotNull(
-                type
-            )
-        this.testedConfig = testedConfig
-        mSigningConfigOverride = signingConfigOverride
-        this.issueReporter = issueReporter
-        mergedFlavor = clone(this.defaultConfig, this.issueReporter)
+        mergedFlavor = mergeFlavors(defaultConfig, productFlavors, issueReporter)
+
         val manifestParser =
-            mainManifestAttributeSupplier
+            manifestAttributeSupplier
                 ?: DefaultManifestParser(
-                    defaultSourceSet.manifestFile,
+                    defaultSourceProvider.manifestFile,
                     isInExecutionPhase,
                     isManifestFileRequired(type),
                     issueReporter
                 )
         mVariantAttributesProvider = VariantAttributesProvider(
             mergedFlavor,
-            this.buildType,
+            buildType,
             type.isTestComponent,
             manifestParser,
-            defaultSourceSet.manifestFile,
+            defaultSourceProvider.manifestFile,
             fullName
         )
         mergeOptions()
-        this.projectOptions = projectOptions
     }
 }

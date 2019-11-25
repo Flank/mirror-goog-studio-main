@@ -40,7 +40,6 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
-import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
@@ -133,7 +132,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import kotlin.Pair;
 import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
@@ -1072,25 +1070,36 @@ public class VariantManager implements VariantModel {
             @NonNull com.android.builder.model.BuildType buildType,
             @NonNull List<? extends ProductFlavor> productFlavorList,
             @NonNull VariantType variantType) {
-        BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
-        final DefaultAndroidSourceSet sourceSet = defaultConfigData.getSourceSet();
-        GradleVariantConfiguration variantConfig =
-                VariantBuilder.getBuilderForExtension(extension)
-                        .create(
-                                globalScope.getProjectOptions(),
-                                defaultConfigData.getProductFlavor(),
-                                sourceSet,
-                                getParser(
-                                        sourceSet.getManifestFile(),
-                                        GradleVariantConfiguration.isManifestFileRequired(
-                                                variantType)),
-                                buildTypeData.getBuildType(),
-                                buildTypeData.getSourceSet(),
-                                variantType,
-                                signingOverride,
-                                globalScope.getErrorHandler(),
-                                this::canParseManifest);
+        BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
+        DefaultAndroidSourceSet defaultConfigSourceProvider = defaultConfigData.getSourceSet();
+
+        VariantBuilder variantBuilder =
+                VariantBuilder.getBuilder(
+                        variantType,
+                        defaultConfigData.getProductFlavor(),
+                        defaultConfigSourceProvider,
+                        buildTypeData.getBuildType(),
+                        buildTypeData.getSourceSet(),
+                        signingOverride,
+                        getParser(
+                                defaultConfigSourceProvider.getManifestFile(),
+                                GradleVariantConfiguration.isManifestFileRequired(variantType)),
+                        globalScope.getProjectOptions(),
+                        globalScope.getErrorHandler(),
+                        this::canParseManifest);
+
+        // We must first add the flavors to the variant config, in order to get the proper
+        // variant-specific and multi-flavor name as we add/create the variant providers later.
+        for (ProductFlavor productFlavor : productFlavorList) {
+            ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getName());
+
+            variantBuilder.addProductFlavor(data.getProductFlavor(), data.getSourceSet());
+        }
+
+        createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
+
+        GradleVariantConfiguration variantConfig = variantBuilder.createVariantConfig();
 
         // Only record release artifacts
         if (!buildTypeData.getBuildType().isDebuggable()
@@ -1098,28 +1107,6 @@ public class VariantManager implements VariantModel {
                 && !variantConfig.getType().isForTesting()) {
             ProcessProfileWriter.get().recordApplicationId(variantConfig::getApplicationId);
         }
-
-        // sourceSetContainer in case we are creating variant specific sourceSets.
-        NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
-                .getSourceSets();
-
-        // We must first add the flavors to the variant config, in order to get the proper
-        // variant-specific and multi-flavor name as we add/create the variant providers later.
-        for (ProductFlavor productFlavor : productFlavorList) {
-            ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getName());
-
-            String dimensionName = productFlavor.getDimension();
-            if (dimensionName == null) {
-                dimensionName = "";
-            }
-
-            variantConfig.addProductFlavor(
-                    data.getProductFlavor(),
-                    data.getSourceSet(),
-                    dimensionName);
-        }
-
-        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetManager);
 
         // Add the container of dependencies.
         // The order of the libraries is important, in descending order:
@@ -1199,16 +1186,17 @@ public class VariantManager implements VariantModel {
 
     private static void createCompoundSourceSets(
             @NonNull List<? extends ProductFlavor> productFlavorList,
-            @NonNull GradleVariantConfiguration variantConfig,
+            @NonNull VariantBuilder variantBuilder,
             @NonNull SourceSetManager sourceSetManager) {
+        final VariantType variantType = variantBuilder.getVariantType();
+
         if (!productFlavorList.isEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             DefaultAndroidSourceSet variantSourceSet =
                     (DefaultAndroidSourceSet)
                             sourceSetManager.setUpSourceSet(
-                                    computeSourceSetName(
-                                            variantConfig.getFullName(), variantConfig.getType()),
-                                    variantConfig.getType().isTestComponent());
-            variantConfig.setVariantSourceProvider(variantSourceSet);
+                                    computeSourceSetName(variantBuilder.getName(), variantType),
+                                    variantType.isTestComponent());
+            variantBuilder.setVariantSourceProvider(variantSourceSet);
         }
 
         if (productFlavorList.size() > 1) {
@@ -1216,9 +1204,9 @@ public class VariantManager implements VariantModel {
                     (DefaultAndroidSourceSet)
                             sourceSetManager.setUpSourceSet(
                                     computeSourceSetName(
-                                            variantConfig.getFlavorName(), variantConfig.getType()),
-                                    variantConfig.getType().isTestComponent());
-            variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
+                                            variantBuilder.getFlavorName(), variantType),
+                                    variantType.isTestComponent());
+            variantBuilder.setMultiFlavorSourceProvider(multiFlavorSourceSet);
         }
     }
 
@@ -1250,9 +1238,6 @@ public class VariantManager implements VariantModel {
         BuildType buildType = testedVariantData.getVariantConfiguration().getBuildType();
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
-        GradleVariantConfiguration testedConfig = testedVariantData.getVariantConfiguration();
-        List<ProductFlavor> productFlavorList = testedConfig.getProductFlavors();
-
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
         // to return @Nullable and the constructor is @NonNull on this parameter,
@@ -1260,35 +1245,41 @@ public class VariantManager implements VariantModel {
         // The constructor does a runtime check on the instances so we should be safe.
         final DefaultAndroidSourceSet testSourceSet = defaultConfigData.getTestSourceSet(type);
         @SuppressWarnings("ConstantConditions")
-        GradleVariantConfiguration testVariantConfig =
-                testedConfig.getMyTestConfig(
+        VariantBuilder variantBuilder =
+                VariantBuilder.getBuilder(
+                        type,
+                        defaultConfigData.getProductFlavor(),
                         testSourceSet,
+                        buildTypeData.getBuildType(),
+                        buildTypeData.getTestSourceSet(type),
+                        signingOverride,
                         testSourceSet != null
                                 ? getParser(
                                         testSourceSet.getManifestFile(),
                                         GradleVariantConfiguration.isManifestFileRequired(type))
                                 : null,
-                        buildTypeData.getTestSourceSet(type),
-                        type,
+                        globalScope.getProjectOptions(),
+                        globalScope.getErrorHandler(),
                         this::canParseManifest);
 
+        GradleVariantConfiguration testedConfig = testedVariantData.getVariantConfiguration();
 
+        variantBuilder.setTestedConfig(testedConfig);
+
+        List<ProductFlavor> productFlavorList = testedConfig.getProductFlavors();
+
+        // We must first add the flavors to the variant builder, in order to get the proper
+        // variant-specific and multi-flavor name as we add/create the variant providers later.
         for (ProductFlavor productFlavor : productFlavorList) {
             ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getName());
 
-            String dimensionName = productFlavor.getDimension();
-            if (dimensionName == null) {
-                dimensionName = "";
-            }
-            // same supress warning here.
             //noinspection ConstantConditions
-            testVariantConfig.addProductFlavor(
-                    data.getProductFlavor(),
-                    data.getTestSourceSet(type),
-                    dimensionName);
+            variantBuilder.addProductFlavor(data.getProductFlavor(), data.getTestSourceSet(type));
         }
 
-        createCompoundSourceSets(productFlavorList, testVariantConfig, sourceSetManager);
+        createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
+
+        GradleVariantConfiguration testVariantConfig = variantBuilder.createVariantConfig();
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =

@@ -94,18 +94,19 @@ public class GradleVariantConfigurationTest {
     }
 
     private GradleVariantConfiguration createVariant(int deviceApiVersion) {
-        return new GradleVariantConfiguration(
-                new ProjectOptions(
-                        ImmutableMap.of(IDE_TARGET_DEVICE_API.getPropertyName(), deviceApiVersion)),
-                null,
-                defaultConfig,
-                new MockSourceProvider("src/main"),
-                null,
-                buildType,
-                null,
-                VariantTypeImpl.BASE_APK,
-                null,
-                new FakeEvalIssueReporter(),
-                () -> true);
+        return VariantBuilder.getBuilder(
+                        VariantTypeImpl.BASE_APK,
+                        defaultConfig,
+                        new MockSourceProvider("src/main"),
+                        buildType,
+                        null,
+                        null /*signing override*/,
+                        null /*manifest supplier*/,
+                        new ProjectOptions(
+                                ImmutableMap.of(
+                                        IDE_TARGET_DEVICE_API.getPropertyName(), deviceApiVersion)),
+                        new FakeEvalIssueReporter(),
+                        () -> true)
+                .createVariantConfig();
     }
 }
