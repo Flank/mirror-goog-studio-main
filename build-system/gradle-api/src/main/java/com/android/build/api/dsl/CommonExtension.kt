@@ -29,26 +29,26 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface CommonExtension<VARIANT: Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTIES: VariantProperties> {
+interface CommonExtension<VariantT: Variant<VariantPropertiesT>, VariantPropertiesT: VariantProperties> {
     // TODO(b/140406102)
 
     /**
      * Adds a [Action] to be performed on all [Variant] objects associated with this module.
      */
-    fun onVariants(action: Action<VARIANT>)
+    fun onVariants(action: Action<VariantT>)
 
     /**
      * Adds a lambda function to be performed on all [Variant] objects associated with his module
      */
-    fun onVariants(action: VARIANT.() -> Unit)
+    fun onVariants(action: VariantT.() -> Unit)
 
     /**
      * Creates a filter on [Variant] objects for this module. The filter will reduce the set of
      * applicable variants to run an action on.
      *
-     * @return a [GenericVariantFilterBuilder] of [VARIANT]
+     * @return a [GenericVariantFilterBuilder] of [VariantT]
      */
-    fun onVariants(): GenericVariantFilterBuilder<VARIANT>
+    fun onVariants(): GenericVariantFilterBuilder<VariantT>
 
     /**
      * Registers an [Action] to be executed on each [VariantProperties] of the project.
@@ -56,19 +56,19 @@ interface CommonExtension<VARIANT: Variant<VARIANT_PROPERTIES>, VARIANT_PROPERTI
      *
      * @param action an [Action] taking a [VariantProperties] as a parameter.
      */
-    fun onVariantProperties(action: Action<VARIANT_PROPERTIES>)
+    fun onVariantProperties(action: Action<VariantPropertiesT>)
 
     /**
      * Adds a lambda function to be performed on all [VariantProperties] objects associated
      * with his module
      */
-    fun onVariantProperties(action: VARIANT_PROPERTIES.() -> Unit)
+    fun onVariantProperties(action: VariantPropertiesT.() -> Unit)
 
     /**
      * Creates a filter on [VariantProperties] objects for this module. The filter will reduce the
      * set of application variants to run an action on.
      *
-     * @areturn a [GenericVariantFilterBuilder] of [VARIANT_PROPERTIES]
+     * @areturn a [GenericVariantFilterBuilder] of [VariantPropertiesT]
      */
-    fun onVariantProperties(): GenericVariantFilterBuilder<VARIANT_PROPERTIES>
+    fun onVariantProperties(): GenericVariantFilterBuilder<VariantPropertiesT>
 }
