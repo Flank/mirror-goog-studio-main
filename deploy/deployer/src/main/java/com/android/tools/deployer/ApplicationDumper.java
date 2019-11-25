@@ -144,6 +144,10 @@ public class ApplicationDumper {
     }
 
     private static Deploy.Arch GetArch(Deploy.DumpResponse response) throws DeployerException {
+        // TODO: DUMP should not return ARCH_UNKNOWN. We should on the host side determine
+        // exactly which app / process needs to dump ProcID / ARCH before calling the installer.
+        // For instrumentation test, we should only dump the APK's CD and the targeted package's
+        // process / arch.
         Deploy.Arch result = Deploy.Arch.ARCH_UNKNOWN;
         String lastPackageWithKnowArch = null;
         for (Deploy.PackageDump pkg : response.getPackagesList()) {
