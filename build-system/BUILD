@@ -107,8 +107,6 @@ maven_pom(
 # The Gradle APIs to build against and run against.
 GRADLE_VERSION = "6.1-milestone-1"
 
-GRADLE_NIGHTLY = "5.7-20190815220048+0000"
-
 filegroup(
     name = "gradle-distrib",
     srcs = ["//tools/external/gradle:gradle-distrib-" + GRADLE_VERSION],
@@ -118,12 +116,6 @@ filegroup(
 filegroup(
     name = "gradle-distrib-5.5",
     srcs = ["//tools/external/gradle:gradle-distrib-5.5"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gradle-distrib-nightly",
-    srcs = ["//tools/external/gradle:gradle-distrib-" + GRADLE_NIGHTLY],
     visibility = ["//visibility:public"],
 )
 

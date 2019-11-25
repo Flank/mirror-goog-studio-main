@@ -116,36 +116,6 @@ gradle_integration_test(
     deps = TEST_DEPS,
 )
 
-# Tests against the Gradle nightly version.
-gradle_integration_test(
-    name = "test-nightly",
-    srcs = glob(
-        [
-            "src/testNightly/java/**/*.java",
-            "src/testNightly/java/**/*.kt",
-        ],
-    ),
-    data = TEST_DATA + [
-        "//prebuilts/studio/sdk:ndk-bundle",
-    ],
-    dirs = ["src/testNightly/java"],
-    #keep sorted
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test:androidx_latest",
-        "//tools/base/build-system/integration-test:support_library_latest",
-        "//tools/base/build-system/integration-test/application:prebuilts",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
-    ],
-    resources = glob(["src/testNightly/resources/**"]),
-    #keep sorted
-    tags = [
-        "no_test_mac_psq",  # b/113099009
-        "no_test_windows",  #
-    ],
-    deps = TEST_DEPS,
-)
-
 # Maven repo with all the dependencies required by test projects.
 #
 # Quick way of updating this list:

@@ -8,8 +8,6 @@ repositories {
     maven { url = uri(rootProject.cloneArtifacts.repository) }
 }
 
-sourceSets.test.java.srcDirs += 'src/testNightly/java'
-
 dependencies {
     testCompile project(':base:build-system:integration-test:framework')
     testCompile project(':analytics-library:protos')
