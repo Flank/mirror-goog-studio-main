@@ -19,7 +19,6 @@ import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -61,7 +60,6 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
      */
     @Test
     public void testRedefiningNotLoaded() throws Exception {
-        Assume.assumeTrue(artFlag == null);
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 

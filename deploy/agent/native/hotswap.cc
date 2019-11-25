@@ -277,7 +277,6 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     error_num = jvmti_->RedefineClasses(modified_classes, def);
   } else {
     Log::I("Using Structure Redefinition Extension");
-    std::vector<size_t> failed_index;
 
     // When using SRE, we need to stop the world since many operations must be
     // run in an atomic fashion. e.g: Adding a static variable to a class
@@ -302,23 +301,18 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
       error_num = (*extension)(jvmti_, def[i].klass, def[i].class_bytes,
                                def[i].class_byte_count);
       if (error_num != JVMTI_ERROR_NONE) {
-        failed_index.push_back(i);
+        break;
       }
       Log::I("Done Redefinition Extension");
     }
-    jvmtiClassDefinition* retry_def =
-        new jvmtiClassDefinition[modified_classes];
-    for (size_t i = 0; i < failed_index.size(); i++) {
-      size_t offset = failed_index[i];
-      retry_def[i] = def[offset];
-    }
+
     suspend_error = suspend.ResumeSuspendedThreads();
     if (!suspend_error.empty()) {
       // TODO: Logging for now. Metrics might be nice later.
       Log::E("%s", suspend_error.c_str());
     }
-    error_num = jvmti_->RedefineClasses(failed_index.size(), retry_def);
   }
+
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
 
   if (error_num == JVMTI_ERROR_NONE) {
