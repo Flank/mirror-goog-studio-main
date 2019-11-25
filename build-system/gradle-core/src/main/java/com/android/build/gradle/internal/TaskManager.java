@@ -2368,9 +2368,18 @@ public abstract class TaskManager {
         }
 
         VariantType type = scope.getType();
-        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = checkNotNull(scope.getTestedVariantData());
-            if (!testedVariantData.getType().isAar()) {
+        if (type.isForTesting()) {
+            BaseVariantData testedVariantData = scope.getTestedVariantData();
+            if (testedVariantData == null) {
+                // This is a com.android.test module.
+                if (dataBindingEnabled) {
+                    getLogger()
+                            .error("Data binding cannot be enabled in a com.android.test project");
+                    return;
+                }
+                // else viewBinding must be enabled which is fine.
+            } else if (!extension.getDataBinding().isEnabledForTests()
+                    && !testedVariantData.getType().isAar()) {
                 return;
             }
         }
