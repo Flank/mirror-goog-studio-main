@@ -61,15 +61,16 @@ class BaseAppModuleExtensionTest {
                 else Mockito.mock(invocation.arguments[0] as Class<*>)
             }
         Mockito.`when`(objectFactory.domainObjectSet(any(Class::class.java))).thenReturn(Mockito.mock(DomainObjectSet::class.java))
-        val extension = ApplicationExtensionImpl()
+        val extension = ApplicationExtensionImpl(
+            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
+            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
+            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
+        )
 
         appExtension = BaseAppModuleExtension(
             project,
             Mockito.mock(ProjectOptions::class.java),
             Mockito.mock(GlobalScope::class.java),
-            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
-            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
-            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>,
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,
             Mockito.mock(SourceSetManager::class.java),
             Mockito.mock(ExtraModelInfo::class.java),

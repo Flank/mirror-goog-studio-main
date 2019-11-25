@@ -22,10 +22,25 @@ import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.scope.VariantScope
+import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
-class LibraryExtensionImpl : CommonExtensionImpl<LibraryVariant, LibraryVariantProperties>(),
-    LibraryExtension,
+class LibraryExtensionImpl(
+    buildTypes: NamedDomainObjectContainer<BuildType>,
+    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
+    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+) :
+    CommonExtensionImpl<
+            BuildType,
+            ProductFlavor,
+            SigningConfig,
+            LibraryVariant,
+            LibraryVariantProperties>(
+        buildTypes,
+        productFlavors,
+        signingConfigs
+    ),
+    LibraryExtension<BuildType, ProductFlavor, SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<LibraryVariant>(variantScopes)

@@ -22,16 +22,41 @@ import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.api.variant.impl.VariantScopeTransformers
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
-abstract class CommonExtensionImpl<VariantT : Variant<VariantPropertiesT>, VariantPropertiesT : VariantProperties>
-    : CommonExtension<VariantT, VariantPropertiesT> {
+abstract class CommonExtensionImpl<
+        BuildTypeT : com.android.build.api.dsl.BuildType,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
+        SigningConfigT : com.android.build.api.dsl.SigningConfig,
+        VariantT : Variant<VariantPropertiesT>, VariantPropertiesT : VariantProperties>(
+    override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
+) : CommonExtension<
+        BuildTypeT,
+        ProductFlavorT,
+        SigningConfigT,
+        VariantT,
+        VariantPropertiesT> {
 
     protected val variantOperations =
         VariantOperations<VariantT>(VariantScopeTransformers.toVariant)
     protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>(
         VariantScopeTransformers.toVariantProperties
     )
+
+    override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>) {
+        action.execute(buildTypes)
+    }
+
+    override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {
+        action.execute(productFlavors)
+    }
+
+    override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>) {
+        action.execute(signingConfigs)
+    }
 
     override fun onVariants(action: Action<VariantT>) {
         variantOperations.actions.add(action)

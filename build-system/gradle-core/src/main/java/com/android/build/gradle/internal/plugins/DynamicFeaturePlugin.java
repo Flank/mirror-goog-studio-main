@@ -85,12 +85,12 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
                         project,
                         projectOptions,
                         globalScope,
-                        buildTypeContainer,
-                        productFlavorContainer,
-                        signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
-                        new DynamicFeatureExtensionImpl());
+                        new DynamicFeatureExtensionImpl(
+                                buildTypeContainer,
+                                productFlavorContainer,
+                                signingConfigContainer));
     }
 }

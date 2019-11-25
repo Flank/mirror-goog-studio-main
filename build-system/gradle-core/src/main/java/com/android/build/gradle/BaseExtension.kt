@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.dsl.BuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ComposeOptions
 import com.android.build.gradle.internal.dsl.ComposeOptionsImpl
+
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DexOptions
@@ -109,9 +110,6 @@ abstract class BaseExtension protected constructor(
     protected val project: Project,
     projectOptions: ProjectOptions,
     protected val globalScope: GlobalScope,
-    override val buildTypes: NamedDomainObjectContainer<BuildType>,
-    override val productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    override val signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     /** All build outputs for all variants, can be used by users to customize a build output. */
     override val buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     private val sourceSetManager: SourceSetManager,
@@ -347,39 +345,6 @@ abstract class BaseExtension protected constructor(
             // is not the desired behavior, so normalize e.g. to 20.0.0.
             buildToolsRevision = Revision.parseRevision(version, Revision.Precision.MICRO)
         }
-
-    /**
-     * Encapsulates all build type configurations for this project.
-     *
-     * For more information about the properties you can configure in this block, see [BuildType]
-     */
-    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>) {
-        checkWritability()
-        action.execute(buildTypes)
-    }
-
-    /**
-     * Encapsulates all product flavors configurations for this project.
-     *
-     * For more information about the properties you can configure in this block,
-     * see [ProductFlavor]
-     */
-    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>) {
-        checkWritability()
-        action.execute(productFlavors)
-    }
-
-    /**
-     * Encapsulates signing configurations that you can apply to
-     * [BuildType] and [ProductFlavor] configurations.
-     *
-     * For more information about the properties you can configure in this block,
-     * see [SigningConfig].
-     */
-    fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>) {
-        checkWritability()
-        action.execute(signingConfigs)
-    }
 
     /**
      * Specifies the names of product flavor dimensions for this project.
@@ -802,4 +767,14 @@ abstract class BaseExtension protected constructor(
     fun composeOptions(action: Action<ComposeOptions>) {
         action.execute(composeOptions)
     }
+
+    // Kept for binary and source compatibility until the old DSL interfaces can go away.
+    abstract override val buildTypes: NamedDomainObjectContainer<BuildType>
+    abstract fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
+
+    abstract override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
+    abstract fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
+
+    abstract override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
+    abstract fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 }

@@ -94,13 +94,13 @@ public class AppPlugin extends AbstractAppPlugin {
                         project,
                         projectOptions,
                         globalScope,
-                        buildTypeContainer,
-                        productFlavorContainer,
-                        signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
-                        new ApplicationExtensionImpl());
+                        new ApplicationExtensionImpl(
+                                buildTypeContainer,
+                                productFlavorContainer,
+                                signingConfigContainer));
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {

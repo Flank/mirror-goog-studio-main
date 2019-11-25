@@ -397,86 +397,13 @@ interface AndroidConfig {
     val transforms: List<Transform>
     val transformsDependencies: List<List<Any>>
 
-    /**
-     * Encapsulates all product flavors configurations for this project.
-     *
-     *
-     * Product flavors represent different versions of your project that you expect to co-exist
-     * on a single device, the Google Play store, or repository. For example, you can configure
-     * 'demo' and 'full' product flavors for your app, and each of those flavors can specify
-     * different features, device requirements, resources, and application ID's--while sharing
-     * common source code and resources. So, product flavors allow you to output different versions
-     * of your project by simply changing only the components and settings that are different
-     * between them.
-     *
-     *
-     * Configuring product flavors is similar to
-     * [configuring build types](https://developer.android.com/studio/build/build-variants.html#build-types):
-     * add them to the `productFlavors` block of your project's `build.gradle` file
-     * and configure the settings you want.
-     * Product flavors support the same properties as the
-     * [com.android.build.gradle.internal.dsl.DefaultConfig]
-     * block--this is because `defaultConfig` defines a [ ] object that the plugin uses as the base
-     * configuration for all other flavors. Each flavor you configure can then override any of the
-     * default values in `defaultConfig`, such as the
-     * [`applicationId`](https://d.android.com/studio/build/application-id.html).
-     *
-     *
-     * When using Android plugin 3.0.0 and higher, *each flavor must belong to a
-     * [`flavorDimension`](com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:flavorDimensions(java.lang.String[]))
-     * value*. By default, when you specify only one
-     * dimension, all flavors you configure belong to that dimension. If you specify more than one
-     * flavor dimension, you need to manually assign each flavor to a dimension. To learn more, read
-     * [Use Flavor Dimensions for variant-aware dependency management](https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html#variant_aware).
-     *
-     *
-     * When you configure product flavors, the Android plugin automatically combines them with
-     * your [com.android.build.gradle.internal.dsl.BuildType] configurations to
-     * [create build variants](https://developer.android.com/studio/build/build-variants.html).
-     * If the plugin creates certain build variants that you don't want, you can
-     * [filter variants](https://developer.android.com/studio/build/build-variants.html#filter-variants).
-     *
-     * @see com.android.build.gradle.internal.dsl.ProductFlavor
-     */
+    /** Replaced by [com.android.build.api.dsl.CommonExtension.productFlavors] */
     val productFlavors: Collection<CoreProductFlavor>
 
-    /**
-     * Encapsulates all build type configurations for this project.
-     *
-     *
-     * Unlike using [com.android.build.gradle.internal.dsl.ProductFlavor] to create
-     * different versions of your project that you expect to co-exist on a single device, build
-     * types determine how Gradle builds and packages each version of your project. Developers
-     * typically use them to configure projects for various stages of a development lifecycle. For
-     * example, when creating a new project from Android Studio, the Android plugin configures a
-     * 'debug' and 'release' build type for you. By default, the 'debug' build type enables
-     * debugging options and signs your APK with a generic debug keystore. Conversely, The 'release'
-     * build type strips out debug symbols and requires you to
-     * [create a release key and keystore](https://developer.android.com/studio/publish/app-signing.html#sign-apk)
-     * for your app. You can then combine build types with product flavors to
-     * [create build variants](https://developer.android.com/studio/build/build-variants.html).
-     *
-     * @see com.android.build.gradle.internal.dsl.BuildType
-     */
+    /** Replaced by [com.android.build.api.dsl.CommonExtension.buildTypes] */
     val buildTypes: Collection<CoreBuildType>
 
-    /**
-     * Encapsulates signing configurations that you can apply to [ ] and [ ] configurations.
-     *
-     *
-     * Android requires that all APKs be digitally signed with a certificate before they can be
-     * installed onto a device. When deploying a debug version of your project from Android Studio,
-     * the Android plugin automatically signs your APK with a generic debug certificate. However, to
-     * build an APK for release, you must
-     * [sign the APK](https://developer.android.com/studio/publish/app-signing.html)
-     * with a release key and keystore.
-     * You can do this by either
-     * [using the Android Studio UI](https://developer.android.com/studio/publish/app-signing.html#sign-apk)
-     * or manually
-     * [configuring your `build.gradle` file](https://developer.android.com/studio/publish/app-signing.html#gradle-sign).
-     *
-     * @see com.android.build.gradle.internal.dsl.SigningConfig
-     */
+    /** Replaced by [com.android.build.api.dsl.CommonExtension.signingConfigs] */
     val signingConfigs: Collection<SigningConfig>
 
     /**

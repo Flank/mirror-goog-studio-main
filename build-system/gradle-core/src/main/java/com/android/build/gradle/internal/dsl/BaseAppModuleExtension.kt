@@ -32,9 +32,6 @@ open class BaseAppModuleExtension(
     project: Project,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
@@ -43,14 +40,12 @@ open class BaseAppModuleExtension(
     project,
     projectOptions,
     globalScope,
-    buildTypes,
-    productFlavors,
-    signingConfigs,
     buildOutputs,
     sourceSetManager,
     extraModelInfo,
     true
-), ApplicationExtension by publicExtensionImpl, ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+), ApplicationExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     var dynamicFeatures: MutableSet<String> = mutableSetOf()
 

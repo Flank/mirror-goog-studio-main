@@ -57,7 +57,7 @@ import org.gradle.api.provider.Property;
  * href="https://developer.android.com/studio/build/build-variants.html#filter-variants">filter
  * variants using <code>android.variantFilter</code></a>.
  */
-public class ProductFlavor extends BaseFlavor {
+public class ProductFlavor extends BaseFlavor implements com.android.build.api.dsl.ProductFlavor {
 
     @Inject
     public ProductFlavor(

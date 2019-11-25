@@ -46,9 +46,6 @@ open class LibraryExtension(
     project: Project,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
@@ -57,14 +54,12 @@ open class LibraryExtension(
     project,
     projectOptions,
     globalScope,
-    buildTypes,
-    productFlavors,
-    signingConfigs,
     buildOutputs,
     sourceSetManager,
     extraModelInfo,
     false
-), com.android.build.api.dsl.LibraryExtension by publicExtensionImpl, ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+), com.android.build.api.dsl.LibraryExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         project.objects.domainObjectSet(LibraryVariant::class.java)

@@ -16,27 +16,10 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
 import org.gradle.api.Incubating
+import org.gradle.api.Named
 
-/**
- * Extension for the Android Library Gradle Plugin.
- *
- *
- * Only the Android Gradle Plugin should create instances of this interface.
- */
+/** DSL object to configure product flavors. */
 @Incubating
-interface LibraryExtension<
-        BuildTypeT : BuildType,
-        ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig>
-    : CommonExtension<
-        BuildTypeT,
-        ProductFlavorT,
-        SigningConfigT,
-        LibraryVariant,
-        LibraryVariantProperties>,
-    TestedExtension {
-    // TODO(b/140406102)
+interface ProductFlavor : Named {
 }

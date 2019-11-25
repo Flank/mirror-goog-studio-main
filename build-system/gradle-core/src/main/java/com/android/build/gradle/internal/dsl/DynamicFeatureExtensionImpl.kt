@@ -22,10 +22,25 @@ import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.scope.VariantScope
+import org.gradle.api.NamedDomainObjectContainer
 
-class DynamicFeatureExtensionImpl :
-    CommonExtensionImpl<DynamicFeatureVariant, DynamicFeatureVariantProperties>(),
-    DynamicFeatureExtension,
+class DynamicFeatureExtensionImpl(
+    buildTypes: NamedDomainObjectContainer<BuildType>,
+    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
+    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+)  :
+    CommonExtensionImpl<
+            BuildType,
+            ProductFlavor,
+            SigningConfig,
+            DynamicFeatureVariant,
+            DynamicFeatureVariantProperties>(
+        buildTypes,
+        productFlavors,
+        signingConfigs
+    ),
+
+    DynamicFeatureExtension<BuildType, ProductFlavor, SigningConfig>,
     ActionableVariantObjectOperationsExecutor {
     override fun executeVariantOperations(variantScopes: List<VariantScope>) {
         variantOperations.executeOperations<DynamicFeatureVariant>(variantScopes)

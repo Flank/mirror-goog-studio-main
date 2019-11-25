@@ -1,8 +1,5 @@
 package com.android.build.gradle
 
-import com.android.build.api.variant.TestVariantProperties
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
@@ -16,7 +13,6 @@ import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
-import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -27,9 +23,6 @@ open class TestExtension(
     project: Project,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
@@ -38,15 +31,12 @@ open class TestExtension(
     project,
     projectOptions,
     globalScope,
-    buildTypes,
-    productFlavors,
-    signingConfigs,
     buildOutputs,
     sourceSetManager,
     extraModelInfo,
     false
 ), TestAndroidConfig,
-    com.android.build.api.dsl.TestExtension by publicExtensionImpl,
+    com.android.build.api.dsl.TestExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =

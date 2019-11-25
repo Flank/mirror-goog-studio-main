@@ -43,7 +43,8 @@ import org.gradle.api.tasks.Internal;
 
 /** DSL object to configure build types. */
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda", "deprecation"})
-public class BuildType extends AbstractBuildType implements CoreBuildType, Serializable {
+public class BuildType extends AbstractBuildType
+        implements CoreBuildType, Serializable, com.android.build.api.dsl.BuildType {
 
     private static final long serialVersionUID = 1L;
 

@@ -69,13 +69,13 @@ public class LibraryPlugin extends BasePlugin {
                         project,
                         projectOptions,
                         globalScope,
-                        buildTypeContainer,
-                        productFlavorContainer,
-                        signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
-                        new LibraryExtensionImpl());
+                        new LibraryExtensionImpl(
+                                buildTypeContainer,
+                                productFlavorContainer,
+                                signingConfigContainer));
     }
 
     @NonNull

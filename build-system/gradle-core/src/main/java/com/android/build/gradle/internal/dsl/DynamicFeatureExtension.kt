@@ -38,15 +38,13 @@ internal open class DynamicFeatureExtension(
     project: Project,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     publicExtensionImpl: DynamicFeatureExtensionImpl
 ) : AppExtension(
-    project, projectOptions, globalScope, buildTypes, productFlavors, signingConfigs,
+    project, projectOptions, globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
-), DynamicFeatureExtension by publicExtensionImpl, ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+), DynamicFeatureExtension<BuildType, ProductFlavor, SigningConfig> by publicExtensionImpl,
+    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 }

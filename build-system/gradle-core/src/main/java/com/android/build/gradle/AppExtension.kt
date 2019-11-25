@@ -16,18 +16,11 @@
 
 package com.android.build.gradle
 
-import com.android.build.gradle.api.ApplicationVariant
-import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.scope.VariantScope
-import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
@@ -39,9 +32,6 @@ abstract class AppExtension(
         project: Project,
         projectOptions: ProjectOptions,
         globalScope: GlobalScope,
-        buildTypes: NamedDomainObjectContainer<BuildType>,
-        productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-        signingConfigs: NamedDomainObjectContainer<SigningConfig>,
         buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
         sourceSetManager: SourceSetManager,
         extraModelInfo: ExtraModelInfo,
@@ -50,9 +40,6 @@ abstract class AppExtension(
         project,
         projectOptions,
         globalScope,
-        buildTypes,
-        productFlavors,
-        signingConfigs,
         buildOutputs,
         sourceSetManager,
         extraModelInfo,

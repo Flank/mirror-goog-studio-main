@@ -74,13 +74,13 @@ public class TestPlugin extends BasePlugin {
                         project,
                         projectOptions,
                         globalScope,
-                        buildTypeContainer,
-                        productFlavorContainer,
-                        signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
-                        new TestExtensionImpl());
+                        new TestExtensionImpl(
+                                buildTypeContainer,
+                                productFlavorContainer,
+                                signingConfigContainer));
     }
 
     @NonNull

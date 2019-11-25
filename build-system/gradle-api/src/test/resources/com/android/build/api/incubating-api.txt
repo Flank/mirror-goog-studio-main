@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4adf50b2dc6b34aeadcc464faeabed1fbc9ccb2bdddd804ab399e62108d7c0b4
+cb876b8a98aa082ce774b27266c8bb2c9b20e614df69a969616b36edb317701b
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -71,15 +71,24 @@ com.android.build.api.dsl.BuildFeatures.setRenderScript: void (java.lang.Boolean
 com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
+com.android.build.api.dsl.BuildType implements org.gradle.api.Named
 com.android.build.api.dsl.CommonExtension
-com.android.build.api.dsl.CommonExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<VARIANT_PROPERTIES> ()
-com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VARIANT_PROPERTIES, kotlin.Unit>)
-com.android.build.api.dsl.CommonExtension.onVariantProperties: void (org.gradle.api.Action<VARIANT_PROPERTIES>)
-com.android.build.api.dsl.CommonExtension.onVariants: com.android.build.api.variant.GenericVariantFilterBuilder<VARIANT> ()
-com.android.build.api.dsl.CommonExtension.onVariants: void (kotlin.jvm.functions.Function1<? super VARIANT, kotlin.Unit>)
-com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VARIANT>)
+com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
+com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
+com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
+com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
+com.android.build.api.dsl.CommonExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<VariantPropertiesT> ()
+com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VariantPropertiesT, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.onVariantProperties: void (org.gradle.api.Action<VariantPropertiesT>)
+com.android.build.api.dsl.CommonExtension.onVariants: com.android.build.api.variant.GenericVariantFilterBuilder<VariantT> ()
+com.android.build.api.dsl.CommonExtension.onVariants: void (kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VariantT>)
+com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
+com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
+com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
