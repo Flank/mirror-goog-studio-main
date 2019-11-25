@@ -1230,119 +1230,6 @@ open class GradleVariantConfiguration internal constructor(
             }
         }
 
-    /** Interface for building the [GradleVariantConfiguration] instances.  */
-    interface Builder {
-        /** Creates a variant configuration  */
-        fun create(
-            projectOptions: ProjectOptions,
-            defaultConfig: DefaultConfig,
-            defaultSourceProvider: SourceProvider,
-            mainManifestAttributeSupplier: ManifestAttributeSupplier?,
-            buildType: BuildType,
-            buildTypeSourceProvider: SourceProvider?,
-            type: VariantType,
-            signingConfigOverride: SigningConfig?,
-            issueReporter: EvalIssueReporter,
-            isInExecutionPhase: BooleanSupplier
-        ): GradleVariantConfiguration
-    }
-
-    /** Builder for non-testing variant configurations  */
-    private class VariantConfigurationBuilder :
-        Builder {
-        override fun create(
-            projectOptions: ProjectOptions,
-            defaultConfig: DefaultConfig,
-            defaultSourceProvider: SourceProvider,
-            mainManifestAttributeSupplier: ManifestAttributeSupplier?,
-            buildType: BuildType,
-            buildTypeSourceProvider: SourceProvider?,
-            type: VariantType,
-            signingConfigOverride: SigningConfig?,
-            issueReporter: EvalIssueReporter,
-            isInExecutionPhase: BooleanSupplier
-        ): GradleVariantConfiguration {
-            return GradleVariantConfiguration(
-                projectOptions,
-                null /*testedConfig*/,
-                defaultConfig,
-                defaultSourceProvider,
-                mainManifestAttributeSupplier,
-                buildType,
-                buildTypeSourceProvider,
-                type,
-                signingConfigOverride,
-                issueReporter,
-                isInExecutionPhase
-            )
-        }
-    }
-
-    /**
-     * Creates a [GradleVariantConfiguration] for a testing module variant.
-     *
-     *
-     * The difference from the regular modules is how the original application id,
-     * and application id are resolved. Our build process supports the absence of manifest
-     * file for these modules, and that is why the value resolution for these attributes
-     * is different.
-     */
-    private class TestModuleConfigurationBuilder :
-        Builder {
-        override fun create(
-            projectOptions: ProjectOptions,
-            defaultConfig: DefaultConfig,
-            defaultSourceProvider: SourceProvider,
-            mainManifestAttributeSupplier: ManifestAttributeSupplier?,
-            buildType: BuildType,
-            buildTypeSourceProvider: SourceProvider?,
-            type: VariantType,
-            signingConfigOverride: SigningConfig?,
-            issueReporter: EvalIssueReporter,
-            isInExecutionPhase: BooleanSupplier
-        ): GradleVariantConfiguration {
-            return object : GradleVariantConfiguration(
-                projectOptions,
-                null /*testedConfig*/,
-                defaultConfig,
-                defaultSourceProvider,
-                mainManifestAttributeSupplier,
-                buildType,
-                buildTypeSourceProvider,
-                type,
-                signingConfigOverride,
-                issueReporter,
-                isInExecutionPhase
-            ) {
-                override val applicationId: String
-                    get() {
-                        val applicationId = mergedFlavor.testApplicationId
-                        if (applicationId != null && applicationId.isNotEmpty()) {
-                            return applicationId
-                        }
-
-                        return super.applicationId
-                    }
-
-                override val originalApplicationId: String
-                    get() = applicationId
-
-                override val testApplicationId: String
-                    get() = applicationId
-
-                override fun getMyTestConfig(
-                    defaultSourceProvider: SourceProvider,
-                    mainManifestAttributeSupplier: ManifestAttributeSupplier?,
-                    buildTypeSourceProvider: SourceProvider?,
-                    type: VariantType,
-                    isInExecutionPhase: BooleanSupplier
-                ): GradleVariantConfiguration? {
-                    throw UnsupportedOperationException("Test modules have no test variants.")
-                }
-            }
-        }
-    }
-
     /**
      * Merge Gradle specific options from build types, product flavors and default config.
      */
@@ -1434,7 +1321,7 @@ open class GradleVariantConfiguration internal constructor(
     // add the lower priority one, to override them with the higher priority ones.
     // cant use merge flavor as it's not a prop on the base class.
     // reverse loop for proper order
-    val defautGlslcArgs: List<String>
+    val defaultGlslcArgs: List<String>
         get() {
             val optionMap: MutableMap<String, String> =
                 Maps.newHashMap()
@@ -1612,16 +1499,6 @@ open class GradleVariantConfiguration internal constructor(
                     usedFieldNames.add(f.name)
                     outList.add(f)
                 }
-            }
-        }
-
-        /** Depending on the extension, gets appropriate variant configuration builder  */
-        @JvmStatic
-        fun getBuilderForExtension(extension: BaseExtension): Builder {
-            return if (extension is TestAndroidConfig) { // if this is the test module
-                TestModuleConfigurationBuilder()
-            } else { // if this is non-test variant
-                VariantConfigurationBuilder()
             }
         }
 

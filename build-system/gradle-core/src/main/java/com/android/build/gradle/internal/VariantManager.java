@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.MergedFlavor;
+import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
 import com.android.build.gradle.internal.dependency.AarToClassTransform;
@@ -1075,7 +1076,7 @@ public class VariantManager implements VariantModel {
 
         final DefaultAndroidSourceSet sourceSet = defaultConfigData.getSourceSet();
         GradleVariantConfiguration variantConfig =
-                GradleVariantConfiguration.getBuilderForExtension(extension)
+                VariantBuilder.getBuilderForExtension(extension)
                         .create(
                                 globalScope.getProjectOptions(),
                                 defaultConfigData.getProductFlavor(),
