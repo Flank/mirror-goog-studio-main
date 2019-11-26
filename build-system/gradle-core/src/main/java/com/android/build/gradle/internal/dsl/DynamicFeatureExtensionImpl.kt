@@ -48,7 +48,13 @@ class DynamicFeatureExtensionImpl(
         signingConfigs
     ),
 
-    DynamicFeatureExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig>,
+    DynamicFeatureExtension<
+            BuildType,
+            DefaultConfig,
+            ProductFlavor,
+            SigningConfig,
+            TestOptions,
+            TestOptions.UnitTestOptions>,
     ActionableVariantObjectOperationsExecutor {
 
     override val buildFeatures: DynamicFeatureBuildFeatures =

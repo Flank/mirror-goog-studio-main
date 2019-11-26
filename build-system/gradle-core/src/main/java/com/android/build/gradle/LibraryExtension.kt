@@ -16,7 +16,6 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
-import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
@@ -31,6 +30,7 @@ import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
+import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -65,7 +65,14 @@ open class LibraryExtension(
     sourceSetManager,
     extraModelInfo,
     false
-), com.android.build.api.dsl.LibraryExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig> by publicExtensionImpl,
+),
+    com.android.build.api.dsl.LibraryExtension<
+            BuildType,
+            DefaultConfig,
+            ProductFlavor,
+            SigningConfig,
+            TestOptions,
+            TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =

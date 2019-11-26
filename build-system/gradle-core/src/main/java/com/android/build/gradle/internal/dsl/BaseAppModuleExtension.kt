@@ -47,7 +47,13 @@ open class BaseAppModuleExtension(
     sourceSetManager,
     extraModelInfo,
     true
-), ApplicationExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig> by publicExtensionImpl,
+), ApplicationExtension<
+        BuildType,
+        DefaultConfig,
+        ProductFlavor,
+        SigningConfig,
+        TestOptions,
+        TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     override val dataBinding: DataBindingOptions =

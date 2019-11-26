@@ -44,7 +44,9 @@ internal open class DynamicFeatureExtension(
         BuildType,
         DefaultConfig,
         ProductFlavor,
-        SigningConfig> by publicExtensionImpl,
+        SigningConfig,
+        TestOptions,
+        TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     override val dataBinding: DataBindingOptions =

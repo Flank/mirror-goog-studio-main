@@ -36,6 +36,8 @@ interface CommonExtension<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
+        TestOptionsT: TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT: UnitTestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
@@ -200,6 +202,21 @@ interface CommonExtension<
      * see [SigningConfig].
      */
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)
+
+
+    /**
+     * Specifies options for how the Android plugin should run local and instrumented tests.
+     *
+     * For more information about the properties you can configure in this block, see [TestOptions].
+     */
+    val testOptions: TestOptionsT
+
+    /**
+     * Specifies options for how the Android plugin should run local and instrumented tests.
+     *
+     * For more information about the properties you can configure in this block, see [TestOptions].
+     */
+    fun testOptions(action: TestOptionsT.() -> Unit)
 
     /**
      * Adds a [Action] to be performed on all [Variant] objects associated with this module.

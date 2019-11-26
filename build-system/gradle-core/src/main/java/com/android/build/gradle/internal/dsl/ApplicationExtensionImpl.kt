@@ -52,7 +52,9 @@ class ApplicationExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig>,
+            SigningConfig,
+            TestOptions,
+            TestOptions.UnitTestOptions>,
     ActionableVariantObjectOperationsExecutor {
 
     override val buildFeatures: ApplicationBuildFeatures =

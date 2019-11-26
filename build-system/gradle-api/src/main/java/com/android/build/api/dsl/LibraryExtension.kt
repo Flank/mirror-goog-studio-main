@@ -32,13 +32,17 @@ interface LibraryExtension<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig>
+        SigningConfigT : SigningConfig,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT : UnitTestOptions>
     : CommonExtension<
         LibraryBuildFeatures,
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,
         SigningConfigT,
+        TestOptionsT,
+        UnitTestOptionsT,
         LibraryVariant,
         LibraryVariantProperties>,
     TestedExtension {

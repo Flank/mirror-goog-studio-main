@@ -48,7 +48,13 @@ class LibraryExtensionImpl(
         productFlavors,
         signingConfigs
     ),
-    LibraryExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig>,
+    LibraryExtension<
+            BuildType,
+            DefaultConfig,
+            ProductFlavor,
+            SigningConfig,
+            TestOptions,
+            TestOptions.UnitTestOptions>,
     ActionableVariantObjectOperationsExecutor {
 
     override val buildFeatures: LibraryBuildFeatures =

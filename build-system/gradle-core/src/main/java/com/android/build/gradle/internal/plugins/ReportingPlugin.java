@@ -20,10 +20,16 @@ import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 
+import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.dsl.DslVariableFactory;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.report.ReportType;
+import com.android.build.gradle.internal.variant2.DslScopeImpl;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.utils.FileUtils;
 import javax.inject.Inject;
 import org.gradle.api.Project;
@@ -53,7 +59,20 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         // it's evaluated last.
         project.evaluationDependsOnChildren();
 
-        extension = project.getExtensions().create("android", TestOptions.class, objectFactory);
+        ProjectOptions projectOptions = new ProjectOptions(project);
+        ExtraModelInfo extraModelInfo =  new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
+
+        DslScope dslScope = new DslScopeImpl(
+                extraModelInfo.getSyncIssueHandler(),
+                extraModelInfo.getDeprecationReporter(),
+                project.getObjects(),
+                project.getLogger(),
+                new BuildFeatureValuesImpl(projectOptions),
+                project.getProviders(),
+                new DslVariableFactory(extraModelInfo.getSyncIssueHandler())
+        );
+
+        extension = project.getExtensions().create("android", TestOptions.class, dslScope);
 
         final AndroidReportTask mergeReportsTask = project.getTasks().create("mergeAndroidReports",
                 AndroidReportTask.class);

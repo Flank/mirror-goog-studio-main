@@ -15,6 +15,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
+import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -46,7 +47,9 @@ open class TestExtension(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig> by publicExtensionImpl,
+            SigningConfig,
+            TestOptions,
+            TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =

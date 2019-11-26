@@ -52,7 +52,9 @@ class TestExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig>,
+            SigningConfig,
+            TestOptions,
+            TestOptions.UnitTestOptions>,
     ActionableVariantObjectOperationsExecutor {
 
     override val buildFeatures: TestBuildFeatures =

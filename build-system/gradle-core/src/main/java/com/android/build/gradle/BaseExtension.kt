@@ -134,8 +134,6 @@ abstract class BaseExtension protected constructor(
         objectFactory.newInstance(ExternalNativeBuild::class.java, objectFactory, project)
     override val dexOptions: DexOptions =
         objectFactory.newInstance(DexOptions::class.java, extraModelInfo.deprecationReporter)
-    override val testOptions: TestOptions =
-        objectFactory.newInstance(TestOptions::class.java, objectFactory)
     override val compileOptions: CompileOptions =
         objectFactory.newInstance(CompileOptions::class.java)
     override val packagingOptions: PackagingOptions =
@@ -719,4 +717,6 @@ abstract class BaseExtension protected constructor(
 
     abstract override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
     abstract fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
+
+    abstract override val testOptions: TestOptions
 }

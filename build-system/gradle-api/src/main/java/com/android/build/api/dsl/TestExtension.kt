@@ -31,13 +31,17 @@ interface TestExtension<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : SigningConfig,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT: UnitTestOptions> :
     CommonExtension<
             TestBuildFeatures,
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
+            TestOptionsT,
+            UnitTestOptionsT,
             TestVariant,
             TestVariantProperties> {
     // TODO(b/140406102)

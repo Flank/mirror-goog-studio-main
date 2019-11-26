@@ -31,13 +31,17 @@ interface DynamicFeatureExtension<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : SigningConfig,
+        TestOptionsT: TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT: UnitTestOptions> :
     CommonExtension<
             DynamicFeatureBuildFeatures,
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
+            TestOptionsT,
+            UnitTestOptionsT,
             DynamicFeatureVariant,
             DynamicFeatureVariantProperties>,
     ApkExtension,

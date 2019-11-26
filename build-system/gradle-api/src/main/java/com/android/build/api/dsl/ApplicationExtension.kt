@@ -31,13 +31,17 @@ interface ApplicationExtension<
         BuildTypeT : BuildType,
         DefaultConfigT: DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : SigningConfig,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT : UnitTestOptions> :
     CommonExtension<
             ApplicationBuildFeatures,
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
+            TestOptionsT,
+            UnitTestOptionsT,
             AppVariant,
             AppVariantProperties>,
     ApkExtension,

@@ -46,6 +46,8 @@ abstract class CommonExtensionImpl<
         DefaultConfigT,
         ProductFlavorT,
         SigningConfigT,
+        TestOptions,
+        TestOptions.UnitTestOptions,
         VariantT,
         VariantPropertiesT> {
 
@@ -87,6 +89,13 @@ abstract class CommonExtensionImpl<
 
     override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>) {
         action.execute(signingConfigs)
+    }
+
+    override val testOptions: TestOptions =
+        dslScope.objectFactory.newInstance(TestOptions::class.java, dslScope)
+
+    override fun testOptions(action: TestOptions.() -> Unit) {
+        action.invoke(testOptions)
     }
 
     override fun onVariants(action: Action<VariantT>) {

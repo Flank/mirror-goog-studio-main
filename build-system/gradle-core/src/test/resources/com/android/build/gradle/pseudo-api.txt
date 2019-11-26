@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1ec49d5b2b37d038837880cc3950f21d02c47b3902f3813e180b9d14ecb48ab3
+61a1b85828d0f5e6a69358e400127f88175c8e1ff1cceed4a8be8427e898f0b6
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -191,6 +191,8 @@ com.android.build.gradle.LibraryExtension.getProductFlavors: java.util.Collectio
 com.android.build.gradle.LibraryExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.LibraryExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.LibraryExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
+com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.LibraryExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
 com.android.build.gradle.LibraryExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.LibraryVariantProperties> ()
 com.android.build.gradle.LibraryExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryVariantProperties, kotlin.Unit>)
@@ -202,6 +204,7 @@ com.android.build.gradle.LibraryExtension.productFlavors: void (org.gradle.api.A
 com.android.build.gradle.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.LibraryExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.LibraryExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.LibraryExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.LibraryPlugin.<init>: com.android.build.gradle.LibraryPlugin ()
 com.android.build.gradle.LibraryPlugin.apply: void (java.lang.Object)
@@ -265,6 +268,8 @@ com.android.build.gradle.TestExtension.getSigningConfigs: org.gradle.api.NamedDo
 com.android.build.gradle.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestExtension.getTargetVariant: java.lang.String ()
 com.android.build.gradle.TestExtension.getTestBuildType: java.lang.String ()
+com.android.build.gradle.TestExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
+com.android.build.gradle.TestExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.TestExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
 com.android.build.gradle.TestExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.TestVariantProperties> ()
 com.android.build.gradle.TestExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.TestVariantProperties, kotlin.Unit>)
@@ -279,6 +284,7 @@ com.android.build.gradle.TestExtension.setTargetVariant: void (java.lang.String)
 com.android.build.gradle.TestExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
 com.android.build.gradle.TestExtension.targetProjectPath: void (java.lang.String)
 com.android.build.gradle.TestExtension.targetVariant: void (java.lang.String)
+com.android.build.gradle.TestExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.TestPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.TestPlugin.<init>: com.android.build.gradle.TestPlugin ()
 com.android.build.gradle.TestPlugin.apply: void (java.lang.Object)
@@ -582,6 +588,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: 
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.AppVariantProperties> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AppVariantProperties, kotlin.Unit>)
@@ -593,6 +601,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.productFlavors: voi
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor
 com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
@@ -828,6 +837,8 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getProductFlavors:
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.DynamicFeatureVariantProperties> ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.DynamicFeatureVariantProperties, kotlin.Unit>)
@@ -838,6 +849,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariants: void (
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild implements com.android.build.gradle.internal.model.CoreExternalNativeBuild
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuild (org.gradle.api.model.ObjectFactory, org.gradle.api.Project)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: com.android.build.gradle.internal.dsl.CmakeOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.CmakeOptions>)
@@ -1100,27 +1112,30 @@ com.android.build.gradle.internal.dsl.Splits.getDensityFilters: java.util.Set<ja
 com.android.build.gradle.internal.dsl.Splits.getLanguage: com.android.build.gradle.internal.dsl.LanguageSplitOptions ()
 com.android.build.gradle.internal.dsl.Splits.getLanguageFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.Splits.language: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.LanguageSplitOptions>)
-com.android.build.gradle.internal.dsl.TestOptions
-com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions
-com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions (org.gradle.api.model.ObjectFactory)
+com.android.build.gradle.internal.dsl.TestOptions implements com.android.build.api.dsl.TestOptions
+com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions implements com.android.build.api.dsl.UnitTestOptions
+com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (groovy.lang.Closure<org.gradle.api.tasks.testing.Test>)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.applyConfiguration: void (org.gradle.api.tasks.testing.Test)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isIncludeAndroidResources: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isReturnDefaultValues: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.setIncludeAndroidResources: void (boolean)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.setReturnDefaultValues: void (boolean)
-com.android.build.gradle.internal.dsl.TestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions (org.gradle.api.model.ObjectFactory)
+com.android.build.gradle.internal.dsl.TestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.TestOptions.getAnimationsDisabled: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getExecutionEnum: com.android.builder.model.TestOptions$Execution ()
 com.android.build.gradle.internal.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getResultsDir: java.lang.String ()
+com.android.build.gradle.internal.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()
 com.android.build.gradle.internal.dsl.TestOptions.getUnitTests: com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions ()
 com.android.build.gradle.internal.dsl.TestOptions.setAnimationsDisabled: void (boolean)
 com.android.build.gradle.internal.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (groovy.lang.Closure)
+com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions>)
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.generatedDensities: void (java.lang.String[])
