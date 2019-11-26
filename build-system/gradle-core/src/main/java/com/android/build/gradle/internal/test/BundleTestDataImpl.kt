@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.test
 import com.android.build.gradle.internal.tasks.getApkFiles
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.builder.testing.TestData
+import com.android.build.gradle.internal.testing.TestData
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList

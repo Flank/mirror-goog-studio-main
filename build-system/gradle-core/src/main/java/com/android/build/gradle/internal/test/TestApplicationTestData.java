@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.builder.testing.TestData;
+import com.android.build.gradle.internal.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
