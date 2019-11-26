@@ -33,18 +33,12 @@ cc_library(
     srcs = [
         "app_inspection_java_jni.cc",
         "app_inspection_service.cc",
-    ] + select({
-        ":app_inspection_experimental": [
-            "void_exit_hook.cc",
-        ],
-        "//conditions:default": [],
-    }),
+    ],
     hdrs = [
         "app_inspection_service.h",
     ] + select({
         ":app_inspection_experimental": [
             "app_inspection_transform.h",
-            "void_exit_hook.h",
         ],
         "//conditions:default": [],
     }),

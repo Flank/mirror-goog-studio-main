@@ -21,7 +21,6 @@
 #include "slicer/dex_ir_builder.h"
 #include "slicer/instrumentation.h"
 #include "utils/log.h"
-#include "void_exit_hook.h"
 
 namespace app_inspection {
 
@@ -45,10 +44,11 @@ class AppInspectionTransform {
                          "onEntry"),
             slicer::EntryHook::Tweak::ThisAsObject);
       } else {
-        mi.AddTransformation<VoidExitHook>(
+        mi.AddTransformation<slicer::ExitHook>(
             ir::MethodId("Lcom/android/tools/agent/app/inspection/"
                          "AppInspectionService$ExperimentalCapabilities;",
-                         "onExit"));
+                         "onExit"),
+            slicer::ExitHook::Tweak::ReturnAsObject);
       }
 
       if (!mi.InstrumentMethod(ir::MethodId(transform.GetClassName(),

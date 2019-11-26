@@ -216,12 +216,12 @@ public class AppInspectionService {
             sInstance.mExperimental.mExitTransforms.put(createLabel(origin, method), hook);
         }
 
-        public static void onExit(Object returnObject) {
+        public static Object onExit(Object returnObject) {
             Error error = new Error();
             error.fillInStackTrace();
             StackTraceElement[] stackTrace = error.getStackTrace();
             if (stackTrace.length < 2) {
-                return;
+                return returnObject;
             }
             StackTraceElement element = stackTrace[1];
             String label = element.getClassName() + element.getMethodName();
@@ -233,6 +233,7 @@ public class AppInspectionService {
             } else {
                 System.out.println("!!! Dropped on the floor");
             }
+            return returnObject;
         }
 
         public static void onEntry(Object thisObject) {
