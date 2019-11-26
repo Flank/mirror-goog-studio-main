@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.AssumeUtil.assumeNotWindows
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.jarWithClasses
 import com.android.testutils.apk.AndroidArchive
@@ -207,6 +208,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromAppProject() {
+        assumeNotWindows() //b/145232747
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
         val expectedKeepRules = "-keep class j\$.util.Optional {\n" +
@@ -223,6 +225,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromFileDependencies() {
+        assumeNotWindows() //b/145232747
         addFileDependency(app)
 
         project.executor().run("app:assembleRelease")
@@ -293,6 +296,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testExternalLibsKeepRulesGenerationWithoutArtifactTransform() {
+        assumeNotWindows() //b/145232747
         addExternalDependency(app)
 
         project.executor()

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.validation
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.testutils.AssumeUtil.assumeNotWindows
 import com.android.testutils.TestInputsGenerator
 import com.google.common.reflect.ClassPath
 
@@ -76,6 +77,7 @@ class ValidateTaskPropertiesTest {
 
     @Test
     fun validate() {
+        assumeNotWindows() // b/145232764
         project.execute("validatePlugins")
     }
 }
