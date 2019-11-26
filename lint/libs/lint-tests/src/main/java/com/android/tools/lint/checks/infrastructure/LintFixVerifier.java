@@ -49,7 +49,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
@@ -514,6 +516,51 @@ public class LintFixVerifier {
                 }
 
                 replacement = replaceFix.expandBackReferences(matcher);
+            }
+        }
+
+        if (replaceFix.shortenNames) {
+            // This isn't fully shortening names, it's only removing fully qualified names
+            // for symbols already imported.
+            //
+            // Also, this will not correctly handle some conflicts. This is only used for
+            // unit testing lint fixes, not for actually operating on code; for that we're using
+            // IntelliJ's built in import cleanup when running in the IDE.
+            Set<String> imported = new HashSet<>();
+            for (String line : contents.split("\n")) {
+                if (line.startsWith("package ")) {
+                    int to = line.indexOf(';');
+                    if (to == -1) {
+                        to = line.length();
+                    }
+                    imported.add(line.substring("package ".length(), to).trim() + ".");
+                } else if (line.startsWith("import ")) {
+                    int from = "import ".length();
+                    if (line.startsWith("static ")) {
+                        from += " static ".length();
+                    }
+                    int to = line.indexOf(';');
+                    if (to == -1) {
+                        to = line.length();
+                    }
+                    if (line.charAt(to - 1) == '*') {
+                        to--;
+                    }
+                    imported.add(line.substring(from, to).trim());
+                }
+            }
+
+            for (String full : imported) {
+                if (replacement.contains(full)) {
+                    if (!full.endsWith(".")) {
+                        int index = full.lastIndexOf('.');
+                        if (index == -1) {
+                            continue;
+                        }
+                        full = full.substring(0, index + 1);
+                    }
+                    replacement = replacement.replace(full, "");
+                }
             }
         }
 

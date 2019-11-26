@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 367;
+    public static final int INITIAL_CAPACITY = 368;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -74,7 +74,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AppLinksValidDetector.TEST_URL);
         issues.add(AppLinksValidDetector.VALIDATION);
         issues.add(ArraySizeDetector.INCONSISTENT);
-        issues.add(AssertDetector.ISSUE);
+        issues.add(AssertDetector.DISABLED);
+        issues.add(AssertDetector.EXPENSIVE);
         issues.add(AutofillDetector.ISSUE);
         issues.add(BadHostnameVerifierDetector.ISSUE);
         issues.add(BatteryDetector.ISSUE);

@@ -41,6 +41,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -111,6 +112,7 @@ public class TestLintTask {
     private TestFile baseline;
     File baselineFile;
     Set<Desugaring> desugaring;
+    EnumSet<Platform> platforms;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -862,7 +864,7 @@ public class TestLintTask {
                 fw.write(
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    package=\"foo.bar2\"\n"
+                                + "    package=\"lint.test.pkg\"\n"
                                 + "    android:versionCode=\"1\"\n"
                                 + "    android:versionName=\"1.0\" >\n"
                                 + "</manifest>\n");
@@ -1023,6 +1025,17 @@ public class TestLintTask {
      */
     public TestLintTask allowNetworkAccess(boolean allowNetworkAccess) {
         this.allowNetworkAccess = allowNetworkAccess;
+        return this;
+    }
+
+    /**
+     * Sets the platforms that the test should run with
+     *
+     * @param platforms the platforms to use
+     * @return this, for constructor chaining
+     */
+    public TestLintTask platforms(EnumSet<Platform> platforms) {
+        this.platforms = platforms;
         return this;
     }
 

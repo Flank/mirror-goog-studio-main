@@ -577,9 +577,9 @@ public class LintFix {
         }
 
         /**
-         * The text to replace the old text or pattern with. Note that the special syntax \g{n} can
-         * be used to reference the n'th group, if and only if this replacement is using {@link
-         * #pattern(String)}}.
+         * The text to replace the old text or pattern with. Note that the special syntax
+         * \k&lt;n&gt; can be used to reference the n'th group, if and only if this replacement is
+         * using {@link #pattern(String)}}.
          */
         public ReplaceStringBuilder with(String newText) {
             assert this.newText == null;

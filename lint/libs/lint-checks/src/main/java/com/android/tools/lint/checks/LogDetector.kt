@@ -41,6 +41,7 @@ import org.jetbrains.uast.UField
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
@@ -186,51 +187,55 @@ class LogDetector : Detector(), SourceCodeScanner {
         }
 
     /** Returns true if the given logging call performs "work" to compute the message  */
-    private fun performsWork(
-        node: UCallExpression
-    ): Boolean {
+    private fun performsWork(node: UCallExpression): Boolean {
         val referenceName = node.methodName ?: return false
         val messageArgumentIndex = if (PRINTLN == referenceName) 2 else 1
         val arguments = node.valueArguments
         if (arguments.size > messageArgumentIndex) {
             val argument = arguments[messageArgumentIndex]
-            if (argument is ULiteralExpression) {
-                return false
-            }
-            if (argument is UPolyadicExpression) {
-                val string = argument.evaluateString()
-
-                if (string != null) { // does it resolve to a constant?
-                    return false
-                }
-            } else if (argument is UBinaryExpression) {
-                // Not currently a polyadic expr in UAST: repeat check done for polyadic
-                val string = argument.evaluateString()
-
-                if (string != null) { // does it resolve to a constant?
-                    return false
-                }
-            } else if (argument is USimpleNameReferenceExpression) {
-                // Just a simple local variable/field reference
-                return false
-            } else if (argument is UQualifiedReferenceExpression) {
-                val string = argument.evaluateString()
-
-                if (string != null) {
-                    return false
-                }
-                val resolved = argument.resolve()
-                if (resolved is PsiVariable) {
-                    // Just a reference to a property/field, parameter or variable
-                    return false
-                }
-            }
-
-            // Method invocations etc
-            return true
+            return performsWork(argument)
         }
 
         return false
+    }
+
+    private fun performsWork(argument: UExpression): Boolean {
+        if (argument is ULiteralExpression) {
+            return false
+        }
+        if (argument is UPolyadicExpression) {
+            val string = argument.evaluateString()
+
+            if (string != null) { // does it resolve to a constant?
+                return false
+            }
+        } else if (argument is UBinaryExpression) {
+            // Not currently a polyadic expr in UAST: repeat check done for polyadic
+            val string = argument.evaluateString()
+
+            if (string != null) { // does it resolve to a constant?
+                return false
+            }
+        } else if (argument is USimpleNameReferenceExpression) {
+            // Just a simple local variable/field reference
+            return false
+        } else if (argument is UParenthesizedExpression) {
+            return performsWork(argument.expression)
+        } else if (argument is UQualifiedReferenceExpression) {
+            val string = argument.evaluateString()
+
+            if (string != null) {
+                return false
+            }
+            val resolved = argument.resolve()
+            if (resolved is PsiVariable) {
+                // Just a reference to a property/field, parameter or variable
+                return false
+            }
+        }
+
+        // Method invocations etc
+        return true
     }
 
     private fun checkWithinConditional(
