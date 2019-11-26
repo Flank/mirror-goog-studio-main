@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import com.android.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,8 +28,8 @@ public class PathParser {
     private static final float[] EMPTY_FLOAT_ARRAY = new float[0];
 
     private static class ExtractFloatResult {
-        // We need to return the position of the next separator and whether the
-        // next float starts with a '-' or a '.'.
+        // We need to return the position of the next separator and whether the next float starts
+        // with a '-' or a '.'.
         private int mEndPosition;
         private boolean mEndWithNegOrDot;
     }
@@ -37,20 +38,19 @@ public class PathParser {
     private PathParser() {}
 
     /**
-     * Calculates the position of the next comma or space or negative sign.
+     * Determines the end position of a command parameter.
      *
      * @param s the string to search
      * @param start the position to start searching
-     * @param result the result of the extraction, including the position of the
-     * the starting position of next number, whether it is ending with a '-'.
+     * @param result the result of the extraction
      */
-    private static void extract(String s, int start, ExtractFloatResult result) {
+    private static void extract(@NonNull String s, int start, @NonNull ExtractFloatResult result) {
         // Now looking for ' ', ',', '.' or '-' from the start.
-        int currentIndex = start;
         boolean foundSeparator = false;
         result.mEndWithNegOrDot = false;
         boolean secondDot = false;
         boolean isExponential = false;
+        int currentIndex = start;
         for (; currentIndex < s.length(); currentIndex++) {
             boolean isPrevExponential = isExponential;
             isExponential = false;
@@ -85,8 +85,7 @@ public class PathParser {
                 break;
             }
         }
-        // When there is nothing found, then we put the end position to the end
-        // of the string.
+        // When there is nothing found, then we put the end position to the end of the string.
         result.mEndPosition = currentIndex;
     }
 
@@ -96,7 +95,8 @@ public class PathParser {
      * @param s the string containing a command and list of floats
      * @return array of floats
      */
-    private static float[] getFloats(String s) {
+    @NonNull
+    private static float[] getFloats(@NonNull String s) {
         if (s.charAt(0) == 'z' || s.charAt(0) == 'Z') {
             return EMPTY_FLOAT_ARRAY;
         }
@@ -109,9 +109,8 @@ public class PathParser {
             ExtractFloatResult result = new ExtractFloatResult();
             int totalLength = s.length();
 
-            // The startPosition should always be the first character of the
-            // current number, and endPosition is the character after the current
-            // number.
+            // The startPosition should always be the first character of the current number, and
+            // endPosition is the character after the current number.
             while (startPosition < totalLength) {
                 extract(s, startPosition, result);
                 endPosition = result.mEndPosition;
@@ -133,19 +132,17 @@ public class PathParser {
         }
     }
 
-    private static void addNode(List<VdPath.Node> list, char cmd, float[] val) {
+    private static void addNode(@NonNull List<VdPath.Node> list, char cmd, @NonNull float[] val) {
         list.add(new VdPath.Node(cmd, val));
     }
 
-    private static int nextStart(String s, int end) {
+    private static int nextStart(@NonNull String s, int end) {
         while (end < s.length()) {
             char c = s.charAt(end);
-            // Note that 'e' or 'E' are not valid path commands, but could be
-            // used for floating point numbers' scientific notation.
-            // Therefore, when searching for next command, we should ignore 'e'
-            // and 'E'.
-            if ((((c - 'A') * (c - 'Z') <= 0) || ((c - 'a') * (c - 'z') <= 0))
-                    && c != 'e' && c != 'E') {
+            // Note that 'e' or 'E' are not valid path commands, but could be used for floating
+            // point numbers' scientific notation. Therefore, when searching for next command, we
+            // should ignore 'e' and 'E'.
+            if ('A' <= c && c <= 'Z' && c != 'E' || 'a' <= c && c <= 'z' && c != 'e') {
                 return end;
             }
             end++;
@@ -153,7 +150,8 @@ public class PathParser {
         return end;
     }
 
-    public static VdPath.Node[] parsePath(String value) {
+    @NonNull
+    public static VdPath.Node[] parsePath(@NonNull String value) {
         value = value.trim();
         List<VdPath.Node> list = new ArrayList<>();
 
@@ -162,12 +160,11 @@ public class PathParser {
         while (end < value.length()) {
             end = nextStart(value, end);
             String s = value.substring(start, end);
-            float[] val = getFloats(s);
             char currentCommand = s.charAt(0);
+            float[] val = getFloats(s);
 
             if (start == 0) {
-                // For the starting command, special handling:
-                // add M 0 0 if there is none.
+                // For the starting command, special handling: add M 0 0 if there is none.
                 // This is good for transformation.
                 if (currentCommand != 'M' && currentCommand != 'm') {
                     addNode(list, 'M', new float[2]);
