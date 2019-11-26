@@ -54,7 +54,7 @@ class BuildElementsTest {
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        `when`(variantConfiguration!!.type).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(variantConfiguration!!.variantType).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test

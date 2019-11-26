@@ -78,7 +78,7 @@ open class MainApkListPersistenceTest {
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
         Mockito.`when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
         Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
-        Mockito.`when`(config.type).thenReturn(VariantTypeImpl.BASE_APK)
+        Mockito.`when`(config.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         Mockito.`when`(globalScope.projectOptions).thenReturn(ProjectOptions(ImmutableMap.of()))
 
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")

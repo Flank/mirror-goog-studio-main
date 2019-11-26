@@ -101,8 +101,14 @@ interface VariantType {
      * Returns the corresponding variant type used by the analytics system.
      */
     val analyticsVariantType: GradleBuildVariant.VariantType
-    /** Whether this variant can have split outputs.  */
+    /**
+     * Whether this variant can have split outputs.
+     */
     val canHaveSplits: Boolean
+    /**
+     * Whether the manifest file is required to exist.
+     */
+    val requiresManifest: Boolean
 
     val name: String
 
@@ -206,4 +212,7 @@ enum class VariantTypeImpl(
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK
+
+    override val requiresManifest: Boolean
+        get() = !isForTesting
 }

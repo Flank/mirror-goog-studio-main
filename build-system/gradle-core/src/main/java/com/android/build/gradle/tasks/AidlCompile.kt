@@ -33,7 +33,6 @@ import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
@@ -189,7 +188,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                     "out"
                 )
 
-            if (variantScope.variantConfiguration.type.isAar) {
+            if (variantScope.variantConfiguration.variantType.isAar) {
                 variantScope
                     .artifacts
                     .producesDir(
@@ -233,7 +232,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task.importDirs = scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
-            if (variantConfiguration.type.isAar) {
+            if (variantConfiguration.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
             }
 

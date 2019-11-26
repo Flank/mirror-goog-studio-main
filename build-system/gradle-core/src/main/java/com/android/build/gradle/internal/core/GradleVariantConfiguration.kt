@@ -73,7 +73,7 @@ import java.util.function.Supplier
 open class GradleVariantConfiguration internal constructor(
     val fullName: String,
     val flavorName: String,
-    val type: VariantType,
+    val variantType: VariantType,
     val defaultConfig: DefaultConfig,
     private val defaultSourceProvider: SourceProvider,
     val buildType: BuildType,
@@ -97,20 +97,8 @@ open class GradleVariantConfiguration internal constructor(
     private val issueReporter: EvalIssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) {
-    /**
-     * Full, unique name of the variant, including BuildType, flavors and test, dash separated.
-     * (similar to full name but with dashes)
-     */
-    private var mBaseName: String? = null
-    /**
-     * Unique directory name (can include multiple folders) for the variant, based on build type,
-     * flavor and test. This always uses forward slashes ('/') as separator on all platform.
-     */
-    private var mDirName: String? = null
-    private var mDirSegments: List<String>? = null
 
-    var mergedFlavor: MergedFlavor
-        private set
+    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavors, issueReporter)
 
     /** Variant-specific build Config fields.  */
     private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
@@ -129,6 +117,28 @@ open class GradleVariantConfiguration internal constructor(
         MergedExternalNativeBuildOptions()
     private val mergedJavaCompileOptions = MergedJavaCompileOptions()
 
+    init {
+
+        val manifestParser =
+            manifestAttributeSupplier
+                ?: DefaultManifestParser(
+                    defaultSourceProvider.manifestFile,
+                    isInExecutionPhase,
+                    variantType.requiresManifest,
+                    issueReporter
+                )
+        mVariantAttributesProvider = VariantAttributesProvider(
+            mergedFlavor,
+            buildType,
+            variantType.isTestComponent,
+            manifestParser,
+            defaultSourceProvider.manifestFile,
+            fullName
+        )
+        mergeOptions()
+    }
+
+
     /**
      * Returns a full name that includes the given splits name.
      *
@@ -145,8 +155,8 @@ open class GradleVariantConfiguration internal constructor(
             sb.append(splitName)
         }
         sb.appendCapitalized(buildType.name)
-        if (type.isTestComponent) {
-            sb.append(type.suffix)
+        if (variantType.isTestComponent) {
+            sb.append(variantType.suffix)
         }
         return sb.toString()
     }
@@ -157,23 +167,20 @@ open class GradleVariantConfiguration internal constructor(
      *
      * @return the name of the variant
      */
-    val baseName: String
-        get() {
-            if (mBaseName == null) {
-                val sb = StringBuilder()
-                if (productFlavors.isNotEmpty()) {
-                    for (pf in productFlavors) {
-                        sb.append(pf.name).append('-')
-                    }
-                }
-                sb.append(buildType.name)
-                if (type.isTestComponent) {
-                    sb.append('-').append(type.prefix)
-                }
-                mBaseName = sb.toString()
+    val baseName : String by lazy {
+        val sb = StringBuilder()
+        if (productFlavors.isNotEmpty()) {
+            for (pf in productFlavors) {
+                sb.append(pf.name).append('-')
             }
-            return mBaseName!!
         }
+        sb.append(buildType.name)
+        if (variantType.isTestComponent) {
+            sb.append('-').append(variantType.prefix)
+        }
+
+        sb.toString()
+    }
 
     /**
      * Returns a base name that includes the given splits name.
@@ -190,8 +197,8 @@ open class GradleVariantConfiguration internal constructor(
         }
         sb.append(splitName).append('-')
         sb.append(buildType.name)
-        if (type.isTestComponent) {
-            sb.append('-').append(type.prefix)
+        if (variantType.isTestComponent) {
+            sb.append('-').append(variantType.prefix)
         }
         return sb.toString()
     }
@@ -205,13 +212,9 @@ open class GradleVariantConfiguration internal constructor(
      *
      * @return the directory name for the variant
      */
-    val dirName: String
-        get() {
-            if (mDirName == null) {
-                mDirName = Joiner.on('/').join(directorySegments)
-            }
-            return mDirName!!
-        }
+    val dirName: String by lazy {
+        Joiner.on('/').join(directorySegments)
+    }
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -219,26 +222,22 @@ open class GradleVariantConfiguration internal constructor(
      *
      * @return the directory name for the variant
      */
-    val directorySegments: Collection<String?>
-        get() {
-            if (mDirSegments == null) {
-                val builder =
-                    ImmutableList.builder<String>()
-                if (type.isTestComponent) {
-                    builder.add(type.prefix)
-                }
-                if (!productFlavors.isEmpty()) {
-                    builder.add(
-                        combineAsCamelCase(
-                            productFlavors, ProductFlavor::getName
-                        )
-                    )
-                }
-                builder.add(buildType.name)
-                mDirSegments = builder.build()
-            }
-            return mDirSegments!!
+    val directorySegments: Collection<String?> by lazy {
+        val builder =
+            ImmutableList.builder<String>()
+        if (variantType.isTestComponent) {
+            builder.add(variantType.prefix)
         }
+        if (!productFlavors.isEmpty()) {
+            builder.add(
+                combineAsCamelCase(
+                    productFlavors, ProductFlavor::getName
+                )
+            )
+        }
+        builder.add(buildType.name)
+        builder.build()
+    }
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -251,8 +250,8 @@ open class GradleVariantConfiguration internal constructor(
      */
     fun computeDirNameWithSplits(vararg splitNames: String): String {
         val sb = StringBuilder()
-        if (type.isTestComponent) {
-            sb.append(type.prefix).append("/")
+        if (variantType.isTestComponent) {
+            sb.append(variantType.prefix).append("/")
         }
         if (!productFlavors.isEmpty()) {
             for (flavor in productFlavors) {
@@ -327,9 +326,9 @@ open class GradleVariantConfiguration internal constructor(
 
     val testedApplicationId: String?
         get() {
-            if (type.isTestComponent) {
+            if (variantType.isTestComponent) {
                 val tested = testedConfig!!
-                return if (tested.type.isAar) {
+                return if (tested.variantType.isAar) {
                     applicationId
                 } else {
                     tested.applicationId
@@ -412,7 +411,7 @@ open class GradleVariantConfiguration internal constructor(
     val instrumentationRunner: String
         get() {
             var config: GradleVariantConfiguration = this
-            if (type.isTestComponent) {
+            if (variantType.isTestComponent) {
                 config = testedConfig!!
             }
             val runner = config.mVariantAttributesProvider.instrumentationRunner
@@ -431,7 +430,7 @@ open class GradleVariantConfiguration internal constructor(
     val instrumentationRunnerArguments: Map<String, String>
         get() {
             var config: GradleVariantConfiguration = this
-            if (type.isTestComponent) {
+            if (variantType.isTestComponent) {
                 config = testedConfig!!
             }
             return config.mergedFlavor.testInstrumentationRunnerArguments
@@ -446,7 +445,7 @@ open class GradleVariantConfiguration internal constructor(
     val handleProfiling: Boolean
         get() {
             var config: GradleVariantConfiguration = this
-            if (type.isTestComponent) {
+            if (variantType.isTestComponent) {
                 config = testedConfig!!
             }
             return config.mVariantAttributesProvider.handleProfiling ?: DEFAULT_HANDLE_PROFILING
@@ -461,7 +460,7 @@ open class GradleVariantConfiguration internal constructor(
     val functionalTest: Boolean
         get() {
             var config: GradleVariantConfiguration = this
-            if (type.isTestComponent) {
+            if (variantType.isTestComponent) {
                 config = testedConfig!!
             }
             return config.mVariantAttributesProvider.functionalTest ?: DEFAULT_FUNCTIONAL_TEST
@@ -526,10 +525,6 @@ open class GradleVariantConfiguration internal constructor(
             }
             return targetSdkVersion
         }
-
-    /** Returns whether the manifest file is required to exist.  */
-    val isManifestFileRequired: Boolean
-        get() = isManifestFileRequired(type)
 
     /**
      * Returns the path to the main manifest file. It may or may not exist.
@@ -938,7 +933,7 @@ open class GradleVariantConfiguration internal constructor(
 
     val signingConfig: SigningConfig?
         get() {
-            if (type.isDynamicFeature) {
+            if (variantType.isDynamicFeature) {
                 return null
             }
             if (signingConfigOverride != null) {
@@ -1006,7 +1001,7 @@ open class GradleVariantConfiguration internal constructor(
 
     // dynamic features can always be build in native multidex mode
     val dexingType: DexingType
-        get() = if (type.isDynamicFeature) {
+        get() = if (variantType.isDynamicFeature) {
             if (buildType.multiDexEnabled != null
                 || mergedFlavor.multiDexEnabled != null
             ) {
@@ -1052,7 +1047,7 @@ open class GradleVariantConfiguration internal constructor(
 
     /** Returns true if the variant output is a bundle.  */
     val isBundled: Boolean
-        get() = type.isAar// Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
+        get() = variantType.isAar// Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
 // debuggable.
 
     /**
@@ -1250,7 +1245,7 @@ open class GradleVariantConfiguration internal constructor(
         }
 
     private val scopedGlslcKeys: Set<String>
-        private get() {
+        get() {
             val keys: MutableSet<String> =
                 Sets.newHashSet()
             keys.addAll(defaultConfig.shaders.scopedGlslcArgs.keySet())
@@ -1262,71 +1257,12 @@ open class GradleVariantConfiguration internal constructor(
         }
 
     companion object {
-        /**
-         * Returns the full, unique name of the variant in camel case (starting with a lower case),
-         * including BuildType, Flavors and Test (if applicable).
-         *
-         *
-         * This is to be used for the normal variant name. In case of Feature plugin, the library
-         * side will be called the same as for library plugins, while the feature side will add
-         * 'feature' to the name.
-         *
-         * @param flavorName the flavor name, as computed by [.computeFlavorName]
-         * @param buildType the build type
-         * @param type the variant type
-         * @return the name of the variant
-         */
-        @JvmStatic
-        fun computeRegularVariantName(
-            flavorName: String,
-            buildType: com.android.builder.model.BuildType,
-            type: VariantType
-        ): String {
-            val sb = StringBuilder()
-            if (!flavorName.isEmpty()) {
-                sb.append(flavorName)
-                sb.appendCapitalized(buildType.name)
-            } else {
-                sb.append(buildType.name)
-            }
-            if (type.isTestComponent) {
-                sb.append(type.suffix)
-            }
-            return sb.toString()
-        }
-
-        /**
-         * Returns the flavor name for a variant composed of the given flavors, including all flavor
-         * names in camel case (starting with a lower case).
-         *
-         *
-         * If the flavor list is empty, then an empty string is returned.
-         *
-         * @param flavors the list of flavors
-         * @return the flavor name or an empty string.
-         */
-        @JvmStatic
-        fun computeFlavorName(
-            flavors: List<com.android.builder.model.ProductFlavor>
-        ): String {
-            return if (flavors.isEmpty()) {
-                ""
-            } else {
-                combineAsCamelCase(flavors, com.android.builder.model.ProductFlavor::getName)
-            }
-        }
 
         private const val DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner"
         private const val MULTIDEX_TEST_RUNNER =
             "com.android.test.runner.MultiDexTestRunner"
         private const val DEFAULT_HANDLE_PROFILING = false
         private const val DEFAULT_FUNCTIONAL_TEST = false
-
-        /** Returns whether the manifest file is required to exist for the given variant type.  */
-        @JvmStatic
-        fun isManifestFileRequired(variantType: VariantType): Boolean { // The manifest file is not required to exist for a test variant or a test project
-            return !variantType.isForTesting
-        }
 
         /**
          * Fills a list of Object from a given list of ClassField only if the name isn't in a set. Each
@@ -1358,25 +1294,4 @@ open class GradleVariantConfiguration internal constructor(
         }
     }
 
-    init {
-        mergedFlavor = mergeFlavors(defaultConfig, productFlavors, issueReporter)
-
-        val manifestParser =
-            manifestAttributeSupplier
-                ?: DefaultManifestParser(
-                    defaultSourceProvider.manifestFile,
-                    isInExecutionPhase,
-                    isManifestFileRequired(type),
-                    issueReporter
-                )
-        mVariantAttributesProvider = VariantAttributesProvider(
-            mergedFlavor,
-            buildType,
-            type.isTestComponent,
-            manifestParser,
-            defaultSourceProvider.manifestFile,
-            fullName
-        )
-        mergeOptions()
-    }
 }

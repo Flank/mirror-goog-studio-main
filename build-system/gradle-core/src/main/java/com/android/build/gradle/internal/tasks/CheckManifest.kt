@@ -79,7 +79,7 @@ abstract class CheckManifest : NonIncrementalTask() {
         override fun configure(task: CheckManifest) {
             super.configure(task)
 
-            task.manifestRequired = variantScope.variantConfiguration.isManifestFileRequired
+            task.manifestRequired = variantScope.variantConfiguration.variantType.requiresManifest
             task.manifestFile = task.project.provider {
                 variantScope.variantConfiguration.mainManifestFilePath
             }

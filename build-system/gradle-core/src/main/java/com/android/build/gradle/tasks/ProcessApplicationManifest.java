@@ -765,7 +765,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.getMainManifest().disallowChanges();
             task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.isFeatureSplitVariantType = config.getType().isDynamicFeature();
+            task.isFeatureSplitVariantType = config.getVariantType().isDynamicFeature();
             task.buildTypeName = config.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }

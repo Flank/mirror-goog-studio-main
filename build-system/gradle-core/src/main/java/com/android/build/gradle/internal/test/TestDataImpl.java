@@ -89,7 +89,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     public boolean isLibrary() {
         TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
         BaseVariantData testedVariantData2 = (BaseVariantData) testedVariantData;
-        return testedVariantData2.getVariantConfiguration().getType().isAar();
+        return testedVariantData2.getVariantConfiguration().getVariantType().isAar();
     }
 
     @NonNull

@@ -91,7 +91,7 @@ class CompatibleScreensManifestTest {
         `when`<MergedFlavor>(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
         `when`(variantConfiguration.fullName).thenReturn("fullName")
-        `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(variantConfiguration.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         `when`(globalScope.projectOptions).thenReturn(
             ProjectOptions(
                 ImmutableMap.of<String, Any>(

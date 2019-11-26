@@ -198,7 +198,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             })
             task.buildConfigPackageName.disallowChanges()
 
-            if (!variantConfiguration.type.isAar) {
+            if (!variantConfiguration.variantType.isAar) {
                 task.appPackageName.set(variantProperties.applicationId)
             }
             task.appPackageName.disallowChanges()
@@ -232,13 +232,13 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
 
-            if (variantScope.variantConfiguration.type.isTestComponent) {
+            if (variantScope.variantConfiguration.variantType.isTestComponent) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
                 )
             }
 
-            task.isLibrary = variantConfiguration.type.isAar
+            task.isLibrary = variantConfiguration.variantType.isAar
         }
     }
 }

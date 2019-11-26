@@ -593,7 +593,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                     new DefaultManifestParser(
                             manifest,
                             () -> true,
-                            variantConfiguration.isManifestFileRequired(),
+                            variantConfiguration.getVariantType().getRequiresManifest(),
                             extraModelInfo.getSyncIssueHandler());
             try {
                 validateMinSdkVersion(attributeSupplier);
@@ -1033,7 +1033,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             .getTestingSpec(
                                                     variantScope
                                                             .getVariantConfiguration()
-                                                            .getType());
+                                                            .getVariantType());
 
                             // get the OutputPublishingSpec from the ArtifactType for this
                             // particular variant spec

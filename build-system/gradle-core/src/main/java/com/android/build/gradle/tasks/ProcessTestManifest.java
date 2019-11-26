@@ -576,7 +576,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.getTestedApplicationId().disallowChanges();
 
             GradleVariantConfiguration testedConfig = config.getTestedConfig();
-            task.onlyTestApk = testedConfig != null && testedConfig.getType().isAar();
+            task.onlyTestApk = testedConfig != null && testedConfig.getVariantType().isAar();
 
             task.getInstrumentationRunner().set(project.provider(config::getInstrumentationRunner));
             task.getInstrumentationRunner().disallowChanges();

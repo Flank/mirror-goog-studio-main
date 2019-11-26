@@ -31,7 +31,7 @@ data class VariantInfoImpl(
 
     constructor(variantScope: VariantScope) :
             this(
-                _isTest = variantScope.variantConfiguration.type.isForTesting,
+                _isTest = variantScope.variantConfiguration.variantType.isForTesting,
                 _variantName = variantScope.fullVariantName,
                 _buildTypeName = variantScope.variantConfiguration.buildType.name,
                 _flavorNames = variantScope.variantConfiguration.productFlavors.map { it.name }.toImmutableList(),

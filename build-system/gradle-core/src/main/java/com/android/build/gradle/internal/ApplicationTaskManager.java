@@ -259,7 +259,7 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     protected void createInstallTask(VariantScope variantScope) {
         GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
-        final VariantType variantType = variantConfiguration.getType();
+        final VariantType variantType = variantConfiguration.getVariantType();
 
         // dynamic feature modules do not have their own install tasks
         if (variantType.isDynamicFeature()) {
@@ -302,7 +302,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void createVariantPreBuildTask(@NonNull VariantScope scope) {
-        final VariantType variantType = scope.getVariantConfiguration().getType();
+        final VariantType variantType = scope.getVariantConfiguration().getVariantType();
 
         if (variantType.isApk()) {
             boolean useDependencyConstraints =
@@ -354,7 +354,7 @@ public class ApplicationTaskManager extends TaskManager {
     private void handleMicroApp(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        final VariantType variantType = variantConfiguration.getType();
+        final VariantType variantType = variantConfiguration.getVariantType();
 
         if (variantType.isBaseModule()) {
             Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();

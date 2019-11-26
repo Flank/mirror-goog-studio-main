@@ -274,7 +274,7 @@ public abstract class BaseVariantData {
 
     @NonNull
     public VariantType getType() {
-        return variantConfiguration.getType();
+        return variantConfiguration.getVariantType();
     }
 
     @NonNull

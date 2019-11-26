@@ -1084,7 +1084,7 @@ public class VariantManager implements VariantModel {
                         signingOverride,
                         getParser(
                                 defaultConfigSourceProvider.getManifestFile(),
-                                GradleVariantConfiguration.isManifestFileRequired(variantType)),
+                                variantType.getRequiresManifest()),
                         globalScope.getProjectOptions(),
                         globalScope.getErrorHandler(),
                         this::canParseManifest);
@@ -1104,7 +1104,7 @@ public class VariantManager implements VariantModel {
         // Only record release artifacts
         if (!buildTypeData.getBuildType().isDebuggable()
                 && variantType.isApk()
-                && !variantConfig.getType().isForTesting()) {
+                && !variantConfig.getVariantType().isForTesting()) {
             ProcessProfileWriter.get().recordApplicationId(variantConfig::getApplicationId);
         }
 
@@ -1255,8 +1255,7 @@ public class VariantManager implements VariantModel {
                         signingOverride,
                         testSourceSet != null
                                 ? getParser(
-                                        testSourceSet.getManifestFile(),
-                                        GradleVariantConfiguration.isManifestFileRequired(type))
+                                        testSourceSet.getManifestFile(), type.getRequiresManifest())
                                 : null,
                         globalScope.getProjectOptions(),
                         globalScope.getErrorHandler(),

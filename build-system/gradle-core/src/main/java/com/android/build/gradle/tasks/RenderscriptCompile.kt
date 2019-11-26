@@ -314,7 +314,7 @@ abstract class RenderscriptCompile : NdkTask() {
             task.buildToolInfoProvider =
                 scope.globalScope.sdkComponents.buildToolInfoProvider
 
-            if (config.type.isTestComponent) {
+            if (config.variantType.isTestComponent) {
                 task.dependsOn(scope.taskContainer.processManifestTask!!)
             }
         }

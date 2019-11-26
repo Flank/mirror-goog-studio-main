@@ -73,7 +73,6 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -471,7 +470,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 variantScope.manifestArtifactType
             variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
-            task.setType(config.type)
+            task.setType(config.variantType)
             task.setDebuggable(config.buildType.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 

@@ -27,6 +27,9 @@ import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
+import com.android.utils.appendCapitalized
+import com.android.utils.combineAsCamelCase
+import java.lang.RuntimeException
 import java.util.function.BooleanSupplier
 
 /** Builder for [GradleVariantConfiguration].
@@ -97,6 +100,48 @@ abstract class VariantBuilder protected constructor(
                 )
             }
         }
+
+        /**
+         * Returns the full, unique name of the variant in camel case (starting with a lower case),
+         * including BuildType, Flavors and Test (if applicable).
+         *
+         * This is to be used for the normal variant name. In case of Feature plugin, the library
+         * side will be called the same as for library plugins, while the feature side will add
+         * 'feature' to the name.
+         *
+         * Also computes the flavor name if applicable
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun computeName(
+            variantType: VariantType,
+            flavors: List<com.android.builder.model.ProductFlavor>,
+            buildType: com.android.builder.model.BuildType,
+            flavorNameCallback: ((String) -> Unit)? = null
+        ): String {
+            // compute the flavor name
+            val flavorName = if (flavors.isEmpty()) {
+                ""
+            } else {
+                combineAsCamelCase(flavors, com.android.builder.model.ProductFlavor::getName)
+            }
+            flavorNameCallback?.let {
+                flavorNameCallback.invoke(flavorName)
+            }
+
+            val sb = StringBuilder()
+            if (flavorName.isNotEmpty()) {
+                sb.append(flavorName)
+                sb.appendCapitalized(buildType.name)
+            } else {
+                sb.append(buildType.name)
+            }
+            if (variantType.isTestComponent) {
+                sb.append(variantType.suffix)
+            }
+            return sb.toString()
+        }
+
     }
 
     private lateinit var variantName: String
@@ -105,11 +150,7 @@ abstract class VariantBuilder protected constructor(
     val name: String
         get() {
             if (!::variantName.isInitialized) {
-                variantName = GradleVariantConfiguration.computeRegularVariantName(
-                    flavorName,
-                    buildType,
-                    variantType
-                )
+                computeNames()
             }
 
             return variantName
@@ -118,7 +159,7 @@ abstract class VariantBuilder protected constructor(
     val flavorName: String
         get() {
             if (!::multiFlavorName.isInitialized) {
-                multiFlavorName = GradleVariantConfiguration.computeFlavorName(flavors.map { it.first })
+                computeNames()
             }
             return multiFlavorName
 
@@ -142,6 +183,20 @@ abstract class VariantBuilder protected constructor(
 
     /** Creates a variant configuration  */
     abstract fun createVariantConfig(): GradleVariantConfiguration
+
+
+    /**
+     * computes the name for the variant and the multi-flavor combination
+     */
+    private fun computeNames() {
+        variantName = computeName(
+            variantType,
+            flavors.map { it.first },
+            buildType
+        ) {
+            multiFlavorName = it
+        }
+    }
 }
 
 /** Builder for non test plugin variant configurations  */

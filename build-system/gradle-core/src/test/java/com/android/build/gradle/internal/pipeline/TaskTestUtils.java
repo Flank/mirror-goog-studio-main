@@ -284,7 +284,7 @@ public class TaskTestUtils {
         when(buildType.isDebuggable()).thenReturn(true);
 
         GradleVariantConfiguration variantConfiguration = mock(GradleVariantConfiguration.class);
-        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(variantConfiguration.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
         when(variantConfiguration.getBuildType()).thenReturn(buildType);
         when(variantConfiguration.getProductFlavors()).thenReturn(ImmutableList.of());
         when(scope.getVariantConfiguration()).thenReturn(variantConfiguration);

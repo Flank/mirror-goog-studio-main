@@ -51,7 +51,7 @@ class BundleTestDataImpl(
         testVariantData.variantConfiguration.testedApplicationId
 
     override fun isLibrary(): Boolean =
-        testVariantData.testedVariantData.variantConfiguration.type.isAar
+        testVariantData.testedVariantData.variantConfiguration.variantType.isAar
 
     override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider,

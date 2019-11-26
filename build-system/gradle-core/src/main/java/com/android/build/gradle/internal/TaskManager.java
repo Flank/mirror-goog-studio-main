@@ -701,7 +701,8 @@ public abstract class TaskManager {
             PublishingSpecs.VariantSpec testedSpec =
                     testedVariantScope
                             .getPublishingSpec()
-                            .getTestingSpec(variantScope.getVariantConfiguration().getType());
+                            .getTestingSpec(
+                                    variantScope.getVariantConfiguration().getVariantType());
 
             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
             PublishingSpecs.OutputSpec taskOutputSpec =
@@ -976,7 +977,7 @@ public abstract class TaskManager {
 
     public void createApkProcessResTask(
             @NonNull VariantScope scope) {
-        VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
+        VariantType variantType = scope.getVariantData().getVariantConfiguration().getVariantType();
         InternalArtifactType<Directory> packageOutputType =
                 (variantType.isApk() && !variantType.isForTesting())
                         ? FEATURE_RESOURCE_PKG.INSTANCE
@@ -1649,7 +1650,7 @@ public abstract class TaskManager {
     /** Is the given variant relevant for lint? */
     static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
-        final VariantType variantType = variantScope.getVariantConfiguration().getType();
+        final VariantType variantType = variantScope.getVariantConfiguration().getVariantType();
         return !variantType.isForTesting();
     }
 
@@ -1816,10 +1817,10 @@ public abstract class TaskManager {
                 checkNotNull(testVariantScope.getTestedVariantData());
         final TestVariantData testVariantData = (TestVariantData) testVariantScope.getVariantData();
 
-        boolean isLibrary = baseVariantData.getVariantConfiguration().getType().isAar();
+        boolean isLibrary = baseVariantData.getVariantConfiguration().getVariantType().isAar();
 
         AbstractTestDataImpl testData;
-        if (baseVariantData.getVariantConfiguration().getType().isDynamicFeature()) {
+        if (baseVariantData.getVariantConfiguration().getVariantType().isDynamicFeature()) {
             testData =
                     new BundleTestDataImpl(
                             testVariantData,
@@ -1946,7 +1947,8 @@ public abstract class TaskManager {
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled =
-                config.getBuildType().isTestCoverageEnabled() && !config.getType().isForTesting();
+                config.getBuildType().isTestCoverageEnabled()
+                        && !config.getVariantType().isForTesting();
         if (isTestCoverageEnabled) {
             createJacocoTask(variantScope);
         }
@@ -2080,7 +2082,7 @@ public abstract class TaskManager {
             }
 
             QualifiedContent.ScopeType scopeType = Scope.EXTERNAL_LIBRARIES;
-            if (variantScope.getVariantConfiguration().getType().isTestComponent()) {
+            if (variantScope.getVariantConfiguration().getVariantType().isTestComponent()) {
                 BaseVariantData testedVariant =
                         Objects.requireNonNull(variantScope.getTestedVariantData());
                 if (!testedVariant.getType().isAar()) {
@@ -2270,9 +2272,9 @@ public abstract class TaskManager {
         // we add it as well.
         boolean isTestCoverageEnabled =
                 config.getBuildType().isTestCoverageEnabled()
-                        && (!config.getType().isTestComponent()
+                        && (!config.getVariantType().isTestComponent()
                                 || (config.getTestedConfig() != null
-                                        && config.getTestedConfig().getType().isAar()));
+                                        && config.getTestedConfig().getVariantType().isAar()));
         if (isTestCoverageEnabled) {
             if (variantScope.getDexer() == DexerTool.DX) {
                 globalScope
@@ -2753,7 +2755,7 @@ public abstract class TaskManager {
                 task = createProguardTask(variantScope, isTestApplication);
                 break;
             case R8:
-                if (variantScope.getVariantConfiguration().getType().isAar()
+                if (variantScope.getVariantConfiguration().getVariantType().isAar()
                         && !projectOptions.get(BooleanOption.ENABLE_R8_LIBRARIES)) {
                     task = createProguardTask(variantScope, isTestApplication);
                     createdShrinker = CodeShrinker.PROGUARD;

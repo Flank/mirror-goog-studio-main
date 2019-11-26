@@ -56,7 +56,7 @@ public class OutputFactory {
         // Otherwise, don't differentiate between signed and unsigned.
         String suffix =
                 (variantConfiguration.isSigningReady()
-                                || !variantConfiguration.getType().isBaseModule())
+                                || !variantConfiguration.getVariantType().isBaseModule())
                         ? DOT_ANDROID_PACKAGE
                         : "-unsigned.apk";
         return projectBaseName + "-" + baseName + suffix;
