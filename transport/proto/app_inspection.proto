@@ -61,9 +61,17 @@ message RawCommand {
 // A response is sent from the device to answer a command.
 message AppInspectionResponse {
   uint32 command_id = 1;
+  // SUCCESS if originating command succeeded.
+  enum Status {
+    SUCCESS = 0;
+    ERROR = 1;
+  }
+  Status status = 2;
+  // Additional info if command failed.
+  string error_message = 3;
   oneof union {
-    ServiceResponse service_response = 2;
-    RawResponse raw_response = 3;
+    ServiceResponse service_response = 4;
+    RawResponse raw_response = 5;
   }
 }
 
@@ -79,16 +87,7 @@ message AppInspectionEvent {
 }
 
 // Response sent in reply for all of the "...InspectorCommand" commands.
-message ServiceResponse {
-  enum Status {
-    SUCCESS = 0;
-    ERROR = 1;
-  }
-  // SUCCESS if originating command successed.
-  Status status = 1;
-  // Additional info if command failed.
-  string error_message = 2;
-}
+message ServiceResponse {}
 
 // Opaque response from an inspector.
 message RawResponse {

@@ -16,8 +16,8 @@
 
 package com.android.tools.profiler.app.inspection;
 
-import static com.android.tools.app.inspection.AppInspection.ServiceResponse.Status.ERROR;
-import static com.android.tools.app.inspection.AppInspection.ServiceResponse.Status.SUCCESS;
+import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.ERROR;
+import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
 import static com.android.tools.profiler.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -25,10 +25,10 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import com.android.tools.app.inspection.AppInspection;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
+import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
 import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand;
 import com.android.tools.app.inspection.AppInspection.DisposeInspectorCommand;
 import com.android.tools.app.inspection.AppInspection.RawCommand;
-import com.android.tools.app.inspection.AppInspection.ServiceResponse.Status;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
@@ -202,7 +202,7 @@ public class AppInspectionTest {
     private static void assertResponseStatus(
             AppInspection.AppInspectionResponse response, Status expected) {
         assertThat(response.hasServiceResponse()).isTrue();
-        assertThat(response.getServiceResponse().getStatus()).isEqualTo(expected);
+        assertThat(response.getStatus()).isEqualTo(expected);
     }
 
     private static void assertCrashEvent(
