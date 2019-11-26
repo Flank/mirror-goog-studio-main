@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl
 
+import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
@@ -46,4 +47,6 @@ interface DslScope {
     val buildFeatures: BuildFeatureValues
 
     val providerFactory: ProviderFactory
+
+    val variableFactory: DslVariableFactory
 }

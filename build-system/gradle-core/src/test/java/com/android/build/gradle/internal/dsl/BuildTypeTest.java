@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.plugins.AppPlugin;
-import com.android.build.gradle.internal.variant2.DslScopeImpl;
+import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.sdklib.SdkVersionInfo;
@@ -47,7 +47,7 @@ public class BuildTypeTest {
     private EvalIssueReporter issueReporter;
     private DeprecationReporter deprecationReporter;
     private DslScope dslScope =
-            new DslScopeImpl(
+            FakeDslScope.createFakeDslScope(
                     new NoOpIssueReporter(),
                     new NoOpDeprecationReporter(),
                     new FakeObjectFactory(),

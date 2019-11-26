@@ -22,6 +22,7 @@ import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.api.variant.impl.VariantScopeTransformers
+import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -32,6 +33,7 @@ abstract class CommonExtensionImpl<
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         SigningConfigT : com.android.build.api.dsl.SigningConfig,
         VariantT : Variant<VariantPropertiesT>, VariantPropertiesT : VariantProperties>(
+    dslScope: DslScope,
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
     override val defaultConfig: DefaultConfigT,
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
@@ -49,6 +51,16 @@ abstract class CommonExtensionImpl<
     protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>(
         VariantScopeTransformers.toVariantProperties
     )
+
+    override var compileSdkVersion: String? by dslScope.variableFactory.newProperty(null)
+
+    override fun compileSdkVersion(version: String) {
+        this.compileSdkVersion = version
+    }
+
+    override fun compileSdkVersion(apiLevel: Int) {
+        compileSdkVersion("android-$apiLevel")
+    }
 
     override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>) {
         action.execute(buildTypes)

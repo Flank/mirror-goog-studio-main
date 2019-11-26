@@ -176,7 +176,6 @@ abstract class BaseExtension protected constructor(
             globalScope.dslScope
         )
 
-    private var target: String? = null
 
     final override var buildToolsRevision: Revision =
         ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
@@ -239,21 +238,9 @@ abstract class BaseExtension protected constructor(
         configuration.isCanBeResolved = true
     }
 
-    override var compileSdkVersion: String?
-        get() = target
-        set(value) {
-            checkWritability()
-            target = value
-        }
 
-    open fun compileSdkVersion(version: String) {
-        this.compileSdkVersion = version
-    }
 
-    open fun compileSdkVersion(apiLevel: Int) {
-        compileSdkVersion("android-$apiLevel")
-    }
-
+    /** For groovy only (so `compileSdkVersion=2` works) */
     fun setCompileSdkVersion(apiLevel: Int) {
         compileSdkVersion(apiLevel)
     }
@@ -741,6 +728,10 @@ abstract class BaseExtension protected constructor(
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
     abstract override val buildTypes: NamedDomainObjectContainer<BuildType>
     abstract fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
+
+    abstract override var compileSdkVersion: String?
+    abstract fun compileSdkVersion(version: String)
+    abstract fun compileSdkVersion(apiLevel: Int)
 
     abstract override val defaultConfig: DefaultConfig
     abstract fun defaultConfig(action: Action<DefaultConfig>)

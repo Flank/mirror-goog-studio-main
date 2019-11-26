@@ -21,11 +21,13 @@ import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
 class TestExtensionImpl(
+    dslScope: DslScope,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -38,6 +40,7 @@ class TestExtensionImpl(
             SigningConfig,
             TestVariant,
             TestVariantProperties>(
+        dslScope,
         buildTypes,
         defaultConfig,
         productFlavors,

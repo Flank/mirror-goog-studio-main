@@ -91,6 +91,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
                         sourceSetManager,
                         extraModelInfo,
                         new DynamicFeatureExtensionImpl(
+                                globalScope.getDslScope(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,

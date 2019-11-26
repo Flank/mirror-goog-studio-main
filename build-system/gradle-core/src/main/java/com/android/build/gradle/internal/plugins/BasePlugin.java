@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.DslVariableFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -320,7 +321,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         objectFactory,
                         project.getLogger(),
                         new BuildFeatureValuesImpl(projectOptions),
-                        project.getProviders());
+                        project.getProviders(),
+                        new DslVariableFactory(syncIssueHandler));
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
@@ -633,6 +635,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         hasCreatedTasks = true;
 
         extension.disableWrite();
+        globalScope.getDslScope().getVariableFactory().disableWrite();
 
         taskManager.configureCustomLintChecks();
 
