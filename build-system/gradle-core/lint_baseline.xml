@@ -301,14 +301,6 @@
         id="CommonForkJoinPool"
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/BasePlugin.java"
-            line="374"/>
-    </issue>
-
-    <issue
-        id="CommonForkJoinPool"
-        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleToApkTask.kt"
             line="100"/>
     </issue>

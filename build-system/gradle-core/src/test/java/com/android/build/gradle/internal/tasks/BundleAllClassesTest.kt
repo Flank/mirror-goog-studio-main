@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
@@ -29,15 +27,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -67,8 +63,6 @@ class BundleAllClassesTest {
 
     @Before
     fun setUp() {
-        Workers.useDirectWorkerExecutor = true
-
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(scope.artifacts).thenReturn(artifacts)
         Mockito.`when`(scope.globalScope).thenReturn(globalScope)
@@ -77,7 +71,7 @@ class BundleAllClassesTest {
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(ProjectOptions(ImmutableMap.of()))
+        Mockito.`when`(globalScope.projectOptions).thenReturn(ProjectOptions(ImmutableMap.of<String, Any>(BooleanOption.ENABLE_GRADLE_WORKERS.propertyName, false)))
         Mockito.`when`(extension.aaptOptions).thenReturn(aaptOptions)
         Mockito.`when`(aaptOptions.namespaced).thenReturn(false)
         Mockito.`when`(preJavacClasses.asFileTree).thenReturn(fileTree)
@@ -105,11 +99,6 @@ class BundleAllClassesTest {
         configAction.configure(task)
         task.javacClasses.set(testFolder.newFolder())
         task.outputJar.set(testFolder.newFile("classes.jar"))
-    }
-
-    @After
-    fun tearDown() {
-        Workers.useDirectWorkerExecutor = false
     }
 
     @Test

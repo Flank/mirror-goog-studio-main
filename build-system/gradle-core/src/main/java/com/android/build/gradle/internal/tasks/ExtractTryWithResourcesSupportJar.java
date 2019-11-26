@@ -17,7 +17,8 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -32,8 +33,6 @@ import org.gradle.api.tasks.OutputFile;
  * the final APK.
  */
 public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTask {
-
-    public static final String TASK_NAME = "extractTryWithResourcesSupportJar";
 
     private ConfigurableFileCollection outputLocation;
 
@@ -54,25 +53,16 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
     }
 
     public static class CreationAction
-            extends TaskCreationAction<ExtractTryWithResourcesSupportJar> {
+            extends VariantTaskCreationAction<ExtractTryWithResourcesSupportJar> {
 
-        @NonNull private final ConfigurableFileCollection outputLocation;
-        @NonNull private final String taskName;
-        @NonNull private final String variantName;
-
-        public CreationAction(
-                @NonNull ConfigurableFileCollection outputLocation,
-                @NonNull String taskName,
-                @NonNull String variantName) {
-            this.outputLocation = outputLocation;
-            this.taskName = taskName;
-            this.variantName = variantName;
+        public CreationAction(@NonNull VariantScope variantScope) {
+            super(variantScope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return taskName;
+            return getVariantScope().getTaskName("extractTryWithResourcesSupportJar");
         }
 
         @NonNull
@@ -83,8 +73,8 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
 
         @Override
         public void configure(@NonNull ExtractTryWithResourcesSupportJar task) {
-            task.outputLocation = outputLocation;
-            task.setVariantName(variantName);
+            super.configure(task);
+            task.outputLocation = getVariantScope().getTryWithResourceRuntimeSupportJar();
         }
     }
 }

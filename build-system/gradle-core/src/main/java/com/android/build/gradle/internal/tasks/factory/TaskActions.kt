@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.factory
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
+import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
@@ -59,15 +60,21 @@ abstract class TaskCreationAction<T : Task> : TaskInformation<T>, PreConfigActio
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
  */
 abstract class VariantTaskCreationAction<T>(
-    protected val variantScope: VariantScope
+    protected val variantScope: VariantScope, private val dependsOnPreBuildTask: Boolean
 ) : TaskCreationAction<T>() where T: Task, T: VariantAwareTask {
 
+    constructor(variantScope: VariantScope): this(variantScope, true)
+
     override fun configure(task: T) {
-        val taskContainer: MutableTaskContainer = variantScope.taskContainer
-        task.dependsOn(taskContainer.preBuildTask)
+        if (dependsOnPreBuildTask) {
+            val taskContainer: MutableTaskContainer = variantScope.taskContainer
+            task.dependsOn(taskContainer.preBuildTask)
+        }
 
         task.variantName = variantScope.fullVariantName
-
+        task.enableGradleWorkers.set(
+            variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
+        )
     }
 }
 

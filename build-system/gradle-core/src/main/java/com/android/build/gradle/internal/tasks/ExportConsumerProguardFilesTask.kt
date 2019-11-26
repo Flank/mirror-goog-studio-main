@@ -21,7 +21,7 @@ import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.immutableMapBuilder
 import com.android.builder.errors.EvalIssueException
 import com.android.utils.FileUtils
@@ -82,8 +82,8 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<ExportConsumerProguardFilesTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<ExportConsumerProguardFilesTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("export", "ConsumerProguardFiles")
@@ -105,9 +105,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         }
 
         override fun configure(task: ExportConsumerProguardFilesTask) {
-            task.variantName = variantScope.fullVariantName
-            val globalScope = variantScope.globalScope
-            val project = globalScope.project
+            super.configure(task)
 
             task.consumerProguardFiles.from(variantScope.consumerProguardFilesForFeatures)
             task.isBaseModule = variantScope.type.isBaseModule

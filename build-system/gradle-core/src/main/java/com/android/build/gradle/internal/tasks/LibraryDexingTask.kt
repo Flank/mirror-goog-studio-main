@@ -84,6 +84,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             projectName,
             path,
             workerExecutor,
+            enableGradleWorkers.get(),
             MoreExecutors.newDirectExecutorService()
         ).use {
             it.submit(

@@ -31,11 +31,13 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.profile.NoOpRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -269,6 +271,7 @@ public class TaskTestUtils {
     private static VariantScope getScope() {
         GlobalScope globalScope = mock(GlobalScope.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
+        when(globalScope.getProjectOptions()).thenReturn(new ProjectOptions(ImmutableMap.of()));
 
         VariantScope scope = mock(VariantScope.class);
         when(scope.getDirName()).thenReturn("config dir name");

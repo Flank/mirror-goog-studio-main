@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -55,8 +52,6 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
 
         override fun configure(task: TestPreBuildTask) {
             super.configure(task)
-            task.variantName = variantScope.fullVariantName
-
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
             task.compileClasspath =
                 Objects.requireNonNull<BaseVariantData>(variantScope.testedVariantData)

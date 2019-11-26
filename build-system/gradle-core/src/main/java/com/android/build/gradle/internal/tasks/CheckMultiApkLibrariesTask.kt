@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import org.apache.commons.io.Charsets
@@ -94,8 +94,8 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<CheckMultiApkLibrariesTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<CheckMultiApkLibrariesTask>(variantScope, dependsOnPreBuildTask = false) {
 
         override val name: String
             get() = variantScope.getTaskName("check", "Libraries")
@@ -103,7 +103,7 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
             get() = CheckMultiApkLibrariesTask::class.java
 
         override fun configure(task: CheckMultiApkLibrariesTask) {
-            task.variantName = variantScope.fullVariantName
+            super.configure(task)
 
             task.featureTransitiveDeps =
                     variantScope.getArtifactCollection(

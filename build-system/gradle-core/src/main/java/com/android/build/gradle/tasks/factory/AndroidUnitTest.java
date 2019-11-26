@@ -50,7 +50,7 @@ import org.gradle.api.tasks.testing.TestTaskReports;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 @CacheableTask
-public class AndroidUnitTest extends Test implements VariantAwareTask {
+public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
     private String variantName;
 

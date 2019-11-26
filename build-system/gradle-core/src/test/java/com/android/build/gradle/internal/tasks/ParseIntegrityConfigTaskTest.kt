@@ -22,9 +22,12 @@ import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
@@ -98,10 +101,17 @@ class ParseIntegrityConfigTaskTest {
         val variantScope = Mockito.mock(VariantScope::class.java)
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
+        val projectOptions = ProjectOptions(
+            ImmutableMap.of<String, Any>(
+                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                false
+            )
+        )
 
         Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
         Mockito.`when`(variantScope.type).thenReturn(variantType)
         Mockito.`when`(variantScope.fullVariantName).thenReturn("variant")
         Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)

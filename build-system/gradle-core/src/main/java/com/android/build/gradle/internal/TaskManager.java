@@ -92,6 +92,7 @@ import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
@@ -135,7 +136,6 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuil
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -2083,13 +2083,9 @@ public abstract class TaskManager {
             }
 
             // add runtime classes for try-with-resources support
-            String taskName = variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
             TaskProvider<ExtractTryWithResourcesSupportJar> extractTryWithResources =
                     taskFactory.register(
-                            new ExtractTryWithResourcesSupportJar.CreationAction(
-                                    variantScope.getTryWithResourceRuntimeSupportJar(),
-                                    taskName,
-                                    variantScope.getFullVariantName()));
+                            new ExtractTryWithResourcesSupportJar.CreationAction(variantScope));
             variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
             transformManager.addStream(
                     OriginalStream.builder(project, "runtime-deps-try-with-resources")
@@ -2963,46 +2959,46 @@ public abstract class TaskManager {
         taskFactory.register(new PreBuildCreationAction(scope));
     }
 
-    public abstract static class AbstractPreBuildCreationAction<T extends Task>
-            extends TaskCreationAction<T> {
-
-        protected final VariantScope variantScope;
+    public abstract static class AbstractPreBuildCreationAction<T extends AndroidVariantTask>
+            extends VariantTaskCreationAction<T> {
 
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("pre", "Build");
+            return getVariantScope().getTaskName("pre", "Build");
         }
 
         public AbstractPreBuildCreationAction(VariantScope variantScope) {
-            this.variantScope = variantScope;
+            super(variantScope, false);
         }
 
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends T> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setPreBuildTask(taskProvider);
+            getVariantScope().getTaskContainer().setPreBuildTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull T task) {
+            super.configure(task);
             task.dependsOn(MAIN_PREBUILD);
 
-            if (variantScope.getCodeShrinker() != null) {
+            if (getVariantScope().getCodeShrinker() != null) {
                 task.dependsOn(EXTRACT_PROGUARD_FILES);
             }
         }
     }
 
-    private static class PreBuildCreationAction extends AbstractPreBuildCreationAction<Task> {
+    private static class PreBuildCreationAction
+            extends AbstractPreBuildCreationAction<AndroidVariantTask> {
         public PreBuildCreationAction(VariantScope variantScope) {
             super(variantScope);
         }
 
         @NonNull
         @Override
-        public Class<Task> getType() {
-            return Task.class;
+        public Class<AndroidVariantTask> getType() {
+            return AndroidVariantTask.class;
         }
     }
 

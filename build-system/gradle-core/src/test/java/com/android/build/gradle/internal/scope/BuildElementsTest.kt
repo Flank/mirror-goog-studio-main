@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.scope
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.builder.core.VariantTypeImpl
 import com.android.utils.Pair
 import com.google.common.base.Charsets
@@ -29,7 +28,6 @@ import com.google.common.io.FileWriteMode
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
-import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -55,14 +53,8 @@ class BuildElementsTest {
 
     @Before
     fun setUp() {
-        Workers.useDirectWorkerExecutor= true
         MockitoAnnotations.initMocks(this)
         `when`(variantConfiguration!!.type).thenReturn(VariantTypeImpl.BASE_APK)
-    }
-
-    @After
-    fun tearDown() {
-        Workers.useDirectWorkerExecutor= false
     }
 
     @Test

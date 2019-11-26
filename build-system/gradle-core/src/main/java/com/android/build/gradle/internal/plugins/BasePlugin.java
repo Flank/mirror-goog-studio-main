@@ -240,11 +240,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
-        Workers.INSTANCE.initFromProject(
-                projectOptions,
-                // possibly, in the future, consider using a pool with a dedicated size
-                // using the gradle parallelism settings.
-                ForkJoinPool.commonPool());
+        Workers.INSTANCE.initFromProject(projectOptions);
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)

@@ -24,6 +24,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.artifacts.ArtifactCollection
@@ -119,8 +121,8 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
      *
      * This cannot depend on preBuild as it would introduce a dependency cycle.
      */
-    class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<PackagedDependenciesWriterTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<PackagedDependenciesWriterTask>(variantScope, dependsOnPreBuildTask = false) {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")
@@ -138,7 +140,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
         }
 
         override fun configure(task: PackagedDependenciesWriterTask) {
-            task.variantName = variantScope.fullVariantName
+            super.configure(task)
             task.projectPath = variantScope.globalScope.project.path
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
 

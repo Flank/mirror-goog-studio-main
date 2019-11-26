@@ -17,47 +17,28 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeIncrementalTaskInputs
 import com.android.build.gradle.internal.tasks.JacocoTaskDelegate
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
-import org.gradle.workers.WorkerExecutor
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import java.io.File
 
 class JacocoTest {
 
-    @Mock
-    lateinit var workerExecutor: WorkerExecutor
-
     @Rule
     @JvmField
     var tmp = TemporaryFolder()
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-        Workers.useDirectWorkerExecutor = true
-    }
-
-    @After
-    fun tearDown() {
-        Workers.useDirectWorkerExecutor = false
-    }
 
     @Test
     fun testCopyFiles() {
@@ -85,7 +66,7 @@ class JacocoTest {
         )
 
         jacocoDelegate.run(
-            Workers.preferWorkers("test", "test", workerExecutor),
+            DirectWorkerExecutor(),
             FakeIncrementalTaskInputs())
 
         assertThat(File(outputDir, "META-INF/copiedFile.kotlin_module")).exists()

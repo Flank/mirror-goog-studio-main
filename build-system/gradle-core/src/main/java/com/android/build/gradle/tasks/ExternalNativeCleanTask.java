@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -137,13 +137,12 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         }
     }
 
-    public static class CreationAction extends TaskCreationAction<ExternalNativeCleanTask> {
-        @NonNull private final VariantScope variantScope;
+    public static class CreationAction extends VariantTaskCreationAction<ExternalNativeCleanTask> {
         @NonNull private final CxxVariantModel variant;
         @NonNull private final List<CxxAbiModel> abis = Lists.newArrayList();
 
         public CreationAction(@NonNull CxxModuleModel module, @NonNull VariantScope scope) {
-            this.variantScope = scope;
+            super(scope);
             this.variant = createCxxVariantModel(module, scope.getVariantData());
             // Attempt to clean every possible ABI even those that aren't currently built.
             // This covers cases where user has changed abiFilters or platform. We don't want
@@ -162,7 +161,7 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("externalNativeBuildClean");
+            return getVariantScope().getTaskName("externalNativeBuildClean");
         }
 
         @NonNull
@@ -173,10 +172,10 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
 
         @Override
         public void configure(@NonNull ExternalNativeCleanTask task) {
-            task.setVariantName(variantScope.getFullVariantName());
+            super.configure(task);
             task.variant = variant;
             task.abis = abis;
-            task.evalIssueReporter = variantScope.getGlobalScope().getErrorHandler();
+            task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
         }
     }
 }
