@@ -16,11 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.profile.ProfilerInitializer
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.GradlePluginMBeans
 import com.android.ide.common.workers.WorkerExecutorException
@@ -101,7 +97,12 @@ object Workers {
      * if the default installed version is to be used.
      * @return an instance of [WorkerExecutorFacade].
      */
-    fun preferThreads(projectName: String, owner: String, workerExecutor: WorkerExecutor, enableGradleWorkers: Boolean): WorkerExecutorFacade {
+    fun preferThreads(
+        projectName: String,
+        owner: String,
+        workerExecutor: WorkerExecutor,
+        enableGradleWorkers: Boolean
+    ): WorkerExecutorFacade {
         return ProfileAwareExecutorServiceAdapter(
             projectName,
             owner,
@@ -121,69 +122,6 @@ object Workers {
      */
     fun withThreads(projectName: String, owner: String) =
         ProfileAwareExecutorServiceAdapter(projectName, owner, defaultExecutorService)
-
-    private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
-
-    @GuardedBy("this")
-    private var aapt2ThreadPool: ForkJoinPool? = null
-
-    /**
-     * See {@link preferWorkers}. The only difference is a default {@code executor} that uses a
-     * specific thread pool for AAPT2 daemons.
-     */
-    @JvmOverloads
-    @Synchronized
-    fun getWorkerForAapt2(
-        projectName: String,
-        owner: String,
-        worker: WorkerExecutor,
-        enableGradleWorkers: Boolean,
-        executor: ExecutorService? = aapt2ThreadPool
-    ): WorkerExecutorFacade {
-        return preferWorkers(projectName, owner, worker, enableGradleWorkers, executor)
-    }
-
-    @JvmOverloads
-    @Synchronized
-    fun getSharedExecutorForAapt2(
-        projectName: String,
-        owner: String,
-        executor: ExecutorService? = aapt2ThreadPool
-    ): WorkerExecutorFacade {
-        return ProfileAwareExecutorServiceAdapter(projectName, owner, executor!!)
-    }
-
-    /**
-     * Initializer that uses the project's [ProjectOptions] to record the project options that are
-     * used to decide which instance of [WorkerExecutorFacade] should be used. This function should
-     * be invoked early during AGP instantiation.
-     *
-     * It will use [BooleanOption.ENABLE_GRADLE_WORKERS] to determine if [WorkerExecutor] or
-     * [ExecutorService] should be used.
-     *
-     * @param options Gradle's project options.
-     */
-    @Synchronized
-    fun initFromProject(options: ProjectOptions) {
-        // Multi-module projects calls initFromProject for each android module, so we check to
-        // avoid resetting the thread pool all the time.
-        if (aapt2ThreadPool == null) {
-            val aapt2ThreadPoolSize = options.get(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?:
-            Integer.min(
-                MAX_AAPT2_THREAD_POOL_SIZE,
-                ForkJoinPool.getCommonPoolParallelism())
-            aapt2ThreadPool = ForkJoinPool(aapt2ThreadPoolSize)
-        }
-    }
-
-    /**
-     * Clean-up any thread pool that was set up during {@code initFromProject}.
-     */
-    @Synchronized
-    fun shutdown() {
-        aapt2ThreadPool?.shutdown()
-        aapt2ThreadPool = null
-    }
 
     /**
      * Simple implementation of [WorkerExecutorFacade] that uses a Gradle [WorkerExecutor]
@@ -277,7 +215,7 @@ object Workers {
      * Translates sdk common [WorkerExecutorFacade.IsolationMode] into Gradle's [IsolationMode]
      */
     fun WorkerExecutorFacade.IsolationMode.toGradleIsolationMode() =
-        when(this) {
+        when (this) {
             WorkerExecutorFacade.IsolationMode.NONE -> IsolationMode.NONE
             WorkerExecutorFacade.IsolationMode.CLASSLOADER -> IsolationMode.CLASSLOADER
             WorkerExecutorFacade.IsolationMode.PROCESS -> IsolationMode.PROCESS
@@ -299,9 +237,11 @@ object Workers {
                 ?: throw RuntimeException("Cannot find constructor with @Inject in ${params.delegateAction.name}")
 
             val delegate = constructor.newInstance(params.delegateParameters) as Runnable
-            GradlePluginMBeans.getProfileMBean(params.projectName)?.workerStarted(params.taskOwner, params.workerKey)
+            GradlePluginMBeans.getProfileMBean(params.projectName)
+                ?.workerStarted(params.taskOwner, params.workerKey)
             delegate.run()
-            GradlePluginMBeans.getProfileMBean(params.projectName)?.workerFinished(params.taskOwner, params.workerKey)
+            GradlePluginMBeans.getProfileMBean(params.projectName)
+                ?.workerFinished(params.taskOwner, params.workerKey)
         }
 
         private fun findAppropriateConstructor(): Constructor<*>? {

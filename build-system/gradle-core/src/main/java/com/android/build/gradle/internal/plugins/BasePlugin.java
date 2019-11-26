@@ -64,7 +64,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.Workers;
+import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -240,7 +240,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
-        Workers.INSTANCE.initFromProject(projectOptions);
+        Aapt2Workers.registerAapt2WorkersBuildService(project, projectOptions);
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
@@ -357,7 +357,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                             return;
                         }
                         ModelBuilder.clearCaches();
-                        Workers.INSTANCE.shutdown();
                         sdkComponents.unload();
                         SdkLocator.resetCache();
                         ConstraintHandler.clearCache();

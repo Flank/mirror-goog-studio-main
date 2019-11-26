@@ -28,10 +28,13 @@ import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.services.getAapt2WorkersBuildService
+import com.android.build.gradle.internal.services.registerForWorkers
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
@@ -51,6 +54,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -112,6 +116,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     var useJvmResourceCompiler: Boolean = false
       private set
 
+    @get:Internal
+    abstract val aapt2WorkersBuildService: Property<Aapt2WorkersBuildService>
+
     private lateinit var mergeBlameFolder: File
 
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
@@ -123,11 +130,13 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
         val aapt2ServiceKey = registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
+        val aapt2WorkersBuildServiceKey = aapt2WorkersBuildService.get().registerForWorkers()
         val parameter = Params(
             projectName = projectName,
             owner = path,
             androidJar = androidJar.get(),
             aapt2ServiceKey = aapt2ServiceKey,
+            aapt2WorkersBuildServiceKey = aapt2WorkersBuildServiceKey,
             errorFormatMode = errorFormatMode,
             inputs = inputChanges.getChangesInSerializableForm(inputDirectory),
             manifestFile = manifestFile,
@@ -144,6 +153,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         val owner: String,
         val androidJar: File,
         val aapt2ServiceKey: Aapt2ServiceKey,
+        val aapt2WorkersBuildServiceKey: WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService>,
         val errorFormatMode: SyncOptions.ErrorFormatMode,
         val inputs: SerializableInputChanges,
         val manifestFile: File,
@@ -159,36 +169,38 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
      */
     private class Action @Inject constructor(private val params: Params) : Runnable {
         override fun run() {
-            Workers.getSharedExecutorForAapt2(params.projectName, params.owner).use { facade ->
-                compileResources(
-                    inputs = params.inputs,
-                    outDirectory = params.compiledDirectory,
-                    workerExecutor = facade,
-                    aapt2ServiceKey = params.aapt2ServiceKey,
-                    errorFormatMode = params.errorFormatMode,
-                    mergeBlameFolder = params.mergeBlameFolder,
-                    useJvmResourceCompiler = params.useJvmResourceCompiler
-                )
+            WorkerActionServiceRegistry.INSTANCE
+                .getService(params.aapt2WorkersBuildServiceKey)
+                .service
+                .getSharedExecutorForAapt2(params.projectName, params.owner).use { facade ->
+                    compileResources(
+                        inputs = params.inputs,
+                        outDirectory = params.compiledDirectory,
+                        workerExecutor = facade,
+                        aapt2ServiceKey = params.aapt2ServiceKey,
+                        errorFormatMode = params.errorFormatMode,
+                        mergeBlameFolder = params.mergeBlameFolder,
+                        useJvmResourceCompiler = params.useJvmResourceCompiler
+                    )
 
-                val config = getAaptPackageConfig(
-                    compiledDependenciesResources = params.compiledDependenciesResources,
-                    androidJar = params.androidJar,
-                    resDir = params.compiledDirectory,
-                    manifestFile = params.manifestFile
-                )
+                    val config = getAaptPackageConfig(
+                        compiledDependenciesResources = params.compiledDependenciesResources,
+                        androidJar = params.androidJar,
+                        resDir = params.compiledDirectory,
+                        manifestFile = params.manifestFile
+                    )
 
+                    val params = Aapt2ProcessResourcesRunnable.Params(
+                        aapt2ServiceKey = params.aapt2ServiceKey,
+                        request = config,
+                        errorFormatMode = params.errorFormatMode,
+                        mergeBlameFolder = params.mergeBlameFolder,
+                        manifestMergeBlameFile = params.manifestMergeBlameFile
+                    )
 
-                val params = Aapt2ProcessResourcesRunnable.Params(
-                    aapt2ServiceKey = params.aapt2ServiceKey,
-                    request = config,
-                    errorFormatMode = params.errorFormatMode,
-                    mergeBlameFolder = params.mergeBlameFolder,
-                    manifestMergeBlameFile = params.manifestMergeBlameFile
-                )
-
-                facade.await() // All compilation must be done before linking.
-                facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
-            }
+                    facade.await() // All compilation must be done before linking.
+                    facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
+                }
         }
     }
 
@@ -249,6 +261,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             task.useJvmResourceCompiler =
               variantScope.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
+            task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
         }
     }
 
