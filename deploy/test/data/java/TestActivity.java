@@ -118,4 +118,8 @@ public class TestActivity extends Activity {
 
         System.out.println("StaticVarInit.X = " + x);
     }
+
+    public void getStaticIntFromVirtual() {
+        System.out.println("getStaticIntFromVirtual = " + new StaticVarInit().virtualGetY());
+    }
 }

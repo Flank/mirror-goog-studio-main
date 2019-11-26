@@ -86,4 +86,32 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "waitBackgroundThread");
         Assert.assertTrue(android.waitForInput("Background Thread Finished", RETURN_VALUE_TIMEOUT));
     }
+
+
+    @Test
+    public void testStaticVarFromVirtual() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStaticIntFromVirtual");
+        Assert.assertTrue(android.waitForInput("getStaticIntFromVirtual = -89", RETURN_VALUE_TIMEOUT));
+
+        Deploy.SwapRequest request =
+          createRequest(
+            "app.StaticVarInit",
+            "app/StaticVarInit.dex",
+            false);
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStaticIntFromVirtual");
+
+        // TODO: This needs to be = 89 once static initialization is completed.
+        Assert.assertTrue(android.waitForInput("getStaticIntFromVirtual = 0", RETURN_VALUE_TIMEOUT));
+    }
 }
