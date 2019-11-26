@@ -8,9 +8,6 @@ build:remote --jobs=150
 
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
 
-# Use prebuilt native toolchain
-build --crosstool_top=@native_toolchain//:toolchain
-
 build:remote --extra_toolchains=@native_toolchain//:cc-toolchain-x64_linux
 build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_ubuntu18
 build:remote --host_platform=//tools/base/bazel/foundry:rbe_ubuntu18
