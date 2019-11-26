@@ -94,6 +94,14 @@ interface RecipeExecutor {
    * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.
    */
   fun requireJavaVersion(version: String, kotlinSupport: Boolean = false)
+
+  /**
+   * Adds a dynamic feature [name] to [toModule]'s build.gradle[.kts].
+   *
+   * @param name name of a dynamic feature which should be added.
+   * @param toModule name of a base feature module *directory*.
+   */
+  fun addDynamicFeature(name: String, toModule: String)
 }
 
 enum class SourceSetType {
