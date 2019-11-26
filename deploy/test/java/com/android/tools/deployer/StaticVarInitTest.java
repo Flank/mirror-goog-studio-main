@@ -24,14 +24,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AgentBasedClassRedefinerStaticVarInitTest extends AgentBasedClassRedefinerTestBase {
+public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
 
     @Parameterized.Parameters
     public static Collection<String> artFlags() {
         return ALL_ART_FLAGS;
     }
 
-    public AgentBasedClassRedefinerStaticVarInitTest(String artFlag) {
+    public StaticVarInitTest(String artFlag) {
         super(artFlag);
     }
 

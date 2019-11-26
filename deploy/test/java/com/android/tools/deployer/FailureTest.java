@@ -25,14 +25,14 @@ import org.junit.runners.Parameterized;
 
 /** Test cases where the agent fail to redefine classes for various reasons. */
 @RunWith(Parameterized.class)
-public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefinerTestBase {
+public class FailureTest extends AgentBasedClassRedefinerTestBase {
 
     @Parameterized.Parameters
     public static Collection<String> artFlags() {
         return ALL_ART_FLAGS;
     }
 
-    public AgentBasedClassRedefinerFailureTest(String artFlag) {
+    public FailureTest(String artFlag) {
         super(artFlag);
     }
 

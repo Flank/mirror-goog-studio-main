@@ -27,13 +27,13 @@ import org.junit.runners.Parameterized;
 
 /** Test the R class field verification. */
 @RunWith(Parameterized.class)
-public class AgentBasedClassRedefinerRClassTest extends AgentBasedClassRedefinerTestBase {
+public class RClassTest extends AgentBasedClassRedefinerTestBase {
     @Parameterized.Parameters
     public static Collection<String> artFlags() {
         return ALL_ART_FLAGS;
     }
 
-    public AgentBasedClassRedefinerRClassTest(String artFlag) {
+    public RClassTest(String artFlag) {
         super(artFlag);
     }
 

@@ -24,14 +24,14 @@ import org.junit.runners.Parameterized;
 
 /** Verify some basic swapping that involves Kotlin compiler generated classes. */
 @RunWith(Parameterized.class)
-public class AgentBasedClassRedefinerKotlinTest extends AgentBasedClassRedefinerTestBase {
+public class KotlinTest extends AgentBasedClassRedefinerTestBase {
 
     @Parameterized.Parameters
     public static Collection<String> artFlags() {
         return ALL_ART_FLAGS;
     }
 
-    public AgentBasedClassRedefinerKotlinTest(String artFlag) {
+    public KotlinTest(String artFlag) {
         super(artFlag);
     }
 

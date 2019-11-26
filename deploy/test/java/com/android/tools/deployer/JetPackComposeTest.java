@@ -23,14 +23,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AgentBasedClassRedefinerJetPackComposeTest extends AgentBasedClassRedefinerTestBase {
+public class JetPackComposeTest extends AgentBasedClassRedefinerTestBase {
 
     @Parameterized.Parameters
     public static Collection<String> artFlags() {
         return ALL_ART_FLAGS;
     }
 
-    public AgentBasedClassRedefinerJetPackComposeTest(String artFlag) {
+    public JetPackComposeTest(String artFlag) {
         super(artFlag);
     }
 

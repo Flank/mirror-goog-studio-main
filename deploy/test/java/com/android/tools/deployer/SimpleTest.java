@@ -25,13 +25,13 @@ import org.junit.runners.Parameterized;
 
 /** Test very simple cases on class redefinitions. */
 @RunWith(Parameterized.class)
-public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefinerTestBase {
+public class SimpleTest extends AgentBasedClassRedefinerTestBase {
     @Parameterized.Parameters
     public static Collection<String> artFlags() {
         return ALL_ART_FLAGS;
     }
 
-    public AgentBasedClassRedefinerSimpleTest(String artFlag) {
+    public SimpleTest(String artFlag) {
         super(artFlag);
     }
 
