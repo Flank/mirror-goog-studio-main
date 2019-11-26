@@ -272,7 +272,7 @@ public abstract class TaskManager {
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev02";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev03";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
             "1.3.60-dev-withExperimentalGoogleExtensions-20191016";
 

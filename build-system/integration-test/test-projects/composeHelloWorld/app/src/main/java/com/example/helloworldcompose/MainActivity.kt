@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun HelloWorldColumn() {
-    Column(crossAxisSize = LayoutSize.Expand, modifier = Spacing(16.dp)) {
+    Column(modifier = Spacing(16.dp)) {
         Text("Hello, World1")
         Text("Hello, World2")
         Text("Hello, World3")
