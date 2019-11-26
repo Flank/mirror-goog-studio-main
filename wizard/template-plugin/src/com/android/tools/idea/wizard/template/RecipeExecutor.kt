@@ -50,11 +50,23 @@ interface RecipeExecutor {
   fun hasDependency(mavenCoordinate: String, configuration: String? = null): Boolean
 
   /**
-   * Records a library dependency (adds an new entry to.
-   * "compile" configuration is used by default for backward compatibility.
-   * It is converted to "implementation" in later stages if Gradle supports it.
+   * Records a library dependency
+   * Old [configuration]s such as "compile" will be converted to new ones ("implementation") in later stages if Gradle supports it.
+   *
+   * @param mavenCoordinate coordinate of dependency to be added in Maven format (e.g androidx.appcompat:appcompat:1.1.0).
+   * @param configuration Gradle configuration to use.
    * */
   fun addDependency(mavenCoordinate: String, configuration: String = "compile")
+
+  /**
+   * Records a module dependency.
+   * Old [configuration]s such as "compile" will be converted to new ones ("implementation") in later stages if Gradle supports it.
+   *
+   * @param configuration Gradle configuration to use.
+   * @param moduleName name of a module on which something depends. Should not start with ':'.
+   * @param toModule name of a module *directory* which depends on [moduleName].
+   */
+  fun addModuleDependency(configuration: String, moduleName: String, toModule: String)
 
   /**
    * Adds a new entry to 'sourceSets' block of Gradle build file.
