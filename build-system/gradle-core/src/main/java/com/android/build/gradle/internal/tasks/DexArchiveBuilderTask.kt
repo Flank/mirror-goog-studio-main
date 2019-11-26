@@ -373,7 +373,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 variantScope.globalScope.project.provider { false })
 
             val minSdkVersion = variantScope
-                .variantConfiguration
+                .variantDslInfo
                 .minSdkVersionWithTargetDeviceApi
                 .featureLevel
             task.dexParams.minSdkVersion.set(minSdkVersion)
@@ -399,7 +399,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 (projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE)
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
-            task.dexParams.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
+            task.dexParams.debuggable.set(variantScope.variantDslInfo.buildType.isDebuggable)
             task.projectVariant.set(
                 "${variantScope.globalScope.project.name}:${variantScope.fullVariantName}"
             )

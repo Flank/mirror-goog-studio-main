@@ -108,7 +108,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public String getName() {
-        return getVariantData().getVariantConfiguration().getFullName();
+        return getVariantData().getVariantDslInfo().getFullName();
     }
 
     @Override
@@ -120,19 +120,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public String getDirName() {
-        return getVariantData().getVariantConfiguration().getDirName();
+        return getVariantData().getVariantDslInfo().getDirName();
     }
 
     @Override
     @NonNull
     public String getBaseName() {
-        return getVariantData().getVariantConfiguration().getBaseName();
+        return getVariantData().getVariantDslInfo().getBaseName();
     }
 
     @NonNull
     @Override
     public String getFlavorName() {
-        return getVariantData().getVariantConfiguration().getFlavorName();
+        return getVariantData().getVariantDslInfo().getFlavorName();
     }
 
     @NonNull
@@ -145,33 +145,32 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public BuildType getBuildType() {
         return readOnlyObjectProvider.getBuildType(
-                getVariantData().getVariantConfiguration().getBuildType());
+                getVariantData().getVariantDslInfo().getBuildType());
     }
 
     @Override
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
         return new ImmutableFlavorList(
-                getVariantData().getVariantConfiguration().getProductFlavors(),
-                readOnlyObjectProvider);
+                getVariantData().getVariantDslInfo().getProductFlavors(), readOnlyObjectProvider);
     }
 
     @Override
     @NonNull
     public ProductFlavor getMergedFlavor() {
-        return getVariantData().getVariantConfiguration().getMergedFlavor();
+        return getVariantData().getVariantDslInfo().getMergedFlavor();
     }
 
     @NonNull
     @Override
     public JavaCompileOptions getJavaCompileOptions() {
-        return getVariantData().getVariantConfiguration().getJavaCompileOptions();
+        return getVariantData().getVariantDslInfo().getJavaCompileOptions();
     }
 
     @NonNull
     @Override
     public List<SourceProvider> getSourceSets() {
-        return getVariantData().getVariantConfiguration().getSortedSourceProviders();
+        return getVariantData().getVariantDslInfo().getSortedSourceProviders();
     }
 
     @NonNull
@@ -229,7 +228,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                             "variant.getApplicationId() is not supported by dynamic-feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
         }
 
-        return variantData.getVariantConfiguration().getApplicationId();
+        return variantData.getVariantDslInfo().getApplicationId();
     }
 
     @Override
@@ -703,12 +702,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public void buildConfigField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
-        getVariantData().getVariantConfiguration().addBuildConfigField(type, name, value);
+        getVariantData().getVariantDslInfo().addBuildConfigField(type, name, value);
     }
 
     @Override
     public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
-        getVariantData().getVariantConfiguration().addResValue(type, name, value);
+        getVariantData().getVariantDslInfo().addResValue(type, name, value);
     }
 
 

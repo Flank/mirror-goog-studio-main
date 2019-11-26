@@ -152,7 +152,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             mergedManifest = testedScope.artifacts.getFinalProduct(MERGED_MANIFESTS)
             mainApkInfo = testedScope.outputScope.mainSplit
             packageNameOfFinalRClassProvider = {
-                testedScope.variantConfiguration.originalApplicationId
+                testedScope.variantDslInfo.originalApplicationId
             }
         }
 

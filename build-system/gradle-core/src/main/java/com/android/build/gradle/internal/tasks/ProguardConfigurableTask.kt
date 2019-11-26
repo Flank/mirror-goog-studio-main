@@ -304,7 +304,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         private fun applyProguardConfigForNonTest(task: ProguardConfigurableTask) {
-            val variantConfig = variantScope.variantConfiguration
+            val variantDslInfo = variantScope.variantDslInfo
 
             val postprocessingFeatures = variantScope.postprocessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
@@ -343,7 +343,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 keep("class **.R$*")
             }
 
-            if (variantConfig.isTestCoverageEnabled) {
+            if (variantDslInfo.isTestCoverageEnabled) {
                 // when collecting coverage, don't remove the JaCoCo runtime
                 keep("class com.vladium.** {*;}")
                 keep("class org.jacoco.** {*;}")

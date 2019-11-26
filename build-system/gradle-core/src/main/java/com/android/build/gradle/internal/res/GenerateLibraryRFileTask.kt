@@ -307,7 +307,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses)
 
             task.packageForR.set(task.project.provider {
-                Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
+                Strings.nullToEmpty(variantScope.variantDslInfo.originalApplicationId)
             })
             task.packageForR.disallowChanges()
 
@@ -370,7 +370,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.namespacedRClass.setDisallowChanges(projectOptions[BooleanOption.NAMESPACED_R_CLASS])
             task.compileClasspathLibraryRClasses.setDisallowChanges(false)
             task.packageForR.setDisallowChanges(task.project.provider {
-                Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
+                Strings.nullToEmpty(variantScope.variantDslInfo.originalApplicationId)
             })
             testedScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles

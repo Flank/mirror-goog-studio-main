@@ -584,7 +584,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 default:
                     throw new AssertionError("Unknown value " + executionEnum);
             }
-            task.codeCoverageEnabled = scope.getVariantConfiguration().isTestCoverageEnabled();
+            task.codeCoverageEnabled = scope.getVariantDslInfo().isTestCoverageEnabled();
             task.dependencies = scope.getVariantDependencies().getRuntimeClasspath();
             task.testExecution = executionEnum;
 

@@ -144,7 +144,7 @@ abstract class BundleLibraryClasses : NonIncrementalTask() {
         override fun configure(task: BundleLibraryClasses) {
             super.configure(task)
 
-            task.packageName = lazy { variantScope.variantConfiguration.packageFromManifest }
+            task.packageName = lazy { variantScope.variantDslInfo.packageFromManifest }
             task.classes.from(inputs)
             val packageRClass =
                 variantScope.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&

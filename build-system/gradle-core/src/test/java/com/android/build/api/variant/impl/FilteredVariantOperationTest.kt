@@ -17,9 +17,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -158,24 +157,24 @@ class FilteredVariantOperationTest {
         buildTypeName: String? = null,
         flavorName: String? = null): VariantScope {
         val variantScope = Mockito.mock(VariantScope::class.java)
-        val variantConfiguration = Mockito.mock(GradleVariantConfiguration::class.java)
+        val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
         val variantData = Mockito.mock(BaseVariantData::class.java)
         val publicVariantApi = Mockito.mock(VariantImpl::class.java)
         Mockito.`when`(variantScope.variantData).thenReturn(variantData)
-        Mockito.`when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
+        Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
         Mockito.`when`(variantScope.fullVariantName).thenReturn(name)
         Mockito.`when`(variantData.publicVariantApi).thenReturn(publicVariantApi)
         Mockito.`when`(publicVariantApi.name).thenReturn(name)
         if (buildTypeName != null) {
             val buildType = Mockito.mock(BuildType::class.java)
-            Mockito.`when`(variantConfiguration.buildType).thenReturn(buildType)
+            Mockito.`when`(variantDslInfo.buildType).thenReturn(buildType)
             Mockito.`when`(buildType.name).thenReturn(buildTypeName)
         }
         val productFlavor = Mockito.mock(ProductFlavor::class.java)
         Mockito.`when`(productFlavor.dimension).thenReturn("dim1")
         Mockito.`when`(productFlavor.name).thenReturn(flavorName)
         if (flavorName != null) {
-            Mockito.`when`(variantConfiguration.productFlavors).thenReturn(
+            Mockito.`when`(variantDslInfo.productFlavors).thenReturn(
                 listOf(productFlavor)
             )
         }

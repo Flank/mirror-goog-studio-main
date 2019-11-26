@@ -30,7 +30,7 @@ import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
@@ -85,8 +85,7 @@ public abstract class BaseVariantData {
 
     @NonNull
     protected final TaskManager taskManager;
-    @NonNull
-    private final GradleVariantConfiguration variantConfiguration;
+    @NonNull private final VariantDslInfo variantDslInfo;
 
     private VariantDependencies variantDependency;
 
@@ -133,9 +132,9 @@ public abstract class BaseVariantData {
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull GradleVariantConfiguration variantConfiguration,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull Recorder recorder) {
-        this.variantConfiguration = variantConfiguration;
+        this.variantDslInfo = variantDslInfo;
         this.taskManager = taskManager;
 
         final Splits splits = globalScope.getExtension().getSplits();
@@ -153,7 +152,7 @@ public abstract class BaseVariantData {
                     .warn(
                             String.format(
                                     "Variant %s requested removed pure splits support, reverted to full splits",
-                                    variantConfiguration.getFullName()));
+                                    variantDslInfo.getFullName()));
         }
 
         final Project project = globalScope.getProject();
@@ -168,11 +167,11 @@ public abstract class BaseVariantData {
 
         publicVariantConfiguration =
                 new VariantConfigurationImpl(
-                        variantConfiguration.getFullName(),
-                        variantConfiguration.getBuildType().getName(),
-                        variantConfiguration.getFlavorNamesWithDimensionNames());
+                        variantDslInfo.getFullName(),
+                        variantDslInfo.getBuildType().getName(),
+                        variantDslInfo.getFlavorNamesWithDimensionNames());
 
-        outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantConfiguration);
+        outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantDslInfo);
 
         TaskManager.configureScopeForNdk(scope);
 
@@ -200,7 +199,7 @@ public abstract class BaseVariantData {
             final MergingLog mergingLog = new MergingLog(resourceBlameLogDir);
             layoutXmlProcessor =
                     new LayoutXmlProcessor(
-                            getVariantConfiguration().getOriginalApplicationId(),
+                            getVariantDslInfo().getOriginalApplicationId(),
                             taskManager
                                     .getDataBindingBuilder()
                                     .createJavaFileWriter(scope.getClassOutputForDataBinding()),
@@ -256,8 +255,8 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public GradleVariantConfiguration getVariantConfiguration() {
-        return variantConfiguration;
+    public VariantDslInfo getVariantDslInfo() {
+        return variantDslInfo;
     }
 
     public void setVariantDependency(@NonNull VariantDependencies variantDependency) {
@@ -274,17 +273,17 @@ public abstract class BaseVariantData {
 
     @NonNull
     public VariantType getType() {
-        return variantConfiguration.getVariantType();
+        return variantDslInfo.getVariantType();
     }
 
     @NonNull
     public String getName() {
-        return variantConfiguration.getFullName();
+        return variantDslInfo.getFullName();
     }
 
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return StringHelper.appendCapitalized(prefix, variantConfiguration.getFullName(), suffix);
+        return StringHelper.appendCapitalized(prefix, variantDslInfo.getFullName(), suffix);
     }
 
     @NonNull
@@ -568,7 +567,7 @@ public abstract class BaseVariantData {
     }
 
     public LinkedHashMap<String, FileCollection> getAndroidResources() {
-        return getVariantConfiguration()
+        return getVariantDslInfo()
                 .getSortedSourceProviders()
                 .stream()
                 .collect(
@@ -598,7 +597,7 @@ public abstract class BaseVariantData {
             ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
 
             // First the actual source folders.
-            List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
+            List<SourceProvider> providers = variantDslInfo.getSortedSourceProviders();
             for (SourceProvider provider : providers) {
                 sourceSets.addAll(
                         ((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
@@ -649,7 +648,7 @@ public abstract class BaseVariantData {
                 }
             }
 
-            if (!variantConfiguration.getRenderscriptNdkModeEnabled()
+            if (!variantDslInfo.getRenderscriptNdkModeEnabled()
                     && taskContainer.getRenderscriptCompileTask() != null) {
                 Provider<Directory> rsFC =
                         scope.getArtifacts()
@@ -675,7 +674,7 @@ public abstract class BaseVariantData {
         ConfigurableFileCollection fc = scope.getGlobalScope().getProject().files();
 
         // First the actual source folders.
-        List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
+        List<SourceProvider> providers = variantDslInfo.getSortedSourceProviders();
         for (SourceProvider provider : providers) {
             for (File sourceFolder : provider.getJavaDirectories()) {
                 if (sourceFolder.isDirectory()) {
@@ -690,7 +689,7 @@ public abstract class BaseVariantData {
                 scope.getArtifacts()
                         .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE));
 
-        if (!variantConfiguration.getRenderscriptNdkModeEnabled()) {
+        if (!variantDslInfo.getRenderscriptNdkModeEnabled()) {
             fc.from(
                     scope.getArtifacts()
                             .getFinalProduct(
@@ -702,9 +701,7 @@ public abstract class BaseVariantData {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .addValue(variantConfiguration.getFullName())
-                .toString();
+        return MoreObjects.toStringHelper(this).addValue(variantDslInfo.getFullName()).toString();
     }
 
     @NonNull

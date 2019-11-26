@@ -34,7 +34,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
@@ -184,7 +183,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         override fun configure(task: DexFileDependenciesTask) {
             super.configure(task)
             task.debuggable
-                .setDisallowChanges(variantScope.variantConfiguration.buildType.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.buildType.isDebuggable)
             task.classes.from(
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -193,7 +192,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 )
             ).disallowChanges()
             val minSdkVersion =
-                variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
+                variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion.setDisallowChanges(minSdkVersion)
             if (minSdkVersion < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(

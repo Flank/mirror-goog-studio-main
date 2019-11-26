@@ -26,7 +26,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -81,10 +81,9 @@ import org.gradle.api.tasks.TaskProvider;
  * <p>For both test modules and tests in androidTest process is the same, except for how the tested
  * application id is extracted.
  *
- * <p>Tests in androidTest get that info form the {@link
- * GradleVariantConfiguration#getTestedApplicationId()}, while the test modules get the info from
- * the published intermediate manifest with type {@link AndroidArtifacts} TYPE_METADATA of the
- * tested app.
+ * <p>Tests in androidTest get that info form the {@link VariantDslInfo#getTestedApplicationId()},
+ * while the test modules get the info from the published intermediate manifest with type {@link
+ * AndroidArtifacts} TYPE_METADATA of the tested app.
  */
 public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
@@ -534,7 +533,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
-                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + getVariantScope().getVariantDslInfo().getBaseName()
                             + "-report.txt");
         }
 
@@ -543,7 +542,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.configure(task);
             Project project = task.getProject();
 
-            final GradleVariantConfiguration config = getVariantScope().getVariantConfiguration();
+            final VariantDslInfo config = getVariantScope().getVariantDslInfo();
 
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
@@ -575,7 +574,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.getTestedApplicationId().set(project.provider(config::getTestedApplicationId));
             task.getTestedApplicationId().disallowChanges();
 
-            GradleVariantConfiguration testedConfig = config.getTestedConfig();
+            VariantDslInfo testedConfig = config.getTestedVariant();
             task.onlyTestApk = testedConfig != null && testedConfig.getVariantType().isAar();
 
             task.getInstrumentationRunner().set(project.provider(config::getInstrumentationRunner));

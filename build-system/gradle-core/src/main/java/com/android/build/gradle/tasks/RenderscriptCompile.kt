@@ -283,7 +283,7 @@ abstract class RenderscriptCompile : NdkTask() {
             val scope = variantScope
 
             val variantData = scope.variantData
-            val config = variantData.variantConfiguration
+            val config = variantData.variantDslInfo
 
             val ndkMode = config.renderscriptNdkModeEnabled
 

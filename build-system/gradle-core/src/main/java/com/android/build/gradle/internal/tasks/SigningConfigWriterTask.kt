@@ -88,7 +88,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
                 task.validatedSigningOutput
             )
 
-            task.signingConfigData = variantScope.variantConfiguration.signingConfig?.let {
+            task.signingConfigData = variantScope.variantDslInfo.signingConfig?.let {
                 task.storeFilePath = it.storeFile?.path
                 SigningConfigData.fromSigningConfig(it)
             }

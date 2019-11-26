@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -200,8 +199,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
             task.dexMerger = variantScope.dexMerger
-            task.minSdkVersion = variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
-            task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
+            task.minSdkVersion = variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
+            task.isDebuggable = variantScope.variantDslInfo.buildType.isDebuggable
             if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
@@ -318,7 +317,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
             return when (action) {
                 DexMergingAction.MERGE_LIBRARY_PROJECTS ->
                     when {
-                        variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel < 23 ->
+                        variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel < 23 ->
                             LIBRARIES_MERGING_THRESHOLD
                         else -> LIBRARIES_M_PLUS_MAX_THRESHOLD
                     }

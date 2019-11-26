@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -283,11 +283,11 @@ public class TaskTestUtils {
         when(buildType.getName()).thenReturn("debug");
         when(buildType.isDebuggable()).thenReturn(true);
 
-        GradleVariantConfiguration variantConfiguration = mock(GradleVariantConfiguration.class);
-        when(variantConfiguration.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
-        when(variantConfiguration.getBuildType()).thenReturn(buildType);
-        when(variantConfiguration.getProductFlavors()).thenReturn(ImmutableList.of());
-        when(scope.getVariantConfiguration()).thenReturn(variantConfiguration);
+        VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
+        when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(variantDslInfo.getBuildType()).thenReturn(buildType);
+        when(variantDslInfo.getProductFlavors()).thenReturn(ImmutableList.of());
+        when(scope.getVariantDslInfo()).thenReturn(variantDslInfo);
         return scope;
     }
 

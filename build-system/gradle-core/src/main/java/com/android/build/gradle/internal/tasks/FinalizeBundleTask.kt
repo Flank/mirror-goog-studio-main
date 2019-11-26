@@ -129,7 +129,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out FinalizeBundleTask>) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}.aab"
+            val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}.aab"
             val apkLocationOverride = variantScope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
                 variantScope.artifacts.producesFile(
@@ -145,7 +145,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     FinalizeBundleTask::finalBundleFile,
                     FileUtils.join(
                         variantScope.globalScope.project.file(apkLocationOverride),
-                        variantScope.variantConfiguration.dirName).absolutePath,
+                        variantScope.variantDslInfo.dirName).absolutePath,
                     bundleName
                 )
             }
@@ -159,7 +159,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
-            if (!variantScope.variantConfiguration.buildType.isDebuggable) {
+            if (!variantScope.variantDslInfo.buildType.isDebuggable) {
                 task.signingConfig = SigningConfigProvider.create(variantScope)
             }
         }

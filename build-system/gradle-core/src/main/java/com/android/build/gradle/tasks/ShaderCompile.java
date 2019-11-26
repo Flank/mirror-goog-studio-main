@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -234,13 +234,13 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
-            final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
+            final VariantDslInfo variantDslInfo = scope.getVariantDslInfo();
 
             task.ndkLocation = scope.getGlobalScope().getSdkComponents().getNdkFolderProvider();
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
-            task.setDefaultArgs(variantConfiguration.getDefaultGlslcArgs());
-            task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
+            task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
+            task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());
 
             task.buildToolInfoRevisionProvider =
                     scope.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();

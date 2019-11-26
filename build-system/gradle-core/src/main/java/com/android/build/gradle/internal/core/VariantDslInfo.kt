@@ -59,18 +59,14 @@ import java.util.function.IntSupplier
 import java.util.function.Supplier
 
 /**
- * A Variant configuration.
+ * Represents a variant, initialized from the DSL object model (default config, build type, flavors)
  *
+ * This class allows querying for the values set via the DSL model.
  *
- * Variants are made from the combination of:
+ * Use [VariantBuilder] to instantiate.
  *
- *
- * - a build type (base interface BuildType), and its associated sources. - a default
- * configuration (base interface ProductFlavor), and its associated sources. - a optional list of
- * product flavors (base interface ProductFlavor) and their associated sources. - dependencies (both
- * jar and aar).
  */
-open class GradleVariantConfiguration internal constructor(
+open class VariantDslInfo internal constructor(
     val fullName: String,
     val flavorName: String,
     val variantType: VariantType,
@@ -92,7 +88,7 @@ open class GradleVariantConfiguration internal constructor(
      *
      * @see VariantType.isTestComponent
      */
-    val testedConfig: GradleVariantConfiguration? = null,
+    val testedVariant: VariantDslInfo? = null,
     private val projectOptions: ProjectOptions,
     private val issueReporter: EvalIssueReporter,
     isInExecutionPhase: BooleanSupplier
@@ -300,7 +296,7 @@ open class GradleVariantConfiguration internal constructor(
     }
 
     private val testedPackage: String
-        private get() = if (testedConfig != null) testedConfig.applicationId else ""
+        private get() = if (testedVariant != null) testedVariant.applicationId else ""
 
     /**
      * Returns the original application ID before any overrides from flavors. If the variant is a
@@ -327,7 +323,7 @@ open class GradleVariantConfiguration internal constructor(
     val testedApplicationId: String?
         get() {
             if (variantType.isTestComponent) {
-                val tested = testedConfig!!
+                val tested = testedVariant!!
                 return if (tested.variantType.isAar) {
                     applicationId
                 } else {
@@ -410,9 +406,9 @@ open class GradleVariantConfiguration internal constructor(
      */
     val instrumentationRunner: String
         get() {
-            var config: GradleVariantConfiguration = this
+            var config: VariantDslInfo = this
             if (variantType.isTestComponent) {
-                config = testedConfig!!
+                config = testedVariant!!
             }
             val runner = config.mVariantAttributesProvider.instrumentationRunner
             if (runner != null) {
@@ -429,9 +425,9 @@ open class GradleVariantConfiguration internal constructor(
      */
     val instrumentationRunnerArguments: Map<String, String>
         get() {
-            var config: GradleVariantConfiguration = this
+            var config: VariantDslInfo = this
             if (variantType.isTestComponent) {
-                config = testedConfig!!
+                config = testedVariant!!
             }
             return config.mergedFlavor.testInstrumentationRunnerArguments
         }
@@ -444,9 +440,9 @@ open class GradleVariantConfiguration internal constructor(
      */
     val handleProfiling: Boolean
         get() {
-            var config: GradleVariantConfiguration = this
+            var config: VariantDslInfo = this
             if (variantType.isTestComponent) {
-                config = testedConfig!!
+                config = testedVariant!!
             }
             return config.mVariantAttributesProvider.handleProfiling ?: DEFAULT_HANDLE_PROFILING
         }
@@ -459,9 +455,9 @@ open class GradleVariantConfiguration internal constructor(
      */
     val functionalTest: Boolean
         get() {
-            var config: GradleVariantConfiguration = this
+            var config: VariantDslInfo = this
             if (variantType.isTestComponent) {
-                config = testedConfig!!
+                config = testedVariant!!
             }
             return config.mVariantAttributesProvider.functionalTest ?: DEFAULT_FUNCTIONAL_TEST
         }
@@ -485,8 +481,8 @@ open class GradleVariantConfiguration internal constructor(
      */
     val minSdkVersion: AndroidVersion
         get() {
-            if (testedConfig != null) {
-                return testedConfig.minSdkVersion
+            if (testedVariant != null) {
+                return testedVariant.minSdkVersion
             }
             var minSdkVersion = mergedFlavor.minSdkVersion
             if (minSdkVersion == null) { // default to 1 for minSdkVersion.
@@ -514,8 +510,8 @@ open class GradleVariantConfiguration internal constructor(
      */
     val targetSdkVersion: ApiVersion
         get() {
-            if (testedConfig != null) {
-                return testedConfig.targetSdkVersion
+            if (testedVariant != null) {
+                return testedVariant.targetSdkVersion
             }
             var targetSdkVersion =
                 mergedFlavor.targetSdkVersion
@@ -1295,5 +1291,4 @@ open class GradleVariantConfiguration internal constructor(
             } else fullOption.substring(0, pos)
         }
     }
-
 }

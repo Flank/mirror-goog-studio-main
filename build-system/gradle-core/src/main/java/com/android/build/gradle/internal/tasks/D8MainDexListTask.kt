@@ -201,19 +201,19 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
                 task.aaptGeneratedRules
             )
 
-            val variantConfiguration = variantScope.variantConfiguration
+            val variantDslInfo = variantScope.variantDslInfo
             val project = variantScope.globalScope.project
 
-            if (variantConfiguration.multiDexKeepProguard != null) {
+            if (variantDslInfo.multiDexKeepProguard != null) {
                 task.userMultidexProguardRules.fileProvider(
-                    project.provider { variantConfiguration.multiDexKeepProguard }
+                    project.provider { variantDslInfo.multiDexKeepProguard }
                 )
             }
             task.userMultidexProguardRules.disallowChanges()
 
-            if (variantConfiguration.multiDexKeepFile != null) {
+            if (variantDslInfo.multiDexKeepFile != null) {
                 task.userMultidexKeepFile.fileProvider(
-                    project.provider { variantConfiguration.multiDexKeepFile }
+                    project.provider { variantDslInfo.multiDexKeepFile }
                 )
             }
             task.userMultidexKeepFile.disallowChanges()

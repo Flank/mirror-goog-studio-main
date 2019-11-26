@@ -240,7 +240,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             task.pseudoLocalesEnabled = variantScope
                 .variantData
-                .variantConfiguration
+                .variantDslInfo
                 .buildType
                 .isPseudoLocalesEnabled
 

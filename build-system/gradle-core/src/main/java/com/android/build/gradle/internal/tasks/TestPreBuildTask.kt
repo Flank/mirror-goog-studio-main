@@ -59,7 +59,7 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
 
             task.fakeOutputDirectory = File(
                 variantScope.globalScope.intermediatesDir,
-                "prebuild/${variantScope.variantConfiguration.dirName}"
+                "prebuild/${variantScope.variantDslInfo.dirName}"
             )
         }
     }

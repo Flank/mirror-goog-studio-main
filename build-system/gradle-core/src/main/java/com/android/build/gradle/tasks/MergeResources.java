@@ -719,7 +719,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                                     .provider(
                                             () ->
                                                     variantData
-                                                            .getVariantConfiguration()
+                                                            .getVariantDslInfo()
                                                             .getMinSdkVersion()
                                                             .getApiLevel()));
             task.getMinSdk().disallowChanges();
@@ -737,10 +737,8 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
 
-            VectorDrawablesOptions vectorDrawablesOptions = variantData
-                    .getVariantConfiguration()
-                    .getMergedFlavor()
-                    .getVectorDrawables();
+            VectorDrawablesOptions vectorDrawablesOptions =
+                    variantData.getVariantDslInfo().getMergedFlavor().getVectorDrawables();
             task.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
             if (task.generatedDensities == null) {
                 task.generatedDensities = Collections.emptySet();
@@ -874,7 +872,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.pseudoLocalesEnabled =
                     variantScope
                             .getVariantData()
-                            .getVariantConfiguration()
+                            .getVariantDslInfo()
                             .getBuildType()
                             .isPseudoLocalesEnabled();
             task.flags = flags;

@@ -171,7 +171,7 @@ class DependencyResourcesComputer {
         generatedResOutputDir = project.files(variantScope.generatedResOutputDir)
 
         if (variantScope.taskContainer.microApkTask != null &&
-            variantData.variantConfiguration.buildType.isEmbedMicroApp) {
+            variantData.variantDslInfo.buildType.isEmbedMicroApp) {
             microApkResDirectory = project.files(variantScope.microApkResDirectory)
         }
     }

@@ -67,7 +67,7 @@ public class SigningReportTask extends DefaultTask {
             textOutput.println();
 
             // get the data
-            SigningConfig signingConfig = variant.getVariantConfiguration().getSigningConfig();
+            SigningConfig signingConfig = variant.getVariantDslInfo().getSigningConfig();
             if (signingConfig == null) {
                 textOutput.withStyle(Identifier).text("Config: ");
                 textOutput.withStyle(Normal).text("none");

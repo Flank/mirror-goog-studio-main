@@ -44,9 +44,9 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.MergedFlavor;
 import com.android.build.gradle.internal.core.VariantBuilder;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
 import com.android.build.gradle.internal.dependency.AarToClassTransform;
@@ -380,7 +380,7 @@ public class VariantManager implements VariantModel {
     public void createTasksForVariant(final VariantScope variantScope) {
         final BaseVariantData variantData = variantScope.getVariantData();
         final VariantType variantType = variantData.getType();
-        final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
+        final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
         taskManager.createAssembleTask(variantData);
         if (variantType.isBaseModule()) {
@@ -399,19 +399,19 @@ public class VariantManager implements VariantModel {
             // variant-specific, build type (, multi-flavor, flavor1, flavor2, ..., defaultConfig.
             // variant-specific if the full combo of flavors+build type. Does not exist if no flavors.
             // multi-flavor is the combination of all flavor dimensions. Does not exist if <2 dimension.
-            List<ProductFlavor> testProductFlavors = variantConfig.getProductFlavors();
+            List<ProductFlavor> testProductFlavors = variantDslInfo.getProductFlavors();
             List<DefaultAndroidSourceSet> testVariantSourceSets =
                     Lists.newArrayListWithExpectedSize(4 + testProductFlavors.size());
 
             // 1. add the variant-specific if applicable.
             if (!testProductFlavors.isEmpty()) {
                 testVariantSourceSets.add(
-                        (DefaultAndroidSourceSet) variantConfig.getVariantSourceProvider());
+                        (DefaultAndroidSourceSet) variantDslInfo.getVariantSourceProvider());
             }
 
             // 2. the build type.
             final BuildTypeData buildTypeData =
-                    buildTypes.get(variantConfig.getBuildType().getName());
+                    buildTypes.get(variantDslInfo.getBuildType().getName());
             DefaultAndroidSourceSet buildTypeConfigurationProvider =
                     buildTypeData.getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {
@@ -421,7 +421,7 @@ public class VariantManager implements VariantModel {
             // 3. the multi-flavor combination
             if (testProductFlavors.size() > 1) {
                 testVariantSourceSets.add(
-                        (DefaultAndroidSourceSet) variantConfig.getMultiFlavorSourceProvider());
+                        (DefaultAndroidSourceSet) variantDslInfo.getMultiFlavorSourceProvider());
             }
 
             // 4. the flavors.
@@ -441,17 +441,16 @@ public class VariantManager implements VariantModel {
             VariantDependencies.Builder builder =
                     VariantDependencies.builder(
                                     project,
-                                    variantType,
                                     variantScope.getGlobalScope().getErrorHandler(),
-                                    variantConfig)
+                                    variantDslInfo)
                             .addSourceSets(testVariantSourceSets)
-                            .setFlavorSelection(getFlavorSelection(variantConfig))
+                            .setFlavorSelection(getFlavorSelection(variantDslInfo))
                             .setTestedVariantScope(testedVariantData.getScope());
 
             final VariantDependencies variantDep = builder.build(variantScope);
             variantData.setVariantDependency(variantDep);
 
-            if (testedVariantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
+            if (testedVariantData.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
                 project.getDependencies()
                         .add(
                                 variantDep.getCompileClasspath().getName(),
@@ -462,7 +461,7 @@ public class VariantManager implements VariantModel {
             }
 
             if (variantType.isApk()) { // ANDROID_TEST
-                if (variantConfig.isLegacyMultiDexMode()) {
+                if (variantDslInfo.isLegacyMultiDexMode()) {
                     String multiDexInstrumentationDep =
                             globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
                                     ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
@@ -542,8 +541,8 @@ public class VariantManager implements VariantModel {
 
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection(
-            @NonNull GradleVariantConfiguration config) {
-        MergedFlavor mergedFlavors = config.getMergedFlavor();
+            @NonNull VariantDslInfo variantDslInfo) {
+        MergedFlavor mergedFlavors = variantDslInfo.getMergedFlavor();
         ObjectFactory factory = project.getObjects();
 
         return mergedFlavors
@@ -1099,13 +1098,13 @@ public class VariantManager implements VariantModel {
 
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        GradleVariantConfiguration variantConfig = variantBuilder.createVariantConfig();
+        VariantDslInfo variantDslInfo = variantBuilder.createVariantDsl();
 
         // Only record release artifacts
         if (!buildTypeData.getBuildType().isDebuggable()
                 && variantType.isApk()
-                && !variantConfig.getVariantType().isForTesting()) {
-            ProcessProfileWriter.get().recordApplicationId(variantConfig::getApplicationId);
+                && !variantDslInfo.getVariantType().isForTesting()) {
+            ProcessProfileWriter.get().recordApplicationId(variantDslInfo::getApplicationId);
         }
 
         // Add the container of dependencies.
@@ -1118,7 +1117,8 @@ public class VariantManager implements VariantModel {
 
         // 1. add the variant-specific if applicable.
         if (!productFlavorList.isEmpty()) {
-            variantSourceSets.add((DefaultAndroidSourceSet) variantConfig.getVariantSourceProvider());
+            variantSourceSets.add(
+                    (DefaultAndroidSourceSet) variantDslInfo.getVariantSourceProvider());
         }
 
         // 2. the build type.
@@ -1126,7 +1126,8 @@ public class VariantManager implements VariantModel {
 
         // 3. the multi-flavor combination
         if (productFlavorList.size() > 1) {
-            variantSourceSets.add((DefaultAndroidSourceSet) variantConfig.getMultiFlavorSourceProvider());
+            variantSourceSets.add(
+                    (DefaultAndroidSourceSet) variantDslInfo.getMultiFlavorSourceProvider());
         }
 
         // 4. the flavors.
@@ -1139,16 +1140,15 @@ public class VariantManager implements VariantModel {
 
         // Done. Create the variant and get its internal storage object.
         BaseVariantData variantData =
-                variantFactory.createVariantData(variantConfig, taskManager, recorder);
+                variantFactory.createVariantData(variantDslInfo, taskManager, recorder);
 
         VariantScope variantScope = variantData.getScope();
         VariantDependencies.Builder builder =
                 VariantDependencies.builder(
                                 project,
-                                variantType,
                                 variantScope.getGlobalScope().getErrorHandler(),
-                                variantConfig)
-                        .setFlavorSelection(getFlavorSelection(variantConfig))
+                                variantDslInfo)
+                        .setFlavorSelection(getFlavorSelection(variantDslInfo))
                         .addSourceSets(variantSourceSets);
 
         if (extension instanceof BaseAppModuleExtension) {
@@ -1158,7 +1158,7 @@ public class VariantManager implements VariantModel {
         final VariantDependencies variantDep = builder.build(variantScope);
         variantData.setVariantDependency(variantDep);
 
-        if (variantConfig.isLegacyMultiDexMode()) {
+        if (variantDslInfo.isLegacyMultiDexMode()) {
             String multiDexDependency =
                     globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
                             ? ANDROIDX_MULTIDEX_MULTIDEX
@@ -1169,7 +1169,7 @@ public class VariantManager implements VariantModel {
                     .add(variantDep.getRuntimeClasspath().getName(), multiDexDependency);
         }
 
-        if (variantConfig.getRenderscriptSupportModeEnabled()) {
+        if (variantDslInfo.getRenderscriptSupportModeEnabled()) {
             final ConfigurableFileCollection fileCollection =
                     project.files(
                             globalScope.getSdkComponents().getRenderScriptSupportJarProvider());
@@ -1235,7 +1235,7 @@ public class VariantManager implements VariantModel {
     public TestVariantData createTestVariantData(
             BaseVariantData testedVariantData,
             VariantType type) {
-        BuildType buildType = testedVariantData.getVariantConfiguration().getBuildType();
+        BuildType buildType = testedVariantData.getVariantDslInfo().getBuildType();
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
         // handle test variant
@@ -1261,11 +1261,11 @@ public class VariantManager implements VariantModel {
                         globalScope.getErrorHandler(),
                         this::canParseManifest);
 
-        GradleVariantConfiguration testedConfig = testedVariantData.getVariantConfiguration();
+        VariantDslInfo testedVariantDslInfo = testedVariantData.getVariantDslInfo();
 
-        variantBuilder.setTestedConfig(testedConfig);
+        variantBuilder.setTestedVariant(testedVariantDslInfo);
 
-        List<ProductFlavor> productFlavorList = testedConfig.getProductFlavors();
+        List<ProductFlavor> productFlavorList = testedVariantDslInfo.getProductFlavors();
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -1278,14 +1278,14 @@ public class VariantManager implements VariantModel {
 
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        GradleVariantConfiguration testVariantConfig = variantBuilder.createVariantConfig();
+        VariantDslInfo testVariantDslInfo = variantBuilder.createVariantDsl();
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =
                 new TestVariantData(
                         globalScope,
                         taskManager,
-                        testVariantConfig,
+                        testVariantDslInfo,
                         (TestedVariantData) testedVariantData,
                         recorder);
         // link the testVariant to the tested variant in the other direction
@@ -1338,11 +1338,11 @@ public class VariantManager implements VariantModel {
                     createVariantDataForVariantType(buildType, productFlavorList, variantType);
                 addVariant(variantData);
 
-                GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+            VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
                 VariantScope variantScope = variantData.getScope();
 
-                int minSdkVersion = variantConfig.getMinSdkVersion().getApiLevel();
-                int targetSdkVersion = variantConfig.getTargetSdkVersion().getApiLevel();
+            int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();
+            int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
                 if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
                     globalScope
                             .getDslScope()
@@ -1360,39 +1360,38 @@ public class VariantManager implements VariantModel {
                                             variantData.getName()));
                 }
 
-                GradleBuildVariant.Builder profileBuilder =
-                        ProcessProfileWriter.getOrCreateVariant(
-                                        project.getPath(), variantData.getName())
-                                .setIsDebug(variantConfig.getBuildType().isDebuggable())
-                                .setMinSdkVersion(
-                                        AnalyticsUtil.toProto(variantConfig.getMinSdkVersion()))
-                                .setMinifyEnabled(variantScope.getCodeShrinker() != null)
-                                .setUseMultidex(variantConfig.isMultiDexEnabled())
-                                .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
-                                .setVariantType(variantData.getType().getAnalyticsVariantType())
-                                .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
-                                .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
-                                .setTestExecution(
-                                        AnalyticsUtil.toProto(
-                                                globalScope
-                                                        .getExtension()
-                                                        .getTestOptions()
-                                                        .getExecutionEnum()));
+            GradleBuildVariant.Builder profileBuilder =
+                    ProcessProfileWriter.getOrCreateVariant(
+                                    project.getPath(), variantData.getName())
+                            .setIsDebug(variantDslInfo.getBuildType().isDebuggable())
+                            .setMinSdkVersion(
+                                    AnalyticsUtil.toProto(variantDslInfo.getMinSdkVersion()))
+                            .setMinifyEnabled(variantScope.getCodeShrinker() != null)
+                            .setUseMultidex(variantDslInfo.isMultiDexEnabled())
+                            .setUseLegacyMultidex(variantDslInfo.isLegacyMultiDexMode())
+                            .setVariantType(variantData.getType().getAnalyticsVariantType())
+                            .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
+                            .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
+                            .setTestExecution(
+                                    AnalyticsUtil.toProto(
+                                            globalScope
+                                                    .getExtension()
+                                                    .getTestOptions()
+                                                    .getExecutionEnum()));
 
                 if (variantScope.getCodeShrinker() != null) {
                     profileBuilder.setCodeShrinker(
                             AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
                 }
 
-                if (variantConfig.getTargetSdkVersion().getApiLevel() > 0) {
-                    profileBuilder.setTargetSdkVersion(
-                            AnalyticsUtil.toProto(variantConfig.getTargetSdkVersion()));
+            if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
+                profileBuilder.setTargetSdkVersion(
+                        AnalyticsUtil.toProto(variantDslInfo.getTargetSdkVersion()));
                 }
-                if (variantConfig.getMergedFlavor().getMaxSdkVersion() != null) {
-                    profileBuilder.setMaxSdkVersion(
-                            ApiVersion.newBuilder()
-                                    .setApiLevel(
-                                            variantConfig.getMergedFlavor().getMaxSdkVersion()));
+            if (variantDslInfo.getMergedFlavor().getMaxSdkVersion() != null) {
+                profileBuilder.setMaxSdkVersion(
+                        ApiVersion.newBuilder()
+                                .setApiLevel(variantDslInfo.getMergedFlavor().getMaxSdkVersion()));
                 }
 
                 VariantScope.Java8LangSupport supportType =
@@ -1573,10 +1572,8 @@ public class VariantManager implements VariantModel {
             if (chosen == null) {
                 return 0;
             }
-            int b1Score =
-                    v1.getVariantConfiguration().getBuildType().getName().equals(chosen) ? 1 : 0;
-            int b2Score =
-                    v2.getVariantConfiguration().getBuildType().getName().equals(chosen) ? 1 : 0;
+            int b1Score = v1.getVariantDslInfo().getBuildType().getName().equals(chosen) ? 1 : 0;
+            int b2Score = v2.getVariantDslInfo().getBuildType().getName().equals(chosen) ? 1 : 0;
             return b2Score - b1Score;
         }
     }
@@ -1604,12 +1601,12 @@ public class VariantManager implements VariantModel {
             int f1Score = 0;
             int f2Score = 0;
 
-            for (ProductFlavor flavor : v1.getVariantConfiguration().getProductFlavors()) {
+            for (ProductFlavor flavor : v1.getVariantDslInfo().getProductFlavors()) {
                 if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
                     f1Score++;
                 }
             }
-            for (ProductFlavor flavor : v2.getVariantConfiguration().getProductFlavors()) {
+            for (ProductFlavor flavor : v2.getVariantDslInfo().getProductFlavors()) {
                 if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
                     f2Score++;
                 }
@@ -1634,8 +1631,8 @@ public class VariantManager implements VariantModel {
 
         @Override
         public int compare(VariantScope v1, VariantScope v2) {
-            String b1 = v1.getVariantConfiguration().getBuildType().getName();
-            String b2 = v2.getVariantConfiguration().getBuildType().getName();
+            String b1 = v1.getVariantDslInfo().getBuildType().getName();
+            String b2 = v2.getVariantDslInfo().getBuildType().getName();
             if (b1.equals(b2)) {
                 return 0;
             } else if (b1.equals(preferredBuildType)) {
@@ -1657,9 +1654,9 @@ public class VariantManager implements VariantModel {
         @Override
         public int compare(VariantScope v1, VariantScope v2) {
             // Compare flavors left-to right.
-            for (int i = 0; i < v1.getVariantConfiguration().getProductFlavors().size(); i++) {
-                String f1 = v1.getVariantConfiguration().getProductFlavors().get(i).getName();
-                String f2 = v2.getVariantConfiguration().getProductFlavors().get(i).getName();
+            for (int i = 0; i < v1.getVariantDslInfo().getProductFlavors().size(); i++) {
+                String f1 = v1.getVariantDslInfo().getProductFlavors().get(i).getName();
+                String f2 = v2.getVariantDslInfo().getProductFlavors().get(i).getName();
                 int diff = f1.compareTo(f2);
                 if (diff != 0) {
                     return diff;

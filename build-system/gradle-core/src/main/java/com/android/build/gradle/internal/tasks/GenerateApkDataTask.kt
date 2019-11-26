@@ -20,7 +20,6 @@ import com.android.SdkConstants.DOT_ANDROID_PACKAGE
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_RES_RAW
 import com.android.SdkConstants.FD_RES_XML
-import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR
@@ -28,7 +27,6 @@ import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ApkVariantData
@@ -237,7 +235,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             val scope = variantScope
 
             val variantData = scope.variantData as ApkVariantData
-            val variantConfiguration = variantData.variantConfiguration
+            val variantDslInfo = variantData.variantDslInfo
 
             task.resOutputDir.set(scope.microApkResDirectory)
             task.resOutputDir.disallowChanges()
@@ -254,9 +252,9 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
             task.mainPkgName.setDisallowChanges(variantProperties.applicationId)
 
-            task.minSdkVersion.setDisallowChanges(variantConfiguration.minSdkVersion.apiLevel)
+            task.minSdkVersion.setDisallowChanges(variantDslInfo.minSdkVersion.apiLevel)
 
-            task.targetSdkVersion.setDisallowChanges(variantConfiguration.targetSdkVersion.apiLevel)
+            task.targetSdkVersion.setDisallowChanges(variantDslInfo.targetSdkVersion.apiLevel)
 
             val aapt2AndVersion = getAapt2FromMavenAndVersion(scope.globalScope)
             task.aapt2Executable.from(aapt2AndVersion.first)

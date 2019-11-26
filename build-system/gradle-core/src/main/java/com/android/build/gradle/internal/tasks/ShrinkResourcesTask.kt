@@ -217,12 +217,12 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
 
-            task.buildTypeName = variantData.variantConfiguration.buildType.name
+            task.buildTypeName = variantData.variantDslInfo.buildType.name
 
             task.variantTypeName.setDisallowChanges(variantData.type.name)
 
             task.debuggableBuildType
-                .setDisallowChanges(variantData.variantConfiguration.buildType.isDebuggable)
+                .setDisallowChanges(variantData.variantDslInfo.buildType.isDebuggable)
 
             task.multiOutputPolicy.setDisallowChanges(variantData.multiOutputPolicy)
 

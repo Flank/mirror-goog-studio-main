@@ -16,13 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
@@ -89,7 +84,7 @@ dependencies {
             task.fakeOutputDirectory = FileUtils.join(
                 variantScope.globalScope.intermediatesDir,
                 name,
-                variantScope.variantConfiguration.dirName
+                variantScope.variantDslInfo.dirName
             )
             task.reporter = variantScope.globalScope.errorHandler
         }

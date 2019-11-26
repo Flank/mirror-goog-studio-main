@@ -149,7 +149,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         override fun configure(task: ValidateSigningTask) {
             super.configure(task)
 
-            task.signingConfig = variantScope.variantConfiguration.signingConfig ?: throw IllegalStateException(
+            task.signingConfig = variantScope.variantDslInfo.signingConfig ?: throw IllegalStateException(
                 "No signing config configured for variant " + variantScope.fullVariantName)
             task.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation
             task.outputs.upToDateWhen { !task.forceRerun() }

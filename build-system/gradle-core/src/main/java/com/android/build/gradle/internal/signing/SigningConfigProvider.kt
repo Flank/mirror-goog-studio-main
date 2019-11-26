@@ -87,7 +87,7 @@ class SigningConfigProvider(
             val isInDynamicFeature =
                 variantScope.type.isDynamicFeature
                         || (variantScope.type.isTestComponent
-                                && variantScope.testedVariantData!!.variantConfiguration.variantType
+                                && variantScope.testedVariantData!!.variantDslInfo.variantType
                                         .isDynamicFeature)
 
             // We want to avoid writing the signing config information to disk to protect sensitive
@@ -96,7 +96,7 @@ class SigningConfigProvider(
             return if (!isInDynamicFeature) {
                 // Get it from the variant scope
                 SigningConfigProvider(
-                    signingConfigData = variantScope.variantConfiguration.signingConfig?.let {
+                    signingConfigData = variantScope.variantDslInfo.signingConfig?.let {
                         SigningConfigData.fromSigningConfig(it)
                     },
                     signingConfigFileCollection = null,

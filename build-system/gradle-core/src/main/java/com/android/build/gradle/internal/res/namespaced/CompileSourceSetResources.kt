@@ -212,7 +212,7 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             task.inputDirectories = inputDirectories
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize =
-                    variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
+                    variantScope.variantData.variantDslInfo.buildType.isPseudoLocalesEnabled
 
             val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)

@@ -409,7 +409,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val variantScope = variantScope
             val variantData = variantScope.variantData
             val projectOptions = variantScope.globalScope.projectOptions
-            val config = variantData.variantConfiguration
+            val config = variantData.variantDslInfo
 
             preconditionsCheck(variantData)
 
@@ -438,7 +438,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ImmutableSet.of()
                 val resConfigSet = ImmutableSet.copyOf(
                     variantScope
-                        .variantConfiguration
+                        .variantDslInfo
                         .mergedFlavor
                         .resourceConfigurations
                 )

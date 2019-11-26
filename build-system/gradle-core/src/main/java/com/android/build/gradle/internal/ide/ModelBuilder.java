@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
@@ -467,9 +467,9 @@ public class ModelBuilder<Extension extends BaseExtension>
             return false;
         }
 
-        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        List<File> manifests = new ArrayList<>(variantConfiguration.getManifestOverlays());
-        File mainManifest = variantConfiguration.getMainManifestIfExists();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        List<File> manifests = new ArrayList<>(variantDslInfo.getManifestOverlays());
+        File mainManifest = variantDslInfo.getMainManifestIfExists();
         if (mainManifest != null) {
             manifests.add(mainManifest);
         }
@@ -586,14 +586,14 @@ public class ModelBuilder<Extension extends BaseExtension>
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
-        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        File manifest = variantConfiguration.getMainManifestIfExists();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        File manifest = variantDslInfo.getMainManifestIfExists();
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
                     new DefaultManifestParser(
                             manifest,
                             () -> true,
-                            variantConfiguration.getVariantType().getRequiresManifest(),
+                            variantDslInfo.getVariantType().getRequiresManifest(),
                             extraModelInfo.getSyncIssueHandler());
             try {
                 validateMinSdkVersion(attributeSupplier);
@@ -610,7 +610,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             }
         }
 
-        String variantName = variantConfiguration.getFullName();
+        String variantName = variantDslInfo.getFullName();
 
         List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
                 extraModelInfo.getExtraAndroidArtifacts(variantName));
@@ -654,10 +654,10 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         return new VariantImpl(
                 variantName,
-                variantConfiguration.getBaseName(),
-                variantConfiguration.getBuildType().getName(),
+                variantDslInfo.getBaseName(),
+                variantDslInfo.getBuildType().getName(),
                 getProductFlavorNames(variantData),
-                new ProductFlavorImpl(variantConfiguration.getMergedFlavor()),
+                new ProductFlavorImpl(variantDslInfo.getMergedFlavor()),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,
@@ -823,7 +823,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private void checkSigningConfig(
-            @NonNull VariantScope scope, @NonNull GradleVariantConfiguration configuration) {
+            @NonNull VariantScope scope, @NonNull VariantDslInfo configuration) {
 
         if (scope.getType().isDynamicFeature()) {
             if (configuration.getMergedFlavor().getSigningConfig() != null
@@ -842,11 +842,11 @@ public class ModelBuilder<Extension extends BaseExtension>
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
-        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
-        checkSigningConfig(scope, variantConfiguration);
+        checkSigningConfig(scope, variantDslInfo);
 
-        SigningConfig signingConfig = variantConfiguration.getSigningConfig();
+        SigningConfig signingConfig = variantDslInfo.getSigningConfig();
         String signingConfigName = null;
         if (signingConfig != null) {
             signingConfigName = signingConfig.getName();
@@ -916,7 +916,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         try {
             // This can throw an exception if no package name can be found.
             // Normally, this is fine to throw an exception, but we don't want to crash in sync.
-            applicationId = variantConfiguration.getApplicationId();
+            applicationId = variantDslInfo.getApplicationId();
         } catch (RuntimeException e) {
             // don't crash. just throw a sync error.
             applicationId = "";
@@ -925,11 +925,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
         return new AndroidArtifactImpl(
                 name,
-                scope.getGlobalScope().getProjectBaseName()
-                        + "-"
-                        + variantConfiguration.getBaseName(),
+                scope.getGlobalScope().getProjectBaseName() + "-" + variantDslInfo.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
-                variantConfiguration.isSigningReady() || variantData.outputsAreSigned,
+                variantDslInfo.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 applicationId,
                 taskContainer.getSourceGenTask().getName(),
@@ -944,9 +942,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 additionalRuntimeApks,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
-                variantConfiguration.getSupportedAbis(),
-                variantConfiguration.getMergedBuildConfigFields(),
-                variantConfiguration.getMergedResValues(),
+                variantDslInfo.getSupportedAbis(),
+                variantDslInfo.getMergedBuildConfigFields(),
+                variantDslInfo.getMergedResValues(),
                 instantRun,
                 splitOutputsProxy,
                 manifestsProxy,
@@ -1032,7 +1030,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             .getPublishingSpec()
                                             .getTestingSpec(
                                                     variantScope
-                                                            .getVariantConfiguration()
+                                                            .getVariantDslInfo()
                                                             .getVariantType());
 
                             // get the OutputPublishingSpec from the ArtifactType for this
@@ -1050,7 +1048,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             JAVAC.INSTANCE,
                                             VariantOutput.OutputType.MAIN,
                                             ImmutableList.of(),
-                                            variantData.getVariantConfiguration().getVersionCode(),
+                                            variantData.getVariantDslInfo().getVersionCode(),
                                             variantScope
                                                     .getArtifacts()
                                                     .getFinalProductAsFileCollection(
@@ -1103,9 +1101,9 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private static SourceProviders determineSourceProviders(@NonNull BaseVariantData variantData) {
         SourceProvider variantSourceProvider =
-                variantData.getVariantConfiguration().getVariantSourceProvider();
+                variantData.getVariantDslInfo().getVariantSourceProvider();
         SourceProvider multiFlavorSourceProvider =
-                variantData.getVariantConfiguration().getMultiFlavorSourceProvider();
+                variantData.getVariantDslInfo().getMultiFlavorSourceProvider();
 
         return new SourceProviders(
                 variantSourceProvider != null ?
@@ -1118,7 +1116,10 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     private static List<String> getProductFlavorNames(@NonNull BaseVariantData variantData) {
-        return variantData.getVariantConfiguration().getProductFlavors().stream()
+        return variantData
+                .getVariantDslInfo()
+                .getProductFlavors()
+                .stream()
                 .map((Function<ProductFlavor, String>) ProductFlavor::getName)
                 .collect(Collectors.toList());
     }
@@ -1172,7 +1173,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                         .get()
                         .getAsFile());
         folders.add(scope.getBuildConfigSourceOutputDir());
-        Boolean ndkMode = variantData.getVariantConfiguration().getMergedFlavor().getRenderscriptNdkModeEnabled();
+        Boolean ndkMode =
+                variantData.getVariantDslInfo().getMergedFlavor().getRenderscriptNdkModeEnabled();
         if (ndkMode == null || !ndkMode) {
             folders.add(
                     scope.getArtifacts()

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.builder.core.VariantTypeImpl
 import com.android.utils.Pair
@@ -46,7 +46,7 @@ import java.io.StringReader
  */
 class BuildElementsTest {
 
-    @Mock private val variantConfiguration: GradleVariantConfiguration? = null
+    @Mock private val variantDslInfo: VariantDslInfo? = null
 
     @get:Rule
     var temporaryFolder = TemporaryFolder()
@@ -54,13 +54,13 @@ class BuildElementsTest {
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        `when`(variantConfiguration!!.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(variantDslInfo!!.variantType).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test
     @Throws(IOException::class)
     fun testPersistence() {
-        val outputFactory = OutputFactory("project", variantConfiguration)
+        val outputFactory = OutputFactory("project", variantDslInfo)
 
         outputFactory.addUniversalApk()
         val densityApkData = outputFactory.addFullSplit(

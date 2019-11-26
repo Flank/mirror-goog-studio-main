@@ -31,11 +31,11 @@ data class VariantInfoImpl(
 
     constructor(variantScope: VariantScope) :
             this(
-                _isTest = variantScope.variantConfiguration.variantType.isForTesting,
+                _isTest = variantScope.variantDslInfo.variantType.isForTesting,
                 _variantName = variantScope.fullVariantName,
-                _buildTypeName = variantScope.variantConfiguration.buildType.name,
-                _flavorNames = variantScope.variantConfiguration.productFlavors.map { it.name }.toImmutableList(),
-                _isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
+                _buildTypeName = variantScope.variantDslInfo.buildType.name,
+                _flavorNames = variantScope.variantDslInfo.productFlavors.map { it.name }.toImmutableList(),
+                _isDebuggable = variantScope.variantDslInfo.buildType.isDebuggable
             )
 
     override fun isTest(): Boolean = _isTest

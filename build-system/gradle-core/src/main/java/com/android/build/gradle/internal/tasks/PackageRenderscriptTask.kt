@@ -64,7 +64,7 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
 
             // package from 3 sources. the order is important to make sure the override works well.
             task
-                .from(variantScope.variantConfiguration.renderscriptSourceList)
+                .from(variantScope.variantDslInfo.renderscriptSourceList)
                 .include("**/*.rsh")
             task.into(task.headersDir)
         }

@@ -37,7 +37,7 @@ import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.attributes.VariantAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -119,9 +119,8 @@ public class VariantDependencies {
 
     public static final class Builder {
         @NonNull private final Project project;
-        @NonNull private final VariantType variantType;
         @NonNull private final SyncIssueHandler errorReporter;
-        @NonNull private final GradleVariantConfiguration variantConfiguration;
+        @NonNull private final VariantDslInfo variantDslInfo;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
         // default size should be enough. It's going to be rare for a variant to include
@@ -141,13 +140,11 @@ public class VariantDependencies {
 
         protected Builder(
                 @NonNull Project project,
-                @NonNull VariantType variantType,
                 @NonNull SyncIssueHandler errorReporter,
-                @NonNull GradleVariantConfiguration variantConfiguration) {
+                @NonNull VariantDslInfo variantDslInfo) {
             this.project = project;
-            this.variantType = variantType;
             this.errorReporter = errorReporter;
-            this.variantConfiguration = variantConfiguration;
+            this.variantDslInfo = variantDslInfo;
         }
 
         public Builder addSourceSets(@NonNull DefaultAndroidSourceSet... sourceSets) {
@@ -213,9 +210,9 @@ public class VariantDependencies {
             final Usage reverseMetadataUsage =
                     factory.named(Usage.class, "android-reverse-meta-data");
 
-            String variantName = variantConfiguration.getFullName();
-            VariantType variantType = variantConfiguration.getVariantType();
-            String buildType = variantConfiguration.getBuildType().getName();
+            String variantName = variantDslInfo.getFullName();
+            VariantType variantType = variantDslInfo.getVariantType();
+            String buildType = variantDslInfo.getBuildType().getName();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
                     getFlavorAttributes(flavorSelection);
 
@@ -636,7 +633,7 @@ public class VariantDependencies {
         @NonNull
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
                 @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
-            List<ProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
+            List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavors();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
             // during a sync, it's possible that the flavors don't have dimension names because
@@ -681,10 +678,9 @@ public class VariantDependencies {
 
     public static Builder builder(
             @NonNull Project project,
-            @NonNull VariantType variantType,
             @NonNull SyncIssueHandler errorReporter,
-            @NonNull GradleVariantConfiguration variantConfiguration) {
-        return new Builder(project, variantType, errorReporter, variantConfiguration);
+            @NonNull VariantDslInfo variantDslInfo) {
+        return new Builder(project, errorReporter, variantDslInfo);
     }
 
     private VariantDependencies(

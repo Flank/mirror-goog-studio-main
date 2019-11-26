@@ -127,7 +127,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             }
 
             task.jarCreatorType = variantScope.jarCreatorType
-            task.isDebugBuild = variantScope.variantConfiguration.buildType.isDebuggable
+            task.isDebugBuild = variantScope.variantDslInfo.buildType.isDebuggable
         }
     }
 }

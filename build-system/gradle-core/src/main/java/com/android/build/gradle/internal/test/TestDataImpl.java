@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
@@ -49,15 +49,15 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     private final TestVariantData testVariantData;
 
-    @NonNull private final GradleVariantConfiguration testVariantConfig;
+    @NonNull private final VariantDslInfo testVariantDslInfo;
 
     public TestDataImpl(
             @NonNull TestVariantData testVariantData,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {
-        super(testVariantData.getVariantConfiguration(), testApkDir, testedApksDir);
+        super(testVariantData.getVariantDslInfo(), testApkDir, testedApksDir);
         this.testVariantData = testVariantData;
-        this.testVariantConfig = testVariantData.getVariantConfiguration();
+        this.testVariantDslInfo = testVariantData.getVariantDslInfo();
         if (testVariantData
                         .getOutputScope()
                         .getSplitsByType(VariantOutput.OutputType.FULL_SPLIT)
@@ -76,20 +76,20 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     @Override
     public String getApplicationId() {
-        return testVariantData.getVariantConfiguration().getApplicationId();
+        return testVariantData.getVariantDslInfo().getApplicationId();
     }
 
     @Nullable
     @Override
     public String getTestedApplicationId() {
-        return testVariantConfig.getTestedApplicationId();
+        return testVariantDslInfo.getTestedApplicationId();
     }
 
     @Override
     public boolean isLibrary() {
         TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
         BaseVariantData testedVariantData2 = (BaseVariantData) testedVariantData;
-        return testedVariantData2.getVariantConfiguration().getVariantType().isAar();
+        return testedVariantData2.getVariantDslInfo().getVariantType().isAar();
     }
 
     @NonNull
@@ -114,7 +114,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
                 SplitOutputMatcher.computeBestOutput(
                         deviceConfigProvider,
                         splitOutputs,
-                        testedVariantData.getVariantConfiguration().getSupportedAbis()));
+                        testedVariantData.getVariantDslInfo().getSupportedAbis()));
         return apks.build();
     }
 }

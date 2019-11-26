@@ -23,7 +23,7 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
@@ -43,9 +43,9 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     public LibraryVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull GradleVariantConfiguration config,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull Recorder recorder) {
-        super(globalScope, taskManager, config, recorder);
+        super(globalScope, taskManager, variantDslInfo, recorder);
         testVariants = Maps.newHashMap();
 
         // create default output
@@ -53,7 +53,7 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
                 .addMainOutput(
                         globalScope.getProjectBaseName()
                                 + "-"
-                                + getVariantConfiguration().getBaseName()
+                                + getVariantDslInfo().getBaseName()
                                 + "."
                                 + BuilderConstants.EXT_LIB_ARCHIVE);
     }
@@ -61,16 +61,17 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     @Override
     @NonNull
     public String getDescription() {
-        final GradleVariantConfiguration config = getVariantConfiguration();
+        final VariantDslInfo variantDslInfo = getVariantDslInfo();
 
-        if (config.hasFlavors()) {
+        if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);
-            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType().getName());
             sb.append(" build for flavor ");
-            StringHelper.appendCapitalized(sb, config.getFlavorName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getFlavorName());
             return sb.toString();
         } else {
-            return StringHelper.capitalizeAndAppend(config.getBuildType().getName(), " build");
+            return StringHelper.capitalizeAndAppend(
+                    variantDslInfo.getBuildType().getName(), " build");
         }
     }
 

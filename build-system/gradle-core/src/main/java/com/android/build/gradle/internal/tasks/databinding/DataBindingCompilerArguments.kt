@@ -157,15 +157,15 @@ class DataBindingCompilerArguments constructor(
         ): DataBindingCompilerArguments {
             val globalScope = variantScope.globalScope
             val variantData = variantScope.variantData
-            val variantConfig = variantScope.variantConfiguration
+            val variantDslInfo = variantScope.variantDslInfo
             val artifacts = variantScope.artifacts
 
             return DataBindingCompilerArguments(
                 incremental = globalScope.projectOptions
                     .get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING),
                 artifactType = getModuleType(variantScope),
-                modulePackageProvider = { variantConfig.originalApplicationId },
-                minApi = variantConfig.minSdkVersion.apiLevel,
+                modulePackageProvider = { variantDslInfo.originalApplicationId },
+                minApi = variantDslInfo.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.getSdkDirectory(),
                 dependencyArtifactsDir =
                         artifacts.getFinalProduct(DATA_BINDING_DEPENDENCY_ARTIFACTS),

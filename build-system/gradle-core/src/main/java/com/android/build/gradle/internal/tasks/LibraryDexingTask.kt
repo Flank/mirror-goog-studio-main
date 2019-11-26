@@ -122,7 +122,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
                 task.classes
             )
             val minSdkVersion =
-                scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
+                scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion = minSdkVersion
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)

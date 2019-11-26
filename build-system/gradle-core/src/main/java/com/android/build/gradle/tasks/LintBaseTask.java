@@ -308,7 +308,7 @@ public abstract class LintBaseTask extends DefaultTask {
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest on: "
-                                + variantScope.getVariantConfiguration().getVariantType());
+                                + variantScope.getVariantDslInfo().getVariantType());
             }
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
@@ -319,7 +319,7 @@ public abstract class LintBaseTask extends DefaultTask {
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
-                                + variantScope.getVariantConfiguration().getVariantType());
+                                + variantScope.getVariantDslInfo().getVariantType());
             }
 
             // these inputs are only there to ensure that the lint task runs after these build

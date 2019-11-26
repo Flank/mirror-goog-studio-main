@@ -33,7 +33,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -607,7 +607,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
-                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + getVariantScope().getVariantDslInfo().getBaseName()
                             + "-report.txt");
 
             artifacts.producesDir(
@@ -633,7 +633,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                             "logs")
                                     .getAbsolutePath(),
                             "manifest-merger-"
-                                    + getVariantScope().getVariantConfiguration().getBaseName()
+                                    + getVariantScope().getVariantDslInfo().getBaseName()
                                     + "-report.txt");
         }
 
@@ -642,7 +642,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             super.configure(task);
 
             final BaseVariantData variantData = getVariantScope().getVariantData();
-            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+            final VariantDslInfo config = variantData.getVariantDslInfo();
             GlobalScope globalScope = getVariantScope().getGlobalScope();
 
             VariantType variantType = getVariantScope().getType();
@@ -833,13 +833,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         if (variantScope.isTestOnly()) {
             features.add(Feature.TEST_ONLY);
         }
-        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+        if (variantScope.getVariantDslInfo().getBuildType().isDebuggable()) {
             features.add(Feature.DEBUGGABLE);
             if (isAdvancedProfilingOn) {
                 features.add(Feature.ADVANCED_PROFILING);
             }
         }
-        if (variantScope.getVariantConfiguration().getDexingType() == DexingType.LEGACY_MULTIDEX) {
+        if (variantScope.getVariantDslInfo().getDexingType() == DexingType.LEGACY_MULTIDEX) {
             if (variantScope
                     .getGlobalScope()
                     .getProjectOptions()

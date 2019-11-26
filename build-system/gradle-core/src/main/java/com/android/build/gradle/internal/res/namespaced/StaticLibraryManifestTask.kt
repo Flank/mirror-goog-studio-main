@@ -70,7 +70,7 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
         override fun configure(task: StaticLibraryManifestTask) {
             super.configure(task)
             task.packageName.set(variantScope.globalScope.project.provider {
-                variantScope.variantConfiguration.originalApplicationId
+                variantScope.variantDslInfo.originalApplicationId
             })
             task.packageName.disallowChanges()
         }

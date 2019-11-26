@@ -32,7 +32,7 @@ import com.android.utils.combineAsCamelCase
 import java.lang.RuntimeException
 import java.util.function.BooleanSupplier
 
-/** Builder for [GradleVariantConfiguration].
+/** Builder for [VariantDslInfo].
  *
  * This allows setting all temporary items on the builder before actually
  * instantiating the configuration, in order to keep it immutable.
@@ -169,7 +169,7 @@ abstract class VariantBuilder protected constructor(
 
     var variantSourceProvider: SourceProvider? = null
     var multiFlavorSourceProvider: SourceProvider? = null
-    var testedConfig: GradleVariantConfiguration? = null
+    var testedVariant: VariantDslInfo? = null
 
     fun addProductFlavor(
         productFlavor: ProductFlavor,
@@ -182,7 +182,7 @@ abstract class VariantBuilder protected constructor(
     }
 
     /** Creates a variant configuration  */
-    abstract fun createVariantConfig(): GradleVariantConfiguration
+    abstract fun createVariantDsl(): VariantDslInfo
 
 
     /**
@@ -224,8 +224,8 @@ private class VariantConfigurationBuilder(
     isInExecutionPhase
 ) {
 
-    override fun createVariantConfig(): GradleVariantConfiguration {
-        return GradleVariantConfiguration(
+    override fun createVariantDsl(): VariantDslInfo {
+        return VariantDslInfo(
             name,
             flavorName,
             variantType,
@@ -240,7 +240,7 @@ private class VariantConfigurationBuilder(
             variantSourceProvider,
             signingConfigOverride,
             manifestAttributeSupplier,
-            testedConfig,
+            testedVariant,
             projectOptions,
             issueReporter,
             isInExecutionPhase
@@ -249,7 +249,7 @@ private class VariantConfigurationBuilder(
 }
 
 /**
- * Creates a [GradleVariantConfiguration] for a testing module variant.
+ * Creates a [VariantDslInfo] for a testing module variant.
  *
  *
  * The difference from the regular modules is how the original application id,
@@ -281,8 +281,8 @@ private class TestModuleConfigurationBuilder(
     isInExecutionPhase
 ) {
 
-    override fun createVariantConfig(): GradleVariantConfiguration {
-        return object:  GradleVariantConfiguration(
+    override fun createVariantDsl(): VariantDslInfo {
+        return object:  VariantDslInfo(
             name,
             flavorName,
             variantType,
@@ -297,7 +297,7 @@ private class TestModuleConfigurationBuilder(
             variantSourceProvider,
             signingConfigOverride,
             manifestAttributeSupplier,
-            testedConfig,
+            testedVariant,
             projectOptions,
             issueReporter,
             isInExecutionPhase

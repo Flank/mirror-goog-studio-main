@@ -196,7 +196,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
             task.description = "Installs the " + variantScope.variantData.description + ""
             task.group = TaskManager.INSTALL_GROUP
 
-            variantScope.variantConfiguration.minSdkVersion.let {
+            variantScope.variantDslInfo.minSdkVersion.let {
                 task.minSdkVersion = it.apiLevel
                 task.minSdkCodename = it.codename
             }

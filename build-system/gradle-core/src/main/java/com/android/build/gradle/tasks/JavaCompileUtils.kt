@@ -32,9 +32,7 @@ import com.google.gson.reflect.TypeToken
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 import java.io.FileReader
@@ -87,7 +85,7 @@ fun JavaCompile.configureProperties(scope: VariantScope) {
 fun JavaCompile.configurePropertiesForAnnotationProcessing(
     scope: VariantScope, sourcesOutputFolder: DirectoryProperty
 ) {
-    val processorOptions = scope.variantConfiguration.javaCompileOptions.annotationProcessorOptions
+    val processorOptions = scope.variantDslInfo.javaCompileOptions.annotationProcessorOptions
     val compileOptions = this.options
 
     configureAnnotationProcessorPath(scope)

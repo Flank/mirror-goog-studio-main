@@ -115,7 +115,7 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
                     FileUtils.join(
                         variantScope.globalScope.intermediatesDir,
                         "check-libraries",
-                        variantScope.variantConfiguration.dirName
+                        variantScope.variantDslInfo.dirName
                     )
         }
     }

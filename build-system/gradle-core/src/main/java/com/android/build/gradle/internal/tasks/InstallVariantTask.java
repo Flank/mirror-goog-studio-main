@@ -20,7 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -97,8 +97,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         deviceProvider.use(
                 () -> {
                     BaseVariantData variantData = getVariantData();
-                    GradleVariantConfiguration variantConfig =
-                            variantData.getVariantConfiguration();
+                    VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
                     List<OutputFile> outputs =
                             ImmutableList.copyOf(
@@ -107,13 +106,13 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
                     install(
                             getProjectName(),
-                            variantConfig.getFullName(),
+                            variantDslInfo.getFullName(),
                             deviceProvider,
-                            variantConfig.getMinSdkVersion(),
+                            variantDslInfo.getMinSdkVersion(),
                             gradleProcessExecutor,
                             getSplitSelectExe().getOrNull(),
                             outputs,
-                            variantConfig.getSupportedAbis(),
+                            variantDslInfo.getSupportedAbis(),
                             getInstallOptions(),
                             getTimeOutInMs(),
                             getLogger());

@@ -117,7 +117,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setDescription(
                     "Run unit tests for the "
-                            + testedVariantData.getVariantConfiguration().getFullName()
+                            + testedVariantData.getVariantDslInfo().getFullName()
                             + " build.");
 
             task.setTestClassesDirs(scope.getArtifacts().getAllClasses());

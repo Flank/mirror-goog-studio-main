@@ -57,7 +57,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws DeviceException, ExecutionException {
         final Logger logger = getLogger();
-        final String applicationId = variant.getVariantConfiguration().getApplicationId();
+        final String applicationId = variant.getVariantDslInfo().getApplicationId();
 
         logger.info("Uninstalling app: {}", applicationId);
 
@@ -75,7 +75,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                                 applicationId,
                                 getProject().getName(),
-                                variant.getVariantConfiguration().getFullName(),
+                                variant.getVariantDslInfo().getFullName(),
                                 device.getName(),
                                 device.getSerialNumber());
                     }
@@ -125,7 +125,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
         @Override
         public String getName() {
             return StringHelper.appendCapitalized(
-                    "uninstall", getVariantScope().getVariantConfiguration().getFullName());
+                    "uninstall", getVariantScope().getVariantDslInfo().getFullName());
         }
 
         @NonNull

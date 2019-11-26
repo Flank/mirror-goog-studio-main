@@ -333,17 +333,17 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val scope = variantScope
 
             val variantData = scope.variantData
-            val variantConfig = variantData.variantConfiguration
+            val variantDslInfo = variantData.variantDslInfo
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.assetsDirectories }
 
             task.assetSets.set(variantScope.globalScope.project.provider {
-                variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
+                variantDslInfo.getSourceFilesAsAssetSets(assetDirFunction)
             })
             task.assetSets.disallowChanges()
 
-            task.sourceFolderInputs.from(Callable { variantConfig.getSourceFiles(assetDirFunction) })
+            task.sourceFolderInputs.from(Callable { variantDslInfo.getSourceFiles(assetDirFunction) })
 
             scope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
@@ -397,15 +397,15 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         override fun configure(task: MergeSourceSetFolders) {
             super.configure(task)
             val variantData = variantScope.variantData
-            val variantConfig = variantData.variantConfiguration
+            val variantDslInfo = variantData.variantDslInfo
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.jniLibsDirectories }
             task.assetSets.set(variantScope.globalScope.project.provider {
-                variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
+                variantDslInfo.getSourceFilesAsAssetSets(assetDirFunction)
             })
             task.assetSets.disallowChanges()
-            task.sourceFolderInputs.from(Callable { variantConfig.getSourceFiles(assetDirFunction) })
+            task.sourceFolderInputs.from(Callable { variantDslInfo.getSourceFiles(assetDirFunction) })
         }
     }
 
@@ -429,14 +429,14 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         override fun configure(task: MergeSourceSetFolders) {
             super.configure(task)
             val variantData = variantScope.variantData
-            val variantConfig = variantData.variantConfiguration
+            val variantDslInfo = variantData.variantDslInfo
 
             val assetDirFunction = Function<SourceProvider, Collection<File>> { it.shadersDirectories }
             task.assetSets.set(variantScope.globalScope.project.provider {
-                variantConfig.getSourceFilesAsAssetSets(assetDirFunction)
+                variantDslInfo.getSourceFilesAsAssetSets(assetDirFunction)
             })
             task.assetSets.disallowChanges()
-            task.sourceFolderInputs.from(Callable { variantConfig.getSourceFiles(assetDirFunction) })
+            task.sourceFolderInputs.from(Callable { variantDslInfo.getSourceFiles(assetDirFunction) })
         }
     }
 }

@@ -34,7 +34,8 @@ fun createCxxVariantModel(
         private val buildSystem by lazy {
             createNativeBuildSystemVariantConfig(
                 module.buildSystem,
-                baseVariantData.variantConfiguration)
+                baseVariantData.variantDslInfo
+            )
         }
         private val intermediatesFolder by lazy {
             join(module.intermediatesFolder, module.buildSystem.tag, variantName)
@@ -59,7 +60,7 @@ fun createCxxVariantModel(
                 join(intermediatesFolder, "obj")
             }
         override val isDebuggableEnabled get() =
-            baseVariantData.variantConfiguration.buildType.isDebuggable
+            baseVariantData.variantDslInfo.buildType.isDebuggable
         override val validAbiList by lazy {
             CachingEnvironment(module.cxxFolder).use {
                 AbiConfigurator(

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.tasks.NativeBuildSystem
 
 /**
@@ -33,7 +33,7 @@ data class NativeBuildSystemVariantConfig(
 
 fun createNativeBuildSystemVariantConfig(
     buildSystem: NativeBuildSystem,
-    config: GradleVariantConfiguration) : NativeBuildSystemVariantConfig {
+    variantDslInfo: VariantDslInfo) : NativeBuildSystemVariantConfig {
 
     /**
      * The set of abiFilters from the externalNativeBuild part of the DSL. For example,
@@ -50,9 +50,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val externalNativeBuildAbiFilters: Set<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            config.externalNativeBuildOptions.externalNativeCmakeOptions?.abiFilters ?: setOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.abiFilters ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
-            config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.abiFilters ?: setOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.abiFilters ?: setOf()
     }
 
     /**
@@ -66,7 +66,7 @@ fun createNativeBuildSystemVariantConfig(
      *     }
      * </pre>
      */
-    val ndkAbiFilters: Set<String> = config.ndkConfig.abiFilters ?: setOf()
+    val ndkAbiFilters: Set<String> = variantDslInfo.ndkConfig.abiFilters ?: setOf()
 
 
     /**
@@ -84,9 +84,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val arguments: List<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            config.externalNativeBuildOptions.externalNativeCmakeOptions?.arguments ?: listOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.arguments ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.arguments ?: listOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.arguments ?: listOf()
     }
 
     /**
@@ -104,9 +104,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val cFlags: List<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            config.externalNativeBuildOptions.externalNativeCmakeOptions?.getcFlags() ?: listOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.getcFlags() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.getcFlags() ?: listOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.getcFlags() ?: listOf()
     }
 
     /**
@@ -124,9 +124,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val cppFlags: List<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            config.externalNativeBuildOptions.externalNativeCmakeOptions?.cppFlags ?: listOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.cppFlags ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.cppFlags ?: listOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.cppFlags ?: listOf()
     }
 
     /**
@@ -144,9 +144,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val targets: Set<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            config.externalNativeBuildOptions.externalNativeCmakeOptions?.targets ?: setOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.targets ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
-            config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.targets ?: setOf()
+            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.targets ?: setOf()
     }
 
     return NativeBuildSystemVariantConfig(
