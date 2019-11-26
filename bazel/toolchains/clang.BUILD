@@ -158,15 +158,16 @@ cc_toolchain_config(
         clang_latest_darwin + "/lib64/clang/9.0.4/include",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
+        "/usr/include",
     ],
     tool_paths = {
         "ar": "studio-extra/wrapped_ar.darwin",
-        "compat-ld": clang_latest_darwin + "/bin/ld64.lld",
+        "compat-ld": "/usr/bin/ld/",
         "cpp": clang_latest_darwin + "/bin/clang++",
         "dwp": "/bin/false",
         "gcc": clang_latest_darwin + "/bin/clang",
         "gcov": clang_latest_darwin + "/bin/llvm-cov",
-        "ld": clang_latest_darwin + "/bin/ld.lld",
+        "ld": "/usr/bin/ld",
         "nm": clang_latest_darwin + "/bin/llvm-nm",
         "objcopy": clang_latest_darwin + "/bin/llvm-objcopy",
         "objdump": clang_latest_darwin + "/bin/llvm-objdump",
@@ -199,6 +200,8 @@ cc_toolchain_config(
         "/usr/bin/",
         "-headerpad_max_install_names",
         "-no-canonical-prefixes",
+        "-undefined",
+        "dynamic_lookup",
     ],
     link_libs = [],  # ?
     opt_link_flags = [],  # ?
@@ -281,7 +284,7 @@ toolchain(
         "@platforms//os:osx",
     ],
     toolchain = ":cc-compiler-darwin",
-    toolchain_type = ":toolchain_type",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
 toolchain(
