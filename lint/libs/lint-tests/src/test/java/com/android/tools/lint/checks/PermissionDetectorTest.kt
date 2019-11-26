@@ -1196,24 +1196,24 @@ class PermissionDetectorTest : AbstractCheckTest() {
 
         lint().files(
             java(
-                "package test.pkg;\n"
-                        + "\n"
-                        + "import jar.jar.AnnotationsClass;\n"
-                        + "import android.Manifest;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "public class TestClass {\n"
-                        + "\n"
-                        + "    @RequiresPermission(Manifest.permission.BLUETOOTH)\n"
-                        + "    public static void inClassBluetoothAnnotation() {}\n"
-                        + "\n"
-                        + "    public static void callMethod() {\n"
-                        + "        inClassBluetoothAnnotation(); // Missing Bluetooth Permission\n"
+                "package test.pkg;\n" +
+                        "\n" +
+                        "import jar.jar.AnnotationsClass;\n" +
+                        "import android.Manifest;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class TestClass {\n" +
+                        "\n" +
+                        "    @RequiresPermission(Manifest.permission.BLUETOOTH)\n" +
+                        "    public static void inClassBluetoothAnnotation() {}\n" +
+                        "\n" +
+                        "    public static void callMethod() {\n" +
+                        "        inClassBluetoothAnnotation(); // Missing Bluetooth Permission\n" +
 
-                        + "        AnnotationsClass.testBluetoothPermissionAnnotation(); // Missing Bluetooth Permission\n"
-                        + "        AnnotationsClass.testAnyOfLocationPermissionAnnotation(); // Missing Location Permission\n"
-                        + "    }\n"
-                        + "}"
+                        "        AnnotationsClass.testBluetoothPermissionAnnotation(); // Missing Bluetooth Permission\n" +
+                        "        AnnotationsClass.testAnyOfLocationPermissionAnnotation(); // Missing Location Permission\n" +
+                        "    }\n" +
+                        "}"
             ),
             classPath,
             SUPPORT_ANNOTATIONS_JAR,

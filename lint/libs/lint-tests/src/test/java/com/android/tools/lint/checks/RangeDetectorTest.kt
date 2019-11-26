@@ -937,7 +937,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 "Fxj+UKI/wOaYleP0Dz/qL8y0X3D6xg/e2LiWukcL/D+IHBW2WVxhfKyyjjnA" +
                 "m53DTqBGahkjA8NTJlBCZ2TiYsCdK1ABWh5B1YqeSxBAG0eewWc5qtW34MkY" +
                 "tw4OFB1/UJI1I5MIAyJhIweAHIouJUZCyTzAm5UNpJIVCA2BqkWYQTwAgU6w" +
-                "1VsEAAA=";
+                "1VsEAAA="
 
         val customLib = base64gzip(libJarPath, base64JarData)
         val classPath = classpath(SUPPORT_JAR_PATH, libJarPath)
@@ -986,6 +986,5 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "    inClassFloatParamFrom0To100(549); // Outside Range\n" +
                     "                                ~~~\n" +
                     "4 errors, 0 warnings")
-
     }
 }

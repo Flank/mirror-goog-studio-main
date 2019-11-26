@@ -66,7 +66,8 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                     INVALID_SCENE_FILE_REFERENCE,
                     location,
                     "The motion scene file: ${reference.url} doesn't exist",
-                    LintFix.create().name("Create ${reference.url}").data(reference.url))
+                    LintFix.create().name("Create ${reference.url}").data(reference.url)
+                )
             }
         }
     }
@@ -95,9 +96,9 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                 element,
                 context.getNameLocation(element),
                 "The attribute: `$ATTR_CONSTRAINT_LAYOUT_DESCRIPTION` is missing",
-                LintFix.create().name("Create $sceneUrl and set attribute").data(sceneUrl))
-        }
-        else {
+                LintFix.create().name("Create $sceneUrl and set attribute").data(sceneUrl)
+            )
+        } else {
             val resource = resourceModel.getResourceFromUrl(description.value)
             if (resource != null && resource.type == ResourceType.XML) {
                 references[resource] = context.getValueLocation(description)
@@ -105,15 +106,15 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                 if (isIncrementalMode(context)) {
                     processMotionSceneFile(context, resource)
                 }
-            }
-            else {
+            } else {
                 val sceneUrl = motionSceneUrlFromMotionLayoutFileName(context)
                 context.report(
                     INVALID_SCENE_FILE_REFERENCE,
                     element,
                     context.getValueLocation(description),
                     "`${description.value}` is an invalid value for $ATTR_CONSTRAINT_LAYOUT_DESCRIPTION",
-                    LintFix.create().name("Create $sceneUrl and set attribute").data(sceneUrl))
+                    LintFix.create().name("Create $sceneUrl and set attribute").data(sceneUrl)
+                )
             }
         }
     }

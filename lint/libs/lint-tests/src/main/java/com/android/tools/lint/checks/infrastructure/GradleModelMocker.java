@@ -110,7 +110,9 @@ import org.mockito.stubbing.OngoingStubbing;
  * dependencies etc)
  */
 public class GradleModelMocker {
-    private static Pattern configurationPattern = Pattern.compile("^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*");
+    private static Pattern configurationPattern =
+            Pattern.compile(
+                    "^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*");
 
     private IdeAndroidProject project;
     private Variant variant;
@@ -398,7 +400,8 @@ public class GradleModelMocker {
         when(androidTestArtifact.getName()).thenReturn(ARTIFACT_NAME_ANDROID_TEST);
 
         Collection<JavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
-        Collection<AndroidArtifact> extraAndroidArtifacts = Collections.singletonList(androidTestArtifact);
+        Collection<AndroidArtifact> extraAndroidArtifacts =
+                Collections.singletonList(androidTestArtifact);
 
         //noinspection deprecation
         when(artifact.getDependencies()).thenReturn(dependencies);
@@ -712,14 +715,11 @@ public class GradleModelMocker {
         int index = key.indexOf('\'');
         if (index != -1) {
             value = key.substring(index + 1, key.indexOf('\'', index + 1));
-        }
-        else if ((index = key.indexOf('"')) != -1) {
+        } else if ((index = key.indexOf('"')) != -1) {
             value = key.substring(index + 1, key.indexOf('"', index + 1));
-        }
-        else if ((index = key.indexOf('=')) != -1) {
+        } else if ((index = key.indexOf('=')) != -1) {
             value = key.substring(index + 1);
-        }
-        else if ((index = key.indexOf(' ')) != -1) {
+        } else if ((index = key.indexOf(' ')) != -1) {
             value = key.substring(index + 1);
         }
         return value.indexOf('$') == -1 ? value : doInterpolations(value);
@@ -734,7 +734,7 @@ public class GradleModelMocker {
             sb.append(value, lastIndex, index);
             int end = value.indexOf(' ', index);
             if (end == -1) end = value.length();
-            String name = value.substring(index+1, end);
+            String name = value.substring(index + 1, end);
             if (ext.containsKey(name)) {
                 sb.append(ext.get(name));
             } else {
@@ -1437,7 +1437,8 @@ public class GradleModelMocker {
                                     + "|    |    \\--- com.android.support:support-compat:VERSION (*)\n"
                                     + "|    \\--- com.android.support:animated-vector-drawable:VERSION\n"
                                     + "|         \\--- com.android.support:support-vector-drawable:VERSION (*)\n")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
 
         } else if (declaration.startsWith("com.android.support:support-v4:")) {
             String version = declaration.substring("com.android.support:support-v4:".length());
@@ -1457,7 +1458,8 @@ public class GradleModelMocker {
                                     + "|         +--- com.android.support:support-media-compat:VERSION (*)\n"
                                     + "|         +--- com.android.support:support-core-ui:VERSION (*)\n"
                                     + "|         \\--- com.android.support:support-core-utils:VERSION (*)\n")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("com.android.support.constraint:constraint-layout:")) {
             String version =
                     declaration.substring(
@@ -1466,7 +1468,8 @@ public class GradleModelMocker {
                     (""
                                     + "+--- com.android.support.constraint:constraint-layout:VERSION\n"
                                     + "     \\--- com.android.support.constraint:constraint-layout-solver:VERSION\n")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("com.firebase:firebase-client-android:")) {
             String version =
                     declaration.substring("com.firebase:firebase-client-android:".length());
@@ -1478,7 +1481,8 @@ public class GradleModelMocker {
                                     + "          |    +--- com.fasterxml.jackson.core:jackson-annotations:2.2.2\n"
                                     + "          |    \\--- com.fasterxml.jackson.core:jackson-core:2.2.2\n"
                                     + "          \\--- com.firebase:tubesock:0.0.12")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("com.android.support:design:")) {
             // Design library
             String version = declaration.substring("com.android.support:design:".length());
@@ -1490,7 +1494,8 @@ public class GradleModelMocker {
                                     + "|    |    \\--- com.android.support:support-v4:VERSION (*)\n"
                                     + "|    +--- com.android.support:appcompat-v7:VERSION (*)\n"
                                     + "|    \\--- com.android.support:support-v4:VERSION (*)")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("com.google.android.gms:play-services-analytics:")) {
             // Analytics
             String version =
@@ -1502,7 +1507,8 @@ public class GradleModelMocker {
                                     + "|    \\--- com.google.android.gms:play-services-basement:VERSION\n"
                                     + "|         \\--- com.android.support:support-v4:23.0.0 -> 23.4.0\n"
                                     + "|              \\--- com.android.support:support-annotations:23.4.0")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("com.google.android.gms:play-services-gcm:")) {
             // GMS
             String version =
@@ -1513,7 +1519,8 @@ public class GradleModelMocker {
                                     + "|    +--- com.google.android.gms:play-services-base:VERSION (*)\n"
                                     + "|    \\--- com.google.android.gms:play-services-measurement:VERSION\n"
                                     + "|         \\--- com.google.android.gms:play-services-basement:VERSION (*)")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("com.google.android.gms:play-services-appindexing:")) {
             // App Indexing
             String version =
@@ -1524,7 +1531,8 @@ public class GradleModelMocker {
                                     + "+--- com.google.android.gms:play-services-appindexing:VERSION\n"
                                     + "|    \\--- com.google.android.gms:play-services-base:VERSION\n"
                                     + "|         \\--- com.google.android.gms:play-services-basement:VERSION (*)")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk7:")) {
             // Kotlin
             String version =
@@ -1537,7 +1545,8 @@ public class GradleModelMocker {
                                     + "|         \\--- org.jetbrains:annotations:13.0\n"
                                     + "+--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)\n"
                                     + "+--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk8:")) {
             // Kotlin
             String version =
@@ -1550,7 +1559,8 @@ public class GradleModelMocker {
                                     + "|    |    \\--- org.jetbrains:annotations:13.0\n"
                                     + "|    \\--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION\n"
                                     + "|         \\--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)")
-                            .replace("VERSION", version), artifact);
+                            .replace("VERSION", version),
+                    artifact);
         } else {
             // Look for the library in the dependency graph provided
             Dep dep = graphs.get(declaration);
