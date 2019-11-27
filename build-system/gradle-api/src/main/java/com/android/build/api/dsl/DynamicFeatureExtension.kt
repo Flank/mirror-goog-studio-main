@@ -29,7 +29,10 @@ import org.gradle.api.Incubating
 @Incubating
 interface DynamicFeatureExtension<
         BuildTypeT : BuildType,
+        CMakeOptionsT : CmakeOptions,
         DefaultConfigT : DefaultConfig,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         TestOptionsT: TestOptions<UnitTestOptionsT>,
@@ -37,7 +40,10 @@ interface DynamicFeatureExtension<
     CommonExtension<
             DynamicFeatureBuildFeatures,
             BuildTypeT,
+            CMakeOptionsT,
             DefaultConfigT,
+            ExternalNativeBuildT,
+            NdkBuildOptionsT,
             ProductFlavorT,
             SigningConfigT,
             TestOptionsT,

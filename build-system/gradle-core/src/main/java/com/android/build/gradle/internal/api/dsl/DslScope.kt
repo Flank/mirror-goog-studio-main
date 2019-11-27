@@ -23,6 +23,7 @@ import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
+import java.io.File
 
 /**
  * Scope of the DSL objects.
@@ -33,6 +34,7 @@ import org.gradle.api.provider.ProviderFactory
  * - the instantiator.
  * - a logger
  * - the [BuildFeatureValues]
+ * - a file method (equivalent to project.file)
  */
 interface DslScope {
 
@@ -49,4 +51,6 @@ interface DslScope {
     val providerFactory: ProviderFactory
 
     val variableFactory: DslVariableFactory
+
+    fun file(file: Any): File
 }

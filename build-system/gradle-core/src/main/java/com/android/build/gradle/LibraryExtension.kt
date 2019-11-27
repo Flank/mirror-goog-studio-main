@@ -25,8 +25,11 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DataBindingOptions
+import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
+import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
@@ -68,7 +71,10 @@ open class LibraryExtension(
 ),
     com.android.build.api.dsl.LibraryExtension<
             BuildType,
+            CmakeOptions,
             DefaultConfig,
+            ExternalNativeBuild,
+            NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
             TestOptions,

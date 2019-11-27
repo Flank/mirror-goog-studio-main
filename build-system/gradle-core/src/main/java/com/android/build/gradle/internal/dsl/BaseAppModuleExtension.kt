@@ -49,7 +49,10 @@ open class BaseAppModuleExtension(
     true
 ), ApplicationExtension<
         BuildType,
+        CmakeOptions,
         DefaultConfig,
+        ExternalNativeBuild,
+        NdkBuildOptions,
         ProductFlavor,
         SigningConfig,
         TestOptions,

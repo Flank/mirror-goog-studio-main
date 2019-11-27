@@ -43,7 +43,10 @@ abstract class CommonExtensionImpl<
 ) : CommonExtension<
         BuildFeaturesT,
         BuildTypeT,
+        CmakeOptions,
         DefaultConfigT,
+        ExternalNativeBuild,
+        NdkBuildOptions,
         ProductFlavorT,
         SigningConfigT,
         TestOptions,
@@ -81,6 +84,13 @@ abstract class CommonExtensionImpl<
 
     override fun defaultConfig(action: Action<DefaultConfigT>) {
         action.execute(defaultConfig)
+    }
+
+    override val externalNativeBuild: ExternalNativeBuild =
+        dslScope.objectFactory.newInstance(ExternalNativeBuild::class.java, dslScope)
+
+    override fun externalNativeBuild(action: (ExternalNativeBuild) -> Unit) {
+        action.invoke(externalNativeBuild)
     }
 
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {

@@ -17,87 +17,57 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import javax.inject.Inject;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import org.gradle.api.Action;
-import org.gradle.api.Project;
-import org.gradle.api.model.ObjectFactory;
 
-/**
- * DSL object to configure external native builds using <a href="https://cmake.org/">CMake</a> or <a
- * href="https://developer.android.com/ndk/guides/build.html">ndk-build</a>.
- *
- * <pre>
- * android {
- *     externalNativeBuild {
- *         // Encapsulates your CMake build configurations.
- *         // For ndk-build, instead use the ndkBuild block.
- *         cmake {
- *             // Specifies a path to your CMake build script that's
- *             // relative to the build.gradle file.
- *             path "CMakeLists.txt"
- *         }
- *     }
- * }
- * </pre>
- *
- * <p>To learn more about including external native builds to your Android Studio projects, read <a
- * href="https://developer.android.com/studio/projects/add-native-code.html">Add C and C++ Code to
- * Your Project</a>.
- */
-public class ExternalNativeBuild implements CoreExternalNativeBuild {
+/** See {@link com.android.build.api.dsl.ExternalNativeBuild} */
+public class ExternalNativeBuild
+        implements CoreExternalNativeBuild,
+                com.android.build.api.dsl.ExternalNativeBuild<CmakeOptions, NdkBuildOptions> {
     private NdkBuildOptions ndkBuild;
     private CmakeOptions cmake;
 
     @Inject
-    public ExternalNativeBuild(@NonNull ObjectFactory objectFactory, @NonNull Project project) {
-        ndkBuild = objectFactory.newInstance(NdkBuildOptions.class, project);
-        cmake = objectFactory.newInstance(CmakeOptions.class, project);
+    public ExternalNativeBuild(@NonNull DslScope dslScope) {
+        ndkBuild = dslScope.getObjectFactory().newInstance(NdkBuildOptions.class, dslScope);
+        cmake = dslScope.getObjectFactory().newInstance(CmakeOptions.class, dslScope);
     }
 
-    /**
-     * Encapsulates ndk-build options.
-     *
-     * <p>For more information, see {@link NdkBuildOptions}.
-     */
     @NonNull
     @Override
     public NdkBuildOptions getNdkBuild() {
         return this.ndkBuild;
     }
 
-    /**
-     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
-     * to your <code>Android.mk</code> build script and build output directory.
-     *
-     * <p>For more information about the properties you can configure in this block, see {@link
-     * NdkBuildOptions}.
-     */
+    /* Not directly in interface as having a non-void return type is unconventional */
     public NdkBuildOptions ndkBuild(Action<NdkBuildOptions> action) {
         action.execute(ndkBuild);
         return this.ndkBuild;
     }
 
-    /**
-     * Encapsulates CMake build options.
-     *
-     * <p>For more information, see {@link CmakeOptions}.
-     */
+    @Override
+    public void ndkBuild(Function1<? super NdkBuildOptions, Unit> action) {
+        action.invoke(ndkBuild);
+    }
+
     @NonNull
     @Override
     public CmakeOptions getCmake() {
         return cmake;
     }
 
-    /**
-     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
-     * to your <code>CMakeLists.txt</code> build script and build output directory.
-     *
-     * <p>For more information about the properties you can configure in this block, see {@link
-     * CmakeOptions}.
-     */
+    /* Not directly in interface as having a non-void return type is unconventional */
     public CmakeOptions cmake(Action<CmakeOptions> action) {
         action.execute(cmake);
         return this.cmake;
+    }
+
+    @Override
+    public void cmake(Function1<? super CmakeOptions, Unit> action) {
+        action.invoke(cmake);
     }
 }

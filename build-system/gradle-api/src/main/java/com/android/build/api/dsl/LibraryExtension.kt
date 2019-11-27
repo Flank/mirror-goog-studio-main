@@ -30,7 +30,10 @@ import org.gradle.api.Incubating
 @Incubating
 interface LibraryExtension<
         BuildTypeT : BuildType,
+        CMakeOptionsT : CmakeOptions,
         DefaultConfigT : DefaultConfig,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         TestOptionsT : TestOptions<UnitTestOptionsT>,
@@ -38,7 +41,10 @@ interface LibraryExtension<
     : CommonExtension<
         LibraryBuildFeatures,
         BuildTypeT,
+        CMakeOptionsT,
         DefaultConfigT,
+        ExternalNativeBuildT,
+        NdkBuildOptionsT,
         ProductFlavorT,
         SigningConfigT,
         TestOptionsT,

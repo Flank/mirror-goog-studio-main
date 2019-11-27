@@ -42,7 +42,10 @@ internal open class DynamicFeatureExtension(
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         BuildType,
+        CmakeOptions,
         DefaultConfig,
+        ExternalNativeBuild,
+        NdkBuildOptions,
         ProductFlavor,
         SigningConfig,
         TestOptions,

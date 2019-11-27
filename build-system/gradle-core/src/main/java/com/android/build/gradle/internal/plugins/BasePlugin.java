@@ -310,7 +310,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         project.getLogger(),
                         new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
-                        new DslVariableFactory(syncIssueHandler));
+                        new DslVariableFactory(syncIssueHandler),
+                        project::file);
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);

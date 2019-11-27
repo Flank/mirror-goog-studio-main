@@ -50,7 +50,10 @@ class DynamicFeatureExtensionImpl(
 
     DynamicFeatureExtension<
             BuildType,
+            CmakeOptions,
             DefaultConfig,
+            ExternalNativeBuild,
+            NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
             TestOptions,

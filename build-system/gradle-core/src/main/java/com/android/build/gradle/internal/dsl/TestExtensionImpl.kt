@@ -50,7 +50,10 @@ class TestExtensionImpl(
     ),
     TestExtension<
             BuildType,
+            CmakeOptions,
             DefaultConfig,
+            ExternalNativeBuild,
+            NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
             TestOptions,

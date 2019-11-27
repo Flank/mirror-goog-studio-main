@@ -62,15 +62,16 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         ProjectOptions projectOptions = new ProjectOptions(project);
         ExtraModelInfo extraModelInfo =  new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
 
-        DslScope dslScope = new DslScopeImpl(
-                extraModelInfo.getSyncIssueHandler(),
-                extraModelInfo.getDeprecationReporter(),
-                project.getObjects(),
-                project.getLogger(),
-                new BuildFeatureValuesImpl(projectOptions),
-                project.getProviders(),
-                new DslVariableFactory(extraModelInfo.getSyncIssueHandler())
-        );
+        DslScope dslScope =
+                new DslScopeImpl(
+                        extraModelInfo.getSyncIssueHandler(),
+                        extraModelInfo.getDeprecationReporter(),
+                        project.getObjects(),
+                        project.getLogger(),
+                        new BuildFeatureValuesImpl(projectOptions),
+                        project.getProviders(),
+                        new DslVariableFactory(extraModelInfo.getSyncIssueHandler()),
+                        project::file);
 
         extension = project.getExtensions().create("android", TestOptions.class, dslScope);
 

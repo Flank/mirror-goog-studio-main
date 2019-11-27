@@ -50,7 +50,10 @@ class LibraryExtensionImpl(
     ),
     LibraryExtension<
             BuildType,
+            CmakeOptions,
             DefaultConfig,
+            ExternalNativeBuild,
+            NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
             TestOptions,

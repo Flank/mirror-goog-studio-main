@@ -15,6 +15,7 @@
  */
 
 @file:JvmName("FakeDslScope")
+
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.gradle.internal.dsl.DslVariableFactory
@@ -30,22 +31,25 @@ import com.android.builder.errors.FakeEvalIssueReporter
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
+import java.io.File
 
 @JvmOverloads
 fun createFakeDslScope(
     issueReporter: EvalIssueReporter = FakeEvalIssueReporter(),
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
-    objectFactory : ObjectFactory = FakeObjectFactory.getFactory(),
+    objectFactory: ObjectFactory = FakeObjectFactory.getFactory(),
     logger: Logger = FakeLogger(),
     buildFeatures: BuildFeatureValues = FakeBuildFeatureValues(),
     providerFactory: ProviderFactory = FakeProviderFactory(),
-    dslVariableFactory: DslVariableFactory = DslVariableFactory(issueReporter)
-) : DslScopeImpl = DslScopeImpl(
+    dslVariableFactory: DslVariableFactory = DslVariableFactory(issueReporter),
+    fileResolver: (Any) -> File = { File(it.toString()) }
+): DslScopeImpl = DslScopeImpl(
     issueReporter,
     deprecationReporter,
     objectFactory,
     logger,
     buildFeatures,
     providerFactory,
-    dslVariableFactory
+    dslVariableFactory,
+    fileResolver
 )

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-f16c24db06ab0096d5246db4bc5c81eaac729678a4531f70c71cbe7500a3aa12
+50a20720ebba51882c295207c775dd5dd8047c3a37802661e9f6009feefd7aa6
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -75,16 +75,19 @@ com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
+com.android.build.api.dsl.CmakeOptions
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
 com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (int)
 com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (org.gradle.api.Action<DefaultConfigT>)
+com.android.build.api.dsl.CommonExtension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super ExternalNativeBuildT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.getBuildFeatures: BuildFeaturesT ()
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
+com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: ExternalNativeBuildT ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: TestOptionsT ()
@@ -101,8 +104,14 @@ com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.function
 com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.ExternalNativeBuild
+com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeOptionsT ()
+com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: NdkBuildOptionsT ()
+com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super NdkBuildOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.NdkBuildOptions
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)

@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
+import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
@@ -126,8 +127,6 @@ abstract class BaseExtension protected constructor(
         )
     override val lintOptions: LintOptions =
         objectFactory.newInstance(LintOptions::class.java)
-    override val externalNativeBuild: ExternalNativeBuild =
-        objectFactory.newInstance(ExternalNativeBuild::class.java, objectFactory, project)
     override val dexOptions: DexOptions =
         objectFactory.newInstance(DexOptions::class.java, extraModelInfo.deprecationReporter)
     override val compileOptions: CompileOptions =
@@ -412,13 +411,6 @@ abstract class BaseExtension protected constructor(
         action.execute(lintOptions)
     }
 
-    /**
-     * Configures external native build using [CMake](https://cmake.org/) or
-     * [ndk-build](https://developer.android.com/ndk/guides/build.html).
-     *
-     * For more information about the properties you can configure in this block,
-     * see [ExternalNativeBuild].
-     */
     fun externalNativeBuild(action: Action<ExternalNativeBuild>) {
         checkWritability()
         action.execute(externalNativeBuild)
@@ -710,6 +702,8 @@ abstract class BaseExtension protected constructor(
 
     abstract override val defaultConfig: DefaultConfig
     abstract fun defaultConfig(action: Action<DefaultConfig>)
+
+    abstract override val externalNativeBuild: ExternalNativeBuild
 
     abstract override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
     abstract fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)

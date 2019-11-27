@@ -50,7 +50,10 @@ class ApplicationExtensionImpl(
     ),
     ApplicationExtension<
             BuildType,
+            CmakeOptions,
             DefaultConfig,
+            ExternalNativeBuild,
+            NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
             TestOptions,

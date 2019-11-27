@@ -33,7 +33,10 @@ import org.gradle.api.NamedDomainObjectContainer
 interface CommonExtension<
         BuildFeaturesT: BuildFeatures,
         BuildTypeT : BuildType,
+        CMakeOptionsT: CmakeOptions,
         DefaultConfigT : DefaultConfig,
+        ExternalNativeBuildT: ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        NdkBuildOptionsT: NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         TestOptionsT: TestOptions<UnitTestOptionsT>,
@@ -203,6 +206,46 @@ interface CommonExtension<
      */
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)
 
+
+    /**
+     * Specifies options for external native build using [CMake](https://cmake.org/) or
+     * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
+     *
+     *
+     * When using
+     * [Android Studio 2.2 or higher](https://developer.android.com/studio/index.html) with
+     * [Android plugin 2.2.0 or higher](https://developer.android.com/studio/releases/gradle-plugin.html),
+     * you can compile C and C++ code into a native library that Gradle packages into your APK.
+     *
+     *
+     * To learn more, read
+     * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html).
+     *
+     * @see ExternalNativeBuild
+     *
+     * @since 2.2.0
+     */
+
+    val externalNativeBuild: ExternalNativeBuildT
+    /**
+     * Specifies options for external native build using [CMake](https://cmake.org/) or
+     * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
+     *
+     *
+     * When using
+     * [Android Studio 2.2 or higher](https://developer.android.com/studio/index.html) with
+     * [Android plugin 2.2.0 or higher](https://developer.android.com/studio/releases/gradle-plugin.html),
+     * you can compile C and C++ code into a native library that Gradle packages into your APK.
+     *
+     *
+     * To learn more, read
+     * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html).
+     *
+     * @see ExternalNativeBuild
+     *
+     * @since 2.2.0
+     */
+    fun externalNativeBuild(action: ExternalNativeBuildT.()->Unit)
 
     /**
      * Specifies options for how the Android plugin should run local and instrumented tests.
