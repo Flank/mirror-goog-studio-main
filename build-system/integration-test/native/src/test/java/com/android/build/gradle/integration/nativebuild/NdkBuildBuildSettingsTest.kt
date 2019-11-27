@@ -51,8 +51,8 @@ class NdkBuildBuildSettingsTest {
             """
             apply plugin: 'com.android.application'
                 android {
-                    compileSdkVersion 28
-                    buildToolsVersion "28.0.3"
+                    compileSdkVersion 29
+                    buildToolsVersion "29.0.2"
                     defaultConfig {
                       externalNativeBuild {
                           ndkBuild {

@@ -6377,13 +6377,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         customLibraryJar)
                 .run()
                 .expect(
-                        "src/test/pkg/CheckJarAnnotations.java:8: Error: Call requires API level Q (current min is 10): packageLintTest [NewApi]\n"
+                        "src/test/pkg/CheckJarAnnotations.java:8: Error: Call requires API level 29 (current min is 10): packageLintTest [NewApi]\n"
                                 + "        Binks.packageLintTest(); // Should Fail\n"
                                 + "              ~~~~~~~~~~~~~~~\n"
-                                + "src/test/pkg/CheckJarAnnotations.java:9: Error: Call requires API level Q (current min is 10): nonLiteralPackageLintTest [NewApi]\n"
+                                + "src/test/pkg/CheckJarAnnotations.java:9: Error: Call requires API level 29 (current min is 10): nonLiteralPackageLintTest [NewApi]\n"
                                 + "        Binks.nonLiteralPackageLintTest(); // Should Fail\n"
                                 + "              ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "src/test/pkg/CheckJarAnnotations.java:10: Error: Call requires API level Q (current min is 10): classLintTest [NewApi]\n"
+                                + "src/test/pkg/CheckJarAnnotations.java:10: Error: Call requires API level 29 (current min is 10): classLintTest [NewApi]\n"
                                 + "        classLintTest(); // Should Fail\n"
                                 + "        ~~~~~~~~~~~~~\n"
                                 + "3 errors, 0 warnings");
