@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import java.util.Collection;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,6 +57,7 @@ public class KotlinTest extends AgentBasedClassRedefinerTestBase {
                 android.waitForInput("KotlinSimpleTarget JUST SWAPPED", RETURN_VALUE_TIMEOUT));
     }
 
+    @Ignore("b/145242388")
     @Test
     public void testBasicKotlinFailed() throws Exception {
         android.loadDex(DEX_LOCATION);
