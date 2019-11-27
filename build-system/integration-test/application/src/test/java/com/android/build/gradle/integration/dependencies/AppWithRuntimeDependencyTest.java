@@ -25,11 +25,17 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
+import com.android.testutils.MavenRepoGenerator;
+import com.android.testutils.TestAarGenerator;
+import com.android.testutils.TestInputsGenerator;
+import com.android.utils.PathUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.AfterClass;
@@ -38,15 +44,40 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
- * test for runtime only dependencies. Test project structure: app -> library (implementation) ----
- * library -> library2 (implementation) ---- library -> guava (implementation) The test verifies
- * that the dependency model of app module contains library2 and guava as runtime only dependencies.
+ * Test for runtime only dependencies. Test project structure: app -> library (implementation) ----
+ * library -> library2 (implementation) ---- library -> [guava (implementation) and example aar]
+ *
+ * <p>The test verifies that the dependency model of app module contains library2, guava and the
+ * example aar as runtime only dependencies.
  */
 public class AppWithRuntimeDependencyTest {
 
+    private static MavenRepoGenerator mavenRepo;
+
+    static {
+        try {
+            byte[] aar =
+                    TestAarGenerator.generateAarWithContent(
+                            "com.example.aar",
+                            TestInputsGenerator.jarWithEmptyClasses(
+                                    ImmutableList.of("com/example/MyClass")),
+                            ImmutableMap.of());
+            mavenRepo =
+                    new MavenRepoGenerator(
+                            ImmutableList.of(
+                                    new MavenRepoGenerator.Library(
+                                            "com.example:aar:1", "aar", aar)));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("projectWithModules").create();
+            GradleTestProject.builder()
+                    .fromTestProject("projectWithModules")
+                    .withAdditionalMavenRepo(mavenRepo)
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -63,6 +94,7 @@ public class AppWithRuntimeDependencyTest {
                 "\ndependencies {\n"
                         + "    implementation project(':library2')\n"
                         + "    implementation 'com.google.guava:guava:19.0'\n"
+                        + "    implementation 'com.example:aar:1'\n"
                         + "}\n");
     }
 
@@ -96,19 +128,22 @@ public class AppWithRuntimeDependencyTest {
         // Verify that app doesn't have JavaLibrary dependency.
         assertThat(deps.getJavaLibraries()).named("app java dependency count").isEmpty();
 
-        // Verify that app has runtime only dependencies on :library2 and guava.
-        Collection<String> runtimeOnlyClasses =
+        // Verify that app has runtime only dependencies on :library2, guava and the aar.
+        List<String> runtimeOnlyClasses =
                 deps.getRuntimeOnlyClasses()
                         .stream()
-                        .map(File::getPath)
+                        .map(file -> PathUtils.toSystemIndependentPath(file.toPath()))
                         .collect(Collectors.toList());
-        assertThat(runtimeOnlyClasses).hasSize(2);
 
-        File outputJar =
-                project.getSubproject(":library2")
-                        .file("build/intermediates/full_jar/debug/full.jar");
-        assertThat(runtimeOnlyClasses).contains(outputJar.getPath());
-        assertThat(runtimeOnlyClasses.stream().anyMatch(it -> it.endsWith("guava-19.0.jar")))
-                .isTrue();
+        assertThat(runtimeOnlyClasses).hasSize(3);
+        String expectedOutputJar =
+                PathUtils.toSystemIndependentPath(
+                        project.getSubproject(":library2")
+                                .file("build/intermediates/full_jar/debug/full.jar")
+                                .toPath());
+        // Verify the order of the artifacts too.
+        assertThat(runtimeOnlyClasses.get(0)).isEqualTo(expectedOutputJar);
+        assertThat(runtimeOnlyClasses.get(1)).endsWith("/guava-19.0.jar");
+        assertThat(runtimeOnlyClasses.get(2)).endsWith("/aar-1/jars/classes.jar");
     }
 }
