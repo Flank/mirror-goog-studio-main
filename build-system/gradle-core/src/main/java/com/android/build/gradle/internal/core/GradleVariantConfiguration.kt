@@ -75,7 +75,7 @@ import java.util.function.Supplier
  * product flavors (base interface ProductFlavor) and their associated sources. - dependencies (both
  * jar and aar).
  */
-open class GradleVariantConfiguration @VisibleForTesting internal constructor(
+open class GradleVariantConfiguration internal constructor(
     projectOptions: ProjectOptions,
     testedConfig: GradleVariantConfiguration?,
     defaultConfig: DefaultConfig,
