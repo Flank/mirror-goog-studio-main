@@ -1107,19 +1107,8 @@ public class VariantScopeImpl implements VariantScope {
         checkState(getType() == UNIT_TEST, "Expected unit test type but found: " + getType());
 
         if (testedScope.getType().isAar()) {
-            if (globalScope
-                    .getExtension()
-                    .getTestOptions()
-                    .getUnitTests()
-                    .isIncludeAndroidResources()) {
-                // Unit tests that use Android resources require the same R.jar as Android tests
-                return this.getArtifacts()
-                        .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-            } else {
-                return testedScope
-                        .getArtifacts()
-                        .getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-            }
+            return this.getArtifacts()
+                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         } else {
             checkState(
                     testedScope.getType().isApk(),

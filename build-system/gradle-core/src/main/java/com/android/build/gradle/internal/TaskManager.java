@@ -1513,6 +1513,14 @@ public abstract class TaskManager {
                                 "packageNameOfFinalRClassProvider",
                                 (Supplier<String>) testConfigInputs::getPackageNameOfFinalRClass);
                     });
+        } else {
+            if (testedVariantScope.getType().isAar()) {
+                // With compile classpath R classes, we need to generate a dummy R class for unit tests
+                // See https://issuetracker.google.com/143762955 for more context.
+                taskFactory.register(
+                        new GenerateLibraryRFileTask.TestRuntimeStubRClassCreationAction(
+                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
+            }
         }
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add

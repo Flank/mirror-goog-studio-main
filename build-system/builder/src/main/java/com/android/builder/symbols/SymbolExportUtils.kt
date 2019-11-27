@@ -59,7 +59,7 @@ fun processLibraryMainSymbolTable(
         manifestFile: File,
         sourceOut: File?,
         rClassOutputJar: File?,
-        symbolFileOut: File,
+        symbolFileOut: File?,
         platformSymbols: SymbolTable,
         namespacedRClass: Boolean,
         generateDependencyRClasses: Boolean,
@@ -78,7 +78,7 @@ fun processLibraryMainSymbolTable(
             depSymbolTables,
             platformSymbols,
             namespacedRClass,
-            symbolFileOut.toPath(),
+            symbolFileOut?.toPath(),
             generateDependencyRClasses,
             idProvider
         )
@@ -102,7 +102,7 @@ internal fun processLibraryMainSymbolTable(
     depSymbolTables: Set<SymbolTable>,
     platformSymbols: SymbolTable,
     namespacedRClass: Boolean,
-    symbolFileOut: Path,
+    symbolFileOut: Path?,
     generateDependencyRClasses: Boolean = true,
     idProvider: IdProvider = IdProvider.sequential()
 ): List<SymbolTable> {
@@ -117,8 +117,10 @@ internal fun processLibraryMainSymbolTable(
     val mainSymbolTable = if (namespacedRClass) allSymbols.filter(librarySymbols) else allSymbols
 
     // Generate R.txt file.
-    Files.createDirectories(symbolFileOut.parent)
-    SymbolIo.writeForAar(mainSymbolTable, symbolFileOut)
+    symbolFileOut?.let {
+        Files.createDirectories(it.parent)
+        SymbolIo.writeForAar(mainSymbolTable, it)
+    }
 
     return if (generateDependencyRClasses) {
         RGeneration.generateAllSymbolTablesToWrite(allSymbols, mainSymbolTable, depSymbolTables)
