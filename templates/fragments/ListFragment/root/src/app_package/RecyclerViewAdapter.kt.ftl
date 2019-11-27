@@ -10,7 +10,7 @@ import ${applicationPackage}.R
 </#if>
 
 
-import ${kotlinEscapedPackageName}.${className}.OnListFragmentInteractionListener
+import ${kotlinEscapedPackageName}.${fragmentClass}.OnListFragmentInteractionListener
 import ${kotlinEscapedPackageName}.dummy.DummyContent.DummyItem
 
 import kotlinx.android.synthetic.main.${fragment_layout}.view.*

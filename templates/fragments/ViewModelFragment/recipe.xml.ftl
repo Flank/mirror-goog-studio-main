@@ -17,9 +17,9 @@
     <open file="${escapedResOut}/layout/${escapeXmlAttribute(layoutName)}.xml" />
 
     <instantiate from="root/src/app_package/BlankFragment.${ktOrJavaExt}.ftl"
-                   to="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+                   to="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 
-    <open file="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+    <open file="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 
     <instantiate from="root/src/app_package/BlankViewModel.${ktOrJavaExt}.ftl"
                    to="${escapedSrcOut}/${viewModelName}.${ktOrJavaExt}" />

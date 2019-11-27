@@ -11,11 +11,11 @@ import ${applicationPackage}.R;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link ${className}#newInstance} factory method to
+ * Use the {@link ${fragmentClass}#newInstance} factory method to
  * create an instance of this fragment.
  *
  */
-public class ${className} extends Fragment {
+public class ${fragmentClass} extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -32,11 +32,11 @@ public class ${className} extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment ${className}.
+     * @return A new instance of fragment ${fragmentClass}.
      */
     // TODO: Rename and change types and number of parameters
-    public static ${className} newInstance(String param1, String param2) {
-        ${className} fragment = new ${className}();
+    public static ${fragmentClass} newInstance(String param1, String param2) {
+        ${fragmentClass} fragment = new ${fragmentClass}();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -44,7 +44,7 @@ public class ${className} extends Fragment {
         return fragment;
     }
 
-    public ${className}() {
+    public ${fragmentClass}() {
         // Required empty public constructor
     }
 

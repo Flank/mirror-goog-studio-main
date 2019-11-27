@@ -14,12 +14,12 @@
                  to="${escapedResOut}/layout/${fragment_layout}.xml" />
 
     <instantiate from="root/src/app_package/ListFragment.${ktOrJavaExt}.ftl"
-                 to="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+                 to="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
     <instantiate from="root/src/app_package/RecyclerViewAdapter.${ktOrJavaExt}.ftl"
                  to="${escapedSrcOut}/${adapterClassName}.${ktOrJavaExt}" />
     <#include "../../activities/common/recipe_dummy_content.xml.ftl" />
 
-    <open file="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+    <open file="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
     <open file="${escapedResOut}/layout/${fragment_layout_list}.xml" />
 
     <merge from="root/res/values/dimens.xml"

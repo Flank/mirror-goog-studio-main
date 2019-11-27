@@ -11,7 +11,7 @@
     <open file="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(fragmentName)}.xml" />
 
     <instantiate from="root/src/app_package/BlankFragment.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+                   to="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
 </recipe>

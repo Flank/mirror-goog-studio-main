@@ -25,7 +25,7 @@
         help="Other examples are 'Person', 'Book', etc." />
 
     <parameter
-        id="className"
+        id="fragmentClass"
         type="string"
         constraints="nonempty|class|unique"
         default="ItemListDialogFragment"
@@ -49,7 +49,7 @@
         type="string"
         constraints="layout|nonempty|unique"
         default="fragment_item_list_dialog_item"
-        suggest="${fragmentToLayout(className)}_list_dialog_item"
+        suggest="${fragmentToLayout(fragmentClass)}_list_dialog_item"
         name="Object content layout file name" />
 
     <parameter
@@ -57,7 +57,7 @@
         type="string"
         constraints="layout|nonempty|unique"
         default="fragment_item_list_dialog"
-        suggest="${fragmentToLayout(className)}_list_dialog"
+        suggest="${fragmentToLayout(fragmentClass)}_list_dialog"
         name="List layout file name" />
 
     <globals file="globals.xml.ftl" />

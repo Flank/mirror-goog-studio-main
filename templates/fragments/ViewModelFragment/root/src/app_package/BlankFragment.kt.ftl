@@ -11,10 +11,10 @@ import android.view.ViewGroup
 import ${applicationPackage}.R
 </#if>
 
-class ${className} : Fragment() {
+class ${fragmentClass} : Fragment() {
 
     companion object {
-        fun newInstance() = ${className}()
+        fun newInstance() = ${fragmentClass}()
     }
 
     private lateinit var viewModel: ${viewModelName}

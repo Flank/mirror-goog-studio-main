@@ -15,10 +15,10 @@
                  to="${escapedResOut}/layout/${itemLayout}.xml" />
 
     <instantiate from="root/src/app_package/ItemListDialogFragment.${ktOrJavaExt}.ftl"
-                 to="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+                 to="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 
     <open file="${escapedResOut}/layout/${listLayout}.xml" />
-    <open file="${escapedSrcOut}/${className}.${ktOrJavaExt}" />
+    <open file="${escapedSrcOut}/${fragmentClass}.${ktOrJavaExt}" />
 
     <merge from="root/res/values/dimens.xml"
              to="${escapedResOut}/values/dimens.xml" />

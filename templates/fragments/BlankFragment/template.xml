@@ -11,7 +11,7 @@
     <formfactor value="Mobile" />
 
     <parameter
-        id="className"
+        id="fragmentClass"
         name="Fragment Name"
         type="string"
         constraints="class|nonempty|unique"
@@ -24,7 +24,7 @@
         type="string"
         constraints="layout|nonempty|unique"
         default="fragment_blank"
-        suggest="${fragmentToLayout(className)}"
+        suggest="${fragmentToLayout(fragmentClass)}"
         help="The name of the layout to create" />
 
     <thumbs>

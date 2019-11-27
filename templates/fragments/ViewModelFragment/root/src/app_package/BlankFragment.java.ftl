@@ -12,10 +12,10 @@ import android.view.ViewGroup;
 import ${applicationPackage}.R;
 </#if>
 
-public class ${className} extends Fragment {
+public class ${fragmentClass} extends Fragment {
 
-    public static ${className} newInstance() {
-        return new ${className}();
+    public static ${fragmentClass} newInstance() {
+        return new ${fragmentClass}();
     }
 
     private ${viewModelName} mViewModel;

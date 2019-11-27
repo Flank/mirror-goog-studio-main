@@ -19,9 +19,9 @@ import ${kotlinEscapedPackageName}.dummy.DummyContent.DummyItem
 /**
  * A fragment representing a list of Items.
  * Activities containing this fragment MUST implement the
- * [${className}.OnListFragmentInteractionListener] interface.
+ * [${fragmentClass}.OnListFragmentInteractionListener] interface.
  */
-class ${className} : Fragment() {
+class ${fragmentClass} : Fragment() {
 
     // TODO: Customize parameters
     private var columnCount = 1
@@ -94,7 +94,7 @@ class ${className} : Fragment() {
         // TODO: Customize parameter initialization
         @JvmStatic
         fun newInstance(columnCount: Int) =
-                ${className}().apply {
+                ${fragmentClass}().apply {
                     arguments = Bundle().apply {
                         putInt(ARG_COLUMN_COUNT, columnCount)
                     }
