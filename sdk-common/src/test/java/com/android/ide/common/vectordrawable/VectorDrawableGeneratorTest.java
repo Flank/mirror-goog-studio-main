@@ -341,6 +341,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_transform_degenerate_arc");
     }
 
+    public void testSvgArcWithoutSeparatorBetweenFlags() throws Exception {
+        checkSvgConversion("test_arc_without_separator_between_flags");
+    }
+
     public void testSvgTransformCircleRotate() throws Exception {
         checkSvgConversion("test_transform_circle_rotate");
     }

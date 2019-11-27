@@ -292,7 +292,7 @@ class VdPath extends VdElement {
                 case 'c':
                 case 's':
                 case 'q':
-                    for (int i = 0; i < paramsLen; i += step) {
+                    for (int i = 0; i < paramsLen - step + 1; i += step) {
                         currentX += mParams[i + step - 2];
                         currentY += mParams[i + step - 1];
                     }
@@ -353,7 +353,7 @@ class VdPath extends VdElement {
                     break;
 
                 case 'A':
-                    for (int i = 0; i < paramsLen; i += step) {
+                    for (int i = 0; i < paramsLen - step + 1; i += step) {
                         // (0:rx 1:ry 2:x-axis-rotation 3:large-arc-flag 4:sweep-flag 5:x 6:y)
                         // [0, 1, 2]
                         if (!isTranslationOnly(totalTransform)) {
@@ -378,7 +378,7 @@ class VdPath extends VdElement {
                     break;
 
                 case 'a':
-                    for (int i = 0; i < paramsLen; i += step) {
+                    for (int i = 0; i < paramsLen - step + 1; i += step) {
                         float oldCurrentX = currentX;
                         float oldCurrentY = currentY;
 
