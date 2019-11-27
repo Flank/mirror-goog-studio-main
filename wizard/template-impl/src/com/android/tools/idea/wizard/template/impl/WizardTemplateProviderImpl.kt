@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.login
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.googleAdMobAdsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -41,5 +42,6 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
     fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerActivityTemplate, blankFragmentTemplate,
-    fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate)
+    fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate,
+    scrollFragmentTemplate)
 }
