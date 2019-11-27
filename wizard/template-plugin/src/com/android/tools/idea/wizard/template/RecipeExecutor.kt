@@ -64,9 +64,9 @@ interface RecipeExecutor {
    *
    * @param configuration Gradle configuration to use.
    * @param moduleName name of a module on which something depends. Should not start with ':'.
-   * @param toModule name of a module *directory* which depends on [moduleName].
+   * @param toModule path to the module which depends on [moduleName].
    */
-  fun addModuleDependency(configuration: String, moduleName: String, toModule: String)
+  fun addModuleDependency(configuration: String, moduleName: String, toModule: File)
 
   /**
    * Adds a new entry to 'sourceSets' block of Gradle build file.
@@ -99,9 +99,9 @@ interface RecipeExecutor {
    * Adds a dynamic feature [name] to [toModule]'s build.gradle[.kts].
    *
    * @param name name of a dynamic feature which should be added.
-   * @param toModule name of a base feature module *directory*.
+   * @param toModule path to base feature module dir
    */
-  fun addDynamicFeature(name: String, toModule: String)
+  fun addDynamicFeature(name: String, toModule: File)
 }
 
 enum class SourceSetType {
