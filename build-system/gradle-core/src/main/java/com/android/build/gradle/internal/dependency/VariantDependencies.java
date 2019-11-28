@@ -102,6 +102,7 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_LINTPUBLISH = "lintPublish";
 
     public static final String CONFIG_NAME_TESTED_APKS = "testedApks";
+    public static final String CONFIG_NAME_CORE_LIBRARY_DESUGARING = "coreLibraryDesugaring";
 
     @NonNull private final String variantName;
 

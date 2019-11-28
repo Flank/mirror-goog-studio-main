@@ -786,7 +786,7 @@ class DexArchiveBuilderDelegateTest(
             arrayOf(DexerTool.D8, false),
             arrayOf(DexerTool.D8, true)
         )
-        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.8.0")
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.9.0")
     }
 
     private fun cacheEntriesCount(): Int {

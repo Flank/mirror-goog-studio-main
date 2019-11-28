@@ -109,6 +109,7 @@ class CoreLibraryDesugarTest {
                 android.defaultConfig.multiDexEnabled = true
                 dependencies {
                     implementation project("$LIBRARY_MODULE")
+                    coreLibraryDesugaring "$DESUGAR_DEPENDENCY"
                 }
             """.trimIndent())
 
@@ -144,6 +145,9 @@ class CoreLibraryDesugarTest {
                         coreLibraryDesugaringEnabled true
                     }
                     android.defaultConfig.multiDexEnabled = true
+                }
+                dependencies {
+                    coreLibraryDesugaring "$DESUGAR_DEPENDENCY"
                 }
             """.trimIndent()
         )
@@ -477,6 +481,7 @@ class CoreLibraryDesugarTest {
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
         private const val CACHE_DIR = "agp_cache_dir"
+        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.3"
     }
 
     private val lineSeparator: String = System.lineSeparator()

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
@@ -412,6 +413,8 @@ public abstract class TaskManager {
         // By resolving it here we avoid configuration problems. The value returned will be cached
         // and returned immediately later when this method is invoked.
         Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);
+
+        createCoreLibraryDesugaringConfig(project);
     }
 
     private void configureCustomLintChecksConfig() {
@@ -616,6 +619,18 @@ public abstract class TaskManager {
                 "Configuration providing various types of Android JAR file");
         androidJarConfig.setCanBeConsumed(false);
         return androidJarConfig;
+    }
+
+    public static void createCoreLibraryDesugaringConfig(@NonNull Project project) {
+        Configuration coreLibraryDesugaring =
+                project.getConfigurations().findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING);
+        if (coreLibraryDesugaring == null) {
+            coreLibraryDesugaring =
+                    project.getConfigurations().create(CONFIG_NAME_CORE_LIBRARY_DESUGARING);
+            coreLibraryDesugaring.setVisible(false);
+            coreLibraryDesugaring.setCanBeConsumed(false);
+            coreLibraryDesugaring.setDescription("Configuration to desugar libraries");
+        }
     }
 
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {

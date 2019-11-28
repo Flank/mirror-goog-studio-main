@@ -19,6 +19,7 @@
 package com.android.build.gradle.internal.utils
 
 import com.android.build.gradle.internal.dependency.ATTR_L8_MIN_SDK
+import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING
 import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.io.ByteStreams
 import org.gradle.api.Project
@@ -32,12 +33,13 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.provider.Provider
+import java.lang.RuntimeException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.zip.ZipInputStream
 
-private const val DESUGAR_LIB_CONFIGURATION_NAME = "_internal_desugar_jdk_libs"
-private const val DESUGAR_LIB_CONFIG_CONFIGURATION_NAME = "_internal_desugar_jdk_libs_configuration"
+private const val DESUGAR_LIB_NAME = "com.android.tools:desugar_jdk_libs:"
+private const val DESUGAR_LIB_CONFIG_NAME = "com.android.tools:desugar_jdk_libs_configuration:"
 private const val DESUGAR_LIB_CONFIG_FILE = "desugar.json"
 // The output of L8 invocation, which is the dex output of desugar_jdk_libs.jar
 const val DESUGAR_LIB_DEX = "_internal-desugar-jdk-libs-dex"
@@ -48,7 +50,7 @@ const val DESUGAR_LIB_CONFIG = "_internal-desugar-jdk-libs-config"
  * Returns a file collection which contains desugar_jdk_libs.jar
  */
 fun getDesugarLibJarFromMaven(project: Project): FileCollection {
-    val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIGURATION_NAME)
+    val configuration = getDesugarLibConfiguration(project)
     return getArtifactCollection(configuration)
 }
 
@@ -61,8 +63,7 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
         return variantScope.globalScope.project.files()
     }
 
-    val project = variantScope.globalScope.project
-    val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIGURATION_NAME)
+    val configuration = getDesugarLibConfiguration(variantScope.globalScope.project)
     return getDesugarLibDexFromTransform(configuration, variantScope.minSdkVersion.featureLevel)
 }
 
@@ -71,10 +72,9 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
  * desugar_jdk_libs_configuration.jar
  */
 fun getDesugarLibConfig(project: Project): Provider<String> {
-    val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIG_CONFIGURATION_NAME)
+    val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
 
     registerDesugarLibConfigTransform(project)
-
     return getDesugarLibConfigFromTransform(configuration).elements.map{ locations ->
         if (locations.isEmpty()) {
             null
@@ -89,46 +89,20 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
     }
 }
 
-private fun getDesugaringLibConfiguration(project: Project, name: String): Configuration {
-    check(name == DESUGAR_LIB_CONFIGURATION_NAME || name == DESUGAR_LIB_CONFIG_CONFIGURATION_NAME)
-    return project.configurations.findByName(name) ?: run {
-        initDesugarLibConfigurations(project)
-        project.configurations.getByName(name)
+/**
+ * Returns the configuration of core library to be desugared and throws runtime exception if the
+ * user didn't add any dependency to that configuration.
+ *
+ * Note: this method is only used when core library desugaring is enabled.
+ */
+private fun getDesugarLibConfiguration(project: Project): Configuration {
+    val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
+    configuration.defaultDependencies {
+        throw RuntimeException("$CONFIG_NAME_CORE_LIBRARY_DESUGARING configuration contains no " +
+                "dependencies. If you intend to enable core library desugaring, please add " +
+                "dependencies to $CONFIG_NAME_CORE_LIBRARY_DESUGARING configuration.")
     }
-}
-
-private fun initDesugarLibConfigurations(project: Project) {
-    val library = project.configurations.create(DESUGAR_LIB_CONFIGURATION_NAME) {
-        it.isVisible = false
-        it.isTransitive = false
-        it.isCanBeConsumed = false
-        it.description = "The desugar_jdk_libs for desugaring Core Library."
-    }
-
-    project.dependencies.add(
-        library.name,
-        mapOf(
-            "group" to "com.android.tools",
-            "name" to "desugar_jdk_libs",
-            "version" to "1.0.2"
-        )
-    )
-
-    val configuration = project.configurations.create(DESUGAR_LIB_CONFIG_CONFIGURATION_NAME) {
-        it.isVisible = false
-        it.isTransitive = false
-        it.isCanBeConsumed = false
-        it.description = "The desugar_jdk_libs_configuration for desugaring Core Library."
-    }
-
-    project.dependencies.add(
-        configuration.name,
-        mapOf(
-            "group" to "com.android.tools",
-            "name" to "desugar_jdk_libs_configuration",
-            "version" to "0.8.0"
-        )
-    )
+    return configuration
 }
 
 private fun getDesugarLibDexFromTransform(configuration: Configuration, minSdkVersion: Int): FileCollection {
@@ -139,6 +113,9 @@ private fun getDesugarLibDexFromTransform(configuration: Configuration, minSdkVe
                 DESUGAR_LIB_DEX
             )
             it.attribute(ATTR_L8_MIN_SDK, minSdkVersion.toString())
+        }
+        config.componentFilter {
+            it.displayName.contains(DESUGAR_LIB_NAME)
         }
     }.artifacts.artifactFiles
 }
@@ -151,6 +128,9 @@ private fun getDesugarLibConfigFromTransform(configuration: Configuration): File
                 DESUGAR_LIB_CONFIG
             )
         }
+        configuration.componentFilter {
+            it.displayName.contains(DESUGAR_LIB_CONFIG_NAME)
+        }
     }.artifacts.artifactFiles
 }
 
@@ -161,6 +141,9 @@ private fun getArtifactCollection(configuration: Configuration): FileCollection 
                 ArtifactAttributes.ARTIFACT_FORMAT,
                 ArtifactTypeDefinition.JAR_TYPE
             )
+        }
+        config.componentFilter {
+            it.displayName.contains(DESUGAR_LIB_NAME)
         }
     }.artifacts.artifactFiles
 
