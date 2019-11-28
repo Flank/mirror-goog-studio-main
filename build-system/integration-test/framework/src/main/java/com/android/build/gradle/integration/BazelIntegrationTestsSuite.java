@@ -25,6 +25,7 @@ import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
 import com.android.testutils.BazelRunfilesManifestProcessor;
+import com.android.testutils.TestExecutionTimeLogger;
 import com.android.testutils.TestUtils;
 import com.android.testutils.WindowsPathUtilsKt;
 import com.android.utils.FileUtils;
@@ -61,6 +62,8 @@ public class BazelIntegrationTestsSuite {
 
 
     static {
+        TestExecutionTimeLogger.log();
+        TestExecutionTimeLogger.addRuntimeHook();
         try {
             DATA_DIR = Files.createTempDirectory("data").toAbsolutePath();
             MAVEN_REPO_SOURCES = mavenRepos(DATA_DIR);
@@ -85,10 +88,12 @@ public class BazelIntegrationTestsSuite {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+        TestExecutionTimeLogger.log();
     }
 
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
+        TestExecutionTimeLogger.log();
 
         // use a lock file to avoid tests stepping on each others toes when running sharded on the
         // same machine.
@@ -112,6 +117,7 @@ public class BazelIntegrationTestsSuite {
             System.out.println("I/O Error: " + e.getMessage());
             throw e;
         }
+        TestExecutionTimeLogger.log();
     }
 
     /**
@@ -123,6 +129,8 @@ public class BazelIntegrationTestsSuite {
      */
     @BeforeClass
     public static void symlinkNdkToTmp() throws Exception {
+        TestExecutionTimeLogger.log();
+
         assertThat(NDK_IN_TMP).doesNotExist();
 
         try {
@@ -136,10 +144,13 @@ public class BazelIntegrationTestsSuite {
             // do anything about it. Some integration tests don't actually depend on the NDK but
             // do depend on this code.
         }
+        TestExecutionTimeLogger.log();
     }
 
     @AfterClass
     public static void cleanUp() throws InterruptedException {
+        TestExecutionTimeLogger.log();
+
         DefaultGradleConnector.close();
         // on Windows, wait until the last gradle daemon had a chance to shutdown.
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
@@ -157,6 +168,7 @@ public class BazelIntegrationTestsSuite {
                             "Cannot delete tmp files, " + "will be cleared at the next run ",
                             ioe);
         }
+        TestExecutionTimeLogger.log();
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {

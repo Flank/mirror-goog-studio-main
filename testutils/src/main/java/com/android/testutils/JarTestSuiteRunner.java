@@ -100,6 +100,7 @@ public class JarTestSuiteRunner extends Suite {
         // Logs the test class that will be invoked, temporarily added to investigate tests timing
         // out issue b/78568459
         if (isBazelIntegrationTestsSuite) {
+            TestExecutionTimeLogger.log();
             Stopwatch stopwatch = Stopwatch.createStarted();
             logger.info("Running " + describeChild(runner).getClassName());
             super.runChild(runner, notifier);
