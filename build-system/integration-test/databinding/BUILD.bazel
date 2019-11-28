@@ -65,7 +65,7 @@ kotlin_jar(
 
 coverage_java_test(
     name = "tests",
-    timeout = "eternal",
+    timeout = "long",
     data = TEST_DATA,
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
