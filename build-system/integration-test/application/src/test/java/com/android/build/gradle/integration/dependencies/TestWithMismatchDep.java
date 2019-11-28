@@ -47,7 +47,7 @@ public class TestWithMismatchDep {
     }
 
     private static final String EXCEPTION_MSG =
-            "Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n"
+            "Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints:\n"
                     + "   Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:19.0'\n"
                     + "   Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:18.0'\n"
                     + "   Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava:{strictly 18.0}' because of the following reason: debugRuntimeClasspath uses version 18.0\n";
@@ -56,7 +56,7 @@ public class TestWithMismatchDep {
                     + "   > Could not resolve com.google.guava:guava:19.0.\n"
                     + "     Required by:\n"
                     + "         project :\n"
-                    + "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n"
+                    + "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints:\n"
                     + "           Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:19.0'\n"
                     + "           Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:18.0'\n"
                     + "           Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava:{strictly 18.0}' because of the following reason: debugRuntimeClasspath uses version 18.0";
