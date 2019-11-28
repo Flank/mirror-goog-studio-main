@@ -93,6 +93,7 @@ gradle_integration_test(
 # Test that builds and lints all test projects, without any additional assertions.
 gradle_integration_test(
     name = "automatic-tests",
+    timeout = "long",
     srcs = glob(["src/test/java/**/CheckAll.java"]),
     data = AUTOMATIC_TEST_DATA,
     #keep sorted
