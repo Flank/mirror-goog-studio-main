@@ -87,10 +87,6 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 20,
-    #keep sorted
-    tags = [
-        "no_test_mac_psq",  # b/113099009
-    ],
     deps = TEST_DEPS,
 )
 
