@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,13 +42,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.gradle.tooling.CancellationTokenSource;
+import org.gradle.tooling.ConfigurableLauncher;
 import org.gradle.tooling.GradleConnectionException;
+import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.ResultHandler;
 import org.gradle.tooling.events.ProgressEvent;
 import org.gradle.tooling.events.ProgressListener;
 
@@ -59,6 +67,7 @@ import org.gradle.tooling.events.ProgressListener;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
+    private static final long TIMEOUT_MINUTES = 5;
 
     private static Path jvmLogDir;
 
@@ -346,4 +355,43 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             return ImmutableList.copyOf(events);
         }
     }
+
+    protected interface RunAction<LauncherT, ResultT> {
+        void run(@NonNull LauncherT launcher, @NonNull ResultHandler<ResultT> resultHandler);
+    }
+
+    @Nullable
+    protected static <LauncherT extends ConfigurableLauncher<LauncherT>, ResultT> ResultT runBuild(
+            @NonNull LauncherT launcher, @NonNull RunAction<LauncherT, ResultT> runAction) {
+        CancellationTokenSource cancellationTokenSource =
+                GradleConnector.newCancellationTokenSource();
+        launcher.withCancellationToken(cancellationTokenSource.token());
+        SettableFuture<ResultT> future = SettableFuture.create();
+        runAction.run(
+                launcher,
+                new ResultHandler<ResultT>() {
+                    @Override
+                    public void onComplete(ResultT result) {
+                        future.set(result);
+                    }
+
+                    @Override
+                    public void onFailure(GradleConnectionException e) {
+                        future.setException(e);
+                    }
+                });
+        try {
+            return future.get(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        } catch (ExecutionException e) {
+            throw (GradleConnectionException) e.getCause();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            cancellationTokenSource.cancel();
+            // TODO(b/78568459) Gather more debugging info from Gradle daemon.
+            throw new RuntimeException(e);
+        }
+    }
+
 }

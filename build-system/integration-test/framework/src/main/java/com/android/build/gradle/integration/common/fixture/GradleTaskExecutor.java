@@ -119,7 +119,7 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
                     projectConnection
                             .action(new GetAndroidModelAction<>(ProjectBuildOutput.class))
                             .forTasks(Iterables.toArray(tasksList, String.class));
-            runBuild = actionExecutor::run;
+            runBuild = () -> runBuild(actionExecutor, BuildActionExecuter::run);
             launcher = actionExecutor;
         } else {
             BuildLauncher buildLauncher =
@@ -128,7 +128,7 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
                             .forTasks(Iterables.toArray(tasksList, String.class));
             runBuild =
                     () -> {
-                        buildLauncher.run();
+                        runBuild(buildLauncher, BuildLauncher::run);
                         return null;
                     };
             launcher = buildLauncher;

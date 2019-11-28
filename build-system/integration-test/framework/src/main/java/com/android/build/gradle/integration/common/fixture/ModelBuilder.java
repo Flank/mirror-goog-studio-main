@@ -322,7 +322,8 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                             new BufferedOutputStream(new FileOutputStream(stdErrFile))) {
                 setStandardOut(executor, stdout);
                 setStandardError(executor, stderr);
-                model = executor.withArguments(getArguments()).run();
+                executor.withArguments(getArguments());
+                model = runBuild(executor, BuildActionExecuter::run);
             }
             GradleBuildResult buildResult =
                     new GradleBuildResult(
