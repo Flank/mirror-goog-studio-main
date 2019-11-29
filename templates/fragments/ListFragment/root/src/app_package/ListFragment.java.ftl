@@ -23,7 +23,7 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class ${className} extends Fragment {
+public class ${fragmentClass} extends Fragment {
 
     // TODO: Customize parameters
     private int mColumnCount = ${columnCount};
@@ -38,8 +38,8 @@ public class ${className} extends Fragment {
 <#if includeFactory>
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static ${className} newInstance(int columnCount) {
-        ${className} fragment = new ${className}();
+    public static ${fragmentClass} newInstance(int columnCount) {
+        ${fragmentClass} fragment = new ${fragmentClass}();
         Bundle args = new Bundle();
         args.putInt(ARG_COLUMN_COUNT, columnCount);
         fragment.setArguments(args);
@@ -51,7 +51,7 @@ public class ${className} extends Fragment {
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public ${className}() {
+    public ${fragmentClass}() {
     }
 
     @Override

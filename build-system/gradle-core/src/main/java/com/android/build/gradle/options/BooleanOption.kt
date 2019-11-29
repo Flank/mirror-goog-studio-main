@@ -58,7 +58,13 @@ enum class BooleanOption(
     // ---------------
     // FEATURE Default Values
     // This is a PUBLIC API.
+    BUILD_FEATURE_AIDL("android.defaults.buildfeatures.aidl", true, Option.Status.STABLE),
     BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, Option.Status.STABLE),
+    BUILD_FEATURE_DATABINDING("android.defaults.buildfeatures.databinding", false, Option.Status.STABLE),
+    BUILD_FEATURE_RENDERSCRIPT("android.defaults.buildfeatures.renderscript", true, Option.Status.STABLE),
+    BUILD_FEATURE_RESVALUES("android.defaults.buildfeatures.resvalues", true, Option.Status.STABLE),
+    BUILD_FEATURE_SHADERS("android.defaults.buildfeatures.shaders", true, Option.Status.STABLE),
+    BUILD_FEATURE_VIEWBINDING("android.defaults.buildfeatures.viewbinding", false, Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Experimental stage, not yet enabled by default
@@ -73,15 +79,16 @@ enum class BooleanOption(
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
     DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
+    ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false),
     NAMESPACED_R_CLASS("android.namespacedRClass", false),
     FULL_R8("android.enableR8.fullMode", false),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false),
-    MINIMAL_KEEP_RULES("android.useMinimalKeepRules", false),
     ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, status = Option.Status.STABLE),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false),
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
+    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", false),
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
@@ -113,6 +120,7 @@ enum class BooleanOption(
     ENABLE_DUPLICATE_CLASSES_CHECK("android.enableDuplicateClassesCheck", true),
     ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true),
     GENERATE_R_JAVA("android.generateRJava", false),
+    MINIMAL_KEEP_RULES("android.useMinimalKeepRules", true),
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, Option.Status.STABLE),
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, Option.Status.STABLE),
     USE_NEW_JAR_CREATOR("android.useNewJarCreator", true),

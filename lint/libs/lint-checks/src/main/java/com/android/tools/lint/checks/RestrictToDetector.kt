@@ -31,7 +31,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
-import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnotation
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.lang.jvm.annotation.JvmAnnotationConstantValue
 import com.intellij.psi.PsiClass

@@ -17,6 +17,7 @@
 #include "daemon_config.h"
 
 #include <fstream>
+
 #include "utils/device_info.h"
 #include "utils/log.h"
 
@@ -28,7 +29,8 @@ DaemonConfig::DaemonConfig(const proto::DaemonConfig& daemon_config)
 DaemonConfig::DaemonConfig(const std::string& file_path) {
   std::fstream input(file_path, std::ios::in | std::ios::binary);
   if (!daemon_config_.ParseFromIstream(&input)) {
-    Log::V("Failed to parse config from %s", file_path.c_str());
+    Log::V(Log::Tag::TRANSPORT, "Failed to parse config from %s",
+           file_path.c_str());
   }
   input.close();
 }

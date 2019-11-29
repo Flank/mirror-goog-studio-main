@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -228,7 +229,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                             "variant.getApplicationId() is not supported by dynamic-feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
         }
 
-        return variantData.getApplicationId();
+        return variantData.getVariantConfiguration().getApplicationId();
     }
 
     @Override
@@ -288,9 +289,20 @@ public abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public AidlCompile getAidlCompile() {
         BaseVariantData variantData = getVariantData();
+        GlobalScope globalScope = variantData.getScope().getGlobalScope();
+
+        if (!globalScope.getBuildFeatures().getAidl()) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            EvalIssueReporter.Type.GENERIC,
+                            "aidl support is disabled via buildFeatures.");
+            return null;
+        }
+
         variantData
                 .getScope()
                 .getGlobalScope()
@@ -304,20 +316,40 @@ public abstract class BaseVariantImpl implements BaseVariant {
         return variantData.getTaskContainer().getAidlCompileTask().get();
     }
 
-    @NonNull
+    @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
+        if (!getVariantData().getScope().getGlobalScope().getBuildFeatures().getAidl()) {
+            getVariantData()
+                    .getScope()
+                    .getGlobalScope()
+                    .getErrorHandler()
+                    .reportError(
+                            EvalIssueReporter.Type.GENERIC,
+                            "aidl support is disabled via buildFeatures.");
+            return null;
+        }
+
         //noinspection unchecked
         return (TaskProvider<AidlCompile>) getVariantData().getTaskContainer().getAidlCompileTask();
     }
 
     @Override
-    @NonNull
+    @Nullable
     public RenderscriptCompile getRenderscriptCompile() {
         BaseVariantData variantData = getVariantData();
-        variantData
-                .getScope()
-                .getGlobalScope()
+        GlobalScope globalScope = variantData.getScope().getGlobalScope();
+
+        if (!globalScope.getBuildFeatures().getRenderScript()) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            EvalIssueReporter.Type.GENERIC,
+                            "renderscript support is disabled via buildFeatures.");
+            return null;
+        }
+
+        globalScope
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -328,9 +360,20 @@ public abstract class BaseVariantImpl implements BaseVariant {
         return variantData.getTaskContainer().getRenderscriptCompileTask().get();
     }
 
-    @NonNull
+    @Nullable
     @Override
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
+        if (!getVariantData().getScope().getGlobalScope().getBuildFeatures().getRenderScript()) {
+            getVariantData()
+                    .getScope()
+                    .getGlobalScope()
+                    .getErrorHandler()
+                    .reportError(
+                            EvalIssueReporter.Type.GENERIC,
+                            "renderscript support is disabled via buildFeatures.");
+            return null;
+        }
+
         //noinspection unchecked
         return (TaskProvider<RenderscriptCompile>)
                 getVariantData().getTaskContainer().getRenderscriptCompileTask();

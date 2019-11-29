@@ -25,6 +25,7 @@
 #include "utils/device_info.h"
 #include "utils/filesystem_notifier.h"
 #include "utils/log.h"
+#include "utils/process_manager.h"
 #include "utils/trace.h"
 
 using profiler::proto::TraceStopStatus;
@@ -32,7 +33,7 @@ using std::string;
 
 namespace {
 const char *const kAmExecutable = "/system/bin/am";
-}
+}  // namespace
 
 namespace profiler {
 
@@ -68,10 +69,7 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
       // Use streaming output mode on O or greater.
       parameters << "--streaming ";
     }
-    // "system_server" from /proc/PID/comm has a different name "system" in the
-    // eyes of Activity Service. See b/112379230 for details.
-    parameters << (app_package_name == "system_server" ? "system"
-                                                       : app_package_name);
+    parameters << ProcessManager::GetCanonicalName(app_package_name);
     parameters << " " << trace_path;
     if (!bash_->Run(parameters.str(), error_string)) {
       *error_string = "Unable to run profile start command";
@@ -187,7 +185,7 @@ bool ActivityManager::RunProfileStopCmd(const string &app_package_name,
                                         string *error_string) {
   string parameters;
   parameters.append("profile stop ");
-  parameters.append(app_package_name);
+  parameters.append(ProcessManager::GetCanonicalName(app_package_name));
   return bash_->Run(parameters, error_string);
 }
 

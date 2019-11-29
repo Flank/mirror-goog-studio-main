@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.core.VariantConfiguration
+import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
@@ -207,7 +207,7 @@ class TaskMethodModifiersAndAnnotationsTest {
 
     @Test
     fun checkVariantConfigurationIsNotAField() {
-        Truth.assertThat(findTaskFieldsOfType(VariantConfiguration::class.java)).isEmpty()
+        Truth.assertThat(findTaskFieldsOfType(GradleVariantConfiguration::class.java)).isEmpty()
     }
 
     @Test

@@ -18,7 +18,9 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <sstream>
+
 #include "utils/log.h"
 #include "utils/native_backtrace.h"
 
@@ -43,7 +45,7 @@ void SignalHandlerSigSegv(int signal) {
     stringify << ",";
   }
   printf("%s\n", stringify.str().c_str());
-  Log::E("%s", stringify.str().c_str());
+  Log::E(Log::Tag::TRANSPORT, "%s", stringify.str().c_str());
   // Force flush output.
   fflush(stdout);
 
@@ -54,7 +56,7 @@ void SignalHandlerSigSegv(int signal) {
 
 extern "C" void SignalHandlerSigHup(int signal) {
   std::signal(signal, SIG_DFL);
-  Log::D("Profiler:Signal received %d", signal);
+  Log::D(Log::Tag::TRANSPORT, "Profiler:Signal received %d", signal);
   TerminationService::Instance()->NotifyShutdown(signal);
   std::raise(signal);
 }
@@ -70,7 +72,8 @@ TerminationService::TerminationService() {
 }
 
 void TerminationService::NotifyShutdown(int signal) {
-  Log::D("Profiler:TerminationService shutting down with signal %d", signal);
+  Log::D(Log::Tag::TRANSPORT,
+         "Profiler:TerminationService shutting down with signal %d", signal);
   for (auto cb : shutdown_callbacks_) {
     cb(signal);
   }

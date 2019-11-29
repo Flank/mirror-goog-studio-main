@@ -20,17 +20,24 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTaskDelegate
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
+import com.android.builder.dexing.ClassBucket
+import com.android.builder.dexing.DependencyGraphUpdater
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexArchiveBuilderConfig
 import com.android.builder.dexing.DexArchiveBuilderException
 import com.android.builder.dexing.DexerTool
-import com.android.builder.dexing.DirectoryBucketGroup
+import com.android.builder.dexing.MutableDependencyGraph
 import com.android.dx.command.dexer.DxContext
 import com.android.ide.common.blame.MessageReceiver
+import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import org.gradle.api.logging.Logging
 import org.gradle.tooling.BuildException
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.io.OutputStream
 import java.io.Serializable
 import javax.inject.Inject
@@ -73,40 +80,102 @@ fun launchProcessing(
     errStream: OutputStream,
     receiver: MessageReceiver
 ) {
-    val dexArchiveBuilder = getDexArchiveBuilder(
-        dexWorkActionParams,
-        outStream,
-        errStream,
-        receiver
-    )
+    with(dexWorkActionParams.dexSpec) {
+        var canBeIncremental = isIncremental
 
-    val inputClassFiles = dexWorkActionParams.dexSpec.inputClassFiles
+        // Desugaring graph is not null iff dexSpec.impactedFiles == null
+        val desugarGraph: MutableDependencyGraph<File>? =
+            if (impactedFiles == null) {
+                // Read the desugaring graph from disk or create a new, empty graph if this is a
+                // non-incremental build (or if the graph cannot be read for some reason).
+                if (canBeIncremental) {
+                    try {
+                        ObjectInputStream(FileInputStream(desugarGraphFile!!).buffered()).use {
+                            @Suppress("UNCHECKED_CAST")
+                            it.readObject() as MutableDependencyGraph<File>
+                        }
+                    } catch (e: Exception) {
+                        loggerWrapper.warning(
+                            "Failed to read dependency graph: ${e.message}." +
+                                    " Fall back to non-incremental mode."
+                        )
+                        canBeIncremental = false
+                        MutableDependencyGraph<File>()
+                    }
+                } else {
+                    MutableDependencyGraph()
+                }
+            } else {
+                null
+            }
 
-    val hasIncrementalInfo =
-        inputClassFiles.bucketGroup is DirectoryBucketGroup
-                && dexWorkActionParams.dexSpec.isIncremental
-
-    // A filter to select a subset of the class files in the bucket to process
-    fun toProcess(rootPath: File, relativePath: String): Boolean {
-        if (!hasIncrementalInfo) {
-            return true
+        // Compute impacted files based on the desugaring graph and the changed (removed, modified,
+        // added) files, if they are not precomputed.
+        val unchangedButImpactedFiles = if (canBeIncremental) {
+            impactedFiles ?: desugarGraph!!.getAllDependents(changedFiles)
+        } else {
+            // In non-incremental mode, this set must be null as we won't use it.
+            null
         }
 
-        val resolved = rootPath.resolve(relativePath)
-        return resolved in dexWorkActionParams.dexSpec.impactedFiles
-                || resolved in dexWorkActionParams.dexSpec.changedFiles
+        // Process the class files and update the desugaring graph
+        process(
+            dexArchiveBuilder = getDexArchiveBuilder(
+                dexWorkActionParams,
+                outStream,
+                errStream,
+                receiver
+            ),
+            inputClassFiles = dexWorkActionParams.dexSpec.inputClassFiles,
+            outputPath = dexWorkActionParams.dexSpec.outputPath,
+            desugarGraphUpdater = desugarGraph,
+            processIncrementally = canBeIncremental,
+            changedAndImpactedFiles = if (canBeIncremental) {
+                changedFiles + unchangedButImpactedFiles!!
+            } else {
+                null
+            }
+        )
+
+        // Store the desugaring graph for use in the next build. If dexing failed earlier, it is
+        // intended that we will not store the graph as the graph is only meant to contain info
+        // about a previous successful build.
+        if (desugarGraph != null) {
+            FileUtils.mkdirs(desugarGraphFile!!.parentFile)
+            ObjectOutputStream(FileOutputStream(desugarGraphFile).buffered()).use {
+                it.writeObject(desugarGraph)
+            }
+        }
+    }
+}
+
+private fun process(
+    dexArchiveBuilder: DexArchiveBuilder,
+    inputClassFiles: ClassBucket,
+    outputPath: File,
+    desugarGraphUpdater: DependencyGraphUpdater<File>?,
+    processIncrementally: Boolean,
+    changedAndImpactedFiles: Set<File>? // Not null iff processIncrementally == true
+) {
+    // Filter to select a subset of the class files to process:
+    //   - In incremental mode, process only changed (modified, added) or unchanged-but-impacted
+    //     files.
+    //   - In non-incremental mode, process all files.
+    fun shouldBeProcessed(rootPath: File, relativePath: String): Boolean {
+        return if (processIncrementally) {
+            rootPath in changedAndImpactedFiles!! /* for jars */ ||
+                    rootPath.resolve(relativePath) in changedAndImpactedFiles /* for dirs */
+        } else {
+            true
+        }
     }
 
     val inputRoots = inputClassFiles.bucketGroup.getRoots()
-    inputRoots.forEach {
-        loggerWrapper
-            .verbose("Dexing '${it.path}' to '${dexWorkActionParams.dexSpec.outputPath.path}'")
-    }
-
+    inputRoots.forEach { loggerWrapper.verbose("Dexing '${it.path}' to '${outputPath.path}'") }
     try {
         Closer.create().use { closer ->
-            inputClassFiles.getClassFiles(filter = ::toProcess, closer = closer).use {
-                dexArchiveBuilder.convert(it, dexWorkActionParams.dexSpec.outputPath.toPath())
+            inputClassFiles.getClassFiles(filter = ::shouldBeProcessed, closer = closer).use {
+                dexArchiveBuilder.convert(it, outputPath.toPath(), desugarGraphUpdater)
             }
         }
     } catch (ex: DexArchiveBuilderException) {

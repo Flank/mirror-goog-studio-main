@@ -27,8 +27,10 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -61,6 +63,7 @@ public class TestPlugin extends BasePlugin {
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
@@ -73,12 +76,14 @@ public class TestPlugin extends BasePlugin {
                         project,
                         projectOptions,
                         globalScope,
-                        buildTypeContainer,
-                        productFlavorContainer,
-                        signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo);
+                        extraModelInfo,
+                        new TestExtensionImpl(
+                                buildTypeContainer,
+                                defaultConfig,
+                                productFlavorContainer,
+                                signingConfigContainer));
     }
 
     @NonNull

@@ -99,6 +99,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             super.configure(task)
 
             val artifacts = variantScope.artifacts
+            val buildFeatures = variantScope.globalScope.buildFeatures
 
             // Sanity check, there should never be duplicates.
             task.duplicatesStrategy = DuplicatesStrategy.FAIL
@@ -115,15 +116,20 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.archiveFileName.set(variantScope.outputScope.mainSplit.outputFileName)
             task.destinationDirectory.set(File(variantScope.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
-            task.from(
-                variantScope.artifacts.getFinalProduct(
-                    InternalArtifactType.AIDL_PARCELABLE
-                ),
-                prependToCopyPath(SdkConstants.FD_AIDL)
-            )
+
+            if (buildFeatures.aidl) {
+                task.from(
+                    variantScope.artifacts.getFinalProduct(
+                        InternalArtifactType.AIDL_PARCELABLE
+                    ),
+                    prependToCopyPath(SdkConstants.FD_AIDL)
+                )
+            }
+
             task.from(artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
-            if (variantScope.globalScope.extension.dataBinding.isEnabled) {
+
+            if (buildFeatures.dataBinding) {
                 task.from(
                     variantScope.globalScope.project.provider {
                         variantScope.artifacts.getFinalProduct(
@@ -156,10 +162,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 task.from(artifacts.getFinalProduct(
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
             }
-            task.from(
-                artifacts.getFinalProduct(InternalArtifactType.RENDERSCRIPT_HEADERS),
-                prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
-            )
+
+            if (buildFeatures.renderScript) {
+                task.from(
+                    artifacts.getFinalProduct(InternalArtifactType.RENDERSCRIPT_HEADERS),
+                    prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
+                )
+            }
+
             task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
             if (artifacts.hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
                 task.from(artifacts.getFinalProduct(

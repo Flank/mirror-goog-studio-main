@@ -7,8 +7,7 @@
     <mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
     <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
 
-    <merge from="root/settings.gradle.ftl"
-             to="${escapeXmlAttribute(topOut)}/settings.gradle" />
+    <addIncludeToSettings />
 
     <instantiate from="root/build.gradle.ftl"
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />

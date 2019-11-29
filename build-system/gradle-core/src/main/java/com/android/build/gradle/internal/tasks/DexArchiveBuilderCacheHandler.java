@@ -20,16 +20,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.builder.core.DexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.dx.Version;
-
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -39,6 +37,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -71,13 +70,14 @@ class DexArchiveBuilderCacheHandler {
             LoggerWrapper.getLogger(DexArchiveBuilderCacheHandler.class);
 
     // Increase this if we might have generated broken cache entries to invalidate them.
-    private static final int CACHE_KEY_VERSION = 4;
+    private static final int CACHE_KEY_VERSION = 5;
 
     @Nullable private final FileCache userLevelCache;
     private final boolean isDxNoOptimizeFlagPresent;
     private final int minSdkVersion;
     private final boolean isDebuggable;
     @NonNull private final DexerTool dexer;
+    @Nullable private String coreLibDesugarConfig;
     /**
      * A cache session to share between all cache access. We can do that because each {@link
      * DexArchiveBuilderCacheHandler} is used only by one DexArchiveBuilderTransform and all files
@@ -90,16 +90,37 @@ class DexArchiveBuilderCacheHandler {
             boolean isDxNoOptimizeFlagPresent,
             int minSdkVersion,
             boolean isDebuggable,
-            @NonNull DexerTool dexer) {
+            @NonNull DexerTool dexer,
+            @Nullable String coreLibDesugarConfig) {
         this.userLevelCache = userLevelCache;
         this.isDxNoOptimizeFlagPresent = isDxNoOptimizeFlagPresent;
         this.minSdkVersion = minSdkVersion;
         this.isDebuggable = isDebuggable;
         this.dexer = dexer;
+        this.coreLibDesugarConfig = coreLibDesugarConfig;
     }
 
     @Nullable
-    File getCachedVersionIfPresent(@NonNull File input, @NonNull List<Path> dependencies)
+    File getCachedDexIfPresent(
+            @NonNull File input, @NonNull List<Path> dependencies, boolean shrinkDesugarLibrary)
+            throws IOException {
+        return getCachedVersionIfPresent(input, dependencies, OutputType.DEX, shrinkDesugarLibrary);
+    }
+
+    @Nullable
+    File getCachedKeepRuleIfPresent(
+            @NonNull File input, @NonNull List<Path> dependencies, boolean shrinkDesugarLibrary)
+            throws IOException {
+        return getCachedVersionIfPresent(
+                input, dependencies, OutputType.KEEP_RULE, shrinkDesugarLibrary);
+    }
+
+    @Nullable
+    private File getCachedVersionIfPresent(
+            @NonNull File input,
+            @NonNull List<Path> dependencies,
+            @NonNull OutputType outputType,
+            boolean shrinkDesugarLibrary)
             throws IOException {
         FileCache cache = getBuildCache(input, userLevelCache);
 
@@ -115,13 +136,31 @@ class DexArchiveBuilderCacheHandler {
                         minSdkVersion,
                         isDebuggable,
                         dependencies,
+                        shrinkDesugarLibrary,
+                        outputType,
+                        coreLibDesugarConfig,
                         cacheSession);
         return cache.cacheEntryExists(buildCacheInputs)
                 ? cache.getFileInCache(buildCacheInputs)
                 : null;
     }
 
-    void populateCache(@NonNull Collection<CacheableItem> cacheableItems)
+    void populateDexCache(
+            @NonNull Collection<CacheableItem> cacheableItems, boolean shrinkDesugarLibrary)
+            throws IOException, ExecutionException {
+        populateCache(cacheableItems, OutputType.DEX, shrinkDesugarLibrary);
+    }
+
+    void populateKeepRuleCache(
+            @NonNull Collection<CacheableItem> cacheableItems, boolean shrinkDesugarLibrary)
+            throws IOException, ExecutionException {
+        populateCache(cacheableItems, OutputType.KEEP_RULE, shrinkDesugarLibrary);
+    }
+
+    private void populateCache(
+            @NonNull Collection<CacheableItem> cacheableItems,
+            @NonNull OutputType outputType,
+            boolean shrinkDesugarLibrary)
             throws IOException, ExecutionException {
 
         for (CacheableItem cacheableItem : cacheableItems) {
@@ -135,17 +174,48 @@ class DexArchiveBuilderCacheHandler {
                                 minSdkVersion,
                                 isDebuggable,
                                 cacheableItem.dependencies,
+                                shrinkDesugarLibrary,
+                                outputType,
+                                coreLibDesugarConfig,
                                 cacheSession);
-                FileCache.QueryResult result =
-                        cache.createFileInCacheIfAbsent(
-                                buildCacheInputs,
-                                in -> {
-                                    Collection<File> dexArchives = cacheableItem.cachable;
-                                    logger.verbose(
-                                            "Merging %1$s into %2$s",
-                                            Joiner.on(',').join(dexArchives), in.getAbsolutePath());
-                                    mergeJars(in, cacheableItem.cachable);
-                                });
+                FileCache.QueryResult result;
+                Collection<File> cachableOutputs = cacheableItem.cachable;
+
+                switch (outputType) {
+                    case DEX:
+                        result =
+                                cache.createFileInCacheIfAbsent(
+                                        buildCacheInputs,
+                                        out -> {
+                                            logger.verbose(
+                                                    "Merging %1$s into %2$s",
+                                                    Joiner.on(',').join(cachableOutputs),
+                                                    out.getAbsolutePath());
+                                            mergeJars(out, cachableOutputs);
+                                        });
+                        break;
+                    case KEEP_RULE:
+                        result =
+                                cache.createFileInCacheIfAbsent(
+                                        buildCacheInputs,
+                                        out -> {
+                                            FileUtils.cleanOutputDir(out);
+                                            logger.verbose(
+                                                    "Copying %1$s into %2$s",
+                                                    Joiner.on(',').join(cachableOutputs),
+                                                    out.getAbsolutePath());
+                                            for (File file : cachableOutputs) {
+                                                Files.copy(
+                                                        file.toPath(),
+                                                        out.toPath().resolve(file.getName()),
+                                                        StandardCopyOption.REPLACE_EXISTING);
+                                            }
+                                        });
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown dex output type");
+                }
+
                 if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
                     Verify.verifyNotNull(result.getCauseOfCorruption());
                     logger.lifecycle(
@@ -227,6 +297,24 @@ class DexArchiveBuilderCacheHandler {
 
         /** Additional dependency files. */
         EXTRA_DEPENDENCIES,
+
+        /** Whether we need to shrink desugar library. */
+        SHRINK_DESUGAR_LIBRARY,
+
+        /** Output type of dexing task. */
+        DEX_OUTPUT_TYPE,
+
+        /** Config for core library desugaring. */
+        CORE_LIB_DESUGAR_CONFIG,
+    }
+
+    /**
+     * Represents DexArchiveBuilderTask cacheable output types which can be either dex or keep_rule.
+     */
+    private enum OutputType {
+        DEX,
+
+        KEEP_RULE,
     }
 
     /**
@@ -241,6 +329,9 @@ class DexArchiveBuilderCacheHandler {
             int minSdkVersion,
             boolean isDebuggable,
             @NonNull List<Path> extraDependencies,
+            boolean shrinkDesugarLibrary,
+            OutputType outputType,
+            @Nullable String coreLibDesugarConfig,
             FileCache.CacheSession cacheSession)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
@@ -260,7 +351,15 @@ class DexArchiveBuilderCacheHandler {
                 .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name())
                 .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION)
                 .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion)
-                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable);
+                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable)
+                .putBoolean(
+                        FileCacheInputParams.SHRINK_DESUGAR_LIBRARY.name(), shrinkDesugarLibrary)
+                .putString(FileCacheInputParams.DEX_OUTPUT_TYPE.name(), outputType.name());
+
+        if (coreLibDesugarConfig != null) {
+            buildCacheInputs.putString(
+                    FileCacheInputParams.CORE_LIB_DESUGAR_CONFIG.name(), coreLibDesugarConfig);
+        }
 
         for (int i = 0; i < extraDependencies.size(); i++) {
             Path path = extraDependencies.get(i);

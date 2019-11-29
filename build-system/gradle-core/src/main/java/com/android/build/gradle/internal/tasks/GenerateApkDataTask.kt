@@ -20,6 +20,8 @@ import com.android.SdkConstants.DOT_ANDROID_PACKAGE
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_RES_RAW
 import com.android.SdkConstants.FD_RES_XML
+import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
@@ -52,6 +54,8 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
 
 /** Task to generate micro app data res file.  */
 abstract class GenerateApkDataTask : NonIncrementalTask() {
@@ -85,6 +89,9 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
     @get:Input
     abstract val mainPkgName: Property<String>
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
     override fun doTaskAction() {
         // always empty output dir.
@@ -149,7 +156,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         aapt2Executable: File
     ) {
 
-        val parser = ApkInfoParser(aapt2Executable, GradleProcessExecutor(project))
+        val parser = ApkInfoParser(aapt2Executable, GradleProcessExecutor(execOperations::exec))
         val apkInfo = parser.parseApk(apkFile)
 
         if (apkInfo.packageName != mainPkgName) {
@@ -209,9 +216,10 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         Files.asCharSink(manifestFile, Charsets.UTF_8).write(content)
     }
 
-    class CreationAction(
-        scope: VariantScope, private val apkFileCollection: FileCollection?
-    ) : VariantTaskCreationAction<GenerateApkDataTask>(scope) {
+    internal class CreationAction(
+        private val variantProperties: VariantPropertiesImpl,
+        private val apkFileCollection: FileCollection?
+    ) : VariantTaskCreationAction<GenerateApkDataTask>(variantProperties.variantScope) {
 
         override val name: String = variantScope.getTaskName("handle", "MicroApk")
 
@@ -244,9 +252,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             task.manifestFile.set(scope.microApkManifestFile)
             task.manifestFile.disallowChanges()
 
-            task.mainPkgName
-                .set(scope.globalScope.project.provider(variantConfiguration::getApplicationId))
-            task.mainPkgName.disallowChanges()
+            task.mainPkgName.setDisallowChanges(variantProperties.applicationId)
 
             task.minSdkVersion.setDisallowChanges(variantConfiguration.minSdkVersion.apiLevel)
 

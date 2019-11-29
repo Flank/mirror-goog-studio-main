@@ -38,41 +38,60 @@ class VariantApiCustomizationTest {
 abstract class CustomTask extends DefaultTask {
 
     String versionCode
+    String versionName
 
     @Input
     String getVersionCode() { return versionCode }
     void setVersionCode(String value) { versionCode = value }
 
+    @Input
+    String getVersionName() { return versionName }
+    void setVersionName(String value) { versionName = value }
+
     @OutputFile
-    abstract RegularFileProperty getOutputFile()
+    abstract RegularFileProperty getVersionCodeOutputFile()
+
+    @OutputFile
+    abstract RegularFileProperty getVersionNameOutputFile()
 
     @TaskAction
-    public void provideVersionCode() {
-      System.out.println("Custom Task invoked, writing at " + getOutputFile().getAsFile().get().getAbsolutePath())
-      FileWriter fw = new FileWriter(getOutputFile().getAsFile().get())
-      fw.write(versionCode)
-      fw.close()
+    public void run() {
+        FileWriter versionCodeWriter = new FileWriter(getVersionCodeOutputFile().getAsFile().get())
+        versionCodeWriter.write(versionCode)
+        versionCodeWriter.close()
+      
+        FileWriter versionNameWriter = new FileWriter(getVersionNameOutputFile().getAsFile().get())
+        versionNameWriter.write(versionName)
+        versionNameWriter.close()
     }
 }
 
 
 android {
-    onVariantsProperties { variantProperties ->
-        TaskProvider customTaskProvider = tasks.register(variantProperties.name + "CustomTask", CustomTask.class) {
+    onVariantProperties {  
+        TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class) {
             task ->
                 task.setVersionCode("123")
-                task.getOutputFile().set(new File("/tmp/versionCode.txt"))
+                task.setVersionName("foo")
+                task.getVersionCodeOutputFile().set(new File("/tmp/versionCode.txt"))
+                task.getVersionNameOutputFile().set(new File("/tmp/versionName.txt"))
         }
-        variantProperties.outputs[0].getVersionCode().set(customTaskProvider.map {
-          task ->
-            FileReader fr = new FileReader(task.getOutputFile().getAsFile().get())
-            String value = fr.readLine()
-            fr.close()
-            return Integer.parseInt(value);
+        outputs[0].getVersionCode().set(customTaskProvider.map {
+            task ->
+                FileReader fr = new FileReader(task.getVersionCodeOutputFile().getAsFile().get())
+                String value = fr.readLine()
+                fr.close()
+                return Integer.parseInt(value);
+        })
+        outputs[0].getVersionName().set(customTaskProvider.map {
+            task ->
+                FileReader fr = new FileReader(task.getVersionNameOutputFile().getAsFile().get())
+                String value = fr.readLine()
+                fr.close()
+                return value;
         })
     }
-}
-        """.trimIndent())
+}""")
 
     @JvmField
     @Rule
@@ -84,8 +103,7 @@ android {
         ).create()
 
     @Test
-    fun setCustomVersionCode() {
-
+    fun setValuesViaVariantApi() {
         assertNotNull(project)
         project.execute("clean", "assembleDebug")
         val appProject = project.getSubproject(":app")
@@ -93,5 +111,6 @@ android {
         val manifestFile = File(appProject.buildDir, "intermediates/merged_manifests/debug/AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).exists()
         assertThat(manifestFile.readText()).contains("android:versionCode=\"123\"")
+        assertThat(manifestFile.readText()).contains("android:versionName=\"foo\"")
     }
 }

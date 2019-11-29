@@ -24,5 +24,6 @@
     <instantiate from="root/src/app_package/FullscreenActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 </recipe>

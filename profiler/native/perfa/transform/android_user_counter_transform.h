@@ -35,10 +35,11 @@ class AndroidUserCounterTransform : public Transform {
         ir::MethodId("Lcom/android/tools/profiler/support/profilers/"
                      "CustomEventProfiler;",
                      "onRecordEventEnter"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "recordEvent",
                                           "(Ljava/lang/String;I)V"))) {
-      Log::E("Error instrumenting EventProfiler.recordEvent");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting EventProfiler.recordEvent");
     }
   }
 };

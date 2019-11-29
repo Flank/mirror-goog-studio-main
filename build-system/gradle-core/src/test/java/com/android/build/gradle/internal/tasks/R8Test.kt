@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
+import com.android.build.gradle.internal.transforms.testdata.ClassWithDesugarApi
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
@@ -34,6 +35,7 @@ import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.RegularFile
 import org.junit.Assume
@@ -569,6 +571,32 @@ class R8Test(val r8OutputType: R8OutputType) {
         }
     }
 
+    @Test
+    fun testKeepRulesGeneration() {
+        Assume.assumeTrue(r8OutputType == R8OutputType.DEX)
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        TestInputsGenerator.pathWithClasses(
+            classes,
+            ImmutableList.of<Class<*>>(ClassWithDesugarApi::class.java)
+        )
+        val libConfiguration =  TestUtils.getDesugarLibConfigContentWithVersion("0.8.0")
+        val outputKeepRulesDir = tmp.newFolder()
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            disableMinification = false,
+            java8Support = VariantScope.Java8LangSupport.R8,
+            r8Keep = "class " + ClassWithDesugarApi::class.java.name + "{*;}",
+            libConfiguration = libConfiguration,
+            outputKeepRulesDir = outputKeepRulesDir
+        )
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
+        FileSubject.assertThat(outputKeepRulesDir.resolve("output")).contains(expectedKeepRules)
+
+    }
+
     private fun getDex(): Dex {
         val dexFiles = Files.walk(outputDir).filter { it.toString().endsWith(".dex") }.toList()
         return Dex(dexFiles.single())
@@ -603,7 +631,9 @@ class R8Test(val r8OutputType: R8OutputType) {
         r8Keep: String? = null,
         referencedInputs: List<File> = listOf(),
         featureJars: List<File> = listOf(),
-        featureDexDir: File? = null
+        featureDexDir: File? = null,
+        libConfiguration: String? = null,
+        outputKeepRulesDir: File? = null
     ) {
         val proguardConfigurations: MutableList<String> = mutableListOf(
             "-ignorewarnings")
@@ -655,7 +685,11 @@ class R8Test(val r8OutputType: R8OutputType) {
             outputResources = outputDir.resolve("java_res.jar").toFile(),
             mainDexListOutput = null,
             featureJars = featureJars,
-            featureDexDir = featureDexDir
+            featureDexDir = featureDexDir,
+            libConfiguration = libConfiguration,
+            outputKeepRulesDir = outputKeepRulesDir
         )
     }
+
+    private val lineSeparator: String = System.lineSeparator()
 }

@@ -26,7 +26,7 @@ class MinimalSubProject private constructor(val plugin: String, val packageName:
 
     init {
         var content = "\napply plugin: '$plugin'\n"
-        if (plugin != "java-library" && plugin != "com.android.instantapp") {
+        if (plugin != "java-library") {
             content += "\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n" +
                     "\nandroid.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK\n"
             val manifest = TestSourceFile(
@@ -81,10 +81,6 @@ class MinimalSubProject private constructor(val plugin: String, val packageName:
 
         fun dynamicFeature(packageName: String): MinimalSubProject {
             return MinimalSubProject("com.android.dynamic-feature", packageName)
-        }
-
-        fun instantApp(): MinimalSubProject {
-            return MinimalSubProject("com.android.instantapp", null)
         }
 
         fun test(packageName: String): MinimalSubProject {

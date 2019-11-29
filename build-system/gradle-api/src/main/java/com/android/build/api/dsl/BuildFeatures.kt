@@ -24,25 +24,110 @@ import org.gradle.api.Incubating
 @Incubating
 interface BuildFeatures {
     /**
-     * Flag to enable Compose feature.
-     * Setting the value to null resets to the default value
+     * Flag to enable AIDL compilation.
      *
-     * Default value is false.
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.aidl=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var aidl: Boolean?
+
+    /**
+     * Flag to enable Compose feature.
+     * Setting the value to `null` resets to the default value
+     *
+     * Default value is `false`.
      *
      * More information available about this feature at: TBD
      **/
     var compose: Boolean?
 
     /**
-     * Flag to enable/disable generation of the BuildConfig class.
+     * Flag to enable/disable generation of the `BuildConfig` class.
      *
-     * Setting the value to null resets to the default value.
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
      *
-     * The default value can be set with the gradle property android.defaults.buildfeatures.buildconfig
-     * This affects all modules.
-     * Default value is true
+     * You can override the default for this for all projects in your build by adding the line
+     *     android.defaults.buildfeatures.buildconfig=true
+     * in the gradle.properties file at the root project of your build.
      *
      * More information about this feature at: TBD
      */
     var buildConfig: Boolean?
+
+    /**
+     * Flag to enable Data Binding.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `false`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.databinding=true`
+     * in the `gradle.properties` file at the root project of your build.
+     *
+     * More information about this feature at: TBD
+     */
+    var dataBinding: Boolean?
+
+    /**
+     * Flag to enable RenderScript compilation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.renderscript=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var renderScript: Boolean?
+
+    /**
+     * Flag to enable Resource Values generation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.resvalues=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var resValues: Boolean?
+
+    /**
+     * Flag to enable Shader compilation.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `true`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.shaders=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var shaders: Boolean?
+
+    /**
+     * Flag to enable View Binding.
+     *
+     * Setting the value to `null` resets to the default value.
+     * Default value is `false`.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.viewbinding=true`
+     * in the gradle.properties file at the root project of your build.
+
+     * More information about this feature at: TBD
+     */
+    var viewBinding: Boolean?
 }

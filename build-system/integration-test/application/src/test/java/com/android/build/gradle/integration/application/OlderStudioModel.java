@@ -25,7 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/** Tests for incremental dexing using dex archives. */
+/** Test things fail in the correct way when trying to sync from Studio before 3.0 */
 public class OlderStudioModel {
 
     public static final String THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_3_0_MINIMUM =

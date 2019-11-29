@@ -50,6 +50,7 @@ kotlin_library(
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.manifest-merger",
+        "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
@@ -143,15 +144,15 @@ kotlin_test(
     ],
     # TODO: Remove the blacklist, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
-    deps = [
+    # Specify gradle-api jar first, as kotlin-daemon-client contains older net.rubygrapefruit.platform classes
+    deps = ["//tools/base/build-system:gradle-api"] + [
         ":gradle-core",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.1:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.5.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.60-eap-25:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.8.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.61:jar",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apkzlib",
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",

@@ -18,15 +18,29 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.resources.Density;
+import com.google.common.collect.Sets;
+import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 
 /** DSL object for the defaultConfig object. */
 @SuppressWarnings({"WeakerAccess", "unused"}) // Exposed in the DSL.
-public class DefaultConfig extends BaseFlavor {
+public class DefaultConfig extends BaseFlavor implements com.android.build.api.dsl.DefaultConfig {
     @Inject
     public DefaultConfig(
             @NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
         super(name, project, dslScope);
+        setDefaultConfigValues();
+    }
+
+    private void setDefaultConfigValues() {
+        Set<Density> densities = Density.getRecommendedValuesForDevice();
+        Set<String> strings = Sets.newHashSetWithExpectedSize(densities.size());
+        for (Density density : densities) {
+            strings.add(density.getResourceValue());
+        }
+        getVectorDrawables().setGeneratedDensities(strings);
+        getVectorDrawables().setUseSupportLibrary(false);
     }
 }

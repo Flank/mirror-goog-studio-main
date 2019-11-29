@@ -46,16 +46,16 @@ public class TestWithJavaLibDepTest {
 "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n" +
 "}\n");
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-"\ndependencies {\n" +
-"    compile 'com.google.guava:guava:18.0'\n" +
-"    androidTestCompile project(':jar')\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\ndependencies {\n"
+                        + "    api 'com.google.guava:guava:18.0'\n"
+                        + "    androidTestImplementation project(':jar')\n"
+                        + "}\n");
 
-        appendToFile(project.getSubproject("jar").getBuildFile(),
-"\ndependencies {\n" +
-"    compile 'com.google.guava:guava:18.0'\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("jar").getBuildFile(),
+                "\ndependencies {\n" + "    api 'com.google.guava:guava:18.0'\n" + "}\n");
 
     }
 

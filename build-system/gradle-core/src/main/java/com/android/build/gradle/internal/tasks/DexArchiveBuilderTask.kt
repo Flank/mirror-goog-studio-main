@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
@@ -124,6 +125,13 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     abstract val dxDexParams: DxDexParameterInputs
 
     @get:Input
+    abstract val incrementalDesugaringV2: Property<Boolean>
+
+    @get:LocalState
+    @get:Optional
+    abstract val desugarGraphDir: DirectoryProperty
+
+    @get:Input
     abstract val projectVariant: Property<String>
 
     @get:LocalState
@@ -143,7 +151,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     private lateinit var messageReceiver: MessageReceiver
 
     override fun doTaskAction(inputChanges: InputChanges) {
-
         DexArchiveBuilderTaskDelegate(
             isIncremental = inputChanges.isIncremental,
 
@@ -168,10 +175,13 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             dexParams = dexParams.toDexParameters(),
             dxDexParams = dxDexParams.toDxDexParameters(),
 
-            desugaringClasspathChangedClasses = getChanged(
+            desugarClasspathChangedClasses = getChanged(
                 inputChanges,
                 dexParams.desugarClasspath
             ),
+
+            incrementalDesugaringV2 = incrementalDesugaringV2.get(),
+            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { incrementalDesugaringV2.get() },
 
             projectVariant = projectVariant.get(),
             inputJarHashesFile = inputJarHashesFile.get().asFile,
@@ -319,6 +329,11 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.DESUGAR_GRAPH,
+                taskProvider,
+                DexArchiveBuilderTask::desugarGraphDir
+            )
             if (variantScope.needsShrinkDesugarLibrary) {
                 variantScope.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
@@ -352,6 +367,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.subProjectClasses.from(subProjectsClasses)
             task.externalLibClasses.from(externalLibraryClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
+
+            // Incremental desugaring V2 is not yet supported (work in progress)
+            task.incrementalDesugaringV2.setDisallowChanges(
+                variantScope.globalScope.project.provider { false })
 
             val minSdkVersion = variantScope
                 .variantConfiguration

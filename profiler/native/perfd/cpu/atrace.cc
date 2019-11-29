@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <sstream>
 
 #include "proto/profiler.grpc.pb.h"
@@ -78,7 +79,7 @@ void Atrace::WriteClockSyncMarker() {
   bool debugfs = access((debugfs_path + trace_file).c_str(), F_OK) != -1;
 
   if (!tracefs && !debugfs) {
-    Log::E("Atrace: Did not find trace folder");
+    Log::E(Log::Tag::PROFILER, "Atrace: Did not find trace folder");
     return;
   }
 
@@ -93,8 +94,8 @@ void Atrace::WriteClockSyncMarker() {
   int len = 0;
   int fd = open((write_path).c_str(), O_WRONLY);
   if (fd == -1) {
-    Log::E("Atrace: error opening %s: %s (%d)", write_path.c_str(),
-           strerror(errno), errno);
+    Log::E(Log::Tag::PROFILER, "Atrace: error opening %s: %s (%d)",
+           write_path.c_str(), strerror(errno), errno);
     return;
   }
   float now_in_seconds = clock_->GetCurrentTime() / 1000000000.0f;
@@ -103,7 +104,8 @@ void Atrace::WriteClockSyncMarker() {
   len = snprintf(buffer, 128, "trace_event_clock_sync: parent_ts=%f\n",
                  now_in_seconds);
   if (write(fd, buffer, len) != len) {
-    Log::E("Atrace: error writing clock sync marker %s (%d)", strerror(errno),
+    Log::E(Log::Tag::PROFILER,
+           "Atrace: error writing clock sync marker %s (%d)", strerror(errno),
            errno);
   }
   close(fd);

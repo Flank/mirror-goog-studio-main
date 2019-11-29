@@ -18,16 +18,22 @@ package com.android.tools.idea.wizard.template.impl
 
 import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
-import com.android.tools.idea.wizard.template.impl.basicActivity.basicActivityTemplate
-import com.android.tools.idea.wizard.template.impl.emptyActivity.emptyActivityTemplate
-import com.android.tools.idea.wizard.template.impl.loginActivity.loginActivityTemplate
-import com.android.tools.idea.wizard.template.impl.tabbedActivity.tabbedActivityTemplate
-import com.android.tools.idea.wizard.template.impl.viewModelActivity.viewModelActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basicActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scrollActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.settingsActivity.settingsActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.tabbedActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.viewModelActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blankFragmentTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
  */
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
-    basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate)
+    basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
+    fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerTemplate, blankFragmentTemplate)
 }

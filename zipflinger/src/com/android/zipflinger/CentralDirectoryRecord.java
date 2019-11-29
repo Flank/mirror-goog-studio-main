@@ -25,6 +25,12 @@ class CentralDirectoryRecord {
     public static final int DATA_DESCRIPTOR_FLAG = 0x0008;
     public static final int DATA_DESCRIPTOR_SIGNATURE = 0x08074b50;
 
+    // JDK 9 consider time&data field with value 0 as invalid. Use 1 instead.
+    // These are in MS-DOS 16-bit format. For actual specs, see:
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms724247(v=vs.85).aspx
+    public static final short DEFAULT_TIME = 1 | 1 << 5 | 1 << 11;
+    public static final short DEFAULT_DATE = 1 | 1 << 5 | 1 << 9;
+
     private final byte[] nameBytes;
     private final int crc;
     private final long compressedSize;
@@ -57,8 +63,8 @@ class CentralDirectoryRecord {
         buf.putShort((short) 0); // version needed
         buf.putShort((short) 0); // flag
         buf.putShort(compressionFlag);
-        buf.putShort((short) 0); // time
-        buf.putShort((short) 0); // date
+        buf.putShort(DEFAULT_TIME);
+        buf.putShort(DEFAULT_DATE);
         buf.putInt(crc);
         buf.putInt(Ints.longToUint(compressedSize));
         buf.putInt(Ints.longToUint(uncompressedSize));

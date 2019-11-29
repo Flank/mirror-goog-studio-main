@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_jar", "kotlin_library", "kotlin_test")
 load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 
 #keep sorted
@@ -90,7 +90,6 @@ gradle_integration_test(
     #keep sorted
     tags = [
         "no_test_mac_psq",  # b/113099009
-        "no_test_windows",  #
     ],
     deps = TEST_DEPS,
 )
@@ -112,36 +111,6 @@ gradle_integration_test(
     #keep sorted
     tags = [
         "no_test_mac",  # b/69151132
-    ],
-    deps = TEST_DEPS,
-)
-
-# Tests against the Gradle nightly version.
-gradle_integration_test(
-    name = "test-nightly",
-    srcs = glob(
-        [
-            "src/testNightly/java/**/*.java",
-            "src/testNightly/java/**/*.kt",
-        ],
-    ),
-    data = TEST_DATA + [
-        "//prebuilts/studio/sdk:ndk-bundle",
-    ],
-    dirs = ["src/testNightly/java"],
-    #keep sorted
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test:androidx_latest",
-        "//tools/base/build-system/integration-test:support_library_latest",
-        "//tools/base/build-system/integration-test/application:prebuilts",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
-    ],
-    resources = glob(["src/testNightly/resources/**"]),
-    #keep sorted
-    tags = [
-        "no_test_mac_psq",  # b/113099009
-        "no_test_windows",  #
     ],
     deps = TEST_DEPS,
 )
@@ -172,8 +141,48 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-common/1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-fragment/1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-runtime/1.0.0:aar",
-        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-compiler/0.1.0-dev02:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/activity/activity/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/appcompat/appcompat-resources/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/appcompat/appcompat/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/arch/core/core-common/2.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/collection/collection/1.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-compiler/0.1.0-dev03:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-runtime/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/core/core-ktx/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core/1.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/core/core/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/dynamicanimation/dynamicanimation/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/fragment/fragment/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-common/2.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-runtime/2.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-viewmodel/2.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/navigation/navigation-common/2.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/navigation/navigation-fragment/2.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/navigation/navigation-runtime/2.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/savedstate/savedstate/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/core/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-core/3.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-idling-resource/3.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/ext/junit/1.1.1:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/rules/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-android-text/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-animation-core/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-animation/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-core/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-foundation/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-framework/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-layout/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-material/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-platform/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-text/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-tooling/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-vector/0.1.0-dev03:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable-animated/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/versionedparcelable/versionedparcelable/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/backport-util-concurrent/backport-util-concurrent/3.1:jar",
         "//prebuilts/tools/common/m2/repository/classworlds/classworlds/1.1-alpha-2:jar",
         "//prebuilts/tools/common/m2/repository/com/almworks/sqlite4java/sqlite4java/0.282:jar",
@@ -221,8 +230,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/test/services/test-services/1.0.0:apk",
         "//prebuilts/tools/common/m2/repository/com/android/support/transition/27.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.1:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.5.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.8.0:jar",
         "//prebuilts/tools/common/m2/repository/com/artemzin/rxjava/proguard-rules/1.1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/com/braintreepayments/api/braintree/2.3.12:aar",
         "//prebuilts/tools/common/m2/repository/com/braintreepayments/api/core/2.3.12:aar",
@@ -339,6 +348,9 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-android-aar/1.2.3:aar",
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.2:jar",
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.3.61-dev-withExperimentalGoogleExtensions-20191127:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.3.0:jar",
         "//prebuilts/tools/common/m2/repository/org/json/json/20141113:jar",
         "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.7.3:jar",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/1.9.5:jar",

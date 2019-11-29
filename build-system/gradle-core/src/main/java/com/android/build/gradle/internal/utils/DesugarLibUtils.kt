@@ -109,7 +109,7 @@ private fun initDesugarLibConfigurations(project: Project) {
         mapOf(
             "group" to "com.android.tools",
             "name" to "desugar_jdk_libs",
-            "version" to "1.0.1"
+            "version" to "1.0.2"
         )
     )
 
@@ -125,7 +125,7 @@ private fun initDesugarLibConfigurations(project: Project) {
         mapOf(
             "group" to "com.android.tools",
             "name" to "desugar_jdk_libs_configuration",
-            "version" to "0.5.0"
+            "version" to "0.8.0"
         )
     )
 }

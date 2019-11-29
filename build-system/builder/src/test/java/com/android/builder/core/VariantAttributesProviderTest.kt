@@ -16,18 +16,17 @@
 
 package com.android.builder.core
 
-import com.android.builder.errors.EvalIssueReporter
-import com.google.common.truth.Truth.assertThat
-import org.mockito.Mockito.`when`
-
 import com.android.testutils.TestResources
-import java.io.File
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
+import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
+import java.io.File
 
+@Suppress("DEPRECATION")
 class VariantAttributesProviderTest {
 
     companion object {
@@ -43,9 +42,9 @@ class VariantAttributesProviderTest {
 
     private lateinit var manifestFile: File
 
-    private lateinit var mergedFlavor: DefaultProductFlavor
+    private lateinit var mergedFlavor: AbstractProductFlavor
 
-    private lateinit var buildType: DefaultBuildType
+    private lateinit var buildType: AbstractBuildType
 
     private var isTestVariant: Boolean = false
 
@@ -61,8 +60,8 @@ class VariantAttributesProviderTest {
     @Before
     @Throws(Exception::class)
     fun before() {
-        mergedFlavor = DefaultProductFlavor("flavor")
-        buildType = DefaultBuildType("debug")
+        mergedFlavor = ProductFlavorImpl("flavor")
+        buildType = BuildTypeImpl("debug")
         `when`(manifestSupplier.`package`).thenReturn(PACKAGE_NAME)
         manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml")
     }
@@ -151,33 +150,33 @@ class VariantAttributesProviderTest {
     fun testVersionNameFromFlavorWithSuffix() {
         mergedFlavor.versionName = "1.0"
         buildType.versionNameSuffix = "-DEBUG"
-        assertThat(provider.versionName).isEqualTo("1.0-DEBUG")
+        assertThat(provider.getVersionName()).isEqualTo("1.0-DEBUG")
     }
 
     @Test
     fun testVersionNameWithSuffixOnly() {
         buildType.versionNameSuffix = "-DEBUG"
 
-        assertThat(provider.versionName).isEqualTo("-DEBUG")
+        assertThat(provider.getVersionName()).isEqualTo("-DEBUG")
     }
 
     @Test
     fun testVersionNameFromManifest() {
         `when`(manifestSupplier.versionName).thenReturn("MANIFEST")
-        assertThat(provider.versionName).isEqualTo("MANIFEST")
+        assertThat(provider.getVersionName()).isEqualTo("MANIFEST")
     }
 
     @Test
     fun testVersionCodeFromManifest() {
         `when`(manifestSupplier.versionCode).thenReturn(34)
-        assertThat(provider.versionCode).isEqualTo(34)
+        assertThat(provider.getVersionCode()).isEqualTo(34)
     }
 
     @Test
     fun testVersionCodeFromFlavor() {
         mergedFlavor.versionCode = 32
 
-        assertThat(provider.versionCode).isEqualTo(32)
+        assertThat(provider.getVersionCode()).isEqualTo(32)
     }
 
     @Test
@@ -201,7 +200,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testFunctionalTestFromFlavor() {
-        mergedFlavor.testFunctionalTest = true
+        mergedFlavor.setTestFunctionalTest(true)
         assertThat(provider.functionalTest).isEqualTo(true)
     }
 
@@ -213,7 +212,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testHandleProfilingFromFlavor() {
-        mergedFlavor.testHandleProfiling = true
+        mergedFlavor.setTestHandleProfiling(true)
 
         assertThat(provider.handleProfiling).isEqualTo(true)
     }
@@ -238,4 +237,8 @@ class VariantAttributesProviderTest {
 
         assertThat(provider.targetPackage).isEqualTo("target.package")
     }
+
+    // class to instantiate BT/PF for tests
+    private class BuildTypeImpl(name: String) : AbstractBuildType(name)
+    private class ProductFlavorImpl(name: String) : AbstractProductFlavor(name)
 }

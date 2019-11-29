@@ -38,7 +38,7 @@ class ViewBindingBasicTest {
     fun setUp() {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,
-            "android.viewBinding.enabled = true"
+            "android.buildFeatures.viewBinding = true"
         )
     }
 

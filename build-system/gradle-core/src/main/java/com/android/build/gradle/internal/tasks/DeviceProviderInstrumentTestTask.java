@@ -38,17 +38,17 @@ import com.android.build.gradle.internal.test.InstrumentationTestAnalytics;
 import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
+import com.android.build.gradle.internal.testing.OnDeviceOrchestratorTestRunner;
+import com.android.build.gradle.internal.testing.ShardedTestRunner;
+import com.android.build.gradle.internal.testing.SimpleTestRunnable;
+import com.android.build.gradle.internal.testing.SimpleTestRunner;
+import com.android.build.gradle.internal.testing.TestRunner;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.internal.testing.SimpleTestRunnable;
 import com.android.builder.model.TestOptions;
-import com.android.builder.testing.OnDeviceOrchestratorTestRunner;
-import com.android.builder.testing.ShardedTestRunner;
-import com.android.builder.testing.SimpleTestRunner;
-import com.android.builder.testing.TestRunner;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.ide.common.process.ProcessExecutor;
@@ -92,6 +92,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
+import org.gradle.process.ExecOperations;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
@@ -122,6 +123,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     private boolean codeCoverageEnabled;
     private TestOptions.Execution testExecution;
     private Configuration dependencies;
+    @NonNull private final ExecOperations execOperations;
 
     /**
      * The workers object is of type ExecutorServiceAdapter instead of WorkerExecutorFacade to
@@ -137,8 +139,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @Nullable private Collection<String> installOptions;
 
     @Inject
-    public DeviceProviderInstrumentTestTask(ObjectFactory objectFactory) {
+    public DeviceProviderInstrumentTestTask(
+            ObjectFactory objectFactory, @NonNull ExecOperations execOperations) {
         coverageDir = objectFactory.directoryProperty();
+        this.execOperations = execOperations;
     }
 
     @Override
@@ -181,7 +185,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
-            GradleProcessExecutor gradleProcessExecutor = new GradleProcessExecutor(getProject());
+            GradleProcessExecutor gradleProcessExecutor =
+                    new GradleProcessExecutor(execOperations::exec);
             success =
                     deviceProvider.use(
                             () -> {

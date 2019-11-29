@@ -17,6 +17,7 @@ package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.DecimalUtils.trimInsignificantZeros;
+import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -206,9 +207,9 @@ class VdPath extends VdElement {
                 @NonNull Point2D.Float currentPoint,
                 @NonNull Point2D.Float currentSegmentStartPoint,
                 char previousType) {
-            // For horizontal and vertical lines, we have to convert to LineTo with 2 parameters
+            // For horizontal and vertical lines, we have to convert to LineTo with 2 parameters.
             // And for arcTo, we also need to isolate the parameters for transformation.
-            // Therefore a looping will be necessary for such commands.
+            // Therefore looping will be necessary for such commands.
             //
             // Note that if the matrix is translation only, then we can save many computations.
             int paramsLen = mParams.length;
@@ -229,6 +230,9 @@ class VdPath extends VdElement {
                     break;
 
                 case 'M':
+                    currentSegmentStartX = mParams[0];
+                    currentSegmentStartY = mParams[1];
+                    //noinspection fallthrough
                 case 'L':
                 case 'T':
                 case 'C':
@@ -236,10 +240,6 @@ class VdPath extends VdElement {
                 case 'Q':
                     currentX = mParams[paramsLen - 2];
                     currentY = mParams[paramsLen - 1];
-                    if (mType == 'M') {
-                        currentSegmentStartX = currentX;
-                        currentSegmentStartY = currentY;
-                    }
 
                     totalTransform.transform(mParams, 0, mParams, 0, paramsLen / 2);
                     break;
@@ -292,7 +292,7 @@ class VdPath extends VdElement {
                 case 'c':
                 case 's':
                 case 'q':
-                    for (int i = 0; i < paramsLen; i += step) {
+                    for (int i = 0; i < paramsLen - step + 1; i += step) {
                         currentX += mParams[i + step - 2];
                         currentY += mParams[i + step - 1];
                     }
@@ -353,7 +353,7 @@ class VdPath extends VdElement {
                     break;
 
                 case 'A':
-                    for (int i = 0; i < paramsLen; i += step) {
+                    for (int i = 0; i < paramsLen - step + 1; i += step) {
                         // (0:rx 1:ry 2:x-axis-rotation 3:large-arc-flag 4:sweep-flag 5:x 6:y)
                         // [0, 1, 2]
                         if (!isTranslationOnly(totalTransform)) {
@@ -378,7 +378,7 @@ class VdPath extends VdElement {
                     break;
 
                 case 'a':
-                    for (int i = 0; i < paramsLen; i += step) {
+                    for (int i = 0; i < paramsLen - step + 1; i += step) {
                         float oldCurrentX = currentX;
                         float oldCurrentY = currentY;
 
@@ -441,6 +441,19 @@ class VdPath extends VdElement {
             for (int i = 0; i < paramsLen; i++) {
                 coordinates[i + offset] = (float) doubleArray[i];
             }
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            StringBuilder result = new StringBuilder();
+            result.append(mType);
+            int i = 0;
+            for (float param : this.mParams) {
+                result.append(i++ % 2 == 0 ? ' ' : ',');
+                result.append(formatFloatValue(param));
+            }
+            return result.toString();
         }
     }
 

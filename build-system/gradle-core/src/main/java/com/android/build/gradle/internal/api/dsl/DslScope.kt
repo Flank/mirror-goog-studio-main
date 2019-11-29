@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ProviderFactory
 
 /**
  * Scope of the DSL objects.
@@ -43,4 +44,6 @@ interface DslScope {
     val logger: Logger
 
     val buildFeatures: BuildFeatureValues
+
+    val providerFactory: ProviderFactory
 }

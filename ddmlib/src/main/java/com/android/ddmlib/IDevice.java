@@ -307,6 +307,13 @@ public interface IDevice extends IShellEnabledDevice {
     Client getClient(String applicationName);
 
     /**
+     * Force stop an application by its application name.
+     *
+     * @param applicationName the name of the application
+     */
+    default void forceStop(String applicationName) {}
+
+    /**
      * Returns a {@link SyncService} object to push / pull files to and from the device.
      *
      * @return <code>null</code> if the SyncService couldn't be created. This can happen if adb

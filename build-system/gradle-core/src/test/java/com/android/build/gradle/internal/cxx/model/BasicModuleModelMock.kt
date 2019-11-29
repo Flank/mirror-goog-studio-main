@@ -20,16 +20,18 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
+import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CmakeOptions
-import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
@@ -41,13 +43,11 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.model.ProductFlavor
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.gradle.api.invocation.Gradle
 import org.mockito.Mockito
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
@@ -205,12 +205,12 @@ open class BasicModuleModelMock {
             Splits::class.java,
             throwUnmocked
         )
-        val coreBuildType = mock(
-            CoreBuildType::class.java,
+        val buildType = mock(
+            BuildType::class.java,
             throwUnmocked
         )
-        val productFlavor = mock(
-            ProductFlavor::class.java,
+        val mergedFlavor = mock(
+            MergedFlavor::class.java,
             throwUnmocked
         )
 
@@ -223,22 +223,22 @@ open class BasicModuleModelMock {
         doReturn(extension).`when`(global).extension
 
         doReturn(extension).`when`(global).extension
-        doReturn(externalNativeBuild).`when`(extension).getExternalNativeBuild()
-        doReturn(false).`when`(extension).getGeneratePureSplits()
+        doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
+        doReturn(false).`when`(extension).generatePureSplits
 
-        doReturn(splits).`when`(extension).getSplits()
+        doReturn(splits).`when`(extension).splits
 
         doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
         doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
             .externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
-        doReturn(coreBuildType).`when`(gradleVariantConfiguration).buildType
-        doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
+        doReturn(buildType).`when`(gradleVariantConfiguration).buildType
+        doReturn(mergedFlavor).`when`(gradleVariantConfiguration).mergedFlavor
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(true).`when`(coreBuildType).isDebuggable
-        doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
+        doReturn(true).`when`(buildType).isDebuggable
+        doReturn(minSdkVersion).`when`(mergedFlavor).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }
@@ -307,7 +307,6 @@ open class BasicModuleModelMock {
 
         val ndkInfo = NdkR19Info(ndkFolder)
         doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
-        doNothing().`when`(ndkHandler).writeNdkLocatorRecord(any())
         doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
         doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(join(sdkDir, "cmake", defaultCmakeVersion.toString())).`when`(cmakeFinder)

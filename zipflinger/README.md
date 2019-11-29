@@ -31,17 +31,18 @@ The library is made of four components named ZipArchive, Freestore, Mapper (Inpu
 
 Design choice discussion:
 
-In order to avoid creating holes when editing an archive, zipflinger recommends (but does not enforce) submitting all delete operations first and then submit add operations. A "deferred add" mechanism was initially used where
-delete operations were carried immediately but additions were deferred until the archive was closed.
-This approach was ultimately abandoned since it increased the memory footprint significantly when 
-BytesSource were involved.
+In order to avoid creating holes when editing an archive, zipflinger recommends (but does not enforce)
+submitting all delete operations first and then submit add operations. A "deferred add" mechanism was
+initially used where delete operations were carried immediately but additions were deferred until the
+archive was closed. This approach was ultimately abandoned since it increased the memory footprint
+significantly when BytesSource were involved.
 
 ## ZipArchive
 ZipArchive is the interface to the users of the library. This is where an archive is created and/or
 modified. Typically an user will provide the path to an archive and request operations such as
 add/delete.
 
-In the code sample below, an Android APK is "incrementally" updated. The AAPT2 output (recognizable 
+In the code sample below, an Android APK is "incrementally" updated. The AAPT2 output (recognizable
 to its file extension .apk_) is opened. Since the archive exists, it will be modified. Had it not
 existed, the archive would have been create. Two operations are requested:
 
@@ -67,8 +68,8 @@ Such an operation can be performed by Zipflinger in under 100 ms with a mid-rang
 
 If an entry has been deleted
 in the middle of the archive, Zipflinger will not leaves a "hole" there. This is done in order to be
-compatible with top-down parsers such as jarsigner or the JDK zip classes. To this effect, 
-Zipflinger fills empty space with virtual entries (a.k.a a Local File Header with no name, up to 
+compatible with top-down parsers such as jarsigner or the JDK zip classes. To this effect,
+Zipflinger fills empty space with virtual entries (a.k.a a Local File Header with no name, up to
 64KiB extra and no Central Directory entry). Alignment is also done via "extra field".
 
 Entry name heuristic:
@@ -92,10 +93,10 @@ free areas are never contiguous. If space is freed, adjacent free blocks are mer
 result, used space is implicitly described by the "gap" between two free blocks.
 
 All write/delete operations in an archive must first go through the freestore.
-- When a zip entry is deleted, both the LR and CDR Location are returned to the FreeStore. 
+- When a zip entry is deleted, both the LR and CDR Location are returned to the FreeStore.
 - When a zip entry is added, a Location must be requested to the Freestore.
 
-Allocations alignment is supported on a 4 bytes basis . This is to accommodate Android Package 
+Allocations alignment is supported on a 4 bytes basis . This is to accommodate Android Package
 Manager optimizations where a zip entry is directly mmaped. Upon requesting an aligned allocation,
 an offset must also be provided because whas needs to be aligned is not the ZIP entry but the
 zip entry payload.

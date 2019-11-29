@@ -33,12 +33,14 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Blocks;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
@@ -151,13 +153,18 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Input
     public abstract SetProperty<String> getResourceDirsOutsideRootProjectDir();
 
+    private boolean useJvmResourceCompiler;
+
     @NonNull
     private static ResourceCompilationService getResourceProcessor(
+            String projectName,
+            String owner,
             @Nullable FileCollection aapt2FromMaven,
             @NonNull WorkerExecutorFacade workerExecutor,
             SyncOptions.ErrorFormatMode errorFormatMode,
             ImmutableSet<Flag> flags,
             boolean processResources,
+            boolean useJvmResourceCompiler,
             Logger logger) {
         // If we received the flag for removing namespaces we need to use the namespace remover to
         // process the resources.
@@ -176,7 +183,12 @@ public abstract class MergeResources extends ResourceAwareTask {
                         aapt2FromMaven, new LoggerWrapper(logger));
 
         return new WorkerExecutorResourceCompilationService(
-                workerExecutor, aapt2ServiceKey, errorFormatMode);
+                projectName,
+                owner,
+                workerExecutor,
+                aapt2ServiceKey,
+                errorFormatMode,
+                useJvmResourceCompiler);
     }
 
     @Override
@@ -222,11 +234,14 @@ public abstract class MergeResources extends ResourceAwareTask {
         try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
                 ResourceCompilationService resourceCompiler =
                         getResourceProcessor(
+                                getProjectName(),
+                                getPath(),
                                 getAapt2FromMaven(),
                                 workerExecutorFacade,
                                 errorFormatMode,
                                 flags,
                                 processResources,
+                                useJvmResourceCompiler,
                                 getLogger())) {
 
             Blocks.recordSpan(
@@ -387,11 +402,14 @@ public abstract class MergeResources extends ResourceAwareTask {
             try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
                     ResourceCompilationService resourceCompiler =
                             getResourceProcessor(
+                                    getProjectName(),
+                                    getPath(),
                                     getAapt2FromMaven(),
                                     workerExecutorFacade,
                                     errorFormatMode,
                                     flags,
                                     processResources,
+                                    useJvmResourceCompiler,
                                     getLogger())) {
 
                 File publicFile =
@@ -605,6 +623,11 @@ public abstract class MergeResources extends ResourceAwareTask {
         return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
     }
 
+    @Input
+    public boolean isJvmResourceCompilerEnabled() {
+        return useJvmResourceCompiler;
+    }
+
     public static class CreationAction extends VariantTaskCreationAction<MergeResources> {
         @NonNull private final TaskManager.MergeType mergeType;
         @NonNull
@@ -728,8 +751,9 @@ public abstract class MergeResources extends ResourceAwareTask {
                 task.generatedPngsOutputDir = variantScope.getGeneratedPngsOutputDir();
             }
 
-            boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
-            boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
+            final BuildFeatureValues features = globalScope.getBuildFeatures();
+            final boolean isDataBindingEnabled = features.getDataBinding();
+            boolean isViewBindingEnabled = features.getViewBinding();
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.
                 task.dataBindingLayoutProcessor =
@@ -890,6 +914,11 @@ public abstract class MergeResources extends ResourceAwareTask {
                             processResources ? PathSensitivity.ABSOLUTE : PathSensitivity.RELATIVE)
                     .withPropertyName("rawLocalResources");
 
+            task.useJvmResourceCompiler =
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
         }
     }
 

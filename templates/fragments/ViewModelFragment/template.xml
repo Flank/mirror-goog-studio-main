@@ -11,7 +11,7 @@
     <formfactor value="Mobile" />
 
     <parameter
-        id="className"
+        id="fragmentClass"
         name="Fragment Name"
         type="string"
         constraints="class|nonempty|unique"
@@ -24,7 +24,7 @@
         type="string"
         constraints="layout|nonempty|unique"
         default="blank_fragment"
-        suggest="${classToResource(className)}_fragment"
+        suggest="${classToResource(fragmentClass)}_fragment"
         help="The name of the layout to create" />
 
     <parameter
@@ -33,7 +33,7 @@
         type="string"
         constraints="class|nonempty|unique"
         default="BlankViewModel"
-        suggest="${underscoreToCamelCase(classToResource(className))}ViewModel"
+        suggest="${underscoreToCamelCase(classToResource(fragmentClass))}ViewModel"
         help="The name of the ViewModel class to create" />
 
     <thumbs>

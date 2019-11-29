@@ -30,8 +30,6 @@ import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.google.common.base.MoreObjects;
 import java.io.File;
-import java.io.Serializable;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Task;
 
@@ -101,12 +99,18 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public void setVersionNameOverride(String versionNameOverride) {
-        apkData.setVersionName((Supplier<String> & Serializable) () -> versionNameOverride);
+        variantOutput.getVersionName().set(versionNameOverride);
     }
 
+    @Nullable
     @Override
     public String getVersionNameOverride() {
-        return apkData.getVersionName();
+        deprecationReporter.reportDeprecatedApi(
+                "VariantOutput.versionName()",
+                "ApkVariantOutput.getVersionNameOverride()",
+                BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
+        return variantOutput.getVersionName().getOrNull();
     }
 
     @Override

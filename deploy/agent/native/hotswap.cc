@@ -30,6 +30,7 @@
 #include "tools/base/deploy/agent/native/dex_verify.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
+#include "tools/base/deploy/agent/native/thread_suspend.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
@@ -276,23 +277,42 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     error_num = jvmti_->RedefineClasses(modified_classes, def);
   } else {
     Log::I("Using Structure Redefinition Extension");
-    std::vector<size_t> failed_index;
+
+    // When using SRE, we need to stop the world since many operations must be
+    // run in an atomic fashion. e.g: Adding a static variable to a class
+    // involves not only redefining a class but also initializing the variable"
+    ThreadSuspend suspend(jvmti_);
+    std::string suspend_error = "";
+    suspend_error = suspend.SuspendUserThreads();
+
+    // TODO: There might be cases where this might be ok.
+    //   ie: Debugger suspended threads, user suspended thread..etc.
+
+    // TODO: More importantly, if we do bail, we should also makes sure we
+    // resume what we suspended here.
+    if (!suspend_error.empty()) {
+      // TODO: Logging for now. Metrics might be nice later.
+      Log::E("%s", suspend_error.c_str());
+    }
+
     for (size_t i = 0; i < modified_classes; i++) {
       // Currently only supports one class per redefinition request.
+      Log::I("Calling Redefinition Extension");
       error_num = (*extension)(jvmti_, def[i].klass, def[i].class_bytes,
                                def[i].class_byte_count);
       if (error_num != JVMTI_ERROR_NONE) {
-        failed_index.push_back(i);
+        break;
       }
+      Log::I("Done Redefinition Extension");
     }
-    jvmtiClassDefinition* retry_def =
-        new jvmtiClassDefinition[modified_classes];
-    for (size_t i = 0; i < failed_index.size(); i++) {
-      size_t offset = failed_index[i];
-      retry_def[i] = def[offset];
+
+    suspend_error = suspend.ResumeSuspendedThreads();
+    if (!suspend_error.empty()) {
+      // TODO: Logging for now. Metrics might be nice later.
+      Log::E("%s", suspend_error.c_str());
     }
-    error_num = jvmti_->RedefineClasses(failed_index.size(), retry_def);
   }
+
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
 
   if (error_num == JVMTI_ERROR_NONE) {

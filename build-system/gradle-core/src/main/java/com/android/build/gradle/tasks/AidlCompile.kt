@@ -55,6 +55,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.process.ExecOperations
 
 /**
  * Task to compile aidl files. Supports incremental update.
@@ -85,6 +86,9 @@ abstract class AidlCompile : NonIncrementalTask() {
 
     @get:Internal
     abstract val buildToolsRevisionProvider: Property<Revision>
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
     private lateinit var javaEncoding: String
 
@@ -156,7 +160,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                 parcelableDir?.asFile,
                 packageWhitelist,
                 DepFileProcessor(),
-                GradleProcessExecutor(project),
+                GradleProcessExecutor(execOperations::exec),
                 LoggedProcessOutputHandler(LoggerWrapper(logger)),
                 javaEncoding
             )
@@ -214,7 +218,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task
                 .sourceDirs
-                .set(project.provider(variantConfiguration::getAidlSourceList))
+                .set(project.provider { variantConfiguration.aidlSourceList })
             task.sourceDirs.disallowChanges()
 
             // This is because aidl may be in the same folder as Java and we want to restrict to

@@ -18,10 +18,10 @@
 #ifndef INSTRUMENTER_H
 #define INSTRUMENTER_H
 
+#include <jvmti.h>
+
 #include <memory>
 #include <unordered_map>
-
-#include <jvmti.h>
 
 #include "slicer/dex_ir.h"
 #include "slicer/instrumentation.h"
@@ -83,7 +83,8 @@ class ActivityThreadTransform : public Transform {
         "handleDispatchPackageBroadcastExit");
 
     slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(kEntryHook, true);
+    mi.AddTransformation<slicer::EntryHook>(
+        kEntryHook, slicer::EntryHook::Tweak::ThisAsObject);
     mi.AddTransformation<slicer::ExitHook>(kExitHook);
     if (!mi.InstrumentMethod(kHandlePackageBroadcast)) {
       Log::E("Failed to instrument ActivityThread");

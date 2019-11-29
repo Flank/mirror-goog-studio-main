@@ -148,9 +148,9 @@ class ProducerConsumerQueue {
   void PrintStats() const {
     std::lock_guard<std::mutex> lock(queue_mutex_);
     int64_t elapsedus = Clock::ns_to_us(sw_.GetElapsed());
-    Log::V(">> Peak:%d, Push:%d(%.4f/us), Pop:%d(%.4f/us)", peak_length_,
-           total_push_, total_push_ / (double)elapsedus, total_pop_,
-           total_pop_ / (double)elapsedus);
+    Log::V(Log::Tag::TRANSPORT, ">> Peak:%d, Push:%d(%.4f/us), Pop:%d(%.4f/us)",
+           peak_length_, total_push_, total_push_ / (double)elapsedus,
+           total_pop_, total_pop_ / (double)elapsedus);
   }
 
  private:

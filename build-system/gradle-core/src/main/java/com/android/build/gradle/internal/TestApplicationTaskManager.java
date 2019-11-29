@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
+import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -42,7 +43,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.Recorder;
-import com.android.builder.testing.ConnectedDeviceProvider;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.List;
@@ -116,7 +116,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         TestApplicationTestData testData =
                 new TestApplicationTestData(
                         variantScope.getVariantConfiguration(),
-                        variantScope.getVariantData()::getApplicationId,
+                        variantScope.getVariantConfiguration()::getApplicationId,
                         testingApk,
                         testedApks);
 

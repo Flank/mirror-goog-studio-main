@@ -39,10 +39,10 @@ public class LintCustomLocalAndPublishTest {
 
     @Test
     public void checkCustomLint() throws Exception {
-        project.executor().run("clean");
-        project.executor().run(":library-remote:uploadArchives");
-        project.executor().expectFailure().run(":library:lintDebug");
-        project.executor().expectFailure().run(":app:lintDebug");
+        project.executor().withFailOnWarning(false).run("clean");
+        project.executor().withFailOnWarning(false).run(":library-remote:uploadArchives");
+        project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
+        project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
         String appexpected =
                 "build.gradle:15: Error: Unknown issue id \"UnitTestLintCheck2\" [LintError]\n"
                         + "        check 'UnitTestLintCheck2'\n"
@@ -102,10 +102,10 @@ public class LintCustomLocalAndPublishTest {
 
     @Test
     public void checkAarHasLintJar() throws Exception {
-        project.executor().run("clean");
-        project.executor().run(":library:assembleDebug");
-        project.executor().run(":library-publish-only:assembleDebug");
-        project.executor().run(":library-local-only:assembleDebug");
+        project.executor().withFailOnWarning(false).run("clean");
+        project.executor().withFailOnWarning(false).run(":library:assembleDebug");
+        project.executor().withFailOnWarning(false).run(":library-publish-only:assembleDebug");
+        project.executor().withFailOnWarning(false).run(":library-local-only:assembleDebug");
 
         Aar localAndPublish = project.getSubproject("library").getAar("debug");
         assertNotNull(localAndPublish.getEntry(FN_LINT_JAR));

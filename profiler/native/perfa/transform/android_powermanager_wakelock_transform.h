@@ -36,11 +36,11 @@ class AndroidPowerManagerWakeLockTransform : public Transform {
         "wrapAcquire"));
     if (!mi_acq.InstrumentMethod(
             ir::MethodId(GetClassName(), "acquire", "()V"))) {
-      Log::E("Error instrumenting WakeLock.acquire");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting WakeLock.acquire");
     }
     if (!mi_acq.InstrumentMethod(
             ir::MethodId(GetClassName(), "acquire", "(J)V"))) {
-      Log::E("Error instrumenting WakeLock.acquire(long)");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting WakeLock.acquire(long)");
     }
 
     // Instrument release(int).
@@ -53,7 +53,7 @@ class AndroidPowerManagerWakeLockTransform : public Transform {
         "onReleaseExit"));
     if (!mi_rel.InstrumentMethod(
             ir::MethodId(GetClassName(), "release", "(I)V"))) {
-      Log::E("Error instrumenting WakeLock.release");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting WakeLock.release");
     }
   }
 };

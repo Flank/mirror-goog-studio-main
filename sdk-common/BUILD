@@ -77,6 +77,7 @@ kotlin_library(
     deps = [
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/base/annotations",
+        "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",

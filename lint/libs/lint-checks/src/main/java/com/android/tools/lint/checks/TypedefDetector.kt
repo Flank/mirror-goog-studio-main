@@ -31,9 +31,9 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
-import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationBooleanValue
-import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationValue
-import com.android.tools.lint.detector.api.UastLintUtils.isMinusOne
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationBooleanValue
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationValue
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.isMinusOne
 import com.google.common.collect.Lists
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiCompiledElement

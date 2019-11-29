@@ -38,10 +38,10 @@ AppInspectionService* AppInspectionService::create(JNIEnv* env) {
   JavaVM* vm;
   int error = env->GetJavaVM(&vm);
   if (error != 0) {
-    Log::E(
-        "Failed to get JavaVM instance for AppInspectionService with error "
-        "code: %d",
-        error);
+    Log::E(Log::Tag::APPINSPECT,
+           "Failed to get JavaVM instance for AppInspectionService with error "
+           "code: %d",
+           error);
     return nullptr;
   }
   // This will attach the current thread to the vm, otherwise
@@ -51,7 +51,8 @@ AppInspectionService* AppInspectionService::create(JNIEnv* env) {
   // with other profilers' agents.
   jvmtiEnv* jvmti = CreateJvmtiEnv(vm);
   if (jvmti == nullptr) {
-    Log::E("Failed to initialize JVMTI env for AppInspectionService");
+    Log::E(Log::Tag::APPINSPECT,
+           "Failed to initialize JVMTI env for AppInspectionService");
     return nullptr;
   }
   auto service = new AppInspectionService(jvmti);
@@ -86,7 +87,8 @@ jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass jclass) {
   jint count;
   jobject* instances;
   jvmti_->GetObjectsWithTags(1, &tag, &count, &instances, NULL);
-  Log::V("App Inspection: found %ld  %d objects with tag\n", tag, count);
+  Log::V(Log::Tag::APPINSPECT,
+         "App Inspection: found %ld  %d objects with tag\n", tag, count);
   auto result = jni->NewObjectArray(count, jclass, NULL);
   for (int i = 0; i < count; ++i) {
     jni->SetObjectArrayElement(result, i, instances[i]);
@@ -153,7 +155,7 @@ void AppInspectionService::OnClassFileLoaded(
   dex::Reader reader(class_data, class_data_len);
   auto class_index = reader.FindClassIndex(desc.c_str());
   if (class_index == dex::kNoIndex) {
-    Log::V("Could not find class index for %s", name);
+    Log::V(Log::Tag::APPINSPECT, "Could not find class index for %s", name);
     return;
   }
 

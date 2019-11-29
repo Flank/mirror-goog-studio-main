@@ -38,29 +38,32 @@ enum class Language(val string: String, val extension: String) {
   Kotlin("Kotlin", "kt")
 }
 
-// TODO: pack version data in separate class, possibly similar to AndroidVersionsInfo.VersionItem
-data class ProjectTemplateData(
+data class ApiTemplateData(
   val minApi: String,
   val minApiLevel: Version,
-  val buildApi: Version,
-  val androidXSupport: Boolean,
+  val buildApi: Version?,
   val targetApi: Version,
-  /**
-   * Not null only if it is unreleased yet API.
-   */
-  val targetApiString: String?,
-  val buildApiString: String,
-  val buildApiRevision: Int,
+  /** Not null only if it is unreleased yet API. */
+  val targetApiString: String? = null,
+  val buildApiString: String? = null,
+  val buildApiRevision: Int? = null
+)
+
+// TODO: pack version data in separate class, possibly similar to AndroidVersionsInfo.VersionItem
+data class ProjectTemplateData(
+  val androidXSupport: Boolean,
   val gradlePluginVersion: GradlePluginVersion,
   val javaVersion: JavaVersion?,
-  val sdkDir: File,
+  val sdkDir: File?,
   val language: Language,
   val kotlinVersion: String,
   val buildToolsVersion: Revision,
   val rootDir: File,
-  val applicationPackage: PackageName?
-): TemplateData()
-
+  val applicationPackage: PackageName?,
+  val includedFormFactorNames: Map<FormFactor, List<String>>
+): TemplateData() {
+  fun hasFormFactor(ff: FormFactor) = !includedFormFactorNames[ff].isNullOrEmpty()
+}
 
 // TODO(qumeric): create a more generic mechanism which will support modifying other modules
 /**
@@ -96,7 +99,8 @@ data class ModuleTemplateData(
   /**
    * Info about base feature. Only present in dynamic feature project.
    */
-  val baseFeature: BaseFeature?
+  val baseFeature: BaseFeature?,
+  val apis: ApiTemplateData
 ): TemplateData() {
   val isDynamic: Boolean
     get() = baseFeature != null

@@ -52,7 +52,7 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
 
     init {
         val compileSdkVersion = variantScope.globalScope.extension.compileSdkVersion
-        if (isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
+        if (compileSdkVersion != null && isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
             throw RuntimeException(
                 "compileSdkVersion '$compileSdkVersion' requires JDK 1.8 or later to compile."
             )
@@ -91,7 +91,7 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
 
         // Data binding artifact is one of the annotation processing outputs, only if kapt is not
         // configured.
-        if (variantScope.globalScope.extension.dataBinding.isEnabled) {
+        if (variantScope.globalScope.buildFeatures.dataBinding) {
             bundleArtifactFolderForDataBinding.set(
                 variantScope.artifacts.getOperations().getOutputDirectory(DATA_BINDING_ARTIFACT)
             )

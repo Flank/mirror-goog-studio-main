@@ -1,6 +1,7 @@
 #include "installer.h"
 
 #include <unistd.h>
+
 #include <memory>
 #include <sstream>
 
@@ -33,7 +34,8 @@ Installer::Installer(const std::string &app_package_name)
 
 bool Installer::Install(const string &binary_name, string *error_string) const {
   Trace trace("CPU:" + string("Install ") + binary_name.c_str());
-  Log::I("Request to install sampler in app '%s'", app_package_name_.c_str());
+  Log::I(Log::Tag::TRANSPORT, "Request to install sampler in app '%s'",
+         app_package_name_.c_str());
 
   string src_path = CurrentProcess::dir() + binary_name;
 
@@ -44,15 +46,18 @@ bool Installer::Install(const string &binary_name, string *error_string) const {
     error_string->append("Unable to generate installation path");
     return false;
   }
-  Log::I("Installing %s to %s", src_path.c_str(), dst_path.c_str());
+  Log::I(Log::Tag::TRANSPORT, "Installing %s to %s", src_path.c_str(),
+         dst_path.c_str());
 
   if (::Exists(app_package_name_, dst_path)) {
-    Log::I("'%s' executable is already installed (found at '%s').\n",
+    Log::I(Log::Tag::TRANSPORT,
+           "'%s' executable is already installed (found at '%s').\n",
            app_package_name_.c_str(), dst_path.c_str());
     return true;
   }
 
-  Log::I("'%s' executable requires installation (missing from '%s').\n",
+  Log::I(Log::Tag::TRANSPORT,
+         "'%s' executable requires installation (missing from '%s').\n",
          app_package_name_.c_str(), dst_path.c_str());
   // We need to copy sampler to the app folder.
 
@@ -93,7 +98,8 @@ bool Installer::Install(const string &binary_name, string *error_string) const {
     return false;
   }
 
-  Log::I("%s %s %s", "Installation to'", dst_path.c_str(), "' succeeded.");
+  Log::I(Log::Tag::TRANSPORT, "%s %s %s", "Installation to'", dst_path.c_str(),
+         "' succeeded.");
   return true;
 }
 
@@ -131,7 +137,8 @@ bool Installer::GetInstallationPath(const string &executable_path,
     error_string->append(error_message);
     return false;
   }
-  Log::I("App %s base is %s", app_package_name_.c_str(), app_base.c_str());
+  Log::I(Log::Tag::TRANSPORT, "App %s base is %s", app_package_name_.c_str(),
+         app_base.c_str());
 
   DiskFileSystem fs;
   auto binary = fs.GetFile(executable_path);

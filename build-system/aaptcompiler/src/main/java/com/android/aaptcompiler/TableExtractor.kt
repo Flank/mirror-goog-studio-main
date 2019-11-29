@@ -619,7 +619,9 @@ class TableExtractor(
       if (formatted && translatable) {
         if (!verifyJavaStringFormat(value.toString())) {
           // TODO(b/139297538): diagnostics
-          return false
+          if (options.errorOnPositionalArgs) {
+            return false
+          }
         }
       }
     } else if (value is StyledString) {

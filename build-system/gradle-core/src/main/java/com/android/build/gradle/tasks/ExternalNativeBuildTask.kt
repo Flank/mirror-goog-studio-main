@@ -53,9 +53,11 @@ import org.gradle.api.Task
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
 import java.time.Clock
+import javax.inject.Inject
 import kotlin.streams.toList
 
 /**
@@ -97,6 +99,9 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val soFolder: File
         get() = File(generator.get().soFolder)
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
     private val stlSharedObjectFiles: Map<Abi, File>
         get() = generator.get().stlSharedObjectFiles
@@ -354,7 +359,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
     @Throws(BuildCommandException::class, IOException::class)
     private fun executeProcessBatch(buildSteps: List<BuildStep>) {
         val logger = logger
-        val processExecutor = GradleProcessExecutor(project)
+        val processExecutor = GradleProcessExecutor(execOperations::exec)
 
         for (buildStep in buildSteps) {
             val tokens = buildStep.buildCommand.tokenizeCommandLineToEscaped()
@@ -422,7 +427,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             )
                 .logStderrToInfo()
                 .logStdoutToInfo()
-                .execute()
+                .execute(execOperations::exec)
 
             generateChromeTraces?.invoke()
         }

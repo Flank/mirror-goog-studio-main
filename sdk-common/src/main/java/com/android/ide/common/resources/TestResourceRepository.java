@@ -44,6 +44,12 @@ public final class TestResourceRepository extends AbstractResourceRepository
         if (!namespace.equals(this.namespace)) {
             return ImmutableListMultimap.of();
         }
+        return getMap(namespace, resourceType);
+    }
+
+    @NonNull
+    public ListMultimap<String, ResourceItem> getMap(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
         ListMultimap<String, ResourceItem> map = resourceTable.get(namespace, resourceType);
         return map == null ? ImmutableListMultimap.of() : map;
     }
@@ -75,17 +81,16 @@ public final class TestResourceRepository extends AbstractResourceRepository
         return namespace.getPackageName();
     }
 
+    @NonNull
+    public ResourceTable getResourceTable() {
+        return resourceTable;
+    }
+
     @Override
     @NonNull
     public Collection<ResourceItem> getPublicResources(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType type) {
         throw new UnsupportedOperationException();
-    }
-
-    @VisibleForTesting
-    @NonNull
-    public ResourceTable getFullTable() {
-        return resourceTable;
     }
 
     @VisibleForTesting

@@ -55,7 +55,7 @@ internal fun serializeSourceToPb(source: Source, sourcePool: StringPool): Resour
   return sourceBuilder.build()
 }
 
-fun serializeTableToPb(table: ResourceTable, logger: Logger?): Resources.ResourceTable {
+fun serializeTableToPb(table: ResourceTable, logger: Logger? = null): Resources.ResourceTable {
   val tableBuilder = Resources.ResourceTable.newBuilder()
   val sourcePool = StringPool()
 
@@ -64,8 +64,6 @@ fun serializeTableToPb(table: ResourceTable, logger: Logger?): Resources.Resourc
     .setTool(ToolFingerprint.TOOL_NAME)
     .setVersion(ToolFingerprint.FINGERPRINT)
     .build())
-
-  table.packages.sortWith(compareBy({it.name}, {it.id}))
   val overlayables = mutableListOf<Overlayable>()
   for (resourcePackage in table.packages) {
     val packageBuilder = Resources.Package.newBuilder()
@@ -78,8 +76,6 @@ fun serializeTableToPb(table: ResourceTable, logger: Logger?): Resources.Resourc
           .build())
     }
     packageBuilder.setPackageName(resourcePackage.name)
-
-    resourcePackage.groups.sortWith(compareBy({it.type.ordinal}, {it.id}))
 
     for (resourceGroup in resourcePackage.groups) {
       val groupBuilder = Resources.Type.newBuilder()
@@ -94,7 +90,6 @@ fun serializeTableToPb(table: ResourceTable, logger: Logger?): Resources.Resourc
 
       groupBuilder.setName(resourceGroup.type.tagName)
 
-      resourceGroup.entries.sortWith(compareBy({it.name}, {it.id}))
       for (entry in resourceGroup.entries) {
         val entryBuilder = Resources.Entry.newBuilder()
 

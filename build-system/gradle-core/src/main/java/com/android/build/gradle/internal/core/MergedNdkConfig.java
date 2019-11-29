@@ -24,10 +24,8 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Implementation of NdkConfig used to merge multiple configs together.
- */
-public class MergedNdkConfig implements CoreNdkOptions {
+/** Implementation of NdkConfig used to merge multiple configs together. */
+public class MergedNdkConfig implements CoreNdkOptions, MergedOptions<CoreNdkOptions> {
 
     private String moduleName;
     private String cFlags;
@@ -36,6 +34,7 @@ public class MergedNdkConfig implements CoreNdkOptions {
     private String stl;
     private Integer jobs;
 
+    @Override
     public void reset() {
         moduleName = null;
         cFlags = null;
@@ -79,6 +78,7 @@ public class MergedNdkConfig implements CoreNdkOptions {
         return jobs;
     }
 
+    @Override
     public void append(@NonNull CoreNdkOptions ndkConfig) {
         // override
         if (ndkConfig.getModuleName() != null) {

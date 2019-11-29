@@ -17,6 +17,11 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
+import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -105,5 +110,24 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
                 scope.getTaskContainer().getGenerateAnnotationsTask().get().source(f);
             }
         }
+    }
+
+    @Override
+    VariantImpl<?> instantiatePublicVariantObject(VariantConfiguration publicVariantConfiguration) {
+        return new LibraryVariantImpl(publicVariantConfiguration);
+    }
+
+    @Override
+    VariantPropertiesImpl instantiatePublicVariantPropertiesObject(
+            VariantConfiguration publicVariantConfiguration) {
+        return scope.getGlobalScope()
+                .getProject()
+                .getObjects()
+                .newInstance(
+                        LibraryVariantPropertiesImpl.class,
+                        scope.getGlobalScope().getDslScope(),
+                        scope,
+                        scope.getArtifacts().getOperations(),
+                        publicVariantConfiguration);
     }
 }

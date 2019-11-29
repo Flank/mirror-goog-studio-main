@@ -22,14 +22,25 @@ import org.junit.Test
 class VersionedCodeShrinkerTest {
 
     @Test
-    fun testParseProguardVersion(){
-        var version = VersionedCodeShrinker.parseProguardVersion("ProGuard, version 6.0.1")
+    fun testParseVersionString(){
+        var version = VersionedCodeShrinker.parseVersionString("ProGuard, version 6.0.1")
         assertThat(version).isEqualTo("6.0.1")
 
-        version = VersionedCodeShrinker.parseProguardVersion("ProGuard, version 6.0.1-dev")
+        version = VersionedCodeShrinker.parseVersionString("ProGuard, version 6.0.1-dev")
         assertThat(version).isEqualTo("6.0.1-dev")
 
-        version = VersionedCodeShrinker.parseProguardVersion("ProGuard, version 6.0.1 FOO")
+        version = VersionedCodeShrinker.parseVersionString("ProGuard, version 6.0.1 FOO")
         assertThat(version).isEqualTo("6.0.1")
+
+        version = VersionedCodeShrinker.parseVersionString("ProGuard, version 6.0.1 FOO")
+        assertThat(version).isEqualTo("6.0.1")
+
+        version = VersionedCodeShrinker.parseVersionString(
+            "1.6.51 (build 94162e from go/r8bot (luci-r8-ci-archive-0-t0i8))")
+        assertThat(version).isEqualTo("1.6.51")
+
+        version = VersionedCodeShrinker.parseVersionString(
+            "1.6.51-dev (build 94162e from go/r8bot (luci-r8-ci-archive-0-t0i8))")
+        assertThat(version).isEqualTo("1.6.51-dev")
     }
 }

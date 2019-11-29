@@ -39,7 +39,8 @@ class AndroidActivityThreadTransform : public Transform {
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "handleReceiver",
                          "(Landroid/app/ActivityThread$ReceiverData;)V"))) {
-      Log::E("Error instrumenting BroadcastReceiver.onReceive");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting BroadcastReceiver.onReceive");
     }
   }
 };

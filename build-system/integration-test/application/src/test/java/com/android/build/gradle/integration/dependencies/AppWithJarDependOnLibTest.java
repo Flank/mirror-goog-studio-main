@@ -52,17 +52,13 @@ public class AppWithJarDependOnLibTest {
         Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
                 .write("include 'app', 'library', 'jar'");
 
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":jar\")\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(\":jar\")\n" + "}\n");
 
-        TestFileUtils.appendToFile(project.getSubproject("jar").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":library\")\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("jar").getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(\":library\")\n" + "}\n");
         modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
     }
 

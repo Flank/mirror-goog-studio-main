@@ -122,7 +122,6 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                         d8DexBuilder.convert(
                             classesInput,
                             dexOutputDir.toPath()
-
                         )
                     }
                 }

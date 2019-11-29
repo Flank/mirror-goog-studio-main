@@ -61,13 +61,13 @@ abstract class CustomTask extends DefaultTask {
 
 
 android {
-    onVariantsProperties { variantProperties ->
-        TaskProvider customTaskProvider = tasks.register(variantProperties.name + "CustomTask", CustomTask.class)
+    onVariantProperties { 
+        TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class)
         customTaskProvider.configure {
             task ->
-                task.getApkLocation().set(variantProperties.operations.get(PublicArtifactType.APK.INSTANCE))
+                task.getApkLocation().set(operations.get(PublicArtifactType.APK.INSTANCE))
                 Provider<Directory> outputDir = getProject().getLayout().getBuildDirectory()
-                task.getOutputFile().set(outputDir.file(variantProperties.name + "/" + variantProperties.name + "CustomTask/out.txt"))
+                task.getOutputFile().set(outputDir.file(name + "/out.txt"))
         }
     }
 }
@@ -91,7 +91,7 @@ android {
 
         assertNotNull(project)
         project.execute("clean", "debugCustomTask")
-        val outFile = File(project.testDir, "app/build/debug/debugCustomTask/out.txt")
+        val outFile = File(project.testDir, "app/build/debugCustomTask/out.txt")
         println("out is ${outFile.absolutePath}")
         assertThat(outFile).exists()
         Truth.assertThat(outFile.readText()).contains("app-debug.apk")

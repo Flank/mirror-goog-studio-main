@@ -61,6 +61,20 @@ class ProcessManager {
                                           const std::string& config_path,
                                           const std::string& lib_file_name);
 
+  // Returns the canonical name for the given process. It's "system" for system
+  // server; and other processes' names are already canonical.
+  //
+  // System server has three names. It's "system_server" in /proc/PID/comm,
+  // "system_process" in DDMS, and "system" in Activity Service. "system" is
+  // chosen as the canonical name because it may be used as an argument passed
+  // to an "am" shell command.
+  static std::string GetCanonicalName(const std::string& process_name) {
+    if (process_name == "system_process" || process_name == "system_server") {
+      return "system";
+    }
+    return process_name;
+  }
+
  private:
   std::vector<Process> GetAllProcesses() const;
 };

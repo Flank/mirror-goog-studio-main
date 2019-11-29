@@ -670,7 +670,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n")));
     }
 
-    public void testDataBinding() throws Exception {
+    public void testDataBinding_resourcesUsingAtSyntaxAreConsideredUsed() throws Exception {
         // Make sure that resources referenced only via a data binding expression
         // are not counted as unused.
         // Regression test for https://code.google.com/p/android/issues/detail?id=183934
@@ -708,7 +708,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "</layout>")));
     }
 
-    public void testDataBindingResourceClass() throws Exception {
+    public void testDataBinding_resourcesUsingRNamespacingAreConsideredUsed() throws Exception {
         // Make sure that resources referenced only via a data binding expression in the
         // form of "R.type.name" are not counted as unused.
         mEnableIds = false;
@@ -719,7 +719,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 "res/values/resources.xml",
                                 ""
                                         + "<resources>\n"
-                                        + "    <item type='string' name='happy'>Happy</item>\n"
+                                        + "    <item type='dimen' name='largePadding'>20dp</item>\n"
+                                        + "    <item type='dimen' name='smallPadding'>15dp</item>\n"
+                                        + "    <item type='string' name='name'>Name</item>\n"
                                         + "</resources>"),
 
                         // Add unit test source which references resources which would otherwise
@@ -735,11 +737,12 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "       android:layout_width=\"match_parent\"\n"
                                         + "       android:layout_height=\"match_parent\"\n"
                                         // Data binding expressions
-                                        + "       android:text=\"@{R.string.happy}\" />\n"
+                                        + "       android:padding=\"@{large? R.dimen.largePadding : R.dimen.smallPadding}\"\n"
+                                        + "       android:text=\"@{R.string.name}\" />\n"
                                         + "</layout>")));
     }
 
-    public void testDataBindingIds() throws Exception {
+    public void testDataBInding_idsAddedInDataBindingLayoutsAreConsideredUsed() throws Exception {
         // Make sure id's in data binding layouts aren't considered unused
         // (since the compiler will generate accessors for these that
         // may not be visible when running lint on edited sources)

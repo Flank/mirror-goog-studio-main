@@ -1,7 +1,5 @@
 package com.android.tools.idea.wizard.template
 
-import java.io.File
-
 typealias Recipe = RecipeExecutor.(TemplateData) -> Unit
 
 /**
@@ -106,7 +104,7 @@ interface Template {
   fun thumb(): Thumb
 
   /**
-   * Reprent absence of a [Template] (null object pattern).
+   * Represent absence of a [Template] (null object pattern).
    */
   companion object NoActivity: Template {
     override val widgets: Collection<Widget<*>> = listOf()

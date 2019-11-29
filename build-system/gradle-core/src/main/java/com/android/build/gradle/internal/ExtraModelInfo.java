@@ -20,8 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
@@ -123,8 +123,9 @@ public class ExtraModelInfo {
         extraArtifactMap.put(name, new ArtifactMetaDataImpl(name, isTest, artifactType));
     }
 
-    public void registerBuildTypeSourceProvider(@NonNull String name,
-            @NonNull CoreBuildType buildType,
+    public void registerBuildTypeSourceProvider(
+            @NonNull String name,
+            @NonNull BuildType buildType,
             @NonNull SourceProvider sourceProvider) {
         if (extraArtifactMap.get(name) == null) {
             throw new IllegalArgumentException(String.format(
@@ -137,8 +138,9 @@ public class ExtraModelInfo {
 
     }
 
-    public void registerProductFlavorSourceProvider(@NonNull String name,
-            @NonNull CoreProductFlavor productFlavor,
+    public void registerProductFlavorSourceProvider(
+            @NonNull String name,
+            @NonNull ProductFlavor productFlavor,
             @NonNull SourceProvider sourceProvider) {
         if (extraArtifactMap.get(name) == null) {
             throw new IllegalArgumentException(String.format(

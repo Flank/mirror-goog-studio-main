@@ -25,7 +25,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -50,7 +49,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -250,11 +248,11 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     @NonNull
     @Override
-    public Collection<VariantType> getVariantConfigurationTypes() {
+    public VariantType getVariantType() {
         if (globalScope.getExtension().getBaseFeature()) {
-            return ImmutableList.of(VariantTypeImpl.BASE_APK);
+            return VariantTypeImpl.BASE_APK;
         }
-        return ImmutableList.of(VariantTypeImpl.OPTIONAL_APK);
+        return VariantTypeImpl.OPTIONAL_APK;
     }
 
     @Override
@@ -268,7 +266,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         validateVersionCodes(model);
 
-        if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isDynamicFeature)) {
+        if (!getVariantType().isDynamicFeature()) {
             return;
         }
 

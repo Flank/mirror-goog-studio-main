@@ -19,11 +19,12 @@ package com.android.tools.agent.layoutinspector.property;
 import android.animation.StateListAnimator;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Interpolator;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
-import android.view.animation.Interpolator;
 import android.view.inspector.PropertyReader;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import java.lang.reflect.InvocationTargetException;
@@ -34,15 +35,22 @@ import java.util.List;
 import java.util.Map;
 
 /** Holds the properties (including their values) of a View. */
-public class ViewNode<V extends View> {
+public class ViewNode<V extends View, L extends LayoutParams> {
     private ViewType<V> mType;
-    private List<Property> mProperties;
+    private LayoutParamsType<L> mLayoutParamsType;
+    private List<Property> mViewProperties;
+    private List<Property> mLayoutProperties;
 
-    public ViewNode(ViewType<V> type) {
+    public ViewNode(ViewType<V> type, LayoutParamsType<L> layoutParamsType) {
         mType = type;
-        mProperties = new ArrayList<>();
+        mLayoutParamsType = layoutParamsType;
+        mViewProperties = new ArrayList<>();
         for (PropertyType propertyType : type.getProperties()) {
-            mProperties.add(new Property(propertyType));
+            mViewProperties.add(new Property(propertyType));
+        }
+        mLayoutProperties = new ArrayList<>();
+        for (PropertyType propertyType : layoutParamsType.getProperties()) {
+            mLayoutProperties.add(new Property(propertyType));
         }
     }
 
@@ -50,21 +58,23 @@ public class ViewNode<V extends View> {
         return mType;
     }
 
-    public List<Property> getProperties() {
-        return mProperties;
+    public List<Property> getViewProperties() {
+        return mViewProperties;
+    }
+
+    public List<Property> getLayoutProperties() {
+        return mLayoutProperties;
     }
 
     public void readProperties(V view) {
-        PropertyReader reader = createPropertyReader(view);
-        mType.readProperties(view, reader);
+        PropertyReader viewReader = new SimplePropertyReader<>(view, mViewProperties, true);
+        mType.readProperties(view, viewReader);
+        PropertyReader layoutReader = new SimplePropertyReader<>(view, mLayoutProperties, false);
+        mLayoutParamsType.readProperties(view.getLayoutParams(), layoutReader);
     }
 
     public Resource getLayoutResource(V view) {
         return Resource.fromResourceId(view, getSourceLayoutResId(view));
-    }
-
-    private SimplePropertyReader createPropertyReader(V view) {
-        return new SimplePropertyReader(view);
     }
 
     private int getSourceLayoutResId(V view) {
@@ -78,36 +88,17 @@ public class ViewNode<V extends View> {
         }
     }
 
-    private Map<Integer, Integer> getAttributeSourceResourceMap(V view) {
-        try {
-            // TODO: Call this method directly when we compile against android-Q
-            Method method = View.class.getDeclaredMethod("getAttributeSourceResourceMap");
-            //noinspection unchecked
-            return (Map<Integer, Integer>) method.invoke(view);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            return Collections.emptyMap();
-        }
-    }
-
-    private int[] getAttributeResolutionStack(V view, int attributeId) {
-        try {
-            // TODO: Call this method directly when we compile against android-Q
-            Method method =
-                    View.class.getDeclaredMethod("getAttributeResolutionStack", Integer.TYPE);
-            //noinspection unchecked
-            return (int[]) method.invoke(view, attributeId);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            return new int[0];
-        }
-    }
-
-    private class SimplePropertyReader implements PropertyReader {
+    private static class SimplePropertyReader<V extends View> implements PropertyReader {
         private final V mView;
+        private final List<Property> mProperties;
         private final Map<Integer, Integer> mResourceMap;
+        private final boolean mIsViewProperties;
 
-        private SimplePropertyReader(V view) {
+        SimplePropertyReader(V view, List<Property> properties, boolean isViewProperties) {
             mView = view;
+            mProperties = properties;
             mResourceMap = getAttributeSourceResourceMap(view);
+            mIsViewProperties = isViewProperties;
         }
 
         @Override
@@ -220,13 +211,42 @@ public class ViewNode<V extends View> {
             Property property = mProperties.get(id);
             PropertyType type = property.getPropertyType();
             property.setValue(value);
-            property.setSource(getResourceValueOfAttribute(type.getAttributeId()));
-            addResolutionStack(property.getResolutionStack(), type.getAttributeId());
+            if (mIsViewProperties) {
+                property.setSource(getResourceValueOfAttribute(type.getAttributeId()));
+                addResolutionStack(property.getResolutionStack(), type.getAttributeId());
+            }
         }
 
         private Resource getResourceValueOfAttribute(int attributeId) {
             Integer resourceId = mResourceMap.get(attributeId);
             return resourceId != null ? Resource.fromResourceId(mView, resourceId) : null;
+        }
+
+        private Map<Integer, Integer> getAttributeSourceResourceMap(V view) {
+            try {
+                // TODO: Call this method directly when we compile against android-Q
+                Method method = View.class.getDeclaredMethod("getAttributeSourceResourceMap");
+                //noinspection unchecked
+                return (Map<Integer, Integer>) method.invoke(view);
+            } catch (NoSuchMethodException
+                    | IllegalAccessException
+                    | InvocationTargetException ex) {
+                return Collections.emptyMap();
+            }
+        }
+
+        private int[] getAttributeResolutionStack(V view, int attributeId) {
+            try {
+                // TODO: Call this method directly when we compile against android-Q
+                Method method =
+                        View.class.getDeclaredMethod("getAttributeResolutionStack", Integer.TYPE);
+                //noinspection unchecked
+                return (int[]) method.invoke(view, attributeId);
+            } catch (NoSuchMethodException
+                    | IllegalAccessException
+                    | InvocationTargetException ex) {
+                return new int[0];
+            }
         }
 
         private void addResolutionStack(List<Resource> stack, int attributeId) {

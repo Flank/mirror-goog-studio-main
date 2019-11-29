@@ -31,10 +31,6 @@ interface RecipeExecutor {
   /** Merges the given XML source into the given destination file (or just writes it if the destination file does not exist). */
   fun mergeXml(source: String, to: File)
 
-  /** Merges the given Gradle source into the given destination file (or just writes it if the destination file does not exist). */
-  @Deprecated("Avoid merging Gradle files, add to an existing file programmatically instead")
-  fun mergeGradleFile(source: String, to: File)
-
   /**
    * Creates a directory at the specified location (if not already present).
    * This will also create any parent directories that don't exist, as well.
@@ -54,11 +50,23 @@ interface RecipeExecutor {
   fun hasDependency(mavenCoordinate: String, configuration: String? = null): Boolean
 
   /**
-   * Records a library dependency (adds an new entry to.
-   * "compile" configuration is used by default for backward compatibility.
-   * It is converted to "implementation" in later stages if Gradle supports it.
+   * Records a library dependency
+   * Old [configuration]s such as "compile" will be converted to new ones ("implementation") in later stages if Gradle supports it.
+   *
+   * @param mavenCoordinate coordinate of dependency to be added in Maven format (e.g androidx.appcompat:appcompat:1.1.0).
+   * @param configuration Gradle configuration to use.
    * */
   fun addDependency(mavenCoordinate: String, configuration: String = "compile")
+
+  /**
+   * Records a module dependency.
+   * Old [configuration]s such as "compile" will be converted to new ones ("implementation") in later stages if Gradle supports it.
+   *
+   * @param configuration Gradle configuration to use.
+   * @param moduleName name of a module on which something depends. Should not start with ':'.
+   * @param toModule name of a module *directory* which depends on [moduleName].
+   */
+  fun addModuleDependency(configuration: String, moduleName: String, toModule: String)
 
   /**
    * Adds a new entry to 'sourceSets' block of Gradle build file.
@@ -71,6 +79,29 @@ interface RecipeExecutor {
 
   /** Initializes the variable with [name] to [value] in the ext block of global Gradle build file. */
   fun setExtVar(name: String, value: Any)
+
+  /**
+   * Adds a module dependency to global settings.gradle[.kts] file.
+   */
+  fun addIncludeToSettings(moduleName: String)
+
+  /**
+   * Adds a new build feature to android block. For example, may enable compose.
+   */
+  fun setBuildFeature(name: String, value: Boolean)
+
+  /**
+   * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.
+   */
+  fun requireJavaVersion(version: String, kotlinSupport: Boolean = false)
+
+  /**
+   * Adds a dynamic feature [name] to [toModule]'s build.gradle[.kts].
+   *
+   * @param name name of a dynamic feature which should be added.
+   * @param toModule name of a base feature module *directory*.
+   */
+  fun addDynamicFeature(name: String, toModule: String)
 }
 
 enum class SourceSetType {

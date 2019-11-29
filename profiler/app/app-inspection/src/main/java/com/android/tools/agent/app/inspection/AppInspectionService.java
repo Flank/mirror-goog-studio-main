@@ -16,9 +16,9 @@
 
 package com.android.tools.agent.app.inspection;
 
-import static com.android.tools.agent.app.inspection.Responses.replyCrash;
 import static com.android.tools.agent.app.inspection.Responses.replyError;
 import static com.android.tools.agent.app.inspection.Responses.replySuccess;
+import static com.android.tools.agent.app.inspection.Responses.sendCrash;
 
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
@@ -133,13 +133,13 @@ public class AppInspectionService {
         if (inspector == null) {
             replyError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
+            return;
         }
         try {
-            inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(inspectorId, commandId));
+            inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(commandId));
         } catch (Throwable t) {
             t.printStackTrace();
-            replyCrash(
-                    commandId,
+            sendCrash(
                     inspectorId,
                     "Inspector "
                             + inspectorId
@@ -216,12 +216,12 @@ public class AppInspectionService {
             sInstance.mExperimental.mExitTransforms.put(createLabel(origin, method), hook);
         }
 
-        public static void onExit(Object returnObject) {
+        public static Object onExit(Object returnObject) {
             Error error = new Error();
             error.fillInStackTrace();
             StackTraceElement[] stackTrace = error.getStackTrace();
             if (stackTrace.length < 2) {
-                return;
+                return returnObject;
             }
             StackTraceElement element = stackTrace[1];
             String label = element.getClassName() + element.getMethodName();
@@ -233,6 +233,7 @@ public class AppInspectionService {
             } else {
                 System.out.println("!!! Dropped on the floor");
             }
+            return returnObject;
         }
 
         public static void onEntry(Object thisObject) {

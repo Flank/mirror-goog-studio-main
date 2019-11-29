@@ -1727,20 +1727,20 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     private fun resolveCoordinate(
-      context: GradleContext,
-      property: String,
-      gc: GradleCoordinate
+        context: GradleContext,
+        property: String,
+        gc: GradleCoordinate
     ): GradleCoordinate? {
         assert(gc.revision.contains("$")) { gc.revision }
         val project = context.project
         val variant = project.currentVariant
         if (variant != null) {
             val artifact =
-              when {
-                  property.startsWith("androidTest") -> variant.extraAndroidArtifacts.firstOrNull { it.name == ARTIFACT_NAME_ANDROID_TEST }
-                  property.startsWith("test") -> variant.extraJavaArtifacts.firstOrNull { it.name == ARTIFACT_NAME_UNIT_TEST }
-                  else -> variant.mainArtifact
-              } ?: return null
+                when {
+                    property.startsWith("androidTest") -> variant.extraAndroidArtifacts.firstOrNull { it.name == ARTIFACT_NAME_ANDROID_TEST }
+                    property.startsWith("test") -> variant.extraJavaArtifacts.firstOrNull { it.name == ARTIFACT_NAME_UNIT_TEST }
+                    else -> variant.mainArtifact
+                } ?: return null
             val dependencies = artifact.dependencies
             for (library in dependencies.libraries + dependencies.javaLibraries) {
                 val mc = library.resolvedCoordinates
@@ -1757,7 +1757,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     val revisions = GradleCoordinate.parseRevisionNumber(mc.version)
                     if (!revisions.isEmpty()) {
                         return GradleCoordinate(
-                          mc.groupId, mc.artifactId, revisions, null
+                            mc.groupId, mc.artifactId, revisions, null
                         )
                     }
                     break

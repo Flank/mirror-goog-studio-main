@@ -861,6 +861,57 @@ public final class SymbolIo {
     }
 
     /**
+     * Writes a file listing the resources provided by the resource file.
+     *
+     * <p>This uses the partial r (go/partial-r) format of
+     * {@code "<access qualifier> <java type> <symbol type> <resource name>" }.
+     *
+     * @param table The SymbolTable to be written as a partial R file.
+     * @param file The file path of the file to be written.
+     */
+    public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
+        try (BufferedWriter writer = Files.newBufferedWriter(file)) {
+            // Loop resource types to keep order.
+            for (ResourceType resType : ResourceType.values()) {
+                List<Symbol> symbols = table.getSymbolByResourceType(resType);
+                for (Symbol s : symbols) {
+                    writer.write(s.getResourceVisibility().getName());
+                    writer.write(' ');
+                    writer.write(s.getJavaType().getTypeName());
+                    writer.write(' ');
+                    writer.write(s.getResourceType().getName());
+                    writer.write(' ');
+                    writer.write(s.getCanonicalName());
+                    writer.write('\n');
+
+                    // Declare styleables having attributes defined in their node
+                    // listed in the children list.
+                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                        Preconditions.checkArgument(
+                                s.getResourceType() == ResourceType.STYLEABLE,
+                                "Only resource type 'styleable' has java type 'int[]'");
+                        List<String> children = s.getChildren();
+                        for (String child : children) {
+                            writer.write(s.getResourceVisibility().getName());
+                            writer.write(' ');
+                            writer.write(SymbolJavaType.INT.getTypeName());
+                            writer.write(' ');
+                            writer.write(ResourceType.STYLEABLE.getName());
+                            writer.write(' ');
+                            writer.write(s.getCanonicalName());
+                            writer.write('_');
+                            writer.write(SymbolUtils.canonicalizeValueResourceName(child));
+                            writer.write('\n');
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
      * Writes the abridged symbol table with the package name as the first line.
      *
      * <p>This collapses the styleable children so the subsequent lines have the format {@code

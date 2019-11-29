@@ -360,7 +360,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
 
         ViewBindingOptions viewBindingOptions =
-                ViewBindingOptionsImpl.create(extension.getViewBinding());
+                new ViewBindingOptionsImpl(globalScope.getBuildFeatures().getViewBinding());
 
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
@@ -449,7 +449,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         flags.put(
                 AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE,
-                globalScope.getBuildFeatures().getJetpackCompose());
+                globalScope.getBuildFeatures().getCompose());
 
         boolean transitiveRClass =
                 !globalScope.getProjectOptions().get(BooleanOption.NAMESPACED_R_CLASS);
@@ -1150,8 +1150,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         GlobalScope globalScope = variantData.getScope().getGlobalScope();
 
-        boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
-        boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
+        boolean isDataBindingEnabled = globalScope.getBuildFeatures().getDataBinding();
+        boolean isViewBindingEnabled = globalScope.getBuildFeatures().getViewBinding();
         boolean addBindingSources =
                 (isDataBindingEnabled || isViewBindingEnabled)
                         && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE);

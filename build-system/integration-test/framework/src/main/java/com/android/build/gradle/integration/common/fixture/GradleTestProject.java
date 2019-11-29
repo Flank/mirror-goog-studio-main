@@ -343,6 +343,7 @@ public final class GradleTestProject implements TestRule {
         this.kotlinVersion = rootProject.kotlinVersion;
         this.outputLogOnFailure = rootProject.outputLogOnFailure;
         this.heapSize = rootProject.getHeapSize();
+        this.additionalMavenRepo = rootProject.additionalMavenRepo;
     }
 
     public static Path getGradleUserHome(File buildDir) {
@@ -748,6 +749,7 @@ public final class GradleTestProject implements TestRule {
      *
      * @param name name of the subProject, or the subProject's gradle project path
      */
+    @NonNull
     public GradleTestProject getSubproject(String name) {
         return new GradleTestProject(name, rootProject, heapSize);
     }
@@ -1519,7 +1521,7 @@ public final class GradleTestProject implements TestRule {
             TestFileUtils.appendToFile(
                     getSettingsFile(),
                     "buildCache {\n"
-                            + "    local(DirectoryBuildCache) {\n"
+                            + "    local {\n"
                             + "        directory = \""
                             + absoluteFile.getPath().replace("\\", "\\\\")
                             + "\"\n"

@@ -17,9 +17,12 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.DomainObjectSet
+import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
+import org.gradle.api.NamedDomainObjectList
+import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
@@ -40,6 +43,18 @@ import java.lang.reflect.Constructor
  *
  */
 class FakeObjectFactory : ObjectFactory {
+    override fun <T : Any?> namedDomainObjectList(p0: Class<T>): NamedDomainObjectList<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <T : Any?> polymorphicDomainObjectContainer(p0: Class<T>): ExtensiblePolymorphicDomainObjectContainer<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <T : Any?> namedDomainObjectSet(p0: Class<T>): NamedDomainObjectSet<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun fileTree(): ConfigurableFileTree {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

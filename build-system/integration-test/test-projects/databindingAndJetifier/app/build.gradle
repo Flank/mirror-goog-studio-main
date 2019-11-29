@@ -9,8 +9,8 @@ android {
         targetSdkVersion rootProject.latestCompileSdk
     }
 
-    dataBinding {
-        enabled = true
+    buildFeatures {
+        dataBinding = true
     }
 }
 

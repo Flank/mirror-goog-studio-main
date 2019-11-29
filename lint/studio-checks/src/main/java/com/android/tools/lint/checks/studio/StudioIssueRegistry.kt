@@ -32,7 +32,8 @@ class StudioIssueRegistry : IssueRegistry() {
         IntellijThreadDetector.ISSUE,
         RegexpPathDetector.ISSUE,
         SwingUtilitiesDetector.ISSUE,
-        SwingWorkerDetector.ISSUE
+        SwingWorkerDetector.ISSUE,
+        GradleApiUsageDetector.ISSUE
     )
 
 // TODO other checks:

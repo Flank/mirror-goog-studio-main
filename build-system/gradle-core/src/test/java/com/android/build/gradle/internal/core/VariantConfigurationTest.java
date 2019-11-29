@@ -18,44 +18,61 @@ package com.android.build.gradle.internal.core;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.variant2.FakeDslScope;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.core.DefaultBuildType;
-import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.FakeEvalIssueReporter;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.model.SigningConfig;
-import com.android.builder.signing.DefaultSigningConfig;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
+import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class VariantConfigurationTest {
 
-    private DefaultProductFlavor mDefaultConfig;
-    private DefaultProductFlavor mFlavorConfig;
-    private DefaultBuildType mBuildType;
+    private DefaultConfig mDefaultConfig;
+    private ProductFlavor mFlavorConfig;
+    private BuildType mBuildType;
     private EvalIssueReporter mIssueReporter;
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
     private File srcDir;
 
+    @Mock Project project;
+    @Mock ProjectOptions projectOptions;
+    private DslScope dslScope = FakeDslScope.createFakeDslScope();
+
     @Before
     public void setUp() throws Exception {
-        mDefaultConfig = new DefaultProductFlavor("main");
-        mFlavorConfig = new DefaultProductFlavor("flavor");
-        mBuildType = new DefaultBuildType("debug");
+        MockitoAnnotations.initMocks(this);
+        Mockito.when(projectOptions.get(Mockito.any(IntegerOption.class))).thenReturn(null);
+        Mockito.when(projectOptions.get(Mockito.any(StringOption.class))).thenReturn(null);
+
+        mDefaultConfig = new DefaultConfig("main", project, dslScope);
+        mFlavorConfig = new ProductFlavor("flavor", project, dslScope);
+        mBuildType = new BuildType("debug", project, dslScope);
         srcDir = tmp.newFolder("src");
         mIssueReporter = new FakeEvalIssueReporter();
     }
 
     @Test
     public void testPackageOverrideNone() {
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getIdOverride()).isNull();
     }
@@ -64,7 +81,7 @@ public class VariantConfigurationTest {
     public void testIdOverrideIdFromFlavor() {
         mFlavorConfig.setApplicationId("foo.bar");
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getIdOverride()).isEqualTo("foo.bar");
     }
@@ -74,7 +91,7 @@ public class VariantConfigurationTest {
         mFlavorConfig.setApplicationId("foo.bar");
         mBuildType.setApplicationIdSuffix(".fortytwo");
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getIdOverride()).isEqualTo("foo.bar.fortytwo");
     }
@@ -84,7 +101,7 @@ public class VariantConfigurationTest {
         mFlavorConfig.setApplicationId("foo.bar");
         mBuildType.setApplicationIdSuffix("fortytwo");
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getIdOverride()).isEqualTo("foo.bar.fortytwo");
     }
@@ -94,37 +111,37 @@ public class VariantConfigurationTest {
         mFlavorConfig.setVersionName("1.0");
         mBuildType.setVersionNameSuffix("-DEBUG");
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getVersionName()).isEqualTo("1.0-DEBUG");
     }
 
     @Test
     public void testSigningBuildTypeOverride() {
-        // DefaultSigningConfig doesn't compare the name, so put some content.
-        DefaultSigningConfig debugSigning = new DefaultSigningConfig("debug");
+        // SigningConfig doesn't compare the name, so put some content.
+        SigningConfig debugSigning = new SigningConfig("debug");
         debugSigning.setStorePassword("debug");
         mBuildType.setSigningConfig(debugSigning);
 
-        DefaultSigningConfig override = new DefaultSigningConfig("override");
+        SigningConfig override = new SigningConfig("override");
         override.setStorePassword("override");
 
-        VariantConfiguration variant = getVariant(override);
+        GradleVariantConfiguration variant = getVariant(override);
 
         assertThat(variant.getSigningConfig()).isEqualTo(override);
     }
 
     @Test
     public void testSigningProductFlavorOverride() {
-        // DefaultSigningConfig doesn't compare the name, so put some content.
-        DefaultSigningConfig defaultConfig = new DefaultSigningConfig("defaultConfig");
+        // SigningConfig doesn't compare the name, so put some content.
+        SigningConfig defaultConfig = new SigningConfig("defaultConfig");
         defaultConfig.setStorePassword("debug");
         mDefaultConfig.setSigningConfig(defaultConfig);
 
-        DefaultSigningConfig override = new DefaultSigningConfig("override");
+        SigningConfig override = new SigningConfig("override");
         override.setStorePassword("override");
 
-        VariantConfiguration variant = getVariant(override);
+        GradleVariantConfiguration variant = getVariant(override);
 
         assertThat(variant.getSigningConfig()).isEqualTo(override);
     }
@@ -135,7 +152,7 @@ public class VariantConfigurationTest {
         ApiVersion minSdkVersion = DefaultApiVersion.create(new Integer(5));
         mDefaultConfig.setMinSdkVersion(minSdkVersion);
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getMinSdkVersion())
                 .isEqualTo(
@@ -146,7 +163,7 @@ public class VariantConfigurationTest {
     @Test
     public void testGetMinSdkVersionDefault() {
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getMinSdkVersion()).isEqualTo(new AndroidVersion(1, null));
     }
@@ -157,7 +174,7 @@ public class VariantConfigurationTest {
         ApiVersion targetSdkVersion = DefaultApiVersion.create(new Integer(9));
         mDefaultConfig.setTargetSdkVersion(targetSdkVersion);
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
     }
@@ -165,19 +182,44 @@ public class VariantConfigurationTest {
     @Test
     public void testGetTargetSdkVersionDefault() {
 
-        VariantConfiguration variant = getVariant();
+        GradleVariantConfiguration variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion())
                 .isEqualTo(DefaultApiVersion.create(new Integer(-1)));
     }
 
-    private VariantConfiguration getVariant() {
+    @Test
+    public void testGetVersionCode() {
+
+        mDefaultConfig.setVersionCode(42);
+
+        GradleVariantConfiguration variant = getVariant();
+
+        assertThat(variant.getVersionCode()).isEqualTo(42);
+    }
+
+    @Test
+    public void testGetVersionName() {
+
+        mDefaultConfig.setVersionName("foo");
+        mDefaultConfig.setVersionNameSuffix("-bar");
+        mBuildType.setVersionNameSuffix("-baz");
+
+        GradleVariantConfiguration variant = getVariant();
+
+        assertThat(variant.getVersionName()).isEqualTo("foo-bar-baz");
+    }
+
+
+    private GradleVariantConfiguration getVariant() {
         return getVariant(null /*signingOverride*/);
     }
 
-    private VariantConfiguration getVariant(SigningConfig signingOverride) {
-        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
-                new VariantConfiguration<>(
+    private GradleVariantConfiguration getVariant(SigningConfig signingOverride) {
+        GradleVariantConfiguration variant =
+                new GradleVariantConfiguration(
+                        projectOptions,
+                        null,
                         mDefaultConfig,
                         new MockSourceProvider("main"),
                         null,
@@ -190,27 +232,6 @@ public class VariantConfigurationTest {
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
 
-        return variant;
-    }
-
-    private VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>
-            getVariantWithTempFolderSourceProviders() {
-        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
-                new VariantConfiguration<>(
-                        mDefaultConfig,
-                        new MockSourceProvider(srcDir.getPath() + File.separatorChar + "main"),
-                        null,
-                        mBuildType,
-                        new MockSourceProvider(srcDir.getPath() + File.separatorChar + "debug"),
-                        VariantTypeImpl.BASE_APK,
-                        null,
-                        mIssueReporter,
-                        () -> true);
-
-        variant.addProductFlavor(
-                mFlavorConfig,
-                new MockSourceProvider(srcDir.getPath() + File.separatorChar + "custom"),
-                "");
         return variant;
     }
 }

@@ -85,6 +85,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // Artifact for supporting faster incremental dex archive building. This artifact contains
     // information about inputs and it should not be consumed by other tasks.
     object DEX_ARCHIVE_INPUT_JAR_HASHES: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Directory containing dependency graph(s) for desugaring
+    object DESUGAR_GRAPH: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // External file library dex archives (Desugared separately from module & project dependencies)
     object EXTERNAL_FILE_LIB_DEX_ARCHIVES: InternalArtifactType<Directory>(DIRECTORY), Replaceable

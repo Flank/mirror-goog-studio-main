@@ -146,9 +146,6 @@ public class ClientData {
     private static IMethodProfilingHandler sMethodProfilingHandler;
     private static IAllocationTrackingHandler sAllocationTrackingHandler;
 
-    // is this a DDM-aware client?
-    private boolean mIsDdmAware;
-
     // the client's process ID
     private final int mPid;
 
@@ -495,20 +492,6 @@ public class ClientData {
 
         mDebuggerInterest = DebuggerStatus.DEFAULT;
         mThreadMap = new TreeMap<Integer,ThreadInfo>();
-    }
-
-    /**
-     * Returns whether the process is DDM-aware.
-     */
-    public boolean isDdmAware() {
-        return mIsDdmAware;
-    }
-
-    /**
-     * Sets DDM-aware status.
-     */
-    void isDdmAware(boolean aware) {
-        mIsDdmAware = aware;
     }
 
     /**

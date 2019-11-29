@@ -38,7 +38,7 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.attributes.VariantAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
@@ -636,7 +636,7 @@ public class VariantDependencies {
         @NonNull
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
                 @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
-            List<CoreProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
+            List<ProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
             // during a sync, it's possible that the flavors don't have dimension names because
@@ -650,7 +650,7 @@ public class VariantDependencies {
             final ObjectFactory objectFactory = project.getObjects();
 
             // first go through the product flavors and add matching attributes
-            for (CoreProductFlavor f : productFlavors) {
+            for (ProductFlavor f : productFlavors) {
                 assert f.getDimension() != null;
 
                 map.put(

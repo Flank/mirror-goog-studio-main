@@ -5,33 +5,38 @@ load(":swap_test.bzl", "swap_test")
 package(default_testonly = True)
 
 swap_test(
-    name = "AgentBasedClassRedefinerDesugarTest",
-    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerDesugarTest.java"],
+    name = "DesugarTest",
+    srcs = ["java/com/android/tools/deployer/DesugarTest.java"],
 )
 
 swap_test(
-    name = "AgentBasedClassRedefinerFailureTest",
-    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerFailureTest.java"],
+    name = "FailureTest",
+    srcs = ["java/com/android/tools/deployer/FailureTest.java"],
 )
 
 swap_test(
-    name = "AgentBasedClassRedefinerKotlinTest",
-    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerKotlinTest.java"],
+    name = "KotlinTest",
+    srcs = ["java/com/android/tools/deployer/KotlinTest.java"],
 )
 
 swap_test(
-    name = "AgentBasedClassRedefinerSimpleTest",
-    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerSimpleTest.java"],
+    name = "SimpleTest",
+    srcs = ["java/com/android/tools/deployer/SimpleTest.java"],
 )
 
 swap_test(
-    name = "AgentBasedClassRedefinerRClassTest",
-    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerRClassTest.java"],
+    name = "RClassTest",
+    srcs = ["java/com/android/tools/deployer/RClassTest.java"],
 )
 
 swap_test(
-    name = "AgentBasedClassRedefinerJetPackComposeTest",
-    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerJetPackComposeTest.java"],
+    name = "JetPackComposeTest",
+    srcs = ["java/com/android/tools/deployer/JetPackComposeTest.java"],
+)
+
+swap_test(
+    name = "StaticVarInitTest",
+    srcs = ["java/com/android/tools/deployer/StaticVarInitTest.java"],
 )
 
 swap_test(

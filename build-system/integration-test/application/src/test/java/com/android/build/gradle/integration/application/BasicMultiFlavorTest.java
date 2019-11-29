@@ -108,25 +108,6 @@ public class BasicMultiFlavorTest {
                 .containsResource("drawable/free.png");
     }
 
-    @Test
-    public void checkExtraSourceSetWithIntantRun() throws IOException, InterruptedException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "    sourceSets {\n"
-                        + "        freeBetaDebug {\n"
-                        + "            java.srcDir \"src/blah/java\"\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
-
-        project.executor()
-                .with(StringOption.IDE_RESTRICT_VARIANT_PROJECT, ":")
-                .with(StringOption.IDE_RESTRICT_VARIANT_NAME, "paidBetaDebug")
-                .run("assemblePaidBetaDebug");
-    }
-
     private void addResValuesAndPlaceholders() throws IOException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

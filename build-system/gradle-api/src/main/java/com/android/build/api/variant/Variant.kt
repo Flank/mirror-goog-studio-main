@@ -26,7 +26,7 @@ import org.gradle.api.Incubating
  * @param T the [VariantProperties] type associated with this [Variant]
  */
 @Incubating
-interface Variant<T : VariantProperties>: VariantConfiguration {
+interface Variant<T : VariantProperties>: VariantConfiguration, ActionableVariantObject {
 
     /**
      * Set to True if the variant is active and should be configured, false otherwise.

@@ -91,7 +91,8 @@ class Trie {
 
   // Bookkeeping - print tracking stats
   void PrintStats() const {
-    Log::V(">> TotalNodes:%d, TotalInserts:%d, UniquePaths:%d", length(),
+    Log::V(Log::Tag::TRANSPORT,
+           ">> TotalNodes:%d, TotalInserts:%d, UniquePaths:%d", length(),
            total_insert_count_, unique_path_count_);
   }
 

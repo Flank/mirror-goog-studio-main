@@ -2,10 +2,6 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
 <recipe>
-    <#--
-    This needs to be before addAllKotlinDependencies because the merge instruction seems
-    to have non-commited documents that cause some UI tests to fail.
-    -->
     <@navigation.addSafeArgsPluginToClasspath />
 
     <@kt.addAllKotlinDependencies />

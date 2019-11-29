@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -42,6 +43,7 @@ public class BuilderTestingApiTest {
 
     @Test
     public void deviceCheck() throws IOException, InterruptedException {
+        assumeNotWindows(); // b/145233124
         GradleBuildResult result = project.executor().run("deviceCheck");
         ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<>();
         ScannerSubjectUtils.forEachLine(

@@ -2,6 +2,30 @@
 <issues format="5" by="lint 4.0.0-dev">
 
     <issue
+        id="ProjectExecOperations"
+        message="Avoid using org.gradle.api.Project.exec as it is incompatible with Gradle instant execution.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/ide/NativeModelBuilder.kt"
+            line="152"/>
+    </issue>
+
+    <issue
+        id="ProjectExecOperations"
+        message="Avoid using org.gradle.api.Project.exec as it is incompatible with Gradle instant execution.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/ide/NativeModelBuilder.kt"
+            line="220"/>
+    </issue>
+
+    <issue
+        id="ProjectExecOperations"
+        message="Avoid using org.gradle.api.Project.exec as it is incompatible with Gradle instant execution.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/ide/NativeModelBuilder.kt"
+            line="234"/>
+    </issue>
+
+    <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
@@ -90,22 +114,6 @@
     </issue>
 
     <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(1)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantConfiguration.java"
-            line="850"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(-1)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/core/VariantConfiguration.java"
-            line="877"/>
-    </issue>
-
-    <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
@@ -181,6 +189,14 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
+            file="src/main/java/com/android/build/gradle/internal/res/namespaced/CompileSourceSetResources.kt"
+            line="125"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
             file="src/main/java/com/android/build/gradle/internal/ide/DefaultAndroidProject.java"
             line="370"/>
     </issue>
@@ -207,6 +223,14 @@
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/level2/JavaLibraryImpl.java"
             line="202"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/dependency/JetifyTransform.kt"
+            line="143"/>
     </issue>
 
     <issue

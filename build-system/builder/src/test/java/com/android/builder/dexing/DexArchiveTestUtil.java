@@ -93,7 +93,10 @@ public final class DexArchiveTestUtil {
                                         ));
             }
 
-            dexArchiveBuilder.convert(inputs.entries((x, y) -> true), dexArchiveOutput);
+            dexArchiveBuilder.convert(
+                    inputs.entries((x, y) -> true),
+                    dexArchiveOutput,
+                    null /* desugarGraphUpdater */);
         }
     }
 

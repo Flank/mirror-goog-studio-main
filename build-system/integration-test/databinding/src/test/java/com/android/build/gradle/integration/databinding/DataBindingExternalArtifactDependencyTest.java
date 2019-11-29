@@ -70,22 +70,28 @@ public class DataBindingExternalArtifactDependencyTest {
     @Before
     public void clean() throws IOException, InterruptedException {
         // just provide test_maven_repo so that build.gradle does not complain
-        library.execute(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."), "clean");
-        app.execute(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."), "clean");
+        library.executor()
+                .withArguments(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."))
+                .withFailOnWarning(false)
+                .run("clean");
+        app.executor()
+                .withArguments(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."))
+                .withFailOnWarning(false)
+                .run("clean");
     }
 
     @NonNull
     private List<String> createLibraryArtifact() throws IOException, InterruptedException {
         List<String> args =
                 ImmutableList.of(MAVEN_REPO_ARG_PREFIX + mavenRepo.getRoot().getAbsolutePath());
-        library.execute(args, "uploadArchives");
+        library.executor().withArguments(args).withFailOnWarning(false).run("uploadArchives");
         return args;
     }
 
     @Test
     public void runTest() throws Exception {
         List<String> args = createLibraryArtifact();
-        app.execute(args, "assembleDebug");
-        app.execute(args, "assembleDebugAndroidTest");
+        app.executor().withFailOnWarning(false).withArguments(args).run("assembleDebug");
+        app.executor().withFailOnWarning(false).withArguments(args).run("assembleDebugAndroidTest");
     }
 }

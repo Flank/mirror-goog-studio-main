@@ -68,12 +68,13 @@ Status InternalCpuServiceImpl::SendTraceEvent(
   } else if (request->has_stop()) {
     const auto* ongoing = trace_manager_->GetOngoingCapture(app_name);
     if (ongoing == nullptr) {
-      Log::E("No running trace when Debug.stopMethodTracing() is called");
+      Log::E(Log::Tag::PROFILER,
+             "No running trace when Debug.stopMethodTracing() is called");
     } else if (ongoing->configuration.initiation_type() !=
                TraceInitiationType::INITIATED_BY_API) {
-      Log::E(
-          "Debug.stopMethodTracing() is called but the running trace is not "
-          "initiated by startMetghodTracing* APIs");
+      Log::E(Log::Tag::PROFILER,
+             "Debug.stopMethodTracing() is called but the running trace is not "
+             "initiated by startMetghodTracing* APIs");
     } else {
       TraceStopStatus stop_status;
       auto* capture = trace_manager_->StopProfiling(

@@ -22,17 +22,17 @@ import ${applicationPackage}.R;
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
  * <p>You can show this modal bottom sheet from your activity like this:</p>
  * <pre>
- *     ${className}.newInstance(30).show(getSupportFragmentManager(), "dialog");
+ *     ${fragmentClass}.newInstance(30).show(getSupportFragmentManager(), "dialog");
  * </pre>
  */
-public class ${className} extends BottomSheetDialogFragment {
+public class ${fragmentClass} extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_ITEM_COUNT = "item_count";
 
     // TODO: Customize parameters
-    public static ${className} newInstance(int itemCount) {
-        final ${className} fragment = new ${className}();
+    public static ${fragmentClass} newInstance(int itemCount) {
+        final ${fragmentClass} fragment = new ${fragmentClass}();
         final Bundle args = new Bundle();
         args.putInt(ARG_ITEM_COUNT, itemCount);
         fragment.setArguments(args);

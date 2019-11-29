@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -30,7 +31,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.ProductFlavor
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.base.Joiner
@@ -58,7 +58,8 @@ class CompatibleScreensManifestTest {
     @Mock internal lateinit var scope: VariantScope
     @Mock private lateinit var outputScope: OutputScope
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
-    @Mock private lateinit var productFlavor: ProductFlavor
+    @Suppress("DEPRECATION")
+    @Mock private lateinit var mergedFlavor: MergedFlavor
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer
 
@@ -80,8 +81,8 @@ class CompatibleScreensManifestTest {
         `when`(scope.taskContainer).thenReturn(taskContainer)
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
-        `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
-        `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(productFlavor)
+        `when`<ApiVersion>(mergedFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
+        `when`<MergedFlavor>(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
         `when`(variantConfiguration.fullName).thenReturn("fullName")
         `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)

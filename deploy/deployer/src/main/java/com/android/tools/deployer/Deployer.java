@@ -19,8 +19,9 @@ package com.android.tools.deployer;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
+import com.android.tools.deployer.tasks.Task;
+import com.android.tools.deployer.tasks.TaskResult;
 import com.android.tools.deployer.tasks.TaskRunner;
-import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
@@ -173,10 +174,10 @@ public class Deployer {
                 runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
 
         // Do the swap
-        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart);
-        runner.create(Tasks.SWAP, swapper::swap, dumps, sessionId, toSwap);
+        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart, adb, logger);
+        runner.create(Tasks.SWAP, swapper::swap, swapper::error, dumps, sessionId, toSwap);
 
-        TaskRunner.Result result = runner.run();
+        TaskResult result = runner.run();
         result.getMetrics().forEach(metrics::add);
 
         // Update the database with the entire new apk. In the normal case this should

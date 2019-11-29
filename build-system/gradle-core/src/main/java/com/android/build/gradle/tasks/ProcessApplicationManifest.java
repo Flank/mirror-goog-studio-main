@@ -30,6 +30,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.VariantProperties;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
@@ -544,13 +546,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     public static class CreationAction
             extends VariantTaskCreationAction<ProcessApplicationManifest> {
 
+        protected final VariantProperties variantProperties;
         protected final boolean isAdvancedProfilingOn;
 
         public CreationAction(
-                @NonNull VariantScope scope,
+                @NonNull VariantPropertiesImpl variantProperties,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(scope);
+            super(variantProperties.getVariantScope());
+            this.variantProperties = variantProperties;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
         }
 
@@ -752,7 +756,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
-            task.packageOverride.set(task.getProject().provider(config::getApplicationId));
+            task.packageOverride.set(variantProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));

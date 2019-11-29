@@ -18,6 +18,7 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -95,15 +96,13 @@ public interface BaseVariant {
     @NonNull
     DomainObjectCollection<BaseVariantOutput> getOutputs();
 
-    /**
-     * Returns the {@link com.android.builder.core.DefaultBuildType} for this build variant.
-     */
+    /** Returns the {@link BuildType} for this build variant. */
     @NonNull
     BuildType getBuildType();
 
     /**
-     * Returns a {@link com.android.builder.core.DefaultProductFlavor} that represents the merging
-     * of the default config and the flavors of this build variant.
+     * Returns a {@link ProductFlavor} that represents the merging of the default config and the
+     * flavors of this build variant.
      */
     @NonNull
     ProductFlavor getMergedFlavor();
@@ -116,8 +115,7 @@ public interface BaseVariant {
     JavaCompileOptions getJavaCompileOptions();
 
     /**
-     * Returns the list of {@link com.android.builder.core.DefaultProductFlavor} for this build
-     * variant.
+     * Returns the list of {@link ProductFlavor} for this build variant.
      *
      * <p>This is always non-null but could be empty.
      */
@@ -203,26 +201,35 @@ public interface BaseVariant {
     /**
      * Returns the AIDL compilation task.
      *
+     * <p>If aidl feature is disabled via {@link BuildFeatures#getAidl()} this will throw an
+     * exception (or return <code>null</code> during sync.)
+     *
      * @deprecated Use {@link #getAidlCompileProvider()}
      */
-    @NonNull
+    @Nullable
     @Deprecated
     AidlCompile getAidlCompile();
 
     /**
      * Returns the {@link TaskProvider} for the AIDL compilation task.
      *
+     * <p>If aidl feature is disabled via {@link BuildFeatures#getAidl()} this will throw an
+     * exception (or return <code>null</code> during sync.)
+     *
      * <p>Prefer this to {@link #getAidlCompile()} as it triggers eager configuration of the task.
      */
-    @NonNull
+    @Nullable
     TaskProvider<AidlCompile> getAidlCompileProvider();
 
     /**
      * Returns the Renderscript compilation task.
      *
+     * <p>If renderscript feature is disabled via {@link BuildFeatures#getRenderScript()} this will
+     * throw an exception (or return <code>null</code> during sync.)
+     *
      * @deprecated Use {@link #getRenderscriptCompileProvider()}
      */
-    @NonNull
+    @Nullable
     @Deprecated
     RenderscriptCompile getRenderscriptCompile();
 
@@ -231,8 +238,11 @@ public interface BaseVariant {
      *
      * <p>Prefer this to {@link #getRenderscriptCompile()} as it triggers eager configuration of the
      * task.
+     *
+     * <p>If renderscript feature is disabled via {@link BuildFeatures#getRenderScript()} this will
+     * throw an exception (or return <code>null</code> during sync.)
      */
-    @NonNull
+    @Nullable
     TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider();
 
     /**

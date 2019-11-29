@@ -46,7 +46,7 @@ if [[ -d "${DIST_DIR}" ]]; then
   readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
-  
+
   ${java} -jar "${bin_dir}/tools/base/bazel/perfgate_logs_collector_deploy.jar" \
     "${testlogs_dir}" \
     "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
@@ -65,6 +65,9 @@ if [[ -d "${DIST_DIR}" ]]; then
   # Additional logging to debug b/140193822
   (cd tools/base && git log --oneline -5 && git diff --stat) > "${DIST_DIR}"/b140193822-tools-base.txt
   (cd tools/adt/idea && git log --oneline -5 && git diff --stat) > "${DIST_DIR}"/b140193822-tools-adt-idea.txt
+
+  # SDK tools
+  cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip "${DIST_DIR}"
 
 fi
 

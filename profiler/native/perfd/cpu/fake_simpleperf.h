@@ -41,20 +41,20 @@ class FakeSimpleperf final : public Simpleperf {
         kill_simpleperf_called_(false),
         report_sample_called_(false) {}
 
-  bool EnableProfiling() const { return enable_profiling_success_; }
+  bool EnableProfiling() const override { return enable_profiling_success_; }
 
-  bool KillSimpleperf(int simpleperf_pid, const string& pkg_name) {
+  bool KillSimpleperf(int simpleperf_pid, const string& pkg_name) override {
     kill_simpleperf_called_ = true;
     return kill_simpleperf_success_;
   }
 
   bool ReportSample(const string& input_path, const string& output_path,
-                    const string& abi_arch, string* output) {
+                    const string& abi_arch, string* output) override {
     report_sample_called_ = true;
     return report_sample_success_;
   }
 
-  virtual int WaitForSimpleperf(int simpleperf_pid, int* status) {
+  virtual int WaitForSimpleperf(int simpleperf_pid, int* status) override {
     *status = 0;
     return simpleperf_pid;
   }

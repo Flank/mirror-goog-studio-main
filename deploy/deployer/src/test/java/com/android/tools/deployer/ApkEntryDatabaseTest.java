@@ -99,26 +99,92 @@ public class ApkEntryDatabaseTest {
         ApkEntry classes02 = new ApkEntry("02.dex", 1235, apk);
         ApkEntry classes03 = new ApkEntry("03.dex", 1236, apk);
         DexClass c1 = new DexClass("A.1", 0xA1, null, classes01);
-        DexClass c2 = new DexClass("B.1", 0xB1, null, classes01);
-        DexClass c3 = new DexClass("B.2", 0XB2, null, classes02);
-        DexClass c4 = new DexClass("C.3", 0XC3, null, classes03);
 
-        db.addClasses(ImmutableList.of(c1, c2, c3));
-
+        // Add c1 to 01.dex
+        db.addClasses(ImmutableList.of(c1));
         List<DexClass> dump = db.dump();
-        Assert.assertEquals(3, dump.size());
-        assertDexClassEquals("ABCD", "01.dex", 1234, "A.1", 0xA1, dump.get(0));
-        assertDexClassEquals("ABCD", "01.dex", 1234, "B.1", 0xB1, dump.get(1));
-        assertDexClassEquals("ABCD", "02.dex", 1235, "B.2", 0xB2, dump.get(2));
-
-        // Add one more class
-        db.addClasses(ImmutableList.of(c4));
-        dump = db.dump();
         Set<String> dexes = new HashSet<>();
         for (DexClass clazz : dump) {
             dexes.add(clazz.dex.getName());
         }
+        Assert.assertEquals(1, dexes.size());
+        Assert.assertTrue(dexes.contains("01.dex"));
+
+        // Add c2 to 01.dex
+        DexClass c2 = new DexClass("B.1", 0xB1, null, classes01);
+        db.addClasses(ImmutableList.of(c2));
+        dump = db.dump();
+        dexes = new HashSet<>();
+        for (DexClass clazz : dump) {
+            dexes.add(clazz.dex.getName());
+        }
+        Assert.assertEquals(1, dexes.size());
+        Assert.assertTrue(dexes.contains("01.dex"));
+
+        // Add c3 to 02.dex
+        DexClass c3 = new DexClass("B.2", 0XB2, null, classes02);
+        db.addClasses(ImmutableList.of(c3));
+        dump = db.dump();
+        dexes = new HashSet<>();
+        for (DexClass clazz : dump) {
+            dexes.add(clazz.dex.getName());
+        }
         Assert.assertEquals(2, dexes.size());
+        Assert.assertTrue(dexes.contains("02.dex"));
+
+        // Add c4 to 03.dex
+        DexClass c4 = new DexClass("B.2", 0XB2, null, classes03);
+        db.addClasses(ImmutableList.of(c4));
+        dump = db.dump();
+        dexes = new HashSet<>();
+        for (DexClass clazz : dump) {
+            dexes.add(clazz.dex.getName());
+        }
+        Assert.assertEquals(2, dexes.size());
+        Assert.assertTrue(dexes.contains("02.dex"));
         Assert.assertTrue(dexes.contains("03.dex"));
+        // 01.dex got flushed out and db should only have 02 and 03.
+        Assert.assertFalse(dexes.contains("01.dex"));
+    }
+
+    @Test
+    public void testExpandCacheSize() throws Exception {
+        SqlApkFileDatabase db = createTestDb("1.0", 2);
+
+        ApkEntry classes01 = new ApkEntry("01.dex", 1234, apk);
+        ApkEntry classes02 = new ApkEntry("02.dex", 1235, apk);
+        ApkEntry classes03 = new ApkEntry("03.dex", 1236, apk);
+        ApkEntry classes04 = new ApkEntry("04.dex", 1236, apk);
+
+        DexClass c1 = new DexClass("A.1", 0xA1, null, classes01);
+        DexClass c2 = new DexClass("B.1", 0xB1, null, classes02);
+        DexClass c3 = new DexClass("B.2", 0XB2, null, classes03);
+        DexClass c4 = new DexClass("C.3", 0XC3, null, classes04);
+
+        // Adding 01, 02, 03.dex to the database pushes the capacity
+        // to 6.
+        db.addClasses(ImmutableList.of(c1, c2, c3));
+        List<DexClass> dump = db.dump();
+        Set<String> dexes = new HashSet<>();
+        for (DexClass clazz : dump) {
+            dexes.add(clazz.dex.getName());
+        }
+        Assert.assertEquals(3, dexes.size());
+        Assert.assertTrue(dexes.contains("01.dex"));
+        Assert.assertTrue(dexes.contains("02.dex"));
+        Assert.assertTrue(dexes.contains("03.dex"));
+
+        // Adding more dex files shouldn't push thing out the database.
+        db.addClasses(ImmutableList.of(c4));
+        dump = db.dump();
+        dexes = new HashSet<>();
+        for (DexClass clazz : dump) {
+            dexes.add(clazz.dex.getName());
+        }
+        Assert.assertEquals(4, dexes.size());
+        Assert.assertTrue(dexes.contains("01.dex"));
+        Assert.assertTrue(dexes.contains("02.dex"));
+        Assert.assertTrue(dexes.contains("03.dex"));
+        Assert.assertTrue(dexes.contains("04.dex"));
     }
 }

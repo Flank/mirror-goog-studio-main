@@ -33,13 +33,13 @@ class AndroidJobSchedulerImplTransform : public Transform {
     mi.AddTransformation<slicer::EntryHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "onScheduleJobEntry"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     mi.AddTransformation<slicer::ExitHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "onScheduleJobExit"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "schedule",
                                           "(Landroid/app/job/JobInfo;)I"))) {
-      Log::E("Error instrumenting JobScheduler.schedule");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting JobScheduler.schedule");
     }
   }
 };

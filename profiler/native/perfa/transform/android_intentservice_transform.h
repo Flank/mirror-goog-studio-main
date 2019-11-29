@@ -34,7 +34,8 @@ class AndroidIntentServiceTransform : public Transform {
         "wrapServiceStart"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "onStartCommand",
                                           "(Landroid/content/Intent;II)I"))) {
-      Log::E("Error instrumenting IntentService.onStartCommand");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting IntentService.onStartCommand");
     }
   }
 };

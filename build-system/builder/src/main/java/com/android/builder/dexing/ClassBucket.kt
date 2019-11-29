@@ -26,7 +26,7 @@ import kotlin.math.abs
  * A bucket of class files. Multiple buckets are split from a [ClassBucketGroup] using an internal
  * algorithm, and each one is identified by a bucket number.
  */
-class ClassBucket(val bucketGroup: ClassBucketGroup, private val bucketNumber: Int) :
+class ClassBucket(val bucketGroup: ClassBucketGroup, val bucketNumber: Int) :
     Serializable {
 
     /**

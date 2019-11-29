@@ -59,7 +59,7 @@ public class Shell {
             @NonNull InputStream input,
             @NonNull FakeDevice device)
             throws IOException {
-        try (Trace ignore = Trace.begin("execute: " + script)) {
+        try (Trace ignore = Trace.begin("execute: " + script.replaceAll("\"", "\\\\\""))) {
             history.add(script);
             ShellContext env = new ShellContext(device, user, input, output);
             Expression.ExecutionResult result = Parser.parse(script).execute(env);

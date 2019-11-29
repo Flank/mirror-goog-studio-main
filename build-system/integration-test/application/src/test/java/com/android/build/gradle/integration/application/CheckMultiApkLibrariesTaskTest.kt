@@ -50,8 +50,6 @@ class CheckMultiApkLibrariesTaskTest {
         MinimalSubProject.app("com.example.app")
             .appendToBuild("android.defaultConfig.minSdkVersion 14")
 
-    private val instantApp = MinimalSubProject.instantApp()
-
     private val testApp =
         MultiModuleTestProject.builder()
             .subproject(":lib", lib)

@@ -57,10 +57,23 @@ public class TransformApiTest {
 
     @Test
     public void checkRepackagedGsonLibrary() throws Exception {
-        wholeProject.getSubproject("plugin").execute("uploadArchives");
+        wholeProject
+                .getSubproject("plugin")
+                .executor()
+                .withFailOnWarning(false)
+                .run("uploadArchives");
 
-        AndroidProject model = wholeProject.getSubproject("androidproject")
-                        .executeAndReturnModel("assembleDebug")
+        wholeProject
+                .getSubproject("androidproject")
+                .executor()
+                .withFailOnWarning(false)
+                .run("assembleDebug");
+        AndroidProject model =
+                wholeProject
+                        .getSubproject("androidproject")
+                        .model()
+                        .withFailOnWarning(false)
+                        .fetchAndroidProjects()
                         .getOnlyModel();
 
         // get the output model
@@ -68,6 +81,7 @@ public class TransformApiTest {
                 wholeProject
                         .getSubproject("androidproject")
                         .model()
+                        .withFailOnWarning(false)
                         .fetch(ProjectBuildOutput.class);
         VariantBuildOutput debugVariantOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);

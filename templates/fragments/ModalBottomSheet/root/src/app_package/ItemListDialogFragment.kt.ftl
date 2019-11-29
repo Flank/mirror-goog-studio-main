@@ -27,10 +27,10 @@ const val ARG_ITEM_COUNT = "item_count"
  *
  * You can show this modal bottom sheet from your activity like this:
  * <pre>
- *    ${className}.newInstance(30).show(supportFragmentManager, "dialog")
+ *    ${fragmentClass}.newInstance(30).show(supportFragmentManager, "dialog")
  * </pre>
  */
-class ${className} : BottomSheetDialogFragment() {
+class ${fragmentClass} : BottomSheetDialogFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -70,8 +70,8 @@ class ${className} : BottomSheetDialogFragment() {
     companion object {
 
         // TODO: Customize parameters
-        fun newInstance(itemCount: Int): ${className} =
-                ${className}().apply {
+        fun newInstance(itemCount: Int): ${fragmentClass} =
+                ${fragmentClass}().apply {
                     arguments = Bundle().apply {
                         putInt(ARG_ITEM_COUNT, itemCount)
                     }

@@ -694,15 +694,8 @@ public class TestZipFlinger extends TestBase {
         verifyArchive(dst.toFile());
     }
 
-    @Test
-    // Regression test for b/141861587
-    public void testVersionMadeByZero() throws Exception {
-        int fileSize = 4;
-        Path dst = getTestPath("testMadeByZero.zip");
-        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
-            archive.add(new BytesSource(new byte[fileSize], "file1", 0));
-        }
-        ZipMap map = ZipMap.from(dst.toFile(), false);
+    private ByteBuffer extractCentralDirectory(Path archivePath) throws IOException {
+        ZipMap map = ZipMap.from(archivePath.toFile(), false);
 
         Path cdDumpPath = getTestPath("cd_dump");
         try (FileChannel channel =
@@ -717,7 +710,18 @@ public class TestZipFlinger extends TestBase {
 
         // Extract the CD from the archive
         byte[] cdBytes = Files.readAllBytes(cdDumpPath);
-        ByteBuffer cd = ByteBuffer.wrap(cdBytes).order(ByteOrder.LITTLE_ENDIAN);
+        return ByteBuffer.wrap(cdBytes).order(ByteOrder.LITTLE_ENDIAN);
+    }
+
+    @Test
+    // Regression test for b/141861587
+    public void testVersionMadeByZero() throws Exception {
+        int fileSize = 4;
+        Path dst = getTestPath("testMadeByZero.zip");
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            archive.add(new BytesSource(new byte[fileSize], "file1", 0));
+        }
+        ByteBuffer cd = extractCentralDirectory(dst);
 
         // Check signature
         int signature = cd.getInt();
@@ -735,5 +739,28 @@ public class TestZipFlinger extends TestBase {
 
         int ucompressedSize = cd.getInt();
         Assert.assertEquals("Bad USize", fileSize, ucompressedSize);
+    }
+
+    // Regression test for b/144189353 (JD9 treats zero time/data stamp as invalid).
+    @Test
+    public void testTimeAndDateNotZero() throws Exception {
+        // Make sure the default values are not zero.
+        Assert.assertNotEquals("Bad time", CentralDirectoryRecord.DEFAULT_TIME, 0);
+        Assert.assertNotEquals("Bad date", CentralDirectoryRecord.DEFAULT_DATE, 0);
+
+        Path dst = getTestPath("testTimeAndDateNotZero.zip");
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            archive.add(new BytesSource(new byte[0], "", 0));
+        }
+
+        // Check Local File Header values
+        ByteBuffer lfh = ByteBuffer.wrap(Files.readAllBytes(dst)).order(ByteOrder.LITTLE_ENDIAN);
+        Assert.assertEquals("Bad time", CentralDirectoryRecord.DEFAULT_TIME, lfh.getShort(10));
+        Assert.assertEquals("Bad date", CentralDirectoryRecord.DEFAULT_DATE, lfh.getShort(12));
+
+        // Check Central Directory values
+        ByteBuffer cd = extractCentralDirectory(dst);
+        Assert.assertEquals("Bad time", CentralDirectoryRecord.DEFAULT_TIME, cd.getShort(12));
+        Assert.assertEquals("Bad date", CentralDirectoryRecord.DEFAULT_DATE, cd.getShort(14));
     }
 }

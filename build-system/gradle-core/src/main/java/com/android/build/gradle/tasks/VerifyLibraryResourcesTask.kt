@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
+import com.android.build.gradle.internal.res.ResourceCompilerRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
@@ -31,7 +32,7 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
-import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.files.SerializableInputChanges
@@ -44,14 +45,11 @@ import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
-import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -59,7 +57,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -67,7 +64,6 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
 import java.io.Serializable
-import java.lang.RuntimeException
 import javax.inject.Inject
 
 @CacheableTask
@@ -105,11 +101,16 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     lateinit var androidJar: Provider<File>
         private set
 
+
     /** A file collection of the directories containing the compiled dependencies resource files. */
     @get:Incremental
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val compiledDependenciesResources: ConfigurableFileCollection
+
+    @get:Input
+    var useJvmResourceCompiler: Boolean = false
+      private set
 
     private lateinit var mergeBlameFolder: File
 
@@ -133,9 +134,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             compiledDependenciesResources = compiledDependenciesResources.files,
             manifestMergeBlameFile = manifestMergeBlameFile.get().asFile,
             compiledDirectory = compiledDirectory,
-            mergeBlameFolder = mergeBlameFolder
-
-            )
+            mergeBlameFolder = mergeBlameFolder,
+            useJvmResourceCompiler = useJvmResourceCompiler)
         getWorkerFacadeWithWorkers().submit(Action::class.java, parameter)
     }
 
@@ -148,6 +148,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         val inputs: SerializableInputChanges,
         val manifestFile: File,
         val compiledDependenciesResources: Iterable<File>,
+        val useJvmResourceCompiler: Boolean,
         val manifestMergeBlameFile: File?,
         val compiledDirectory: File,
         val mergeBlameFolder: File
@@ -165,7 +166,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                     workerExecutor = facade,
                     aapt2ServiceKey = params.aapt2ServiceKey,
                     errorFormatMode = params.errorFormatMode,
-                    mergeBlameFolder = params.mergeBlameFolder
+                    mergeBlameFolder = params.mergeBlameFolder,
+                    useJvmResourceCompiler = params.useJvmResourceCompiler
                 )
 
                 val config = getAaptPackageConfig(
@@ -244,6 +246,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                     ))
             }
+
+            task.useJvmResourceCompiler =
+              variantScope.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
         }
     }
 
@@ -285,7 +290,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             workerExecutor: WorkerExecutorFacade,
             aapt2ServiceKey: Aapt2ServiceKey,
             errorFormatMode: SyncOptions.ErrorFormatMode,
-            mergeBlameFolder: File
+            mergeBlameFolder: File,
+            useJvmResourceCompiler: Boolean
         ) {
 
             for (change in inputs.changes) {
@@ -310,15 +316,24 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                                 isPngCrunching = false,
                                 mergeBlameFolder = mergeBlameFolder
                             )
-                            workerExecutor.submit(
-                                Aapt2CompileRunnable::class.java,
-                                Aapt2CompileRunnable.Params(
+
+                            if (useJvmResourceCompiler &&
+                              canCompileResourceInJvm(request.inputFile)) {
+                                workerExecutor.submit(
+                                  ResourceCompilerRunnable::class.java,
+                                  ResourceCompilerRunnable.Params(request)
+                                )
+                            } else {
+                                workerExecutor.submit(
+                                  Aapt2CompileRunnable::class.java,
+                                  Aapt2CompileRunnable.Params(
                                     aapt2ServiceKey,
                                     listOf(request),
                                     errorFormatMode,
                                     true
+                                  )
                                 )
-                            )
+                            }
                         } catch (e: Exception) {
                             throw AaptException("Failed to compile file ${change.file.absolutePath}", e)
                         }

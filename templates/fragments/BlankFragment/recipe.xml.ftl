@@ -5,15 +5,13 @@
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
     <merge from="root/res/values/strings.xml" to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 
-    <#if includeLayout>
-        <instantiate from="root/res/layout/fragment_blank.xml.ftl"
-                       to="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(fragmentName)}.xml" />
+    <instantiate from="root/res/layout/fragment_blank.xml.ftl"
+                   to="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(fragmentName)}.xml" />
 
-        <open file="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(fragmentName)}.xml" />
-    </#if>
+    <open file="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(fragmentName)}.xml" />
 
     <instantiate from="root/src/app_package/BlankFragment.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+                   to="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${fragmentClass}.${ktOrJavaExt}" />
 </recipe>

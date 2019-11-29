@@ -25,7 +25,8 @@ import javax.inject.Inject;
 import org.gradle.api.Named;
 
 /** DSL object for configuring signing configs. */
-public class SigningConfig extends DefaultSigningConfig implements Serializable, Named {
+public class SigningConfig extends DefaultSigningConfig
+        implements Serializable, Named, com.android.build.api.dsl.SigningConfig {
     private static final long serialVersionUID = 1L;
 
     /**

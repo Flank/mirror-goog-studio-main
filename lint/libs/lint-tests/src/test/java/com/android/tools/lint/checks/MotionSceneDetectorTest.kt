@@ -16,9 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.detector.api.Detector
-import org.intellij.lang.annotations.Language
-
 class MotionSceneDetectorTest : AbstractCheckTest() {
 
     override fun getDetector() = MotionSceneDetector()

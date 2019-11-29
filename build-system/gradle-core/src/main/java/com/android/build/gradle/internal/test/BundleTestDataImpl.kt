@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.test
 import com.android.build.gradle.internal.tasks.getApkFiles
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.builder.testing.TestData
+import com.android.build.gradle.internal.testing.TestData
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -45,7 +45,7 @@ class BundleTestDataImpl(
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
-    override fun getApplicationId(): String = testVariantData.applicationId
+    override fun getApplicationId(): String = testVariantData.variantConfiguration.applicationId
 
     override fun getTestedApplicationId(): String? =
         testVariantData.variantConfiguration.testedApplicationId

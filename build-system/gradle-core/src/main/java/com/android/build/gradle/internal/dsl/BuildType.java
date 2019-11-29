@@ -21,8 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.builder.core.AbstractBuildType;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.DefaultBuildType;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
@@ -42,8 +42,9 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Internal;
 
 /** DSL object to configure build types. */
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda"})
-public class BuildType extends DefaultBuildType implements CoreBuildType, Serializable {
+@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda", "deprecation"})
+public class BuildType extends AbstractBuildType
+        implements CoreBuildType, Serializable, com.android.build.api.dsl.BuildType {
 
     private static final long serialVersionUID = 1L;
 

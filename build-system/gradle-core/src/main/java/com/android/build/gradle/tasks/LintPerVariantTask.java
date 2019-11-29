@@ -117,7 +117,7 @@ public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask
             lint.allInputs.from(lint.variantInputs.getAllInputs());
 
             for (VariantScope variantScope : variantScopes) {
-                addJarArtifactsToInputs(lint.allInputs, variantScope);
+                addModelArtifactsToInputs(lint.allInputs, variantScope);
             }
 
             lint.setDescription(
@@ -161,7 +161,7 @@ public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask
             task.allInputs.from(task.variantInputs.getAllInputs());
 
             for (VariantScope variantScope : variantScopes) {
-                addJarArtifactsToInputs(task.allInputs, variantScope);
+                addModelArtifactsToInputs(task.allInputs, variantScope);
             }
 
             task.fatalOnly = true;

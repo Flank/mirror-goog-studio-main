@@ -24,7 +24,7 @@ import java.io.OutputStream
  * Represents and handles the output of resource compilation.
  *
  * [Container] represents a collection of the output from a single file being compiled by the
- * [ResourceCompiler]. These can contain multiple entries, such as multiple flattened XMLs from
+ * ResourceCompiler. These can contain multiple entries, such as multiple flattened XMLs from
  * aapt:attr outlining. The Container should only be used once the total number of required entries
  * are known.
  */

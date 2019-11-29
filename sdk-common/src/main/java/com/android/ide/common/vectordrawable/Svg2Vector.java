@@ -169,6 +169,7 @@ public class Svg2Vector {
             "stop",
             // Graphics elements.
             "ellipse",
+            "image",
             "text",
             // Light source elements.
             "feDistantLight",
@@ -524,10 +525,7 @@ public class Svg2Vector {
         }
         // Gradient offset values must be between 0 and 1 or 0% and 100%.
         x = Math.min(1, Math.max(x, 0));
-        if (x >= greatestOffset) {
-            return x;
-        }
-        return greatestOffset;
+        return Math.max(x, greatestOffset);
     }
 
     /**
@@ -590,8 +588,9 @@ public class Svg2Vector {
                     String styleAttrTemp = styleAttr;
                     className = splitClassName.trim();
                     // Concatenate the attributes to existing attributes.
-                    if (svgTree.containsStyleClass(className)) {
-                        styleAttrTemp += svgTree.getStyleClassAttr(className);
+                    String existing = svgTree.getStyleClassAttr(className);
+                    if (existing != null) {
+                        styleAttrTemp += ';' + existing;
                     }
                     svgTree.addStyleClassToTree(className, styleAttrTemp);
                 }
@@ -1176,7 +1175,6 @@ public class Svg2Vector {
                     svg.addAffectedNodeToStyleClass("path." + value, child);
                     svg.addAffectedNodeToStyleClass("." + value, child);
                 }
-
             }
         }
     }
@@ -1185,7 +1183,7 @@ public class Svg2Vector {
         logger.log(Level.FINE, "Style found is " + value);
         if (value != null) {
             String[] parts = value.split(";");
-            for (int k = parts.length - 1; k >= 0; k--) {
+            for (int k = parts.length; --k >= 0; ) {
                 String subStyle = parts[k];
                 String[] nameValue = subStyle.split(":");
                 if (nameValue.length == 2 && nameValue[0] != null && nameValue[1] != null) {

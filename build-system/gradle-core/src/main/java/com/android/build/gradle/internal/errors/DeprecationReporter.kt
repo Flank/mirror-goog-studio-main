@@ -52,7 +52,8 @@ interface DeprecationReporter {
                 "Properties must be used to change Variant information."),
         INCLUDE_COMPILE_CLASSPATH("soon. It does not do anything and AGP no longer " +
                 "includes annotation processors added on your project's compile classpath"
-        )
+        ),
+        VERSION_5_0("in version 5.0")
     }
 
     /**

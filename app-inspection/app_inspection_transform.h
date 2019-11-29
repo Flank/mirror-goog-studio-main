@@ -21,7 +21,6 @@
 #include "slicer/dex_ir_builder.h"
 #include "slicer/instrumentation.h"
 #include "utils/log.h"
-#include "void_exit_hook.h"
 
 namespace app_inspection {
 
@@ -43,18 +42,20 @@ class AppInspectionTransform {
             ir::MethodId("Lcom/android/tools/agent/app/inspection/"
                          "AppInspectionService$ExperimentalCapabilities;",
                          "onEntry"),
-            true);
+            slicer::EntryHook::Tweak::ThisAsObject);
       } else {
-        mi.AddTransformation<VoidExitHook>(
+        mi.AddTransformation<slicer::ExitHook>(
             ir::MethodId("Lcom/android/tools/agent/app/inspection/"
                          "AppInspectionService$ExperimentalCapabilities;",
-                         "onExit"));
+                         "onExit"),
+            slicer::ExitHook::Tweak::ReturnAsObject);
       }
 
       if (!mi.InstrumentMethod(ir::MethodId(transform.GetClassName(),
                                             transform.GetMethod(),
                                             transform.GetSignature()))) {
-        profiler::Log::E("Error enter instrumenting %s\n", GetClassName());
+        profiler::Log::E(profiler::Log::Tag::APPINSPECT,
+                         "Error enter instrumenting %s\n", GetClassName());
       }
     }
   }

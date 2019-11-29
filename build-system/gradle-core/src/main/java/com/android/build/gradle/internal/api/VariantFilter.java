@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.VariantConfiguration;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
@@ -38,7 +38,7 @@ public class VariantFilter implements com.android.build.api.variant.VariantFilte
 
     private ProductFlavor defaultConfig;
     private BuildType buildType;
-    private List<ProductFlavor> flavors;
+    private List<? extends ProductFlavor> flavors;
     private VariantType type;
     private String name;
 
@@ -50,7 +50,7 @@ public class VariantFilter implements com.android.build.api.variant.VariantFilte
             @NonNull ProductFlavor defaultConfig,
             @NonNull BuildType buildType,
             @NonNull VariantType type,
-            @Nullable List<ProductFlavor> flavors) {
+            @Nullable List<? extends ProductFlavor> flavors) {
         ignore = false;
         this.defaultConfig = defaultConfig;
         this.buildType = buildType;
@@ -114,8 +114,8 @@ public class VariantFilter implements com.android.build.api.variant.VariantFilte
     public String getName() {
         if (name == null) {
             name =
-                    VariantConfiguration.computeRegularVariantName(
-                            VariantConfiguration.computeFlavorName(flavors), buildType, type);
+                    GradleVariantConfiguration.computeRegularVariantName(
+                            GradleVariantConfiguration.computeFlavorName(flavors), buildType, type);
         }
 
         return name;

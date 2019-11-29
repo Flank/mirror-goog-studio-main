@@ -67,6 +67,7 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -360,7 +361,7 @@ public class ResourceUsageModel {
 
             Resource resource = (Resource) o;
 
-            if (name != null ? !name.equals(resource.name) : resource.name != null) {
+            if (!Objects.equals(name, resource.name)) {
                 return false;
             }
             if (type != resource.type) {
@@ -568,11 +569,8 @@ public class ResourceUsageModel {
         if (realValue != -1) {
             mValueToResource.put(realValue, resource);
         }
-        Map<String, Resource> nameMap = mTypeToName.get(type);
-        if (nameMap == null) {
-            nameMap = Maps.newHashMapWithExpectedSize(30);
-            mTypeToName.put(type, nameMap);
-        }
+        Map<String, Resource> nameMap =
+                mTypeToName.computeIfAbsent(type, k -> Maps.newHashMapWithExpectedSize(30));
         nameMap.put(SdkUtils.getResourceFieldName(name), resource);
 
         // TODO: Assert that we don't set the same resource multiple times to different values.
@@ -922,22 +920,22 @@ public class ResourceUsageModel {
                             value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)) {
                         // Data binding expression: there could be multiple references here
                         int length = value.length();
-                        int startIndex =
+                        int dbExpressionStartIndex =
                                 value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)
                                         ? PREFIX_TWOWAY_BINDING_EXPR.length()
                                         : PREFIX_BINDING_EXPR.length();
 
                         // Find resource references that look like "@string/", "@drawable/", etc.
-                        int index = startIndex;
+                        int resourceStartIndex = dbExpressionStartIndex;
                         while (true) {
-                            index = value.indexOf('@', index);
-                            if (index == -1) {
+                            resourceStartIndex = value.indexOf('@', resourceStartIndex);
+                            if (resourceStartIndex == -1) {
                                 break;
                             }
                             // Find end of (potential) resource URL: first non resource URL character
-                            int end = index + 1;
-                            while (end < length) {
-                                char c = value.charAt(end);
+                            int resourceEndIndex = resourceStartIndex + 1;
+                            while (resourceEndIndex < length) {
+                                char c = value.charAt(resourceEndIndex);
                                 if (!(Character.isJavaIdentifierPart(c) ||
                                         c == '_' ||
                                         c == '.' ||
@@ -945,9 +943,11 @@ public class ResourceUsageModel {
                                         c == '+')) {
                                     break;
                                 }
-                                end++;
+                                resourceEndIndex++;
                             }
-                            url = ResourceUrl.parse(value.substring(index, end));
+                            url =
+                                    ResourceUrl.parse(
+                                            value.substring(resourceStartIndex, resourceEndIndex));
                             if (url != null && !url.isFramework()) {
                                 Resource resource;
                                 if (url.isCreate()) {
@@ -958,37 +958,39 @@ public class ResourceUsageModel {
                                 from.addReference(resource);
                             }
 
-                            index = end;
+                            resourceStartIndex = resourceEndIndex;
                         }
 
                         // Find resource references that look like "R.string", "R.drawable", etc.
-                        index = startIndex;
+                        resourceStartIndex = dbExpressionStartIndex;
                         while (true) {
-                            index = value.indexOf("R.", index);
-                            if (index == -1) {
+                            resourceStartIndex = value.indexOf("R.", resourceStartIndex);
+                            if (resourceStartIndex == -1) {
                                 break;
                             }
-                            int end = index + 2;
-                            char previousChar = value.charAt(index - 1);
-                            // The previous character of 'R' should not be able to form an identifier.
-                            // For example, character 's' could connect 'R' and form "sR" which does
-                            // not represent the resource class anymore.
-                            if (end < length && !Character.isJavaIdentifierPart(previousChar)) {
-                                while (end < length
-                                        && (Character.isJavaIdentifierPart(value.charAt(end))
-                                                || value.charAt(end) == '.')) {
-                                    end++;
-                                }
-                                // Get a substring "type.name" from "R.type.name" and split it into [type, name].
-                                String[] tokens = value.substring(startIndex + 2, end).split("\\.");
-                                if (tokens.length == 2) {
-                                    ResourceType type = ResourceType.fromClassName(tokens[0]);
-                                    if (type != null) {
-                                        from.addReference(addResource(type, tokens[1], null));
-                                    }
+                            int resourceEndIndex = resourceStartIndex + 2;
+                            // No exact match for "R." found (e.g. don't match against "BR.")
+                            if (Character.isJavaIdentifierPart(
+                                    value.charAt(resourceStartIndex - 1))) {
+                                continue;
+                            }
+                            while (resourceEndIndex < length
+                                    && (Character.isJavaIdentifierPart(
+                                                    value.charAt(resourceEndIndex))
+                                            || value.charAt(resourceEndIndex) == '.')) {
+                                resourceEndIndex++;
+                            }
+                            // Get a substring "type.name" from "R.type.name" and split it into [type, name].
+                            String[] tokens =
+                                    value.substring(resourceStartIndex + 2, resourceEndIndex)
+                                            .split("\\.");
+                            if (tokens.length == 2) {
+                                ResourceType type = ResourceType.fromClassName(tokens[0]);
+                                if (type != null) {
+                                    from.addReference(addResource(type, tokens[1], null));
                                 }
                             }
-                            index = end;
+                            resourceStartIndex = resourceEndIndex;
                         }
                     }
                 }

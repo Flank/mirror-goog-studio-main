@@ -23,18 +23,22 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableChange
+import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.ResourceDirectoryParseException
 import com.android.ide.common.symbols.SymbolIo
+import com.android.ide.common.symbols.SymbolIo.writePartialR
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.parseResourceFile
 import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
+import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -46,6 +50,9 @@ import org.gradle.work.InputChanges
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
+import java.util.SortedSet
+import java.util.TreeSet
+
 import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
@@ -63,8 +70,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
-    lateinit var platformAttrRTxt: FileCollection
-        private set
+    abstract val platformAttrRTxt: Property<FileCollection>
 
     @get:Incremental
     @get:InputFiles
@@ -88,7 +94,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
                 ParseResourcesRunnable::class.java,
                 ParseResourcesParams(
                     inputResDir = inputResourcesDir.get().asFile,
-                    platformAttrsRTxt = platformAttrRTxt.singleFile,
+                    platformAttrsRTxt = platformAttrRTxt.get().singleFile,
                     librarySymbolsFile = librarySymbolsFile.get().asFile,
                     incremental = incremental,
                     changedResources = changedResources
@@ -121,7 +127,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
 
     class CreateAction(
         variantScope: VariantScope
-    ): VariantTaskCreationAction<ParseLibraryResourcesTask>(variantScope) {
+    ) : VariantTaskCreationAction<ParseLibraryResourcesTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("parse", "LocalResources")
@@ -141,7 +147,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
         override fun configure(task: ParseLibraryResourcesTask) {
             super.configure(task)
 
-            task.platformAttrRTxt = variantScope.globalScope.platformAttrs
+            task.platformAttrRTxt.set(variantScope.globalScope.platformAttrs)
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_RES,
@@ -149,43 +155,18 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             )
         }
     }
-
-    companion object {
-        internal fun canGenerateSymbols(type: ResourceFolderType, file: File) =
-            type == ResourceFolderType.VALUES
-                    || (FolderTypeRelationship.isIdGeneratingFolderType(type)
-                    && file.name.endsWith(SdkConstants.DOT_XML, ignoreCase = true))
-
-
-        internal fun canBeProcessedIncrementally(fileChange: SerializableChange): Boolean {
-            if (fileChange.fileStatus == FileStatus.REMOVED) {
-                // Removed files are not supported
-                return false
-            }
-            if (fileChange.fileStatus == FileStatus.CHANGED) {
-                val file = fileChange.file
-                val folderType = ResourceFolderType.getFolderType(file.parentFile.name)
-                    ?: error("Invalid type '${file.parentFile.name}' for file ${file.absolutePath}")
-                if (canGenerateSymbols(folderType, file)) {
-                    // ID generating files (e.g. values or XML layouts) can generate resources
-                    // within them, if they were modified we cannot tell if a resource was removed
-                    // so we need to reprocess everything.
-                    return false
-                }
-            }
-            return true
-        }
-    }
 }
+
+data class SymbolTableWithContextPath(val path : String, val symbolTable: SymbolTable)
 
 internal fun doFullTaskAction(parseResourcesParams: ParseLibraryResourcesTask.ParseResourcesParams) {
     // IDs do not matter as we will merge all symbols and re-number them in the
     // GenerateLibraryRFileTask anyway. Give a fake package for the same reason.
     val symbolTable = parseResourceSourceSetDirectory(
-      parseResourcesParams.inputResDir,
-      IdProvider.constant(),
-      getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt),
-      "local"
+        parseResourcesParams.inputResDir,
+        IdProvider.constant(),
+        getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt),
+        "local"
     )
 
     // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
@@ -228,8 +209,66 @@ internal fun doIncrementalTaskAction(parseResourcesParams: ParseLibraryResources
     }
 }
 
-private fun getAndroidAttrSymbols(platformAttrsRTxt: File) =
-  if (platformAttrsRTxt.exists())
-      SymbolIo.readFromAapt(platformAttrsRTxt, "android")
-  else
-      SymbolTable.builder().tablePackage("android").build()
+internal fun canGenerateSymbols(type: ResourceFolderType, file: File) =
+    type == ResourceFolderType.VALUES
+        || (FolderTypeRelationship.isIdGeneratingFolderType(type)
+        && file.name.endsWith(SdkConstants.DOT_XML, ignoreCase = true))
+
+
+internal fun canBeProcessedIncrementally(fileChange: SerializableChange): Boolean {
+    if (fileChange.fileStatus == FileStatus.REMOVED) {
+        // Removed files are not supported
+        return false
+    }
+    if (fileChange.fileStatus == FileStatus.CHANGED) {
+        val file = fileChange.file
+        val folderType = ResourceFolderType.getFolderType(file.parentFile.name)
+            ?: error("Invalid type '${file.parentFile.name}' for file ${file.absolutePath}")
+        if (canGenerateSymbols(folderType, file)) {
+            // ID generating files (e.g. values or XML layouts) can generate resources
+            // within them, if they were modified we cannot tell if a resource was removed
+            // so we need to reprocess everything.
+            return false
+        }
+    }
+    return true
+}
+
+private fun getAndroidAttrSymbols(platformAttrsRTxt: File): SymbolTable =
+    if (platformAttrsRTxt.exists())
+        SymbolIo.readFromAapt(platformAttrsRTxt, "android")
+    else
+        SymbolTable.builder().tablePackage("android").build()
+
+internal fun generateResourceSymbolTables(
+        resourceDirectory: File,
+        platformAttrsSymbolTable: SymbolTable?): SortedSet<SymbolTableWithContextPath> {
+    val resourceSymbolTables =
+            TreeSet<SymbolTableWithContextPath> { a, b -> a.path.compareTo(b.path) }
+    val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+    resourceDirectory
+            .walkTopDown()
+            .forEach {
+                val folderType = ResourceFolderType.getFolderType(it.parentFile.name)
+                if (folderType != null) {
+                    val symbolTable: SymbolTable.Builder = SymbolTable.builder()
+                    parseResourceFile(it, folderType, symbolTable, documentBuilder,
+                            platformAttrsSymbolTable)
+                    resourceSymbolTables.add(SymbolTableWithContextPath(
+                            it.relativeTo(resourceDirectory).path, symbolTable.build()))
+                }
+            }
+    return resourceSymbolTables
+}
+
+internal fun savePartialRFilesToDirectory(
+        symbolTableWithContextPaths: Collection<SymbolTableWithContextPath>,
+        directory: File) {
+    symbolTableWithContextPaths.forEach {
+        val namedPartialRFile = File(
+                directory,
+                "${Aapt2RenamingConventions.compilationRename(File(directory, it.path))}-R.txt")
+        FileUtils.createFile(namedPartialRFile, "")
+        writePartialR(it.symbolTable, namedPartialRFile.toPath())
+    }
+}

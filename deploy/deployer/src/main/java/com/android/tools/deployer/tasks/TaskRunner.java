@@ -16,20 +16,12 @@
 
 package com.android.tools.deployer.tasks;
 
-import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerException;
-import com.android.tools.tracer.Trace;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
 
 public class TaskRunner {
 
@@ -52,7 +44,26 @@ public class TaskRunner {
 
     public <I, O, E extends Enum> Task<O> create(
             E id, ThrowingFunction<I, O> function, Task<I> input) {
-        Callable<O> callable = () -> function.apply(input.future.get());
+        return create(id, function, null, input);
+    }
+
+    public <I, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingFunction<I, O> function,
+            ThrowingFunction<I, Void> errorFunction,
+            Task<I> input) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        return function.apply(input.future.get());
+                    } catch (Exception e) {
+                        if (errorFunction != null) {
+                            I value = getTaskValue(input);
+                            errorFunction.apply(value);
+                        }
+                        throw e;
+                    }
+                };
         Task<O> task = new Task<>(id.name(), callable, input);
         tasks.add(task);
         return task;
@@ -60,12 +71,30 @@ public class TaskRunner {
 
     public <T, U, O, E extends Enum> Task<O> create(
             E id, ThrowingBiFunction<T, U, O> function, Task<T> input1, Task<U> input2) {
+        return create(id, function, null, input1, input2);
+    }
+
+    public <T, U, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingBiFunction<T, U, O> function,
+            ThrowingBiFunction<T, U, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2) {
         Callable<O> callable =
                 () -> {
-                    // The input value is already done
-                    T value1 = input1.future.get();
-                    U value2 = input2.future.get();
-                    return function.apply(value1, value2);
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        return function.apply(value1, value2);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2);
+                        }
+                        throw e;
+                    }
                 };
         Task<O> task = new Task<>(id.name(), callable, input1, input2);
         tasks.add(task);
@@ -78,66 +107,68 @@ public class TaskRunner {
             Task<T> input1,
             Task<U> input2,
             Task<V> input3) {
+        return create(id, function, null, input1, input2, input3);
+    }
+
+    public <T, U, V, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingTriFunction<T, U, V, O> function,
+            ThrowingTriFunction<T, U, V, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3) {
         Callable<O> callable =
                 () -> {
-                    // The input value is already done
-                    T value1 = input1.future.get();
-                    U value2 = input2.future.get();
-                    V value3 = input3.future.get();
-                    return function.apply(value1, value2, value3);
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        V value3 = input3.future.get();
+                        return function.apply(value1, value2, value3);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        V value3 = getTaskValue(input3);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2, value3);
+                        }
+                        throw e;
+                    }
                 };
         Task<O> task = new Task<>(id.name(), callable, input1, input2, input3);
         tasks.add(task);
         return task;
     }
 
+    private <O> O getTaskValue(Task<O> task) {
+        try {
+            return task.get();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void runInternal(ArrayList<Task<?>> batch) throws DeployerException {
         for (Task<?> task : batch) {
             task.run(executor);
         }
-        for (Task<?> task : batch) {
-            task.get();
-        }
+
+        joinAllTasks(batch, false);
+
+        // If any task has throw an exception, retrieve it and throw the first one here.
+        joinAllTasks(batch, true);
     }
 
-    public static final class Result {
-        private final DeployerException exception;
-        private final List<Task<?>> tasks;
-
-        public Result(List<Task<?>> tasks) {
-            this(tasks, null);
-        }
-
-        public Result(List<Task<?>> tasks, DeployerException exception) {
-            this.tasks = tasks;
-            this.exception = exception;
-        }
-
-        /** @return the metrics for completed tasks, filtering out non-started and dropped tasks. */
-        public List<DeployMetric> getMetrics() {
-            return tasks.stream()
-                    .map(Task::getMetric)
-                    .filter(Result::shouldIncludeMetric)
-                    .collect(Collectors.toList());
-        }
-
-        /**
-         * @return the exception that was thrown if the execution was not a success. Returns null if
-         *     the execution succeeded.
-         */
-        public DeployerException getException() {
-            return exception;
-        }
-
-        public boolean isSuccess() {
-            return exception == null;
-        }
-
-        private static boolean shouldIncludeMetric(DeployMetric metric) {
-            if (metric == null) {
-                return false;
+    private void joinAllTasks(ArrayList<Task<?>> batch, boolean throwExceptionOnTaskFail)
+            throws DeployerException {
+        for (Task<?> task : batch) {
+            try {
+                task.get();
+            } catch (Exception e) {
+                if (throwExceptionOnTaskFail) {
+                    throw e;
+                }
             }
-            return "Success".equals(metric.getStatus()) || "Failed".equals(metric.getStatus());
         }
     }
 
@@ -147,15 +178,15 @@ public class TaskRunner {
      * <p>If no tasks are pending this is a no-op, except that it will wait for the existing running
      * tasks to end.
      */
-    public Result run() {
+    public TaskResult run() {
         running.acquireUninterruptibly();
         ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         try {
             tasks.clear();
             runInternal(batch);
-            return new Result(batch);
+            return new TaskResult(batch);
         } catch (DeployerException e) {
-            return new Result(batch, e);
+            return new TaskResult(batch, e);
         } finally {
             running.release();
         }
@@ -188,62 +219,6 @@ public class TaskRunner {
      */
     public void runAsync() {
         runAsync(executor);
-    }
-
-    public static class Task<T> {
-        private final Callable<T> callable;
-        private final Task<?>[] inputs;
-        private final SettableFuture<T> future;
-        private DeployMetric metric;
-
-        // Only can be created through the interface enforcing a no-cycle dependency graph.
-        Task(String name, Callable<T> callable, Task<?>... inputs) {
-            this.future = SettableFuture.create();
-            this.inputs = inputs;
-            this.callable =
-                    () -> {
-                        String status = "Not Started";
-                        metric = new DeployMetric(name);
-                        try (Trace ignored = Trace.begin(name)) {
-                            T value = callable.call();
-                            status = "Success";
-                            return value;
-                        } catch (ExecutionException e) {
-                            // Dropped this task because one of the previous task failed.
-                            status = "Dropped";
-                            throw e;
-                        } catch (Throwable t) {
-                            status = "Failed";
-                            throw t;
-                        } finally {
-                            metric.finish(status);
-                        }
-                    };
-        }
-
-        public T get() throws DeployerException {
-            try {
-                return future.get();
-            } catch (InterruptedException e) {
-                throw DeployerException.interrupted(e.getMessage());
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof DeployerException) {
-                    throw (DeployerException) e.getCause();
-                } else {
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
-
-        public void run(Executor executor) {
-            List<? extends SettableFuture<?>> futures =
-                    Arrays.stream(inputs).map(t -> t.future).collect(Collectors.toList());
-            future.setFuture(Futures.whenAllComplete(futures).call(callable, executor));
-        }
-
-        public DeployMetric getMetric() {
-            return metric;
-        }
     }
 
     public interface ThrowingFunction<I, O> {

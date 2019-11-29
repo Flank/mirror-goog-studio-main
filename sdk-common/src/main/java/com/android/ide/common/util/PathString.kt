@@ -150,6 +150,11 @@ class PathString private constructor(
         return buf.toString()
     }
 
+    fun toDebugString(): String {
+        return "PathString filesystemUri=\"$filesystemUri\" path=\"$path\" startIndex=$startIndex " +
+               "suffixEndIndex=$suffixEndIndex prefixEndIndex=$prefixEndIndex separator='$separator'"
+    }
+
     /**
      * If this path uses the file:// scheme, this method returns the associated [File] object. Returns null if it uses any other
      * scheme.

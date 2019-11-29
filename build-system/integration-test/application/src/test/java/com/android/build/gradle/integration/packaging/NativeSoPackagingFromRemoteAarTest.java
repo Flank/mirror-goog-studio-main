@@ -44,7 +44,7 @@ public class NativeSoPackagingFromRemoteAarTest {
     private GradleTestProject libProject;
 
     private void execute(String... tasks) throws IOException, InterruptedException {
-        project.executor().run(tasks);
+        project.executor().withFailOnWarning(false).run(tasks);
     }
 
     @Before
@@ -57,13 +57,14 @@ public class NativeSoPackagingFromRemoteAarTest {
                 .write("include 'app'\n" + "include 'library'\n");
 
         // setup dependencies.
-        TestFileUtils.appendToFile(appProject.getBuildFile(),
+        TestFileUtils.appendToFile(
+                appProject.getBuildFile(),
                 "repositories {\n"
-                + "    maven { url '../testrepo' }\n"
-                + "}\n"
-                + "dependencies {\n"
-                + "    compile 'com.example.android.nativepackaging:library:1.0-SNAPSHOT@aar'\n"
-                + "}\n");
+                        + "    maven { url '../testrepo' }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    api 'com.example.android.nativepackaging:library:1.0-SNAPSHOT@aar'\n"
+                        + "}\n");
 
         TestFileUtils.appendToFile(libProject.getBuildFile(),
                 "apply plugin: 'maven'\n"
@@ -88,6 +89,7 @@ public class NativeSoPackagingFromRemoteAarTest {
 
         // build and deploy the library
         project.executor()
+                .withFailOnWarning(false)
                 .withArgument("--configure-on-demand")
                 .run("library:clean", "library:uploadArchives");
 
@@ -97,6 +99,7 @@ public class NativeSoPackagingFromRemoteAarTest {
         createOriginalSoFile(libDir, "main", "liblibrary3.so", "library3:abcdefg");
         TestFileUtils.searchAndReplace(libProject.getBuildFile(), "1.0-SNAPSHOT", "2.0-SNAPSHOT");
         project.executor()
+                .withFailOnWarning(false)
                 .withArgument("--configure-on-demand")
                 .run("library:clean", "library:uploadArchives");
         // remove the added .so file and revert the version to 1.0-SNAPSHOT

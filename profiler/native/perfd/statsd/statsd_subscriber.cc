@@ -74,7 +74,7 @@ void StatsdSubscriber::Run() {
 
   if (!runner_->Run(kStatsdArgs, string(buffer.begin(), buffer.end()),
                     &callback_, nullptr)) {
-    Log::E("Failed to run statsd command.");
+    Log::E(Log::Tag::PROFILER, "Failed to run statsd command.");
     return;
   }
 }
@@ -92,7 +92,8 @@ void StatsdSubscriber::HandleOutput(int stdout_fd) {
   std::vector<uint8_t> buffer;
   while (runner_->IsRunning()) {
     if (read(stdout_fd, &size, abi_size_in_bytes_) == -1) {
-      Log::E("Failed to read statsd data size: %s.", strerror(errno));
+      Log::E(Log::Tag::PROFILER, "Failed to read statsd data size: %s.",
+             strerror(errno));
       return;
     }
     if (size == 0) {
@@ -100,7 +101,8 @@ void StatsdSubscriber::HandleOutput(int stdout_fd) {
     }
     buffer.resize(size);
     if (read(stdout_fd, buffer.data(), size) == -1) {
-      Log::E("Failed to read statsd data: %s.", strerror(errno));
+      Log::E(Log::Tag::PROFILER, "Failed to read statsd data: %s.",
+             strerror(errno));
       return;
     }
     if (shell_data.ParseFromArray(buffer.data(), size)) {
@@ -112,7 +114,7 @@ void StatsdSubscriber::HandleOutput(int stdout_fd) {
         }
       }
     } else {
-      Log::E("Failed to parse statsd data.");
+      Log::E(Log::Tag::PROFILER, "Failed to parse statsd data.");
     }
   }
 }

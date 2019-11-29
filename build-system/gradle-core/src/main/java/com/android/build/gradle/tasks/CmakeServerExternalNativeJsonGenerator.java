@@ -94,6 +94,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import org.gradle.api.Action;
+import org.gradle.process.ExecResult;
+import org.gradle.process.ExecSpec;
 
 /**
  * This strategy uses the Vanilla-CMake that supports Cmake server version 1.0 to configure the
@@ -138,7 +142,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     @NonNull
     @Override
-    public String executeProcessAndGetOutput(@NonNull CxxAbiModel abi)
+    public String executeProcessAndGetOutput(
+            @NonNull CxxAbiModel abi,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
             throws ProcessException, IOException {
         // Once a Cmake server object is created
         // - connect to the server

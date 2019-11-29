@@ -81,7 +81,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
+import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -92,6 +94,8 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.process.ExecResult;
+import org.gradle.process.ExecSpec;
 
 /**
  * Base class for generation of native JSON.
@@ -136,14 +140,17 @@ public abstract class ExternalNativeJsonGenerator {
         return config.buildFiles;
     }
 
-    public void build() throws IOException, ProcessException {
-        buildAndPropagateException(false);
+    public void build(@NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
+            throws IOException, ProcessException {
+        buildAndPropagateException(false, execOperation);
     }
 
-    public void build(boolean forceJsonGeneration) {
+    public void build(
+            boolean forceJsonGeneration,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
         try {
             infoln("building json with force flag %s", forceJsonGeneration);
-            buildAndPropagateException(forceJsonGeneration);
+            buildAndPropagateException(forceJsonGeneration, execOperation);
         } catch (@NonNull IOException | GradleException e) {
             errorln("exception while building Json $%s", e.getMessage());
         } catch (ProcessException e) {
@@ -153,23 +160,29 @@ public abstract class ExternalNativeJsonGenerator {
         }
     }
 
-    public List<Callable<Void>> parallelBuild(boolean forceJsonGeneration) {
+    public List<Callable<Void>> parallelBuild(
+            boolean forceJsonGeneration,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
         List<Callable<Void>> buildSteps = new ArrayList<>(abis.size());
         for (CxxAbiModel abi : abis) {
             buildSteps.add(
-                    () -> buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi));
+                    () ->
+                            buildForOneConfigurationConvertExceptions(
+                                    forceJsonGeneration, abi, execOperation));
         }
         return buildSteps;
     }
 
     @Nullable
     private Void buildForOneConfigurationConvertExceptions(
-            boolean forceJsonGeneration, CxxAbiModel abi) {
+            boolean forceJsonGeneration,
+            CxxAbiModel abi,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         evalIssueReporter(abi.getVariant().getModule()))) {
             try {
-                buildForOneConfiguration(forceJsonGeneration, abi);
+                buildForOneConfiguration(forceJsonGeneration, abi, execOperation);
             } catch (@NonNull IOException | GradleException e) {
                 errorln("exception while building Json %s", e.getMessage());
             } catch (ProcessException e) {
@@ -189,12 +202,14 @@ public abstract class ExternalNativeJsonGenerator {
         return new String(Files.readAllBytes(commandFile.toPath()), Charsets.UTF_8);
     }
 
-    private void buildAndPropagateException(boolean forceJsonGeneration)
+    private void buildAndPropagateException(
+            boolean forceJsonGeneration,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
             throws IOException, ProcessException {
         Exception firstException = null;
         for (CxxAbiModel abi : abis) {
             try {
-                buildForOneConfiguration(forceJsonGeneration, abi);
+                buildForOneConfiguration(forceJsonGeneration, abi, execOperation);
             } catch (@NonNull GradleException | IOException | ProcessException e) {
                 if (firstException == null) {
                     firstException = e;
@@ -215,19 +230,25 @@ public abstract class ExternalNativeJsonGenerator {
         }
     }
 
-    public void buildForOneAbiName(boolean forceJsonGeneration, String abiName) {
+    public void buildForOneAbiName(
+            boolean forceJsonGeneration,
+            String abiName,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
         int built = 0;
         for (CxxAbiModel abi : abis) {
             if (!abi.getAbi().getTag().equals(abiName)) {
                 continue;
             }
             built++;
-            buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi);
+            buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi, execOperation);
         }
         assert (built == 1);
     }
 
-    private void buildForOneConfiguration(boolean forceJsonGeneration, CxxAbiModel abi)
+    private void buildForOneConfiguration(
+            boolean forceJsonGeneration,
+            CxxAbiModel abi,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
             throws GradleException, IOException, ProcessException {
         try (PassThroughPrefixingLoggingEnvironment recorder =
                 new PassThroughPrefixingLoggingEnvironment(
@@ -300,7 +321,7 @@ public abstract class ExternalNativeJsonGenerator {
                     }
 
                     infoln("executing %s %s", getNativeBuildSystem().getTag(), processBuilder);
-                    String buildOutput = executeProcess(abi);
+                    String buildOutput = executeProcess(abi, execOperation);
                     infoln("done executing %s", getNativeBuildSystem().getTag());
 
                     // Write the captured process output to a file for diagnostic purposes.
@@ -420,7 +441,10 @@ public abstract class ExternalNativeJsonGenerator {
      *
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
-    abstract String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException;
+    abstract String executeProcess(
+            @NonNull CxxAbiModel abi,
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
+            throws ProcessException, IOException;
 
     /** @return the native build system that is used to generate the JSON. */
     @Input

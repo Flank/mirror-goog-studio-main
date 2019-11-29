@@ -37,6 +37,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 27: Android 8.1 (Oreo)", SdkVersionInfo.getAndroidName(27));
         assertEquals("API 28: Android 9.0 (Pie)", SdkVersionInfo.getAndroidName(28));
         assertEquals("API 29: Android 10.0 (Q)", SdkVersionInfo.getAndroidName(29));
+        assertEquals("API 30: Android 10.0+ (R)", SdkVersionInfo.getAndroidName(30));
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
     }
@@ -63,6 +64,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(28, getApiByPreviewName("P", false));
         assertEquals(28, getApiByPreviewName("Pie", false));
         assertEquals(29, getApiByPreviewName("Q", false));
+        assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("R", true));
 
         assertEquals(-1, getApiByPreviewName("UnknownName", false));
         assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("UnknownName", true));
@@ -76,6 +78,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(27, getApiByBuildCode("O_MR1", false));
         assertEquals(28, getApiByBuildCode("P", true));
         assertEquals(29, getApiByBuildCode("Q", true));
+        assertEquals(30, getApiByBuildCode("R", true));
 
         for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
             assertEquals(api, getApiByBuildCode(getBuildCode(api), false));

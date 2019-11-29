@@ -39,6 +39,7 @@ class AndroidLocationManagerTransform : public Transform {
                          "(Ljava/lang/String;JFLandroid/location/"
                          "LocationListener;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting LocationManager.requestLocationUpdates(String, "
           "long, float, LocationListener)");
     }
@@ -46,29 +47,31 @@ class AndroidLocationManagerTransform : public Transform {
             ir::MethodId(GetClassName(), "requestLocationUpdates",
                          "(JFLandroid/location/Criteria;Landroid/location/"
                          "LocationListener;Landroid/os/Looper;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(long, "
-          "float, Criteria, LocationListener, Looper)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting LocationManager.requestLocationUpdates(long, "
+             "float, Criteria, LocationListener, Looper)");
     }
     if (!mi_req.InstrumentMethod(
             ir::MethodId(GetClassName(), "requestLocationUpdates",
                          "(Ljava/lang/String;JFLandroid/location/"
                          "LocationListener;Landroid/os/Looper;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting LocationManager.requestLocationUpdates(String, "
           "long, float, LocationListener, Looper)");
     }
     if (!mi_req.InstrumentMethod(ir::MethodId(
             GetClassName(), "requestLocationUpdates",
             "(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(long, "
-          "float, Criteria, PendingIntent)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting LocationManager.requestLocationUpdates(long, "
+             "float, Criteria, PendingIntent)");
     }
     if (!mi_req.InstrumentMethod(ir::MethodId(
             GetClassName(), "requestLocationUpdates",
             "(Ljava/lang/String;JFLandroid/app/PendingIntent;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting LocationManager.requestLocationUpdates(String, "
           "long, float, PendingIntent)");
     }
@@ -81,14 +84,15 @@ class AndroidLocationManagerTransform : public Transform {
     if (!mi_req_s.InstrumentMethod(
             ir::MethodId(GetClassName(), "requestSingleUpdate",
                          "(Ljava/lang/String;Landroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestSingleUpdate(String, "
-          "PendingIntent)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting LocationManager.requestSingleUpdate(String, "
+             "PendingIntent)");
     }
     if (!mi_req_s.InstrumentMethod(ir::MethodId(
             GetClassName(), "requestSingleUpdate",
             "(Landroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
           "PendingIntent)");
     }
@@ -96,15 +100,16 @@ class AndroidLocationManagerTransform : public Transform {
             ir::MethodId(GetClassName(), "requestSingleUpdate",
                          "(Ljava/lang/String;Landroid/location/"
                          "LocationListener;Landroid/os/Looper;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestSingleUpdate(String, "
-          "LocationListener, Looper)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting LocationManager.requestSingleUpdate(String, "
+             "LocationListener, Looper)");
     }
     if (!mi_req_s.InstrumentMethod(
             ir::MethodId(GetClassName(), "requestSingleUpdate",
                          "(Landroid/location/Criteria;Landroid/location/"
                          "LocationListener;Landroid/os/Looper;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
           "LocationListener, Looper)");
     }
@@ -117,14 +122,15 @@ class AndroidLocationManagerTransform : public Transform {
     if (!mi_remove.InstrumentMethod(
             ir::MethodId(GetClassName(), "removeUpdates",
                          "(Landroid/location/LocationListener;)V"))) {
-      Log::E(
-          "Error instrumenting "
-          "LocationManager.removeUpdates(LocationListener)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting "
+             "LocationManager.removeUpdates(LocationListener)");
     }
     if (!mi_remove.InstrumentMethod(
             ir::MethodId(GetClassName(), "removeUpdates",
                          "(Landroid/app/PendingIntent;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting LocationManager.removeUpdates(PendingIntent)");
     }
   }

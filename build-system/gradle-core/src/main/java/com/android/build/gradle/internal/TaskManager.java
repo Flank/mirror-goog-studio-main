@@ -62,16 +62,15 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.api.ViewBindingOptions;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -84,6 +83,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -145,6 +145,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitUtils;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
+import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
@@ -193,7 +194,6 @@ import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
-import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
@@ -272,9 +272,9 @@ public abstract class TaskManager {
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev02";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev03";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
-            "1.3.60-dev-withExperimentalGoogleExtensions-20191016";
+            "1.3.61-dev-withExperimentalGoogleExtensions-20191127";
 
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
@@ -488,7 +488,7 @@ public abstract class TaskManager {
     public void configureKotlinPluginTasksForComposeIfNecessary(
             GlobalScope globalScope, List<VariantScope> variantScopes) {
 
-        boolean composeIsEnabled = globalScope.getBuildFeatures().getJetpackCompose();
+        boolean composeIsEnabled = globalScope.getBuildFeatures().getCompose();
         if (!composeIsEnabled) {
             return;
         }
@@ -795,11 +795,14 @@ public abstract class TaskManager {
             @NonNull VariantScope variantScope) {
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
-                        variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
+                        variantScope.getVariantData().getPublicVariantPropertiesApi(),
+                        !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
     public void createMergeLibManifestsTask(@NonNull VariantScope scope) {
-        taskFactory.register(new ProcessLibraryManifest.CreationAction(scope));
+        taskFactory.register(
+                new ProcessLibraryManifest.CreationAction(
+                        scope.getVariantData().getPublicVariantPropertiesApi(), scope));
     }
 
     protected void createProcessTestManifestTask(
@@ -813,17 +816,19 @@ public abstract class TaskManager {
     }
 
     public void createRenderscriptTask(@NonNull VariantScope scope) {
-        final MutableTaskContainer taskContainer = scope.getTaskContainer();
+        if (scope.getGlobalScope().getBuildFeatures().getRenderScript()) {
+            final MutableTaskContainer taskContainer = scope.getTaskContainer();
 
-        TaskProvider<RenderscriptCompile> rsTask =
-                taskFactory.register(new RenderscriptCompile.CreationAction(scope));
+            TaskProvider<RenderscriptCompile> rsTask =
+                    taskFactory.register(new RenderscriptCompile.CreationAction(scope));
 
-        GradleVariantConfiguration config = scope.getVariantConfiguration();
+            GradleVariantConfiguration config = scope.getVariantConfiguration();
 
-        TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
-        // only put this dependency if rs will generate Java code
-        if (!config.getRenderscriptNdkModeEnabled()) {
-            TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), rsTask);
+            TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
+            // only put this dependency if rs will generate Java code
+            if (!config.getRenderscriptNdkModeEnabled()) {
+                TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), rsTask);
+            }
         }
     }
 
@@ -951,19 +956,22 @@ public abstract class TaskManager {
     public void createBuildConfigTask(@NonNull VariantScope scope) {
         if (scope.getGlobalScope().getBuildFeatures().getBuildConfig()) {
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
-                    taskFactory.register(new GenerateBuildConfig.CreationAction(scope));
+                    taskFactory.register(
+                            new GenerateBuildConfig.CreationAction(
+                                    scope.getVariantData().getPublicVariantPropertiesApi()));
 
             TaskFactoryUtils.dependsOn(
                     scope.getTaskContainer().getSourceGenTask(), generateBuildConfigTask);
         }
     }
 
-    public void createGenerateResValuesTask(
-            @NonNull VariantScope scope) {
-        TaskProvider<GenerateResValues> generateResValuesTask =
-                taskFactory.register(new GenerateResValues.CreationAction(scope));
-        TaskFactoryUtils.dependsOn(
-                scope.getTaskContainer().getResourceGenTask(), generateResValuesTask);
+    public void createGenerateResValuesTask(@NonNull VariantScope scope) {
+        if (scope.getGlobalScope().getBuildFeatures().getResValues()) {
+            TaskProvider<GenerateResValues> generateResValuesTask =
+                    taskFactory.register(new GenerateResValues.CreationAction(scope));
+            TaskFactoryUtils.dependsOn(
+                    scope.getTaskContainer().getResourceGenTask(), generateResValuesTask);
+        }
     }
 
     public void createApkProcessResTask(
@@ -1084,7 +1092,9 @@ public abstract class TaskManager {
 
             // Generate the R class for a library using both local symbols and symbols
             // from dependencies.
-            taskFactory.register(new GenerateLibraryRFileTask.CreationAction(scope, isLibrary()));
+            taskFactory.register(
+                    new GenerateLibraryRFileTask.CreationAction(
+                            scope.getVariantData().getPublicVariantPropertiesApi(), isLibrary()));
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
@@ -1125,7 +1135,7 @@ public abstract class TaskManager {
                     @NonNull String baseName) {
 
         return new LinkApplicationAndroidResourcesTask.CreationAction(
-                scope,
+                scope.getVariantData().getPublicVariantPropertiesApi(),
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                 sourceArtifactType,
                 baseName,
@@ -1219,24 +1229,29 @@ public abstract class TaskManager {
     }
 
     public void createAidlTask(@NonNull VariantScope scope) {
-        MutableTaskContainer taskContainer = scope.getTaskContainer();
+        if (scope.getGlobalScope().getBuildFeatures().getAidl()) {
+            MutableTaskContainer taskContainer = scope.getTaskContainer();
 
-        TaskProvider<AidlCompile> aidlCompileTask =
-                taskFactory.register(new AidlCompile.CreationAction(scope));
+            TaskProvider<AidlCompile> aidlCompileTask =
+                    taskFactory.register(new AidlCompile.CreationAction(scope));
 
-        TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
+            TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
+        }
     }
 
     public void createShaderTask(@NonNull VariantScope scope) {
-        // merge the shader folders together using the proper priority.
-        taskFactory.register(
-                new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
+        if (scope.getGlobalScope().getBuildFeatures().getShaders()) {
+            // merge the shader folders together using the proper priority.
+            taskFactory.register(
+                    new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
 
-        // compile the shaders
-        TaskProvider<ShaderCompile> shaderCompileTask =
-                taskFactory.register(new ShaderCompile.CreationAction(scope));
+            // compile the shaders
+            TaskProvider<ShaderCompile> shaderCompileTask =
+                    taskFactory.register(new ShaderCompile.CreationAction(scope));
 
-        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
+            TaskFactoryUtils.dependsOn(
+                    scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
+        }
     }
 
     protected abstract void postJavacCreation(@NonNull final VariantScope scope);
@@ -1354,7 +1369,9 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @Nullable FileCollection config) {
         TaskProvider<GenerateApkDataTask> generateMicroApkTask =
-                taskFactory.register(new GenerateApkDataTask.CreationAction(scope, config));
+                taskFactory.register(
+                        new GenerateApkDataTask.CreationAction(
+                                scope.getVariantData().getPublicVariantPropertiesApi(), config));
 
         // the merge res task will need to run after this one.
         TaskFactoryUtils.dependsOn(
@@ -1939,28 +1956,34 @@ public abstract class TaskManager {
         List<Transform> customTransforms = extension.getTransforms();
         List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
 
+        boolean registeredExternalTransform = false;
         for (int i = 0, count = customTransforms.size(); i < count; i++) {
             Transform transform = customTransforms.get(i);
 
             List<Object> deps = customTransformsDependencies.get(i);
-            transformManager.addTransform(
-                    taskFactory,
-                    variantScope,
-                    transform,
-                    null,
-                    task -> {
-                        if (!deps.isEmpty()) {
-                            task.dependsOn(deps);
-                        }
-                    },
-                    taskProvider -> {
-                        // if the task is a no-op then we make assemble task depend on it.
-                        if (transform.getScopes().isEmpty()) {
-                            TaskFactoryUtils.dependsOn(
-                                    variantScope.getTaskContainer().getAssembleTask(),
-                                    taskProvider);
-                        }
-                    });
+            registeredExternalTransform |=
+                    transformManager
+                            .addTransform(
+                                    taskFactory,
+                                    variantScope,
+                                    transform,
+                                    null,
+                                    task -> {
+                                        if (!deps.isEmpty()) {
+                                            task.dependsOn(deps);
+                                        }
+                                    },
+                                    taskProvider -> {
+                                        // if the task is a no-op then we make assemble task depend on it.
+                                        if (transform.getScopes().isEmpty()) {
+                                            TaskFactoryUtils.dependsOn(
+                                                    variantScope
+                                                            .getTaskContainer()
+                                                            .getAssembleTask(),
+                                                    taskProvider);
+                                        }
+                                    })
+                            .isPresent();
         }
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
@@ -1989,6 +2012,7 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTask(variantScope);
         if (shrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(variantScope);
+            maybeCreateDexDesugarLibTask(variantScope, false);
             return;
         }
 
@@ -2015,7 +2039,7 @@ public abstract class TaskManager {
             taskFactory.register(new D8MainDexListTask.CreationAction(variantScope, true));
         }
 
-        createDexTasks(variantScope, dexingType);
+        createDexTasks(variantScope, dexingType, registeredExternalTransform);
 
         maybeCreateResourcesShrinkerTasks(variantScope);
 
@@ -2081,7 +2105,9 @@ public abstract class TaskManager {
      * archives in order to enable incremental dexing support.
      */
     private void createDexTasks(
-            @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
+            @NonNull VariantScope variantScope,
+            @NonNull DexingType dexingType,
+            boolean registeredExternalTransform) {
         DefaultDexOptions dexOptions;
         if (variantScope.getVariantData().getType().isTestComponent()) {
             // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
@@ -2101,7 +2127,7 @@ public abstract class TaskManager {
                                         BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM));
         boolean enableDexingArtifactTransform =
                 globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
-                        && extension.getTransforms().isEmpty()
+                        && !registeredExternalTransform
                         && !minified
                         && supportsDesugaring
                         && !appliesCustomClassTransforms(variantScope, projectOptions);
@@ -2307,9 +2333,8 @@ public abstract class TaskManager {
     }
 
     private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
-        boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
-        boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
-        if (!dataBindingEnabled && !viewBindingEnabled) {
+        final BuildFeatureValues features = variantScope.getGlobalScope().getBuildFeatures();
+        if (!features.getDataBinding() && !features.getViewBinding()) {
             return;
         }
         final BaseVariantData variantData = variantScope.getVariantData();
@@ -2338,9 +2363,9 @@ public abstract class TaskManager {
     }
 
     protected void createDataBindingTasksIfNecessary(@NonNull VariantScope scope) {
-        boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
-        boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
-        if (!dataBindingEnabled && !viewBindingEnabled) {
+        final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
+        boolean dataBindingEnabled = features.getDataBinding();
+        if (!dataBindingEnabled && !features.getViewBinding()) {
             return;
         }
         createDataBindingMergeBaseClassesTask(scope);
@@ -2511,25 +2536,18 @@ public abstract class TaskManager {
      * @param variantScopes the list of variant scopes.
      * @param flavorCount the number of flavors
      * @param flavorDimensionCount whether there are flavor dimensions at all.
-     * @param variantTypeCount the number of variant types generated.
      */
     public void createAnchorAssembleTasks(
-            @NonNull List<VariantScope> variantScopes,
-            int flavorCount,
-            int flavorDimensionCount,
-            int variantTypeCount) {
+            @NonNull List<VariantScope> variantScopes, int flavorCount, int flavorDimensionCount) {
 
         // sub anchor tasks that the main 'assemble' and 'bundle task will depend.
         List<TaskProvider<? extends Task>> subAssembleTasks = Lists.newArrayList();
         List<TaskProvider<? extends Task>> subBundleTasks = Lists.newArrayList();
 
-        // There are 3 different scenarios:
+        // There are 2 different scenarios:
         // 1. There are 1+ flavors. In this case the variant-specific assemble task is
         //    different from all the assemble<BuildType> or assemble<Flavor>
-        // 2. There is no flavor but this is a feature plugin that has 2 different variants for
-        //    the same build type (aar + feature), so we still create a specific assemble<buildType>
-        //    which depends on the variant specific assemble task.
-        // 3. Else, the assemble<BuildType> is the same as the variant specific assemble task.
+        // 2. Else, the assemble<BuildType> is the same as the variant specific assemble task.
 
         // Case #1
         if (flavorCount > 0) {
@@ -2551,7 +2569,7 @@ public abstract class TaskManager {
                             taskContainer.getAssembleTask();
                     assembleMap.put(variantConfig.getBuildType().getName(), assembleTask);
 
-                    for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
+                    for (ProductFlavor flavor : variantConfig.getProductFlavors()) {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
@@ -2566,7 +2584,7 @@ public abstract class TaskManager {
 
                         bundleMap.put(variantConfig.getBuildType().getName(), bundleTask);
 
-                        for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
+                        for (ProductFlavor flavor : variantConfig.getProductFlavors()) {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 
@@ -2616,78 +2634,8 @@ public abstract class TaskManager {
                                     }));
                 }
             }
-
-        } else if (variantTypeCount > 1) {
-            // Case #2
-
-            // loop on the variants and record their build type usage.
-            // map from build type to the variant-specific assemble/bundle tasks
-            ListMultimap<String, TaskProvider<? extends Task>> assembleMap =
-                    ArrayListMultimap.create();
-            ListMultimap<String, TaskProvider<? extends Task>> bundleMap =
-                    ArrayListMultimap.create();
-
-            for (VariantScope variantScope : variantScopes) {
-                final VariantType variantType = variantScope.getType();
-                if (!variantType.isTestComponent()) {
-                    final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-                    final GradleVariantConfiguration variantConfig =
-                            variantScope.getVariantConfiguration();
-
-                    assembleMap.put(
-                            variantConfig.getBuildType().getName(),
-                            taskContainer.getAssembleTask());
-
-                    // fill the bundle map only if the variant supports bundles.
-                    if (variantType.isBaseModule()) {
-                        TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
-
-                        bundleMap.put(variantConfig.getBuildType().getName(), bundleTask);
-                    }
-                }
-            }
-
-            // loop over the map of build-type to create tasks for each, setting a dependency
-            // on the variant-specific task.
-            // these keys should be the same for bundle and assemble
-            Set<String> dimensionKeys = assembleMap.keySet();
-
-            for (String dimensionKey : dimensionKeys) {
-                final String dimensionName = StringHelper.usLocaleCapitalize(dimensionKey);
-
-                // create the task and add it to the list
-                subAssembleTasks.add(
-                        taskFactory.register(
-                                "assemble" + dimensionName,
-                                task -> {
-                                    task.setDescription(
-                                            "Assembles main outputs for all "
-                                                    + dimensionName
-                                                    + " variants.");
-                                    task.setGroup(BasePlugin.BUILD_GROUP);
-                                    task.dependsOn(assembleMap.get(dimensionKey));
-                                }));
-
-                List<TaskProvider<? extends Task>> subBundleMap = bundleMap.get(dimensionKey);
-                if (!subBundleMap.isEmpty()) {
-
-                    // create the task and add it to the list
-                    subBundleTasks.add(
-                            taskFactory.register(
-                                    "bundle" + dimensionName,
-                                    task -> {
-                                        task.setDescription(
-                                                "Assembles bundles for all "
-                                                        + dimensionName
-                                                        + " variants.");
-                                        task.setGroup(BasePlugin.BUILD_GROUP);
-                                        task.dependsOn(subBundleMap);
-                                    }));
-                }
-            }
         } else {
-            // Case #3
-
+            // Case #2
             for (VariantScope variantScope : variantScopes) {
                 final VariantType variantType = variantScope.getType();
                 if (!variantType.isTestComponent()) {
@@ -2743,15 +2691,7 @@ public abstract class TaskManager {
 
     @NonNull
     private String getAssembleTaskName(VariantScope scope, @NonNull String prefix) {
-        String taskName;
-        if (variantFactory.getVariantConfigurationTypes().size() == 1) {
-            taskName = scope.getTaskName(prefix);
-        } else {
-            taskName =
-                    StringHelper.appendCapitalized(
-                            prefix, scope.getVariantConfiguration().getFullName());
-        }
-        return taskName;
+        return scope.getTaskName(prefix);
     }
 
     public void createBundleTask(@NonNull final BaseVariantData variantData) {
@@ -3085,13 +3025,12 @@ public abstract class TaskManager {
     }
 
     public void addBindingDependenciesIfNecessary(
-            ViewBindingOptions viewBindingOptions,
+            boolean viewBindingEnabled,
+            boolean dataBindingEnabled,
             DataBindingOptions dataBindingOptions,
             List<VariantScope> variantScopes) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         boolean useAndroidX = projectOptions.get(BooleanOption.USE_ANDROID_X);
-        boolean viewBindingEnabled = viewBindingOptions.isEnabled();
-        boolean dataBindingEnabled = dataBindingOptions.isEnabled();
 
         if (viewBindingEnabled) {
             String version =

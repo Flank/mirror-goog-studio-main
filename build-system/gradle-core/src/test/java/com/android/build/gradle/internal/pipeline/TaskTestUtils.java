@@ -26,16 +26,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
-import com.android.build.gradle.internal.ide.SyncIssueImpl;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueException;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.NoOpRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -280,7 +276,7 @@ public class TaskTestUtils {
         when(scope.getTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
         when(scope.getFullVariantName()).thenReturn("theVariantName");
 
-        CoreBuildType buildType = mock(CoreBuildType.class);
+        BuildType buildType = mock(BuildType.class);
         when(buildType.getName()).thenReturn("debug");
         when(buildType.isDebuggable()).thenReturn(true);
 

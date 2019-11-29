@@ -50,11 +50,6 @@ public class ViewType<V extends View> {
         return mJavaName;
     }
 
-    ViewNode<V> newNode() {
-        //noinspection unchecked
-        return new ViewNode(this);
-    }
-
     List<InspectionCompanion> getInspectionCompanions() {
         return mInspectionCompanions;
     }

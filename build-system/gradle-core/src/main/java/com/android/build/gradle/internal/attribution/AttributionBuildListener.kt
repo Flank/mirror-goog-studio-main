@@ -17,15 +17,10 @@
 package com.android.build.gradle.internal.attribution
 
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
-import com.google.common.collect.Sets
 import org.gradle.BuildAdapter
-import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
-import org.gradle.api.initialization.Settings
-import org.gradle.api.invocation.Gradle
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.TaskState
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -37,16 +32,14 @@ import java.util.concurrent.ConcurrentHashMap
 class AttributionBuildListener internal constructor(private val outputDirPath: String) :
     TaskExecutionListener, BuildAdapter() {
     private val taskNameToClassNameMap: MutableMap<String, String> = ConcurrentHashMap()
-    private val noncacheableTasks: MutableSet<String> = Sets.newConcurrentHashSet()
     private val outputFileToTasksMap: MutableMap<String, MutableList<String>> = ConcurrentHashMap()
 
     override fun buildFinished(buildResult: BuildResult) {
         AndroidGradlePluginAttributionData.save(
             File(outputDirPath),
             AndroidGradlePluginAttributionData(
-                taskNameToClassNameMap,
-                noncacheableTasks,
-                outputFileToTasksMap.filter { it.value.size > 1 }
+                taskNameToClassNameMap = taskNameToClassNameMap,
+                tasksSharingOutput = outputFileToTasksMap.filter { it.value.size > 1 }
             )
         )
         AttributionListenerInitializer.unregister(buildResult.gradle)
@@ -54,10 +47,6 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
 
     override fun beforeExecute(task: Task) {
         taskNameToClassNameMap[task.name] = getTaskClassName(task.javaClass.name)
-
-        if (task.javaClass.getAnnotation(CacheableTask::class.java) == null) {
-            noncacheableTasks.add(task.path)
-        }
 
         task.outputs.files.forEach { outputFile ->
             outputFileToTasksMap.computeIfAbsent(outputFile.absolutePath) {

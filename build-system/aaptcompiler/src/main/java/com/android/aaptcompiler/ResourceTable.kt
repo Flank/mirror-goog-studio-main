@@ -265,6 +265,19 @@ class ResourceTable(val validateResources: Boolean = false) {
     }
   }
 
+  fun sort() {
+    packages.sortWith(compareBy({it.name}, {it.id}))
+    for (pkg in packages) {
+      pkg.groups.sortWith(compareBy({it.type.ordinal}, {it.id}))
+      for (group in pkg.groups) {
+        group.entries.sortWith(compareBy({it.name}, {it.id}))
+        for (entry in group.entries) {
+          entry.values.sortWith(compareBy({it.config}, {it.product}))
+        }
+      }
+    }
+  }
+
   private fun validateName(
     nameValidator: (String) -> String, name: ResourceName, source: Source): Boolean {
     val badCodePoint = nameValidator.invoke(name.entry!!)
@@ -628,7 +641,7 @@ class ResourceEntry(val name : String) {
     return values.find { it.config == config && it.product == product }
   }
 
-  fun findOrCreateValue(config: ConfigDescription, product: String): ResourceConfigValue {
+  fun findOrCreateValue(config: ConfigDescription, product: String = ""): ResourceConfigValue {
     val configValue = findValue(config, product)
     return when (configValue) {
       null -> {

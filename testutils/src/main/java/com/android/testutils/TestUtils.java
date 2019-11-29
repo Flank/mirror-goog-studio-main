@@ -26,14 +26,18 @@ import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import junit.framework.TestCase;
 
 /**
@@ -362,6 +366,24 @@ public class TestUtils {
                                 + version
                                 + ".jar")
                 .toPath();
+    }
+
+    @NonNull
+    public static String getDesugarLibConfigContentWithVersion(String version) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        try (JarFile jarFile = new JarFile(getDesugarLibConfigJarWithVersion(version).toFile())) {
+            JarEntry jarEntry = jarFile.getJarEntry("META-INF/desugar/d8/desugar.json");
+            try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(jarFile.getInputStream(jarEntry)))) {
+                String line = reader.readLine();
+                while (line != null) {
+                    stringBuilder.append(line);
+                    line = reader.readLine();
+                }
+            }
+        }
+        return stringBuilder.toString();
     }
 
     @NonNull

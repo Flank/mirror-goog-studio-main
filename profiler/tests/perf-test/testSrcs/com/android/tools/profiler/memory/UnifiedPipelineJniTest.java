@@ -16,6 +16,10 @@
 
 package com.android.tools.profiler.memory;
 
+import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.findClassTag;
+import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.startAllocationTracking;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
@@ -24,15 +28,11 @@ import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Memory;
 import com.android.tools.profiler.proto.Memory.AllocationEvent;
 import com.android.tools.profiler.proto.Memory.JNIGlobalReferenceEvent;
+import java.util.HashSet;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.HashSet;
-
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.findClassTag;
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.startAllocationTracking;
-import static com.google.common.truth.Truth.assertThat;
 
 public class UnifiedPipelineJniTest {
     private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
@@ -66,6 +66,7 @@ public class UnifiedPipelineJniTest {
         }
     }
 
+    @Ignore("b/141868630")
     @Test
     public void countCreatedAndDeleteRefEvents() throws Exception {
         // Find JNITestEntity class tag

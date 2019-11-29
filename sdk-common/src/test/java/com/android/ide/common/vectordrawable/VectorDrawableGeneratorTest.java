@@ -289,6 +289,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_lineto_moveto_viewbox5");
     }
 
+    public void testSvgImplicitLineToAfterMoveTo() throws Exception {
+        checkSvgConversion("test_implicit_lineto_after_moveto");
+    }
+
     public void testSvgColorFormats() throws Exception {
         checkSvgConversion("test_color_formats");
     }
@@ -335,6 +339,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgTransformDegenerateArc() throws Exception {
         checkSvgConversion("test_transform_degenerate_arc");
+    }
+
+    public void testSvgArcWithoutSeparatorBetweenFlags() throws Exception {
+        checkSvgConversion("test_arc_without_separator_between_flags");
     }
 
     public void testSvgTransformCircleRotate() throws Exception {
@@ -554,7 +562,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
     }
 
     public void testSvgImageOnly() throws Exception {
-        checkSvgConversionAndContainsError("test_image_only", "ERROR: No vector content found");
+        checkSvgConversionAndContainsError("test_image_only",
+                                           "ERROR @ line 11: <image> is not supported");
     }
 
     // Clip Path Tests
@@ -662,6 +671,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgStyleShortVersion() throws Exception {
         checkSvgConversion("test_style_short_version");
+    }
+
+    public void testSvgStyleCombined() throws Exception {
+        checkSvgConversion("test_style_combined");
     }
 
     // Gradient tests start here

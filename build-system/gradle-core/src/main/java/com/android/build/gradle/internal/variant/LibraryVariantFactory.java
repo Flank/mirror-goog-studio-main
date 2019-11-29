@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.LibraryVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -36,8 +35,6 @@ import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.ImmutableList;
-import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 
 public class LibraryVariantFactory extends BaseVariantFactory {
@@ -68,8 +65,8 @@ public class LibraryVariantFactory extends BaseVariantFactory {
 
     @NonNull
     @Override
-    public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantTypeImpl.LIBRARY);
+    public VariantType getVariantType() {
+        return VariantTypeImpl.LIBRARY;
     }
 
     @Override

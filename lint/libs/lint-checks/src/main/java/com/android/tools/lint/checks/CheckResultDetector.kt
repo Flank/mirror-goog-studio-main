@@ -28,8 +28,8 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
-import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnotation
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiElement

@@ -100,7 +100,8 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     } break;
 
     default:
-      Log::V("Unhandled http event (%d)", httpEvent->event());
+      Log::V(Log::Tag::PROFILER, "Unhandled http event (%d)",
+             httpEvent->event());
   }
 
   return Status::OK;
@@ -109,7 +110,9 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 Status InternalNetworkServiceImpl::SendHttpRequest(
     ServerContext *context, const proto::HttpRequestRequest *httpRequest,
     proto::EmptyNetworkReply *reply) {
-  auto details = network_cache_->AddConnection(httpRequest->conn_id(), httpRequest->pid(), httpRequest->start_timestamp());
+  auto details =
+      network_cache_->AddConnection(httpRequest->conn_id(), httpRequest->pid(),
+                                    httpRequest->start_timestamp());
   details->request.url = httpRequest->url();
   details->request.trace_id = file_cache_->AddString(httpRequest->trace());
   details->request.fields = httpRequest->fields();
@@ -124,7 +127,7 @@ Status InternalNetworkServiceImpl::SendHttpResponse(
   if (conn != nullptr) {
     conn->response.fields = httpResponse->fields();
   } else {
-    Log::V("Unhandled http response (%lld)",
+    Log::V(Log::Tag::PROFILER, "Unhandled http response (%lld)",
            (long long)httpResponse->conn_id());
   }
   return Status::OK;

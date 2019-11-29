@@ -169,9 +169,24 @@ public class JarContentsTest {
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/build/aapt2-proto",
+                "android/",
+                "android/aapt/",
+                "android/aapt/pb/",
+                "android/aapt/pb/internal/", // ResourcesInternal.proto
                 "com/",
                 "com/android/",
-                "com/android/aapt/",
+                "com/android/aapt/", // Resources.proto & Configuration.proto
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+        expected.putAll(
+                "com/android/tools/build/aaptcompiler",
+                "com/",
+                "com/android/",
+                "com/android/aaptcompiler/",
+                "com/android/aaptcompiler/android/",
+                "com/android/aaptcompiler/buffer/",
+                "com/android/aaptcompiler/proto/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -197,7 +212,6 @@ public class JarContentsTest {
                 "com/android/builder/internal/compiler/",
                 "com/android/builder/internal/incremental/",
                 "com/android/builder/internal/packaging/",
-                "com/android/builder/internal/testing/",
                 "com/android/builder/merge/",
                 "com/android/builder/multidex/",
                 "com/android/builder/packaging/",
@@ -302,6 +316,8 @@ public class JarContentsTest {
                 "libthrowable_extension.jar:META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/services/",
+                "META-INF/services/com.android.tools.r8",
                 "NOTICE",
                 "r8-version.properties");
         expected.putAll(
@@ -365,6 +381,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/",
                 "com/android/build/gradle/internal/cxx/attribution/",
                 "com/android/build/gradle/internal/cxx/cmake/",
+                "com/android/build/gradle/internal/cxx/caching/",
                 "com/android/build/gradle/internal/cxx/configure/",
                 "com/android/build/gradle/internal/cxx/hashing/",
                 "com/android/build/gradle/internal/cxx/json/",
@@ -403,11 +420,13 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/tasks/featuresplit/",
                 "com/android/build/gradle/internal/tasks/manifest/",
                 "com/android/build/gradle/internal/tasks/structureplugin/",
+                "com/android/build/gradle/internal/tasks/",
                 "com/android/build/gradle/internal/test/",
                 "com/android/build/gradle/internal/test/report/",
                 "com/android/build/gradle/internal/test/report/base-style.css",
                 "com/android/build/gradle/internal/test/report/report.js",
                 "com/android/build/gradle/internal/test/report/style.css",
+                "com/android/build/gradle/internal/testing/",
                 "com/android/build/gradle/internal/transforms/",
                 "com/android/build/gradle/internal/utils/",
                 "com/android/build/gradle/internal/variant/",

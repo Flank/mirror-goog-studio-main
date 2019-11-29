@@ -23,16 +23,14 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
+import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.truth.FileSubject.assertThat
-import com.android.utils.FileUtils
-import com.google.common.truth.Expect
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.io.File
 
 /**
  * Tests cacheability of tasks.
@@ -111,16 +109,17 @@ class CacheabilityTest {
     }
 
     @get:Rule
-    var projectCopy1 = setUpTestProject("projectCopy1")
+    val buildCacheDirRoot = TemporaryFolder()
 
     @get:Rule
-    var projectCopy2 = setUpTestProject("projectCopy2")
+    val projectCopy1 = setUpTestProject("projectCopy1")
+
+    @get:Rule
+    val projectCopy2 = setUpTestProject("projectCopy2")
 
     private fun setUpTestProject(projectName: String): GradleTestProject {
         return with(EmptyActivityProjectBuilder()) {
             this.projectName = projectName
-            useGradleBuildCache = true
-            gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE_DIR")
             build()
         }
     }
@@ -136,56 +135,24 @@ class CacheabilityTest {
         }
     }
 
-    @get:Rule
-    val expect: Expect = Expect.create()
-
     @Test
     fun testRelocatability() {
-        // Build the first project
-        val buildCacheDir = File(projectCopy1.testDir.parent, GRADLE_BUILD_CACHE_DIR)
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-        projectCopy1.executor().withArgument("--build-cache")
-            .run("clean", "assembleDebug", "testDebugUnitTest", ":app:parseDebugIntegrityConfig")
+        val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE_DIR)
 
-        // Check that the build cache has been populated
-        assertThat(buildCacheDir).exists()
-
-        // Build the second project
-        val result =
-            projectCopy2.executor().withArgument("--build-cache")
-                .run(
-                    "clean",
-                    "assembleDebug",
-                    "testDebugUnitTest",
-                    ":app:parseDebugIntegrityConfig"
-                )
-
-        // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
-        // directory is not available. We need to remove that task from the expected tasks' states.
-        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]
-        if (result.findTask(":app:transformNativeLibsWithStripDebugSymbolForDebug") == null) {
-            expectedDidWorkTasks =
-                    expectedDidWorkTasks!!.minus(":app:transformNativeLibsWithStripDebugSymbolForDebug")
-        }
-
-        // Check that the tasks' states are as expected
-        expect.that(result.upToDateTasks)
-            .named("UpToDate Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE])
-        expect.that(result.fromCacheTasks)
-            .named("FromCache Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE])
-        expect.that(result.didWorkTasks)
-            .named("DidWork Tasks")
-            .containsExactlyElementsIn(expectedDidWorkTasks)
-        expect.that(result.skippedTasks)
-            .named("Skipped Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED])
-        expect.that(result.failedTasks)
-            .named("Failed Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED])
-
-        // Clean up the cache
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+        CacheabilityTestHelper
+            .forProjects(
+                projectCopy1,
+                projectCopy2)
+            .withBuildCacheDir(buildCacheDir)
+            .withTasks(
+                "clean",
+                "assembleDebug",
+                "testDebugUnitTest",
+                ":app:parseDebugIntegrityConfig")
+            .hasUpToDateTasks(EXPECTED_TASK_STATES.getValue(UP_TO_DATE))
+            .hasFromCacheTasks(EXPECTED_TASK_STATES.getValue(FROM_CACHE))
+            .hasDidWorkTasks(EXPECTED_TASK_STATES.getValue(DID_WORK))
+            .hasSkippedTasks(EXPECTED_TASK_STATES.getValue(SKIPPED))
+            .hasFailedTasks(EXPECTED_TASK_STATES.getValue(FAILED))
     }
 }

@@ -23,8 +23,10 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig.minSdkVersion rootProject.supportLibMinSdk
+    buildFeatures {
+        dataBinding = true
+    }
     dataBinding {
-        enabled = true
         addDefaultAdapters = false
     }
 }

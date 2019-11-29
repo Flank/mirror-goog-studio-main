@@ -109,11 +109,11 @@ TEST(ActivityManagerTest, InstrumentSystemServerStart) {
                       Return(true)));
   TestActivityManager manager{std::move(bash)};
   manager.StartProfiling(ActivityManager::ProfilingMode::INSTRUMENTED,
-                         "system_server", 1000, trace_path, &output_string);
+                         "system_process", 1000, trace_path, &output_string);
   EXPECT_THAT(cmd, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd, HasSubstr(kProfileStart));
   EXPECT_THAT(cmd, HasSubstr(" system "));
-  EXPECT_THAT(cmd, Not(HasSubstr(" system_server ")));
+  EXPECT_THAT(cmd, Not(HasSubstr(" system_process ")));
   EXPECT_THAT(output_string, StrEq(kMockOutputString));
 }
 

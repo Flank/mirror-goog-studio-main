@@ -110,10 +110,11 @@ coverage_java_test(
             "//tools/base/deploy/installer:test-installer",
             "//tools/base/deploy/installer/tests:artifacts",
         ],
-    }),
+    }) + ["//tools/base/tracer:trace_agent"],
     jvm_flags = [
         "-Dtest.suite.jar=deployer.tests.jar",
         "-Ddashboards.enabled=true",
+        "-javaagent:$(location //tools/base/tracer:trace_agent)=$(location //tools/base/deploy/deployer:src/test/resource/deployer.profile)",
     ],
     tags = [
         "no_mac",

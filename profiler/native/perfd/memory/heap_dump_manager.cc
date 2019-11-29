@@ -16,6 +16,7 @@
 #include "heap_dump_manager.h"
 
 #include <unistd.h>
+
 #include <cassert>
 #include <fstream>
 #include <sstream>
@@ -27,6 +28,8 @@
 #include "utils/filesystem_notifier.h"
 #include "utils/log.h"
 #include "utils/thread_name.h"
+
+using profiler::Log;
 
 namespace {
 // By checking file size changing and the last piece of data in the dump file,
@@ -47,7 +50,7 @@ bool WaitForHeapDumpFinishInOPlus(std::string file_path) {
   bool finished = false;
   std::ifstream stream(file_path, std::ifstream::binary | std::ifstream::ate);
   if (stream.fail()) {
-    profiler::Log::V("Failed to open hprof file stream.");
+    Log::V(Log::Tag::PROFILER, "Failed to open hprof file stream.");
   } else {
     int retry = 0;
     int prev_size = -1;
@@ -104,7 +107,8 @@ bool HeapDumpManager::TriggerHeapDump(
                                   std::make_tuple(pid), std::make_tuple());
   auto& data = result.first->second;
   if (data.is_running_) {
-    Log::V("A heap dump for pid %d is already in progress.", pid);
+    Log::V(Log::Tag::PROFILER, "A heap dump for pid %d is already in progress.",
+           pid);
     return false;
   }
 
@@ -138,10 +142,10 @@ void HeapDumpManager::HeapDumpMain(int32_t pid, std::shared_ptr<File> file,
       // Monitoring the file to catch close event when the heap dump is complete
       FileSystemNotifier notifier(file->path(), FileSystemNotifier::CLOSE);
       if (!notifier.IsReadyToNotify() || !notifier.WaitUntilEventOccurs(-1)) {
-        Log::V(
-            "Unable to monitor heap dump file (pid=%d, path=%s) for "
-            "completion",
-            pid, file->path().c_str());
+        Log::V(Log::Tag::PROFILER,
+               "Unable to monitor heap dump file (pid=%d, path=%s) for "
+               "completion",
+               pid, file->path().c_str());
         result = false;
       }
     }

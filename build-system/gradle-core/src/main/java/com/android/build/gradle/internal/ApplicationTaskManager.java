@@ -187,7 +187,7 @@ public class ApplicationTaskManager extends TaskManager {
             // Add a task to produce the signing config file.
             taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
 
-            if (extension.getDataBinding().isEnabled()) {
+            if (globalScope.getBuildFeatures().getDataBinding()) {
                 // Create a task that will package the manifest ids(the R file packages) of all
                 // features into a file. This file's path is passed into the Data Binding annotation
                 // processor which uses it to known about all available features.
@@ -203,7 +203,7 @@ public class ApplicationTaskManager extends TaskManager {
             // Task will produce artifacts consumed by the base feature
             taskFactory.register(
                     new FeatureSplitDeclarationWriterTask.CreationAction(variantScope));
-            if (extension.getDataBinding().isEnabled()) {
+            if (globalScope.getBuildFeatures().getDataBinding()) {
                 // Create a task that will package necessary information about the feature into a
                 // file which is passed into the Data Binding annotation processor.
                 taskFactory.register(
@@ -383,12 +383,16 @@ public class ApplicationTaskManager extends TaskManager {
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
         if (variantScope.getType().isBaseModule()) {
-            taskFactory.register(new ModuleMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.register(
+                    new ModuleMetadataWriterTask.CreationAction(
+                            variantScope.getVariantData().getPublicVariantPropertiesApi()));
         }
 
         // TODO b/141650037 - Only the base App should create this task.
         TaskProvider<? extends Task> applicationIdWriterTask =
-                taskFactory.register(new ApplicationIdWriterTask.CreationAction(variantScope));
+                taskFactory.register(
+                        new ApplicationIdWriterTask.CreationAction(
+                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.

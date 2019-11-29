@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
+import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
@@ -35,12 +36,25 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.process.ExecOperations;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
 
     private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
+    @NonNull private final ExecOperations execOperations;
+
+    @Inject
+    public ExternalNativeBuildJsonTask(@NonNull ExecOperations execOperations) {
+        this.execOperations = execOperations;
+        this.getOutputs()
+                .upToDateWhen(
+                        task -> {
+                            getLogger().debug("Generate json model is always run.");
+                            return false;
+                        });
+    }
 
     @InputFiles
     @Optional
@@ -51,7 +65,7 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
     protected void doTaskAction() throws ProcessException, IOException {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(evalIssueReporter)) {
-            generator.get().build();
+            generator.get().build(execOperations::exec);
         }
     }
 

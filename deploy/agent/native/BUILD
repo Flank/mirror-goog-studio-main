@@ -21,6 +21,8 @@ cc_binary(
         "native_callbacks.h",
         "swapper.cc",
         "swapper.h",
+        "thread_suspend.cc",
+        "thread_suspend.h",
     ],
     copts = ANDROID_COPTS + [
         "-I$(GENDIR)/tools/base/deploy/proto",

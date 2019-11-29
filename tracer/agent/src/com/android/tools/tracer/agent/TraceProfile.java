@@ -80,6 +80,13 @@ class TraceProfile {
                     start.add(value);
                 } else if (key.equals("Output")) {
                     outputFile = value;
+                } else if (key.equals("OutputEnvVar")) {
+                    String outputDir = System.getenv(value);
+                    if (outputDir == null || outputDir.isEmpty()) {
+                        throw new RuntimeException(
+                                "OutputEnvVar specified in trace file, but value not set.");
+                    }
+                    outputFile = new File(outputDir, "report.json").getPath();
                 } else if (key.equals("Annotation")) {
                     value = "L" + value.replaceAll("\\.", "/") + ";";
                     annotations.add(value);

@@ -162,7 +162,6 @@ public class ApiObjectFactory {
                                             .addVariantOutput(apkData.getType());
                             apkData.setVariantOutput(variantOutput);
 
-                            apkData.setVersionName(config.getVersionNameSerializableSupplier());
                             // pass the new api variant output object so the override method can
                             // delegate to the new location.
                             variantData.variantOutputFactory.create(apkData, variantOutput);

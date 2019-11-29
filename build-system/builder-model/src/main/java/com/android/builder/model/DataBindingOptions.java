@@ -28,12 +28,13 @@ public interface DataBindingOptions {
 
     /**
      * Whether to enable data binding.
+     *
+     * @deprecated use android.features.databinding
      */
+    @Deprecated
     boolean isEnabled();
 
-    /**
-     * Whether to add the default data binding adapters.
-     */
+    /** Whether to add the default data binding adapters. */
     boolean getAddDefaultAdapters();
     /**
      * Whether we want tests to be able to use data binding as well.

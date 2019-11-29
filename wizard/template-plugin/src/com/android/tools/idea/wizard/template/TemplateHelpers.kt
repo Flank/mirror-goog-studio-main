@@ -19,6 +19,9 @@ import com.android.utils.usLocaleCapitalize
 import com.google.common.base.CaseFormat
 import com.google.common.base.Strings.emptyToNull
 import com.android.tools.idea.wizard.template.AssetNameConverter.Type
+import com.google.common.io.Resources
+import java.io.File
+import java.net.URL
 
 data class GradleVersion(val major: Int, val minor: Int, val micro: Int) {
   operator fun compareTo(other: GradleVersion) = when {
@@ -47,6 +50,15 @@ fun activityToLayout(activityName: String, layoutName: String? = null): String =
   else
     ""
 
+/** Converts a Fragment class name into a suitable layout name. */
+fun fragmentToLayout(fragmentName: String, layoutName: String? = null): String =
+  if (fragmentName.isNotEmpty())
+    AssetNameConverter(Type.FRAGMENT, fragmentName)
+      .overrideLayoutPrefix(layoutName ?: "fragment")
+      .getValue(Type.LAYOUT)
+  else
+    ""
+
 /** Similar to [camelCaseToUnderlines], but strips off common class suffixes such as "Activity", "Fragment", etc. */
 fun classToResource(name: String): String =
   if (name.isNotEmpty())
@@ -54,6 +66,10 @@ fun classToResource(name: String): String =
   else ""
 
 fun camelCaseToUnderlines(string: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, string)
+
+fun underscoreToCamelCase(
+  string: String
+): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
 
 fun escapeKotlinIdentifier(identifier: String): String =
   identifier.split(".").joinToString(".") { if (it in kotlinKeywords) "`$it`" else it }
@@ -82,3 +98,12 @@ private val kotlinKeywords = listOf(
   "throw", "return", "break", "continue", "object", "if", "try", "else", "while", "do", "when", "interface", "typeof")
 
 fun underlinesToCamelCase(string: String): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
+
+/**
+ * Finds a resource given a file path and a context class. The implementation takes cares of the details of different file path
+ * separators in different operating systems.
+ */
+fun findResource(contextClass: Class<Any>, from: File) : URL {
+  // Windows file paths use '\', but resources are always '/', and they need to start at root.
+  return Resources.getResource(contextClass, "/${from.path.replace('\\', '/')}")
+}

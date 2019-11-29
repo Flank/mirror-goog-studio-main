@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
+import com.android.build.gradle.internal.transforms.testdata.ClassWithDesugarApi
 import com.android.build.gradle.internal.transforms.testdata.Dog
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
@@ -35,6 +36,7 @@ import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
+import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThat
@@ -64,10 +66,13 @@ import org.junit.runners.Parameterized
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileFilter
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -76,7 +81,10 @@ import kotlin.test.fail
 
 /** Testing the [DexArchiveBuilderTaskDelegate].  */
 @RunWith(Parameterized::class)
-class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
+class DexArchiveBuilderDelegateTest(
+    private var dexerTool: DexerTool,
+    private val withIncrementalDesugaringV2: Boolean
+) {
 
     private lateinit var cacheDir: File
     private lateinit var userCache: FileCache
@@ -166,6 +174,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
 
     @Test
     fun testCacheUsedForExternalLibOnly() {
+        // Caching is currently not supported when withIncrementalDesugaringV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+
         val projectJar = tmpDir.root.toPath().resolve("projectInput.jar")
         jarWithEmptyClasses(projectJar, ImmutableList.of("$PACKAGE/A"))
 
@@ -238,6 +249,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
 
     @Test
     fun testCacheKeyInputsChanges() {
+        // Caching is currently not supported when withIncrementalDesugaringV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         jarWithEmptyClasses(inputJar, ImmutableList.of())
 
@@ -284,6 +298,9 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
     fun testD8DesugaringCacheKeys() {
         // Only for D8, Ignore DX
         Assume.assumeTrue(dexerTool == DexerTool.D8)
+
+        // Caching is currently not supported when withIncrementalDesugaringV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
 
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         val emptyLibDir = tmpDir.root.toPath().resolve("emptylibDir")
@@ -399,6 +416,82 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
         // one available classpath entry.
         expectedCacheMisses++
         expectedCacheEntryCount++
+        checkCache()
+    }
+
+    @Test
+    fun testCachingExternalLibsForCoreLibraryDesugaring() {
+        Assume.assumeTrue(dexerTool == DexerTool.D8)
+        Assume.assumeFalse(withIncrementalDesugaringV2)
+
+        val inputJar = tmpDir.root.toPath().resolve("input.jar")
+        TestInputsGenerator.pathWithClasses(
+            inputJar,
+            ImmutableList.of<Class<*>>(ClassWithDesugarApi::class.java)
+        )
+        val externalLibsOutputKeepRules = tmpDir.newFolder("keep_rules")
+        // 1 round, no shrinking, cache misses as cache is empty
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        expectedCacheEntryCount++
+        expectedCacheMisses++
+        checkCache()
+
+        // 2 round, same as round 1, cache hits
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        checkCache()
+
+        // 3 round, shrining enabled, cache misses as there is no cache for keep rule files and we
+        // have to re-process the input
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutputKeepRules =  externalLibsOutputKeepRules,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        // expectedCacheEntryCount is increased by two: one is for dex outputs, the other one is
+        // for keep_rule outputs
+        expectedCacheEntryCount += 2
+        expectedCacheMisses += 2
+        checkCache()
+
+        // 4 round, same as round 1, cache hits
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        checkCache()
+
+        // 5 round, same as round 3, cache hits
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutputKeepRules =  externalLibsOutputKeepRules,
+            libConfiguration = desugarConfig
+        ).doProcess()
+        checkCache()
+
+        // 6 round, there is no libConfiguration compared with round 1, cache misses
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8
+        ).doProcess()
+        expectedCacheEntryCount++
+        expectedCacheMisses++
         checkCache()
     }
 
@@ -634,6 +727,7 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
         desugaringClasspath: Set<File> = emptySet(),
         libConfiguration: String? = null,
         projectOutputKeepRules: File? = null,
+        externalLibsOutputKeepRules: File? = null,
         numberOfBuckets: Int = 1
     ): DexArchiveBuilderTaskDelegate {
         return DexArchiveBuilderTaskDelegate(
@@ -651,11 +745,13 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
             subProjectOutputDex = tmpDir.newFolder(),
             subProjectOutputKeepRules = null,
             externalLibsOutputDex = externalLibsOutput,
-            externalLibsOutputKeepRules = null,
+            externalLibsOutputKeepRules = externalLibsOutputKeepRules,
             mixedScopeOutputDex = tmpDir.newFolder(),
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = tmpDir.newFile(),
-            desugaringClasspathChangedClasses = emptySet(),
+            desugarClasspathChangedClasses = emptySet(),
+            incrementalDesugaringV2 = withIncrementalDesugaringV2,
+            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDesugaringV2 },
             dexer = dexerTool,
             useGradleWorkers = false,
             projectVariant = "myVariant",
@@ -683,10 +779,14 @@ class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters
-        fun setups(): Collection<Array<DexerTool>> {
-            return listOf(arrayOf(DexerTool.DX), arrayOf(DexerTool.D8))
-        }
+        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDesugaringV2_{1}")
+        fun parameters() = listOf(
+            arrayOf(DexerTool.DX, false),
+            // No need to test arrayOf(DexerTool.DX, true) as incrementalDesugaringV2 is only for D8
+            arrayOf(DexerTool.D8, false),
+            arrayOf(DexerTool.D8, true)
+        )
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.8.0")
     }
 
     private fun cacheEntriesCount(): Int {

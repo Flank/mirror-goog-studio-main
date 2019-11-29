@@ -17,6 +17,7 @@
 
 #include <iomanip>
 #include <sstream>
+
 #include "scoped_local_ref.h"
 #include "stdlib.h"
 #include "utils/device_info.h"
@@ -36,7 +37,7 @@ jvmtiEnv* CreateJvmtiEnv(JavaVM* vm) {
   }
   jint result = vm->GetEnv((void**)&jvmti_env, jvmti_flag);
   if (result != JNI_OK) {
-    Log::E("Error creating jvmti environment.");
+    Log::E(Log::Tag::TRANSPORT, "Error creating jvmti environment.");
     return nullptr;
   }
 
@@ -51,7 +52,7 @@ bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num,
 
   char* error = nullptr;
   jvmti->GetErrorName(err_num, &error);
-  Log::E("JVMTI error: %d(%s) %s", err_num,
+  Log::E(Log::Tag::TRANSPORT, "JVMTI error: %d(%s) %s", err_num,
          error == nullptr ? "Unknown" : error, message.c_str());
   Deallocate(jvmti, error);
   return true;
@@ -77,7 +78,7 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
   jint result =
       vm->GetEnv((void**)&jni, JNI_VERSION_1_6);  // ndk is only up to 1.6.
   if (result == JNI_EDETACHED) {
-    Log::V("JNIEnv not attached");
+    Log::V(Log::Tag::TRANSPORT, "JNIEnv not attached");
 #ifdef __ANDROID__
     if (vm->AttachCurrentThread(&jni, nullptr) != 0) {
 #else
@@ -86,7 +87,7 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
     // platform-dependent headers we will remove this.
     if (vm->AttachCurrentThread((void**)&jni, nullptr) != 0) {
 #endif
-      Log::V("Failed to attach JNIEnv");
+      Log::V(Log::Tag::TRANSPORT, "Failed to attach JNIEnv");
       return nullptr;
     }
   }
@@ -97,17 +98,17 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
 jthread AllocateJavaThread(jvmtiEnv* jvmti, JNIEnv* jni) {
   ScopedLocalRef<jclass> klass(jni, jni->FindClass("java/lang/Thread"));
   if (klass.get() == nullptr) {
-    Log::E("Failed to find Thread class.");
+    Log::E(Log::Tag::TRANSPORT, "Failed to find Thread class.");
   }
 
   jmethodID method = jni->GetMethodID(klass.get(), "<init>", "()V");
   if (method == nullptr) {
-    Log::E("Failed to find Thread.<init> method.");
+    Log::E(Log::Tag::TRANSPORT, "Failed to find Thread.<init> method.");
   }
 
   jthread result = jni->NewObject(klass.get(), method);
   if (result == nullptr) {
-    Log::E("Failed to create new Thread object.");
+    Log::E(Log::Tag::TRANSPORT, "Failed to create new Thread object.");
   }
 
   return result;

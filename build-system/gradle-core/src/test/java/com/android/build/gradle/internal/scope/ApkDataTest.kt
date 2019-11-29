@@ -86,23 +86,6 @@ class ApkDataTest {
     }
 
     @Test
-    fun testVersionNamePrecedence() {
-        val apkData1 = constructApkData()
-        val apkData2 = constructApkData()
-        apkData1.setVersionName {"aaa"}
-        apkData2.setVersionName {"bbb"}
-        assertThat(apkData1).isLessThan(apkData2)
-    }
-
-    @Test
-    fun testVersionNamePrecedenceWithNull() {
-        val apkData1 = constructApkData()
-        val apkData2 = constructApkData()
-        apkData1.setVersionName {"foo"}
-        assertThat(apkData1).isLessThan(apkData2)
-    }
-
-    @Test
     fun testEnabledPrecedence() {
         val apkData1 = constructApkData()
         val apkData2 = constructApkData()
@@ -117,9 +100,10 @@ class ApkDataTest {
         val versionCodeMock: Property<*> = Mockito.mock(Property::class.java)
         `when`(variantOutputMock.versionCode).thenReturn(versionCodeMock as Property<Int>)
         `when`(versionCodeMock.get()).thenReturn(42)
+        val versionNameMock: Property<*> = Mockito.mock(Property::class.java)
+        `when`(variantOutputMock.versionName).thenReturn(versionNameMock as Property<String>)
+        `when`(versionNameMock.getOrNull()).thenReturn("foo")
         originalApkData.variantOutput = variantOutputMock
-
-        originalApkData.setVersionName { "foo" }
 
         val bytes = serialize(originalApkData)
         val rebuiltApkData = deserialize(bytes)

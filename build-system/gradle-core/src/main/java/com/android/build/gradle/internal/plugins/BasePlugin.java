@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dependency.ConstraintHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -166,6 +167,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
+            @NonNull DefaultConfig defaultConfig,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
@@ -321,7 +323,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         extraModelInfo.getDeprecationReporter(),
                         objectFactory,
                         project.getLogger(),
-                        new BuildFeatureValuesImpl(projectOptions));
+                        new BuildFeatureValuesImpl(projectOptions),
+                        project.getProviders());
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
@@ -424,12 +427,20 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         globalScope.getDslScope(),
                         new DelayedActionsExecutor());
 
+        DefaultConfig defaultConfig =
+                objectFactory.newInstance(
+                        DefaultConfig.class,
+                        BuilderConstants.MAIN,
+                        project,
+                        globalScope.getDslScope());
+
         extension =
                 createExtension(
                         project,
                         projectOptions,
                         globalScope,
                         buildTypeContainer,
+                        defaultConfig,
                         productFlavorContainer,
                         signingConfigContainer,
                         buildOutputs,
@@ -642,7 +653,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        List<VariantScope> variantScopes = variantManager.createAndroidTasks();
+        List<VariantScope> variantScopes = variantManager.createVariantsAndTasks();
 
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(
@@ -654,17 +665,19 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             apiObjectFactory.create(variantData);
         }
 
+        // now call the public Variant API.
+        // TODO: Move this before our task creation and support other extension than applications.
+        extension.executeVariantOperations(variantScopes);
+        extension.executeVariantPropertiesOperations(variantScopes);
+
         // Make sure no SourceSets were added through the DSL without being properly configured
-        // Only do it if we are not restricting to a single variant (with Instant
-        // Run or we can find extra source set
-        if (projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME) == null) {
-            sourceSetManager.checkForUnconfiguredSourceSets();
-        }
+        sourceSetManager.checkForUnconfiguredSourceSets();
 
         // must run this after scopes are created so that we can configure kotlin
         // kapt tasks
         taskManager.addBindingDependenciesIfNecessary(
-                extension.getViewBinding(),
+                globalScope.getBuildFeatures().getViewBinding(),
+                globalScope.getBuildFeatures().getDataBinding(),
                 extension.getDataBinding(),
                 variantManager.getVariantScopes());
 
@@ -682,10 +695,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
 
         taskManager.createAnchorAssembleTasks(
-                variantScopes,
-                extension.getProductFlavors().size(),
-                flavorDimensionCount,
-                variantFactory.getVariantConfigurationTypes().size());
+                variantScopes, extension.getProductFlavors().size(), flavorDimensionCount);
 
         // now publish all variant artifacts.
         for (VariantScope variantScope : variantManager.getVariantScopes()) {

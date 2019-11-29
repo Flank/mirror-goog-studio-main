@@ -29,9 +29,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.utils.StringHelper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.Collection;
 import java.util.Map;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -100,7 +98,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @NonNull
     @Override
-    public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantTypeImpl.TEST_APK);
+    public VariantType getVariantType() {
+        return VariantTypeImpl.TEST_APK;
     }
 }

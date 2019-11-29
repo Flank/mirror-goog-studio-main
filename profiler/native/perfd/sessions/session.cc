@@ -69,7 +69,8 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
     // For legacy pipeline we initiate the network buffer on StartProfiling.
     auto buffer = profiler_unified_pipeline ? daemon->buffer() : nullptr;
     int32_t uid = UidFetcher::GetUid(pid);
-    Log::V("Subscribe to statsd atoms for pid %d (uid: %d)", pid, uid);
+    Log::V(Log::Tag::PROFILER, "Subscribe to statsd atoms for pid %d (uid: %d)",
+           pid, uid);
     if (uid >= 0) {
       StatsdSubscriber::Instance().SubscribeToPulledAtom(
           std::unique_ptr<WifiBytesTransfer>(

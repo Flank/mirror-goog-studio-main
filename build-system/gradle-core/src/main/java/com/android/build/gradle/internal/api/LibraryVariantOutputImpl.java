@@ -68,7 +68,9 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     public File getOutputFile() {
         Zip packageTask = getPackageLibrary();
         if (packageTask != null) {
-            return new File(packageTask.getDestinationDir(), apkData.getOutputFileName());
+            return new File(
+                    packageTask.getDestinationDirectory().get().getAsFile(),
+                    apkData.getOutputFileName());
         } else {
             return super.getOutputFile();
         }

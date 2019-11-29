@@ -24,8 +24,10 @@ import com.android.builder.model.BuildType;
 import org.gradle.api.provider.Property;
 
 /**
- * A build type with addition properties for building with Gradle plugin.
+ * A build type with addition properties for building with Gradle plugin. @Deprecated do not use.
+ * Use a more specific type instead
  */
+@Deprecated
 public interface CoreBuildType extends BuildType {
 
     @Nullable

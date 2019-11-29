@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
@@ -118,6 +119,10 @@ abstract class R8Task: ProguardConfigurableTask() {
     @get:Classpath
     abstract val baseJar: RegularFileProperty
 
+    @get:Input
+    @get:Optional
+    abstract val coreLibDesugarConfig: Property<String>
+
     // R8 will produce either classes or dex
     @get:Optional
     @get:OutputFile
@@ -126,6 +131,10 @@ abstract class R8Task: ProguardConfigurableTask() {
     @get:Optional
     @get:OutputDirectory
     abstract val outputDex: DirectoryProperty
+
+    @get:Optional
+    @get:OutputDirectory
+    abstract val projectOutputKeepRules: DirectoryProperty
 
     @get:Optional
     @get:OutputDirectory
@@ -193,6 +202,11 @@ abstract class R8Task: ProguardConfigurableTask() {
                     variantScope.artifacts.getOperations().append(
                         taskProvider, R8Task::outputDex
                     ).on(MultipleArtifactType.DEX)
+                    if (variantScope.needsShrinkDesugarLibrary) {
+                        variantScope.artifacts.getOperations()
+                            .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
+                            .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
+                    }
                 }
             }
 
@@ -272,6 +286,9 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
             task.baseJar.disallowChanges()
             task.featureJars.disallowChanges()
+            if (variantScope.isCoreLibraryDesugaringEnabled) {
+                task.coreLibDesugarConfig.set(getDesugarLibConfig(variantScope.globalScope.project))
+            }
         }
 
         override fun keep(keep: String) {
@@ -347,7 +364,9 @@ abstract class R8Task: ProguardConfigurableTask() {
             outputResources = outputResources.get().asFile,
             mainDexListOutput = mainDexListOutput.orNull?.asFile,
             featureJars = featureJars.toList(),
-            featureDexDir = featureDexDir.asFile.orNull
+            featureDexDir = featureDexDir.asFile.orNull,
+            libConfiguration = coreLibDesugarConfig.orNull,
+            outputKeepRulesDir = projectOutputKeepRules.asFile.orNull
         )
     }
 
@@ -376,7 +395,9 @@ abstract class R8Task: ProguardConfigurableTask() {
             outputResources: File,
             mainDexListOutput: File?,
             featureJars: List<File>,
-            featureDexDir: File?
+            featureDexDir: File?,
+            libConfiguration: String?,
+            outputKeepRulesDir: File?
         ) {
             LoggerWrapper.getLogger(R8Task::class.java)
                 .info(
@@ -403,6 +424,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 Format.DIRECTORY -> {
                     FileUtils.cleanOutputDir(output)
                     featureDexDir?.let { FileUtils.cleanOutputDir(it) }
+                    outputKeepRulesDir?.let { FileUtils.cleanOutputDir(it) }
                 }
                 Format.JAR -> FileUtils.deleteIfExists(output)
             }
@@ -435,7 +457,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
 
             val bootClasspathInputs = referencedInputs + bootClasspath
-
+            val outputKeepRulesFile = outputKeepRulesDir?.resolve("output")
             runR8(
                 classes.map { it.toPath() },
                 output.toPath(),
@@ -448,7 +470,9 @@ abstract class R8Task: ProguardConfigurableTask() {
                 messageReceiver,
                 useFullR8,
                 featureJars.map { it.toPath() },
-                featureDexDir?.toPath()
+                featureDexDir?.toPath(),
+                libConfiguration,
+                outputKeepRulesFile?.toPath()
             )
         }
     }

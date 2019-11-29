@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.internal.res
 
-import com.android.build.gradle.internal.res.ParseLibraryResourcesTask.Companion.canBeProcessedIncrementally
-import com.android.build.gradle.internal.res.ParseLibraryResourcesTask.Companion.canGenerateSymbols
 import com.android.builder.files.SerializableChange
 import com.android.ide.common.resources.FileStatus
+import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceFolderType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -95,7 +94,8 @@ class ParseLibraryResourcesTaskTest {
           "drawable img",
           "layout main_activity",
           "layout content_layout",
-          "string greeting"
+          "string greeting",
+          "string farewell"
         )
     }
 
@@ -107,7 +107,7 @@ class ParseLibraryResourcesTaskTest {
         val platformAttrsRTxtFile = File(parentFolder, "R-def.txt")
         val librarySymbolsFile = File(parentFolder, "Symbols.txt")
         val addedLayout = File(
-          FileUtils.join(resourcesFolder.path, "/layout"), "second_activity.xml")
+          FileUtils.join(resourcesFolder.path, "layout"), "second_activity.xml")
 
         FileUtils.createFile(librarySymbolsFile,
           "R_DEF: Internal format may change without notice\n" +
@@ -142,6 +142,60 @@ class ParseLibraryResourcesTaskTest {
         )
     }
 
+    @Test
+    fun testGenerateResourceSymbolTables_generatesExpectedSymbolTables() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val fakeResourceDirectory = createFakeResourceDirectory(parentFolder)
+
+        val symbolTables = generateResourceSymbolTables(fakeResourceDirectory, null).toTypedArray()
+
+        assertThat(symbolTables.count()).isEqualTo(4)
+        assertThat(symbolTables[0].symbolTable.symbols.values().toList().toString()).isEqualTo(
+                "[UNDEFINED drawable img = 0x0]"
+        )
+        assertThat(symbolTables[1].symbolTable.symbols.values().toList().toString()).isEqualTo(
+                "[UNDEFINED layout content_layout = 0x0]"
+        )
+        assertThat(symbolTables[3].symbolTable.symbols.values().toList().toString()).isEqualTo(
+                "[UNDEFINED string greeting = 0x0, UNDEFINED string farewell = 0x0]"
+        )
+    }
+
+    @Test
+    fun testSavePartialRFilesToDirectory_checkAllPartialFilesSaved() {
+        val parentFolder = temporaryFolder.newFolder("parent")
+        val fakeResourceDirectory = createFakeResourceDirectory(parentFolder)
+        val partialRFileDirectory = File(parentFolder, "partialR")
+
+        val emptyPlatformAttrSymbolTable = SymbolTable.builder().build()
+        val symbolTables =
+                generateResourceSymbolTables(fakeResourceDirectory, emptyPlatformAttrSymbolTable)
+
+        savePartialRFilesToDirectory(symbolTables, partialRFileDirectory)
+
+        val createdPartialRFiles = partialRFileDirectory.walkTopDown().toList().filter { it.isFile }
+        assertThat(createdPartialRFiles.size).isEqualTo(4)
+        assertThat(createdPartialRFiles
+                .first { it.name == "values_strings.arsc.flat-R.txt" }
+                .readLines())
+                .containsExactly(
+                        "undefined int string greeting",
+                        "undefined int string farewell"
+                )
+        assertThat(createdPartialRFiles
+                .first { it.name == "layout_main_activity.xml.flat-R.txt" }
+                .readLines())
+                .containsExactly(
+                        "undefined int layout main_activity"
+                )
+        assertThat(createdPartialRFiles
+                .first { it.name == "drawable_img.png.flat-R.txt" }
+                .readLines())
+                .containsExactly(
+                        "undefined int drawable img"
+                )
+    }
+
     private fun createFakeResourceDirectory(parentFolder : File): File {
         val resourcesFolder = File(parentFolder, "res")
         val drawableFolder = File(resourcesFolder, "drawable")
@@ -158,7 +212,8 @@ class ParseLibraryResourcesTaskTest {
         FileUtils.createFile(imageFile, "34324234")
         FileUtils.createFile(
           stringsFile,
-          """<resources><string name="greeting">Hello</string></resources>"""
+          """<resources><string name="greeting">Hello</string>
+              <string name="farewell">Goodbye</string></resources>"""
         )
         return resourcesFolder
     }

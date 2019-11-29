@@ -180,6 +180,8 @@ fun runR8(
         outputResources = outputDir.resolve("java_res.jar").toFile(),
         mainDexListOutput = null,
         featureJars = featureJars,
-        featureDexDir = featureDexDir
+        featureDexDir = featureDexDir,
+        libConfiguration = null,
+        outputKeepRulesDir = null
     )
 }

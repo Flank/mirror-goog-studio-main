@@ -97,7 +97,8 @@ bool MemoryCache::StartHeapDump(int64_t request_time,
   std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
 
   if (has_unfinished_heap_dump_) {
-    Log::D("StartHeapDumpSample called with existing unfinished heap dump.");
+    Log::D(Log::Tag::PROFILER,
+           "StartHeapDumpSample called with existing unfinished heap dump.");
     assert(heap_dump_infos_.size() > 0);
     response->mutable_info()->CopyFrom(heap_dump_infos_.back());
     return false;
@@ -120,7 +121,8 @@ bool MemoryCache::EndHeapDump(int64_t end_time, bool success) {
   std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
 
   if (!has_unfinished_heap_dump_) {
-    Log::D("CompleteHeapDumpSample called with no unfinished heap dump.");
+    Log::D(Log::Tag::PROFILER,
+           "CompleteHeapDumpSample called with no unfinished heap dump.");
     return false;
   }
 

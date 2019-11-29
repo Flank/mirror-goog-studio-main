@@ -919,6 +919,52 @@ public class SymbolIoTest {
     }
 
     @Test
+    public void testPartialRFileWrite() throws Exception {
+        File partialR = mTemporaryFolder.newFile();
+
+        SymbolTable sampleSymbolTable =
+                SymbolTable.builder()
+                        .tablePackage("foo.bar")
+                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
+                        .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
+                        .add(
+                                new Symbol.NormalSymbol(
+                                        ResourceType.STRING,
+                                        "be.ep",
+                                        0,
+                                        ResourceVisibility.UNDEFINED,
+                                        "be_ep"))
+                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
+                        .add(
+                                new Symbol.StyleableSymbol(
+                                        "A.B",
+                                        ImmutableList.of(),
+                                        ImmutableList.of("a1", "a2.f"),
+                                        ResourceVisibility.UNDEFINED,
+                                        "A_B"))
+                        .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .add(new Symbol.AttributeSymbol("maybeAttr", 0, true))
+                        .add(new Symbol.AttributeSymbol("realAttr", 0, false))
+                        .build();
+
+        SymbolIo.writePartialR(sampleSymbolTable, partialR.toPath());
+
+        List<String> partialRContents = Files.readLines(partialR, StandardCharsets.UTF_8);
+        assertThat(partialRContents)
+                .containsExactly(
+                        "undefined int attr maybeAttr",
+                        "undefined int attr realAttr",
+                        "undefined int drawable img",
+                        "undefined int id bar",
+                        "undefined int string be_ep",
+                        "undefined int string foo",
+                        "undefined int[] styleable A_B",
+                        "undefined int styleable A_B_a1",
+                        "undefined int styleable A_B_a2_f",
+                        "undefined int transition t");
+    }
+
+    @Test
     public void testPartialRFileRead() throws Exception {
         File partialR = mTemporaryFolder.newFile();
         java.nio.file.Files.write(

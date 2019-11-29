@@ -18,6 +18,7 @@ package com.android.tools.profiler.app.inspection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tools.app.inspection.AppInspection;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.profiler.PerfDriver;
@@ -63,18 +64,36 @@ class ServiceLayer implements Runnable {
         this.pid = pid;
     }
 
-    List<AppInspectionEvent> consumeCollectedEvents() {
-        ArrayList<Common.Event> drainedEvents = new ArrayList<>(events.size());
-        ArrayList<AppInspectionEvent> result = new ArrayList<>(events.size());
-        events.drainTo(drainedEvents);
-        for (Common.Event event : drainedEvents) {
-            assertThat(event.getPid()).isEqualTo(pid);
-            result.add(event.getAppInspectionEvent());
-        }
-        return result;
+    boolean hasEventToCollect() {
+        return events.size() > 0;
     }
 
-    AppInspectionEvent sendCommand(AppInspectionCommand appInspectionCommand) throws Exception {
+    AppInspectionEvent consumeCollectedEvent() throws Exception {
+        Common.Event event = events.poll(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertThat(event).isNotNull();
+        assertThat(event.getPid()).isEqualTo(pid);
+        assertThat(event.hasAppInspectionEvent()).isTrue();
+        return event.getAppInspectionEvent();
+    }
+
+    /*
+     * Sends the inspection command and returns a non-null response.
+     */
+    AppInspection.AppInspectionResponse sendCommandAndGetResponse(
+            AppInspectionCommand appInspectionCommand) throws Exception {
+        CompletableFuture<Common.Event> local =
+                commandIdToFuture.get(sendCommand(appInspectionCommand));
+        Common.Event response = local.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertThat(response).isNotNull();
+        assertThat(response.hasAppInspectionResponse()).isTrue();
+        assertThat(response.getPid()).isEqualTo(pid);
+        return response.getAppInspectionResponse();
+    }
+
+    /*
+     * Sends the inspection command and returns its generated id.
+     */
+    int sendCommand(AppInspectionCommand appInspectionCommand) {
         int commandId = nextCommandId.getAndIncrement();
         AppInspectionCommand idAppInspectionCommand =
                 appInspectionCommand.toBuilder().setCommandId(commandId).build();
@@ -90,11 +109,7 @@ class ServiceLayer implements Runnable {
         commandIdToFuture.put(commandId, local);
         ExecuteRequest executeRequest = ExecuteRequest.newBuilder().setCommand(command).build();
         transportStub.execute(executeRequest);
-        Common.Event event = local.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        assertThat(event).isNotNull();
-        assertThat(event.hasAppInspectionEvent()).isTrue();
-        assertThat(event.getPid()).isEqualTo(pid);
-        return event.getAppInspectionEvent();
+        return commandId;
     }
 
     @Override
@@ -103,14 +118,13 @@ class ServiceLayer implements Runnable {
                 transportStub.getEvents(GetEventsRequest.getDefaultInstance());
         while (iterator.hasNext()) {
             Common.Event event = iterator.next();
-            if (!event.hasAppInspectionEvent()) {
-                continue;
-            }
-            AppInspectionEvent inspectionEvent = event.getAppInspectionEvent();
-            int commandId = inspectionEvent.getCommandId();
-            if (commandId == 0) {
+            if (event.hasAppInspectionEvent()) {
                 events.offer(event);
-            } else {
+            } else if (event.hasAppInspectionResponse()) {
+                AppInspection.AppInspectionResponse inspectionResponse =
+                        event.getAppInspectionResponse();
+                int commandId = inspectionResponse.getCommandId();
+                assertThat(commandId).isNotEqualTo(0);
                 handleCommandResponse(commandId, event);
             }
         }

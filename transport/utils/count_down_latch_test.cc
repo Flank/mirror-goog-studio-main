@@ -15,6 +15,7 @@
  */
 #include "utils/count_down_latch.h"
 
+#include <algorithm>
 #include <thread>
 
 #include <gtest/gtest.h>

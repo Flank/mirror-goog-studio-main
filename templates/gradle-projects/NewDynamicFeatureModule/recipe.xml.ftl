@@ -5,10 +5,9 @@
     <mkdir at="${escapeXmlAttribute(projectOut)}" />
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
     <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
-    <merge from="root/settings.gradle.ftl"
-             to="${escapeXmlAttribute(topOut)}/settings.gradle" />
-    <merge from="root/base-build.gradle.ftl"
-             to="${baseFeatureDir}/build.gradle" />
+    <addIncludeToSettings />
+    <addDynamicFeature name="${projectName}"
+	                 to="${baseFeatureDir}" />
     <#if isInstantModule>
       <merge from="root/base-AndroidManifest.xml.ftl"
                to="${escapeXmlAttribute(baseFeatureDir)}/src/main/AndroidManifest.xml" />

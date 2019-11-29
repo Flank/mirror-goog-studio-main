@@ -39,6 +39,8 @@ import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
 import com.android.tools.perflogger.Benchmark;
+import com.android.tools.tracer.Trace;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -51,6 +53,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -65,6 +68,8 @@ public class DeployerRunnerTest {
 
     private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
+    private static File cachedDb;
+    private ApkFileDatabase db;
     private UIService service;
     private final FakeDevice device;
     private FakeAdbServer myAdbServer;
@@ -82,6 +87,14 @@ public class DeployerRunnerTest {
         this.device = new FakeDeviceLibrary().build(id);
     }
 
+    @BeforeClass
+    public static void prepare() throws Exception {
+        cachedDb = File.createTempFile("cached_db", ".bin");
+        cachedDb.delete();
+        new SqlApkFileDatabase(cachedDb, null);
+        cachedDb.deleteOnExit();
+    }
+
     @Before
     public void setUp() throws Exception {
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
@@ -97,6 +110,11 @@ public class DeployerRunnerTest {
         logger = new TestLogger();
         AndroidDebugBridge.enableFakeAdbServerMode(myAdbServer.getPort());
 
+        File dbFile = File.createTempFile("test_db", ".bin");
+        dbFile.deleteOnExit();
+        FileUtils.copyFile(cachedDb, dbFile);
+        db = new SqlApkFileDatabase(dbFile, null);
+
         if ("true".equals(System.getProperty("dashboards.enabled"))) {
             // Put all APIs (parameters) of a particular test into one benchmark.
             String benchmarkName = name.getMethodName().replaceAll("\\[.*", "");
@@ -106,11 +124,14 @@ public class DeployerRunnerTest {
                             .build();
             startTime = System.currentTimeMillis();
         }
+
+        Trace.begin(name.getMethodName());
     }
 
     @After
     public void tearDown() throws Exception {
         long currentTime = System.currentTimeMillis();
+        Trace.end();
         if (benchmark != null) {
             long timeTaken = currentTime - startTime;
 
@@ -130,7 +151,6 @@ public class DeployerRunnerTest {
     @Test
     public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         String[] args = {
@@ -154,7 +174,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -224,7 +243,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -286,7 +304,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -356,7 +373,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File v2 = TestUtils.getWorkspaceFile(BASE + "apks/simple+ver.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -445,7 +461,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -481,7 +496,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split+ver.apk");
@@ -514,7 +528,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -616,7 +629,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -719,7 +731,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -826,7 +837,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split1 = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -931,7 +941,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -1001,7 +1010,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -1106,7 +1114,6 @@ public class DeployerRunnerTest {
         File installersPath = DeployerTestUtils.prepareInstaller();
 
         // Install the base apk:
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         String[] args = {
@@ -1157,7 +1164,6 @@ public class DeployerRunnerTest {
 
         // Install the base apk:
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         File installersPath = DeployerTestUtils.prepareInstaller();
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
@@ -1234,7 +1240,8 @@ public class DeployerRunnerTest {
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
         }
     }
 
@@ -1245,7 +1252,6 @@ public class DeployerRunnerTest {
         String packageName = "com.example.simpleapp";
         assertTrue(device.getApps().isEmpty());
         File installersPath = DeployerTestUtils.prepareInstaller();
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
 
         AndroidDebugBridge.init(false);
@@ -1303,7 +1309,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -1346,10 +1351,13 @@ public class DeployerRunnerTest {
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
-                    "/system/bin/cmd package " + (device.getApi() < 28 ? "dump" : "path") + " com.example.simpleapp",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk"); // TODO: Don't we need to abort installation?
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAPREINSTALL_WRITE",
@@ -1371,7 +1379,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -1453,7 +1460,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -1506,7 +1512,8 @@ public class DeployerRunnerTest {
                             + " com.example.simpleapp",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
                     "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAPREINSTALL_WRITE",
@@ -1526,7 +1533,6 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();

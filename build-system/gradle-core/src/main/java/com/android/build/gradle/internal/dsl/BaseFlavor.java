@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.builder.core.AbstractProductFlavor;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ClassField;
@@ -35,7 +35,8 @@ import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 
 /** Base DSL object used to configure product flavors. */
-public abstract class BaseFlavor extends DefaultProductFlavor implements CoreProductFlavor {
+@SuppressWarnings("deprecation")
+public abstract class BaseFlavor extends AbstractProductFlavor implements CoreProductFlavor {
 
     @NonNull protected final Project project;
     @NonNull private DslScope dslScope;

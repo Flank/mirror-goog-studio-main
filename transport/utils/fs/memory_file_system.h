@@ -33,7 +33,7 @@ namespace profiler {
 // Note: This class is only used for unit tests at the moment. If this ever
 // needs to be used in production, consider changing the data structures from
 // flat maps to a more appropriate tree structure.
-class MemoryFileSystem final : public FileSystem {
+class MemoryFileSystem : public FileSystem {
  public:
   MemoryFileSystem();
   explicit MemoryFileSystem(const std::shared_ptr<Clock> &clock);
@@ -51,8 +51,8 @@ class MemoryFileSystem final : public FileSystem {
                int32_t max_depth) const override;
   int32_t GetFileSize(const std::string &path) const override;
   std::string GetFileContents(const std::string &path) const override;
-  bool MoveFile(const std::string &path_from,
-                const std::string &path_to) override;
+  virtual bool MoveFile(const std::string &path_from,
+                        const std::string &path_to) override;
   bool IsOpenForWrite(const std::string &path) const override;
   void OpenForWrite(const std::string &path) override;
   bool Append(const std::string &path, const std::string &str) override;

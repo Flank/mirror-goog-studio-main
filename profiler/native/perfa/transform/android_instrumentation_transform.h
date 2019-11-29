@@ -37,15 +37,16 @@ class AndroidInstrumentationTransform : public Transform {
             ir::MethodId(GetClassName(), "callActivityOnCreate",
                          "(Landroid/app/Activity;Landroid/os/Bundle;)V"))) {
       Log::E(
+          Log::Tag::PROFILER,
           "Error instrumenting Instrumentation.callActivityOnCreate(Bundle)");
     }
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "callActivityOnCreate",
                          "(Landroid/app/Activity;Landroid/os/Bundle;Landroid/"
                          "os/PersistableBundle;)V"))) {
-      Log::E(
-          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle, "
-          "PersistableBundle)");
+      Log::E(Log::Tag::PROFILER,
+             "Error instrumenting Instrumentation.callActivityOnCreate(Bundle, "
+             "PersistableBundle)");
     }
   }
 };

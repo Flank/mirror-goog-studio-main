@@ -15,23 +15,101 @@
  */
 
 @file:JvmName("ArtifactUtils")
+
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Maps
+import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import java.util.HashSet
+
+/** This holder class exists to allow lint to depend on the artifact collections. */
+class ArtifactCollections(
+    variantScope: VariantScope,
+    consumedConfigType: AndroidArtifacts.ConsumedConfigType
+) {
+    /**
+     * A collection containing 'all' artifacts, i.e. jar and AARs from subprojects, repositories
+     * and files.
+     *
+     * This will give the following mapping:
+     * * Java library project → Untransformed jar output
+     * * Android library project → *jar* output, aar is not published between projects.
+     *   This could be a separate type in the future if it was desired not to publish the jar from
+     *   android-library projects.
+     * * Remote jar → Untransformed jar
+     * * Remote aar → Untransformed aar
+     * * Local jar → untransformed jar
+     * * Local aar → untransformed aar
+     * * Jar wrapped as a project → untransformed aar
+     * * aar wrapped as a project → untransformed aar
+     *
+     * Using an artifact view as that contains local dependencies, unlike
+     * `configuration.incoming.resolutionResult` which only contains project and \[repository\]
+     * module dependencies.
+     *
+     * This captures dependencies without transforming them using `AttributeCompatibilityRule`s.
+     **/
+    val all: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+        consumedConfigType,
+        AndroidArtifacts.ArtifactScope.ALL,
+        AndroidArtifacts.ArtifactType.AAR_OR_JAR
+    )
+
+    val manifests: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+        consumedConfigType,
+        AndroidArtifacts.ArtifactScope.ALL,
+        AndroidArtifacts.ArtifactType.MANIFEST
+    )
+    val nonNamespacedManifests: ArtifactCollection? =
+        if (variantScope.globalScope.extension.aaptOptions.namespaced) {
+            variantScope.getArtifactCollectionForToolingModel(
+                consumedConfigType,
+                AndroidArtifacts.ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
+            )
+        } else {
+            null
+        }
+
+    // We still need to understand wrapped jars and aars. The former is difficult (TBD), but
+    // the latter can be done by querying for EXPLODED_AAR. If a sub-project is in this list,
+    // then we need to override the type to be external, rather than sub-project.
+    // This is why we query for Scope.ALL
+    // But we also simply need the exploded AARs for external Android dependencies so that
+    // Studio can access the content.
+    val explodedAars: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+        consumedConfigType,
+        AndroidArtifacts.ArtifactScope.ALL,
+        AndroidArtifacts.ArtifactType.EXPLODED_AAR
+    )
+
+    // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
+    // With a solution to that projectJars and externalJars could be merged.
+    val projectJars: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+        consumedConfigType,
+        AndroidArtifacts.ArtifactScope.PROJECT,
+        AndroidArtifacts.ArtifactType.JAR
+    )
+
+    val allCollections: Collection<ArtifactCollection>
+        get() = listOfNotNull(
+            all,
+            manifests,
+            nonNamespacedManifests,
+            explodedAars,
+            projectJars
+        )
+}
 
 /**
- * Returns a set of ResolvedArtifact where the [ResolvedArtifact.getDependencyType] and
+ * Returns a set of ResolvedArtifact where the [ResolvedArtifact.dependencyType] and
  * [ResolvedArtifact.isWrappedModule] fields have been setup properly.
  *
  * @param variantScope the variant to get the artifacts from
@@ -51,163 +129,133 @@ fun getAllArtifacts(
     // - Is it an external dependency or a sub-project?
     // - Is it an android or a java dependency
 
-    // Querying for JAR type gives us all the dependencies we care about, and we can use this
-    // to differentiate external vs sub-projects (to a certain degree).
-    // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
-    val allArtifactList = computeArtifactList(
-        variantScope,
-        consumedConfigType,
-        AndroidArtifacts.ArtifactScope.ALL,
-        AndroidArtifacts.ArtifactType.JAR
-    )
+    val collections = ArtifactCollections(variantScope, consumedConfigType)
+
+    // All artifacts: see comment on collections.all
+    val incomingArtifacts = collections.all
 
     // Then we can query for MANIFEST that will give us only the Android project so that we
     // can detect JAVA vs ANDROID.
-    val manifestList = computeArtifactList(
-        variantScope,
-        consumedConfigType,
-        AndroidArtifacts.ArtifactScope.ALL,
-        AndroidArtifacts.ArtifactType.MANIFEST
-    )
-    val nonNamespacedManifestList = computeArtifactList(
-        variantScope,
-        consumedConfigType,
-        AndroidArtifacts.ArtifactScope.ALL,
-        AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
-    )
+    val manifests = if (collections.nonNamespacedManifests != null) {
+        ImmutableMultimap.builder<ComponentIdentifier, ResolvedArtifactResult>()
+            .putAll(collections.manifests.asMultiMap())
+            .putAll(collections.nonNamespacedManifests.asMultiMap()).build()
+    } else {
+        collections.manifests.asMultiMap()
+    }
 
-    // We still need to understand wrapped jars and aars. The former is difficult (TBD), but
-    // the latter can be done by querying for EXPLODED_AAR. If a sub-project is in this list,
-    // then we need to override the type to be external, rather than sub-project.
-    // This is why we query for Scope.ALL
-    // But we also simply need the exploded AARs for external Android dependencies so that
-    // Studio can access the content.
-    val explodedAarList = computeArtifactList(
-        variantScope,
-        consumedConfigType,
-        AndroidArtifacts.ArtifactScope.ALL,
-        AndroidArtifacts.ArtifactType.EXPLODED_AAR
-    )
+    val explodedAars = collections.explodedAars.asMultiMap()
 
-    // We also need the actual AARs so that we can get the artifact location and find the source
-    // location from it.
-    // Note: Query for AAR instead of PROCESSED_AAR due to b/110054209
-    val aarList = computeArtifactList(
-        variantScope,
-        consumedConfigType,
-        AndroidArtifacts.ArtifactScope.EXTERNAL,
-        AndroidArtifacts.ArtifactType.AAR
-    )
+    // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
+    // With a solution to that projectJars and externalJars could be merged.
+    val projectJars = collections.projectJars.asMultiMap()
 
     // collect dependency resolution failures
     if (dependencyFailureHandler != null) {
+        val failures = incomingArtifacts.failures
         // compute the name of the configuration
-        dependencyFailureHandler!!.addErrors(
+        dependencyFailureHandler.addErrors(
             variantScope.globalScope.project.path
                     + "@"
                     + variantScope.fullVariantName
                     + "/"
                     + consumedConfigType.getName(),
-            allArtifactList.failures
+            failures
         )
     }
 
     // build a list of wrapped AAR, and a map of all the exploded-aar artifacts
-    val wrapperModules = HashSet<ComponentIdentifier>()
-    val explodedAarArtifacts = explodedAarList.artifacts
-    val explodedAarResults =
-        Maps.newHashMapWithExpectedSize<ComponentIdentifier, ResolvedArtifactResult>(
-            explodedAarArtifacts.size
-        )
-    for (result in explodedAarArtifacts) {
-        val componentIdentifier = result.id.componentIdentifier
-        if (componentIdentifier is ProjectComponentIdentifier) {
-            wrapperModules.add(componentIdentifier)
-        }
-        explodedAarResults[componentIdentifier] = result
-    }
-
-    val aarArtifacts = aarList.artifacts
-    val aarResults =
-        Maps.newHashMapWithExpectedSize<ComponentIdentifier, ResolvedArtifactResult>(aarArtifacts.size)
-    for (result in aarArtifacts) {
-        aarResults[result.id.componentIdentifier] = result
-    }
+    val aarWrappedAsProjects = explodedAars.keySet().filterIsInstance<ProjectComponentIdentifier>()
 
     // build a list of android dependencies based on them publishing a MANIFEST element
-    val manifestArtifacts = HashSet<ResolvedArtifactResult>()
-    manifestArtifacts.addAll(manifestList.artifacts)
-    manifestArtifacts.addAll(nonNamespacedManifestList.artifacts)
-
-    val manifestIds = Sets.newHashSetWithExpectedSize<ComponentIdentifier>(manifestArtifacts.size)
-    for (result in manifestArtifacts) {
-        manifestIds.add(result.id.componentIdentifier)
-    }
 
     // build the final list, using the main list augmented with data from the previous lists.
-    val allArtifacts = allArtifactList.artifacts
+    val resolvedArtifactResults = incomingArtifacts.artifacts
 
     // use a linked hash set to keep the artifact order.
-    val artifacts = Sets.newLinkedHashSetWithExpectedSize<ResolvedArtifact>(allArtifacts.size)
+    val artifacts =
+        Sets.newLinkedHashSetWithExpectedSize<ResolvedArtifact>(resolvedArtifactResults.size)
 
-    for (artifact in allArtifacts) {
-        val componentIdentifier = artifact.id.componentIdentifier
+    for (resolvedComponentResult in resolvedArtifactResults) {
+        val componentIdentifier = resolvedComponentResult.id.componentIdentifier
 
         // check if this is a wrapped module
-        val isWrappedModule = wrapperModules.contains(componentIdentifier)
+        val isAarWrappedAsProject = aarWrappedAsProjects.contains(componentIdentifier)
 
         // check if this is an android external module. In this case, we want to use the exploded
         // aar as the artifact we depend on rather than just the JAR, so we swap out the
         // ResolvedArtifactResult.
-        var dependencyType = ResolvedArtifact.DependencyType.JAVA
+        val dependencyType: ResolvedArtifact.DependencyType
 
-        // in case of AAR, the current artifact is the extracted artifacts. It needs to
-        // be swapped with the AAR bundle one.
-        var mainArtifact = artifact
-        var extractedAar: ResolvedArtifactResult? = null
+        val extractedAar: Collection<ResolvedArtifactResult> = explodedAars[componentIdentifier]
 
-        // optional result that will point to the artifact (AAR) when the current result
-        // is the exploded AAR.
-        if (manifestIds.contains(componentIdentifier)) {
-            dependencyType = ResolvedArtifact.DependencyType.ANDROID
-            // if it's an android dependency, we swap out the manifest result for the exploded
-            // AAR result.
-            // If the exploded AAR is null then it's a sub-project and we can keep the manifest
-            // as the Library we'll create will be a ModuleLibrary which doesn't care about
-            // the artifact file anyway.
-            val explodedAar = explodedAarResults[componentIdentifier]
-            if (explodedAar != null) {
-                extractedAar = explodedAar
-                // and we need the AAR bundle itself (if it exists)
-                mainArtifact = aarResults[componentIdentifier] ?: mainArtifact
+        val manifest: Collection<ResolvedArtifactResult> = manifests[componentIdentifier]
+
+        val mainArtifacts: Collection<ResolvedArtifactResult>
+
+        val artifactType =
+            resolvedComponentResult.variant.attributes.getAttribute(AndroidArtifacts.ARTIFACT_TYPE)
+        when (artifactType) {
+            AndroidArtifacts.ArtifactType.AAR.type -> {
+                // This only happens for external dependencies - local android libraries do not
+                // publish the AAR between projects.
+                dependencyType = ResolvedArtifact.DependencyType.ANDROID
+                mainArtifacts = listOf(resolvedComponentResult)
             }
+            AndroidArtifacts.ArtifactType.JAR.type ->
+                if (manifest.isNotEmpty()) {
+                    dependencyType = ResolvedArtifact.DependencyType.ANDROID
+                    mainArtifacts = manifest
+                } else {
+                    dependencyType = ResolvedArtifact.DependencyType.JAVA
+                    val projectJar = projectJars[componentIdentifier]
+                    mainArtifacts = if (projectJar.isNotEmpty()) {
+                        projectJar
+                    } else {
+                        // Note use this component directly to handle classified artifacts
+                        // This is tested by AppWithClassifierDepTest.
+                        listOf<ResolvedArtifactResult>(resolvedComponentResult)
+                    }
+                }
+            else -> throw IllegalStateException("Internal error: Artifact type $artifactType not expected, only jar or aar are handled.")
+
         }
 
-        artifacts.add(
-            ResolvedArtifact(
-                mainArtifact,
-                extractedAar,
-                dependencyType,
-                isWrappedModule,
-                buildMapping
+        check(mainArtifacts.isNotEmpty()) {
+            """Internal Error: No artifact found for artifactType '$componentIdentifier'
+            | context: ${variantScope.globalScope.project.path} ${variantScope.fullVariantName}
+            | manifests = $manifests
+            | explodedAars = $explodedAars
+            | projectJars = $projectJars
+        """.trimMargin()
+        }
+
+        for (mainArtifact in mainArtifacts) {
+            artifacts.add(
+                ResolvedArtifact(
+                    mainArtifact,
+                    extractedAar.firstOrNull(),
+                    dependencyType,
+                    isAarWrappedAsProject,
+                    buildMapping
+                )
             )
-        )
+        }
     }
 
     return artifacts
 }
 
-
-fun computeArtifactList(
-    variantScope: VariantScope,
-    consumedConfigType: AndroidArtifacts.ConsumedConfigType,
-    scope: AndroidArtifacts.ArtifactScope,
-    type: AndroidArtifacts.ArtifactType
-): ArtifactCollection {
-    val artifacts = variantScope.getArtifactCollection(consumedConfigType, scope, type)
-
-    // because the ArtifactCollection could be a collection over a test variant which ends
-    // up being a ArtifactCollectionWithExtraArtifact, we need to get the actual list
-    // without the tested artifact.
-    return (artifacts as? ArtifactCollectionWithExtraArtifact)?.parentArtifacts ?: artifacts
+/**
+ * This is a multi map to handle when there are multiple jars with the same component id.
+ *
+ * e.g. see `AppWithClassifierDepTest`
+ */
+fun ArtifactCollection.asMultiMap(): ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> {
+    return ImmutableMultimap.builder<ComponentIdentifier, ResolvedArtifactResult>()
+        .also { builder ->
+            for (artifact in artifacts) {
+                builder.put(artifact.id.componentIdentifier, artifact)
+            }
+        }.build()
 }

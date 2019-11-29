@@ -23,14 +23,12 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
-import com.android.testutils.truth.FileSubject.assertThat
-import com.android.utils.FileUtils
-import com.google.common.truth.Expect
+import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.io.File
 
 /**
  * Tests cacheability of tasks. Similar to [CacheabilityTest], but builds the release version of a
@@ -105,67 +103,36 @@ class LibraryCacheabilityTest {
     }
 
     @get:Rule
-    var projectCopy1 = GradleTestProject.builder()
-        .fromTestApp(HelloWorldLibraryApp())
-        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE_DIR"))
-        .withName("projectCopy1")
-        .dontOutputLogOnFailure()
-        .create()
+    val projectCopy1 = setUpTestProject("projectCopy1")
 
     @get:Rule
-    var projectCopy2 = GradleTestProject.builder()
-        .fromTestApp(HelloWorldLibraryApp())
-        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE_DIR"))
-        .withName("projectCopy2")
-        .dontOutputLogOnFailure()
-        .create()
+    val projectCopy2 = setUpTestProject("projectCopy2")
 
     @get:Rule
-    val expect: Expect = Expect.create()
+    val buildCacheDirRoot = TemporaryFolder()
+
+    private fun setUpTestProject(projectName: String): GradleTestProject {
+        return GradleTestProject.builder()
+            .fromTestApp(HelloWorldLibraryApp())
+            .withName(projectName)
+            .dontOutputLogOnFailure()
+            .create()
+    }
 
     @Test
     fun testRelocatability() {
-        // Build the first project
-        val buildCacheDir = File(projectCopy1.testDir.parent, GRADLE_BUILD_CACHE_DIR)
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-        // The task :lib:assembleRelease is run in order to run the VerifyLibraryResources task,
-        // which is only created for release variants
-        projectCopy1.executor().withArgument("--build-cache").run("clean", ":lib:assembleRelease")
+        val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE_DIR)
 
-        // Check that the build cache has been populated
-        assertThat(buildCacheDir).exists()
-
-        // Build the second project
-        val result =
-            projectCopy2.executor().withArgument("--build-cache")
-                .run("clean", ":lib:assembleRelease")
-
-        // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
-        // directory is not available. We need to remove that task from the expected tasks' states.
-        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]
-        if (result.findTask(":lib:transformNativeLibsWithStripDebugSymbolForRelease") == null) {
-            expectedDidWorkTasks =
-                    expectedDidWorkTasks!!.minus(":lib:transformNativeLibsWithStripDebugSymbolForRelease")
-        }
-
-        // Check that the tasks' states are as expected
-        expect.that(result.upToDateTasks)
-            .named("UpToDate Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE])
-        expect.that(result.fromCacheTasks)
-            .named("FromCache Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE])
-        expect.that(result.didWorkTasks)
-            .named("DidWork Tasks")
-            .containsExactlyElementsIn(expectedDidWorkTasks)
-        expect.that(result.skippedTasks)
-            .named("Skipped Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED])
-        expect.that(result.failedTasks)
-            .named("Failed Tasks")
-            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED])
-
-        // Clean up the cache
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+        CacheabilityTestHelper
+            .forProjects(
+                projectCopy1,
+                projectCopy2)
+            .withBuildCacheDir(buildCacheDir)
+            .withTasks("clean", ":lib:assembleRelease")
+            .hasUpToDateTasks(EXPECTED_TASK_STATES.getValue(UP_TO_DATE))
+            .hasFromCacheTasks(EXPECTED_TASK_STATES.getValue(FROM_CACHE))
+            .hasDidWorkTasks(EXPECTED_TASK_STATES.getValue(DID_WORK))
+            .hasSkippedTasks(EXPECTED_TASK_STATES.getValue(SKIPPED))
+            .hasFailedTasks(EXPECTED_TASK_STATES.getValue(FAILED))
     }
 }

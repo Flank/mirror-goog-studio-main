@@ -34,6 +34,7 @@ public class AndroidArtifacts {
 
     // types for main artifacts
     private static final String TYPE_AAR = "aar";
+    private static final String TYPE_PROCESSED_AAR = "processed-aar";
     private static final String TYPE_APK = "apk";
     private static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
     private static final String TYPE_BUNDLE = "aab";
@@ -84,6 +85,7 @@ public class AndroidArtifacts {
     private static final String TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT =
             "android-databinding-class-log";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
+    private static final String TYPE_AAR_OR_JAR = "android-aar-or-jar";
     private static final String TYPE_COMPILED_DEPENDENCIES_RESOURCES =
             "android-compiled-dependencies-resources";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
@@ -337,7 +339,11 @@ public class AndroidArtifacts {
 
         // types for querying only. Not publishable.
         AAR(TYPE_AAR),
+        // Artifact type for processed aars (the aars may need to be processed, e.g. jetified to
+        // AndroidX, before they can be used)
+        PROCESSED_AAR(TYPE_PROCESSED_AAR),
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
+        AAR_OR_JAR(TYPE_AAR_OR_JAR), // See ArtifactUtils for how this is used.
 
         NAVIGATION_JSON(TYPE_NAVIGATION_JSON);
 

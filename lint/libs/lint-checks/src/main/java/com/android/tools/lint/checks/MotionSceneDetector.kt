@@ -122,9 +122,9 @@ class MotionSceneDetector : ResourceXmlDetector() {
                 element,
                 context.getNameLocation(element),
                 "`$ATTR_CUSTOM_ATTRIBUTE_NAME` should be defined",
-                LintFix.create().set().todo(AUTO_URI, ATTR_CUSTOM_ATTRIBUTE_NAME).build())
-        }
-        else if (!customAttributeNames.add(name)) {
+                LintFix.create().set().todo(AUTO_URI, ATTR_CUSTOM_ATTRIBUTE_NAME).build()
+            )
+        } else if (!customAttributeNames.add(name)) {
             context.report(
                 MOTION_SCENE_FILE_VALIDATION_ERROR,
                 element,
@@ -135,7 +135,8 @@ class MotionSceneDetector : ResourceXmlDetector() {
                     .replace()
                     .with("")
                     .range(context.getLocation(element))
-                    .build())
+                    .build()
+            )
         }
     }
 
@@ -151,20 +152,21 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun checkMultipleOnClicks(context: XmlContext, element: Element) {
-        XmlUtils.getSubTags(element).filter { it.tagName == ON_CLICK }.drop(1).forEach { onClickElement ->
-            context.report(
-              MOTION_SCENE_FILE_VALIDATION_ERROR,
-              onClickElement,
-              context.getNameLocation(onClickElement),
-              "Can only have one `${ON_CLICK}` per `${TRANSITION}`.",
-              LintFix.create()
-                .name("Delete additional $ON_CLICK")
-                .replace()
-                .with("")
-                .range(context.getLocation(onClickElement))
-                .build()
-            )
-        }
+        XmlUtils.getSubTags(element).filter { it.tagName == ON_CLICK }.drop(1)
+            .forEach { onClickElement ->
+                context.report(
+                    MOTION_SCENE_FILE_VALIDATION_ERROR,
+                    onClickElement,
+                    context.getNameLocation(onClickElement),
+                    "Can only have one `$ON_CLICK` per `$TRANSITION`.",
+                    LintFix.create()
+                        .name("Delete additional $ON_CLICK")
+                        .replace()
+                        .with("")
+                        .range(context.getLocation(onClickElement))
+                        .build()
+                )
+            }
     }
 
     private fun visitKeyFrameSet(context: XmlContext, element: Element) {
@@ -245,16 +247,16 @@ class MotionSceneDetector : ResourceXmlDetector() {
     private fun checkNoSubTags(context: XmlContext, element: Element) {
         XmlUtils.getSubTags(element).forEach { subTag ->
             context.report(
-              MOTION_SCENE_FILE_VALIDATION_ERROR,
-              subTag,
-              context.getNameLocation(subTag),
-              "`${element.tagName}` can not have any child tags.",
-              LintFix.create()
-                .name("Delete ${subTag.tagName}")
-                .replace()
-                .with("")
-                .range(context.getLocation(subTag))
-                .build()
+                MOTION_SCENE_FILE_VALIDATION_ERROR,
+                subTag,
+                context.getNameLocation(subTag),
+                "`${element.tagName}` can not have any child tags.",
+                LintFix.create()
+                    .name("Delete ${subTag.tagName}")
+                    .replace()
+                    .with("")
+                    .range(context.getLocation(subTag))
+                    .build()
             )
         }
     }

@@ -81,8 +81,17 @@ public class ${activityClass} extends AppCompatActivity {
     private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+            switch (motionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    if (AUTO_HIDE) {
+                        delayedHide(AUTO_HIDE_DELAY_MILLIS);
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    view.performClick();
+                    break;
+                default:
+                    break;
             }
             return false;
         }
@@ -128,7 +137,6 @@ public class ${activityClass} extends AppCompatActivity {
         }
     };
 
-    @SuppressLint("InlinedApi")
     private void show() {
         // Show the system bar
         mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN

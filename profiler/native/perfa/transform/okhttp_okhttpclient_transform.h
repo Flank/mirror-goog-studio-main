@@ -34,13 +34,13 @@ class OkhttpClientTransform : public Transform {
         ir::MethodId("Lcom/android/tools/profiler/support/network/okhttp/"
                      "OkHttp2Wrapper;",
                      "setOkHttpClassLoader"),
-        true);
+        slicer::EntryHook::Tweak::ThisAsObject);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
         "insertInterceptor"));
     if (!mi.InstrumentMethod(ir::MethodId(GetClassName(), "networkInterceptors",
                                           "()Ljava/util/List;"))) {
-      Log::E("Error instrumenting OkHttp2 OkHttpClient");
+      Log::E(Log::Tag::PROFILER, "Error instrumenting OkHttp2 OkHttpClient");
     }
   }
 };

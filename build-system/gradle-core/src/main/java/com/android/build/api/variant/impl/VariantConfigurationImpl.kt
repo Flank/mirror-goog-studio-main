@@ -17,9 +17,18 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.VariantConfiguration
+import com.google.common.collect.ImmutableList
 
-class VariantConfigurationImpl(
-    override val name: String,
-    override val buildType: String,
-    override val flavors: List<String>
-) : VariantConfiguration
+/**
+ * Implementation of [VariantConfiguration] as a data class to provide [equals]/[hashCode]
+ * and [toString].
+ */
+data class VariantConfigurationImpl(
+    val variantName: String,
+    override val buildType: String? = null,
+    override val flavors: List<String> = ImmutableList.of()
+) : VariantConfiguration {
+    override fun getName(): String {
+        return variantName
+    }
+}

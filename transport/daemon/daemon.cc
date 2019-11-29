@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -217,13 +218,13 @@ void Daemon::RunServer(const string& server_address) {
     // The port wasn't successfully bound to the server by BuildAndStart().
     const char* error = "Server failed to start. A port number wasn't bound.";
     std::cout << error << std::endl;
-    Log::E(error);
+    Log::E(Log::Tag::TRANSPORT, "%s", error);
     exit(EXIT_FAILURE);
   }
   std::ostringstream oss;
   oss << "Server listening on " << server_address << " port:" << port;
   std::cout << oss.str() << std::endl;
-  Log::V(oss.str().c_str());
+  Log::V(Log::Tag::TRANSPORT, "%s", oss.str().c_str());
   server->Wait();  // Block until the server shuts down.
 }
 

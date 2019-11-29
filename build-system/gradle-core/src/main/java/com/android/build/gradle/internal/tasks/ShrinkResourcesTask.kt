@@ -32,8 +32,8 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
-import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.file.ConfigurableFileCollection
@@ -72,9 +72,15 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val uncompressedResources: DirectoryProperty
 
+    @get:Optional
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val lightRClasses: RegularFileProperty
+
+    @get:Optional
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val rTxtFile: RegularFileProperty
 
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -91,6 +97,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
     @get:Input
     abstract val debuggableBuildType: Property<Boolean>
+
+    @get:Input
+    abstract val enableRTxtResourceShrinking: Property<Boolean>
 
     @get:Input
     abstract val multiOutputPolicy: Property<MultiOutputPolicy>
@@ -178,10 +187,18 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.uncompressedResources
             )
 
-            artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
-                task.lightRClasses
-            )
+            if (variantScope
+                    .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
+                artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.RUNTIME_SYMBOL_LIST,
+                    task.rTxtFile
+                )
+            } else {
+                artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+                    task.lightRClasses
+                )
+            }
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
@@ -208,6 +225,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 .setDisallowChanges(variantData.variantConfiguration.buildType.isDebuggable)
 
             task.multiOutputPolicy.setDisallowChanges(variantData.multiOutputPolicy)
+
+            task.enableRTxtResourceShrinking.set(variantScope
+                .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
 
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
@@ -253,7 +273,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             // Analyze resources and usages and strip out unused
             val analyzer = ResourceUsageAnalyzer(
-                params.lightRClasses,
+                params.rSourceVariant,
                 params.classes,
                 params.mergedManifest.outputFile,
                 params.mappingFile,
@@ -340,11 +360,14 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         val mergedManifest: BuildOutput? = mergedManifests.element(apkInfo)
         val mappingFile: File? = task.mappingFileSrc.orNull?.asFile
         val buildTypeName: String = task.buildTypeName
-        val lightRClasses: File = task.lightRClasses.get().asFile
+        val rSourceVariant: File = if (task.enableRTxtResourceShrinking.get()){
+            task.rTxtFile.get().asFile
+        } else {
+            task.lightRClasses.get().asFile
+        }
         val resourceDir: File = task.resourceDir.get().asFile
         val isInfoLoggingEnabled: Boolean = task.logger.isEnabled(LogLevel.INFO)
         val isDebugLoggingEnabled: Boolean = task.logger.isEnabled(LogLevel.DEBUG)
-
     }
 
     companion object {
@@ -354,7 +377,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         private var ourWarned = true // Logging disabled until shrinking is on by default.
 
         private fun toKbString(size: Long): String {
-            return Integer.toString(size.toInt() / 1024)
+            return (size.toInt() / 1024).toString()
         }
     }
 }

@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
@@ -63,9 +62,9 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
                             .thenComparing(ApkData::isEnabled));
 
     // TODO : move it to a subclass, we cannot override versions for SPLIT
-    private transient Supplier<String> versionName = () -> null;
     private transient VariantOutputImpl variantOutput;
-    private Integer versionCode = null;
+    private Integer versionCode = 0;
+    private String versionName = null;
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private String outputFileName;
 
@@ -169,10 +168,6 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     @Input
     public abstract String getDirName();
 
-    public void setVersionName(Supplier<String> versionName) {
-        this.versionName = versionName;
-    }
-
     public void setOutputFileName(@NonNull String outputFileName) {
         this.outputFileName = outputFileName;
     }
@@ -182,17 +177,22 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     @Override
     @Internal
     public int getVersionCode() {
-        if (versionCode != null) return versionCode;
         if (variantOutput != null) {
             return variantOutput.getVersionCode().get();
-        } else return 0;
+        }
+        return versionCode;
     }
 
+    // TODO : We need to remove this from this API and always go directly to the
+    // Variant API variantOutput.
     @Nullable
     @Input
     @Optional
     public String getVersionName() {
-        return versionName.get();
+        if (variantOutput != null) {
+            return variantOutput.getVersionName().getOrNull();
+        }
+        return versionName;
     }
 
     @Nullable
@@ -301,30 +301,9 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
         this.variantOutput = variantOutput;
     }
 
-    // We use this since we cannot serialize the suppliers for the respective fields, so we serialize
-    // a "snapshot" of those value sand when the object is deserialized we use these fields to create
-    // new suppliers.
-    // Although now the suppliers will be static, it's expected that by the time the class was
-    // serialized those values shouldn't change anymore.
-    private String serializedVersionName = null;
-    private int serializedVersionCode = 0;
-
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        serializedVersionName = versionName.get();
-        if (variantOutput != null) {
-            serializedVersionCode = variantOutput.getVersionCode().get();
-        } else if (versionCode != null) {
-            serializedVersionCode = versionCode;
-        } else serializedVersionCode = 0;
-
+        versionCode = getVersionCode();
+        versionName = getVersionName();
         out.defaultWriteObject();
     }
-
-    private void readObject(java.io.ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        versionName = () -> serializedVersionName;
-        versionCode = serializedVersionCode;
-    }
-
 }

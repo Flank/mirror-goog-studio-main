@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -62,6 +63,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.Callable
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
@@ -257,11 +259,17 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
-            task.versionCode.set(mainSplit?.versionCode
-                ?: task.project.provider(config::getVersionCode))
+            task.versionCode.set(
+                mainSplit?.versionCode ?: task.project.provider {
+                    config.versionCode
+                }
+            )
             task.versionCode.disallowChanges()
-            task.versionName.set(task.project.provider { config.versionName })
-            task.versionName.disallowChanges()
+            task.versionName.setDisallowChanges(
+                mainSplit?.versionName ?: task.project.provider {
+                    config.versionName
+                }
+            )
 
             task.mainSplit = variantData.outputScope.mainSplit
 

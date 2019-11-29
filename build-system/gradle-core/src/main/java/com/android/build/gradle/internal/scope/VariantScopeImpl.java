@@ -69,8 +69,7 @@ import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -195,13 +194,10 @@ public class VariantScopeImpl implements VariantScope {
 
     private PostProcessingOptions createPostProcessingOptions() {
         // This may not be the case with the experimental plugin.
-        CoreBuildType buildType = variantData.getVariantConfiguration().getBuildType();
-        if (buildType instanceof BuildType) {
-            BuildType dslBuildType = (BuildType) buildType;
-            if (dslBuildType.getPostProcessingConfiguration() == POSTPROCESSING_BLOCK) {
-                return new PostProcessingBlockOptions(
-                        dslBuildType.getPostprocessing(), getType().isTestComponent());
-            }
+        BuildType buildType = variantData.getVariantConfiguration().getBuildType();
+        if (buildType.getPostProcessingConfiguration() == POSTPROCESSING_BLOCK) {
+            return new PostProcessingBlockOptions(
+                    buildType.getPostprocessing(), getType().isTestComponent());
         }
 
         return new OldPostProcessingOptions(buildType, globalScope.getProject());
@@ -465,7 +461,7 @@ public class VariantScopeImpl implements VariantScope {
 
         result.addAll(postProcessingOptions.getProguardFiles(type));
 
-        for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
+        for (ProductFlavor flavor : variantConfiguration.getProductFlavors()) {
             result.addAll(BaseConfigAdapter.getProguardFiles(flavor, type));
         }
 
@@ -966,6 +962,15 @@ public class VariantScopeImpl implements VariantScope {
             default:
                 throw new RuntimeException("unknown ConfigType value " + configType);
         }
+    }
+
+    @NonNull
+    @Override
+    public ArtifactCollection getArtifactCollectionForToolingModel(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType) {
+        return computeArtifactCollection(configType, scope, artifactType, null);
     }
 
     @NonNull

@@ -37,9 +37,9 @@
     <orderEntry type="library" exported="" name="protobuf" level="project" />
     <orderEntry type="library" name="javax-inject" level="project" />
     <orderEntry type="library" name="Trove4j" level="project" />
-    <orderEntry type="library" name="aapt2-proto" level="project" />
     <orderEntry type="library" name="intellij-annotations" level="project" />
     <orderEntry type="library" name="Mocks" level="project" />
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.aapt2-proto" />
   </component>
 </module>

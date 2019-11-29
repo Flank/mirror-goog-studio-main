@@ -27,8 +27,8 @@ apply from: "../commonLocalRepo.gradle"
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-    dataBinding {
-        enabled = true
+    buildFeatures {
+        dataBinding = true
     }
     defaultConfig.minSdkVersion rootProject.supportLibMinSdk
 }

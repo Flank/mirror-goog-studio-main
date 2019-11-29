@@ -19,16 +19,14 @@ package com.android.tools.agent.app.inspection;
 import androidx.inspection.Inspector;
 
 class CommandCallbackImpl implements Inspector.CommandCallback {
-    private String mInspectorId;
     private int mCommandId;
 
-    CommandCallbackImpl(String inspectorId, int commandId) {
-        mInspectorId = inspectorId;
+    CommandCallbackImpl(int commandId) {
         mCommandId = commandId;
     }
 
     @Override
     public void reply(byte[] bytes) {
-        Responses.sendEvent(mCommandId, bytes, bytes.length, mInspectorId);
+        Responses.replyRaw(mCommandId, bytes, bytes.length);
     }
 }

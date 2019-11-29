@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
+import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
@@ -60,15 +61,19 @@ fun createCxxVariantModel(
         override val isDebuggableEnabled get() =
             baseVariantData.variantConfiguration.buildType.isDebuggable
         override val validAbiList by lazy {
-            AbiConfigurator(
-                module.ndkSupportedAbiList,
-                module.ndkDefaultAbiList,
-                buildSystem.externalNativeBuildAbiFilters,
-                buildSystem.ndkAbiFilters,
-                module.splitsAbiFilterSet,
-                module.project.isBuildOnlyTargetAbiEnabled,
-                module.project.ideBuildTargetAbi
-            ).validAbis.toList()
+            CachingEnvironment(module.cxxFolder).use {
+                AbiConfigurator(
+                    AbiConfigurationKey(
+                        module.ndkSupportedAbiList,
+                        module.ndkDefaultAbiList,
+                        buildSystem.externalNativeBuildAbiFilters,
+                        buildSystem.ndkAbiFilters,
+                        module.splitsAbiFilterSet,
+                        module.project.isBuildOnlyTargetAbiEnabled,
+                        module.project.ideBuildTargetAbi
+                    )
+                ).validAbis.toList()
+            }
         }
     }
 }

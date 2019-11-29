@@ -94,7 +94,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
-import com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.getChildren

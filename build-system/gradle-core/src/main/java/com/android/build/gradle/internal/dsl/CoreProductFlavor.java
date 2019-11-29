@@ -23,8 +23,10 @@ import com.android.builder.model.ProductFlavor;
 import org.gradle.api.Named;
 
 /**
- * A product flavor with addition properties for building with Gradle plugin.
+ * A product flavor with addition properties for building with Gradle plugin. @Deprecated do not
+ * use. Use a more specific type instead
  */
+@Deprecated
 public interface CoreProductFlavor extends ProductFlavor, Named {
 
     @Nullable

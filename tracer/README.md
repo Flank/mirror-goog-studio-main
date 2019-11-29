@@ -78,7 +78,7 @@ bazel build //tools/base/tracer:trace_agent
 Now the agent is located at:
 
 ```
-$SRC/bazel-genfiles/tools/base/tracer/trace_agent.jar
+$SRC/bazel-bin/tools/base/tracer/trace_agent.jar
 ```
 
 ## How to enable tracing
@@ -87,13 +87,13 @@ Tracing is performed when the tracing agent is attached at startup to an applica
 To attach to studio simply add to the run configuration the following:
 
 ```
--javaagent:../../../bazel-genfiles/tools/base/tracer/trace_agent.jar
+-javaagent:../../../bazel-bin/tools/base/tracer/trace_agent.jar
 ```
 
 If you want to pass a profile file then:
 
 ```
--javaagent:../../../bazel-genfiles/tools/base/tracer/trace_agent.jar=../../base/tracer/deploy.profile
+-javaagent:../../../bazel-bin/tools/base/tracer/trace_agent.jar=../../base/tracer/deploy.profile
 ```
 
 Note that there is special code to automatically forward the tracing agent down to the gradle daemons.
@@ -109,7 +109,7 @@ jvm_flags = ["-javaagent:$(location //tools/base/tracer:trace_agent)"],
 In your gradle project directory, edit gradle.properties file and add:
 
 ```
-org.gradle.jvmargs = "-javaagent:$SRC/bazel-genfiles/tools/base/tracer/trace_agent.jar"
+org.gradle.jvmargs = "-javaagent:$SRC/bazel-bin/tools/base/tracer/trace_agent.jar"
 ```
 
 Where $SRC is your studio-master-dev full path.
@@ -117,7 +117,7 @@ Where $SRC is your studio-master-dev full path.
 In order to use a trace profile:
 
 ```
-org.gradle.jvmargs = "-javaagent:$SRC/bazel-genfiles/tools/base/tracer/trace_agent.jar=/path/to/profile.json"
+org.gradle.jvmargs = "-javaagent:$SRC/bazel-bin/tools/base/tracer/trace_agent.jar=/path/to/profile.json"
 ```
 
 It might be necessary to stop gradle daemons to force a reload of your profile:

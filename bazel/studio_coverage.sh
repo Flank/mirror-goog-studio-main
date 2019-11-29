@@ -50,8 +50,8 @@ fi
   @cov//:comps.list_all \
   || exit $?
 
-readonly lcov_path="./bazel-genfiles/external/cov/all/lcov"
-readonly comp_list_path="./bazel-genfiles/external/cov/comps/list"
+readonly lcov_path="./bazel-bin/external/cov/all/lcov"
+readonly comp_list_path="./bazel-bin/external/cov/comps/list"
 
 # Generate the HTML report
 #genhtml -o "./out/html" ${lcov_path} -p $(pwd) --no-function-coverage || exit $?

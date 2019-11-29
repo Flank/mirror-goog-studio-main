@@ -22,7 +22,7 @@ def main():
                 # path has a fix 38 character long prefix and a 5 character long
                 # suffix to it, which is being sliced to get the test name
                 # for example, if path is
-                # bazel-genfiles/external/results/tools/adt/idea/adt-ui/intellij.android.adt.ui_tests/lcov
+                # bazel-bin/external/results/tools/adt/idea/adt-ui/intellij.android.adt.ui_tests/lcov
                 # test name will be
                 # tools/adt/idea/adt-ui/intellij.android.adt.ui_tests
                 sys.stdout.write('TN:{}\n'.format((path[38:])[:-5]))

@@ -74,8 +74,7 @@ abstract class MergeNativeLibsTask
     private lateinit var intermediateDir: File
 
     @get:OutputDirectory
-    lateinit var cacheDir: File
-        private set
+    abstract val cacheDir: DirectoryProperty
 
     private lateinit var incrementalStateFile: File
 
@@ -105,7 +104,7 @@ abstract class MergeNativeLibsTask
                     packagingOptions,
                     incrementalStateFile,
                     false,
-                    cacheDir,
+                    cacheDir.get().asFile,
                     null,
                     NATIVE_LIBS,
                     listOf()
@@ -131,7 +130,7 @@ abstract class MergeNativeLibsTask
                     packagingOptions,
                     incrementalStateFile,
                     true,
-                    cacheDir,
+                    cacheDir.get().asFile,
                     changedInputs,
                     NATIVE_LIBS,
                     listOf()
@@ -171,17 +170,29 @@ abstract class MergeNativeLibsTask
             task.intermediateDir =
                     variantScope.getIncrementalDir(
                         "${variantScope.fullVariantName}-mergeNativeLibs")
-            task.cacheDir = File(task.intermediateDir, "zip-cache")
+
+            val project = variantScope.globalScope.project
+
+            task.cacheDir
+                .fileProvider(project.provider { File(task.intermediateDir, "zip-cache") })
+                .disallowChanges()
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
 
             task.projectNativeLibs.from(getProjectNativeLibs(variantScope).asFileTree.filter(spec))
+                .disallowChanges()
+
             if (mergeScopes.contains(SUB_PROJECTS)) {
                 task.subProjectNativeLibs.from(getSubProjectNativeLibs(variantScope))
             }
+            task.subProjectNativeLibs.disallowChanges()
+
             if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
                 task.externalLibNativeLibs.from(getExternalNativeLibs(variantScope))
             }
-            task.unfilteredProjectNativeLibs.from(getProjectNativeLibs(variantScope))
+            task.externalLibNativeLibs.disallowChanges()
+
+            task.unfilteredProjectNativeLibs
+                .from(getProjectNativeLibs(variantScope)).disallowChanges()
         }
     }
 

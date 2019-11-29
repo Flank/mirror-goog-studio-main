@@ -19,11 +19,13 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.JavaSourceFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
@@ -33,9 +35,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.AssumeUtil.assumeNotWindows
 import com.android.testutils.TestInputsGenerator
+import com.android.testutils.TestInputsGenerator.jarWithClasses
 import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
+import com.android.testutils.generateAarWithContent
 import com.android.testutils.truth.DexClassSubject
 import com.android.testutils.truth.DexSubject
 import com.android.utils.FileUtils
@@ -52,8 +58,19 @@ import kotlin.test.fail
 
 class CoreLibraryDesugarTest {
 
+    private val aar = generateAarWithContent(
+        packageName = "com.example.myaar",
+        mainJar = jarWithClasses(listOf(ClassWithDesugarApi::class.java))
+    )
+
+    private val mavenRepo = MavenRepoGenerator(
+        listOf(
+            MavenRepoGenerator.Library("com.example:myaar:1", "aar", aar)
+        )
+    )
+
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(setUpTestProject()).create()
+    val project = GradleTestProject.builder().withAdditionalMavenRepo(mavenRepo).fromTestApp(setUpTestProject()).create()
 
     @get:Rule
     var adb = Adb()
@@ -191,6 +208,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromAppProject() {
+        assumeNotWindows() //b/145232747
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
         val expectedKeepRules = "-keep class j\$.util.Optional {\n" +
@@ -207,6 +225,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromFileDependencies() {
+        assumeNotWindows() //b/145232747
         addFileDependency(app)
 
         project.executor().run("app:assembleRelease")
@@ -275,6 +294,73 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
     }
 
+    @Test
+    fun testExternalLibsKeepRulesGenerationWithoutArtifactTransform() {
+        assumeNotWindows() //b/145232747
+        addExternalDependency(app)
+
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
+            .run("clean", "app:assembleRelease")
+
+        val out =
+            InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES.getOutputDir(app.buildDir)
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
+                "    j\$.time.LocalTime MIDNIGHT;\n" +
+                "}\n"
+        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
+        val cacheFile = getKeepRulesCacheDir().listFiles()!!.first { it.isFile }
+        val cacheTimeStamp = cacheFile.lastModified()
+
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
+            .run("clean", "app:assembleRelease")
+
+        val outputFile = out.resolve("release/out/" + cacheFile.name)
+        assertTrue { outputFile.lastModified() == cacheTimeStamp }
+    }
+
+    @Test
+    fun testKeepRulesGenerationAndConsumptionForMinifyBuild() {
+        app.buildFile.appendText("""
+
+            android.buildTypes.release.minifyEnabled = true
+        """.trimIndent())
+        // In the onCreate method of HelloWorld activity class, the getText() method with desugar
+        // APIs needs to be called. Otherwise, R8 would shrink this getText() method and therefore
+        // not generating keep rules for those desugar APIs.
+        TestFileUtils.searchAndReplace(
+            FileUtils.join(app.mainSrcDir, "com/example/helloworld/HelloWorld.java"),
+            "// onCreate",
+            "getText();"
+        )
+
+        val result =
+            project.executor()
+                .withLoggingLevel(LoggingLevel.DEBUG)
+                .run("app:assembleRelease")
+
+        val keepRulesOutputDir =
+            InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
+        val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
+                "    java.lang.Object get();$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
+                "    j\$.util.stream.Stream stream(java.util.Collection);$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.stream.Stream {$lineSeparator" +
+                "    j\$.util.Optional findFirst();$lineSeparator" +
+                "}$lineSeparator"
+        assertTrue { collectKeepRulesUnderDirectory(keepRulesOutputDir) == expectedKeepRules }
+
+        // check keep rules file is consumed by L8 tool
+        val consumedKeepRulesFile = File(keepRulesOutputDir, "release/output").absolutePath
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains("[L8] Keep rules: $consumedKeepRulesFile")
+        }
+    }
 
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
@@ -286,6 +372,15 @@ class CoreLibraryDesugarTest {
         """.trimIndent())
         val fileLib = project.file(fileDependencyName).toPath()
         TestInputsGenerator.pathWithClasses(fileLib, listOf(ClassWithDesugarApi::class.java))
+    }
+
+    private fun addExternalDependency(project: GradleTestProject) {
+        project.buildFile.appendText("""
+
+            dependencies {
+                implementation 'com.example:myaar:1'
+            }
+        """.trimIndent())
     }
 
     private fun collectKeepRulesUnderDirectory(dir: File) : String {
@@ -322,9 +417,19 @@ class CoreLibraryDesugarTest {
         file.writeText(source)
     }
 
+    private fun getKeepRulesCacheDir(): File {
+        val cacheFolder = project.file(CACHE_DIR).listFiles().find { it.isDirectory }
+        val keepRulesCacheFolder
+                = cacheFolder!!.listFiles().find { File(it, "output").isDirectory }
+        return File(keepRulesCacheFolder, "output")
+    }
+
     companion object {
         private const val APP_MODULE = ":app"
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
+        private const val CACHE_DIR = "agp_cache_dir"
     }
+
+    private val lineSeparator: String = System.lineSeparator()
 }

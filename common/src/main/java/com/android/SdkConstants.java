@@ -872,6 +872,11 @@ public final class SdkConstants {
     public static final String EXO_PLAYER_ARTIFACT =
             EXO_PLAYER_GROUP_ID + ":" + EXO_PLAYER_ARTIFACT_ID;
 
+    /* Compose constants */
+    public static final String CLASS_COMPOSE = "androidx.compose.Compose";
+    public static final String CLASS_COMPOSE_VIEW_ADAPTER =
+            "androidx.ui.tooling.preview.ComposeViewAdapter";
+
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
      * and 'mksdcard' for all other platforms.
@@ -1233,6 +1238,7 @@ public final class SdkConstants {
     public static final String TAG_LAYER_LIST = "layer-list"; //$NON-NLS-1$
     public static final String TAG_PATH = "path";
     public static final String TAG_RIPPLE = "ripple";
+    public static final String TAG_ROTATE = "rotate";
     public static final String TAG_SHAPE = "shape";
     public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
     public static final String TAG_TRANSITION = "transition"; //$NON-NLS-1$
@@ -1274,6 +1280,7 @@ public final class SdkConstants {
     public static final String ATTR_AUTHORITIES = "authorities"; //$NON-NLS-1$
     public static final String ATTR_MULTIPROCESS = "multiprocess"; //$NON-NLS-1$
     public static final String ATTR_SPLIT = "split";
+    public static final String ATTR_SHARED_USER_ID = "sharedUserId";
     public static final String ATTR_FUNCTIONAL_TEST = "functionalTest";
     public static final String ATTR_HANDLE_PROFILING = "handleProfiling";
     public static final String ATTR_TARGET_PACKAGE = "targetPackage";
@@ -2656,7 +2663,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.0-rc-1";
+    public static final String GRADLE_MINIMUM_VERSION = "6.1-milestone-1";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

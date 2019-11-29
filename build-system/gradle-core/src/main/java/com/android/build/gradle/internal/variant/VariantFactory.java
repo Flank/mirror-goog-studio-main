@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -78,7 +76,7 @@ public interface VariantFactory {
     }
 
     @NonNull
-    Collection<VariantType> getVariantConfigurationTypes();
+    VariantType getVariantType();
 
     boolean hasTestScope();
 

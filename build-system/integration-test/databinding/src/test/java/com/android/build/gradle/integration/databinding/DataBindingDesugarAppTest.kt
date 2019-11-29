@@ -57,7 +57,7 @@ class DataBindingDesugarAppTest(private val enableGradleWorkers: Boolean) {
                 """
                 |android.compileOptions.sourceCompatibility 1.8
                 |android.compileOptions.targetCompatibility 1.8
-                |android.dataBinding.enabled true
+                |android.buildFeatures.dataBinding true
                 |android.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK
                 |dependencies {
                 |    compile 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'

@@ -21,7 +21,8 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 
 /** Implementation of CoreJavaCompileOptions used to merge multiple configs together. */
-public class MergedJavaCompileOptions implements JavaCompileOptions {
+public class MergedJavaCompileOptions
+        implements JavaCompileOptions, MergedOptions<JavaCompileOptions> {
 
     private com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
             annotationProcessorOptions =
@@ -33,12 +34,14 @@ public class MergedJavaCompileOptions implements JavaCompileOptions {
         return annotationProcessorOptions;
     }
 
+    @Override
     public void reset() {
         annotationProcessorOptions.getClassNames().clear();
         annotationProcessorOptions.getArguments().clear();
         annotationProcessorOptions.getCompilerArgumentProviders().clear();
     }
 
+    @Override
     public void append(@NonNull JavaCompileOptions javaCompileOptions) {
         annotationProcessorOptions.classNames(
                 javaCompileOptions.getAnnotationProcessorOptions().getClassNames());
