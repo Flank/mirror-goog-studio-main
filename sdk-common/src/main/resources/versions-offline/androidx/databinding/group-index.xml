@@ -5,11 +5,11 @@
   <compilerCommon versions="3.2.0-alpha11"/>
   <adapters versions="3.2.0-alpha11"/>
   <library versions="3.2.0-alpha11"/>
-  <databinding-runtime versions="3.5.1,3.6.0-beta01"/>
-  <databinding-adapters versions="3.5.1,3.6.0-beta01"/>
-  <databinding-compiler-common versions="3.5.1,3.6.0-beta01"/>
-  <databinding-compiler versions="3.5.1,3.6.0-beta01"/>
-  <databinding-common versions="3.5.1,3.6.0-beta01"/>
-  <viewbinding versions="3.6.0-beta01"/>
+  <databinding-runtime versions="3.5.2,4.0.0-alpha04"/>
+  <databinding-adapters versions="3.5.2,4.0.0-alpha04"/>
+  <databinding-compiler-common versions="3.5.2,4.0.0-alpha04"/>
+  <databinding-compiler versions="3.5.2,4.0.0-alpha04"/>
+  <databinding-common versions="3.5.2,4.0.0-alpha04"/>
+  <viewbinding versions="4.0.0-alpha04"/>
 </androidx.databinding>
 

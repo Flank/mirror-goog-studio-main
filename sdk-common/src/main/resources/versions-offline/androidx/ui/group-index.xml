@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.ui>
-  <ui-core versions="0.1.0-dev01"/>
-  <ui-layout versions="0.1.0-dev01"/>
-  <ui-framework versions="0.1.0-dev01"/>
-  <ui-animation versions="0.1.0-dev01"/>
-  <ui-animation-core versions="0.1.0-dev01"/>
-  <ui-android-text versions="0.1.0-dev01"/>
-  <ui-material versions="0.1.0-dev01"/>
-  <ui-tooling versions="0.1.0-dev01"/>
-  <ui-platform versions="0.1.0-dev01"/>
-  <ui-vector versions="0.1.0-dev01"/>
-  <ui-foundation versions="0.1.0-dev01"/>
-  <ui-text versions="0.1.0-dev01"/>
-  <ui-test versions="0.1.0-dev01"/>
+  <ui-core versions="0.1.0-dev02"/>
+  <ui-layout versions="0.1.0-dev02"/>
+  <ui-framework versions="0.1.0-dev02"/>
+  <ui-animation versions="0.1.0-dev02"/>
+  <ui-animation-core versions="0.1.0-dev02"/>
+  <ui-android-text versions="0.1.0-dev02"/>
+  <ui-material versions="0.1.0-dev02"/>
+  <ui-tooling versions="0.1.0-dev02"/>
+  <ui-platform versions="0.1.0-dev02"/>
+  <ui-vector versions="0.1.0-dev02"/>
+  <ui-foundation versions="0.1.0-dev02"/>
+  <ui-text versions="0.1.0-dev02"/>
+  <ui-test versions="0.1.0-dev02"/>
 </androidx.ui>
 
