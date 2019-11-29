@@ -28,7 +28,6 @@ import com.android.tools.idea.wizard.template.impl.activities.common.navigation.
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPluginToClasspath
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.saveFragmentAndViewModel
-import com.android.tools.idea.wizard.template.impl.activities.common.res.values.themeStyles
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.layout.navigationContentMain
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.layout.navigationHeaderXml
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.layout.navigationViewXml
@@ -38,7 +37,6 @@ import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerAc
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.values.dimens
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.values.navigationDrawerDrawables
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.values.strings
-import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.values21.noActionBarStylesV21
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.src.drawerActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.src.drawerActivityKt
 import java.io.File
@@ -123,10 +121,6 @@ fun RecipeExecutor.generateNavigationDrawer(
     appBarLayoutName,
     useAndroidX = useAndroidX,
     useMaterial2 = useMaterial2
-  )
-  save(
-    noActionBarStylesV21(data.themesData.noActionBar, data.themesData.main.name),
-    resOut.resolve("values-v21/styles.xml")
   )
 
   save(drawer(), resOut.resolve("menu/${drawerMenu}.xml"))
