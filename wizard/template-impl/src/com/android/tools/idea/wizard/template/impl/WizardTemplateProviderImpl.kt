@@ -29,6 +29,7 @@ import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blankFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.fullscreenFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.loginFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 
 /**
@@ -38,5 +39,5 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
     fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerTemplate, blankFragmentTemplate,
-    fullscreenFragmentTemplate, settingsFragmentTemplate)
+    fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate)
 }
