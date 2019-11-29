@@ -146,6 +146,7 @@ data class EnumParameter<T: Enum<T>>(
 ) : DslParameter<T>(_visible, _enabled) {
   override var value: T = defaultValue
   val options: Array<T> = enumClass.java.enumConstants
+  fun fromString(string: String): T? = options.find { it.name == string }
 }
 
 /**
