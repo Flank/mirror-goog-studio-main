@@ -38,7 +38,7 @@ iml_module(
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/idea/.idea/libraries:protobuf",
-        "//prebuilts/r8:r8-master",
+        "//prebuilts/r8",
         "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:sqlite",
         "//tools/idea/.idea/libraries:mockito[test]",
@@ -68,7 +68,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":java_version",
-        "//prebuilts/r8:r8-master",
+        "//prebuilts/r8",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/annotations",
@@ -125,7 +125,7 @@ coverage_java_test(
     deps = [
         ":java_version",
         ":tools.deployer",
-        "//prebuilts/r8:r8-master",
+        "//prebuilts/r8",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/annotations",
