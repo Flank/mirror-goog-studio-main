@@ -60,7 +60,8 @@ data class ProjectTemplateData(
   val buildToolsVersion: Revision,
   val rootDir: File,
   val applicationPackage: PackageName?,
-  val includedFormFactorNames: FormFactorNames
+  val includedFormFactorNames: FormFactorNames,
+  val debugKeystoreSha1: String?
 ): TemplateData()
 
 fun FormFactorNames.has(ff: FormFactor) = !this[ff].isNullOrEmpty()
