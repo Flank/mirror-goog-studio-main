@@ -29,7 +29,7 @@ readonly invocation_id="$(uuidgen)"
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
-  --profile=${dist_dir}/perfgate-profile-${build_number}.json \
+  --profile=${dist_dir}/perfgate-profile-${build_number}.json.gz \
   --runs_per_test=5 \
   -- \
   //tools/base/bazel:perfgate_logs_collector_deploy.jar \

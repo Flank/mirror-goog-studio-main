@@ -28,7 +28,7 @@ readonly invocation_id="$(uuidgen)"
   --define=meta_android_build_number="${BUILD_NUMBER}" \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
-  --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json" \
+  --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   -- \
   //tools/idea/updater:updater_deploy.jar \
   //tools/base/bazel:perfgate_logs_collector_deploy.jar \
