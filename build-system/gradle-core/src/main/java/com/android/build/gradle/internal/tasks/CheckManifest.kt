@@ -81,7 +81,7 @@ abstract class CheckManifest : NonIncrementalTask() {
 
             task.manifestRequired = variantScope.variantDslInfo.variantType.requiresManifest
             task.manifestFile = task.project.provider {
-                variantScope.variantDslInfo.mainManifestFilePath
+                variantScope.variantSources.mainManifestFilePath
             }
         }
     }

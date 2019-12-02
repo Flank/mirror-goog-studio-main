@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -70,10 +71,12 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @NonNull
     public BaseVariantData createVariantData(
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
-                new ApplicationVariantData(globalScope, taskManager, variantDslInfo, recorder);
+                new ApplicationVariantData(
+                        globalScope, taskManager, variantDslInfo, variantSources, recorder);
         computeOutputs(variantDslInfo, variant, true);
 
         return variant;

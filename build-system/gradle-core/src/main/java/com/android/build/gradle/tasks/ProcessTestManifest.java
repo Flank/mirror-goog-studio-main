@@ -27,6 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -542,12 +543,14 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.configure(task);
             Project project = task.getProject();
 
-            final VariantDslInfo config = getVariantScope().getVariantDslInfo();
+            final VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
+            final VariantSources variantSources = getVariantScope().getVariantSources();
 
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
             // non-null file that does not exist.
-            task.getTestManifestFile().set(project.provider(config::getMainManifestIfExists));
+            task.getTestManifestFile()
+                    .set(project.provider(variantSources::getMainManifestIfExists));
             task.getTestManifestFile().disallowChanges();
 
             task.outputScope = getVariantScope().getOutputScope();
@@ -560,37 +563,42 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             getVariantScope().getDirName()));
 
             task.getMinSdkVersion()
-                    .set(project.provider(() -> config.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
             task.getTargetSdkVersion()
-                    .set(project.provider(() -> config.getTargetSdkVersion().getApiString()));
+                    .set(
+                            project.provider(
+                                    () -> variantDslInfo.getTargetSdkVersion().getApiString()));
             task.getTargetSdkVersion().disallowChanges();
 
             task.testTargetMetadata = testTargetMetadata;
-            task.getTestApplicationId().set(project.provider(config::getTestApplicationId));
+            task.getTestApplicationId().set(project.provider(variantDslInfo::getTestApplicationId));
             task.getTestApplicationId().disallowChanges();
 
             // will only be used if testTargetMetadata is null.
-            task.getTestedApplicationId().set(project.provider(config::getTestedApplicationId));
+            task.getTestedApplicationId()
+                    .set(project.provider(variantDslInfo::getTestedApplicationId));
             task.getTestedApplicationId().disallowChanges();
 
-            VariantDslInfo testedConfig = config.getTestedVariant();
+            VariantDslInfo testedConfig = variantDslInfo.getTestedVariant();
             task.onlyTestApk = testedConfig != null && testedConfig.getVariantType().isAar();
 
-            task.getInstrumentationRunner().set(project.provider(config::getInstrumentationRunner));
+            task.getInstrumentationRunner()
+                    .set(project.provider(variantDslInfo::getInstrumentationRunner));
             task.getInstrumentationRunner().disallowChanges();
 
-            task.getHandleProfiling().set(project.provider(config::getHandleProfiling));
+            task.getHandleProfiling().set(project.provider(variantDslInfo::getHandleProfiling));
             task.getHandleProfiling().disallowChanges();
-            task.getFunctionalTest().set(project.provider(config::getFunctionalTest));
+            task.getFunctionalTest().set(project.provider(variantDslInfo::getFunctionalTest));
             task.getFunctionalTest().disallowChanges();
-            task.getTestLabel().set(project.provider(config::getTestLabel));
+            task.getTestLabel().set(project.provider(variantDslInfo::getTestLabel));
             task.getTestLabel().disallowChanges();
 
             task.manifests =
                     getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            task.getPlaceholdersValues().set(project.provider(config::getManifestPlaceholders));
+            task.getPlaceholdersValues()
+                    .set(project.provider(variantDslInfo::getManifestPlaceholders));
             task.getPlaceholdersValues().disallowChanges();
 
             if (!getVariantScope()

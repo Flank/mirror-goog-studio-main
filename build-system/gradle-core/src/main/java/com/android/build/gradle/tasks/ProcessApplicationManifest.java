@@ -34,6 +34,7 @@ import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -46,7 +47,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
@@ -641,31 +641,26 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            final BaseVariantData variantData = getVariantScope().getVariantData();
-            final VariantDslInfo config = variantData.getVariantDslInfo();
-            GlobalScope globalScope = getVariantScope().getGlobalScope();
+            final VariantScope variantScope = getVariantScope();
+            final VariantDslInfo config = variantScope.getVariantDslInfo();
+            final VariantSources variantSources = variantScope.getVariantSources();
+            final GlobalScope globalScope = variantScope.getGlobalScope();
 
-            VariantType variantType = getVariantScope().getType();
+            VariantType variantType = variantScope.getType();
 
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
-            task.manifests =
-                    getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.manifests = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // Also include rewritten auto-namespaced manifests if there are any
             if (variantType
                             .isBaseModule() // TODO(b/112251836): Auto namespacing for dynamic features.
-                    && getVariantScope()
-                            .getGlobalScope()
-                            .getExtension()
-                            .getAaptOptions()
-                            .getNamespaced()
-                    && getVariantScope()
-                            .getGlobalScope()
+                    && globalScope.getExtension().getAaptOptions().getNamespaced()
+                    && globalScope
                             .getProjectOptions()
                             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                getVariantScope()
+                variantScope
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.NAMESPACED_MANIFESTS.INSTANCE,
@@ -673,11 +668,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
 
             // optional manifest files too.
-            if (getVariantScope().getTaskContainer().getMicroApkTask() != null
+            if (variantScope.getTaskContainer().getMicroApkTask() != null
                     && config.getBuildType().isEmbedMicroApp()) {
-                task.microApkManifest = project.files(getVariantScope().getMicroApkManifestFile());
+                task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
@@ -711,7 +706,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             project.provider(
                                     () ->
                                             getOptionalFeatures(
-                                                    getVariantScope(), isAdvancedProfilingOn)));
+                                                    variantScope, isAdvancedProfilingOn)));
             task.getOptionalFeatures().disallowChanges();
 
             artifacts.setTaskInputToFinalProduct(
@@ -720,50 +715,43 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
                 task.featureManifests =
-                        getVariantScope()
-                                .getArtifactCollection(
-                                        REVERSE_METADATA_VALUES,
-                                        PROJECT,
-                                        REVERSE_METADATA_FEATURE_MANIFEST);
+                        variantScope.getArtifactCollection(
+                                REVERSE_METADATA_VALUES,
+                                PROJECT,
+                                REVERSE_METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isDynamicFeature()) {
-                task.getFeatureName().set(getVariantScope().getFeatureName());
+                task.getFeatureName().set(variantScope.getFeatureName());
                 task.getFeatureName().disallowChanges();
 
                 task.packageManifest =
-                        getVariantScope()
-                                .getArtifactFileCollection(
-                                        COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
+                        variantScope.getArtifactFileCollection(
+                                COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
 
                 task.dependencyFeatureNameArtifacts =
-                        getVariantScope()
-                                .getArtifactFileCollection(
-                                        RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
+                        variantScope.getArtifactFileCollection(
+                                RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
             }
 
-            if (!getVariantScope()
-                    .getGlobalScope()
-                    .getExtension()
-                    .getAaptOptions()
-                    .getNamespaced()) {
+            if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
                 task.navigationJsons =
                         project.files(
-                                getVariantScope()
+                                variantScope
                                         .getArtifacts()
                                         .getFinalProduct(
                                                 InternalArtifactType.NAVIGATION_JSON.INSTANCE),
-                                getVariantScope()
-                                        .getArtifactFileCollection(
-                                                RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
+                                variantScope.getArtifactFileCollection(
+                                        RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
             task.packageOverride.set(variantProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(config::getManifestPlaceholders));
             task.manifestPlaceholders.disallowChanges();
-            task.getMainManifest().set(project.provider(config::getMainManifestFilePath));
+            task.getMainManifest().set(project.provider(variantSources::getMainManifestFilePath));
             task.getMainManifest().disallowChanges();
-            task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
+            task.manifestOverlays.set(
+                    task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = config.getVariantType().isDynamicFeature();
             task.buildTypeName = config.getBuildType().getName();

@@ -207,6 +207,7 @@ abstract class AidlCompile : NonIncrementalTask() {
             val project = globalScope.project
 
             val variantDslInfo = scope.variantDslInfo
+            val variantSources = scope.variantSources
 
             val sdkComponents = globalScope.sdkComponents
             task.aidlExecutableProvider.set(sdkComponents.aidlExecutableProvider)
@@ -217,7 +218,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task
                 .sourceDirs
-                .set(project.provider { variantDslInfo.aidlSourceList })
+                .set(project.provider { variantSources.aidlSourceList })
             task.sourceDirs.disallowChanges()
 
             // This is because aidl may be in the same folder as Java and we want to restrict to

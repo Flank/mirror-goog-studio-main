@@ -170,7 +170,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public List<SourceProvider> getSourceSets() {
-        return getVariantData().getVariantDslInfo().getSortedSourceProviders();
+        return getVariantData().getVariantSources().getSortedSourceProviders();
     }
 
     @NonNull

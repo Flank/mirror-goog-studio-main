@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.MergedFlavor;
 import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
 import com.android.build.gradle.internal.dependency.AarToClassTransform;
@@ -381,6 +382,7 @@ public class VariantManager implements VariantModel {
         final BaseVariantData variantData = variantScope.getVariantData();
         final VariantType variantType = variantData.getType();
         final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+        final VariantSources variantSources = variantScope.getVariantSources();
 
         taskManager.createAssembleTask(variantData);
         if (variantType.isBaseModule()) {
@@ -406,7 +408,7 @@ public class VariantManager implements VariantModel {
             // 1. add the variant-specific if applicable.
             if (!testProductFlavors.isEmpty()) {
                 testVariantSourceSets.add(
-                        (DefaultAndroidSourceSet) variantDslInfo.getVariantSourceProvider());
+                        (DefaultAndroidSourceSet) variantSources.getVariantSourceProvider());
             }
 
             // 2. the build type.
@@ -421,7 +423,7 @@ public class VariantManager implements VariantModel {
             // 3. the multi-flavor combination
             if (testProductFlavors.size() > 1) {
                 testVariantSourceSets.add(
-                        (DefaultAndroidSourceSet) variantDslInfo.getMultiFlavorSourceProvider());
+                        (DefaultAndroidSourceSet) variantSources.getMultiFlavorSourceProvider());
             }
 
             // 4. the flavors.
@@ -1098,7 +1100,8 @@ public class VariantManager implements VariantModel {
 
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        VariantDslInfo variantDslInfo = variantBuilder.createVariantDsl();
+        VariantDslInfo variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantSources variantSources = variantBuilder.createVariantSources();
 
         // Only record release artifacts
         if (!buildTypeData.getBuildType().isDebuggable()
@@ -1118,7 +1121,7 @@ public class VariantManager implements VariantModel {
         // 1. add the variant-specific if applicable.
         if (!productFlavorList.isEmpty()) {
             variantSourceSets.add(
-                    (DefaultAndroidSourceSet) variantDslInfo.getVariantSourceProvider());
+                    (DefaultAndroidSourceSet) variantSources.getVariantSourceProvider());
         }
 
         // 2. the build type.
@@ -1127,7 +1130,7 @@ public class VariantManager implements VariantModel {
         // 3. the multi-flavor combination
         if (productFlavorList.size() > 1) {
             variantSourceSets.add(
-                    (DefaultAndroidSourceSet) variantDslInfo.getMultiFlavorSourceProvider());
+                    (DefaultAndroidSourceSet) variantSources.getMultiFlavorSourceProvider());
         }
 
         // 4. the flavors.
@@ -1140,7 +1143,8 @@ public class VariantManager implements VariantModel {
 
         // Done. Create the variant and get its internal storage object.
         BaseVariantData variantData =
-                variantFactory.createVariantData(variantDslInfo, taskManager, recorder);
+                variantFactory.createVariantData(
+                        variantDslInfo, variantSources, taskManager, recorder);
 
         VariantScope variantScope = variantData.getScope();
         VariantDependencies.Builder builder =
@@ -1278,14 +1282,13 @@ public class VariantManager implements VariantModel {
 
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        VariantDslInfo testVariantDslInfo = variantBuilder.createVariantDsl();
-
         // create the internal storage for this variant.
         TestVariantData testVariantData =
                 new TestVariantData(
                         globalScope,
                         taskManager,
-                        testVariantDslInfo,
+                        variantBuilder.createVariantDslInfo(),
+                        variantBuilder.createVariantSources(),
                         (TestedVariantData) testedVariantData,
                         recorder);
         // link the testVariant to the tested variant in the other direction

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.variant;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
 import java.util.Collections;
@@ -32,8 +33,9 @@ public abstract class AndroidArtifactVariantData extends BaseVariantData {
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
-        super(globalScope, taskManager, variantDslInfo, recorder);
+        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
     }
 
     public void setCompatibleScreens(Set<String> compatibleScreens) {

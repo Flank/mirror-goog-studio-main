@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -56,6 +57,9 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     VariantDslInfo getVariantDslInfo();
+
+    @NonNull
+    VariantSources getVariantSources();
 
     @NonNull
     PublishingSpecs.VariantSpec getPublishingSpec();

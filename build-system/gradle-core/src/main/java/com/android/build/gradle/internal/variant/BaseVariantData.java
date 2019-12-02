@@ -31,6 +31,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
@@ -86,6 +87,7 @@ public abstract class BaseVariantData {
     @NonNull
     protected final TaskManager taskManager;
     @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final VariantSources variantSources;
 
     private VariantDependencies variantDependency;
 
@@ -133,8 +135,10 @@ public abstract class BaseVariantData {
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
         this.variantDslInfo = variantDslInfo;
+        this.variantSources = variantSources;
         this.taskManager = taskManager;
 
         final Splits splits = globalScope.getExtension().getSplits();
@@ -258,6 +262,11 @@ public abstract class BaseVariantData {
     public VariantDslInfo getVariantDslInfo() {
         return variantDslInfo;
     }
+
+    public VariantSources getVariantSources() {
+        return variantSources;
+    }
+
 
     public void setVariantDependency(@NonNull VariantDependencies variantDependency) {
         this.variantDependency = variantDependency;
@@ -567,7 +576,7 @@ public abstract class BaseVariantData {
     }
 
     public LinkedHashMap<String, FileCollection> getAndroidResources() {
-        return getVariantDslInfo()
+        return variantSources
                 .getSortedSourceProviders()
                 .stream()
                 .collect(
@@ -597,7 +606,7 @@ public abstract class BaseVariantData {
             ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
 
             // First the actual source folders.
-            List<SourceProvider> providers = variantDslInfo.getSortedSourceProviders();
+            List<SourceProvider> providers = variantSources.getSortedSourceProviders();
             for (SourceProvider provider : providers) {
                 sourceSets.addAll(
                         ((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
@@ -674,7 +683,7 @@ public abstract class BaseVariantData {
         ConfigurableFileCollection fc = scope.getGlobalScope().getProject().files();
 
         // First the actual source folders.
-        List<SourceProvider> providers = variantDslInfo.getSortedSourceProviders();
+        List<SourceProvider> providers = variantSources.getSortedSourceProviders();
         for (SourceProvider provider : providers) {
             for (File sourceFolder : provider.getJavaDirectories()) {
                 if (sourceFolder.isDirectory()) {

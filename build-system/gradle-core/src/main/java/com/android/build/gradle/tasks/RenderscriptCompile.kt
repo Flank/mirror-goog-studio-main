@@ -280,28 +280,29 @@ abstract class RenderscriptCompile : NdkTask() {
 
         override fun configure(task: RenderscriptCompile) {
             super.configure(task)
+
             val scope = variantScope
+            val globalScope = scope.globalScope
 
-            val variantData = scope.variantData
-            val config = variantData.variantDslInfo
+            val variantDslInfo = scope.variantDslInfo
+            val variantSources = scope.variantSources
 
-            val ndkMode = config.renderscriptNdkModeEnabled
+            val ndkMode = variantDslInfo.renderscriptNdkModeEnabled
 
-            task.targetApi.set(scope.globalScope.project.provider {
-                config.renderscriptTarget
+            task.targetApi.set(globalScope.project.provider {
+                variantDslInfo.renderscriptTarget
             })
             task.targetApi.disallowChanges()
 
-            task.isSupportMode = config.renderscriptSupportModeEnabled
-            task.useAndroidX =
-                scope.globalScope.projectOptions.get(BooleanOption.USE_ANDROID_X)
+            task.isSupportMode = variantDslInfo.renderscriptSupportModeEnabled
+            task.useAndroidX = globalScope.projectOptions.get(BooleanOption.USE_ANDROID_X)
             task.isNdkMode = ndkMode
-            task.isDebugBuild = config.buildType.isRenderscriptDebuggable
-            task.optimLevel = config.buildType.renderscriptOptimLevel
+            task.isDebugBuild = variantDslInfo.buildType.isRenderscriptDebuggable
+            task.optimLevel = variantDslInfo.buildType.renderscriptOptimLevel
 
-            task.sourceDirs = scope.globalScope
+            task.sourceDirs = globalScope
                 .project
-                .files(Callable { config.renderscriptSourceList })
+                .files(Callable { variantSources.renderscriptSourceList })
             task.importDirs = scope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
@@ -309,12 +310,12 @@ abstract class RenderscriptCompile : NdkTask() {
             task.resOutputDir = scope.renderscriptResOutputDir
             task.objOutputDir = scope.renderscriptObjOutputDir
 
-            task.ndkConfig = config.ndkConfig
+            task.ndkConfig = variantDslInfo.ndkConfig
 
             task.buildToolInfoProvider =
-                scope.globalScope.sdkComponents.buildToolInfoProvider
+                globalScope.sdkComponents.buildToolInfoProvider
 
-            if (config.variantType.isTestComponent) {
+            if (variantDslInfo.variantType.isTestComponent) {
                 task.dependsOn(scope.taskContainer.processManifestTask!!)
             }
         }

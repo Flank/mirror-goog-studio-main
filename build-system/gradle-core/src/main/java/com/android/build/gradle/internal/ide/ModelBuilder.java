@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
@@ -467,9 +468,10 @@ public class ModelBuilder<Extension extends BaseExtension>
             return false;
         }
 
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-        List<File> manifests = new ArrayList<>(variantDslInfo.getManifestOverlays());
-        File mainManifest = variantDslInfo.getMainManifestIfExists();
+        VariantSources variantSources = variantData.getVariantSources();
+
+        List<File> manifests = new ArrayList<>(variantSources.getManifestOverlays());
+        File mainManifest = variantSources.getMainManifestIfExists();
         if (mainManifest != null) {
             manifests.add(mainManifest);
         }
@@ -587,7 +589,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
         VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-        File manifest = variantDslInfo.getMainManifestIfExists();
+
+        File manifest = variantData.getVariantSources().getMainManifestIfExists();
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
                     new DefaultManifestParser(
@@ -1101,9 +1104,9 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private static SourceProviders determineSourceProviders(@NonNull BaseVariantData variantData) {
         SourceProvider variantSourceProvider =
-                variantData.getVariantDslInfo().getVariantSourceProvider();
+                variantData.getVariantSources().getVariantSourceProvider();
         SourceProvider multiFlavorSourceProvider =
-                variantData.getVariantDslInfo().getMultiFlavorSourceProvider();
+                variantData.getVariantSources().getMultiFlavorSourceProvider();
 
         return new SourceProviders(
                 variantSourceProvider != null ?

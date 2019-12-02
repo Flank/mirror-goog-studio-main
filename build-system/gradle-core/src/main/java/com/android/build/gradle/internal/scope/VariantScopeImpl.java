@@ -61,6 +61,7 @@ import com.android.build.gradle.internal.core.OldPostProcessingOptions;
 import com.android.build.gradle.internal.core.PostProcessingBlockOptions;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
@@ -271,6 +272,12 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     public VariantDslInfo getVariantDslInfo() {
         return variantData.getVariantDslInfo();
+    }
+
+    @NonNull
+    @Override
+    public VariantSources getVariantSources() {
+        return variantData.getVariantSources();
     }
 
     @NonNull

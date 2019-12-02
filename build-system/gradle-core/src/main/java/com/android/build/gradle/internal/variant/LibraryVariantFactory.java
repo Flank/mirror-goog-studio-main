@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.LibraryVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -47,9 +48,11 @@ public class LibraryVariantFactory extends BaseVariantFactory {
     @NonNull
     public BaseVariantData createVariantData(
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
-        return new LibraryVariantData(globalScope, taskManager, variantDslInfo, recorder);
+        return new LibraryVariantData(
+                globalScope, taskManager, variantDslInfo, variantSources, recorder);
     }
 
     @Override

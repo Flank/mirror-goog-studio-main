@@ -71,16 +71,10 @@ open class VariantDslInfo internal constructor(
     val flavorName: String,
     val variantType: VariantType,
     val defaultConfig: DefaultConfig,
-    private val defaultSourceProvider: SourceProvider,
+    manifestFile: File,
     val buildType: BuildType,
-    private val buildTypeSourceProvider: SourceProvider? = null,
     /** The list of product flavors. Items earlier in the list override later items.  */
     val productFlavors: List<ProductFlavor>,
-    private val flavorSourceProviders: List<SourceProvider>,
-    /** MultiFlavors specific source provider, may be null  */
-    val multiFlavorSourceProvider: SourceProvider? = null,
-    /** Variant specific source provider, may be null  */
-    val variantSourceProvider: SourceProvider? = null,
     private val signingConfigOverride: SigningConfig? = null,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     /**
@@ -118,7 +112,7 @@ open class VariantDslInfo internal constructor(
         val manifestParser =
             manifestAttributeSupplier
                 ?: DefaultManifestParser(
-                    defaultSourceProvider.manifestFile,
+                    manifestFile,
                     isInExecutionPhase,
                     variantType.requiresManifest,
                     issueReporter
@@ -128,7 +122,7 @@ open class VariantDslInfo internal constructor(
             buildType,
             variantType.isTestComponent,
             manifestParser,
-            defaultSourceProvider.manifestFile,
+            manifestFile,
             fullName
         )
         mergeOptions()
@@ -296,7 +290,7 @@ open class VariantDslInfo internal constructor(
     }
 
     private val testedPackage: String
-        private get() = if (testedVariant != null) testedVariant.applicationId else ""
+        get() = testedVariant?.applicationId ?: ""
 
     /**
      * Returns the original application ID before any overrides from flavors. If the variant is a
@@ -522,249 +516,12 @@ open class VariantDslInfo internal constructor(
             return targetSdkVersion
         }
 
-    /**
-     * Returns the path to the main manifest file. It may or may not exist.
-     *
-     *
-     * Note: Avoid calling this method at configuration time because the final path to the
-     * manifest file may change during that time.
-     */
-    val mainManifestFilePath: File
-        get() = defaultSourceProvider.manifestFile
-
-    /**
-     * Returns the path to the main manifest file if it exists, or `null` otherwise (e.g., the main
-     * manifest file is not required to exist for a test variant or a test project).
-     *
-     *
-     * Note: Avoid calling this method at configuration time because (1) the final path to the
-     * manifest file may change during that time, and (2) this method performs I/O.
-     */
-    val mainManifestIfExists: File?
-        get() {
-            val mainManifest = mainManifestFilePath
-            return if (mainManifest.isFile) {
-                mainManifest
-            } else null
-        }// first the default source provider
-    // the list of flavor must be reversed to use the right overlay order.
-    // multiflavor specific overrides flavor
-    // build type overrides flavors
-    // variant specific overrides all
-
-    /**
-     * Returns a list of sorted SourceProvider in ascending order of importance. This means that
-     * items toward the end of the list take precedence over those toward the start of the list.
-     *
-     * @return a list of source provider
-     */
-    val sortedSourceProviders: List<SourceProvider>
-        get() {
-            val providers: MutableList<SourceProvider> =
-                Lists.newArrayListWithExpectedSize(flavorSourceProviders.size + 4)
-
-            // first the default source provider
-            providers.add(defaultSourceProvider)
-            // the list of flavor must be reversed to use the right overlay order.
-            for (n in flavorSourceProviders.indices.reversed()) {
-                providers.add(flavorSourceProviders[n])
-            }
-            // multiflavor specific overrides flavor
-            multiFlavorSourceProvider?.let(providers::add)
-            // build type overrides flavors
-            buildTypeSourceProvider?.let(providers::add)
-            // variant specific overrides all
-            variantSourceProvider?.let(providers::add)
-
-            return providers
-        }
-
-    val manifestOverlays: List<File>
-        get() {
-            val inputs = mutableListOf<File>()
-
-            val gatherManifest: (SourceProvider) -> Unit = {
-                val variantLocation = it.manifestFile
-                if (variantLocation.isFile) {
-                    inputs.add(variantLocation)
-                }
-            }
-
-            variantSourceProvider?.let(gatherManifest)
-            buildTypeSourceProvider?.let(gatherManifest)
-            multiFlavorSourceProvider?.let(gatherManifest)
-            flavorSourceProviders.forEach(gatherManifest)
-
-            return inputs
-        }
-
-    fun getSourceFiles(f: Function<SourceProvider, Collection<File>>): Set<File> {
-        return sortedSourceProviders.flatMap {
-            f.apply(it)
-        }.toSet()
-    }
-
-    /**
-     * Returns the dynamic list of [ResourceSet] for the source folders only.
-     *
-     *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
-     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
-     * Resource merger
-     *
-     * @return a list ResourceSet.
-     */
-    fun getResourceSets(validateEnabled: Boolean): List<ResourceSet> {
-        val resourceSets: MutableList<ResourceSet> =
-            Lists.newArrayList()
-        val mainResDirs =
-            defaultSourceProvider.resDirectories
-        // the main + generated res folders are in the same ResourceSet
-        var resourceSet = ResourceSet(
-            BuilderConstants.MAIN, ResourceNamespace.RES_AUTO, null, validateEnabled
-        )
-        resourceSet.addSources(mainResDirs)
-        resourceSets.add(resourceSet)
-        // the list of flavor must be reversed to use the right overlay order.
-        for (n in flavorSourceProviders.indices.reversed()) {
-            val sourceProvider = flavorSourceProviders[n]
-            val flavorResDirs = sourceProvider.resDirectories
-
-            // we need the same of the flavor config, but it's in a different list.
-            // This is fine as both list are parallel collections with the same number of items.
-            resourceSet = ResourceSet(
-                sourceProvider.name,
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled
-            )
-            resourceSet.addSources(flavorResDirs)
-            resourceSets.add(resourceSet)
-        }
-        // multiflavor specific overrides flavor
-        multiFlavorSourceProvider?.let {
-            val variantResDirs = it.resDirectories
-            resourceSet = ResourceSet(
-                flavorName, ResourceNamespace.RES_AUTO, null, validateEnabled
-            )
-            resourceSet.addSources(variantResDirs)
-            resourceSets.add(resourceSet)
-        }
-
-        // build type overrides the flavors
-        buildTypeSourceProvider?.let {
-            val typeResDirs = it.resDirectories
-            resourceSet = ResourceSet(
-                buildType.name,
-                ResourceNamespace.RES_AUTO,
-                null,
-                validateEnabled
-            )
-            resourceSet.addSources(typeResDirs)
-            resourceSets.add(resourceSet)
-        }
-
-        // variant specific overrides all
-        variantSourceProvider?.let {
-            val variantResDirs = it.resDirectories
-            resourceSet = ResourceSet(
-                fullName, ResourceNamespace.RES_AUTO, null, validateEnabled
-            )
-            resourceSet.addSources(variantResDirs)
-            resourceSets.add(resourceSet)
-        }
-
-        return resourceSets
-    }
-
-    /**
-     * Returns the dynamic list of [AssetSet] based on the configuration, for a particular
-     * property of [SourceProvider].
-     *
-     *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
-     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in an
-     * asset merger
-     *
-     * @param function the function that return a collection of file based on the SourceProvider.
-     * this is usually a method referenceo on SourceProvider
-     * @return a list ResourceSet.
-     */
-    fun getSourceFilesAsAssetSets(
-        function: Function<SourceProvider, Collection<File>>
-    ): List<AssetSet> {
-        val assetSets = mutableListOf<AssetSet>()
-
-        val mainResDirs = function.apply(defaultSourceProvider)
-        // the main + generated asset folders are in the same AssetSet
-        var assetSet = AssetSet(BuilderConstants.MAIN)
-        assetSet.addSources(mainResDirs)
-        assetSets.add(assetSet)
-        // the list of flavor must be reversed to use the right overlay order.
-        for (n in flavorSourceProviders.indices.reversed()) {
-            val sourceProvider = flavorSourceProviders[n]
-            val flavorResDirs = function.apply(sourceProvider)
-            // we need the same of the flavor config, but it's in a different list.
-// This is fine as both list are parallel collections with the same number of items.
-            assetSet = AssetSet(productFlavors[n].name)
-            assetSet.addSources(flavorResDirs)
-            assetSets.add(assetSet)
-        }
-
-        // multiflavor specific overrides flavor
-        multiFlavorSourceProvider?.let {
-            val variantResDirs = function.apply(it)
-            assetSet = AssetSet(flavorName)
-            assetSet.addSources(variantResDirs)
-            assetSets.add(assetSet)
-        }
-
-        // build type overrides flavors
-        if (buildTypeSourceProvider != null) {
-            val typeResDirs = function.apply(buildTypeSourceProvider)
-            assetSet = AssetSet(buildType.name)
-            assetSet.addSources(typeResDirs)
-            assetSets.add(assetSet)
-        }
-
-        // variant specific overrides all
-        variantSourceProvider?.let {
-            val variantResDirs = function.apply(it)
-            assetSet = AssetSet(fullName)
-            assetSet.addSources(variantResDirs)
-            assetSets.add(assetSet)
-        }
-
-        return assetSets
-    }
-
     val renderscriptTarget: Int
         get() {
             val targetApi = mergedFlavor.renderscriptTargetApi ?: -1
             val minSdk = minSdkVersionValue
             return if (targetApi > minSdk) targetApi else minSdk
         }
-
-    /**
-     * Returns all the renderscript source folder from the main config, the flavors and the build
-     * type.
-     *
-     * @return a list of folders.
-     */
-    val renderscriptSourceList: Collection<File>
-        get() = getSourceFiles(
-            Function { obj: SourceProvider -> obj.renderscriptDirectories }
-        )
-
-    val aidlSourceList: Collection<File>
-        get() = getSourceFiles(
-            Function { obj: SourceProvider -> obj.aidlDirectories }
-        )
-
-    val jniSourceList: Collection<File>
-        get() = getSourceFiles(
-            Function { obj: SourceProvider -> obj.cDirectories }
-        )
 
     /**
      * Adds a variant-specific BuildConfig field.
@@ -1182,19 +939,7 @@ open class VariantDslInfo internal constructor(
                 optionMap[getKey(option)] = option
             }
             return Lists.newArrayList(optionMap.values)
-        }// global
-    // scoped.
-    // 3. the build type, global
-    // 3b. the build type, scoped.
-    // now add the full value list.
-// first add to a temp map to resolve overridden values
-    // we're going to go from lower priority, to higher priority elements, and for each
-// start with the non scoped version, and then add the scoped version.
-// 1. default config, global.
-    // 1b. default config, scoped.
-    // 2. the flavors.
-// cant use merge flavor as it's not a prop on the base class.
-// reverse loop for proper order
+        }
 
     // first collect all possible keys.
     val scopedGlslcArgs: Map<String, List<String>>

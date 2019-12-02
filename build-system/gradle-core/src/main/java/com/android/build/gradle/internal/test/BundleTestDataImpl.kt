@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.test
 
 import com.android.build.gradle.internal.tasks.getApkFiles
+import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.build.gradle.internal.testing.TestData
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -39,7 +39,12 @@ class BundleTestDataImpl(
     testApkDir: Provider<Directory>,
     private val moduleName: String?,
     private val apkBundle: FileCollection
-) : AbstractTestDataImpl(testVariantData.variantDslInfo, testApkDir, null) {
+) : AbstractTestDataImpl(
+    testVariantData.variantDslInfo,
+    testVariantData.variantSources,
+    testApkDir,
+    null
+) {
 
     override fun loadFromMetadataFile(metadataFile: File) {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.

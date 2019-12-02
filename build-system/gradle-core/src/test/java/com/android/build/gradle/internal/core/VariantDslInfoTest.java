@@ -286,6 +286,6 @@ public class VariantDslInfoTest {
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
-        return builder.createVariantDsl();
+        return builder.createVariantDslInfo();
     }
 }

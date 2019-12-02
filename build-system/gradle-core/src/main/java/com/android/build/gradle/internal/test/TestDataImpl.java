@@ -55,7 +55,11 @@ public class TestDataImpl extends AbstractTestDataImpl {
             @NonNull TestVariantData testVariantData,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {
-        super(testVariantData.getVariantDslInfo(), testApkDir, testedApksDir);
+        super(
+                testVariantData.getVariantDslInfo(),
+                testVariantData.getVariantSources(),
+                testApkDir,
+                testedApksDir);
         this.testVariantData = testVariantData;
         this.testVariantDslInfo = testVariantData.getVariantDslInfo();
         if (testVariantData

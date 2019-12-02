@@ -125,9 +125,7 @@ abstract class VariantBuilder protected constructor(
             } else {
                 combineAsCamelCase(flavors, com.android.builder.model.ProductFlavor::getName)
             }
-            flavorNameCallback?.let {
-                flavorNameCallback.invoke(flavorName)
-            }
+            flavorNameCallback?.let { it(flavorName) }
 
             val sb = StringBuilder()
             if (flavorName.isNotEmpty()) {
@@ -182,8 +180,19 @@ abstract class VariantBuilder protected constructor(
     }
 
     /** Creates a variant configuration  */
-    abstract fun createVariantDsl(): VariantDslInfo
+    abstract fun createVariantDslInfo(): VariantDslInfo
 
+    fun createVariantSources(): VariantSources {
+        return VariantSources(
+            name,
+            variantType,
+            defaultSourceProvider,
+            buildTypeSourceProvider,
+            flavors.map { it.second }.toImmutableList(),
+            multiFlavorSourceProvider,
+            variantSourceProvider
+        )
+    }
 
     /**
      * computes the name for the variant and the multi-flavor combination
@@ -224,20 +233,16 @@ private class VariantConfigurationBuilder(
     isInExecutionPhase
 ) {
 
-    override fun createVariantDsl(): VariantDslInfo {
+    override fun createVariantDslInfo(): VariantDslInfo {
         return VariantDslInfo(
             name,
             flavorName,
             variantType,
             defaultConfig,
-            defaultSourceProvider,
+            defaultSourceProvider.manifestFile,
             buildType,
-            buildTypeSourceProvider,
             // this could be removed once the product flavor is internal only.
             flavors.map { it.first }.toImmutableList(),
-            flavors.map { it.second }.toImmutableList(),
-            multiFlavorSourceProvider,
-            variantSourceProvider,
             signingConfigOverride,
             manifestAttributeSupplier,
             testedVariant,
@@ -281,20 +286,16 @@ private class TestModuleConfigurationBuilder(
     isInExecutionPhase
 ) {
 
-    override fun createVariantDsl(): VariantDslInfo {
+    override fun createVariantDslInfo(): VariantDslInfo {
         return object:  VariantDslInfo(
             name,
             flavorName,
             variantType,
             defaultConfig,
-            defaultSourceProvider,
+            defaultSourceProvider.manifestFile,
             buildType,
-            buildTypeSourceProvider,
             // this could be removed once the product flavor is internal only.
             flavors.map { it.first }.toImmutableList(),
-            flavors.map { it.second }.toImmutableList(),
-            multiFlavorSourceProvider,
-            variantSourceProvider,
             signingConfigOverride,
             manifestAttributeSupplier,
             testedVariant,

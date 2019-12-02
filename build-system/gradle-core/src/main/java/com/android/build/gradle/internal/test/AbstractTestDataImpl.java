@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -46,6 +47,7 @@ import org.gradle.api.provider.Provider;
 public abstract class AbstractTestDataImpl implements TestData {
 
     @NonNull private final VariantDslInfo testVariantConfig;
+    @NonNull private final VariantSources testVariantSources;
 
     @NonNull
     private Map<String, String> extraInstrumentationTestRunnerArgs;
@@ -58,9 +60,11 @@ public abstract class AbstractTestDataImpl implements TestData {
 
     public AbstractTestDataImpl(
             @NonNull VariantDslInfo testVariantDslInfo,
+            @NonNull VariantSources testVariantSources,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {
         this.testVariantConfig = checkNotNull(testVariantDslInfo);
+        this.testVariantSources = testVariantSources;
         this.extraInstrumentationTestRunnerArgs = Maps.newHashMap();
         this.testApkDir = testApkDir;
         this.testedApksDir = testedApksDir;
@@ -147,7 +151,7 @@ public abstract class AbstractTestDataImpl implements TestData {
         // apply JUnit logic to see if there's something to run, but that would not catch the case
         // where user makes a typo in a test name or forgets to inherit from a JUnit class
         ImmutableList.Builder<File> javaDirectories = ImmutableList.builder();
-        for (SourceProvider sourceProvider : testVariantConfig.getSortedSourceProviders()) {
+        for (SourceProvider sourceProvider : testVariantSources.getSortedSourceProviders()) {
             javaDirectories.addAll(sourceProvider.getJavaDirectories());
         }
         return javaDirectories.build();
