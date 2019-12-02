@@ -45,4 +45,19 @@ class StripDebugSymbolsTaskTest {
             }
         }
     }
+
+    @Test
+    fun testSingleStripDebugSymbolsWarning() {
+        val expectedWarning =
+            "Unable to strip the following libraries, packaging them as they are: bar.so, foo.so."
+        doTest(project) {
+            it.addFile("src/main/jniLibs/x86/foo.so", "foo")
+            it.addFile("src/main/jniLibs/x86/bar.so", "bar")
+            project.executor().run("stripDebugDebugSymbols").stdout.use { scanner ->
+                assertThat(scanner).contains(expectedWarning)
+                assertThat(scanner).doesNotContain("packaging it as is")
+                assertThat(scanner).doesNotContain("Packaging it as is")
+            }
+        }
+    }
 }
