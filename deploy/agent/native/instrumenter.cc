@@ -254,6 +254,7 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 
   AddTransform(new ActivityThreadTransform());
+  AddTransform(new DexPathListTransform());
 
   if (!Instrument(jvmti, jni, instrument_jar_path)) {
     Log::E("Error instrumenting application.");

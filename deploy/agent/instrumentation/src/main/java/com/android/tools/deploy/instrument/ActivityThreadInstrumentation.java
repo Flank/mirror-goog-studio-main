@@ -16,9 +16,16 @@
 
 package com.android.tools.deploy.instrument;
 
+import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
+
+import android.content.pm.ApplicationInfo;
 import android.util.Log;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.HashSet;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class ActivityThreadInstrumentation {
@@ -30,8 +37,42 @@ public final class ActivityThreadInstrumentation {
     private static Object mActivityThread;
     private static int mCmd;
 
+    // Set of all previous installation locations of the package.
+    private static final HashSet<Path> oldPackagePaths = new HashSet<>();
+
+    // Current installation path of the running package.
+    private static Path currentPackagePath;
+
     public static void setRestart(boolean restart) {
         mRestart = restart;
+    }
+
+    // This method instruments DexPathList$Element#findResource(). It checks to see if this Element
+    // object refers to an old installation of this package, and modifies the element to point to
+    // the latest installation path if so.
+    public static void handleFindResourceEntry(Object element, String name) {
+        try {
+            File file = (File) getDeclaredField(element, "path");
+            Path dir = file.getParentFile().toPath();
+
+            // First check if this Element points to the current package path. If so, we don't need
+            // to do anything. We check this first because currentPackagePath can end up in the
+            // old paths set without the package actually having been moved.
+            if (currentPackagePath.equals(dir)) {
+                return;
+            }
+
+            // If the path pointed to by this Element is an old installation location, bring the
+            // Element up to date and mark it as uninitialized. This will cause the classloader to
+            // read the new path.
+            if (oldPackagePaths.contains(dir)) {
+                File newFile = currentPackagePath.resolve(file.getName()).toFile();
+                setDeclaredField(element, "path", newFile);
+                setDeclaredField(element, "initialized", false);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Excepton", e);
+        }
     }
 
     public static void handleDispatchPackageBroadcastEntry(
@@ -44,6 +85,12 @@ public final class ActivityThreadInstrumentation {
 
         mActivityThread = activityThread;
         mCmd = cmd;
+
+        try {
+            oldPackagePaths.add(getPackagePath(mActivityThread));
+        } catch (Exception e) {
+            Log.e(TAG, "Error in package installer patch", e);
+        }
     }
 
     public static void handleDispatchPackageBroadcastExit() {
@@ -70,6 +117,8 @@ public final class ActivityThreadInstrumentation {
             if (mRestart) {
                 updateApplicationInfo(mActivityThread);
             }
+
+            currentPackagePath = getPackagePath(mActivityThread);
         } catch (Exception ex) {
             // The actual risks of the patch are unknown; although it seems to be safe, we're using some
             // defensive exception handling to prevent any application hard-crashes.
@@ -77,6 +126,16 @@ public final class ActivityThreadInstrumentation {
         } finally {
             mRestart = false;
         }
+    }
+
+    public static Path getPackagePath(Object activityThread) throws Exception {
+        Object boundApplication = getDeclaredField(activityThread, "mBoundApplication");
+        Object appInfo = getDeclaredField(boundApplication, "appInfo");
+        Object packageName = getField(appInfo, "packageName");
+        Object loadedApk =
+                call(activityThread, "peekPackageInfo", arg(packageName), arg(true, boolean.class));
+        ApplicationInfo info = (ApplicationInfo) call(loadedApk, "getApplicationInfo");
+        return Paths.get(info.sourceDir.substring(0, info.sourceDir.lastIndexOf("/")));
     }
 
     // ResourcesImpl fixAppContext(ActivityThread activityThread)

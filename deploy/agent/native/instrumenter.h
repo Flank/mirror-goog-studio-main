@@ -92,6 +92,26 @@ class ActivityThreadTransform : public Transform {
   }
 };
 
+class DexPathListTransform : public Transform {
+ public:
+  std::string GetClassName() { return "dalvik/system/DexPathList$Element"; }
+  void Apply(shared_ptr<ir::DexFile> dex_ir) {
+    static const ir::MethodId kHandlePackageBroadcast(
+        "Ldalvik/system/DexPathList$Element;", "findResource",
+        "(Ljava/lang/String;)Ljava/net/URL;");
+    static const ir::MethodId kEntryHook(
+        "Lcom/android/tools/deploy/instrument/ActivityThreadInstrumentation;",
+        "handleFindResourceEntry");
+
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(
+        kEntryHook, slicer::EntryHook::Tweak::ThisAsObject);
+    if (!mi.InstrumentMethod(kHandlePackageBroadcast)) {
+      Log::E("Failed to instrument DexPathList$Element");
+    }
+  }
+};
+
 // TODO: Static globals are gross, but we also only have one class being
 // instrumented, so anything more elegant feels like overkill right now. If we
 // instrument a few more things, probably worth refactoring this.
