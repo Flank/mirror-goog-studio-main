@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -41,6 +42,7 @@ import java.util.zip.Deflater
 import javax.inject.Inject
 
 /** Bundle all library Java resources in a jar.  */
+@CacheableTask
 abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
     @get:OutputFile

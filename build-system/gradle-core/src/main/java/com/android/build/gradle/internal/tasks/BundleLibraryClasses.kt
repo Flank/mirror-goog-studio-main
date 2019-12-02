@@ -31,6 +31,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -52,6 +53,7 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
  * Bundle all library classes in a jar. Additional filters can be specified, in addition to ones
  * defined in [LibraryAarJarsTask.getDefaultExcludes].
  */
+@CacheableTask
 abstract class BundleLibraryClasses : NonIncrementalTask() {
 
     @get:OutputFile

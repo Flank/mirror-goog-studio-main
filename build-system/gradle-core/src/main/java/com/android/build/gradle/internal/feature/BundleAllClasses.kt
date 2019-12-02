@@ -33,6 +33,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
@@ -49,6 +50,7 @@ import java.util.zip.Deflater
  * - dependent features to compile against these classes without bundling them.
  * - unit tests to compile and run them against these classes.
  */
+@CacheableTask
 abstract class BundleAllClasses : NonIncrementalTask() {
 
     @get:OutputFile
