@@ -13,44 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.api
 
-package com.android.build.gradle.api;
-import com.android.annotations.NonNull;
-import groovy.lang.Closure;
+import groovy.lang.Closure
 
 /**
  * An AndroidSourceSet represents a logical group of Java, aidl and RenderScript sources
  * as well as Android and non-Android (Java-style) resources.
  */
-public interface AndroidSourceSet {
-
+interface AndroidSourceSet {
     /**
      * Returns the name of this source set.
      *
      * @return The name. Never returns null.
      */
-    @NonNull
-    String getName();
+    fun getName(): String
 
     /**
      * Returns the Java resources which are to be copied into the javaResources output directory.
-     *
-     * @return the java resources. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getResources();
+    val resources: AndroidSourceDirectorySet
 
     /**
      * Configures the Java resources for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet} which
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet] which
      * contains the java resources.
      *
      * @param configureClosure The closure to use to configure the javaResources.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet resources(Closure configureClosure);
+    fun resources(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * Returns the Java source which is to be compiled by the Java compiler into the class output
@@ -58,241 +52,220 @@ public interface AndroidSourceSet {
      *
      * @return the Java source. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getJava();
+    val java: AndroidSourceDirectorySet
 
     /**
      * Configures the Java source for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet} which
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet] which
      * contains the Java source.
      *
      * @param configureClosure The closure to use to configure the Java source.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet java(Closure configureClosure);
+    fun java(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * Returns the name of the compile configuration for this source set.
      *
-     * @deprecated use {@link #getImplementationConfigurationName()}
      */
-    @NonNull
-    @Deprecated
-    String getCompileConfigurationName();
+    @get:Deprecated("use {@link #getImplementationConfigurationName()}")
+    val compileConfigurationName: String
 
     /**
      * Returns the name of the runtime configuration for this source set.
      *
-     * @deprecated use {@link #getRuntimeOnlyConfigurationName()}
      */
-    @NonNull
-    @Deprecated
-    String getPackageConfigurationName();
+    @get:Deprecated("use {@link #getRuntimeOnlyConfigurationName()}")
+    val packageConfigurationName: String
 
     /**
      * Returns the name of the compiled-only configuration for this source set.
      *
-     * @deprecated use {@link #getCompileOnlyConfigurationName()}
      */
-    @NonNull
-    @Deprecated
-    String getProvidedConfigurationName();
+    @get:Deprecated("use {@link #getCompileOnlyConfigurationName()}")
+    val providedConfigurationName: String
 
-    /** Returns the name of the api configuration for this source set. */
-    @NonNull
-    String getApiConfigurationName();
+    /** Returns the name of the api configuration for this source set.  */
+    val apiConfigurationName: String
 
     /**
      * Returns the name of the compileOnly configuration for this source set.
      */
-    @NonNull
-    String getCompileOnlyConfigurationName();
+    val compileOnlyConfigurationName: String
 
     /**
      * Returns the name of the implemenation configuration for this source set.
      */
-    @NonNull
-    String getImplementationConfigurationName();
+    val implementationConfigurationName: String
 
     /**
      * Returns the name of the implemenation configuration for this source set.
      */
-    @NonNull
-    String getRuntimeOnlyConfigurationName();
+    val runtimeOnlyConfigurationName: String
 
     /**
      * Returns the name of the wearApp configuration for this source set.
      */
-    @NonNull
-    String getWearAppConfigurationName();
+    val wearAppConfigurationName: String
 
     /**
      * Returns the name of the annotation processing tool classpath for this source set.
      */
-    @NonNull
-    String getAnnotationProcessorConfigurationName();
+    val annotationProcessorConfigurationName: String
 
     /**
      * The Android Manifest file for this source set.
      *
      * @return the manifest. Never returns null.
      */
-    @NonNull
-    AndroidSourceFile getManifest();
+    val manifest: AndroidSourceFile
 
     /**
      * Configures the location of the Android Manifest for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceFile} which contains the
+     *
+     * The given closure is used to configure the [AndroidSourceFile] which contains the
      * manifest.
      *
      * @param configureClosure The closure to use to configure the Android Manifest.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet manifest(Closure configureClosure);
+    fun manifest(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android Resources directory for this source set.
      *
      * @return the resources. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getRes();
+    val res: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android Resources for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the resources.
      *
      * @param configureClosure The closure to use to configure the Resources.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet res(Closure configureClosure);
+    fun res(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android Assets directory for this source set.
      *
      * @return the assets. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getAssets();
+    val assets: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android Assets for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the assets.
      *
      * @param configureClosure The closure to use to configure the Assets.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet assets(Closure configureClosure);
+    fun assets(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android AIDL source directory for this source set.
      *
      * @return the source. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getAidl();
+    val aidl: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android AIDL source for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the AIDL source.
      *
      * @param configureClosure The closure to use to configure the AIDL source.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet aidl(Closure configureClosure);
+    fun aidl(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android RenderScript source directory for this source set.
      *
      * @return the source. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getRenderscript();
+    val renderscript: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android RenderScript source for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the Renderscript source.
      *
      * @param configureClosure The closure to use to configure the Renderscript source.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet renderscript(Closure configureClosure);
+    fun renderscript(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android JNI source directory for this source set.
      *
      * @return the source. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getJni();
+    val jni: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android JNI source for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the JNI source.
      *
      * @param configureClosure The closure to use to configure the JNI source.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet jni(Closure configureClosure);
+    fun jni(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android JNI libs directory for this source set.
      *
      * @return the libs. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getJniLibs();
+    val jniLibs: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android JNI libs for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the JNI libs.
      *
      * @param configureClosure The closure to use to configure the JNI libs.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet jniLibs(Closure configureClosure);
+    fun jniLibs(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * The Android shaders directory for this source set.
      *
      * @return the shaders. Never returns null.
      */
-    @NonNull
-    AndroidSourceDirectorySet getShaders();
+    val shaders: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android shaders for this set.
      *
-     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet}
+     *
+     * The given closure is used to configure the [AndroidSourceDirectorySet]
      * which contains the shaders.
      *
      * @param configureClosure The closure to use to configure the shaders.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet shaders(Closure configureClosure);
+    fun shaders(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * Sets the root of the source sets to a given path.
@@ -302,6 +275,5 @@ public interface AndroidSourceSet {
      * @param path the root directory.
      * @return this
      */
-    @NonNull
-    AndroidSourceSet setRoot(String path);
+    fun setRoot(path: String): AndroidSourceSet
 }

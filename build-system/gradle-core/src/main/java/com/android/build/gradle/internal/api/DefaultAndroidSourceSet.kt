@@ -47,30 +47,30 @@ open class DefaultAndroidSourceSet @Inject constructor(
     private val publishPackage: Boolean
 ) : AndroidSourceSet, SourceProvider {
 
-    private val javaSource: AndroidSourceDirectorySet
-    private val javaResources: AndroidSourceDirectorySet
-    private val manifest: AndroidSourceFile
-    private val assets: AndroidSourceDirectorySet
-    private val res: AndroidSourceDirectorySet
-    private val aidl: AndroidSourceDirectorySet
-    private val renderscript: AndroidSourceDirectorySet
-    private val jni: AndroidSourceDirectorySet
-    private val jniLibs: AndroidSourceDirectorySet
-    private val shaders: AndroidSourceDirectorySet
+    final override val java: AndroidSourceDirectorySet
+    final override val resources: AndroidSourceDirectorySet
+    final override val manifest: AndroidSourceFile
+    final override val assets: AndroidSourceDirectorySet
+    final override val res: AndroidSourceDirectorySet
+    final override val aidl: AndroidSourceDirectorySet
+    final override val renderscript: AndroidSourceDirectorySet
+    final override val jni: AndroidSourceDirectorySet
+    final override val jniLibs: AndroidSourceDirectorySet
+    final override val shaders: AndroidSourceDirectorySet
     private val displayName : String = GUtil.toWords(this.name)
 
     init {
-        javaSource = DefaultAndroidSourceDirectorySet(
+        java = DefaultAndroidSourceDirectorySet(
             "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES
         )
-        javaSource.filter.include("**/*.java")
+        java.filter.include("**/*.java")
 
-        javaResources = DefaultAndroidSourceDirectorySet(
+        resources = DefaultAndroidSourceDirectorySet(
             "$displayName Java resources",
             project,
             SourceArtifactType.JAVA_RESOURCES
         )
-        javaResources.filter.exclude("**/*.java", "**/*.kt")
+        resources.filter.exclude("**/*.java", "**/*.kt")
 
         manifest = DefaultAndroidSourceFile("$displayName manifest", project)
 
@@ -125,19 +125,25 @@ open class DefaultAndroidSourceSet @Inject constructor(
         }
     }
 
-    override fun getApiConfigurationName() = getName(CONFIG_NAME_API)
+    override val apiConfigurationName: String
+        get() = getName(CONFIG_NAME_API)
 
-    override fun getCompileOnlyConfigurationName() = getName(CONFIG_NAME_COMPILE_ONLY)
+    override val compileOnlyConfigurationName: String
+        get() = getName(CONFIG_NAME_COMPILE_ONLY)
 
-    override fun getImplementationConfigurationName() = getName(CONFIG_NAME_IMPLEMENTATION)
+    override val implementationConfigurationName: String
+        get() = getName(CONFIG_NAME_IMPLEMENTATION)
 
-    override fun getRuntimeOnlyConfigurationName() = getName(CONFIG_NAME_RUNTIME_ONLY)
+    override val runtimeOnlyConfigurationName: String
+        get() = getName(CONFIG_NAME_RUNTIME_ONLY)
 
     @Suppress("OverridingDeprecatedMember")
-    override fun getCompileConfigurationName() = getName(CONFIG_NAME_COMPILE)
+    override val compileConfigurationName: String
+        get() = getName(CONFIG_NAME_COMPILE)
 
     @Suppress("OverridingDeprecatedMember")
-    override fun getPackageConfigurationName(): String {
+    override val packageConfigurationName: String
+        get() {
         if (publishPackage) {
             return getName(CONFIG_NAME_PUBLISH)
         }
@@ -146,87 +152,61 @@ open class DefaultAndroidSourceSet @Inject constructor(
     }
 
     @Suppress("OverridingDeprecatedMember")
-    override fun getProvidedConfigurationName() = getName(CONFIG_NAME_PROVIDED)
+    override val providedConfigurationName = getName(CONFIG_NAME_PROVIDED)
 
-    override fun getWearAppConfigurationName() = getName(CONFIG_NAME_WEAR_APP)
+    override val wearAppConfigurationName = getName(CONFIG_NAME_WEAR_APP)
 
-    override fun getAnnotationProcessorConfigurationName()
+    override val annotationProcessorConfigurationName
+    get()
             = getName(CONFIG_NAME_ANNOTATION_PROCESSOR)
 
-    override fun getManifest(): AndroidSourceFile {
-        return manifest
-    }
-
     override fun manifest(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getManifest())
+        ConfigureUtil.configure(configureClosure, manifest)
         return this
-    }
-
-    override fun getRes(): AndroidSourceDirectorySet {
-        return res
     }
 
     override fun res(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getRes())
+        ConfigureUtil.configure(configureClosure, res)
         return this
     }
 
-    override fun getAssets(): AndroidSourceDirectorySet {
-        return assets
-    }
 
     override fun assets(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getAssets())
+        ConfigureUtil.configure(configureClosure, assets)
         return this
     }
 
-    override fun getAidl(): AndroidSourceDirectorySet {
-        return aidl
-    }
+
 
     override fun aidl(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getAidl())
+        ConfigureUtil.configure(configureClosure, aidl)
         return this
     }
 
-    override fun getRenderscript(): AndroidSourceDirectorySet {
-        return renderscript
-    }
+
 
     override fun renderscript(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getRenderscript())
+        ConfigureUtil.configure(configureClosure, renderscript)
         return this
     }
 
-    override fun getJni(): AndroidSourceDirectorySet {
-        return jni
-    }
+
 
     override fun jni(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getJni())
+        ConfigureUtil.configure(configureClosure, jni)
         return this
     }
 
-    override fun getJniLibs(): AndroidSourceDirectorySet {
-        return jniLibs
-    }
+
 
     override fun jniLibs(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getJniLibs())
+        ConfigureUtil.configure(configureClosure, jniLibs)
         return this
     }
 
     override fun shaders(configureClosure: Closure<*>): AndroidSourceSet {
-        ConfigureUtil.configure(configureClosure, getShaders())
+        ConfigureUtil.configure(configureClosure, shaders)
         return this
-    }
-
-    override fun getShaders(): AndroidSourceDirectorySet {
-        return shaders
-    }
-
-    override fun getJava(): AndroidSourceDirectorySet {
-        return javaSource
     }
 
     override fun java(configureClosure: Closure<*>): AndroidSourceSet {
@@ -234,9 +214,6 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return this
     }
 
-    override fun getResources(): AndroidSourceDirectorySet {
-        return javaResources
-    }
 
     override fun resources(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, resources)
@@ -248,8 +225,8 @@ open class DefaultAndroidSourceSet @Inject constructor(
     }
 
     private fun initRoot(path: String): AndroidSourceSet {
-        javaSource.setSrcDirs(listOf("$path/java"))
-        javaResources.setSrcDirs(listOf("$path/resources"))
+        java.setSrcDirs(listOf("$path/java"))
+        resources.setSrcDirs(listOf("$path/resources"))
         res.setSrcDirs(listOf("$path/${SdkConstants.FD_RES}"))
         assets.setSrcDirs(listOf("$path/${SdkConstants.FD_ASSETS}"))
         manifest.srcFile("$path/${SdkConstants.FN_ANDROID_MANIFEST_XML}")
@@ -272,40 +249,41 @@ open class DefaultAndroidSourceSet @Inject constructor(
     }
 
     override fun getManifestFile(): File {
-        return getManifest().srcFile
+        return manifest.srcFile
     }
 
     override fun getAidlDirectories(): Set<File> {
-        return getAidl().srcDirs
+        return aidl.srcDirs
     }
 
     override fun getRenderscriptDirectories(): Set<File> {
-        return getRenderscript().srcDirs
+        return renderscript.srcDirs
     }
 
     override fun getCDirectories(): Set<File> {
-        return getJni().srcDirs
+        return jni.srcDirs
     }
 
     override fun getCppDirectories(): Set<File> {
         // The C and C++ directories are currently the same.  This may change in the future when
         // we use Gradle's native source sets.
-        return getJni().srcDirs
+        return jni.srcDirs
     }
 
     override fun getResDirectories(): Set<File> {
-        return getRes().srcDirs
+        return res.srcDirs
     }
 
     override fun getAssetsDirectories(): Set<File> {
-        return getAssets().srcDirs
+        return assets.srcDirs
     }
 
     override fun getJniLibsDirectories(): Collection<File> {
-        return getJniLibs().srcDirs
+        return jniLibs.srcDirs
     }
 
     override fun getShadersDirectories(): Collection<File> {
-        return getShaders().srcDirs
+        return shaders.srcDirs
     }
+
 }

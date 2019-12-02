@@ -13,98 +13,86 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.api
 
-package com.android.build.gradle.api;
-
-import com.android.annotations.NonNull;
-import java.io.File;
-import java.util.List;
-import java.util.Set;
-import org.gradle.api.Incubating;
-import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.tasks.util.PatternFilterable;
+import org.gradle.api.Incubating
+import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.util.PatternFilterable
+import java.io.File
 
 /**
  * An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.
  */
-public interface AndroidSourceDirectorySet extends PatternFilterable {
-
+interface AndroidSourceDirectorySet : PatternFilterable {
     /**
      * A concise name for the source directory (typically used to identify it in a collection).
      */
-    @NonNull
-    String getName();
+    fun getName(): String
 
     /**
      * Adds the given source directory to this set.
      *
      * @param srcDir The source directory. This is evaluated as for
-     *                {@link org.gradle.api.Project#file(Object)}
+     * [org.gradle.api.Project.file]
      * @return this
      */
-    @NonNull
-    AndroidSourceDirectorySet srcDir(Object srcDir);
+    fun srcDir(srcDir: Any): AndroidSourceDirectorySet
 
     /**
      * Adds the given source directories to this set.
      *
      * @param srcDirs The source directories. These are evaluated as for
-     *                {@link org.gradle.api.Project#files(Object...)}
+     * [org.gradle.api.Project.files]
      * @return this
      */
-    @NonNull
-    AndroidSourceDirectorySet srcDirs(Object... srcDirs);
+    fun srcDirs(vararg srcDirs: Any): AndroidSourceDirectorySet
 
     /**
      * Sets the source directories for this set.
      *
      * @param srcDirs The source directories. These are evaluated as for
-     *                {@link org.gradle.api.Project#files(Object...)}
+     * [org.gradle.api.Project.files]
      * @return this
      */
-    @NonNull
-    AndroidSourceDirectorySet setSrcDirs(Iterable<?> srcDirs);
+    fun setSrcDirs(srcDirs: Iterable<*>): AndroidSourceDirectorySet
 
     /**
-     * Returns the list of source files as a {@link org.gradle.api.file.FileTree}
+     * Returns the list of source files as a [org.gradle.api.file.FileTree]
      *
-     * @return a non null {@link FileTree} for all the source files in this set.
+     * @return a non null [FileTree] for all the source files in this set.
      */
-    @NonNull
-    FileTree getSourceFiles();
+    fun getSourceFiles(): FileTree
 
     /**
      * Returns the filter used to select the source from the source directories.
      *
-     * @return a non null {@link org.gradle.api.tasks.util.PatternFilterable}
+     * @return a non null [org.gradle.api.tasks.util.PatternFilterable]
      */
-    @NonNull
-    PatternFilterable getFilter();
+    val filter: PatternFilterable
 
     /**
-     * Returns the source folders as a list of {@link org.gradle.api.file.ConfigurableFileTree}
+     * Returns the source folders as a list of [org.gradle.api.file.ConfigurableFileTree]
      *
-     * <p>This is used as the input to the java compile to enable incremental compilation.
      *
-     * @return a non null list of {@link ConfigurableFileTree}s, one per source dir in this set.
+     * This is used as the input to the java compile to enable incremental compilation.
+     *
+     * @return a non null list of [ConfigurableFileTree]s, one per source dir in this set.
      */
-    @NonNull
-    List<ConfigurableFileTree> getSourceDirectoryTrees();
+    fun getSourceDirectoryTrees(): List<ConfigurableFileTree>
 
     /**
      * Returns the resolved directories.
      *
-     * <p>Setter can be called with a collection of {@link Object}s, just like
-     * Gradle's {@code project.file(...)}.
+     * Setter can be called with a collection of [Object]s, just like
+     * Gradle's `project.file(...)`.
      *
      * @return a non null set of File objects.
      */
-    @NonNull
-    Set<File> getSrcDirs();
+    val srcDirs: Set<File>
 
-    /** Returns the [FileCollection] that represents this source sets. */
+    /** Returns the [FileCollection] that represents this source sets.  */
     @Incubating
-    FileCollection getBuildableArtifact();
+    fun getBuildableArtifact(): FileCollection
 }

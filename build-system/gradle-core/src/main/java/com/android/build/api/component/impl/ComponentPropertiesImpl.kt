@@ -399,7 +399,7 @@ abstract class ComponentPropertiesImpl(
         // First the actual source folders.
         val providers = variantSources.sortedSourceProviders
         for (provider in providers) {
-            sourceSets.addAll((provider as AndroidSourceSet).java.sourceDirectoryTrees)
+            sourceSets.addAll((provider as AndroidSourceSet).java.getSourceDirectoryTrees())
         }
 
         // for the other, there's no duplicate so no issue.

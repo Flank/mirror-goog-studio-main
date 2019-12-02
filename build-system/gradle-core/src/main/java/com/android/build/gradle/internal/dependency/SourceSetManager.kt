@@ -20,7 +20,7 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.scope.DelayedActionsExecutor
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor 
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -72,7 +72,7 @@ class SourceSetManager(
         // TODO Fix this in gradle sync.
         val compile = createConfiguration(
                 compileName,
-                getDeprecatedConfigDesc("Compile", sourceSet.name, implementationName),
+                getDeprecatedConfigDesc("Compile", sourceSet.getName(), implementationName),
                 "compile" == compileName || "testCompile" == compileName /*canBeResolved*/)
         compile.dependencies
                 .whenObjectAdded(
@@ -86,11 +86,11 @@ class SourceSetManager(
         val packageConfigDescription: String
         packageConfigDescription = if (publishPackage) {
             getDeprecatedConfigDesc("Publish",
-                sourceSet.name,
+                sourceSet.getName(),
                 runtimeOnlyName)
         } else {
             getDeprecatedConfigDesc("Apk",
-                sourceSet.name,
+                sourceSet.getName(),
                 runtimeOnlyName)
         }
 
@@ -107,7 +107,7 @@ class SourceSetManager(
         val providedName = sourceSet.providedConfigurationName
         val provided = createConfiguration(
                 providedName,
-                getDeprecatedConfigDesc("Provided", sourceSet.name, compileOnlyName))
+                getDeprecatedConfigDesc("Provided", sourceSet.getName(), compileOnlyName))
         provided.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(
@@ -117,7 +117,7 @@ class SourceSetManager(
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         // then the new configurations.
-        val api = createConfiguration(apiName, getConfigDesc("API", sourceSet.name))
+        val api = createConfiguration(apiName, getConfigDesc("API", sourceSet.getName()))
         api.extendsFrom(compile)
         if (isTestComponent) {
             api.dependencies
@@ -131,25 +131,25 @@ class SourceSetManager(
 
         val implementation = createConfiguration(
                 implementationName,
-                getConfigDesc("Implementation only", sourceSet.name))
+                getConfigDesc("Implementation only", sourceSet.getName()))
         implementation.extendsFrom(api)
 
         val runtimeOnly = createConfiguration(
-                runtimeOnlyName, getConfigDesc("Runtime only", sourceSet.name))
+                runtimeOnlyName, getConfigDesc("Runtime only", sourceSet.getName()))
         runtimeOnly.extendsFrom(apk)
 
         val compileOnly = createConfiguration(
-                compileOnlyName, getConfigDesc("Compile only", sourceSet.name))
+                compileOnlyName, getConfigDesc("Compile only", sourceSet.getName()))
         compileOnly.extendsFrom(provided)
 
         // then the secondary configurations.
         val wearConfig = createConfiguration(
                 sourceSet.wearAppConfigurationName,
-                "Link to a wear app to embed for object '" + sourceSet.name + "'.")
+                "Link to a wear app to embed for object '" + sourceSet.getName() + "'.")
 
         createConfiguration(
                 sourceSet.annotationProcessorConfigurationName,
-                "Classpath for the annotation processor for '" + sourceSet.name + "'.")
+                "Classpath for the annotation processor for '" + sourceSet.getName() + "'.")
     }
 
     /**
@@ -189,8 +189,8 @@ class SourceSetManager(
     // This will alert users who accidentally mistype the name of a sourceSet in their buildscript
     fun checkForUnconfiguredSourceSets() {
         sourceSetsContainer.forEach { sourceSet ->
-            if (!configuredSourceSets.contains(sourceSet.name)) {
-                val message = ("The SourceSet '${sourceSet.name}' is not recognized " +
+            if (!configuredSourceSets.contains(sourceSet.getName())) {
+                val message = ("The SourceSet '${sourceSet.getName()}' is not recognized " +
                         "by the Android Gradle Plugin. Perhaps you misspelled something?")
                 dslServices.issueReporter.reportError(IssueReporter.Type.GENERIC, message)
             }

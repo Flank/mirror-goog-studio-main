@@ -13,33 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.api
 
-package com.android.build.gradle.api;
-
-import java.io.File;
+import java.io.File
 
 /**
  * An AndroidSourceFile represents a single file input for an Android project.
  */
-public interface AndroidSourceFile {
-
+interface AndroidSourceFile {
     /**
      * A concise name for the source directory (typically used to identify it in a collection).
      */
-    String getName();
+    fun getName(): String
 
-    /**
-     * Returns the file.
-     * @return the file input.
-     */
-    File getSrcFile();
+    /** The source file */
+    val srcFile: File
 
     /**
      * Sets the location of the file. Returns this object.
      *
      * @param srcPath The source directory. This is evaluated as for
-     *                {@link org.gradle.api.Project#file(Object)}
+     * [org.gradle.api.Project.file]
      * @return the AndroidSourceFile object
      */
-    AndroidSourceFile srcFile(Object srcPath);
+    fun srcFile(srcPath: Any): AndroidSourceFile
 }

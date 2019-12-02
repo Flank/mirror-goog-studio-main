@@ -315,7 +315,7 @@ abstract class BaseVariantData(
     val androidResources: Map<String, FileCollection>
         get() = variantSources
             .sortedSourceProviders
-            .associate { it.name to (it as AndroidSourceSet).res.buildableArtifact }
+            .associate { it.name to (it as AndroidSourceSet).res.getBuildableArtifact() }
 
     /**
      * Returns the Java folders needed for code coverage report.

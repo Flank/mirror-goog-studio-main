@@ -46,7 +46,7 @@ class DefaultAndroidSourceDirectorySet(
 )
     : AndroidSourceDirectorySet {
     private val source = Lists.newArrayList<Any>()
-    private val filter = PatternSet()
+    override val filter = PatternSet()
 
     override fun getName(): String {
         return name
@@ -73,10 +73,10 @@ class DefaultAndroidSourceDirectorySet(
     override fun getSourceFiles(): FileTree {
         var src: FileTree? = null
         val sources = srcDirs
-        if (!sources.isEmpty()) {
+        if (sources.isNotEmpty()) {
             src = project.files(ArrayList<Any>(sources)).asFileTree.matching(filter)
         }
-        return if (src == null) project.files().asFileTree else src
+        return src ?: project.files().asFileTree
     }
 
     override fun getSourceDirectoryTrees(): List<ConfigurableFileTree> {
@@ -91,13 +91,8 @@ class DefaultAndroidSourceDirectorySet(
                 .collect(ImmutableList.toImmutableList())
     }
 
-    override fun getSrcDirs(): Set<File> {
-        return ImmutableSet.copyOf(project.files(*source.toTypedArray()).files)
-    }
-
-    override fun getFilter(): PatternFilterable {
-        return filter
-    }
+    override val srcDirs: Set<File>
+        get() = ImmutableSet.copyOf(project.files(*source.toTypedArray()).files)
 
     override fun toString()= "${super.toString()}, type=${type}, source=$source"
 
