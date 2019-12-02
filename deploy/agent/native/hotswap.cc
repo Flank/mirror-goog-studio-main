@@ -227,8 +227,8 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     DefineNewClasses(swap_request);
   }
 
-  size_t modified_classes = swap_request.modified_classes_size();
-  jvmtiClassDefinition* def = new jvmtiClassDefinition[modified_classes];
+  size_t num_modified_classes = swap_request.modified_classes_size();
+  jvmtiClassDefinition* def = new jvmtiClassDefinition[num_modified_classes];
 
   // Build a list of classes that we might need to check for detailed errors.
   const std::string& r_class_prefix = "/R$";
@@ -237,7 +237,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   jvmtiExtensionFunction const* extension =
       GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);
 
-  for (size_t i = 0; i < modified_classes; i++) {
+  for (size_t i = 0; i < num_modified_classes; i++) {
     const proto::ClassDef& class_def = swap_request.modified_classes(i);
     const std::string code = class_def.dex();
 
@@ -274,7 +274,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   jvmtiError error_num = JVMTI_ERROR_NONE;
 
   if (extension == nullptr) {
-    error_num = jvmti_->RedefineClasses(modified_classes, def);
+    error_num = jvmti_->RedefineClasses(num_modified_classes, def);
   } else {
     Log::I("Using Structure Redefinition Extension");
 
@@ -295,7 +295,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
       Log::E("%s", suspend_error.c_str());
     }
 
-    for (size_t i = 0; i < modified_classes; i++) {
+    for (size_t i = 0; i < num_modified_classes; i++) {
       // Currently only supports one class per redefinition request.
       Log::I("Calling Redefinition Extension");
       error_num = (*extension)(jvmti_, def[i].klass, def[i].class_bytes,
@@ -332,7 +332,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     jvmti_->Deallocate((unsigned char*)error);
   }
 
-  for (size_t i = 0; i < modified_classes; i++) {
+  for (size_t i = 0; i < num_modified_classes; i++) {
     delete[] def[i].class_bytes;
   }
 
