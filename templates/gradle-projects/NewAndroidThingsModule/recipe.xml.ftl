@@ -37,4 +37,7 @@
     <copy from="root/res/values/colors.xml"
             to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
 
+    <#if generateKotlin && useAndroidX>
+        <dependency mavenUrl="androidx.core:core-ktx:+" />
+    </#if>
 </recipe>

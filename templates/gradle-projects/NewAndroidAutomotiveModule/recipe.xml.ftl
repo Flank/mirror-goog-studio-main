@@ -28,8 +28,6 @@
 
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 
-    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
-
     <copy from="root://gradle-projects/common/gitignore"
             to="${escapeXmlAttribute(projectOut)}/.gitignore" />
 
@@ -74,4 +72,5 @@
 <#if generateKotlin && useAndroidX>
     <dependency mavenUrl="androidx.core:core-ktx:+" />
 </#if>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 </recipe>
