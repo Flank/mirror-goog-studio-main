@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
@@ -39,7 +40,6 @@ import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ClassField
 import com.android.builder.model.InstantRun
-import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.AssetSet
@@ -940,7 +940,9 @@ open class GradleVariantConfiguration internal constructor(
                 return signingConfigOverride
             }
             val signingConfig: SigningConfig? = buildType.signingConfig
-            return signingConfig ?: mergedFlavor.signingConfig
+            // cast builder.SigningConfig to dsl.SigningConfig because MergedFlavor merges
+            // dsl.SigningConfig of ProductFlavor objects
+            return signingConfig ?: mergedFlavor.signingConfig as SigningConfig?
         }
 
     val isSigningReady: Boolean

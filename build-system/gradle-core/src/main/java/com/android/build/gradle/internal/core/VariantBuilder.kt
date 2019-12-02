@@ -21,11 +21,11 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase

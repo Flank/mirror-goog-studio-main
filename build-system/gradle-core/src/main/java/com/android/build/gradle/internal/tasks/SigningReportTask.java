@@ -22,8 +22,8 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;

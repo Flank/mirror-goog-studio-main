@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.dsl.SigningConfig
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
-import com.android.builder.model.SigningConfig
 import com.android.builder.signing.DefaultSigningConfig
 import com.android.builder.utils.SynchronizedFile
 import com.android.utils.FileUtils
