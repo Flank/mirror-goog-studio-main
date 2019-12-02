@@ -44,8 +44,8 @@ public class SigningConfig extends DefaultSigningConfig
         setStorePassword(that.getStorePassword());
         setKeyAlias(that.getKeyAlias());
         setKeyPassword(that.getKeyPassword());
-        setV1SigningEnabled(that.isV1SigningEnabled());
-        setV2SigningEnabled(that.isV2SigningEnabled());
+        internalSetV1SigningEnabled(that.isV1SigningEnabled());
+        internalSetV2SigningEnabled(that.isV2SigningEnabled());
         setStoreType(that.getStoreType());
         return this;
     }
@@ -140,6 +140,8 @@ public class SigningConfig extends DefaultSigningConfig
                 .add("storeType", getStoreType())
                 .add("v1SigningEnabled", isV1SigningEnabled())
                 .add("v2SigningEnabled", isV2SigningEnabled())
+                .add("v1SigningConfigured", isV1SigningConfigured())
+                .add("v2SigningConfigured", isV2SigningConfigured())
                 .toString();
     }
 }

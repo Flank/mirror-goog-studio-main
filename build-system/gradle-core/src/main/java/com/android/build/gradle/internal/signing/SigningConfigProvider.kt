@@ -120,7 +120,9 @@ class SigningConfigProvider(
                             keyAlias = signingOptions.keyAlias,
                             keyPassword = signingOptions.keyPassword,
                             v1SigningEnabled = signingOptions.v1Enabled!!,
-                            v2SigningEnabled = signingOptions.v2Enabled!!
+                            v2SigningEnabled = signingOptions.v2Enabled!!,
+                            v1SigningConfigured = signingOptions.v1Configured,
+                            v2SigningConfigured = signingOptions.v2Configured
                         ),
                         signingConfigFileCollection = null,
                         // Validation for this case is currently missing because the base module

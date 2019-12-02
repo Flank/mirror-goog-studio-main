@@ -210,31 +210,48 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * This method has a decision logic on whether to sign with v1 signature or not. Even if we have
-     * v1 signature specified it might be useless if the target or minSdk version is high enough and
-     * we sign with v2 since in that case only v2 is checked.
+     * This method has a decision logic on whether to sign with v1 signature or not.
      *
-     * @param v1Enabled if v1 signature is enabled by the user
-     * @param v2Enabled if v2 signature is enabled by the user
+     * @param v1Enabled if v1 signature is enabled by default or by the user
+     * @param v1Configured if v1 signature is configured by the user
      * @param minSdk the minimum SDK
      * @param targetApi optional injected target Api
      * @return if we actually sign with v1 signature
      */
     @VisibleForTesting
     static boolean enableV1Signing(
-            boolean v1Enabled, boolean v2Enabled, int minSdk, @Nullable Integer targetApi) {
+            boolean v1Enabled, boolean v1Configured, int minSdk, @Nullable Integer targetApi) {
         if (!v1Enabled) {
             return false;
         }
 
-        // If there is no v2 signature specified we have to sign with v1 even if the versions are
-        // high enough otherwise we would not have signed at all
+        // we only do optimization(disable signing) if there is no user input
+        if (!v1Configured && (targetApi != null && targetApi >= NO_V1_SDK || minSdk >= NO_V1_SDK)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * This method has a decision logic on whether to sign with v2 signature or not.
+     *
+     * @param v2Enabled if v2 signature is enabled by default or by the user
+     * @param v2Configured if v2 signature is configured by the user
+     * @param targetApi optional injected target Api
+     * @return if we actually sign with v2 signature
+     */
+    @VisibleForTesting
+    static boolean enableV2Signing(
+            boolean v2Enabled, boolean v2Configured, @Nullable Integer targetApi) {
         if (!v2Enabled) {
-            return true;
+            return false;
         }
 
-        // Case where both v1Enabled==true and v2Enabled==true
-        return (targetApi == null || targetApi < NO_V1_SDK) && minSdk < NO_V1_SDK;
+        // we only do optimization(disable signing) if there is no user input
+        if (!v2Configured && (targetApi != null && targetApi < NO_V1_SDK)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -246,7 +263,7 @@ public class IncrementalPackagerBuilder {
      * @return {@code this} for use with fluent-style notation
      */
     @NonNull
-    public IncrementalPackagerBuilder withSigning(
+    public IncrementalPackagerBuilder withSigning( //TODO change it to use dsl signingConfig class?
             @Nullable SigningConfigData signingConfig, int minSdk, @Nullable Integer targetApi) {
         if (signingConfig == null) {
             return this;
@@ -267,15 +284,19 @@ public class IncrementalPackagerBuilder {
                                     signingConfig.getKeyPassword(), error, "keyPassword"),
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
+
             boolean enableV1Signing =
                     enableV1Signing(
                             signingConfig.getV1SigningEnabled(),
-                            signingConfig.getV2SigningEnabled(),
+                            signingConfig.getV1SigningConfigured(),
                             minSdk,
                             targetApi);
             boolean enableV2Signing =
-                    (targetApi == null || targetApi >= NO_V1_SDK)
-                            && signingConfig.getV2SigningEnabled();
+                    enableV2Signing(
+                            signingConfig.getV2SigningEnabled(),
+                            signingConfig.getV2SigningConfigured(),
+                            targetApi);
+
             creationDataBuilder.setSigningOptions(
                     SigningOptions.builder()
                             .setKey(certificateInfo.getKey())

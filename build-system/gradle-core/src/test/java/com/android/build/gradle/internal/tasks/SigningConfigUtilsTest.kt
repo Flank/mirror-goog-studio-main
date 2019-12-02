@@ -59,7 +59,9 @@ class SigningConfigUtilsTest {
             keyAlias = "sampleKeyAlias",
             keyPassword = "sampleKeyPassword",
             v1SigningEnabled = false,
-            v2SigningEnabled = true
+            v2SigningEnabled = true,
+            v1SigningConfigured = false,
+            v2SigningConfigured = false
         )
         SigningConfigUtils.save(outputDirectory, signingConfig)
 
@@ -81,7 +83,9 @@ class SigningConfigUtilsTest {
             keyAlias = "sampleKeyAlias",
             keyPassword = "sampleKeyPassword",
             v1SigningEnabled = false,
-            v2SigningEnabled = true
+            v2SigningEnabled = true,
+            v1SigningConfigured = false,
+            v2SigningConfigured = false
         )
         SigningConfigUtils.save(outputDirectory, signingConfig)
 

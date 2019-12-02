@@ -72,7 +72,13 @@ data class SigningConfigData(
     val v1SigningEnabled: Boolean,
 
     @get:Input
-    val v2SigningEnabled: Boolean
+    val v2SigningEnabled: Boolean,
+
+    @get:Input
+    val v1SigningConfigured: Boolean,
+
+    @get:Input
+    val v2SigningConfigured: Boolean
 ) : Serializable {
 
     @Input
@@ -99,7 +105,9 @@ data class SigningConfigData(
                 keyAlias = signingConfig.keyAlias,
                 keyPassword = signingConfig.keyPassword,
                 v1SigningEnabled = signingConfig.isV1SigningEnabled,
-                v2SigningEnabled = signingConfig.isV2SigningEnabled
+                v2SigningEnabled = signingConfig.isV2SigningEnabled,
+                v1SigningConfigured = signingConfig.isV1SigningConfigured,
+                v2SigningConfigured = signingConfig.isV2SigningConfigured
             )
         }
     }
