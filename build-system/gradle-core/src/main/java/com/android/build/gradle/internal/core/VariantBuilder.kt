@@ -167,7 +167,7 @@ abstract class VariantBuilder protected constructor(
 
     var variantSourceProvider: SourceProvider? = null
     var multiFlavorSourceProvider: SourceProvider? = null
-    var testedVariant: VariantDslInfo? = null
+    var testedVariant: VariantDslInfoImpl? = null
 
     fun addProductFlavor(
         productFlavor: ProductFlavor,
@@ -180,7 +180,7 @@ abstract class VariantBuilder protected constructor(
     }
 
     /** Creates a variant configuration  */
-    abstract fun createVariantDslInfo(): VariantDslInfo
+    abstract fun createVariantDslInfo(): VariantDslInfoImpl
 
     fun createVariantSources(): VariantSources {
         return VariantSources(
@@ -233,8 +233,8 @@ private class VariantConfigurationBuilder(
     isInExecutionPhase
 ) {
 
-    override fun createVariantDslInfo(): VariantDslInfo {
-        return VariantDslInfo(
+    override fun createVariantDslInfo(): VariantDslInfoImpl {
+        return VariantDslInfoImpl(
             name,
             flavorName,
             variantType,
@@ -286,8 +286,8 @@ private class TestModuleConfigurationBuilder(
     isInExecutionPhase
 ) {
 
-    override fun createVariantDslInfo(): VariantDslInfo {
-        return object: VariantDslInfo(
+    override fun createVariantDslInfo(): VariantDslInfoImpl {
+        return object: VariantDslInfoImpl(
             name,
             flavorName,
             variantType,

@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.core.IVariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
@@ -1103,7 +1103,7 @@ public class VariantManager implements VariantModel {
 
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        VariantDslInfo variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
         VariantSources variantSources = variantBuilder.createVariantSources();
 
         // Only record release artifacts
@@ -1268,8 +1268,8 @@ public class VariantManager implements VariantModel {
                         globalScope.getErrorHandler(),
                         this::canParseManifest);
 
-        VariantDslInfo testedVariantDslInfo =
-                (VariantDslInfo) testedVariantData.getVariantDslInfo();
+        VariantDslInfoImpl testedVariantDslInfo =
+                (VariantDslInfoImpl) testedVariantData.getVariantDslInfo();
 
         variantBuilder.setTestedVariant(testedVariantDslInfo);
 

@@ -25,7 +25,7 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.IVariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -163,7 +163,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // case for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final IVariantDslInfo variantDslInfo = getVariantData().getVariantDslInfo();
-        return ((VariantDslInfo) variantDslInfo).getMergedFlavor();
+        return ((VariantDslInfoImpl) variantDslInfo).getMergedFlavor();
     }
 
     @NonNull

@@ -31,7 +31,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.IVariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
@@ -87,7 +87,7 @@ public abstract class BaseVariantData {
 
     @NonNull
     protected final TaskManager taskManager;
-    @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final VariantDslInfoImpl variantDslInfo;
     @NonNull private final VariantSources variantSources;
 
     private VariantDependencies variantDependency;
@@ -135,7 +135,7 @@ public abstract class BaseVariantData {
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfoImpl variantDslInfo,
             @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
         this.variantDslInfo = variantDslInfo;

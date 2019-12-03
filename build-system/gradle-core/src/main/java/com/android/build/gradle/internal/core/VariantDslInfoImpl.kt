@@ -69,7 +69,7 @@ import java.util.function.Supplier
  * Use [VariantBuilder] to instantiate.
  *
  */
-open class VariantDslInfo internal constructor(
+open class VariantDslInfoImpl internal constructor(
     override val fullName: String,
     override val flavorName: String,
     override val variantType: VariantType,
@@ -80,7 +80,7 @@ open class VariantDslInfo internal constructor(
     override val productFlavors: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    private val testedVariantImpl: VariantDslInfo? = null,
+    private val testedVariantImpl: VariantDslInfoImpl? = null,
     private val projectOptions: ProjectOptions,
     private val issueReporter: EvalIssueReporter,
     isInExecutionPhase: BooleanSupplier
@@ -411,7 +411,7 @@ open class VariantDslInfo internal constructor(
      */
     override val instrumentationRunner: String
         get() {
-            val variantDslInfo: VariantDslInfo =
+            val variantDslInfo: VariantDslInfoImpl =
                 if (variantType.isTestComponent) {
                     testedVariantImpl!!
                 } else {
@@ -432,7 +432,7 @@ open class VariantDslInfo internal constructor(
      */
     override val instrumentationRunnerArguments: Map<String, String>
         get() {
-            val variantDslInfo: VariantDslInfo =
+            val variantDslInfo: VariantDslInfoImpl =
                 if (variantType.isTestComponent) {
                     testedVariantImpl!!
                 } else {
@@ -449,7 +449,7 @@ open class VariantDslInfo internal constructor(
      */
     override val handleProfiling: Boolean
         get() {
-            val variantDslInfo: VariantDslInfo =
+            val variantDslInfo: VariantDslInfoImpl =
                 if (variantType.isTestComponent) {
                     testedVariantImpl!!
                 } else {
@@ -466,7 +466,7 @@ open class VariantDslInfo internal constructor(
      */
     override val functionalTest: Boolean
         get() {
-            val variantDslInfo: VariantDslInfo =
+            val variantDslInfo: VariantDslInfoImpl =
                 if (variantType.isTestComponent) {
                     testedVariantImpl!!
                 } else {
