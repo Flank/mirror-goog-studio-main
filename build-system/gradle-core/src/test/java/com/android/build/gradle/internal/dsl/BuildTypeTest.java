@@ -94,6 +94,8 @@ public class BuildTypeTest {
 
                     // Manually call getters that don't need to be copied.
                     original.getPostProcessingConfiguration();
+                    // Covered by original.isDefault
+                    original.getIsDefault();
                 });
     }
 

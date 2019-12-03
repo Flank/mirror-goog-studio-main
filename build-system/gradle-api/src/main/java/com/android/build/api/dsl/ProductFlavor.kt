@@ -22,4 +22,5 @@ import org.gradle.api.Named
 /** DSL object to configure product flavors. */
 @Incubating
 interface ProductFlavor : Named {
+    var isDefault: Boolean
 }

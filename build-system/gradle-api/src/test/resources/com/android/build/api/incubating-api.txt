@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1e18337a242eefe3d7bf9367118f3a46ec0dfafebc29e42881978d60191be844
+c5625ca5d70f846e45ef0727a7fd5f2821ebc828f1a68458ae4b2bf8e7b2e7be
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -73,6 +73,8 @@ com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named
+com.android.build.api.dsl.BuildType.isDefault: boolean ()
+com.android.build.api.dsl.BuildType.setDefault: void (boolean)
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
@@ -100,6 +102,8 @@ com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.a
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
+com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
+com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension

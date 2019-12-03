@@ -16,6 +16,8 @@
 
 package com.android.build.gradle
 
+import com.android.build.gradle.internal.api.VariantFilter
+import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
@@ -27,8 +29,12 @@ import com.android.builder.model.SyncIssue
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
+import groovy.lang.Closure
 import groovy.util.Eval
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.util.ConfigureUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -130,6 +136,20 @@ class DefaultVariantTest {
                     f3
                 }"""
             )
+        ).isEqualTo("f2Z")
+    }
+
+    @Test
+    fun `test explicit default flavor with single dimensions kotlin`() {
+        assertThat(
+            computeDefaultVariant {
+                flavorDimensions("dim")
+                buildTypes.create("a")
+                buildTypes.create("z").isDefault = true
+                productFlavors.create("f1")
+                productFlavors.create("f2").isDefault = true
+                productFlavors.create("f3")
+            }
         ).isEqualTo("f2Z")
     }
 
@@ -348,22 +368,36 @@ class DefaultVariantTest {
     private class Result(val defaultVariant: String?, val syncIssues: Set<SyncIssue>)
 
     private fun computeDefaultVariant(dsl: String, pluginType: TestProjects.Plugin = TestProjects.Plugin.APP): String? {
-        val result = computeDefaultVariantWithSyncIssues(dsl, pluginType)
+        return computeDefaultVariant(pluginType) { evalAndroidBlockGroovy(this, dsl) }
+    }
+
+    private fun computeDefaultVariant(
+        pluginType: TestProjects.Plugin = TestProjects.Plugin.APP,
+        dsl: BaseExtension.() -> Unit
+    ): String? {
+        val result = computeDefaultVariantWithSyncIssues(pluginType, dsl)
         assertThat(result.syncIssues).isEmpty()
         return result.defaultVariant
     }
 
-    private fun computeDefaultVariantWithSyncIssues(dsl: String, pluginType: TestProjects.Plugin = TestProjects.Plugin.APP) : Result {
+    private fun computeDefaultVariantWithSyncIssues(
+        dsl: String,
+        pluginType: TestProjects.Plugin = TestProjects.Plugin.APP
+    ): Result {
+        return computeDefaultVariantWithSyncIssues(pluginType) { evalAndroidBlockGroovy(this, dsl) }
+    }
+
+    private fun computeDefaultVariantWithSyncIssues(
+        pluginType: TestProjects.Plugin = TestProjects.Plugin.APP,
+        dsl: BaseExtension.() -> Unit
+    ): Result {
         project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
             .withPlugin(pluginType)
             .build()
         project.extensions.getByType(TestedExtension::class.java).apply {
             setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         }
-        Eval.me(
-            "project",
-            project, "project.android {\n $dsl\n }\n"
-        )
+        dsl.invoke(project.extensions.getByType(BaseExtension::class.java))
         val plugin = when (pluginType) {
             TestProjects.Plugin.APP -> project.plugins.getPlugin(AppPlugin::class.java)
             TestProjects.Plugin.LIBRARY -> project.plugins.getPlugin(LibraryPlugin::class.java)
@@ -375,6 +409,11 @@ class DefaultVariantTest {
         val defaultVariant =
             plugin.variantManager.getDefaultVariant(syncIssuesHandler)
         return Result(defaultVariant, ImmutableSet.copyOf(syncIssuesHandler.syncIssues))
+    }
+
+    private fun evalAndroidBlockGroovy(androidExtension: BaseExtension, dsl: String) {
+        val closure = Eval.me("{ -> $dsl}") as Closure<*>
+        ConfigureUtil.configure(closure, androidExtension)
     }
 
     class FakeSyncIssueHandler: SyncIssueHandler() {
