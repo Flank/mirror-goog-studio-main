@@ -1,5 +1,6 @@
 package com.android.aaptcompiler.proto
 
+import android.aapt.pb.internal.ResourcesInternal
 import com.android.aapt.ConfigurationOuterClass
 import com.android.aapt.Resources
 import com.android.aaptcompiler.ArrayResource
@@ -159,6 +160,24 @@ fun serializeVisibilityToPb(resourceVisibility: ResourceVisibility) =
     ResourceVisibility.PUBLIC -> Resources.Visibility.Level.PUBLIC
     else -> Resources.Visibility.Level.UNKNOWN
   }
+
+fun serializeCompiledFileToPb(file: ResourceFile): ResourcesInternal.CompiledFile {
+  val compiledFile = ResourcesInternal.CompiledFile.newBuilder()
+    .setResourceName(file.name.toString())
+    .setSourcePath(file.source.path)
+    .setType(serializeFileTypeToPb(file.type))
+    .setConfig(serializeConfigToPb(file.configuration, null, null))
+
+  for (exportedResourceName in file.exportedSymbols) {
+    compiledFile.addExportedSymbol(
+      ResourcesInternal.CompiledFile.Symbol.newBuilder()
+        .setResourceName(exportedResourceName.name.toString())
+        .setSource(
+          Resources.SourcePosition.newBuilder()
+            .setLineNumber(exportedResourceName.line)))
+  }
+  return compiledFile.build()
+}
 
 fun serializeConfigToPb(
   config: ConfigDescription,

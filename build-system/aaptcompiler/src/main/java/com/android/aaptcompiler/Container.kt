@@ -17,7 +17,9 @@
 package com.android.aaptcompiler
 
 import com.android.aapt.Resources
+import com.android.aaptcompiler.proto.serializeCompiledFileToPb
 import com.google.protobuf.CodedOutputStream
+import java.io.InputStream
 import java.io.OutputStream
 
 /**
@@ -68,6 +70,47 @@ class Container(val output: OutputStream, val totalEntryCount: Int) {
 
     codedOut.flush()
 
+    closeIfFinished()
+  }
+
+  fun addFileEntry(input: InputStream, file: ResourceFile) {
+    if (currentEntryCount >= totalEntryCount) {
+      error("Too many entries being serialized.")
+    }
+    ++currentEntryCount
+
+    val content = input.readBytes()
+
+    val codedOut = CodedOutputStream.newInstance(output)
+
+    // Write the type.
+    codedOut.writeFixed32NoTag(EntryType.RES_FILE.value)
+
+    val compiledFile = serializeCompiledFileToPb(file)
+    // Write the aligned size.
+    val headerSize = compiledFile.serializedSize
+    val headerPadding = (4 - (headerSize % 4)) % 4
+    val dataSize = content.size
+    val dataPadding = (4 - (dataSize % 4)) % 4
+    val totalSize =
+      RES_FILE_ENTRY_HEADER_SIZE.toLong() + headerSize + headerPadding + dataSize + dataPadding
+    codedOut.writeFixed64NoTag(totalSize)
+
+    // Write the res file header size.
+    codedOut.writeFixed32NoTag(headerSize)
+
+    // Write the data payload size.
+    codedOut.writeFixed64NoTag(dataSize.toLong())
+
+    // Write the header (config etc.)
+    compiledFile.writeTo(codedOut)
+    writePadding(headerPadding, codedOut)
+
+    // Write the actual file content with padding.
+    codedOut.write(content, 0, dataSize)
+    writePadding(dataPadding, codedOut)
+
+    codedOut.flush()
     closeIfFinished()
   }
 

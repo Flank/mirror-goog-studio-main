@@ -17,6 +17,7 @@
 
 package com.android.aaptcompiler
 
+import com.android.aaptcompiler.buffer.BigBuffer
 import com.android.aaptcompiler.proto.serializeTableToPb
 import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
@@ -26,6 +27,7 @@ import java.io.InputStream
 private const val VALUES_DIRECTORY_PREFIX = "values"
 private const val XML_EXTENSION = "xml"
 private const val RESOURCE_TABLE_EXTENSION = "arsc"
+private const val PATCH_9_EXTENSION = "9.png"
 private const val PNG_EXTENSION = "png"
 
 /**
@@ -45,6 +47,7 @@ private const val PNG_EXTENSION = "png"
 data class ResourceCompilerOptions(
   val generateSymbolsPathData: ResourcePathData?= null,
   val visibility: ResourceVisibility? = null,
+  val requirePngCrunching: Boolean = false,
   val pseudolocalize: Boolean = false,
   val legacyMode: Boolean = false,
   val verbose: Boolean = false)
@@ -55,7 +58,7 @@ data class ResourceCompilerOptions(
  * @param file The file to check
  * @return true if and only if the ResourceCompiler currently supports the ResourceFile.
  */
-fun canCompileResourceInJvm(file: File): Boolean {
+fun canCompileResourceInJvm(file: File, requirePngCrunching: Boolean): Boolean {
   // Hidden files, while skipped, are still supported.
   if (file.isHidden) return true
 
@@ -64,9 +67,19 @@ fun canCompileResourceInJvm(file: File): Boolean {
     && pathData.extension == XML_EXTENSION) {
     // file is a values table.
     return true
+  } else {
+    val type = ResourceType.fromFolderName(pathData.resourceDirectory) ?: return false
+    if (type != ResourceType.RAW) {
+      // neither png or resource xmls are accepted.
+      if (pathData.extension == XML_EXTENSION) {
+        return false
+      } else if (pathData.extension.endsWith(PNG_EXTENSION)) {
+        // If we don't need to perform patch9 processing or png crunching we can process.
+        return pathData.extension != PATCH_9_EXTENSION && !requirePngCrunching
+      }
+    }
   }
-
-  return false
+  return true
 }
 
 /**
@@ -198,7 +211,14 @@ private fun compileFile(
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   // TODO(b/139297538): Diagnostics
   //logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
-  error("Raw file support not yet implemented.")
+  val resourceFile = ResourceFile()
+  resourceFile.name =
+    ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name)
+  resourceFile.configuration = pathData.config
+  resourceFile.source = pathData.source
+
+  val container = Container(outputFile.outputStream(), 1)
+  container.addFileEntry(pathData.file.inputStream(), resourceFile)
 }
 
 /**
@@ -244,9 +264,14 @@ private fun compileXml(
  */
 private fun compilePng(
     pathData: ResourcePathData, outputDirectory: File, options: ResourceCompilerOptions) {
-  val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   // TODO(b/139297538): Diagnostics
-  //logger?.info("Compiling image file ${pathData.file.absolutePath} to $outputFile")
-  error("PNG support not yet implemented.")
+  //logger?.info("Compiling image file ${pathData.file.absolutePath}")
+  if (pathData.extension == PATCH_9_EXTENSION) {
+    error("Patch 9 PNG processing support not yet implemented.")
+  }
+  if (options.requirePngCrunching) {
+    error("PNG crunching support not yet implemented")
+  }
+  compileFile(pathData, outputDirectory, options)
 }
 

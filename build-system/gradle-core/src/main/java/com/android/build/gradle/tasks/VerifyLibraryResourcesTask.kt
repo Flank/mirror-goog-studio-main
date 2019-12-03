@@ -331,7 +331,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                             )
 
                             if (useJvmResourceCompiler &&
-                              canCompileResourceInJvm(request.inputFile)) {
+                              canCompileResourceInJvm(request.inputFile, request.isPngCrunching)) {
                                 workerExecutor.submit(
                                   ResourceCompilerRunnable::class.java,
                                   ResourceCompilerRunnable.Params(request)
