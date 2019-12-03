@@ -76,10 +76,10 @@ class ActivityThreadTransform : public Transform {
         "Landroid/app/ActivityThread;", "handleDispatchPackageBroadcast",
         "(I[Ljava/lang/String;)V");
     static const ir::MethodId kEntryHook(
-        "Lcom/android/tools/deploy/instrument/ActivityThreadInstrumentation;",
+        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
         "handleDispatchPackageBroadcastEntry");
     static const ir::MethodId kExitHook(
-        "Lcom/android/tools/deploy/instrument/ActivityThreadInstrumentation;",
+        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
         "handleDispatchPackageBroadcastExit");
 
     slicer::MethodInstrumenter mi(dex_ir);
@@ -100,7 +100,7 @@ class DexPathListTransform : public Transform {
         "Ldalvik/system/DexPathList$Element;", "findResource",
         "(Ljava/lang/String;)Ljava/net/URL;");
     static const ir::MethodId kEntryHook(
-        "Lcom/android/tools/deploy/instrument/ActivityThreadInstrumentation;",
+        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
         "handleFindResourceEntry");
 
     slicer::MethodInstrumenter mi(dex_ir);

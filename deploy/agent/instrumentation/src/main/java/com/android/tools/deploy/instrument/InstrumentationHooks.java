@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
-public final class ActivityThreadInstrumentation {
+public final class InstrumentationHooks {
     // ApplicationThreadConstants.PACKAGE_REPLACED
     private static final int PACKAGE_REPLACED = 3;
     private static final String TAG = "studio.deploy";
@@ -40,35 +40,40 @@ public final class ActivityThreadInstrumentation {
     // Set of all previous installation locations of the package.
     private static final HashSet<Path> oldPackagePaths = new HashSet<>();
 
-    // Current installation path of the running package.
+    // Current installation path of the running package. Written by
+    // handleDispatchPackageBroadcastExit; read by handleFindResourceEntry.
     private static Path currentPackagePath;
 
     public static void setRestart(boolean restart) {
         mRestart = restart;
     }
 
-    // This method instruments DexPathList$Element#findResource(). It checks to see if this Element
-    // object refers to an old installation of this package, and modifies the element to point to
-    // the latest installation path if so.
+    // Instruments DexPathList$Element#findResource(). Checks to see if an Element object refers
+    // to an old installation of this package, and modifies the element to point to the latest
+    // installation path if so.
     public static void handleFindResourceEntry(Object element, String name) {
         try {
             File file = (File) getDeclaredField(element, "path");
             Path dir = file.getParentFile().toPath();
 
-            // First check if this Element points to the current package path. If so, we don't need
-            // to do anything. We check this first because currentPackagePath can end up in the
-            // old paths set without the package actually having been moved.
-            if (currentPackagePath.equals(dir)) {
-                return;
-            }
+            // Need to ensure that a background thread isn't retrieving resources while a
+            // --dont-kill installation is occurring.
+            synchronized (oldPackagePaths) {
+                // First check if this Element points to the current package path. If so, we don't need
+                // to do anything. We check this first because currentPackagePath can end up in the
+                // old paths set without the package actually having been moved.
+                if (currentPackagePath.equals(dir)) {
+                    return;
+                }
 
-            // If the path pointed to by this Element is an old installation location, bring the
-            // Element up to date and mark it as uninitialized. This will cause the classloader to
-            // read the new path.
-            if (oldPackagePaths.contains(dir)) {
-                File newFile = currentPackagePath.resolve(file.getName()).toFile();
-                setDeclaredField(element, "path", newFile);
-                setDeclaredField(element, "initialized", false);
+                // If the path pointed to by this Element is an old installation location, bring the
+                // Element up to date and mark it as uninitialized. This will cause the classloader to
+                // read the new path.
+                if (oldPackagePaths.contains(dir)) {
+                    File newFile = currentPackagePath.resolve(file.getName()).toFile();
+                    setDeclaredField(element, "path", newFile);
+                    setDeclaredField(element, "initialized", false);
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Excepton", e);
@@ -87,7 +92,9 @@ public final class ActivityThreadInstrumentation {
         mCmd = cmd;
 
         try {
-            oldPackagePaths.add(getPackagePath(mActivityThread));
+            synchronized (oldPackagePaths) {
+                oldPackagePaths.add(getPackagePath(mActivityThread));
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error in package installer patch", e);
         }
@@ -118,7 +125,9 @@ public final class ActivityThreadInstrumentation {
                 updateApplicationInfo(mActivityThread);
             }
 
-            currentPackagePath = getPackagePath(mActivityThread);
+            synchronized (oldPackagePaths) {
+                currentPackagePath = getPackagePath(mActivityThread);
+            }
         } catch (Exception ex) {
             // The actual risks of the patch are unknown; although it seems to be safe, we're using some
             // defensive exception handling to prevent any application hard-crashes.

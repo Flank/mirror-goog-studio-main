@@ -67,8 +67,7 @@ proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
   // a restart was requested).
   if (response.status() == proto::AgentSwapResponse::OK) {
     JniClass instrument(
-        jni,
-        "com/android/tools/deploy/instrument/ActivityThreadInstrumentation");
+        jni, "com/android/tools/deploy/instrument/InstrumentationHooks");
     jvalue arg{.z = request.restart_activity()};
     instrument.CallStaticMethod<void>({"setRestart", "(Z)V"}, &arg);
   }

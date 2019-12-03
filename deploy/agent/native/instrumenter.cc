@@ -37,7 +37,7 @@ namespace deploy {
 namespace {
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
-    "com/android/tools/deploy/instrument/ActivityThreadInstrumentation";
+    "com/android/tools/deploy/instrument/InstrumentationHooks";
 
 const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
 
