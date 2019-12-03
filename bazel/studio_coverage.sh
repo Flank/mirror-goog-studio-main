@@ -23,6 +23,7 @@ fi
   test \
   --keep_going \
   --config=remote \
+  --remote_download_outputs=toplevel \
   --invocation_id=${invocation_id} \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate \
@@ -43,6 +44,7 @@ fi
 "${script_dir}/bazel" \
   build \
   --config=remote \
+  --remote_download_outputs=toplevel \
   --invocation_id=${report_invocation_id} \
   ${auth_options} \
   -- \
