@@ -32,6 +32,7 @@ message ComponentTreeEvent {
   View root = 2;
   repeated StringEntry string = 3;
   ResourceConfiguration resources = 4;
+  repeated int64 all_window_ids = 5;
 }
 
 message PropertyEvent {
@@ -90,7 +91,8 @@ message View {
   int32 class_name = 10;   // the simple class name of the view e.g. LinearLayout
   int32 package_name = 11; // the package part of the class name e.g. android.view
   int32 text_value = 12;   // the value of the text property if it exists
-  repeated View sub_view = 13;
+  int32 layout_flags = 13;
+  repeated View sub_view = 14;
 }
 
 message Property {

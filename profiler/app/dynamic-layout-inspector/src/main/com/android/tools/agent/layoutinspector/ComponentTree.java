@@ -18,6 +18,7 @@ package com.android.tools.agent.layoutinspector;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.TextView;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
@@ -38,12 +39,11 @@ class ComponentTree {
      */
     public void writeTree(long event, View view)
             throws LayoutInspectorService.LayoutModifiedException {
-        mStringTable.clear();
-        Resource layout = Resource.fromResourceId(view, getSourceLayoutResId(view));
+        // We shouldn't come in here more than once.
+        assert !mStringTable.entries().iterator().hasNext();
         loadView(event, view, false);
         mConfiguration.writeConfiguration(event, view);
         loadStringTable(event);
-        mStringTable.clear();
     }
 
     private void loadView(long buffer, View view, boolean isSubView)
@@ -53,27 +53,37 @@ class ComponentTree {
         int packageName = toInt(getPackageName(klass));
         int className = toInt(klass.getSimpleName());
         int textValue = toInt(getTextValue(view));
+        int[] location = new int[2];
+        if (isSubView) {
+            location[0] = view.getLeft();
+            location[1] = view.getTop();
+        } else {
+            view.getLocationOnScreen(location);
+        }
+        int flags = 0;
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        if (layoutParams instanceof WindowManager.LayoutParams) {
+            flags = ((WindowManager.LayoutParams) layoutParams).flags;
+        }
         long viewBuffer =
                 addView(
                         buffer,
                         isSubView,
                         viewId,
-                        view.getLeft(),
-                        view.getTop(),
+                        location[0],
+                        location[1],
                         view.getScrollX(),
                         view.getScrollY(),
                         view.getWidth(),
                         view.getHeight(),
                         className,
                         packageName,
-                        textValue);
+                        textValue,
+                        flags);
         Resource id = Resource.fromResourceId(view, view.getId());
         if (id != null) {
             addIdResource(
-                    viewBuffer,
-                    toInt(id.getNamespace()),
-                    toInt(id.getType()),
-                    toInt(id.getName()));
+                    viewBuffer, toInt(id.getNamespace()), toInt(id.getType()), toInt(id.getName()));
         }
         Resource layout = Resource.fromResourceId(view, getSourceLayoutResId(view));
         if (layout != null) {
@@ -159,7 +169,8 @@ class ComponentTree {
             int height,
             int className,
             int packageName,
-            int textValue);
+            int textValue,
+            int layoutFlags);
 
     /** Adds an id resource value to a view in either a ComponentTreeEvent or a View protobuf */
     private native void addIdResource(long viewBuffer, int namespace, int type, int name);

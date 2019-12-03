@@ -74,7 +74,7 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_agent_layoutinspector_ComponentTree_addView(
     JNIEnv *env, jclass clazz, jlong jevent, bool isSubView, jlong drawId,
     jint x, jint y, jint scrollX, jint scrollY, jint width, jint height,
-    jint className, jint packageName, jint textValue) {
+    jint className, jint packageName, jint textValue, jint layoutFlags) {
   View *view = selectView(env, jevent, isSubView);
   view->set_draw_id(drawId);
   view->set_x(x);
@@ -90,6 +90,7 @@ Java_com_android_tools_agent_layoutinspector_ComponentTree_addView(
   view->set_class_name(className);
   view->set_package_name(packageName);
   view->set_text_value(textValue);
+  view->set_layout_flags(layoutFlags);
 }
 
 /*

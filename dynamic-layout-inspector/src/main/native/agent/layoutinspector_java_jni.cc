@@ -92,11 +92,17 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_freeSendRequ
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_initComponentTree(
-    JNIEnv *env, jclass clazz, jlong jrequest) {
+    JNIEnv *env, jclass clazz, jlong jrequest, jlongArray allWindowIds) {
   SendEventRequest *request = (SendEventRequest *)jrequest;
   auto *event = request->mutable_event();
   auto *inspector_event = event->mutable_layout_inspector_event();
   auto *tree = inspector_event->mutable_tree();
+  jsize windowCount = env->GetArrayLength(allWindowIds);
+  jlong *windowIds = env->GetLongArrayElements(allWindowIds, 0);
+  for (int i = 0; i < windowCount; i++) {
+    tree->add_all_window_ids(windowIds[i]);
+  }
+  env->ReleaseLongArrayElements(allWindowIds, windowIds, 0);
   return (long)tree;
 }
 

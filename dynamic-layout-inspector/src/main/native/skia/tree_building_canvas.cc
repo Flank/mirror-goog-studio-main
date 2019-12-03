@@ -83,7 +83,7 @@ void TreeBuildingCanvas::willRestore() {
 
 void TreeBuildingCanvas::nonHeaderCommand() {
   inHeader = false;
-  if (!topView->didDraw) {
+  if (topView != nullptr && !topView->didDraw) {
     topView->didDraw = true;
     createRealCanvas();
   }
@@ -134,8 +134,11 @@ void TreeBuildingCanvas::onDrawBitmapRect(const SkBitmap &bitmap,
 }
 
 void TreeBuildingCanvas::onDrawPaint(const SkPaint &paint) {
-  nonHeaderCommand();
-  topView->canvas->drawPaint(paint);
+  // can be null if this is a dialog
+  if (topView != nullptr) {
+    nonHeaderCommand();
+    topView->canvas->drawPaint(paint);
+  }
 }
 
 void TreeBuildingCanvas::onDrawPoints(PointMode mode, size_t count,
