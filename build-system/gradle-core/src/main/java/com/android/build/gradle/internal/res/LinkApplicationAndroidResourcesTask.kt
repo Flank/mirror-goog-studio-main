@@ -395,7 +395,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val variantScope = variantScope
             val variantData = variantScope.variantData
             val projectOptions = variantScope.globalScope.projectOptions
-            val config = variantData.variantDslInfo
+            val variantDslInfo = variantData.variantDslInfo
 
             preconditionsCheck(variantData)
 
@@ -435,7 +435,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
 
             task.mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplitOrNull()?.apkData
-            task.originalApplicationId.set(project.provider { config.originalApplicationId })
+            task.originalApplicationId.set(project.provider { variantDslInfo.originalApplicationId })
             task.originalApplicationId.disallowChanges()
 
             val aaptFriendlyManifestsFilePresent = variantScope
@@ -447,7 +447,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 variantScope.manifestArtifactType
             variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
-            task.setType(config.variantType)
+            task.setType(variantDslInfo.variantType)
             task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 

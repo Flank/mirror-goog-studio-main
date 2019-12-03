@@ -244,7 +244,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             task.pseudoLocalesEnabled = variantScope
                 .variantData
                 .variantDslInfo
-                .buildType
                 .isPseudoLocalesEnabled
 
             task.crunchPng = variantScope.isCrunchPngs

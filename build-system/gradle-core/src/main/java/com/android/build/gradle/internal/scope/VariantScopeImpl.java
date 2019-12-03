@@ -21,7 +21,6 @@ import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
@@ -56,7 +55,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.PostProcessingBlockOptions;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -67,7 +65,6 @@ import com.android.build.gradle.internal.dependency.FilteringSpec;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -186,20 +183,10 @@ public class VariantScopeImpl implements VariantScope {
                                                         "runtime-deps",
                                                         getVariantDslInfo().getDirName(),
                                                         "desugar_try_with_resources.jar")));
-        this.postProcessingOptions = createPostProcessingOptions();
-    }
-
-    private PostProcessingOptions createPostProcessingOptions() {
-        // This may not be the case with the experimental plugin.
-        BuildType buildType = variantData.getVariantDslInfo().getBuildType();
-        if (buildType.getPostProcessingConfiguration() == POSTPROCESSING_BLOCK) {
-            return new PostProcessingBlockOptions(
-                    buildType.getPostprocessing(), getType().isTestComponent());
-        }
-
-        return variantData
-                .getVariantDslInfo()
-                .createOldPostProcessingOptions(globalScope.getProject());
+        this.postProcessingOptions =
+                variantData
+                        .getVariantDslInfo()
+                        .createPostProcessingOptions(globalScope.getProject());
     }
 
     protected Project getProject() {
@@ -338,7 +325,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean isCrunchPngs() {
         // If set for this build type, respect that.
-        Boolean buildTypeOverride = getVariantDslInfo().getBuildType().isCrunchPngs();
+        Boolean buildTypeOverride = getVariantDslInfo().isCrunchPngs();
         if (buildTypeOverride != null) {
             return buildTypeOverride;
         }
@@ -350,13 +337,13 @@ public class VariantScopeImpl implements VariantScope {
         }
         // If not overridden, use the default from the build type.
         //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
-        return getVariantDslInfo().getBuildType().isCrunchPngsDefault();
+        return getVariantDslInfo().isCrunchPngsDefault();
     }
 
     @Override
     public boolean consumesFeatureJars() {
         return getType().isBaseModule()
-                && getVariantDslInfo().getBuildType().isMinifyEnabled()
+                && getVariantDslInfo().isMinifyEnabled()
                 && globalScope.hasDynamicFeatures();
     }
 

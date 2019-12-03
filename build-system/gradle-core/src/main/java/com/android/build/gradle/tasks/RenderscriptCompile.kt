@@ -290,7 +290,7 @@ abstract class RenderscriptCompile : NdkTask() {
             task.isSupportMode = variantDslInfo.renderscriptSupportModeEnabled
             task.useAndroidX = globalScope.projectOptions.get(BooleanOption.USE_ANDROID_X)
             task.isNdkMode = ndkMode
-            task.optimLevel = variantDslInfo.buildType.renderscriptOptimLevel
+            task.optimLevel = variantDslInfo.renderscriptOptimLevel
 
             task.sourceDirs = globalScope
                 .project

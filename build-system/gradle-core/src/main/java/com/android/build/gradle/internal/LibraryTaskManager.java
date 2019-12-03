@@ -205,7 +205,7 @@ public class LibraryTaskManager extends TaskManager {
             taskFactory.register(new ExtractAnnotations.CreationAction(variantScope));
         }
 
-        final boolean instrumented = variantDslInfo.getBuildType().isTestCoverageEnabled();
+        final boolean instrumented = variantDslInfo.isTestCoverageEnabled();
 
         TransformManager transformManager = variantScope.getTransformManager();
 

@@ -690,7 +690,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // optional manifest files too.
             if (variantScope.getTaskContainer().getMicroApkTask() != null
-                    && variantDslInfo.getBuildType().isEmbedMicroApp()) {
+                    && variantDslInfo.isEmbedMicroApp()) {
                 task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
@@ -786,7 +786,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
-            task.buildTypeName = variantDslInfo.getBuildType().getName();
+            task.buildTypeName = variantDslInfo.getBuildType();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

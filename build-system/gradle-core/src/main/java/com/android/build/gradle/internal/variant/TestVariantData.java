@@ -74,14 +74,14 @@ public class TestVariantData extends ApkVariantData {
             sb.append(prefix);
             sb.append(" for the ");
             StringHelper.appendCapitalized(sb, variantDslInfo.getFlavorName());
-            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType().getName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType());
             sb.append(" build");
             return sb.toString();
         } else {
             StringBuilder sb = new StringBuilder(50);
             sb.append(prefix);
             sb.append(" for the ");
-            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType().getName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType());
             sb.append(" build");
             return sb.toString();
         }

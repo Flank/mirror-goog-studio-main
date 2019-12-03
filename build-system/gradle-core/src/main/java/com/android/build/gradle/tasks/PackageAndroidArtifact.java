@@ -971,8 +971,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getAssets()
                     .set(variantScope.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
-            packageAndroidArtifact.setJniDebugBuild(
-                    variantDslInfo.getBuildType().isJniDebuggable());
+            packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
                     .set(variantScope.getVariantData().getPublicVariantApi().isDebuggable());

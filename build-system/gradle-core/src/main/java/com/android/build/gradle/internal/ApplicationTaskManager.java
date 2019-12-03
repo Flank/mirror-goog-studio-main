@@ -356,8 +356,7 @@ public class ApplicationTaskManager extends TaskManager {
         if (variantType.isBaseModule()) {
             Boolean unbundledWearApp = variantDslInfo.isWearAppUnbundled();
 
-            if (!Boolean.TRUE.equals(unbundledWearApp)
-                    && variantDslInfo.getBuildType().isEmbedMicroApp()) {
+            if (!Boolean.TRUE.equals(unbundledWearApp) && variantDslInfo.isEmbedMicroApp()) {
                 Configuration wearApp =
                         variantData.getVariantDependency().getWearAppConfiguration();
                 assert wearApp != null : "Wear app with no wearApp configuration";

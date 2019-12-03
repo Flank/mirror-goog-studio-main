@@ -49,7 +49,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     // ----- PRIVATE TASK API -----
 
     @get:Input
-    lateinit var buildTypeName: String
+    @get:Optional
+    var buildTypeName: String? = null
 
     @get:Input
     var isLibrary: Boolean = false
@@ -133,24 +134,33 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 .addField(
                     "String",
                     "LIBRARY_PACKAGE_NAME",
-                    '"'.toString() + buildConfigPackageName.get() + '"'.toString()
+                    """"${buildConfigPackageName.get()}""""
                 )
         } else {
             generator.addField(
                 "String",
                 "APPLICATION_ID",
-                '"'.toString() + appPackageName.get() + '"'.toString()
+                """"${appPackageName.get()}""""
             )
         }
 
+        buildTypeName?.let {
+            generator
+                .addField("String", "BUILD_TYPE", """"$it"""")
+        }
+
+        flavorName.get().let {
+            if (it.isNotEmpty()) {
+                generator.addField("String", "FLAVOR", """"$it"""")
+            }
+        }
+
         generator
-            .addField("String", "BUILD_TYPE", '"'.toString() + buildTypeName + '"'.toString())
-            .addField("String", "FLAVOR", '"'.toString() + flavorName.get() + '"'.toString())
             .addField("int", "VERSION_CODE", Integer.toString(versionCode.get()))
             .addField(
                 "String",
                 "VERSION_NAME",
-                '"'.toString() + versionName.getOrElse("") + '"'.toString()
+                """"${versionName.getOrElse("")}""""
             )
             .addItems(items.get())
 
@@ -161,8 +171,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             while (i < count) {
                 generator.addField(
                     "String",
-                    "FLAVOR_" + flavors[i + 1],
-                    '"'.toString() + flavors[i] + '"'.toString()
+                    """FLAVOR_${flavors[i + 1]}""",
+                    """"${flavors[i]}""""
                 )
                 i += 2
             }
@@ -215,7 +225,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
 
-            task.buildTypeName = variantDslInfo.buildType.name
+            task.buildTypeName = variantDslInfo.buildType
 
             // no need to memoize, variant configuration does that already.
             task.flavorName.set(project.provider { variantDslInfo.flavorName })

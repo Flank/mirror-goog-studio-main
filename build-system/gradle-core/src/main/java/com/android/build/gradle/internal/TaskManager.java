@@ -1884,7 +1884,7 @@ public abstract class TaskManager {
                 CONNECTED_ANDROID_TEST,
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask));
 
-        if (baseVariantData.getVariantDslInfo().getBuildType().isTestCoverageEnabled()) {
+        if (baseVariantData.getVariantDslInfo().isTestCoverageEnabled()) {
 
             Configuration jacocoAntConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
@@ -1958,7 +1958,7 @@ public abstract class TaskManager {
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled =
-                variantDslInfo.getBuildType().isTestCoverageEnabled()
+                variantDslInfo.isTestCoverageEnabled()
                         && !variantDslInfo.getVariantType().isForTesting();
         if (isTestCoverageEnabled) {
             createJacocoTask(variantScope);
@@ -2285,7 +2285,7 @@ public abstract class TaskManager {
         // For library project, since we cannot use the local jars of the library,
         // we add it as well.
         boolean isTestCoverageEnabled =
-                variantDslInfo.getBuildType().isTestCoverageEnabled()
+                variantDslInfo.isTestCoverageEnabled()
                         && (!variantDslInfo.getVariantType().isTestComponent()
                                 || (variantDslInfo.getTestedVariant() != null
                                         && variantDslInfo
@@ -2566,10 +2566,13 @@ public abstract class TaskManager {
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
                     final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+                    final String buildType = variantDslInfo.getBuildType();
 
                     final TaskProvider<? extends Task> assembleTask =
                             taskContainer.getAssembleTask();
-                    assembleMap.put(variantDslInfo.getBuildType().getName(), assembleTask);
+                    if (buildType != null) {
+                        assembleMap.put(buildType, assembleTask);
+                    }
 
                     for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
                         assembleMap.put(flavor.getName(), assembleTask);
@@ -2584,7 +2587,9 @@ public abstract class TaskManager {
                     if (variantType.isBaseModule()) {
                         TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
 
-                        bundleMap.put(variantDslInfo.getBuildType().getName(), bundleTask);
+                        if (buildType != null) {
+                            bundleMap.put(buildType, bundleTask);
+                        }
 
                         for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
                             bundleMap.put(flavor.getName(), bundleTask);
@@ -2938,7 +2943,7 @@ public abstract class TaskManager {
                 .setAssetGenTask(taskFactory.register(scope.getTaskName("generate", "Assets")));
 
         if (!variantData.getType().isForTesting()
-                && variantData.getVariantDslInfo().getBuildType().isTestCoverageEnabled()) {
+                && variantData.getVariantDslInfo().isTestCoverageEnabled()) {
             scope.getTaskContainer()
                     .setCoverageReportTask(
                             taskFactory.register(

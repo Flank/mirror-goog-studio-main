@@ -39,16 +39,16 @@ public abstract class ApkVariantData extends InstallableVariantData {
     @Override
     @NonNull
     public String getDescription() {
-        final VariantDslInfo config = getVariantDslInfo();
+        final VariantDslInfo variantDslInfo = getVariantDslInfo();
 
-        if (config.hasFlavors()) {
+        if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);
-            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
-            StringHelper.appendCapitalized(sb, config.getFlavorName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getFlavorName());
             sb.append(" build");
             return sb.toString();
         } else {
-            return StringHelper.capitalizeAndAppend(config.getBuildType().getName(), " build");
+            return StringHelper.capitalizeAndAppend(variantDslInfo.getBuildType(), " build");
         }
     }
 }

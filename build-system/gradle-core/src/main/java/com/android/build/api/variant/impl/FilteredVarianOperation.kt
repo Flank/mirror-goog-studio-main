@@ -41,7 +41,7 @@ class FilteredVariantOperation<T: ActionableVariantObject>(
     fun execute(transformer: VariantScopeTransformers, variants: List<VariantScope>) {
         var currentVariants = variants
         if (buildType != null) {
-            currentVariants = currentVariants.filter { variant -> variant.variantDslInfo.buildType.name == buildType }
+            currentVariants = currentVariants.filter { variant -> variant.variantDslInfo.buildType == buildType }
         }
         flavorToDimensionData.forEach {
             currentVariants = currentVariants.filter { variant ->

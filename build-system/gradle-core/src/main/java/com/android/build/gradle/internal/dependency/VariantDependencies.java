@@ -213,7 +213,7 @@ public class VariantDependencies {
 
             String variantName = variantDslInfo.getFullName();
             VariantType variantType = variantDslInfo.getVariantType();
-            String buildType = variantDslInfo.getBuildType().getName();
+            String buildType = variantDslInfo.getBuildType();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
                     getFlavorAttributes(flavorSelection);
 

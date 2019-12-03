@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -75,7 +76,10 @@ open class VariantDslInfoImpl internal constructor(
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     manifestFile: File,
-    override val buildType: BuildType,
+    /**
+     * Public because this is needed by the old Variant API. Nothing else should touch this.
+     */
+     val buildTypeObj: BuildType,
     /** The list of product flavors. Items earlier in the list override later items.  */
     override val productFlavors: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
@@ -86,6 +90,8 @@ open class VariantDslInfoImpl internal constructor(
     isInExecutionPhase: BooleanSupplier
 ): VariantDslInfo {
 
+    override val buildType: String?
+        get() = buildTypeObj.name
     /**
      * This should be mostly private and not used outside of this class.
      * Unfortunately there are a few cases where this cannot happen.
@@ -130,7 +136,7 @@ open class VariantDslInfoImpl internal constructor(
                 )
         mVariantAttributesProvider = VariantAttributesProvider(
             mergedFlavor,
-            buildType,
+            buildTypeObj,
             variantType.isTestComponent,
             manifestParser,
             manifestFile,
@@ -155,7 +161,7 @@ open class VariantDslInfoImpl internal constructor(
         } else {
             sb.append(splitName)
         }
-        sb.appendCapitalized(buildType.name)
+        sb.appendCapitalized(buildTypeObj.name)
         if (variantType.isTestComponent) {
             sb.append(variantType.suffix)
         }
@@ -175,7 +181,7 @@ open class VariantDslInfoImpl internal constructor(
                 sb.append(pf.name).append('-')
             }
         }
-        sb.append(buildType.name)
+        sb.append(buildTypeObj.name)
         if (variantType.isTestComponent) {
             sb.append('-').append(variantType.prefix)
         }
@@ -197,7 +203,7 @@ open class VariantDslInfoImpl internal constructor(
             }
         }
         sb.append(splitName).append('-')
-        sb.append(buildType.name)
+        sb.append(buildTypeObj.name)
         if (variantType.isTestComponent) {
             sb.append('-').append(variantType.prefix)
         }
@@ -229,14 +235,14 @@ open class VariantDslInfoImpl internal constructor(
         if (variantType.isTestComponent) {
             builder.add(variantType.prefix)
         }
-        if (!productFlavors.isEmpty()) {
+        if (productFlavors.isNotEmpty()) {
             builder.add(
                 combineAsCamelCase(
                     productFlavors, ProductFlavor::getName
                 )
             )
         }
-        builder.add(buildType.name)
+        builder.add(buildTypeObj.name)
         builder.build()
     }
 
@@ -254,7 +260,7 @@ open class VariantDslInfoImpl internal constructor(
         if (variantType.isTestComponent) {
             sb.append(variantType.prefix).append("/")
         }
-        if (!productFlavors.isEmpty()) {
+        if (productFlavors.isNotEmpty()) {
             for (flavor in productFlavors) {
                 sb.append(flavor.name)
             }
@@ -263,7 +269,7 @@ open class VariantDslInfoImpl internal constructor(
         for (splitName in splitNames) {
             sb.append(splitName).append('/')
         }
-        sb.append(buildType.name)
+        sb.append(buildTypeObj.name)
         return sb.toString()
     }
 
@@ -546,6 +552,7 @@ open class VariantDslInfoImpl internal constructor(
     override val isWearAppUnbundled: Boolean?
         get() = mergedFlavor.wearAppUnbundled
 
+    @Suppress("DEPRECATION")
     override val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
         get() = ImmutableMap.copyOf(mergedFlavor.missingDimensionStrategies)
 
@@ -606,9 +613,9 @@ open class VariantDslInfoImpl internal constructor(
                 fullList.add("Fields from the variant")
                 fillFieldList(fullList, usedFieldNames, list)
             }
-            list = buildType.buildConfigFields.values
+            list = buildTypeObj.buildConfigFields.values
             if (!list.isEmpty()) {
-                fullList.add("Fields from build type: " + buildType.name)
+                fullList.add("Fields from build type: " + buildTypeObj.name)
                 fillFieldList(fullList, usedFieldNames, list)
             }
             for (flavor in productFlavors) {
@@ -646,7 +653,7 @@ open class VariantDslInfoImpl internal constructor(
             for (i in productFlavors.indices.reversed()) {
                 mergedMap.putAll(productFlavors[i].buildConfigFields)
             }
-            mergedMap.putAll(buildType.buildConfigFields)
+            mergedMap.putAll(buildTypeObj.buildConfigFields)
             mergedMap.putAll(mBuildConfigFields)
             return mergedMap
         }
@@ -669,7 +676,7 @@ open class VariantDslInfoImpl internal constructor(
             for (i in productFlavors.indices.reversed()) {
                 mergedMap.putAll(productFlavors[i].resValues)
             }
-            mergedMap.putAll(buildType.resValues)
+            mergedMap.putAll(buildTypeObj.resValues)
             mergedMap.putAll(mResValues)
             return mergedMap
         }
@@ -696,9 +703,9 @@ open class VariantDslInfoImpl internal constructor(
                 fullList.add("Values from the variant")
                 fillFieldList(fullList, usedFieldNames, list)
             }
-            list = buildType.resValues.values
+            list = buildTypeObj.resValues.values
             if (!list.isEmpty()) {
-                fullList.add("Values from build type: " + buildType.name)
+                fullList.add("Values from build type: " + buildTypeObj.name)
                 fillFieldList(fullList, usedFieldNames, list)
             }
             for (flavor in productFlavors) {
@@ -724,7 +731,7 @@ open class VariantDslInfoImpl internal constructor(
             if (signingConfigOverride != null) {
                 return signingConfigOverride
             }
-            val signingConfig: SigningConfig? = buildType.signingConfig
+            val signingConfig: SigningConfig? = buildTypeObj.signingConfig
             // cast builder.SigningConfig to dsl.SigningConfig because MergedFlavor merges
             // dsl.SigningConfig of ProductFlavor objects
             return signingConfig ?: mergedFlavor.signingConfig as SigningConfig?
@@ -737,7 +744,7 @@ open class VariantDslInfoImpl internal constructor(
         }
 
     override val isTestCoverageEnabled: Boolean
-        get() = buildType.isTestCoverageEnabled// so far, blindly override the build type placeholders
+        get() = buildTypeObj.isTestCoverageEnabled// so far, blindly override the build type placeholders
 
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build
@@ -750,7 +757,7 @@ open class VariantDslInfoImpl internal constructor(
             val mergedFlavorsPlaceholders =
                 mergedFlavor.manifestPlaceholders
             // so far, blindly override the build type placeholders
-            mergedFlavorsPlaceholders.putAll(buildType.manifestPlaceholders)
+            mergedFlavorsPlaceholders.putAll(buildTypeObj.manifestPlaceholders)
             return mergedFlavorsPlaceholders
         }
 
@@ -758,14 +765,14 @@ open class VariantDslInfoImpl internal constructor(
     override val isMultiDexEnabled: Boolean
         get() {
             // Only require specific multidex opt-in for legacy multidex.
-            return buildType.multiDexEnabled
+            return buildTypeObj.multiDexEnabled
                 ?: mergedFlavor.multiDexEnabled
                 ?: (minSdkVersion.featureLevel >= 21)
         }
 
     override val multiDexKeepFile: File?
         get() {
-            var value = buildType.multiDexKeepFile
+            var value = buildTypeObj.multiDexKeepFile
             if (value != null) {
                 return value
             }
@@ -775,7 +782,7 @@ open class VariantDslInfoImpl internal constructor(
 
     override val multiDexKeepProguard: File?
         get() {
-            var value = buildType.multiDexKeepProguard
+            var value = buildTypeObj.multiDexKeepProguard
             if (value != null) {
                 return value
             }
@@ -789,7 +796,7 @@ open class VariantDslInfoImpl internal constructor(
     // dynamic features can always be build in native multidex mode
     override val dexingType: DexingType
         get() = if (variantType.isDynamicFeature) {
-            if (buildType.multiDexEnabled != null
+            if (buildTypeObj.multiDexEnabled != null
                 || mergedFlavor.multiDexEnabled != null
             ) {
                 issueReporter
@@ -837,7 +844,7 @@ open class VariantDslInfoImpl internal constructor(
         get() {
             val targetApiLevel =
                 projectOptions[IntegerOption.IDE_TARGET_DEVICE_API]
-            return if (targetApiLevel != null && isMultiDexEnabled && buildType.isDebuggable) { // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
+            return if (targetApiLevel != null && isMultiDexEnabled && buildTypeObj.isDebuggable) { // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
 // debuggable.
                 val minVersion: Int =
                     if (targetSdkVersion.apiLevel > 1) Integer.min(
@@ -908,10 +915,8 @@ open class VariantDslInfoImpl internal constructor(
      * added earlier has higher priority than ProductFlavor added later.
      *
      * @param mergedOption The merged option store in the GradleVariantConfiguration.
-     * @param productFlavorOptionGetter A Function to return the option from a ProductFlavor.
+     * @param getFlavorOption A Function to return the option from a ProductFlavor.
      * @param getBuildTypeOption A Function to return the option from a BuildType.
-     * @param reset A method to return 'option' to its default state.
-     * @param append A BiConsumer to combine two options into one. Option in second input argument
      * takes priority and overwrite option in the first input argument.
      * @param <CoreOptionsT> The core type of the option being merge.
      * @param <MergedOptionsT> The merge option type.
@@ -934,7 +939,7 @@ open class VariantDslInfoImpl internal constructor(
                 mergedOption.append(flavorOption)
             }
         }
-        val buildTypeOption = buildType.getBuildTypeOption()
+        val buildTypeOption = buildTypeObj.getBuildTypeOption()
         if (buildTypeOption != null) {
             mergedOption.append(buildTypeOption)
         }
@@ -943,22 +948,32 @@ open class VariantDslInfoImpl internal constructor(
     override val javaCompileOptions: JavaCompileOptions
         get() = mergedJavaCompileOptions
 
-    override fun createOldPostProcessingOptions(project: Project) : PostProcessingOptions {
-        return object: PostProcessingOptions {
-            override fun getProguardFiles(type: ProguardFileType): Collection<File> = buildType.getProguardFiles(type)
+    override fun createPostProcessingOptions(project: Project) : PostProcessingOptions {
+        return if (buildTypeObj.postProcessingConfiguration == PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
+            PostProcessingBlockOptions(
+                buildTypeObj.postprocessing, variantType.isTestComponent
+            )
+        } else object : PostProcessingOptions {
+            override fun getProguardFiles(type: ProguardFileType): Collection<File> =
+                buildTypeObj.getProguardFiles(type)
 
             override fun getDefaultProguardFiles(): List<File> =
-                listOf(ProguardFiles.getDefaultProguardFile(ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName, project))
+                listOf(
+                    ProguardFiles.getDefaultProguardFile(
+                        ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName,
+                        project
+                    )
+                )
 
             override fun getPostprocessingFeatures(): PostprocessingFeatures? = null
 
             override fun getCodeShrinker() = when {
-                !buildType.isMinifyEnabled -> null
-                buildType.isUseProguard == true -> CodeShrinker.PROGUARD
+                !buildTypeObj.isMinifyEnabled -> null
+                buildTypeObj.isUseProguard == true -> CodeShrinker.PROGUARD
                 else -> CodeShrinker.R8
             }
 
-            override fun resourcesShrinkingEnabled(): Boolean = buildType.isShrinkResources
+            override fun resourcesShrinkingEnabled(): Boolean = buildTypeObj.isShrinkResources
         }
     }
 
@@ -981,7 +996,7 @@ open class VariantDslInfoImpl internal constructor(
                 }
             }
             // then the build type
-            for (option in buildType.shaders.glslcArgs) {
+            for (option in buildTypeObj.shaders.glslcArgs) {
                 optionMap[getKey(option)] = option
             }
             return Lists.newArrayList(optionMap.values)
@@ -1020,11 +1035,11 @@ open class VariantDslInfoImpl internal constructor(
                     }
                 }
                 // 3. the build type, global
-                for (option in buildType.shaders.glslcArgs) {
+                for (option in buildTypeObj.shaders.glslcArgs) {
                     optionMap[getKey(option)] = option
                 }
                 // 3b. the build type, scoped.
-                for (option in buildType.shaders.scopedGlslcArgs[key]) {
+                for (option in buildTypeObj.shaders.scopedGlslcArgs[key]) {
                     optionMap[getKey(option)] = option
                 }
                 // now add the full value list.
@@ -1041,9 +1056,37 @@ open class VariantDslInfoImpl internal constructor(
             for (flavor in productFlavors) {
                 keys.addAll(flavor.shaders.scopedGlslcArgs.keySet())
             }
-            keys.addAll(buildType.shaders.scopedGlslcArgs.keySet())
+            keys.addAll(buildTypeObj.shaders.scopedGlslcArgs.keySet())
             return keys
         }
+
+    override val isDebuggable: Boolean
+        get() = buildTypeObj.isDebuggable
+
+    override val isEmbedMicroApp: Boolean
+        get() = buildTypeObj.isEmbedMicroApp
+
+    override val isPseudoLocalesEnabled: Boolean
+        get() = buildTypeObj.isPseudoLocalesEnabled
+
+    override val isCrunchPngs: Boolean?
+        get() = buildTypeObj.isCrunchPngs
+
+    @Suppress("OverridingDeprecatedMember", "DEPRECATION")
+    override val isCrunchPngsDefault: Boolean
+        get() = buildTypeObj.isCrunchPngsDefault
+
+    override val isMinifyEnabled: Boolean
+        get() = buildTypeObj.isMinifyEnabled
+
+    override val isRenderscriptDebuggable: Boolean
+        get() = buildTypeObj.isRenderscriptDebuggable
+
+    override val renderscriptOptimLevel: Int
+        get() = buildTypeObj.renderscriptOptimLevel
+
+    override val isJniDebuggable: Boolean
+        get() = buildTypeObj.isJniDebuggable
 
     companion object {
 
@@ -1088,5 +1131,4 @@ private fun BaseConfig.getProguardFiles(type: ProguardFileType): Collection<File
     ProguardFileType.EXPLICIT -> this.proguardFiles
     ProguardFileType.TEST -> this.testProguardFiles
     ProguardFileType.CONSUMER -> this.consumerProguardFiles
-    else -> throw AssertionError("Unknown proguard file type: $type")
 }
