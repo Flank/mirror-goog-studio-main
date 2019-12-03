@@ -45,7 +45,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.VariantBuilder;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
@@ -381,7 +381,7 @@ public class VariantManager implements VariantModel {
     public void createTasksForVariant(final VariantScope variantScope) {
         final BaseVariantData variantData = variantScope.getVariantData();
         final VariantType variantType = variantData.getType();
-        final IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+        final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
         final VariantSources variantSources = variantScope.getVariantSources();
 
         taskManager.createAssembleTask(variantData);
@@ -543,7 +543,7 @@ public class VariantManager implements VariantModel {
 
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection(
-            @NonNull IVariantDslInfo variantDslInfo) {
+            @NonNull VariantDslInfo variantDslInfo) {
         ObjectFactory factory = project.getObjects();
 
         return variantDslInfo
@@ -1345,7 +1345,7 @@ public class VariantManager implements VariantModel {
                     createVariantDataForVariantType(buildType, productFlavorList, variantType);
             addVariant(variantData);
 
-            IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+            VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
             VariantScope variantScope = variantData.getScope();
 
             int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();

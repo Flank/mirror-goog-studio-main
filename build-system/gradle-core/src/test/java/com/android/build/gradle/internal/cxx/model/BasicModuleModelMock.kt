@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.core.IVariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
@@ -196,7 +196,7 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
         val variantDslInfo = mock(
-            IVariantDslInfo::class.java,
+            VariantDslInfo::class.java,
             throwUnmocked
         )
         val splits = mock(

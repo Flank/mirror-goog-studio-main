@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
@@ -353,7 +352,7 @@ public class ApplicationTaskManager extends TaskManager {
     /** Configure variantData to generate embedded wear application. */
     private void handleMicroApp(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
-        IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
         final VariantType variantType = scope.getType();
 
         if (variantType.isBaseModule()) {

@@ -20,7 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -97,7 +97,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         deviceProvider.use(
                 () -> {
                     BaseVariantData variantData = getVariantData();
-                    IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+                    VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
                     List<OutputFile> outputs =
                             ImmutableList.copyOf(

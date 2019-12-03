@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -39,7 +39,7 @@ public abstract class ApkVariantData extends InstallableVariantData {
     @Override
     @NonNull
     public String getDescription() {
-        final IVariantDslInfo config = getVariantDslInfo();
+        final VariantDslInfo config = getVariantDslInfo();
 
         if (config.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);

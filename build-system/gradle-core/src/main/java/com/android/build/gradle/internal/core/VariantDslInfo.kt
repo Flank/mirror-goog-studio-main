@@ -44,7 +44,7 @@ import java.util.function.Supplier
  * Use [VariantBuilder] to instantiate.
  *
  */
-interface IVariantDslInfo {
+interface VariantDslInfo {
 
     val fullName: String
 
@@ -62,7 +62,7 @@ interface IVariantDslInfo {
      *
      * @see VariantType.isTestComponent
      */
-    val testedVariant: IVariantDslInfo?
+    val testedVariant: VariantDslInfo?
 
     /**
      * Returns a full name that includes the given splits name.

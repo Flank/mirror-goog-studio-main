@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
@@ -49,7 +49,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     private final TestVariantData testVariantData;
 
-    @NonNull private final IVariantDslInfo testVariantDslInfo;
+    @NonNull private final VariantDslInfo testVariantDslInfo;
 
     public TestDataImpl(
             @NonNull TestVariantData testVariantData,

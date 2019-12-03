@@ -29,7 +29,7 @@ import com.android.build.OutputFile;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
@@ -924,7 +924,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             VariantScope variantScope = getVariantScope();
 
             GlobalScope globalScope = variantScope.getGlobalScope();
-            IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+            VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact

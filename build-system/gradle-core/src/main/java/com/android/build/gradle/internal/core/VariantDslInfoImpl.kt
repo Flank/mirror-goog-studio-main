@@ -84,13 +84,13 @@ open class VariantDslInfoImpl internal constructor(
     private val projectOptions: ProjectOptions,
     private val issueReporter: EvalIssueReporter,
     isInExecutionPhase: BooleanSupplier
-): IVariantDslInfo {
+): VariantDslInfo {
 
     /**
      * This should be mostly private and not used outside of this class.
      * Unfortunately there are a few cases where this cannot happen.
      *
-     * Still, DO NOT USE. You should mostly use [IVariantDslInfo] which does not give access to this.
+     * Still, DO NOT USE. You should mostly use [VariantDslInfo] which does not give access to this.
      */
     val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavors, issueReporter)
 
@@ -105,7 +105,7 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @see VariantType.isTestComponent
      */
-    override val testedVariant: IVariantDslInfo?
+    override val testedVariant: VariantDslInfo?
         get() = testedVariantImpl
 
     /**

@@ -21,7 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -416,7 +416,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
-            IVariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
+            VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
             VariantSources variantSources = getVariantScope().getVariantSources();
 
             Project project = getVariantScope().getGlobalScope().getProject();

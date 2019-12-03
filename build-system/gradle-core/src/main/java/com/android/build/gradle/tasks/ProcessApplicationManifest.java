@@ -33,7 +33,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -642,7 +642,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             super.configure(task);
 
             final VariantScope variantScope = getVariantScope();
-            final IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+            final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
             final VariantSources variantSources = variantScope.getVariantSources();
             final GlobalScope globalScope = variantScope.getGlobalScope();
 

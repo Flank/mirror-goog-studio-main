@@ -23,7 +23,7 @@ import com.android.Version;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.TestVariant;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
@@ -300,7 +300,7 @@ public class PluginDslTest {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
                 String variantName =
                         StringHelper.combineAsCamelCase(ImmutableList.of(dim1, dim2, "debug"));
-                IVariantDslInfo variant = variantMap.get(variantName).getVariantDslInfo();
+                VariantDslInfo variant = variantMap.get(variantName).getVariantDslInfo();
                 assertThat(
                                 variant.getJavaCompileOptions()
                                         .getAnnotationProcessorOptions()

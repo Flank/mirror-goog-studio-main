@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -84,7 +84,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     }
 
     protected void computeOutputs(
-            @NonNull IVariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull ApplicationVariantData variant,
             boolean includeMainApk) {
         BaseExtension extension = globalScope.getExtension();
@@ -185,7 +185,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
     }
 
-    private void restrictEnabledOutputs(IVariantDslInfo variantDslInfo, List<ApkData> apkDataList) {
+    private void restrictEnabledOutputs(VariantDslInfo variantDslInfo, List<ApkData> apkDataList) {
 
         Set<String> supportedAbis = variantDslInfo.getSupportedAbis();
         ProjectOptions projectOptions = globalScope.getProjectOptions();

@@ -19,7 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.Operations
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.core.IVariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -46,7 +46,7 @@ class VariantPropertiesImplTest {
 
     @Mock lateinit var variantScope: VariantScope
     @Mock lateinit var globalScope: GlobalScope
-    @Mock lateinit var variantDslInfo: IVariantDslInfo
+    @Mock lateinit var variantDslInfo: VariantDslInfo
     @Mock lateinit var operations: Operations
     @Mock lateinit var publicConfiguration: com.android.build.api.variant.VariantConfiguration
     @Mock lateinit var dslScope: DslScope

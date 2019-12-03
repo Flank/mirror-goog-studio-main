@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.IVariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -60,7 +60,7 @@ class CompatibleScreensManifestTest {
     @Mock internal lateinit var scope: VariantScope
     @Mock internal lateinit var globalScope: GlobalScope
     @Mock private lateinit var outputScope: OutputScope
-    @Mock private lateinit var variantDslInfo: IVariantDslInfo
+    @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer

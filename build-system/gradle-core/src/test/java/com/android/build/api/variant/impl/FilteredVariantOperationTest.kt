@@ -17,7 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.core.IVariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.scope.VariantScope
@@ -157,7 +157,7 @@ class FilteredVariantOperationTest {
         buildTypeName: String? = null,
         flavorName: String? = null): VariantScope {
         val variantScope = Mockito.mock(VariantScope::class.java)
-        val variantDslInfo = Mockito.mock(IVariantDslInfo::class.java)
+        val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
         val variantData = Mockito.mock(BaseVariantData::class.java)
         val publicVariantApi = Mockito.mock(VariantImpl::class.java)
         Mockito.`when`(variantScope.variantData).thenReturn(variantData)

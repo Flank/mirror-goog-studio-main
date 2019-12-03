@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -46,7 +46,7 @@ import org.gradle.api.provider.Provider;
  */
 public abstract class AbstractTestDataImpl implements TestData {
 
-    @NonNull private final IVariantDslInfo testVariantConfig;
+    @NonNull private final VariantDslInfo testVariantConfig;
     @NonNull private final VariantSources testVariantSources;
 
     @NonNull
@@ -59,7 +59,7 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Nullable protected final FileCollection testedApksDir;
 
     public AbstractTestDataImpl(
-            @NonNull IVariantDslInfo testVariantDslInfo,
+            @NonNull VariantDslInfo testVariantDslInfo,
             @NonNull VariantSources testVariantSources,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {

@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.TestOptions;
@@ -830,7 +830,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
-        IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         SigningConfig signingConfig = variantDslInfo.getSigningConfig();
         String signingConfigName = null;

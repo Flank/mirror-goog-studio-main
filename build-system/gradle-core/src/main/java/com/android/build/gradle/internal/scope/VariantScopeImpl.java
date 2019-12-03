@@ -58,7 +58,7 @@ import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingBlockOptions;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
@@ -268,7 +268,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     @NonNull
-    public IVariantDslInfo getVariantDslInfo() {
+    public VariantDslInfo getVariantDslInfo() {
         return variantData.getVariantDslInfo();
     }
 
@@ -457,7 +457,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     private List<File> gatherProguardFiles(ProguardFileType type) {
-        IVariantDslInfo variantDslInfo = getVariantDslInfo();
+        VariantDslInfo variantDslInfo = getVariantDslInfo();
 
         List<File> result = variantDslInfo.gatherProguardFiles(type);
         result.addAll(postProcessingOptions.getProguardFiles(type));

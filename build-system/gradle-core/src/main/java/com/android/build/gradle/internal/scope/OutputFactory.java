@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.core.IVariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
@@ -40,11 +40,11 @@ public class OutputFactory {
     static final String UNIVERSAL = "universal";
 
     private final String projectBaseName;
-    private final IVariantDslInfo variantDslInfo;
+    private final VariantDslInfo variantDslInfo;
     private final OutputScope.Builder outputScopeBuilder;
     private final Supplier<OutputScope> outputSupplier;
 
-    public OutputFactory(String projectBaseName, IVariantDslInfo variantDslInfo) {
+    public OutputFactory(String projectBaseName, VariantDslInfo variantDslInfo) {
         this.projectBaseName = projectBaseName;
         this.variantDslInfo = variantDslInfo;
         this.outputScopeBuilder = new OutputScope.Builder();
