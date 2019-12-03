@@ -18,8 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.core.IVariantDslInfo
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -31,9 +30,8 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantTypeImpl
-import com.android.builder.model.ApiVersion
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.base.Joiner
@@ -62,9 +60,8 @@ class CompatibleScreensManifestTest {
     @Mock internal lateinit var scope: VariantScope
     @Mock internal lateinit var globalScope: GlobalScope
     @Mock private lateinit var outputScope: OutputScope
-    @Mock private lateinit var variantDslInfo: VariantDslInfo
+    @Mock private lateinit var variantDslInfo: IVariantDslInfo
     @Suppress("DEPRECATION")
-    @Mock private lateinit var mergedFlavor: MergedFlavor
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer
 
@@ -87,8 +84,7 @@ class CompatibleScreensManifestTest {
         `when`(scope.taskContainer).thenReturn(taskContainer)
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
-        `when`<ApiVersion>(mergedFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
-        `when`<MergedFlavor>(variantDslInfo.mergedFlavor).thenReturn(mergedFlavor)
+        `when`<AndroidVersion>(variantDslInfo.minSdkVersion).thenReturn(AndroidVersion(21))
         `when`(variantDslInfo.baseName).thenReturn("baseName")
         `when`(variantDslInfo.fullName).thenReturn("fullName")
         `when`(variantDslInfo.variantType).thenReturn(VariantTypeImpl.BASE_APK)

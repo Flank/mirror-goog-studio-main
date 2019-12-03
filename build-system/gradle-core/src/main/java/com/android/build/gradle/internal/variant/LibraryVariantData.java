@@ -23,6 +23,7 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -63,7 +64,7 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     @Override
     @NonNull
     public String getDescription() {
-        final VariantDslInfo variantDslInfo = getVariantDslInfo();
+        final IVariantDslInfo variantDslInfo = getVariantDslInfo();
 
         if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);

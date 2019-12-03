@@ -436,12 +436,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ImmutableSet.copyOf(splits.abiFilters)
                 else
                     ImmutableSet.of()
-                val resConfigSet = ImmutableSet.copyOf(
-                    variantScope
-                        .variantDslInfo
-                        .mergedFlavor
-                        .resourceConfigurations
-                )
+                val resConfigSet = variantScope.variantDslInfo.resourceConfigurations
 
                 task.splitList = SplitList(densitySet, languageSet, abiSet, resConfigSet)
             } else {

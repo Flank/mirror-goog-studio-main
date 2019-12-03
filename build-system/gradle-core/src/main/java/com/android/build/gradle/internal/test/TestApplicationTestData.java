@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -45,10 +45,10 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
 
     private final Supplier<String> testApplicationId;
     private final Map<String, String> testedProperties;
-    private final VariantDslInfo variantDslInfo;
+    private final IVariantDslInfo variantDslInfo;
 
     public TestApplicationTestData(
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull IVariantDslInfo variantDslInfo,
             @NonNull VariantSources variantSources,
             Supplier<String> testApplicationId,
             @NonNull Provider<Directory> testApkDir,

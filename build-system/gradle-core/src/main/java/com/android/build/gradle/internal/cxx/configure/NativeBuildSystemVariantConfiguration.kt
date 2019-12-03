@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.IVariantDslInfo
 import com.android.build.gradle.tasks.NativeBuildSystem
 
 /**
@@ -33,7 +33,7 @@ data class NativeBuildSystemVariantConfig(
 
 fun createNativeBuildSystemVariantConfig(
     buildSystem: NativeBuildSystem,
-    variantDslInfo: VariantDslInfo) : NativeBuildSystemVariantConfig {
+    variantDslInfo: IVariantDslInfo) : NativeBuildSystemVariantConfig {
 
     /**
      * The set of abiFilters from the externalNativeBuild part of the DSL. For example,

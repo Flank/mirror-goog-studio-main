@@ -157,11 +157,11 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST,
                 task.apkList)
 
-            val config = variantScope.variantDslInfo
-            task.minSdkVersion.set(task.project.provider {
-                val minSdk = config.mergedFlavor.minSdkVersion
-                minSdk?.apiString
-            })
+            task.minSdkVersion.set(
+                task.project.provider {
+                    variantScope.variantDslInfo.minSdkVersion.apiString
+                }
+            )
             task.minSdkVersion.disallowChanges()
         }
     }

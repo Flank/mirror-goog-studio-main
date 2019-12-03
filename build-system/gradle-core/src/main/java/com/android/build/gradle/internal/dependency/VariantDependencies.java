@@ -37,7 +37,7 @@ import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.attributes.VariantAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -120,7 +120,7 @@ public class VariantDependencies {
     public static final class Builder {
         @NonNull private final Project project;
         @NonNull private final SyncIssueHandler errorReporter;
-        @NonNull private final VariantDslInfo variantDslInfo;
+        @NonNull private final IVariantDslInfo variantDslInfo;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
         // default size should be enough. It's going to be rare for a variant to include
@@ -141,7 +141,7 @@ public class VariantDependencies {
         protected Builder(
                 @NonNull Project project,
                 @NonNull SyncIssueHandler errorReporter,
-                @NonNull VariantDslInfo variantDslInfo) {
+                @NonNull IVariantDslInfo variantDslInfo) {
             this.project = project;
             this.errorReporter = errorReporter;
             this.variantDslInfo = variantDslInfo;
@@ -679,7 +679,7 @@ public class VariantDependencies {
     public static Builder builder(
             @NonNull Project project,
             @NonNull SyncIssueHandler errorReporter,
-            @NonNull VariantDslInfo variantDslInfo) {
+            @NonNull IVariantDslInfo variantDslInfo) {
         return new Builder(project, errorReporter, variantDslInfo);
     }
 

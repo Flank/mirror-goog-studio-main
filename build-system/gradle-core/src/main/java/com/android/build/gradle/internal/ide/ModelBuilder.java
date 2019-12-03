@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.TestOptions;
@@ -588,7 +589,8 @@ public class ModelBuilder<Extension extends BaseExtension>
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        // Need access to the merged flavors for the model, so we cast.
+        VariantDslInfo variantDslInfo = (VariantDslInfo) variantData.getVariantDslInfo();
 
         File manifest = variantData.getVariantSources().getMainManifestIfExists();
         if (manifest != null) {
@@ -825,29 +827,10 @@ public class ModelBuilder<Extension extends BaseExtension>
         return result;
     }
 
-    private void checkSigningConfig(
-            @NonNull VariantScope scope, @NonNull VariantDslInfo configuration) {
-
-        if (scope.getType().isDynamicFeature()) {
-            if (configuration.getMergedFlavor().getSigningConfig() != null
-                    || configuration.getBuildType().getSigningConfig() != null) {
-                String message =
-                        "Signing configuration should not be declared in the "
-                                + "dynamic-feature. Dynamic-features use the signing configuration "
-                                + "declared in the application module.";
-                extraModelInfo
-                        .getSyncIssueHandler()
-                        .reportWarning(Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
-            }
-        }
-    }
-
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-
-        checkSigningConfig(scope, variantDslInfo);
+        IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         SigningConfig signingConfig = variantDslInfo.getSigningConfig();
         String signingConfigName = null;
@@ -1176,9 +1159,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                         .get()
                         .getAsFile());
         folders.add(scope.getBuildConfigSourceOutputDir());
-        Boolean ndkMode =
-                variantData.getVariantDslInfo().getMergedFlavor().getRenderscriptNdkModeEnabled();
-        if (ndkMode == null || !ndkMode) {
+        boolean ndkMode = variantData.getVariantDslInfo().getRenderscriptNdkModeEnabled();
+        if (!ndkMode) {
             folders.add(
                     scope.getArtifacts()
                             .getFinalProduct(

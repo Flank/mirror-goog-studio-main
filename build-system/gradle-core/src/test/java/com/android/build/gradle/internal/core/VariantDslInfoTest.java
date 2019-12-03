@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-/** Test cases for {@link VariantDslInfo}. */
+/** Test cases for {@link IVariantDslInfo}. */
 public class VariantDslInfoTest {
 
     private DefaultConfig defaultConfig;
@@ -63,7 +63,7 @@ public class VariantDslInfoTest {
 
     @Test
     public void testPackageOverrideNone() {
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getIdOverride()).isNull();
     }
@@ -72,7 +72,7 @@ public class VariantDslInfoTest {
     public void testIdOverrideIdFroflavor() {
         flavorConfig.setApplicationId("foo.bar");
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getIdOverride()).isEqualTo("foo.bar");
     }
@@ -82,7 +82,7 @@ public class VariantDslInfoTest {
         flavorConfig.setApplicationId("foo.bar");
         buildType.setApplicationIdSuffix(".fortytwo");
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getIdOverride()).isEqualTo("foo.bar.fortytwo");
     }
@@ -92,7 +92,7 @@ public class VariantDslInfoTest {
         flavorConfig.setApplicationId("foo.bar");
         buildType.setApplicationIdSuffix("fortytwo");
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getIdOverride()).isEqualTo("foo.bar.fortytwo");
     }
@@ -102,7 +102,7 @@ public class VariantDslInfoTest {
         flavorConfig.setVersionName("1.0");
         buildType.setVersionNameSuffix("-DEBUG");
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getVersionName()).isEqualTo("1.0-DEBUG");
     }
@@ -117,7 +117,7 @@ public class VariantDslInfoTest {
         SigningConfig override = new SigningConfig("override");
         override.setStorePassword("override");
 
-        VariantDslInfo variant = getVariant(override);
+        IVariantDslInfo variant = getVariant(override);
 
         assertThat(variant.getSigningConfig()).isEqualTo(override);
     }
@@ -132,7 +132,7 @@ public class VariantDslInfoTest {
         SigningConfig override = new SigningConfig("override");
         override.setStorePassword("override");
 
-        VariantDslInfo variant = getVariant(override);
+        IVariantDslInfo variant = getVariant(override);
 
         assertThat(variant.getSigningConfig()).isEqualTo(override);
     }
@@ -142,7 +142,7 @@ public class VariantDslInfoTest {
         ApiVersion minSdkVersion = DefaultApiVersion.create(5);
         defaultConfig.setMinSdkVersion(minSdkVersion);
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion())
                 .isEqualTo(
@@ -152,7 +152,7 @@ public class VariantDslInfoTest {
 
     @Test
     public void testGetMinSdkVersionDefault() {
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion()).isEqualTo(new AndroidVersion(1, null));
     }
@@ -162,14 +162,14 @@ public class VariantDslInfoTest {
         ApiVersion targetSdkVersion = DefaultApiVersion.create(9);
         defaultConfig.setTargetSdkVersion(targetSdkVersion);
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
     }
 
     @Test
     public void testGetTargetSdkVersionDefault() {
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(DefaultApiVersion.create(-1));
     }
@@ -178,7 +178,7 @@ public class VariantDslInfoTest {
     public void testGetVersionCode() {
         defaultConfig.setVersionCode(42);
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getVersionCode()).isEqualTo(42);
     }
@@ -189,7 +189,7 @@ public class VariantDslInfoTest {
         defaultConfig.setVersionNameSuffix("-bar");
         buildType.setVersionNameSuffix("-baz");
 
-        VariantDslInfo variant = getVariant();
+        IVariantDslInfo variant = getVariant();
 
         assertThat(variant.getVersionName()).isEqualTo("foo-bar-baz");
     }
@@ -201,7 +201,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(false);
 
-        VariantDslInfo variant = createVariant(18);
+        IVariantDslInfo variant = createVariant(18);
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(16);
@@ -214,7 +214,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(false);
         buildType.setDebuggable(true);
 
-        VariantDslInfo variant = createVariant(18);
+        IVariantDslInfo variant = createVariant(18);
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(16);
@@ -227,7 +227,7 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(true);
 
-        VariantDslInfo variant = createVariant(18);
+        IVariantDslInfo variant = createVariant(18);
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(18);
@@ -240,25 +240,25 @@ public class VariantDslInfoTest {
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(true);
 
-        VariantDslInfo variant = createVariant(22);
+        IVariantDslInfo variant = createVariant(22);
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
         assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(20);
     }
 
-    private VariantDslInfo createVariant(int deviceApiVersion) {
+    private IVariantDslInfo createVariant(int deviceApiVersion) {
         return createVariant(deviceApiVersion, null);
     }
 
-    private VariantDslInfo getVariant() {
+    private IVariantDslInfo getVariant() {
         return createVariant(null, null /*signingOverride*/);
     }
 
-    private VariantDslInfo getVariant(SigningConfig signingOverride) {
+    private IVariantDslInfo getVariant(SigningConfig signingOverride) {
         return createVariant(null, signingOverride /*signingOverride*/);
     }
 
-    private VariantDslInfo createVariant(Integer deviceApiVersion, SigningConfig signingOverride) {
+    private IVariantDslInfo createVariant(Integer deviceApiVersion, SigningConfig signingOverride) {
 
         ProjectOptions projectOptions;
         if (deviceApiVersion == null) {

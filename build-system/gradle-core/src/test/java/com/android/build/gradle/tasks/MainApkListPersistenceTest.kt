@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.IVariantDslInfo
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -58,7 +58,7 @@ open class MainApkListPersistenceTest {
 
     @Mock private lateinit var variantScope: VariantScope
     @Mock private lateinit var globalScope: GlobalScope
-    @Mock private lateinit var config: VariantDslInfo
+    @Mock private lateinit var config: IVariantDslInfo
     @Mock private lateinit var artifacts: BuildArtifactsHolder
 
     private lateinit var outputFactory: OutputFactory

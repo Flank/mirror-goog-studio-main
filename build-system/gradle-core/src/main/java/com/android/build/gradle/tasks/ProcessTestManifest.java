@@ -26,7 +26,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -82,7 +82,7 @@ import org.gradle.api.tasks.TaskProvider;
  * <p>For both test modules and tests in androidTest process is the same, except for how the tested
  * application id is extracted.
  *
- * <p>Tests in androidTest get that info form the {@link VariantDslInfo#getTestedApplicationId()},
+ * <p>Tests in androidTest get that info form the {@link IVariantDslInfo#getTestedApplicationId()},
  * while the test modules get the info from the published intermediate manifest with type {@link
  * AndroidArtifacts} TYPE_METADATA of the tested app.
  */
@@ -543,7 +543,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.configure(task);
             Project project = task.getProject();
 
-            final VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
+            final IVariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
             final VariantSources variantSources = getVariantScope().getVariantSources();
 
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
@@ -580,7 +580,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantDslInfo::getTestedApplicationId));
             task.getTestedApplicationId().disallowChanges();
 
-            VariantDslInfo testedConfig = variantDslInfo.getTestedVariant();
+            IVariantDslInfo testedConfig = variantDslInfo.getTestedVariant();
             task.onlyTestApk = testedConfig != null && testedConfig.getVariantType().isAar();
 
             task.getInstrumentationRunner()

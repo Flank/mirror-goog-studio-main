@@ -32,7 +32,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -114,7 +114,7 @@ public class LibraryTaskManager extends TaskManager {
     public void createTasksForVariantScope(
             @NonNull final VariantScope variantScope,
             @NonNull List<VariantScope> variantScopesForLint) {
-        final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+        final IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
         GlobalScope globalScope = variantScope.getGlobalScope();
 

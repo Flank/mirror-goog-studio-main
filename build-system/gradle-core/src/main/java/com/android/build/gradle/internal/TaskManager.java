@@ -63,7 +63,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
@@ -824,7 +824,7 @@ public abstract class TaskManager {
             TaskProvider<RenderscriptCompile> rsTask =
                     taskFactory.register(new RenderscriptCompile.CreationAction(scope));
 
-            VariantDslInfo variantDslInfo = scope.getVariantDslInfo();
+            IVariantDslInfo variantDslInfo = scope.getVariantDslInfo();
 
             TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
             // only put this dependency if rs will generate Java code
@@ -1677,7 +1677,7 @@ public abstract class TaskManager {
     public void maybeCreateLintVitalTask(
             @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
         VariantScope variantScope = variantData.getScope();
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         if (!isLintVariant(variantScope)
                 || variantDslInfo.getBuildType().isDebuggable()
@@ -1940,7 +1940,7 @@ public abstract class TaskManager {
         checkNotNull(variantScope.getTaskContainer().getJavacTask());
 
         final BaseVariantData variantData = variantScope.getVariantData();
-        final VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        final IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
@@ -2269,7 +2269,7 @@ public abstract class TaskManager {
     }
 
     protected void handleJacocoDependencies(@NonNull VariantScope variantScope) {
-        VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+        IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
         // we add the jacoco jar if coverage is enabled, but we don't add it
         // for test apps as it's already part of the tested app.
         // For library project, since we cannot use the local jars of the library,
@@ -2405,7 +2405,7 @@ public abstract class TaskManager {
 
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        IVariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
         JavaCompileOptions javaCompileOptions = variantDslInfo.getJavaCompileOptions();
         AnnotationProcessorOptions processorOptions =
                 javaCompileOptions.getAnnotationProcessorOptions();
@@ -2575,7 +2575,7 @@ public abstract class TaskManager {
                 final VariantType variantType = variantScope.getType();
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-                    final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+                    final IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
                     final TaskProvider<? extends Task> assembleTask =
                             taskContainer.getAssembleTask();

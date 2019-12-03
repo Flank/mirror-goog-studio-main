@@ -32,7 +32,7 @@ import com.android.utils.combineAsCamelCase
 import java.lang.RuntimeException
 import java.util.function.BooleanSupplier
 
-/** Builder for [VariantDslInfo].
+/** Builder for [IVariantDslInfo].
  *
  * This allows setting all temporary items on the builder before actually
  * instantiating the configuration, in order to keep it immutable.
@@ -44,7 +44,7 @@ abstract class VariantBuilder protected constructor(
     protected val defaultConfig: DefaultConfig,
     protected val defaultSourceProvider: SourceProvider,
     protected val buildType: BuildType,
-    protected val buildTypeSourceProvider: SourceProvider? = null,
+    private val buildTypeSourceProvider: SourceProvider? = null,
     protected val signingConfigOverride: SigningConfig?,
     protected val manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     protected val projectOptions: ProjectOptions,
@@ -254,7 +254,7 @@ private class VariantConfigurationBuilder(
 }
 
 /**
- * Creates a [VariantDslInfo] for a testing module variant.
+ * Creates a [IVariantDslInfo] for a testing module variant.
  *
  *
  * The difference from the regular modules is how the original application id,
@@ -287,7 +287,7 @@ private class TestModuleConfigurationBuilder(
 ) {
 
     override fun createVariantDslInfo(): VariantDslInfo {
-        return object:  VariantDslInfo(
+        return object: VariantDslInfo(
             name,
             flavorName,
             variantType,

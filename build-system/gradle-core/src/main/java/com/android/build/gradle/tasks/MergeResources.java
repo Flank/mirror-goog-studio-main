@@ -738,7 +738,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.crunchPng = variantScope.isCrunchPngs();
 
             VectorDrawablesOptions vectorDrawablesOptions =
-                    variantData.getVariantDslInfo().getMergedFlavor().getVectorDrawables();
+                    variantData.getVariantDslInfo().getVectorDrawables();
             task.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
             if (task.generatedDensities == null) {
                 task.generatedDensities = Collections.emptySet();

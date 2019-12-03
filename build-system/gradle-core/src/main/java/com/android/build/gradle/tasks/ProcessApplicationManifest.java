@@ -33,7 +33,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -642,7 +642,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             super.configure(task);
 
             final VariantScope variantScope = getVariantScope();
-            final VariantDslInfo config = variantScope.getVariantDslInfo();
+            final IVariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
             final VariantSources variantSources = variantScope.getVariantSources();
             final GlobalScope globalScope = variantScope.getGlobalScope();
 
@@ -669,7 +669,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // optional manifest files too.
             if (variantScope.getTaskContainer().getMicroApkTask() != null
-                    && config.getBuildType().isEmbedMicroApp()) {
+                    && variantDslInfo.getBuildType().isEmbedMicroApp()) {
                 task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
@@ -678,27 +678,21 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     task.getCompatibleScreensManifest());
 
             task.getMinSdkVersion()
-                    .set(
-                            project.provider(
-                                    () -> {
-                                        ApiVersion minSdk =
-                                                config.getMergedFlavor().getMinSdkVersion();
-                                        return minSdk == null ? null : minSdk.getApiString();
-                                    }));
+                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
                     .set(
                             project.provider(
                                     () -> {
-                                        ApiVersion targetSdk =
-                                                config.getMergedFlavor().getTargetSdkVersion();
-                                        return targetSdk == null ? null : targetSdk.getApiString();
+                                        ApiVersion targetSdk = variantDslInfo.getTargetSdkVersion();
+                                        return targetSdk.getApiLevel() < 1
+                                                ? null
+                                                : targetSdk.getApiString();
                                     }));
             task.getTargetSdkVersion().disallowChanges();
 
-            task.getMaxSdkVersion()
-                    .set(project.provider(config.getMergedFlavor()::getMaxSdkVersion));
+            task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
             task.getOptionalFeatures()
@@ -746,15 +740,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.packageOverride.set(variantProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
-                    task.getProject().provider(config::getManifestPlaceholders));
+                    task.getProject().provider(variantDslInfo::getManifestPlaceholders));
             task.manifestPlaceholders.disallowChanges();
             task.getMainManifest().set(project.provider(variantSources::getMainManifestFilePath));
             task.getMainManifest().disallowChanges();
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.isFeatureSplitVariantType = config.getVariantType().isDynamicFeature();
-            task.buildTypeName = config.getBuildType().getName();
+            task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
+            task.buildTypeName = variantDslInfo.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

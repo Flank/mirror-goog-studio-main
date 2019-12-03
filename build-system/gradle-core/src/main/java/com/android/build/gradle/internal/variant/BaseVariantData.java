@@ -30,6 +30,7 @@ import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -259,7 +260,7 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public VariantDslInfo getVariantDslInfo() {
+    public IVariantDslInfo getVariantDslInfo() {
         return variantDslInfo;
     }
 

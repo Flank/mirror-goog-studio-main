@@ -48,20 +48,14 @@ fun createCxxAbiModel(
             join(variant.jsonFolder, abi.tag)
         }
         override val abiPlatformVersion by lazy {
-            val minSdkVersion =
-                baseVariantData.variantDslInfo.mergedFlavor.minSdkVersion
-            val version = if (minSdkVersion == null) {
-                null
-            } else{
-                AndroidVersion(minSdkVersion.apiLevel, minSdkVersion.codename)
-            }
+            val minSdkVersion = baseVariantData.variantDslInfo.minSdkVersion
             global
                 .sdkComponents
                 .ndkHandlerSupplier.get()
                 .ndkPlatform
                 .getOrThrow()
                 .ndkInfo
-                .findSuitablePlatformVersion(abi.tag, version)
+                .findSuitablePlatformVersion(abi.tag, minSdkVersion)
         }
         override val cmake by lazy {
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {

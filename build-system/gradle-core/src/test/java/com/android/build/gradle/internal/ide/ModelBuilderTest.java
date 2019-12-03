@@ -27,7 +27,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
@@ -133,7 +133,7 @@ public class ModelBuilderTest {
     @Test
     public void testSingleVariantNoOutputMinimalisticModel() {
 
-        VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
+        IVariantDslInfo variantDslInfo = Mockito.mock(IVariantDslInfo.class);
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
@@ -157,7 +157,7 @@ public class ModelBuilderTest {
     @Test
     public void testSingleVariantWithOutputMinimalisticModel() throws IOException {
 
-        VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
+        IVariantDslInfo variantDslInfo = Mockito.mock(IVariantDslInfo.class);
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
@@ -207,7 +207,7 @@ public class ModelBuilderTest {
     @Test
     public void testSingleVariantWithMultipleOutputMinimalisticModel() throws IOException {
 
-        VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
+        IVariantDslInfo variantDslInfo = Mockito.mock(IVariantDslInfo.class);
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
@@ -265,7 +265,7 @@ public class ModelBuilderTest {
         List<String> expectedVariantNames = new ArrayList<>();
         ImmutableList.Builder<VariantScope> scopes = ImmutableList.builder();
         for (int i = 0; i < 5; i++) {
-            VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
+            IVariantDslInfo variantDslInfo = Mockito.mock(IVariantDslInfo.class);
             when(variantDslInfo.getDirName()).thenReturn("variant/name" + i);
             when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
@@ -322,7 +322,7 @@ public class ModelBuilderTest {
     public void testSingleVariantWithOutputWithSingleTestVariantMinimalisticModel()
             throws IOException {
 
-        VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
+        IVariantDslInfo variantDslInfo = Mockito.mock(IVariantDslInfo.class);
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.LIBRARY);
 
@@ -343,7 +343,7 @@ public class ModelBuilderTest {
         when(apkDataMock.getOutputFileName()).thenReturn("test.aar");
 
 
-        VariantDslInfo testVariantConfiguration = Mockito.mock(VariantDslInfo.class);
+        IVariantDslInfo testVariantConfiguration = Mockito.mock(IVariantDslInfo.class);
         when(testVariantConfiguration.getDirName()).thenReturn("test/name");
         when(testVariantConfiguration.getVariantType()).thenReturn(VariantTypeImpl.UNIT_TEST);
 
@@ -410,7 +410,7 @@ public class ModelBuilderTest {
     }
 
     private static BaseVariantData createVariantData(
-            VariantScope variantScope, VariantDslInfo variantDslInfo) {
+            VariantScope variantScope, IVariantDslInfo variantDslInfo) {
         BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
         final VariantType type = variantDslInfo.getVariantType();
         when(variantData.getType()).thenReturn(type);
@@ -423,7 +423,7 @@ public class ModelBuilderTest {
     }
 
     private VariantScope createVariantScope(
-            String variantName, String dirName, VariantDslInfo variantDslInfo) {
+            String variantName, String dirName, IVariantDslInfo variantDslInfo) {
         VariantScope variantScope = Mockito.mock(VariantScope.class);
         when(variantScope.getFullVariantName()).thenReturn(variantName);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);

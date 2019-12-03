@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.IVariantDslInfo
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.builder.core.VariantTypeImpl
 import com.android.utils.Pair
@@ -46,7 +46,7 @@ import java.io.StringReader
  */
 class BuildElementsTest {
 
-    @Mock private val variantDslInfo: VariantDslInfo? = null
+    @Mock private val variantDslInfo: IVariantDslInfo? = null
 
     @get:Rule
     var temporaryFolder = TemporaryFolder()

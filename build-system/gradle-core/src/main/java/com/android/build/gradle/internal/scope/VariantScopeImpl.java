@@ -53,14 +53,12 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.OldPostProcessingOptions;
 import com.android.build.gradle.internal.core.PostProcessingBlockOptions;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.IVariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
@@ -70,7 +68,6 @@ import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -114,7 +111,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -201,7 +197,9 @@ public class VariantScopeImpl implements VariantScope {
                     buildType.getPostprocessing(), getType().isTestComponent());
         }
 
-        return new OldPostProcessingOptions(buildType, globalScope.getProject());
+        return variantData
+                .getVariantDslInfo()
+                .createOldPostProcessingOptions(globalScope.getProject());
     }
 
     protected Project getProject() {
@@ -270,7 +268,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     @NonNull
-    public VariantDslInfo getVariantDslInfo() {
+    public IVariantDslInfo getVariantDslInfo() {
         return variantData.getVariantDslInfo();
     }
 
@@ -459,18 +457,10 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     private List<File> gatherProguardFiles(ProguardFileType type) {
-        VariantDslInfo variantDslInfo = getVariantDslInfo();
+        IVariantDslInfo variantDslInfo = getVariantDslInfo();
 
-        List<File> result =
-                new ArrayList<>(
-                        BaseConfigAdapter.getProguardFiles(
-                                variantDslInfo.getDefaultConfig(), type));
-
+        List<File> result = variantDslInfo.gatherProguardFiles(type);
         result.addAll(postProcessingOptions.getProguardFiles(type));
-
-        for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
-            result.addAll(BaseConfigAdapter.getProguardFiles(flavor, type));
-        }
 
         return result;
     }
