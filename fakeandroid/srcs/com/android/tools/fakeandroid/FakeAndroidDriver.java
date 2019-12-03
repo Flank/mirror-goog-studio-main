@@ -94,6 +94,11 @@ public class FakeAndroidDriver extends ProcessRunner {
             args.add(extraArtFlag);
         }
 
+        // Make sure that art is always started in debug mode.
+        // We pay a slight performance penalty for better
+        // dumps when we crash.
+        args.add("-XXlib:libartd.so");
+
         args.add("com.android.tools.applauncher.FakeAndroid");
 
         this.myAddress = address;
