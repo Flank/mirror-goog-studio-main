@@ -18,7 +18,6 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_CONSTRAINT_LAYOUT_DESCRIPTION
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.MOTION_LAYOUT
 import com.android.SdkConstants.MotionSceneTags.MOTION_SCENE
 import com.android.ide.common.resources.usage.ResourceUsageModel
@@ -36,7 +35,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Element
-import java.io.File
 
 /**
  * Various checks for Motion Layout files.
@@ -59,9 +57,11 @@ class MotionLayoutDetector : ResourceXmlDetector() {
         if (!referencesRecorded) {
             return
         }
+        val isIncremental = isIncrementalMode(context)
         references.forEach { (reference, location) ->
             val resource = resourceModel.getResource(reference.type, reference.name)
-            if (resource == null || !resource.isDeclared) {
+            if (!isIncremental && (resource == null || !resource.isDeclared)) {
+                // Can only read all MotionScene files when analyzing the entire project.
                 context.report(
                     INVALID_SCENE_FILE_REFERENCE,
                     location,
@@ -103,9 +103,6 @@ class MotionLayoutDetector : ResourceXmlDetector() {
             if (resource != null && resource.type == ResourceType.XML) {
                 references[resource] = context.getValueLocation(description)
                 referencesRecorded = true
-                if (isIncrementalMode(context)) {
-                    processMotionSceneFile(context, resource)
-                }
             } else {
                 val sceneUrl = motionSceneUrlFromMotionLayoutFileName(context)
                 context.report(
@@ -119,27 +116,11 @@ class MotionLayoutDetector : ResourceXmlDetector() {
         }
     }
 
-    private fun isIncrementalMode(context: XmlContext): Boolean =
+    private fun isIncrementalMode(context: Context): Boolean =
         !context.scope.contains(Scope.ALL_RESOURCE_FILES)
 
     private fun motionSceneUrlFromMotionLayoutFileName(context: XmlContext): String =
         "@xml/${context.file.nameWithoutExtension}_scene"
-
-    private fun processMotionSceneFile(context: XmlContext, resource: Resource) {
-        val motionFolder = File(context.file.parentFile.parentFile, "xml")
-        val motionFile = File(motionFolder, "${resource.name}$DOT_XML")
-        val contents = context.client.readFile(motionFile)
-        if (contents.isEmpty()) {
-            return
-        }
-        val xml = contents.toString()
-        val document = context.parser.parseXml(xml, motionFile) ?: return
-        val name = motionFile.nameWithoutExtension
-        val root = document.documentElement ?: return
-        if (root.tagName == MOTION_SCENE) {
-            resourceModel.addDeclaredResource(ResourceType.XML, name, null, true)
-        }
-    }
 
     companion object {
         private val IMPLEMENTATION = Implementation(

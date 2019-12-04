@@ -39,23 +39,6 @@ class MotionLayoutDetectorTest : AbstractCheckTest() {
             ).indented()).run().expectClean()
     }
 
-    fun testExistingMotionSceneFileIncremental() {
-        lint().files(
-            xml("res/xml/motion_scene.xml", "<MotionScene/>"),
-            xml("res/layout/motion_test.xml",
-                """
-                <android.support.constraint.motion.MotionLayout
-                    xmlns:android="http://schemas.android.com/apk/res/android"
-                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    android:id="@+id/motionLayout"
-                    app:layoutDescription="@xml/motion_scene"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                </android.support.constraint.motion.MotionLayout>
-                """
-            ).indented()).incremental("res/layout/motion_test.xml").run().expectClean()
-    }
-
     fun testMissingMotionSceneFile() {
         lint().files(
             xml(
@@ -79,6 +62,24 @@ class MotionLayoutDetectorTest : AbstractCheckTest() {
                 1 errors, 0 warnings
             """
             )
+    }
+
+    fun testMissingMotionSceneFileDisabledInIncremental() {
+        lint().files(
+            xml(
+                "res/layout/motion_test.xml",
+                """
+                <android.support.constraint.motion.MotionLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/motionLayout"
+                    app:layoutDescription="@xml/motion_scene"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                </android.support.constraint.motion.MotionLayout>
+                """
+            ).indented()
+        ).incremental("res/layout/motion_test.xml").run().expectClean()
     }
 
     fun testInvalidLayoutDescription() {
