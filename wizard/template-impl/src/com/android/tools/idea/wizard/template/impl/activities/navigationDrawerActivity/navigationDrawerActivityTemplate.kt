@@ -34,7 +34,7 @@ import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
 
-val navigationDrawerTemplate = template {
+val navigationDrawerActivityTemplate = template {
   revision = 1
   name = "Navigation Drawer Activity"
   minApi = 14
