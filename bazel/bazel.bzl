@@ -493,7 +493,8 @@ def iml_module(
         test_main_class = None,
         lint_baseline = None,
         lint_timeout = None,
-        back_deps = []):
+        back_deps = [],
+        exec_properties = {}):
     prod_deps = []
     test_deps = []
     for dep in deps:
@@ -591,6 +592,7 @@ def iml_module(
             visibility = visibility,
             main_class = test_main_class,
             coverage = test_coverage,
+            exec_properties = exec_properties,
         )
 
 def split_srcs(src_dirs, res_dirs, exclude):
@@ -723,11 +725,11 @@ _iml_project = rule(
         ),
     },
     outputs = {
-#       "win": "%{name}.win.zip",
-#       "win32": "%{name}.win32.zip",
-#       "mac": "%{name}.mac.zip",
-#       "linux": "%{name}.tar.gz",
-#       "output": "%{name}.log",
+        #       "win": "%{name}.win.zip",
+        #       "win32": "%{name}.win32.zip",
+        #       "mac": "%{name}.mac.zip",
+        #       "linux": "%{name}.tar.gz",
+        #       "output": "%{name}.log",
     },
     implementation = _iml_project_impl,
 )
