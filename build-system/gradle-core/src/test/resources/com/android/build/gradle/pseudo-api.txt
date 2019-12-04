@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a7a688ae1e19e3d6dec2d8ed3dfa29a5b034738498372f34595d8d295d716c49
+50b2c329c3bfc6d6038f695e3a364618ffbd02b12124fc55d466ca6249952156
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -206,8 +206,10 @@ com.android.build.gradle.LibraryPluginKt
 com.android.build.gradle.LibraryPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.LintPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.LintPlugin.<init>: com.android.build.gradle.LintPlugin ()
-com.android.build.gradle.LintPlugin.access$createTask: com.android.build.gradle.internal.tasks.LintStandaloneTask (com.android.build.gradle.LintPlugin, java.lang.String, java.lang.String, org.gradle.api.Project, org.gradle.api.plugins.JavaPluginConvention, org.gradle.api.artifacts.Configuration)
 com.android.build.gradle.LintPlugin.access$getJavaPluginConvention: org.gradle.api.plugins.JavaPluginConvention (com.android.build.gradle.LintPlugin)
+com.android.build.gradle.LintPlugin.access$getLintOptions$p: com.android.build.gradle.internal.dsl.LintOptions (com.android.build.gradle.LintPlugin)
+com.android.build.gradle.LintPlugin.access$registerTask: org.gradle.api.tasks.TaskProvider (com.android.build.gradle.LintPlugin, java.lang.String, java.lang.String, org.gradle.api.Project, org.gradle.api.plugins.JavaPluginConvention, org.gradle.api.artifacts.Configuration)
+com.android.build.gradle.LintPlugin.access$setLintOptions$p: void (com.android.build.gradle.LintPlugin, com.android.build.gradle.internal.dsl.LintOptions)
 com.android.build.gradle.LintPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.LintPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.ProguardFiles

@@ -26,6 +26,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Plugin for running lint **without** the Android Gradle plugin, such as in a pure Kotlin
@@ -45,32 +46,35 @@ open class LintPlugin : Plugin<Project> {
                 getJavaPluginConvention()?.let { javaConvention ->
                     val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
                     val projectName = project.name
-                    val task = createTask(
+                    val task = registerTask(
                         "lint",
                         "Run Android Lint analysis on project `$projectName`",
                         project,
                         javaConvention,
-                        customLintChecksConfig)
+                        customLintChecksConfig
+                    )
                     // Make the check task depend on the lint
-                    project.tasks
-                        .named(JavaBasePlugin.CHECK_TASK_NAME)
+                    project.tasks.named(JavaBasePlugin.CHECK_TASK_NAME)
                         .configure { t: Task -> t.dependsOn(task) }
-                    val lintVital = createTask(
+                    val lintVital = registerTask(
                         "lintVital",
                         "Runs lint on just the fatal issues in the project `$projectName`",
                         project,
                         javaConvention,
-                        customLintChecksConfig)
-                    lintVital.fatalOnly = true
-                    val lintFix = createTask(
+                        customLintChecksConfig
+                    )
+                    lintVital.configure { it.fatalOnly = true }
+                    registerTask(
                         "lintFix",
                         "Runs lint on `$projectName` and applies any safe suggestions to " +
                             "the source code.",
                         project,
                         javaConvention,
-                        customLintChecksConfig)
-                    lintFix.autoFix = true
-                    lintFix.group = "cleanup"
+                        customLintChecksConfig
+                    ).configure {
+                        it.autoFix = true
+                        it.group = "cleanup"
+                    }
                 }
             })
     }
@@ -83,23 +87,21 @@ open class LintPlugin : Plugin<Project> {
         project.plugins.withType(JavaBasePlugin::class.java, action)
     }
 
-    private fun createTask(
+    private fun registerTask(
         taskName: String,
         description: String,
         project: Project,
         javaConvention: JavaPluginConvention,
         customLintChecksConfig: Configuration
-    ): LintStandaloneTask {
-        val testResultsDir = javaConvention.testResultsDir
-        val tasks = project.tasks
-        val task = tasks.create(taskName, LintStandaloneTask::class.java)
-        task.group = JavaBasePlugin.VERIFICATION_GROUP
-        task.description = description
-        task.reportDir = testResultsDir
-        task.lintOptions = lintOptions
-        task.lintChecks = customLintChecksConfig
-        task.outputs.upToDateWhen { false }
-        return task
+    ): TaskProvider<LintStandaloneTask> {
+        return project.tasks.register(taskName, LintStandaloneTask::class.java) { task ->
+            task.group = JavaBasePlugin.VERIFICATION_GROUP
+            task.description = description
+            task.reportDir = javaConvention.testResultsDir
+            task.lintOptions = lintOptions
+            task.lintChecks = customLintChecksConfig
+            task.outputs.upToDateWhen { false }
+        }
     }
 
     private fun getJavaPluginConvention(): JavaPluginConvention? {
