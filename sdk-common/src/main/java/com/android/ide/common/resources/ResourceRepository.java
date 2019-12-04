@@ -64,6 +64,8 @@ public interface ResourceRepository {
 
     /**
      * Returns the resources with the given namespace and type keyed by resource names.
+     * If you need only the names of the resources, but not the resources themselves, call
+     * {@link #getResourceNames(ResourceNamespace, ResourceType)} instead.
      *
      * @param namespace the namespace of the resources to return
      * @param resourceType the type of the resources to return
@@ -72,6 +74,22 @@ public interface ResourceRepository {
     @NonNull
     ListMultimap<String, ResourceItem> getResources(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType);
+
+    /**
+     * Returns the names of resources with the given namespace and type. For some resource
+     * repositories calling this method can be more efficient than calling
+     * {@link #getResources(ResourceNamespace, ResourceType)} and then
+     * {@link ListMultimap#keySet()}.
+     *
+     * @param namespace the namespace of the resources to return
+     * @param resourceType the type of the resources to return
+     * @return the names of the resources matching the namespace and type
+     */
+    @NonNull
+    default Set<String> getResourceNames(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
+        return getResources(namespace, resourceType).keySet();
+    }
 
     /**
      * Calls the {@link ResourceVisitor#visit(ResourceItem)} method for all resources in the
