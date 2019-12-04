@@ -27,6 +27,6 @@ class CommandCallbackImpl implements Inspector.CommandCallback {
 
     @Override
     public void reply(byte[] bytes) {
-        Responses.replyRaw(mCommandId, bytes, bytes.length);
+        NativeTransport.sendRawResponseSuccess(mCommandId, bytes, bytes.length);
     }
 }

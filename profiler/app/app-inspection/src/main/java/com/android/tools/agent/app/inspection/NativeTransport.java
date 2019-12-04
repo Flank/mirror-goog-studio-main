@@ -16,14 +16,18 @@
 
 package com.android.tools.agent.app.inspection;
 
-class Responses {
-    public static native void replyError(int commandId, String errorMessage);
+/* JNI utilities for sending AppInspections messages across the underlying transport pipeline. */
+class NativeTransport {
+    public static native void sendServiceResponseError(int commandId, String errorMessage);
 
-    public static native void replySuccess(int commandId);
+    public static native void sendServiceResponseSuccess(int commandId);
 
-    public static native void replyRaw(int commandId, byte[] responseData, int length);
+    public static native void sendRawResponseSuccess(
+            int commandId, byte[] responseData, int length);
 
-    public static native void sendCrash(String inspectorId, String errorMessage);
+    public static native void sendRawResponseError(int commandId, String errorMessage);
 
-    public static native void sendRaw(String inspectorId, byte[] eventData, int length);
+    public static native void sendCrashEvent(String inspectorId, String errorMessage);
+
+    public static native void sendRawEvent(String inspectorId, byte[] eventData, int length);
 }
