@@ -136,7 +136,8 @@ private fun findNdkPathImpl(
     var ndkVersionFromDslRevision: Revision? = null
     if (ndkVersionOrDefault != null) {
         try {
-            ndkVersionFromDslRevision = Revision.parseRevision(ndkVersionOrDefault)
+            ndkVersionFromDslRevision =
+                stripPreviewFromRevision(Revision.parseRevision(ndkVersionOrDefault))
             if (ndkVersionFromDslRevision.toIntArray(true).size < 3) {
                 errorln(
                     "Specified android.ndkVersion '$ndkVersionOrDefault' does not have " +
@@ -189,8 +190,9 @@ private fun findNdkPathImpl(
                 else -> {
                     val revision = versionInfo.getValue(SDK_PKG_REVISION)!!
                     try {
-                        Revision.parseRevision(revision)
-                        Pair(location, versionInfo)
+                        val revision = Revision.parseRevision(revision)
+                        // Trim preview information since we expect to match major.minor.micro only
+                        Pair(location, stripPreviewFromRevision(revision))
                     } catch (e: NumberFormatException) {
                         considerAndReject(
                             location, "that location had " +
@@ -201,7 +203,7 @@ private fun findNdkPathImpl(
                 }
             }
         }
-        .sortedWith(compareBy({ -it.first.type.ordinal }, { it.second.revision }))
+        .sortedWith(compareBy({ -it.first.type.ordinal }, { it.second }))
         .asReversed()
 
     // From the existing NDKs find the highest. We'll use this as a fall-back in case there's an
@@ -242,7 +244,7 @@ private fun findNdkPathImpl(
                 return null
             } else {
                 val (location, version) = ndkDirLocation
-                if (isAcceptableNdkVersion(version.revision, ndkVersionFromDslRevision)) {
+                if (isAcceptableNdkVersion(version, ndkVersionFromDslRevision)) {
                     infoln(
                         "Choosing ${location.ndkRoot} from $NDK_DIR_PROPERTY which had the requested " +
                                 "version $ndkVersionOrDefault"
@@ -250,7 +252,7 @@ private fun findNdkPathImpl(
                 } else {
                     errorln(
                         "Requested NDK version $ndkVersionOrDefault did not match the version " +
-                                "${version.revision} requested by $NDK_DIR_PROPERTY at ${location.ndkRoot}"
+                                "$version requested by $NDK_DIR_PROPERTY at ${location.ndkRoot}"
                     )
                     return null
                 }
@@ -261,7 +263,7 @@ private fun findNdkPathImpl(
         // If not ndk.dir then take the version that matches the requested NDK version
         val matchingLocations = versionedLocations
             .filter { (_, sourceProperties) ->
-                isAcceptableNdkVersion(sourceProperties.revision, ndkVersionFromDslRevision)
+                isAcceptableNdkVersion(sourceProperties, ndkVersionFromDslRevision)
             }
             .toList()
 
@@ -270,15 +272,15 @@ private fun findNdkPathImpl(
             versionedLocations.onEach { (location, version) ->
                 considerAndReject(
                     location,
-                    "that NDK had version ${version.revision} which didn't " +
+                    "that NDK had version $version which didn't " +
                             "match the requested version $ndkVersionOrDefault"
                 )
             }
             if (versionedLocations.isNotEmpty()) {
                 val available =
                     versionedLocations
-                        .sortedBy { (_, version) -> version.revision }
-                        .joinToString(", ") { (_, version) -> version.revision.toString() }
+                        .sortedBy { (_, version) -> version }
+                        .joinToString(", ") { (_, version) -> version.toString() }
                 errorln("No version of NDK matched the requested version $ndkVersionOrDefault. Versions available locally: $available")
             } else {
                 errorln("No version of NDK matched the requested version $ndkVersionOrDefault")
@@ -319,19 +321,19 @@ private fun findNdkPathImpl(
 
                 infoln(
                     "Using ${highest.first.ndkRoot} which is " +
-                            "version ${highest.second.revision} as fallback but build will fail"
+                            "version ${highest.second} as fallback but build will fail"
                 )
                 return null
             }
             val (location, version) = ndkDirLocation
-            infoln("Found requested ndk.dir (${location.ndkRoot}) which has version ${version.revision}")
+            infoln("Found requested ndk.dir (${location.ndkRoot}) which has version ${version}")
             return location.ndkRoot
         }
 
         // No NDK version was requested.
         infoln(
             "No user requested version, choosing ${highest.first.ndkRoot} which is " +
-                    "version ${highest.second.revision}"
+                    "version ${highest.second}"
         )
         return highest.first.ndkRoot
     }
@@ -414,6 +416,16 @@ fun getNdkVersionedFolders(ndkVersionRoot: File): List<String> {
         return listOf()
     }
     return ndkVersionRoot.list()!!.filter { File(ndkVersionRoot, it).isDirectory }
+}
+
+fun stripPreviewFromRevision(revision : Revision) : Revision
+{
+    var parts = revision.toIntArray(false)
+    return when(parts.size) {
+        1 -> Revision(parts[0])
+        2 -> Revision(parts[0], parts[1])
+        else -> Revision(parts[0], parts[1], parts[2])
+    }
 }
 
 data class NdkLocatorRecord(
