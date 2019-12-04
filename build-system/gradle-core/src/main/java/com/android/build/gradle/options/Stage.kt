@@ -22,11 +22,12 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
  * The stage of an API or feature in its life cycle.
  *
  * The difference between an API and a feature is that:
- *   - An API can be represented by any [Option]. If it is represented by a [BooleanOption], it is
- *     intended that eventually both values of the option will be supported.
- *   - A feature can be represented only by a [BooleanOption]. It is intended that eventually only
- *     one of the two values of the option which represents the feature being enabled (usually the
- *     `true` value) will be supported.
+ *   - An API can be represented by any [Option]. If it is represented by a [BooleanOption] (or
+ *     [OptionalBooleanOption]), it is intended that eventually both values of the option will be
+ *     supported.
+ *   - A feature can be represented only by a [BooleanOption] (or [OptionalBooleanOption]). It is
+ *     intended that eventually only one of the two values of the option which represents the
+ *     feature being enabled (usually the `true` value) will be supported.
  */
 open class Stage(
 
