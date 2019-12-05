@@ -36,8 +36,9 @@ import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.Aapt2Workers;
+import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.tasks.Blocks;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -153,6 +154,9 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Input
     public abstract SetProperty<String> getResourceDirsOutsideRootProjectDir();
 
+    @Internal
+    public abstract Property<Aapt2WorkersBuildService> getAapt2WorkersBuildService();
+
     private boolean useJvmResourceCompiler;
 
     @NonNull
@@ -199,7 +203,13 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     @NonNull
     public WorkerExecutorFacade getAaptWorkerFacade() {
-        return Workers.INSTANCE.getWorkerForAapt2(getProjectName(), getPath(), getWorkerExecutor());
+        return getAapt2WorkersBuildService()
+                .get()
+                .getWorkerForAapt2(
+                        getProjectName(),
+                        getPath(),
+                        getWorkerExecutor(),
+                        getEnableGradleWorkers().get());
     }
 
     @NonNull
@@ -709,7 +719,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                                     .provider(
                                             () ->
                                                     variantData
-                                                            .getVariantConfiguration()
+                                                            .getVariantDslInfo()
                                                             .getMinSdkVersion()
                                                             .getApiLevel()));
             task.getMinSdk().disallowChanges();
@@ -727,10 +737,8 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
 
-            VectorDrawablesOptions vectorDrawablesOptions = variantData
-                    .getVariantConfiguration()
-                    .getMergedFlavor()
-                    .getVectorDrawables();
+            VectorDrawablesOptions vectorDrawablesOptions =
+                    variantData.getVariantDslInfo().getMergedFlavor().getVectorDrawables();
             task.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
             if (task.generatedDensities == null) {
                 task.generatedDensities = Collections.emptySet();
@@ -864,7 +872,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.pseudoLocalesEnabled =
                     variantScope
                             .getVariantData()
-                            .getVariantConfiguration()
+                            .getVariantDslInfo()
                             .getBuildType()
                             .isPseudoLocalesEnabled();
             task.flags = flags;
@@ -919,6 +927,8 @@ public abstract class MergeResources extends ResourceAwareTask {
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
+            task.getAapt2WorkersBuildService()
+                    .set(Aapt2Workers.getAapt2WorkersBuildService(task.getProject()));
         }
     }
 

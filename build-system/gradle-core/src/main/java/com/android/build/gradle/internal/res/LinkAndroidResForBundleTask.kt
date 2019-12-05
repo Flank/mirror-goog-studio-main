@@ -63,7 +63,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.Callable
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
@@ -252,7 +251,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             val projectOptions = variantScope.globalScope.projectOptions
 
-            val config = variantData.variantConfiguration
+            val config = variantData.variantDslInfo
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
@@ -308,7 +307,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
             task.resConfig =
-                    variantScope.variantConfiguration.mergedFlavor.resourceConfigurations
+                    variantScope.variantDslInfo.mergedFlavor.resourceConfigurations
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 

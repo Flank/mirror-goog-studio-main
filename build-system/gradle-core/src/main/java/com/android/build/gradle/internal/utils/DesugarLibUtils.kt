@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.utils
 
+import com.android.build.gradle.internal.dependency.ATTR_L8_MIN_SDK
 import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.io.ByteStreams
 import org.gradle.api.Project
@@ -62,7 +63,7 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
 
     val project = variantScope.globalScope.project
     val configuration = getDesugaringLibConfiguration(project, DESUGAR_LIB_CONFIGURATION_NAME)
-    return getDesugarLibDexFromTransform(configuration)
+    return getDesugarLibDexFromTransform(configuration, variantScope.minSdkVersion.featureLevel)
 }
 
 /**
@@ -130,13 +131,14 @@ private fun initDesugarLibConfigurations(project: Project) {
     )
 }
 
-private fun getDesugarLibDexFromTransform(configuration: Configuration): FileCollection {
+private fun getDesugarLibDexFromTransform(configuration: Configuration, minSdkVersion: Int): FileCollection {
     return configuration.incoming.artifactView { config ->
         config.attributes {
             it.attribute(
                 ArtifactAttributes.ARTIFACT_FORMAT,
                 DESUGAR_LIB_DEX
             )
+            it.attribute(ATTR_L8_MIN_SDK, minSdkVersion.toString())
         }
     }.artifacts.artifactFiles
 }

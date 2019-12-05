@@ -19,7 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.Operations
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -46,7 +46,7 @@ class VariantPropertiesImplTest {
 
     @Mock lateinit var variantScope: VariantScope
     @Mock lateinit var globalScope: GlobalScope
-    @Mock lateinit var variantConfiguration: GradleVariantConfiguration
+    @Mock lateinit var variantDslInfo: VariantDslInfo
     @Mock lateinit var operations: Operations
     @Mock lateinit var publicConfiguration: com.android.build.api.variant.VariantConfiguration
     @Mock lateinit var dslScope: DslScope
@@ -62,16 +62,16 @@ class VariantPropertiesImplTest {
         Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
         Mockito.`when`(dslScope.objectFactory).thenReturn(project.objects)
         Mockito.`when`(dslScope.providerFactory).thenReturn(project.providers)
-        Mockito.`when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
+        Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
     }
 
     @Test
     fun testManifestProvidedVersion() {
         val properties = VariantPropertiesImpl(
             dslScope, variantScope, operations, publicConfiguration)
-        Mockito.`when`(variantConfiguration.manifestVersionCodeSupplier)
+        Mockito.`when`(variantDslInfo.manifestVersionCodeSupplier)
             .thenReturn(IntSupplier { 10 })
-        Mockito.`when`(variantConfiguration.manifestVersionNameSupplier)
+        Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
             .thenReturn(Supplier<String?> { "foo" })
 
         properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
@@ -88,8 +88,8 @@ class VariantPropertiesImplTest {
             @Suppress("UNCHECKED_CAST")
             override val applicationId: Property<String> = Mockito.mock(Property::class.java) as Property<String>
         }
-        Mockito.`when`(variantConfiguration.getVersionCode(true)).thenReturn(23)
-        Mockito.`when`(variantConfiguration.getVersionName(true)).thenReturn("bar")
+        Mockito.`when`(variantDslInfo.getVersionCode(true)).thenReturn(23)
+        Mockito.`when`(variantDslInfo.getVersionName(true)).thenReturn("bar")
 
         properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
         Truth.assertThat(properties.outputs).hasSize(1)
@@ -102,12 +102,12 @@ class VariantPropertiesImplTest {
     fun testManifestAndDslProvidedVersions() {
         val properties = VariantPropertiesImpl(
             dslScope, variantScope, operations, publicConfiguration)
-        Mockito.`when`(variantConfiguration.manifestVersionCodeSupplier)
+        Mockito.`when`(variantDslInfo.manifestVersionCodeSupplier)
             .thenReturn(IntSupplier { 10 })
-        Mockito.`when`(variantConfiguration.manifestVersionNameSupplier)
+        Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
             .thenReturn(Supplier<String?> { "foo" })
-        Mockito.`when`(variantConfiguration.getVersionCode(true)).thenReturn(23)
-        Mockito.`when`(variantConfiguration.getVersionName(true)).thenReturn("bar")
+        Mockito.`when`(variantDslInfo.getVersionCode(true)).thenReturn(23)
+        Mockito.`when`(variantDslInfo.getVersionName(true)).thenReturn("bar")
 
         properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
         Truth.assertThat(properties.outputs).hasSize(1)

@@ -26,8 +26,10 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 import org.apache.tools.ant.BuildException
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -48,6 +50,9 @@ abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
 
     @get:OutputFile
     var outputFile: File? = null
+
+    @get:Internal
+    override val enableGradleWorkers: Property<Boolean> = project.objects.property(Boolean::class.java).value(false)
 
     override fun doTaskAction() {
         Preconditions.checkNotNull(mainManifestFile, "mainManifestFile must not be null")

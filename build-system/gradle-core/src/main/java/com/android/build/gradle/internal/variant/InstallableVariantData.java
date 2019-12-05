@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
 
@@ -28,8 +29,9 @@ public abstract class InstallableVariantData extends AndroidArtifactVariantData 
     protected InstallableVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull GradleVariantConfiguration config,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
-        super(globalScope, taskManager, config, recorder);
+        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
     }
 }

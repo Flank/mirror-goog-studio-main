@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
 enum class IntegerOption(
     override val propertyName: String,
-    override val status: Option.Status = Option.Status.EXPERIMENTAL
+    stage: ApiStage
 ) : Option<Int> {
-    ANDROID_TEST_SHARD_COUNT("android.androidTest.numShards"),
-    ANDROID_SDK_CHANNEL("android.sdk.channel"),
+    ANDROID_TEST_SHARD_COUNT("android.androidTest.numShards", ApiStage.Experimental),
+    ANDROID_SDK_CHANNEL("android.sdk.channel", ApiStage.Experimental),
 
     /**
      * Returns the level of model-only mode.
@@ -38,7 +37,7 @@ enum class IntegerOption(
      * @see AndroidProject#MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
      */
-    IDE_BUILD_MODEL_ONLY_VERSION(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, status = STABLE),
+    IDE_BUILD_MODEL_ONLY_VERSION(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, ApiStage.Stable),
 
     /**
      * The api level for the target device.
@@ -46,28 +45,30 @@ enum class IntegerOption(
      * <p>For preview versions that is the last stable version, and the {@link
      * StringOption#IDE_TARGET_DEVICE_CODENAME} will also be set.
      */
-    IDE_TARGET_DEVICE_API(AndroidProject.PROPERTY_BUILD_API, status = STABLE),
+    IDE_TARGET_DEVICE_API(AndroidProject.PROPERTY_BUILD_API, ApiStage.Stable),
 
-    IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE, status = STABLE),
+    IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE, ApiStage.Stable),
 
     /**
      * Size of the buffers in kilobytes used to read .class files and storage for writing .dex files
      * translations into.
      */
-    DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size"),
-    DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size"),
-    DEXING_NUMBER_OF_BUCKETS("android.dexingNumberOfBuckets"),
+    DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size", ApiStage.Experimental),
+    DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size", ApiStage.Experimental),
+    DEXING_NUMBER_OF_BUCKETS("android.dexingNumberOfBuckets", ApiStage.Experimental),
 
     /**
      * Maximum number of dynamic features that can be allocated before Oreo platforms.
      */
-    PRE_O_MAX_NUMBER_OF_FEATURES("android.maxNumberOfFeaturesBeforeOreo"),
+    PRE_O_MAX_NUMBER_OF_FEATURES("android.maxNumberOfFeaturesBeforeOreo", ApiStage.Experimental),
 
     /**
      * Override the thread pool size dedicated to AAPT2 work units when not running with WorkerAPI.
      */
-    AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize")
+    AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize", ApiStage.Experimental)
     ;
+
+    override val status = stage.status
 
     override fun parse(value: Any): Int {
         if (value is CharSequence) {

@@ -171,7 +171,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
 
             task.init(
                     scope.getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
-                    scope.getVariantConfiguration()
+                    scope.getVariantDslInfo()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions());
         }

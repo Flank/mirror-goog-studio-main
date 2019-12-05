@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.VariantScope
-import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -76,10 +75,10 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
     }
 
     private class EmptyCreationAction(variantScope: VariantScope) :
-        TaskManager.AbstractPreBuildCreationAction<DefaultTask>(variantScope) {
+        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(variantScope) {
 
-        override val type: Class<DefaultTask>
-            get() = DefaultTask::class.java
+        override val type: Class<AndroidVariantTask>
+            get() = AndroidVariantTask::class.java
     }
 
     private class CheckCreationAction(variantScope: VariantScope) :
@@ -90,7 +89,6 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
 
         override fun configure(task: AppPreBuildTask) {
             super.configure(task)
-            task.variantName = variantScope.fullVariantName
 
             task.compileManifests =
                 variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
@@ -105,9 +103,8 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
 
             task.fakeOutputDirectory = File(
                 variantScope.globalScope.intermediatesDir,
-                "prebuild/${variantScope.variantConfiguration.dirName}"
+                "prebuild/${variantScope.variantDslInfo.dirName}"
             )
-
         }
     }
 

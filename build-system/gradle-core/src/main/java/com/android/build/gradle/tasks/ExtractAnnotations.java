@@ -28,8 +28,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -341,11 +340,11 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             super.configure(task);
             VariantScope variantScope = getVariantScope();
 
-            final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
+            final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
             task.setDescription(
                     "Extracts Android annotations for the "
-                            + variantConfig.getFullName()
+                            + variantDslInfo.getFullName()
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 

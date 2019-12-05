@@ -26,11 +26,10 @@ maven_pom(
 java_library(
     name = "test_utils",
     srcs = [
-        "test/src/com/android/signflinger/SignResult.java",
-        "test/src/com/android/signflinger/Signer.java",
         "test/src/com/android/signflinger/SignerConfig.java",
-        "test/src/com/android/signflinger/TestBase.java",
-        "test/src/com/android/signflinger/TestBaseV2.java",
+        "test/src/com/android/signflinger/Signers.java",
+        "test/src/com/android/signflinger/Utils.java",
+        "test/src/com/android/signflinger/Workspace.java",
     ],
     deps = [
         ":signflinger",
@@ -44,6 +43,7 @@ java_test(
     name = "benchmarkV2",
     srcs = [
         "test/src/com/android/signflinger/BenchmarkTest.java",
+        "test/src/com/android/signflinger/V2Signer.java",
     ],
     data =
         glob(["test/resources/*.pem"]) + glob([
@@ -68,7 +68,7 @@ java_test(
     name = "testV1Signing",
     size = "medium",
     srcs = [
-        "test/src/com/android/signflinger/TestBaseSigning.java",
+        "test/src/com/android/signflinger/BaseSigning.java",
         "test/src/com/android/signflinger/V1SigningTest.java",
     ],
     data = glob(["test/resources/*.pem"]) + glob([
@@ -95,6 +95,7 @@ java_test(
     name = "testV2Signing",
     size = "medium",
     srcs = [
+        "test/src/com/android/signflinger/V2Signer.java",
         "test/src/com/android/signflinger/V2SigningTest.java",
     ],
     data = glob(["test/resources/*.pem"]) + glob([
@@ -120,7 +121,7 @@ java_test(
     name = "testV1andV2Signing",
     size = "medium",
     srcs = [
-        "test/src/com/android/signflinger/TestBaseSigning.java",
+        "test/src/com/android/signflinger/BaseSigning.java",
         "test/src/com/android/signflinger/V1andV2SigningTest.java",
     ],
     data = glob(["test/resources/*.pem"]) + glob([

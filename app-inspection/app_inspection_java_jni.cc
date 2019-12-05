@@ -21,13 +21,13 @@
 #include "unistd.h"
 #include "utils/log.h"
 
-using app_inspection::ServiceResponse;
+using app_inspection::AppInspectionResponse;
 using profiler::Log;
 
 namespace app_inspection {
 
 void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
-                                         ServiceResponse::Status status,
+                                         AppInspectionResponse::Status status,
                                          jstring error_message) {
   profiler::JStringWrapper message(env, error_message);
   profiler::Agent::Instance().SubmitAgentTasks(
@@ -40,10 +40,9 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
         event->set_pid(getpid());
         auto *inspection_response = event->mutable_app_inspection_response();
         inspection_response->set_command_id(command_id);
-        auto *service_response =
-            inspection_response->mutable_service_response();
-        service_response->set_status(status);
-        service_response->set_error_message(message.get().c_str());
+        inspection_response->set_status(status);
+        inspection_response->set_error_message(message.get().c_str());
+        inspection_response->mutable_service_response();
         profiler::proto::EmptyResponse response;
         return stub.SendEvent(&ctx, request, &response);
       }});
@@ -194,14 +193,14 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_Responses_replyError(
     JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
   app_inspection::EnqueueAppInspectionServiceResponse(
-      env, command_id, ServiceResponse::ERROR, error_message);
+      env, command_id, AppInspectionResponse::ERROR, error_message);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_Responses_replySuccess(
     JNIEnv *env, jobject obj, jint command_id) {
   app_inspection::EnqueueAppInspectionServiceResponse(
-      env, command_id, ServiceResponse::SUCCESS, nullptr);
+      env, command_id, AppInspectionResponse::SUCCESS, nullptr);
 }
 
 JNIEXPORT void JNICALL

@@ -16,16 +16,13 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.sdklib.AndroidVersion
-import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -66,8 +63,6 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        Workers.useDirectWorkerExecutor = true
-
         MockitoAnnotations.initMocks(this)
         val testDir = temporaryFolder.newFolder()
 
@@ -77,14 +72,10 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         task.outputFile.set(File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME))
         task.inputFiles = fileCollection
         task.minSdkVersion = minSdkVersion
+        task.enableGradleWorkers.set(false)
 
         `when`(fileCollection.asFileTree).thenReturn(fileTree)
         `when`(fileTree.files).thenReturn(files)
-    }
-
-    @After
-    fun tearDown() {
-        Workers.useDirectWorkerExecutor = false
     }
 
     @Test

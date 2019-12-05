@@ -28,7 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -258,8 +258,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void createInstallTask(VariantScope variantScope) {
-        GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
-        final VariantType variantType = variantConfiguration.getType();
+        final VariantType variantType = variantScope.getType();
 
         // dynamic feature modules do not have their own install tasks
         if (variantType.isDynamicFeature()) {
@@ -302,7 +301,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void createVariantPreBuildTask(@NonNull VariantScope scope) {
-        final VariantType variantType = scope.getVariantConfiguration().getType();
+        final VariantType variantType = scope.getVariantDslInfo().getVariantType();
 
         if (variantType.isApk()) {
             boolean useDependencyConstraints =
@@ -353,14 +352,14 @@ public class ApplicationTaskManager extends TaskManager {
     /** Configure variantData to generate embedded wear application. */
     private void handleMicroApp(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
-        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        final VariantType variantType = variantConfiguration.getType();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        final VariantType variantType = scope.getType();
 
         if (variantType.isBaseModule()) {
-            Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
+            Boolean unbundledWearApp = variantDslInfo.getMergedFlavor().getWearAppUnbundled();
 
             if (!Boolean.TRUE.equals(unbundledWearApp)
-                    && variantConfiguration.getBuildType().isEmbedMicroApp()) {
+                    && variantDslInfo.getBuildType().isEmbedMicroApp()) {
                 Configuration wearApp =
                         variantData.getVariantDependency().getWearAppConfiguration();
                 assert wearApp != null : "Wear app with no wearApp configuration";
@@ -464,6 +463,6 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     private static boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
-        return !scope.getVariantConfiguration().getBuildType().isDebuggable();
+        return !scope.getVariantDslInfo().getBuildType().isDebuggable();
     }
 }

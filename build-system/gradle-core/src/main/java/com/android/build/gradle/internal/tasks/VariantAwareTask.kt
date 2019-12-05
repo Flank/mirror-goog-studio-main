@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+
 /**
  * A task associated with a variant name.
  */
@@ -23,4 +26,7 @@ interface VariantAwareTask {
 
     /** the name of the variant */
     var variantName: String
+
+    @get:Input
+    val enableGradleWorkers: Property<Boolean>
 }

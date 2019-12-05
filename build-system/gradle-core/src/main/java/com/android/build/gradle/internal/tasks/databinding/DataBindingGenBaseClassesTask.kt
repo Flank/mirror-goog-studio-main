@@ -183,7 +183,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 task.layoutInfoDirectory)
             val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
-            task.packageNameSupplier = { variantData.variantConfiguration.originalApplicationId }
+            task.packageNameSupplier = { variantData.variantDslInfo.originalApplicationId }
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies

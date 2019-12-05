@@ -19,37 +19,39 @@ package com.android.signflinger;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
+import org.junit.Rule;
 import org.junit.Test;
 
-public class BenchmarkTest extends TestBaseV2 {
+public class BenchmarkTest {
+
+    @Rule public final Workspace workspace = new Workspace();
 
     @Test
     public void run() throws Exception {
-        File file = getTestOutputFile("apk-12MiB.apk");
-        createZip(21, 1 << 20, file);
+        File androidManifest = workspace.getDummyAndroidManifest();
+        File file = workspace.createZip(21, 1 << 20, "apk-12MiB.apk", androidManifest);
         signAndVerify(file);
 
-        file = getTestOutputFile("apk-42MiB.apk");
-        createZip(41, 1 << 20, file);
+        file = workspace.createZip(41, 1 << 20, "apk-42MiB.apk", androidManifest);
         signAndVerify(file);
     }
 
     private void signAndVerify(File file) throws Exception {
-        for (Signer signer : SIGNERS) {
+        for (SignerConfig signerConfig : Signers.getAll(workspace)) {
             long times[] = new long[3];
-            SignResult result = null;
             for (int i = 0; i < times.length; i++) {
-                result = sign(file, signer);
-                times[i] = result.time;
+                long startTime = System.nanoTime();
+                V2Signer.sign(file, signerConfig);
+                times[i] = System.nanoTime() - startTime;
             }
-            verify(result.file);
+            Utils.verifyApk(file);
             Arrays.sort(times);
             long timeMs = times[times.length / 2];
             long fileSizeMiB = Files.size(file.toPath()) / (1 << 20);
             String message =
                     String.format(
                             "V2 signed %d MiB in %3d ms (%s-%s)",
-                            fileSizeMiB, timeMs, signer.type, signer.subtype);
+                            fileSizeMiB, timeMs, signerConfig.getAlgo(), signerConfig.getSubType());
             System.out.println(message);
         }
     }

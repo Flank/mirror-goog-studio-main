@@ -49,7 +49,7 @@ fun createCxxAbiModel(
         }
         override val abiPlatformVersion by lazy {
             val minSdkVersion =
-                baseVariantData.variantConfiguration.mergedFlavor.minSdkVersion
+                baseVariantData.variantDslInfo.mergedFlavor.minSdkVersion
             val version = if (minSdkVersion == null) {
                 null
             } else{

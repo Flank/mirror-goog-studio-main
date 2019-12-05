@@ -80,6 +80,7 @@ public class TestPlugin extends BasePlugin {
                         sourceSetManager,
                         extraModelInfo,
                         new TestExtensionImpl(
+                                globalScope.getDslScope(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,

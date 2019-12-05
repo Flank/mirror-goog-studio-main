@@ -102,7 +102,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.desugarLibJar.from(getDesugarLibJarFromMaven(variantScope.globalScope.project))
             task.androidJar.set(variantScope.globalScope.sdkComponents.androidJarProvider)
             task.minSdkVersion.set(
-                variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.apiLevel)
+                variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
 
             val subProjectKeepRules =
                 if (enableDexingArtifactTransform) {

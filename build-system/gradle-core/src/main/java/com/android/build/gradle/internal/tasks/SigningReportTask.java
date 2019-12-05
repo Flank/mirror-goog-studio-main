@@ -22,8 +22,8 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
@@ -67,7 +67,7 @@ public class SigningReportTask extends DefaultTask {
             textOutput.println();
 
             // get the data
-            SigningConfig signingConfig = variant.getVariantConfiguration().getSigningConfig();
+            SigningConfig signingConfig = variant.getVariantDslInfo().getSigningConfig();
             if (signingConfig == null) {
                 textOutput.withStyle(Identifier).text("Config: ");
                 textOutput.withStyle(Normal).text("none");

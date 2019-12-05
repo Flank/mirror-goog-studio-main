@@ -98,8 +98,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
             task.getApplicationId()
                     .set(
                             project.provider(
-                                    variantScope.getVariantConfiguration()
-                                            ::getOriginalApplicationId));
+                                    variantScope.getVariantDslInfo()::getOriginalApplicationId));
             task.getApplicationId().disallowChanges();
         }
     }

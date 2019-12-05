@@ -29,7 +29,7 @@ import com.android.build.OutputFile;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
@@ -924,8 +924,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             VariantScope variantScope = getVariantScope();
 
             GlobalScope globalScope = variantScope.getGlobalScope();
-            GradleVariantConfiguration variantConfiguration =
-                    variantScope.getVariantConfiguration();
+            VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact
@@ -969,9 +968,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getAssets()
                     .set(variantScope.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(
-                    variantConfiguration.getBuildType().isJniDebuggable());
-            packageAndroidArtifact.setDebugBuild(
-                    variantConfiguration.getBuildType().isDebuggable());
+                    variantDslInfo.getBuildType().isJniDebuggable());
+            packageAndroidArtifact.setDebugBuild(variantDslInfo.getBuildType().isDebuggable());
 
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
@@ -980,8 +978,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     globalScope.getExtension().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
-            if (variantConfiguration.getSupportedAbis() != null) {
-                packageAndroidArtifact.setAbiFilters(variantConfiguration.getSupportedAbis());
+            if (variantDslInfo.getSupportedAbis() != null) {
+                packageAndroidArtifact.setAbiFilters(variantDslInfo.getSupportedAbis());
             } else {
                 packageAndroidArtifact.setAbiFilters(
                         projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)

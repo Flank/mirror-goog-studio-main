@@ -100,6 +100,7 @@ public class AppPlugin extends AbstractAppPlugin {
                         sourceSetManager,
                         extraModelInfo,
                         new ApplicationExtensionImpl(
+                                globalScope.getDslScope(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,

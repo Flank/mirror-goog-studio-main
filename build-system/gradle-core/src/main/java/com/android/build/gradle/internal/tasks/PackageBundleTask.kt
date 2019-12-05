@@ -251,7 +251,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out PackageBundleTask>) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}.aab"
+            val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}.aab"
             variantScope.artifacts.producesFile(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
                 taskProvider,
@@ -312,7 +312,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 )
             }
 
-            task.isDebugBuild = variantScope.variantConfiguration.buildType.isDebuggable
+            task.isDebugBuild = variantScope.variantDslInfo.buildType.isDebuggable
         }
     }
 }

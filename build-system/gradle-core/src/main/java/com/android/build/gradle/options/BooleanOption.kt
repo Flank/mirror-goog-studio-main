@@ -18,132 +18,145 @@ package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.model.AndroidProject
+import com.android.build.gradle.options.Option.Status.EXPERIMENTAL
+import com.android.build.gradle.options.Option.Status.STABLE
+import com.android.build.gradle.options.Option.Status.REMOVED
 
 enum class BooleanOption(
     override val propertyName: String,
-    override val defaultValue: Boolean = false,
-    override val status: Option.Status = Option.Status.EXPERIMENTAL,
+    override val defaultValue: Boolean,
+    val stage: Stage,
     override val additionalInfo: String = ""
 ) : Option<Boolean> {
 
-    // ---------------
-    // Permanent IDE Flags -- no lifecycle
+    /* ----------
+     * STABLE API
+     */
 
-    IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE, status = Option.Status.STABLE),
-    IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY, status = Option.Status.STABLE),
-    IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED, status = Option.Status.STABLE),
-    IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES(
-        AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, status = Option.Status.STABLE),
-    IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, status = Option.Status.STABLE),
-    IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, status = Option.Status.STABLE),
+    // IDE properties
+    IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE, false, ApiStage.Stable),
+    IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY, false, ApiStage.Stable),
+    IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED, false, ApiStage.Stable),
+    IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES(AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, false, ApiStage.Stable),
+    IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, false, ApiStage.Stable),
+    IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, false, ApiStage.Stable),
 
     // tell bundletool to only extract instant APKs.
-    IDE_EXTRACT_INSTANT(AndroidProject.PROPERTY_EXTRACT_INSTANT_APK, status = Option.Status.STABLE),
+    IDE_EXTRACT_INSTANT(AndroidProject.PROPERTY_EXTRACT_INSTANT_APK, false, ApiStage.Stable),
 
     // Flag used to indicate a "deploy as instant" run configuration.
-    IDE_DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false, status = Option.Status.STABLE),
+    IDE_DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false, ApiStage.Stable),
 
+    ENABLE_STUDIO_VERSION_CHECK("android.injected.studio.version.check", true, ApiStage.Stable),
 
-    // ---------------
-    // Permanent Other Flags -- No lifecycle
+    // Features' default values
+    BUILD_FEATURE_AIDL("android.defaults.buildfeatures.aidl", true, ApiStage.Stable),
+    BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, ApiStage.Stable),
+    BUILD_FEATURE_DATABINDING("android.defaults.buildfeatures.databinding", false, ApiStage.Stable),
+    BUILD_FEATURE_RENDERSCRIPT("android.defaults.buildfeatures.renderscript", true, ApiStage.Stable),
+    BUILD_FEATURE_RESVALUES("android.defaults.buildfeatures.resvalues", true, ApiStage.Stable),
+    BUILD_FEATURE_SHADERS("android.defaults.buildfeatures.shaders", true, ApiStage.Stable),
+    BUILD_FEATURE_VIEWBINDING("android.defaults.buildfeatures.viewbinding", false, ApiStage.Stable),
+
+    // AndroidX & Jetifier
+    USE_ANDROID_X("android.useAndroidX", false, ApiStage.Stable),
+    ENABLE_JETIFIER("android.enableJetifier", false, ApiStage.Stable),
+
+    DEBUG_OBSOLETE_API("android.debug.obsoleteApi", false, ApiStage.Stable),
+
+    /* ------------------
+     * SUPPORTED FEATURES
+     */
 
     // Used by Studio as workaround for b/71054106, b/75955471
-    ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true, status = Option.Status.STABLE),
-    ENABLE_PROFILE_JSON("android.enableProfileJson", false),
-    WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn"),
-    DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow"),
-    DEBUG_OBSOLETE_API("android.debug.obsoleteApi", false, Option.Status.STABLE),
-    ENABLE_STUDIO_VERSION_CHECK("android.injected.studio.version.check", true, Option.Status.STABLE),
+    ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true, FeatureStage.Supported),
 
-    // ---------------
-    // FEATURE Default Values
-    // This is a PUBLIC API.
-    BUILD_FEATURE_AIDL("android.defaults.buildfeatures.aidl", true, Option.Status.STABLE),
-    BUILD_FEATURE_BUILDCONFIG("android.defaults.buildfeatures.buildconfig", true, Option.Status.STABLE),
-    BUILD_FEATURE_DATABINDING("android.defaults.buildfeatures.databinding", false, Option.Status.STABLE),
-    BUILD_FEATURE_RENDERSCRIPT("android.defaults.buildfeatures.renderscript", true, Option.Status.STABLE),
-    BUILD_FEATURE_RESVALUES("android.defaults.buildfeatures.resvalues", true, Option.Status.STABLE),
-    BUILD_FEATURE_SHADERS("android.defaults.buildfeatures.shaders", true, Option.Status.STABLE),
-    BUILD_FEATURE_VIEWBINDING("android.defaults.buildfeatures.viewbinding", false, Option.Status.STABLE),
+    ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, FeatureStage.Supported),
 
-    // ---------------
-    // Lifecycle flags: Experimental stage, not yet enabled by default
-    ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
-    VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
-    OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
-    ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", true),
-    DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
-    CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),
-    ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
-    USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE),
-    DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
-    DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
-    DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
-    ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false),
-    ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false),
-    NAMESPACED_R_CLASS("android.namespacedRClass", false),
-    FULL_R8("android.enableR8.fullMode", false),
-    CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false),
-    ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, status = Option.Status.STABLE),
-    KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
-    USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false),
-    ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
-    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", false),
     // Flag added to work around b/130596259.
-    FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
-    /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
-    ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true),
-    ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false),
-    // ---------------
-    // Lifecycle flags: Stable stage, Enabled by default, can be disabled
-    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true),
-    ENABLE_BUILD_CACHE("android.enableBuildCache", true),
-    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
-    ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true),
-    ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true),
-    ENABLE_D8_DESUGARING("android.enableD8.desugaring", true),
-    ENABLE_R8_LIBRARIES("android.enableR8.libraries", true, status = Option.Status.STABLE),
-    /** Set to true by default, but has effect only if R8 is enabled. */
-    ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
-    // Marked as stable to avoid reporting deprecation twice.
-    CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies", true),
-    /** Set to true to build native .so libraries only for the device it will be run on. */
-    BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),
-    ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
-    ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true),
-    ENABLE_NATIVE_COMPILER_SETTINGS_CACHE("android.enableNativeCompilerSettingsCache", false),
-    ENABLE_CMAKE_BUILD_COHABITATION("android.enableCmakeBuildCohabitation", false),
-    ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true),
-    ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true, status=Option.Status.STABLE),
-    USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true),
-    ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, status=Option.Status.STABLE),
-    ENABLE_DUPLICATE_CLASSES_CHECK("android.enableDuplicateClassesCheck", true),
-    ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true),
-    GENERATE_R_JAVA("android.generateRJava", false),
-    MINIMAL_KEEP_RULES("android.useMinimalKeepRules", true),
-    USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, Option.Status.STABLE),
-    ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, Option.Status.STABLE),
-    USE_NEW_JAR_CREATOR("android.useNewJarCreator", true),
-    PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, Option.Status.STABLE),
-    USE_NEW_APK_CREATOR("android.useNewApkCreator", true),
-    EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES("android.bundle.excludeResSourcesForRelease", true),
+    FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, FeatureStage.Supported),
 
-    // ---------------
-    // Lifecycle flags: Deprecated stage, feature is stable and we want to get rid of the ability to revert to older code path
-    ENABLE_DESUGAR(
-        "android.enableDesugar", true, DeprecationReporter.DeprecationTarget.DESUGAR_TOOL),
-    ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
+    ENABLE_R8_LIBRARIES("android.enableR8.libraries", true, FeatureStage.Supported),
+    ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true, FeatureStage.Supported),
+    ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, FeatureStage.Supported),
+    USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, FeatureStage.Supported),
+    ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.Supported),
+    PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
+
+    /* ---------------------
+     * EXPERIMENTAL FEATURES
+     */
+
+    ENABLE_PROFILE_JSON("android.enableProfileJson", false, FeatureStage.Experimental),
+    WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn", false, FeatureStage.Experimental),
+    DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow", false, FeatureStage.Experimental),
+    ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices", false, FeatureStage.Experimental),
+    VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck", false, FeatureStage.Experimental),
+    OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck", false, FeatureStage.Experimental),
+    ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", true, FeatureStage.Experimental),
+    DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation", false, FeatureStage.Experimental),
+    CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
+    DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
+    DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false, FeatureStage.Experimental),
+    DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false, FeatureStage.Experimental),
+    ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false, FeatureStage.Experimental),
+    ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
+    NAMESPACED_R_CLASS("android.namespacedRClass", false, FeatureStage.Experimental),
+    FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
+    CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
+    KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
+    USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, FeatureStage.Experimental),
+    ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true, FeatureStage.Experimental),
+    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", false, FeatureStage.Experimental),
+    ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
+
+    /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
+    ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
+
+    ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false, FeatureStage.Experimental),
+    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.Experimental),
+    ENABLE_BUILD_CACHE("android.enableBuildCache", true, FeatureStage.Experimental),
+    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true, FeatureStage.Experimental),
+    ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
+    ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true, FeatureStage.Experimental),
+    ENABLE_D8_DESUGARING("android.enableD8.desugaring", true, FeatureStage.Experimental),
+
+    /** Set to true by default, but has effect only if R8 is enabled. */
+    ENABLE_R8_DESUGARING("android.enableR8.desugaring", true, FeatureStage.Experimental),
+
+    // Marked as stable to avoid reporting deprecation twice.
+    CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies", true, FeatureStage.Experimental),
+
+    /** Set to true to build native .so libraries only for the device it will be run on. */
+    BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true, FeatureStage.Experimental),
+
+    ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true, FeatureStage.Experimental),
+    ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true, FeatureStage.Experimental),
+    ENABLE_NATIVE_COMPILER_SETTINGS_CACHE("android.enableNativeCompilerSettingsCache", false, FeatureStage.Experimental),
+    ENABLE_CMAKE_BUILD_COHABITATION("android.enableCmakeBuildCohabitation", false, FeatureStage.Experimental),
+    ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true, FeatureStage.Experimental),
+    USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true, FeatureStage.Experimental),
+    ENABLE_DUPLICATE_CLASSES_CHECK("android.enableDuplicateClassesCheck", true, FeatureStage.Experimental),
+    ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true, FeatureStage.Experimental),
+    GENERATE_R_JAVA("android.generateRJava", false, FeatureStage.Experimental),
+    MINIMAL_KEEP_RULES("android.useMinimalKeepRules", true, FeatureStage.Experimental),
+    USE_NEW_JAR_CREATOR("android.useNewJarCreator", true, FeatureStage.Experimental),
+    USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.Experimental),
+    EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES("android.bundle.excludeResSourcesForRelease", true, FeatureStage.Experimental),
 
     // Options related to new Variant API
-    USE_SAFE_PROPERTIES("android.variant.safe.properties", false),
+    USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
-    ;
-    constructor(
-        propertyName: String,
-        defaultValue: Boolean,
-        deprecationTarget: DeprecationReporter.DeprecationTarget
-    ) :
-            this(propertyName, defaultValue, Option.Status.Deprecated(deprecationTarget))
+    /* ------------------------
+     * SOFTLY-ENFORCED FEATURES
+     */
+
+    ENABLE_DESUGAR("android.enableDesugar", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.DESUGAR_TOOL)),
+    ENABLE_D8("android.enableD8", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.LEGACY_DEXER)),
+
+    ; // end of enums
+
+    override val status = stage.status
 
     override fun parse(value: Any): Boolean {
         return parseBoolean(propertyName, value)

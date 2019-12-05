@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NAT
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.getDesugarLibDexFromTransform
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
@@ -42,7 +41,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -55,7 +53,6 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
-import java.util.function.Supplier
 import java.util.zip.Deflater
 import javax.inject.Inject
 
@@ -270,7 +267,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
             task.nativeLibsFiles.from(getNativeLibsFiles(variantScope, packageCustomClassDependencies))
 
-            task.abiFilters = variantScope.variantConfiguration.supportedAbis
+            task.abiFilters = variantScope.variantDslInfo.supportedAbis
 
             task.jarCreatorType.set(variantScope.jarCreatorType)
             task.jarCreatorType.disallowChanges()

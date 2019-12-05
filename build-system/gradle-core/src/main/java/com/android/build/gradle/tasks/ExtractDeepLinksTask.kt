@@ -94,7 +94,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
         override fun configure(task: ExtractDeepLinksTask) {
             super.configure(task)
             task.navFilesFolders =
-                variantScope.variantConfiguration
+                variantScope.variantSources
                     .getResourceSets(false).stream()
                     .flatMap {
                         it.sourceFiles.stream().map { File(it, FD_RES_NAVIGATION) }

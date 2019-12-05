@@ -17,24 +17,25 @@
 package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
 enum class OptionalBooleanOption(
     override val propertyName: String,
-    override val status: Option.Status = Option.Status.EXPERIMENTAL) : Option<Boolean> {
-    SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, status = STABLE),
-    SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, status = STABLE),
-    IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, status = STABLE),
-    ENABLE_R8("android.enableR8", status = Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.ENABLE_R8)),
+    val stage: Stage) : Option<Boolean> {
+    SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, ApiStage.Stable),
+    SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, ApiStage.Stable),
+    IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, ApiStage.Stable),
+    ENABLE_R8("android.enableR8", FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.ENABLE_R8)),
 
     /**
      * This project property is read by the firebase plugin, and has no direct impact on AGP behavior.
      *
      * It is included as an OptionalBooleanOption in order that its value, if set, is recorded in the AGP analytics.
      */
-    FIREBASE_PERF_PLUGIN_ENABLE_FLAG("firebasePerformanceInstrumentationEnabled", status = STABLE)
+    FIREBASE_PERF_PLUGIN_ENABLE_FLAG("firebasePerformanceInstrumentationEnabled", ApiStage.Stable)
     ;
+
+    override val status = stage.status
 
     override fun parse(value: Any): Boolean {
         return parseBoolean(propertyName, value)

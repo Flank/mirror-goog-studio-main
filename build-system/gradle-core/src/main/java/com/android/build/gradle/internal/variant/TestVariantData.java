@@ -21,7 +21,8 @@ import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -38,10 +39,11 @@ public class TestVariantData extends ApkVariantData {
     public TestVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull GradleVariantConfiguration config,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull TestedVariantData testedVariantData,
             @NonNull Recorder recorder) {
-        super(globalScope, taskManager, config, recorder);
+        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
         this.testedVariantData = testedVariantData;
 
         // create default output
@@ -64,21 +66,21 @@ public class TestVariantData extends ApkVariantData {
             prefix = "unit tests";
         }
 
-        final GradleVariantConfiguration config = getVariantConfiguration();
+        final VariantDslInfo variantDslInfo = getVariantDslInfo();
 
-        if (config.hasFlavors()) {
+        if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);
             sb.append(prefix);
             sb.append(" for the ");
-            StringHelper.appendCapitalized(sb, config.getFlavorName());
-            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getFlavorName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType().getName());
             sb.append(" build");
             return sb.toString();
         } else {
             StringBuilder sb = new StringBuilder(50);
             sb.append(prefix);
             sb.append(" for the ");
-            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType().getName());
             sb.append(" build");
             return sb.toString();
         }

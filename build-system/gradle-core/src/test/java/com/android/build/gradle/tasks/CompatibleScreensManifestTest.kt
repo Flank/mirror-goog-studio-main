@@ -18,16 +18,19 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
@@ -35,6 +38,7 @@ import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -56,8 +60,9 @@ class CompatibleScreensManifestTest {
     @get:Rule var temporaryFolder = TemporaryFolder()
 
     @Mock internal lateinit var scope: VariantScope
+    @Mock internal lateinit var globalScope: GlobalScope
     @Mock private lateinit var outputScope: OutputScope
-    @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
+    @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
     @Mock private lateinit var mergedFlavor: MergedFlavor
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
@@ -75,17 +80,26 @@ class CompatibleScreensManifestTest {
 
         MockitoAnnotations.initMocks(this)
         `when`(scope.fullVariantName).thenReturn("fullVariantName")
-        `when`(scope.variantConfiguration).thenReturn(variantConfiguration)
+        `when`(scope.variantDslInfo).thenReturn(variantDslInfo)
         `when`(scope.outputScope).thenReturn(outputScope)
+        `when`(scope.globalScope).thenReturn(globalScope)
         `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(scope.taskContainer).thenReturn(taskContainer)
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
         `when`<ApiVersion>(mergedFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
-        `when`<MergedFlavor>(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
-        `when`(variantConfiguration.baseName).thenReturn("baseName")
-        `when`(variantConfiguration.fullName).thenReturn("fullName")
-        `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`<MergedFlavor>(variantDslInfo.mergedFlavor).thenReturn(mergedFlavor)
+        `when`(variantDslInfo.baseName).thenReturn("baseName")
+        `when`(variantDslInfo.fullName).thenReturn("fullName")
+        `when`(variantDslInfo.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(globalScope.projectOptions).thenReturn(
+            ProjectOptions(
+                ImmutableMap.of<String, Any>(
+                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                    false
+                )
+            )
+        )
     }
 
     @Test
@@ -107,7 +121,7 @@ class CompatibleScreensManifestTest {
     @Test
     fun testNoSplit() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
+        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         val mainApk = outputFactory.addMainApk()
         writeApkList(listOf(mainApk))
 
@@ -127,7 +141,7 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testSingleSplitWithMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
+        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         val splitApk = outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -159,7 +173,7 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testSingleSplitWithoutMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
+        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         val splitApk = outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -189,7 +203,7 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testMultipleSplitsWithMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
+        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         val xhdpiSplit = outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(

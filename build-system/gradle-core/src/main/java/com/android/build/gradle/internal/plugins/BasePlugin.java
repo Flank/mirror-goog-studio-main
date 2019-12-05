@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.DslVariableFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -64,7 +65,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.Workers;
+import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -240,11 +241,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
-        Workers.INSTANCE.initFromProject(
-                projectOptions,
-                // possibly, in the future, consider using a pool with a dedicated size
-                // using the gradle parallelism settings.
-                ForkJoinPool.commonPool());
+        Aapt2Workers.registerAapt2WorkersBuildService(project, projectOptions);
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
@@ -324,7 +321,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         objectFactory,
                         project.getLogger(),
                         new BuildFeatureValuesImpl(projectOptions),
-                        project.getProviders());
+                        project.getProviders(),
+                        new DslVariableFactory(syncIssueHandler));
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
@@ -361,7 +359,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                             return;
                         }
                         ModelBuilder.clearCaches();
-                        Workers.INSTANCE.shutdown();
                         sdkComponents.unload();
                         SdkLocator.resetCache();
                         ConstraintHandler.clearCache();
@@ -638,6 +635,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         hasCreatedTasks = true;
 
         extension.disableWrite();
+        globalScope.getDslScope().getVariableFactory().disableWrite();
 
         taskManager.configureCustomLintChecks();
 

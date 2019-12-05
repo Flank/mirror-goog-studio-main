@@ -169,8 +169,7 @@ public class AppPluginInternalTest {
 
         BaseVariantData testVariant =
                 VariantCheckers.findVariantData(variants, "stagingAndroidTest");
-        TestCase.assertEquals(
-                "staging", testVariant.getVariantConfiguration().getBuildType().getName());
+        TestCase.assertEquals("staging", testVariant.getVariantDslInfo().getBuildType().getName());
     }
     @Test
     public void testFlavors() {
@@ -355,7 +354,7 @@ public class AppPluginInternalTest {
         SigningConfig signingConfig;
 
         variant = VariantCheckers.findVariantData(variants, "flavor1Debug");
-        signingConfig = variant.getVariantConfiguration().getSigningConfig();
+        signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file = signingConfig.getStoreFile();
         assertNotNull(file);
@@ -364,17 +363,17 @@ public class AppPluginInternalTest {
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
         variant = VariantCheckers.findVariantData(variants, "flavor1Staging");
-        signingConfig = variant.getVariantConfiguration().getSigningConfig();
+        signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNull(signingConfig);
 
         variant = VariantCheckers.findVariantData(variants, "flavor1Release");
-        signingConfig = variant.getVariantConfiguration().getSigningConfig();
+        signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
 
         variant = VariantCheckers.findVariantData(variants, "flavor2Debug");
-        signingConfig = variant.getVariantConfiguration().getSigningConfig();
+        signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file1 = signingConfig.getStoreFile();
         assertNotNull(file1);
@@ -383,13 +382,13 @@ public class AppPluginInternalTest {
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
         variant = VariantCheckers.findVariantData(variants, "flavor2Staging");
-        signingConfig = variant.getVariantConfiguration().getSigningConfig();
+        signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile());
 
         variant = VariantCheckers.findVariantData(variants, "flavor2Release");
-        signingConfig = variant.getVariantConfiguration().getSigningConfig();
+        signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());

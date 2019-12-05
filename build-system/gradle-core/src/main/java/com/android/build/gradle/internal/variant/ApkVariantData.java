@@ -17,7 +17,8 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
@@ -28,15 +29,16 @@ public abstract class ApkVariantData extends InstallableVariantData {
     protected ApkVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull GradleVariantConfiguration config,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
-        super(globalScope, taskManager, config, recorder);
+        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
     }
 
     @Override
     @NonNull
     public String getDescription() {
-        final GradleVariantConfiguration config = getVariantConfiguration();
+        final VariantDslInfo config = getVariantDslInfo();
 
         if (config.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);

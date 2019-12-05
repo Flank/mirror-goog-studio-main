@@ -75,6 +75,7 @@ public class LibraryPlugin extends BasePlugin {
                         sourceSetManager,
                         extraModelInfo,
                         new LibraryExtensionImpl(
+                                globalScope.getDslScope(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,

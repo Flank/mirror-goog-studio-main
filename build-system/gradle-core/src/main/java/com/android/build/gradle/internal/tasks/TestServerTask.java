@@ -104,7 +104,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getVariantConfiguration().hasFlavors()
+            return getVariantScope().getVariantDslInfo().hasFlavors()
                     ? getVariantScope().getTaskName(testServer.getName() + "Upload")
                     : testServer.getName() + ("Upload");
         }
@@ -122,7 +122,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             final BaseVariantData testedVariantData = scope.getTestedVariantData();
 
-            final String variantName = scope.getVariantConfiguration().getFullName();
+            final String variantName = scope.getVariantDslInfo().getFullName();
             task.setDescription(
                     "Uploads APKs for Build \'"
                             + variantName

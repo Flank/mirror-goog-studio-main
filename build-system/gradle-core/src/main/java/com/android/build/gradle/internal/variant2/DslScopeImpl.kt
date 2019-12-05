@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
@@ -30,5 +31,6 @@ class DslScopeImpl(
         override val objectFactory: ObjectFactory,
         override val logger: Logger,
         override val buildFeatures: BuildFeatureValues,
-        override val providerFactory: ProviderFactory
+        override val providerFactory: ProviderFactory,
+        override val variableFactory: DslVariableFactory
 ) : DslScope

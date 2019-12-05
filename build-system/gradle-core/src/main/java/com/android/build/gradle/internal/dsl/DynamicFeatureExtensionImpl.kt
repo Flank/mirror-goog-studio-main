@@ -21,10 +21,12 @@ import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 class DynamicFeatureExtensionImpl(
+    dslScope: DslScope,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -37,6 +39,7 @@ class DynamicFeatureExtensionImpl(
             SigningConfig,
             DynamicFeatureVariant,
             DynamicFeatureVariantProperties>(
+        dslScope,
         buildTypes,
         defaultConfig,
         productFlavors,

@@ -94,7 +94,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
             super.configure(task)
 
             task.items.set(variantScope.globalScope.project.provider {
-                variantScope.variantConfiguration.resValues
+                variantScope.variantDslInfo.resValues
             })
 
             task.resOutputDir = variantScope.generatedResOutputDir

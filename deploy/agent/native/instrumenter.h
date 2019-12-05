@@ -76,10 +76,10 @@ class ActivityThreadTransform : public Transform {
         "Landroid/app/ActivityThread;", "handleDispatchPackageBroadcast",
         "(I[Ljava/lang/String;)V");
     static const ir::MethodId kEntryHook(
-        "Lcom/android/tools/deploy/instrument/ActivityThreadInstrumentation;",
+        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
         "handleDispatchPackageBroadcastEntry");
     static const ir::MethodId kExitHook(
-        "Lcom/android/tools/deploy/instrument/ActivityThreadInstrumentation;",
+        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
         "handleDispatchPackageBroadcastExit");
 
     slicer::MethodInstrumenter mi(dex_ir);
@@ -88,6 +88,26 @@ class ActivityThreadTransform : public Transform {
     mi.AddTransformation<slicer::ExitHook>(kExitHook);
     if (!mi.InstrumentMethod(kHandlePackageBroadcast)) {
       Log::E("Failed to instrument ActivityThread");
+    }
+  }
+};
+
+class DexPathListTransform : public Transform {
+ public:
+  std::string GetClassName() { return "dalvik/system/DexPathList$Element"; }
+  void Apply(shared_ptr<ir::DexFile> dex_ir) {
+    static const ir::MethodId kHandlePackageBroadcast(
+        "Ldalvik/system/DexPathList$Element;", "findResource",
+        "(Ljava/lang/String;)Ljava/net/URL;");
+    static const ir::MethodId kEntryHook(
+        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
+        "handleFindResourceEntry");
+
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(
+        kEntryHook, slicer::EntryHook::Tweak::ThisAsObject);
+    if (!mi.InstrumentMethod(kHandlePackageBroadcast)) {
+      Log::E("Failed to instrument DexPathList$Element");
     }
   }
 };

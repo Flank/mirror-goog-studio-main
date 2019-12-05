@@ -26,8 +26,14 @@ import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scr
 import com.android.tools.idea.wizard.template.impl.activities.settingsActivity.settingsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.tabbedActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.viewModelActivityTemplate
-import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerTemplate
+import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerActivityTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blankFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.fullscreenFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.loginFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.googleAdMobAdsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -35,5 +41,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blank
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
-    fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerTemplate, blankFragmentTemplate)
+    fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerActivityTemplate, blankFragmentTemplate,
+    fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate,
+    scrollFragmentTemplate)
 }

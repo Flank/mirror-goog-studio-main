@@ -239,6 +239,27 @@ class NdkLocatorKtTest {
     }
 
     @Test
+    fun `ndk dir properties has -rc2 in version`() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = "21.0.6011959-rc2",
+            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            androidNdkHomeEnvironmentVariable = null,
+            sdkFolder = null,
+            getNdkVersionedFolderNames = { listOf() },
+            getNdkSourceProperties = { path ->
+                when (path.path) {
+                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                        mapOf(
+                            SDK_PKG_REVISION.key to "21.0.6011959-rc2"
+                        )
+                    )
+                    else -> throw RuntimeException(path.path)
+                }
+            })
+        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
+    }
+
+    @Test
     fun nonExistingNdkDirWithNdkVersionInDsl() {
         findNdkPath(
             ndkVersionFromDsl = "18.1",

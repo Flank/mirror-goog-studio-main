@@ -17,7 +17,8 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
@@ -35,7 +36,10 @@ public interface TestedVariantData {
     TestVariantData getTestVariantData(VariantType type);
 
     @NonNull
-    GradleVariantConfiguration getVariantConfiguration();
+    VariantDslInfo getVariantDslInfo();
+
+    @NonNull
+    VariantSources getVariantSources();
 
     VariantScope getScope();
 

@@ -2,7 +2,7 @@
 <template
     format="5"
     revision="1"
-    name="Dynamic Feature (Instant App)"
+    name="Instant Dynamic Feature Module"
     description="Creates a new Android module that will be delivered as an instant app">
 
     <category value="Application" />

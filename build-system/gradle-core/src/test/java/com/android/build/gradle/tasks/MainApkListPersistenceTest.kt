@@ -18,14 +18,17 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -54,7 +57,8 @@ open class MainApkListPersistenceTest {
     var manifestFileFolder = TemporaryFolder()
 
     @Mock private lateinit var variantScope: VariantScope
-    @Mock private lateinit var config: GradleVariantConfiguration
+    @Mock private lateinit var globalScope: GlobalScope
+    @Mock private lateinit var config: VariantDslInfo
     @Mock private lateinit var artifacts: BuildArtifactsHolder
 
     private lateinit var outputFactory: OutputFactory
@@ -70,10 +74,12 @@ open class MainApkListPersistenceTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
         Mockito.`when`(variantScope.getTaskName(ArgumentMatchers.any(String::class.java)))
                 .thenReturn("taskFoo")
+        Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
         Mockito.`when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
         Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
-        Mockito.`when`(config.type).thenReturn(VariantTypeImpl.BASE_APK)
+        Mockito.`when`(config.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(ProjectOptions(ImmutableMap.of()))
 
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 

@@ -34,7 +34,6 @@ import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -158,7 +157,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST,
                 task.apkList)
 
-            val config = variantScope.variantConfiguration
+            val config = variantScope.variantDslInfo
             task.minSdkVersion.set(task.project.provider {
                 val minSdk = config.mergedFlavor.minSdkVersion
                 minSdk?.apiString

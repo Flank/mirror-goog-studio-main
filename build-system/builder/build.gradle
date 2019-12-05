@@ -103,7 +103,7 @@ dependencies {
         transitive = false
     }
 
-    provided(files('../../../../prebuilts/r8/r8-master.jar'))
+    provided(files('../../../../prebuilts/r8/r8.jar'))
 
     sourcesProvided(project(path:':dx', configuration:'sourcesOnly')) {
         transitive = false

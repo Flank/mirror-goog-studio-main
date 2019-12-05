@@ -21,7 +21,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -398,7 +399,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessLibraryManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
-                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + getVariantScope().getVariantDslInfo().getBaseName()
                             + "-report.txt");
 
             artifacts.producesFile(
@@ -408,7 +409,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     FileUtils.join(getVariantScope().getGlobalScope().getOutputsDir(), "logs")
                             .getAbsolutePath(),
                     "manifest-merger-"
-                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + getVariantScope().getVariantDslInfo().getBaseName()
                             + "-report.txt");
         }
 
@@ -416,9 +417,10 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
-            GradleVariantConfiguration config = getVariantScope().getVariantConfiguration();
+            VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
+            VariantSources variantSources = getVariantScope().getVariantSources();
 
-            final ProductFlavor mergedFlavor = config.getMergedFlavor();
+            final ProductFlavor mergedFlavor = variantDslInfo.getMergedFlavor();
 
             Project project = getVariantScope().getGlobalScope().getProject();
             task.getMinSdkVersion()
@@ -458,18 +460,19 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             .getExtension()
                             .getAaptOptions()
                             .getNamespaced();
-            task.versionName.set(task.getProject().provider(config::getVersionName));
+            task.versionName.set(task.getProject().provider(variantDslInfo::getVersionName));
             task.versionName.disallowChanges();
-            task.versionCode.set(task.getProject().provider(config::getVersionCode));
+            task.versionCode.set(task.getProject().provider(variantDslInfo::getVersionCode));
             task.versionCode.disallowChanges();
             task.packageOverride.set(variantProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
-                    task.getProject().provider(config::getManifestPlaceholders));
+                    task.getProject().provider(variantDslInfo::getManifestPlaceholders));
             task.manifestPlaceholders.disallowChanges();
-            task.getMainManifest().set(project.provider(config::getMainManifestFilePath));
+            task.getMainManifest().set(project.provider(variantSources::getMainManifestFilePath));
             task.getMainManifest().disallowChanges();
-            task.manifestOverlays.set(task.getProject().provider(config::getManifestOverlays));
+            task.manifestOverlays.set(
+                    task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
         }
     }

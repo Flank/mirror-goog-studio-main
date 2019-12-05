@@ -40,20 +40,20 @@ struct NativeBinding {
 
 bool RegisterNative(JNIEnv* jni, const NativeBinding& binding);
 
-// This method is bound to ActivityThreadInstrumentation#fixAppContext()
+// This method is bound to InstrumentationHooks#fixAppContext()
 jobject Native_FixAppContext(JNIEnv* jni, jobject object,
                              jobject activity_thread);
 
-// This method is bound to ActivityThreadInstrumentation#getActivities()
+// This method is bound to InstrumentationHooks#getActivities()
 jobject Native_GetActivityClientRecords(JNIEnv* jni, jobject object,
                                         jobject activity_thread);
 
-// This method is bound to ActivityThreadInstrumentation#fixActivityContext()
+// This method is bound to InstrumentationHooks#fixActivityContext()
 void Native_FixActivityContext(JNIEnv* jni, jobject object,
                                jobject activity_record,
                                jobject new_resources_impl);
 
-// This method is bound to ActivityThreadInstrumentation#updateApplicationInfo()
+// This method is bound to InstrumentationHooks#updateApplicationInfo()
 void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
                                   jobject activity_thread);
 

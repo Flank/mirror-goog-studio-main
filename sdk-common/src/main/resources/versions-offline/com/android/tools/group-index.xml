@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools>
-  <dvlib versions="26.5.1,26.6.0-beta01"/>
-  <sdklib versions="26.5.1,26.6.0-beta01"/>
-  <repository versions="26.5.1,26.6.0-beta01"/>
-  <annotations versions="26.5.1,26.6.0-beta01"/>
-  <sdk-common versions="26.5.1,26.6.0-beta01"/>
-  <testutils versions="26.5.1,26.6.0-beta01"/>
-  <common versions="26.5.1,26.6.0-beta01"/>
+  <dvlib versions="26.5.2,27.0.0-alpha04"/>
+  <sdklib versions="26.5.2,27.0.0-alpha04"/>
+  <repository versions="26.5.2,27.0.0-alpha04"/>
+  <annotations versions="26.5.2,27.0.0-alpha04"/>
+  <devicelib versions="26.5.2,27.0.0-alpha01"/>
+  <sdk-common versions="26.5.2,27.0.0-alpha04"/>
+  <testutils versions="26.5.2,27.0.0-alpha04"/>
+  <common versions="26.5.2,27.0.0-alpha04"/>
   <r8 versions="1.5.68"/>
-  <draw9patch versions="26.5.1,26.6.0-beta01"/>
-  <ninepatch versions="26.5.1,26.6.0-beta01"/>
-  <desugar_jdk_libs versions="1.0.1"/>
-  <desugar_jdk_libs_configuration versions="0.5.0"/>
+  <draw9patch versions="26.5.2,27.0.0-alpha04"/>
+  <ninepatch versions="26.5.2,27.0.0-alpha04"/>
+  <desugar_jdk_libs versions="1.0.2"/>
+  <desugar_jdk_libs_configuration versions="0.8.0"/>
 </com.android.tools>
 

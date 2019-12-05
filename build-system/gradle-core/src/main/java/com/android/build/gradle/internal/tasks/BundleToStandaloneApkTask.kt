@@ -178,12 +178,12 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out BundleToStandaloneApkTask>) {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
-            val suffix = if (variantScope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
+            val suffix = if (variantScope.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
             variantScope.artifacts.producesFile(
                 InternalArtifactType.UNIVERSAL_APK,
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile,
-                "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}-universal$suffix"
+                "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}-universal$suffix"
             )
         }
 

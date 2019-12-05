@@ -120,3 +120,7 @@ build:remote --experimental_strict_action_env=true
 
 # Enable jvmopt used for Foundry testing
 test:remote --jvmopt='-Dandroid.remote.run=true'
+
+# Stop downloading of build outputs to the local machine and
+# removes a possibility of network/disk bottlenecks when using RBE.
+build:remote --remote_download_minimal

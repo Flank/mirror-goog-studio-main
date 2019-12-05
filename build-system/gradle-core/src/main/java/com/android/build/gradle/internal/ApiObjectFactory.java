@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.UnitTestVariantImpl;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -149,7 +148,6 @@ public class ApiObjectFactory {
                                 .getGlobalScope()
                                 .getDslScope()
                                 .getDeprecationReporter());
-        GradleVariantConfiguration config = variantData.getVariantConfiguration();
         variantData
                 .getOutputScope()
                 .getApkDatas()

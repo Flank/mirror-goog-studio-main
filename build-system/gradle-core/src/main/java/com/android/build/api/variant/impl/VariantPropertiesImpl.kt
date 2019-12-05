@@ -33,33 +33,33 @@ internal open class VariantPropertiesImpl(
 ) : VariantProperties, VariantConfiguration by configuration{
 
     private val variantOutputs= mutableListOf<VariantOutput>()
-    private val variantConfiguration = variantScope.variantConfiguration
+    private val variantDslInfo = variantScope.variantDslInfo
 
     override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java).apply {
-        setDisallowChanges(dslScope.providerFactory.provider { variantConfiguration.applicationId })
+        setDisallowChanges(dslScope.providerFactory.provider { variantDslInfo.applicationId })
     }
 
     fun addVariantOutput(outputType: com.android.build.VariantOutput.OutputType): VariantOutputImpl {
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
-        val versionCode = variantConfiguration.getVersionCode(true)
+        val versionCode = variantDslInfo.getVersionCode(true)
         val versionCodeProperty = initializeProperty(Int::class.java, "$name::versionCode")
         if (versionCode <= 0) {
             versionCodeProperty.set(
                 variantScope.globalScope.project.provider<Int> {
-                    variantConfiguration.manifestVersionCodeSupplier.asInt
+                    variantDslInfo.manifestVersionCodeSupplier.asInt
                 })
         } else {
             versionCodeProperty.set(versionCode)
         }
         // the DSL objects are now locked, if the versionName is provided, use that; otherwise use
         // the lazy manifest reader to extract the value from the manifest file.
-        val versionName = variantConfiguration.getVersionName(true)
+        val versionName = variantDslInfo.getVersionName(true)
         val versionNameProperty = initializeProperty(String::class.java, "$name::versionName")
         versionNameProperty.set(
             variantScope.globalScope.project.provider<String> {
-                versionName ?: variantConfiguration.manifestVersionNameSupplier.get()
+                versionName ?: variantDslInfo.manifestVersionNameSupplier.get()
             }
         )
         return VariantOutputImpl(

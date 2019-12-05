@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.google.android.gms>
-  <play-services-vision versions="17.0.2,18.0.0"/>
+  <play-services-vision versions="18.0.0,19.0.0"/>
   <play-services-tagmanager versions="16.0.8,17.0.0"/>
-  <play-services-vision-common versions="17.0.2,18.0.0"/>
+  <play-services-vision-common versions="18.0.0,19.0.0"/>
   <play-services-all-wear versions="12.0.1,15.0.1"/>
   <play-services-instantapps versions="16.1.2,17.0.0"/>
   <play-services-tasks versions="16.0.1,17.0.0"/>
-  <play-services-ads-lite versions="17.2.1,18.2.0"/>
+  <play-services-ads-lite versions="17.2.1,18.3.0"/>
   <play-services-analytics-impl versions="16.0.8,17.0.0"/>
   <play-services-maps versions="16.1.0,17.0.0"/>
   <play-services-appindexing versions="8.4.0,9.8.0"/>
@@ -23,7 +23,7 @@
   <play-services-iid versions="16.0.1,17.0.0"/>
   <play-services-panorama versions="16.0.0,17.0.0"/>
   <play-services-contextmanager versions="9.4.0"/>
-  <play-services-games versions="17.0.0,18.0.1"/>
+  <play-services-games versions="18.0.1,19.0.0"/>
   <play-services-cast versions="16.2.0,17.1.0"/>
   <play-services-location versions="16.0.0,17.0.0"/>
   <play-services-places versions="16.1.0,17.0.0"/>
@@ -32,13 +32,13 @@
   <play-services-analytics versions="16.0.8,17.0.0"/>
   <play-services-appinvite versions="17.0.0,18.0.0"/>
   <play-services-auth-base versions="16.0.0,17.0.0"/>
-  <play-services-auth-api-phone versions="16.0.0,17.1.0"/>
-  <play-services-gass versions="17.2.1,18.2.0"/>
+  <play-services-auth-api-phone versions="16.0.0,17.3.0"/>
+  <play-services-gass versions="17.2.1,18.3.0"/>
   <play-services-appstate versions="7.8.0,8.4.0"/>
   <play-services-fitness versions="17.0.0,18.0.0"/>
   <play-services-drive versions="16.1.0,17.0.0"/>
-  <play-services-measurement versions="16.5.0,17.2.0"/>
-  <play-services-ads versions="17.2.1,18.2.0"/>
+  <play-services-measurement versions="16.5.0,17.2.1"/>
+  <play-services-ads versions="17.2.1,18.3.0"/>
   <play-services-clearcut versions="16.0.0,17.0.0"/>
   <play-services-gcm versions="16.1.0,17.0.0"/>
   <play-services-oss-licenses versions="16.0.2,17.0.0"/>
@@ -85,21 +85,21 @@
   <play-services-tagmanager-v4-impl-license versions="11.8.0,12.0.1"/>
   <auth-api-impl versions="11.6.0"/>
   <play-services-places-placereport versions="16.0.0,17.0.0"/>
-  <play-services-measurement-base versions="16.5.0,17.2.0"/>
+  <play-services-measurement-base versions="16.5.0,17.2.1"/>
   <play-services-audience versions="16.0.0,17.0.0"/>
   <play-services-ads-identifier versions="16.0.0,17.0.0"/>
   <play-services-flags versions="16.0.1,17.0.0"/>
   <play-services-phenotype versions="16.0.0,17.0.0"/>
-  <play-services-ads-base versions="17.2.1,18.2.0"/>
+  <play-services-ads-base versions="17.2.1,18.3.0"/>
   <play-services-stats versions="16.0.1,17.0.0"/>
-  <strict-version-matcher-plugin versions="1.2.0"/>
-  <play-services-vision-image-label versions="17.0.2,18.0.0"/>
+  <strict-version-matcher-plugin versions="1.2.1"/>
+  <play-services-vision-image-label versions="17.0.2,18.0.1"/>
   <oss-licenses-plugin versions="0.10.0"/>
-  <play-services-measurement-sdk-api versions="16.5.0,17.2.0"/>
-  <play-services-measurement-api versions="16.5.0,17.2.0"/>
-  <play-services-measurement-sdk versions="16.5.0,17.2.0"/>
+  <play-services-measurement-sdk-api versions="16.5.0,17.2.1"/>
+  <play-services-measurement-api versions="16.5.0,17.2.1"/>
+  <play-services-measurement-sdk versions="16.5.0,17.2.1"/>
   <play-services-afs-native versions="17.0.0,18.0.0"/>
-  <play-services-measurement-impl versions="16.5.0,17.2.0"/>
+  <play-services-measurement-impl versions="16.5.0,17.2.1"/>
   <play-services-cronet versions="16.0.0,17.0.0"/>
 </com.google.android.gms>
 

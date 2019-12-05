@@ -50,8 +50,6 @@
     <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
 
     <#include "../common/recipe_app_bar.xml.ftl" />
-    <instantiate from="root/res/values-v21/no_actionbar_styles_v21.xml.ftl"
-                    to="${escapeXmlAttribute(resOut)}/values-v21/styles.xml" />
 
     <instantiate from="root/res/menu/drawer.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/menu/${drawerMenu}.xml" />

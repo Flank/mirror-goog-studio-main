@@ -30,7 +30,6 @@ import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.TypedefRemover
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -324,7 +323,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             task.packageName.set(
                 variantScope.globalScope.project.provider {
-                    variantScope.variantConfiguration.packageFromManifest
+                    variantScope.variantDslInfo.packageFromManifest
                 }
             )
             task.packageName.disallowChanges()
@@ -332,7 +331,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.jarCreatorType.setDisallowChanges(variantScope.jarCreatorType)
 
             task.debugBuild
-                .setDisallowChanges(variantScope.variantConfiguration.buildType.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.buildType.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES

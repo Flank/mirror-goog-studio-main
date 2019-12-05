@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
@@ -40,13 +40,13 @@ public class OutputFactory {
     static final String UNIVERSAL = "universal";
 
     private final String projectBaseName;
-    private final GradleVariantConfiguration variantConfiguration;
+    private final VariantDslInfo variantDslInfo;
     private final OutputScope.Builder outputScopeBuilder;
     private final Supplier<OutputScope> outputSupplier;
 
-    public OutputFactory(String projectBaseName, GradleVariantConfiguration variantConfiguration) {
+    public OutputFactory(String projectBaseName, VariantDslInfo variantDslInfo) {
         this.projectBaseName = projectBaseName;
-        this.variantConfiguration = variantConfiguration;
+        this.variantDslInfo = variantDslInfo;
         this.outputScopeBuilder = new OutputScope.Builder();
         this.outputSupplier = Suppliers.memoize(outputScopeBuilder::build);
     }
@@ -55,8 +55,7 @@ public class OutputFactory {
         // we only know if it is signed during configuration, if its the base module.
         // Otherwise, don't differentiate between signed and unsigned.
         String suffix =
-                (variantConfiguration.isSigningReady()
-                                || !variantConfiguration.getType().isBaseModule())
+                (variantDslInfo.isSigningReady() || !variantDslInfo.getVariantType().isBaseModule())
                         ? DOT_ANDROID_PACKAGE
                         : "-unsigned.apk";
         return projectBaseName + "-" + baseName + suffix;
@@ -65,24 +64,24 @@ public class OutputFactory {
     public ApkData addMainOutput(String defaultFilename) {
         ApkData mainOutput =
                 new Main(
-                        variantConfiguration.getBaseName(),
-                        variantConfiguration.getFullName(),
+                        variantDslInfo.getBaseName(),
+                        variantDslInfo.getFullName(),
                         defaultFilename);
         outputScopeBuilder.addMainSplit(mainOutput);
         return mainOutput;
     }
 
     public ApkData addMainApk() {
-        return addMainOutput(getOutputFileName(variantConfiguration.getBaseName()));
+        return addMainOutput(getOutputFileName(variantDslInfo.getBaseName()));
     }
 
     public ApkData addUniversalApk() {
 
-        String baseName = variantConfiguration.computeBaseNameWithSplits(UNIVERSAL);
+        String baseName = variantDslInfo.computeBaseNameWithSplits(UNIVERSAL);
         ApkData mainApk =
                 new Universal(
                         baseName,
-                        variantConfiguration.computeFullNameWithSplits(UNIVERSAL),
+                        variantDslInfo.computeFullNameWithSplits(UNIVERSAL),
                         getOutputFileName(baseName));
         outputScopeBuilder.addMainSplit(mainApk);
         return mainApk;
@@ -98,12 +97,12 @@ public class OutputFactory {
                                                         filter.getFirst(), filter.getSecond()))
                                 .collect(Collectors.toList()));
         String filterName = FullSplit._getFilterName(filtersList);
-        String baseName = variantConfiguration.computeBaseNameWithSplits(filterName);
+        String baseName = variantDslInfo.computeBaseNameWithSplits(filterName);
         ApkData apkData =
                 new FullSplit(
                         filterName,
                         baseName,
-                        variantConfiguration.computeFullNameWithSplits(filterName),
+                        variantDslInfo.computeFullNameWithSplits(filterName),
                         getOutputFileName(baseName),
                         filtersList);
         outputScopeBuilder.addSplit(apkData);

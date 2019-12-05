@@ -44,12 +44,12 @@ abstract class AndroidVariantTask : DefaultTask(), VariantAwareTask {
 
     @Internal
     fun getWorkerFacadeWithWorkers(): WorkerExecutorFacade {
-        return Workers.preferWorkers(projectName, path, workerExecutor)
+        return Workers.preferWorkers(projectName, path, workerExecutor, enableGradleWorkers.get())
     }
 
     fun getWorkerFacadeWithThreads(useGradleExecutor: Boolean = false): WorkerExecutorFacade {
         return if (useGradleExecutor) {
-            Workers.preferThreads(projectName, path, workerExecutor)
+            Workers.preferThreads(projectName, path, workerExecutor, enableGradleWorkers.get())
         } else {
             Workers.withThreads(projectName, path)
         }

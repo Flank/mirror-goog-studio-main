@@ -21,11 +21,13 @@ import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
 class LibraryExtensionImpl(
+    dslScope: DslScope,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -38,6 +40,7 @@ class LibraryExtensionImpl(
             SigningConfig,
             LibraryVariant,
             LibraryVariantProperties>(
+        dslScope,
         buildTypes,
         defaultConfig,
         productFlavors,

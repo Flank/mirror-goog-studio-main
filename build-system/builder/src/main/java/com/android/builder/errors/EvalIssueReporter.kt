@@ -76,6 +76,7 @@ abstract class EvalIssueReporter {
         ANDROID_X_PROPERTY_NOT_ENABLED(SyncIssue.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED),
         USING_DEPRECATED_CONFIGURATION(SyncIssue.TYPE_USING_DEPRECATED_CONFIGURATION),
         USING_DEPRECATED_DSL_VALUE(SyncIssue.TYPE_USING_DEPRECATED_DSL_VALUE),
+        EDIT_LOCKED_DSL_VALUE(SyncIssue.TYPE_EDIT_LOCKED_DSL_VALUE)
     }
 
     protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)

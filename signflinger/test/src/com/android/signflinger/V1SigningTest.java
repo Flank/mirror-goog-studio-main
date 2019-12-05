@@ -30,7 +30,7 @@ import java.util.jar.Manifest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class V1SigningTest extends TestBaseSigning {
+public class V1SigningTest extends BaseSigning {
 
     private static final String CREATED_BY = "SignflingerTest Created-By";
     private static final String BUILT_BY = "SignflingerTest Built-By";
@@ -63,9 +63,9 @@ public class V1SigningTest extends TestBaseSigning {
                         .setV1Enabled(true)
                         .setV1TrustManifest(trustManifest)
                         .setMinSdkVersion(21)
-                        .setPrivateKey(signerConfig.privateKey)
-                        .setCertificates(signerConfig.certificates)
-                        .setExecutor(createExecutor());
+                        .setPrivateKey(signerConfig.getPrivateKey())
+                        .setCertificates(signerConfig.getCertificates())
+                        .setExecutor(Utils.createExecutor());
 
         if (attributes.containsKey(SignedApk.MANIFEST_CREATED_BY)) {
             builder.setV1CreatedBy(attributes.get(SignedApk.MANIFEST_CREATED_BY));
@@ -80,19 +80,19 @@ public class V1SigningTest extends TestBaseSigning {
 
     @Test
     public void createdByAndBuiltBy() throws Exception {
-        File zipFile = getTestOutputFile("testCreatedBy.zip");
-        createZip(5, 2000, zipFile);
+        File androidManifest = workspace.getDummyAndroidManifest();
+        File zipFile = workspace.createZip(5, 2000, "testCreatedBy.zip", androidManifest);
 
         // Sign
         HashMap<String, String> manifestAttributes = new HashMap<>();
         manifestAttributes.put(SignedApk.MANIFEST_CREATED_BY, CREATED_BY);
         manifestAttributes.put(SignedApk.MANIFEST_BUILT_BY, BUILT_BY);
-        SignerConfig signerConfig = getDefaultRSASigner();
+        SignerConfig signerConfig = Signers.getDefaultRSASigner(workspace);
         SignedApkOptions options = getOptions(signerConfig, false, manifestAttributes);
         try (SignedApk signedApk = new SignedApk(zipFile, options)) {}
         // Check content of manifest file
         verifyManifestAttributes(zipFile, manifestAttributes);
-        verify(zipFile);
+        Utils.verifyApk(zipFile);
 
         // Incremental update (make sure Created-By and Built-By are kept).
         options = getOptions(signerConfig, true);
@@ -101,15 +101,15 @@ public class V1SigningTest extends TestBaseSigning {
         }
         // Check content of manifest file
         verifyManifestAttributes(zipFile, manifestAttributes);
-        verify(zipFile);
+        Utils.verifyApk(zipFile);
     }
 
     @Test
     public void v1FilesAreCompressed() throws Exception {
-        File zipFile = getTestOutputFile("testV1FilesAreCompressed.zip");
-        createZip(1, 10, zipFile);
+        File androidManifest = workspace.getDummyAndroidManifest();
+        File zipFile = workspace.createZip(1, 10, "testV1FilesAreCompressed.zip", androidManifest);
 
-        SignerConfig signerConfig = getDefaultRSASigner();
+        SignerConfig signerConfig = Signers.getDefaultRSASigner(workspace);
         SignedApkOptions options = getOptions(signerConfig, false);
         try (SignedApk signedApk = new SignedApk(zipFile, options)) {}
 

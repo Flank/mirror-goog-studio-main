@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.StringHelper;
 import java.util.List;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -31,7 +32,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask {
+public abstract class LintPerVariantTask extends LintBaseTask implements VariantAwareTask {
 
     private VariantInputs variantInputs;
     private ConfigurableFileCollection allInputs;
@@ -123,6 +124,11 @@ public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask
             lint.setDescription(
                     StringHelper.appendCapitalized(
                             "Runs lint on the ", lint.getVariantName(), " build."));
+            lint.getEnableGradleWorkers()
+                    .set(
+                            getGlobalScope()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS));
         }
     }
 
@@ -169,6 +175,11 @@ public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask
                     "Runs lint on just the fatal issues in the "
                             + task.getVariantName()
                             + " build.");
+            task.getEnableGradleWorkers()
+                    .set(
+                            getGlobalScope()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS));
         }
     }
 }

@@ -20,31 +20,28 @@ import com.android.SdkConstants.DOT_ANDROID_PACKAGE
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_RES_RAW
 import com.android.SdkConstants.FD_RES_XML
-import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK
-import com.android.builder.core.BuilderConstants.ANDROID_WEAR
-import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.builder.core.ApkInfoParser
+import com.android.builder.core.BuilderConstants.ANDROID_WEAR
+import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
 import com.android.ide.common.process.ProcessException
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
-import java.io.File
-import java.io.IOException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -55,9 +52,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
+import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 
 /** Task to generate micro app data res file.  */
+@CacheableTask
 abstract class GenerateApkDataTask : NonIncrementalTask() {
 
     // Tells us if the apk file collection received from task manager exists
@@ -237,7 +237,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             val scope = variantScope
 
             val variantData = scope.variantData as ApkVariantData
-            val variantConfiguration = variantData.variantConfiguration
+            val variantDslInfo = variantData.variantDslInfo
 
             task.resOutputDir.set(scope.microApkResDirectory)
             task.resOutputDir.disallowChanges()
@@ -254,9 +254,9 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
             task.mainPkgName.setDisallowChanges(variantProperties.applicationId)
 
-            task.minSdkVersion.setDisallowChanges(variantConfiguration.minSdkVersion.apiLevel)
+            task.minSdkVersion.setDisallowChanges(variantDslInfo.minSdkVersion.apiLevel)
 
-            task.targetSdkVersion.setDisallowChanges(variantConfiguration.targetSdkVersion.apiLevel)
+            task.targetSdkVersion.setDisallowChanges(variantDslInfo.targetSdkVersion.apiLevel)
 
             val aapt2AndVersion = getAapt2FromMavenAndVersion(scope.globalScope)
             task.aapt2Executable.from(aapt2AndVersion.first)

@@ -33,7 +33,6 @@ import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
@@ -189,7 +188,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                     "out"
                 )
 
-            if (variantScope.variantConfiguration.type.isAar) {
+            if (variantScope.variantDslInfo.variantType.isAar) {
                 variantScope
                     .artifacts
                     .producesDir(
@@ -207,7 +206,8 @@ abstract class AidlCompile : NonIncrementalTask() {
             val globalScope = scope.globalScope
             val project = globalScope.project
 
-            val variantConfiguration = scope.variantConfiguration
+            val variantDslInfo = scope.variantDslInfo
+            val variantSources = scope.variantSources
 
             val sdkComponents = globalScope.sdkComponents
             task.aidlExecutableProvider.set(sdkComponents.aidlExecutableProvider)
@@ -218,7 +218,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task
                 .sourceDirs
-                .set(project.provider { variantConfiguration.aidlSourceList })
+                .set(project.provider { variantSources.aidlSourceList })
             task.sourceDirs.disallowChanges()
 
             // This is because aidl may be in the same folder as Java and we want to restrict to
@@ -233,7 +233,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task.importDirs = scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
-            if (variantConfiguration.type.isAar) {
+            if (variantDslInfo.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
             }
 

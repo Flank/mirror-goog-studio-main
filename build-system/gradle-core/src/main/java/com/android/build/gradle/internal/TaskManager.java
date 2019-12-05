@@ -63,7 +63,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
@@ -92,6 +92,7 @@ import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
@@ -135,7 +136,6 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuil
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -334,8 +334,10 @@ public abstract class TaskManager {
     /** Override to configure NDK data in the scope. */
     public static void configureScopeForNdk(@NonNull VariantScope scope) {
         final BaseVariantData variantData = scope.getVariantData();
-        File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
-                "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
+        File objFolder =
+                new File(
+                        scope.getGlobalScope().getIntermediatesDir(),
+                        "ndk/" + variantData.getVariantDslInfo().getDirName() + "/obj");
         for (Abi abi : Abi.values()) {
             scope.addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
         }
@@ -701,7 +703,7 @@ public abstract class TaskManager {
             PublishingSpecs.VariantSpec testedSpec =
                     testedVariantScope
                             .getPublishingSpec()
-                            .getTestingSpec(variantScope.getVariantConfiguration().getType());
+                            .getTestingSpec(variantScope.getVariantDslInfo().getVariantType());
 
             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
             PublishingSpecs.OutputSpec taskOutputSpec =
@@ -774,7 +776,7 @@ public abstract class TaskManager {
     protected static boolean appliesCustomClassTransforms(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
         final VariantType type = scope.getType();
-        return scope.getVariantConfiguration().getBuildType().isDebuggable()
+        return scope.getVariantDslInfo().getBuildType().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()
                 && !getAdvancedProfilingTransforms(options).isEmpty();
@@ -822,11 +824,11 @@ public abstract class TaskManager {
             TaskProvider<RenderscriptCompile> rsTask =
                     taskFactory.register(new RenderscriptCompile.CreationAction(scope));
 
-            GradleVariantConfiguration config = scope.getVariantConfiguration();
+            VariantDslInfo variantDslInfo = scope.getVariantDslInfo();
 
             TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
             // only put this dependency if rs will generate Java code
-            if (!config.getRenderscriptNdkModeEnabled()) {
+            if (!variantDslInfo.getRenderscriptNdkModeEnabled()) {
                 TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), rsTask);
             }
         }
@@ -892,7 +894,7 @@ public abstract class TaskManager {
                         ? new File(
                                 globalScope.getIntermediatesDir()
                                         + "/merged-not-compiled-resources/"
-                                        + scope.getVariantConfiguration().getDirName())
+                                        + scope.getVariantDslInfo().getDirName())
                         : null;
 
         TaskProvider<MergeResources> mergeResourcesTask =
@@ -976,7 +978,7 @@ public abstract class TaskManager {
 
     public void createApkProcessResTask(
             @NonNull VariantScope scope) {
-        VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
+        VariantType variantType = scope.getVariantData().getVariantDslInfo().getVariantType();
         InternalArtifactType<Directory> packageOutputType =
                 (variantType.isApk() && !variantType.isForTesting())
                         ? FEATURE_RESOURCE_PKG.INSTANCE
@@ -1513,6 +1515,14 @@ public abstract class TaskManager {
                                 "packageNameOfFinalRClassProvider",
                                 (Supplier<String>) testConfigInputs::getPackageNameOfFinalRClass);
                     });
+        } else {
+            if (testedVariantScope.getType().isAar()) {
+                // With compile classpath R classes, we need to generate a dummy R class for unit tests
+                // See https://issuetracker.google.com/143762955 for more context.
+                taskFactory.register(
+                        new GenerateLibraryRFileTask.TestRuntimeStubRClassCreationAction(
+                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
+            }
         }
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add
@@ -1641,7 +1651,7 @@ public abstract class TaskManager {
     /** Is the given variant relevant for lint? */
     static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
-        final VariantType variantType = variantScope.getVariantConfiguration().getType();
+        final VariantType variantType = variantScope.getVariantDslInfo().getVariantType();
         return !variantType.isForTesting();
     }
 
@@ -1667,10 +1677,10 @@ public abstract class TaskManager {
     public void maybeCreateLintVitalTask(
             @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
         VariantScope variantScope = variantData.getScope();
-        GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         if (!isLintVariant(variantScope)
-                || variantConfig.getBuildType().isDebuggable()
+                || variantDslInfo.getBuildType().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
@@ -1808,10 +1818,10 @@ public abstract class TaskManager {
                 checkNotNull(testVariantScope.getTestedVariantData());
         final TestVariantData testVariantData = (TestVariantData) testVariantScope.getVariantData();
 
-        boolean isLibrary = baseVariantData.getVariantConfiguration().getType().isAar();
+        boolean isLibrary = baseVariantData.getVariantDslInfo().getVariantType().isAar();
 
         AbstractTestDataImpl testData;
-        if (baseVariantData.getVariantConfiguration().getType().isDynamicFeature()) {
+        if (baseVariantData.getVariantDslInfo().getVariantType().isDynamicFeature()) {
             testData =
                     new BundleTestDataImpl(
                             testVariantData,
@@ -1864,7 +1874,7 @@ public abstract class TaskManager {
                 CONNECTED_ANDROID_TEST,
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask));
 
-        if (baseVariantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
+        if (baseVariantData.getVariantDslInfo().getBuildType().isTestCoverageEnabled()) {
 
             Configuration jacocoAntConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
@@ -1930,7 +1940,7 @@ public abstract class TaskManager {
         checkNotNull(variantScope.getTaskContainer().getJavacTask());
 
         final BaseVariantData variantData = variantScope.getVariantData();
-        final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+        final VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
@@ -1938,13 +1948,17 @@ public abstract class TaskManager {
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled =
-                config.getBuildType().isTestCoverageEnabled() && !config.getType().isForTesting();
+                variantDslInfo.getBuildType().isTestCoverageEnabled()
+                        && !variantDslInfo.getVariantType().isForTesting();
         if (isTestCoverageEnabled) {
             createJacocoTask(variantScope);
         }
 
         maybeCreateDesugarTask(
-                variantScope, config.getMinSdkVersion(), transformManager, isTestCoverageEnabled);
+                variantScope,
+                variantDslInfo.getMinSdkVersion(),
+                transformManager,
+                isTestCoverageEnabled);
 
         BaseExtension extension = variantScope.getGlobalScope().getExtension();
 
@@ -2021,9 +2035,9 @@ public abstract class TaskManager {
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
-            if (variantScope.getVariantConfiguration().isMultiDexEnabled()
+            if (variantScope.getVariantDslInfo().isMultiDexEnabled()
                     && variantScope
-                                    .getVariantConfiguration()
+                                    .getVariantDslInfo()
                                     .getMinSdkVersionWithTargetDeviceApi()
                                     .getFeatureLevel()
                             >= 21) {
@@ -2072,7 +2086,7 @@ public abstract class TaskManager {
             }
 
             QualifiedContent.ScopeType scopeType = Scope.EXTERNAL_LIBRARIES;
-            if (variantScope.getVariantConfiguration().getType().isTestComponent()) {
+            if (variantScope.getVariantDslInfo().getVariantType().isTestComponent()) {
                 BaseVariantData testedVariant =
                         Objects.requireNonNull(variantScope.getTestedVariantData());
                 if (!testedVariant.getType().isAar()) {
@@ -2083,13 +2097,9 @@ public abstract class TaskManager {
             }
 
             // add runtime classes for try-with-resources support
-            String taskName = variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
             TaskProvider<ExtractTryWithResourcesSupportJar> extractTryWithResources =
                     taskFactory.register(
-                            new ExtractTryWithResourcesSupportJar.CreationAction(
-                                    variantScope.getTryWithResourceRuntimeSupportJar(),
-                                    taskName,
-                                    variantScope.getFullVariantName()));
+                            new ExtractTryWithResourcesSupportJar.CreationAction(variantScope));
             variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
             transformManager.addStream(
                     OriginalStream.builder(project, "runtime-deps-try-with-resources")
@@ -2197,7 +2207,7 @@ public abstract class TaskManager {
         } else {
             boolean produceSeparateOutputs =
                     dexingType == DexingType.NATIVE_MULTIDEX
-                            && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
+                            && variantScope.getVariantDslInfo().getBuildType().isDebuggable();
 
             taskFactory.register(
                     new DexMergingTask.CreationAction(
@@ -2259,16 +2269,19 @@ public abstract class TaskManager {
     }
 
     protected void handleJacocoDependencies(@NonNull VariantScope variantScope) {
-        GradleVariantConfiguration config = variantScope.getVariantConfiguration();
+        VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
         // we add the jacoco jar if coverage is enabled, but we don't add it
         // for test apps as it's already part of the tested app.
         // For library project, since we cannot use the local jars of the library,
         // we add it as well.
         boolean isTestCoverageEnabled =
-                config.getBuildType().isTestCoverageEnabled()
-                        && (!config.getType().isTestComponent()
-                                || (config.getTestedConfig() != null
-                                        && config.getTestedConfig().getType().isAar()));
+                variantDslInfo.getBuildType().isTestCoverageEnabled()
+                        && (!variantDslInfo.getVariantType().isTestComponent()
+                                || (variantDslInfo.getTestedVariant() != null
+                                        && variantDslInfo
+                                                .getTestedVariant()
+                                                .getVariantType()
+                                                .isAar()));
         if (isTestCoverageEnabled) {
             if (variantScope.getDexer() == DexerTool.DX) {
                 globalScope
@@ -2392,8 +2405,8 @@ public abstract class TaskManager {
 
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
-        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        JavaCompileOptions javaCompileOptions = variantConfiguration.getJavaCompileOptions();
+        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        JavaCompileOptions javaCompileOptions = variantDslInfo.getJavaCompileOptions();
         AnnotationProcessorOptions processorOptions =
                 javaCompileOptions.getAnnotationProcessorOptions();
         if (processorOptions
@@ -2517,7 +2530,7 @@ public abstract class TaskManager {
     }
 
     protected void createValidateSigningTask(@NonNull VariantScope variantScope) {
-        if (variantScope.getVariantConfiguration().getSigningConfig() == null) {
+        if (variantScope.getVariantDslInfo().getSigningConfig() == null) {
             return;
         }
 
@@ -2562,35 +2575,34 @@ public abstract class TaskManager {
                 final VariantType variantType = variantScope.getType();
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-                    final GradleVariantConfiguration variantConfig =
-                            variantScope.getVariantConfiguration();
+                    final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
                     final TaskProvider<? extends Task> assembleTask =
                             taskContainer.getAssembleTask();
-                    assembleMap.put(variantConfig.getBuildType().getName(), assembleTask);
+                    assembleMap.put(variantDslInfo.getBuildType().getName(), assembleTask);
 
-                    for (ProductFlavor flavor : variantConfig.getProductFlavors()) {
+                    for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
                     // if 2+ flavor dimensions, then make an assemble for the flavor combo
                     if (flavorDimensionCount > 1) {
-                        assembleMap.put(variantConfig.getFlavorName(), assembleTask);
+                        assembleMap.put(variantDslInfo.getFlavorName(), assembleTask);
                     }
 
                     // fill the bundle map only if the variant supports bundles.
                     if (variantType.isBaseModule()) {
                         TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
 
-                        bundleMap.put(variantConfig.getBuildType().getName(), bundleTask);
+                        bundleMap.put(variantDslInfo.getBuildType().getName(), bundleTask);
 
-                        for (ProductFlavor flavor : variantConfig.getProductFlavors()) {
+                        for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 
                         // if 2+ flavor dimensions, then make an assemble for the flavor combo
                         if (flavorDimensionCount > 1) {
-                            bundleMap.put(variantConfig.getFlavorName(), bundleTask);
+                            bundleMap.put(variantDslInfo.getFlavorName(), bundleTask);
                         }
                     }
                 }
@@ -2685,7 +2697,7 @@ public abstract class TaskManager {
                 task ->
                         task.setDescription(
                                 "Assembles main output for variant "
-                                        + scope.getVariantConfiguration().getFullName()),
+                                        + scope.getVariantDslInfo().getFullName()),
                 taskProvider -> scope.getTaskContainer().setAssembleTask(taskProvider));
     }
 
@@ -2702,7 +2714,7 @@ public abstract class TaskManager {
                 task -> {
                     task.setDescription(
                             "Assembles bundle for variant "
-                                    + scope.getVariantConfiguration().getFullName());
+                                    + scope.getVariantDslInfo().getFullName());
                     task.dependsOn(
                             scope.getArtifacts()
                                     .getFinalProduct(InternalArtifactType.BUNDLE.INSTANCE));
@@ -2749,7 +2761,7 @@ public abstract class TaskManager {
                 task = createProguardTask(variantScope, isTestApplication);
                 break;
             case R8:
-                if (variantScope.getVariantConfiguration().getType().isAar()
+                if (variantScope.getVariantDslInfo().getVariantType().isAar()
                         && !projectOptions.get(BooleanOption.ENABLE_R8_LIBRARIES)) {
                     task = createProguardTask(variantScope, isTestApplication);
                     createdShrinker = CodeShrinker.PROGUARD;
@@ -2936,7 +2948,7 @@ public abstract class TaskManager {
                 .setAssetGenTask(taskFactory.register(scope.getTaskName("generate", "Assets")));
 
         if (!variantData.getType().isForTesting()
-                && variantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
+                && variantData.getVariantDslInfo().getBuildType().isTestCoverageEnabled()) {
             scope.getTaskContainer()
                     .setCoverageReportTask(
                             taskFactory.register(
@@ -2963,46 +2975,46 @@ public abstract class TaskManager {
         taskFactory.register(new PreBuildCreationAction(scope));
     }
 
-    public abstract static class AbstractPreBuildCreationAction<T extends Task>
-            extends TaskCreationAction<T> {
-
-        protected final VariantScope variantScope;
+    public abstract static class AbstractPreBuildCreationAction<T extends AndroidVariantTask>
+            extends VariantTaskCreationAction<T> {
 
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("pre", "Build");
+            return getVariantScope().getTaskName("pre", "Build");
         }
 
         public AbstractPreBuildCreationAction(VariantScope variantScope) {
-            this.variantScope = variantScope;
+            super(variantScope, false);
         }
 
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends T> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setPreBuildTask(taskProvider);
+            getVariantScope().getTaskContainer().setPreBuildTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull T task) {
+            super.configure(task);
             task.dependsOn(MAIN_PREBUILD);
 
-            if (variantScope.getCodeShrinker() != null) {
+            if (getVariantScope().getCodeShrinker() != null) {
                 task.dependsOn(EXTRACT_PROGUARD_FILES);
             }
         }
     }
 
-    private static class PreBuildCreationAction extends AbstractPreBuildCreationAction<Task> {
+    private static class PreBuildCreationAction
+            extends AbstractPreBuildCreationAction<AndroidVariantTask> {
         public PreBuildCreationAction(VariantScope variantScope) {
             super(variantScope);
         }
 
         @NonNull
         @Override
-        public Class<Task> getType() {
-            return Task.class;
+        public Class<AndroidVariantTask> getType() {
+            return AndroidVariantTask.class;
         }
     }
 

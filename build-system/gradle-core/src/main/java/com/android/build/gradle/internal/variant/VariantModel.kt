@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.builder.model.SigningConfig
+import com.android.build.gradle.internal.dsl.SigningConfig
 
 /**
  * Provides information about the build types, product flavors and signing configurations.

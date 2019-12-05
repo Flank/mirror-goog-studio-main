@@ -16,61 +16,61 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.options.Option.Status.EXPERIMENTAL
-import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
 enum class StringOption(
     override val propertyName: String,
-    override val status: Option.Status = EXPERIMENTAL
+    stage: ApiStage
 ) : Option<String> {
-    BUILD_CACHE_DIR("android.buildCacheDir", status = STABLE),
+    BUILD_CACHE_DIR("android.buildCacheDir", ApiStage.Stable),
 
-    IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY, status = STABLE),
-    IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI, status = STABLE),
+    IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY, ApiStage.Stable),
+    IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI, ApiStage.Stable),
 
-    IDE_ATTRIBUTION_FILE_LOCATION(AndroidProject.PROPERTY_ATTRIBUTION_FILE_LOCATION, status = STABLE),
+    IDE_ATTRIBUTION_FILE_LOCATION(AndroidProject.PROPERTY_ATTRIBUTION_FILE_LOCATION, ApiStage.Stable),
 
     // Signing options
-    IDE_SIGNING_STORE_TYPE(AndroidProject.PROPERTY_SIGNING_STORE_TYPE, status = STABLE),
-    IDE_SIGNING_STORE_FILE(AndroidProject.PROPERTY_SIGNING_STORE_FILE, status = STABLE),
-    IDE_SIGNING_STORE_PASSWORD(AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD, status = STABLE),
-    IDE_SIGNING_KEY_ALIAS(AndroidProject.PROPERTY_SIGNING_KEY_ALIAS, status = STABLE),
-    IDE_SIGNING_KEY_PASSWORD(AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD, status = STABLE),
+    IDE_SIGNING_STORE_TYPE(AndroidProject.PROPERTY_SIGNING_STORE_TYPE, ApiStage.Stable),
+    IDE_SIGNING_STORE_FILE(AndroidProject.PROPERTY_SIGNING_STORE_FILE, ApiStage.Stable),
+    IDE_SIGNING_STORE_PASSWORD(AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD, ApiStage.Stable),
+    IDE_SIGNING_KEY_ALIAS(AndroidProject.PROPERTY_SIGNING_KEY_ALIAS, ApiStage.Stable),
+    IDE_SIGNING_KEY_PASSWORD(AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD, ApiStage.Stable),
 
     // device config for ApkSelect
-    IDE_APK_SELECT_CONFIG(AndroidProject.PROPERTY_APK_SELECT_CONFIG, status = STABLE),
+    IDE_APK_SELECT_CONFIG(AndroidProject.PROPERTY_APK_SELECT_CONFIG, ApiStage.Stable),
 
     // location where to write the APK/BUNDLE
-    IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION, status = STABLE),
+    IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION, ApiStage.Stable),
 
     // Instant run
-    IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS, status = STABLE),
-    IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, status = STABLE),
-    IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME, status = STABLE),
+    IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS, ApiStage.Stable),
+    IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, ApiStage.Stable),
+    IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME, ApiStage.Stable),
 
-    IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME, status = STABLE),
+    IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME, ApiStage.Stable),
 
     // Profiler plugin
-    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms", status = STABLE),
+    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms", ApiStage.Stable),
 
     // Testing
-    DEVICE_POOL_SERIAL("com.android.test.devicepool.serial"),
-    PROFILE_OUTPUT_DIR("android.advanced.profileOutputDir"),
+    DEVICE_POOL_SERIAL("com.android.test.devicepool.serial", ApiStage.Experimental),
+    PROFILE_OUTPUT_DIR("android.advanced.profileOutputDir", ApiStage.Experimental),
 
-    BUILD_ARTIFACT_REPORT_FILE("android.buildartifact.reportfile"),
+    BUILD_ARTIFACT_REPORT_FILE("android.buildartifact.reportfile", ApiStage.Experimental),
 
-    AAPT2_FROM_MAVEN_OVERRIDE("android.aapt2FromMavenOverride"),
+    AAPT2_FROM_MAVEN_OVERRIDE("android.aapt2FromMavenOverride", ApiStage.Experimental),
 
-    SUPPRESS_UNSUPPORTED_OPTION_WARNINGS("android.suppressUnsupportedOptionWarnings"),
+    SUPPRESS_UNSUPPORTED_OPTION_WARNINGS("android.suppressUnsupportedOptionWarnings", ApiStage.Experimental),
 
     // The exact version of Android Studio used, e.g. 2.4.0.6
-    IDE_ANDROID_STUDIO_VERSION(AndroidProject.PROPERTY_STUDIO_VERSION, status = STABLE),
+    IDE_ANDROID_STUDIO_VERSION(AndroidProject.PROPERTY_STUDIO_VERSION, ApiStage.Stable),
 
     // Jetifier: List of regular expressions for libraries that should not be jetified
-    JETIFIER_BLACKLIST("android.jetifier.blacklist"),
+    JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Experimental),
 
     ;
+
+    override val status = stage.status
 
     override fun parse(value: Any): String {
         if (value is CharSequence || value is Number) {

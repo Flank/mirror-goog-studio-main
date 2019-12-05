@@ -25,17 +25,19 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.profile.NoOpRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -269,6 +271,7 @@ public class TaskTestUtils {
     private static VariantScope getScope() {
         GlobalScope globalScope = mock(GlobalScope.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
+        when(globalScope.getProjectOptions()).thenReturn(new ProjectOptions(ImmutableMap.of()));
 
         VariantScope scope = mock(VariantScope.class);
         when(scope.getDirName()).thenReturn("config dir name");
@@ -280,11 +283,11 @@ public class TaskTestUtils {
         when(buildType.getName()).thenReturn("debug");
         when(buildType.isDebuggable()).thenReturn(true);
 
-        GradleVariantConfiguration variantConfiguration = mock(GradleVariantConfiguration.class);
-        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
-        when(variantConfiguration.getBuildType()).thenReturn(buildType);
-        when(variantConfiguration.getProductFlavors()).thenReturn(ImmutableList.of());
-        when(scope.getVariantConfiguration()).thenReturn(variantConfiguration);
+        VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
+        when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(variantDslInfo.getBuildType()).thenReturn(buildType);
+        when(variantDslInfo.getProductFlavors()).thenReturn(ImmutableList.of());
+        when(scope.getVariantDslInfo()).thenReturn(variantDslInfo);
         return scope;
     }
 

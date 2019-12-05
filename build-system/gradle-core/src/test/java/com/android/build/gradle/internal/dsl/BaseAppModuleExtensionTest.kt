@@ -21,8 +21,10 @@ import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.AppVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.core.ThrowingIssueReporter
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.MockitoKt.any
 import org.gradle.api.Action
@@ -58,10 +60,11 @@ class BaseAppModuleExtensionTest {
             .thenAnswer { invocation -> Mockito.mock(invocation.arguments[0] as Class<*>) }
         Mockito.`when`(objectFactory.domainObjectSet(any(Class::class.java))).thenReturn(Mockito.mock(DomainObjectSet::class.java))
         val extension = ApplicationExtensionImpl(
-            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
-            defaultConfig,
-            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
-            Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
+            dslScope = createFakeDslScope(),
+            buildTypes = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
+            defaultConfig = defaultConfig,
+            productFlavors = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
+            signingConfigs = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
         )
 
         appExtension = BaseAppModuleExtension(

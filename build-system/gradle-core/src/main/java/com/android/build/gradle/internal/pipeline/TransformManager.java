@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AndroidProject;
@@ -242,7 +243,17 @@ public class TransformManager extends FilterableStreamCollection {
         }
 
         transforms.add(transform);
-
+        TaskConfigAction<TransformTask> wrappedConfigAction =
+                t -> {
+                    t.getEnableGradleWorkers()
+                            .set(
+                                    scope.getGlobalScope()
+                                            .getProjectOptions()
+                                            .get(BooleanOption.ENABLE_GRADLE_WORKERS));
+                    if (configAction != null) {
+                        configAction.configure(t);
+                    }
+                };
         // create the task...
         return Optional.of(
                 taskFactory.register(
@@ -255,7 +266,7 @@ public class TransformManager extends FilterableStreamCollection {
                                 outputStream,
                                 recorder),
                         preConfigAction,
-                        configAction,
+                        wrappedConfigAction,
                         providerCallback));
     }
 

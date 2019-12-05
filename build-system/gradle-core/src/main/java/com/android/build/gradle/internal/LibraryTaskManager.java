@@ -32,7 +32,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -114,7 +114,7 @@ public class LibraryTaskManager extends TaskManager {
     public void createTasksForVariantScope(
             @NonNull final VariantScope variantScope,
             @NonNull List<VariantScope> variantScopesForLint) {
-        final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
+        final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
 
         GlobalScope globalScope = variantScope.getGlobalScope();
 
@@ -161,7 +161,7 @@ public class LibraryTaskManager extends TaskManager {
                 globalScope.getProjectBaseName());
 
         // Only verify resources if in Release and not namespaced.
-        if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()
+        if (!variantScope.getVariantDslInfo().getBuildType().isDebuggable()
                 && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             createVerifyLibraryResTask(variantScope);
         }
@@ -205,7 +205,7 @@ public class LibraryTaskManager extends TaskManager {
             taskFactory.register(new ExtractAnnotations.CreationAction(variantScope));
         }
 
-        final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
+        final boolean instrumented = variantDslInfo.getBuildType().isTestCoverageEnabled();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
@@ -381,7 +381,7 @@ public class LibraryTaskManager extends TaskManager {
         // Old style publishing. This is likely to go away at some point.
         if (extension
                 .getDefaultPublishConfig()
-                .equals(variantScope.getVariantConfiguration().getFullName())) {
+                .equals(variantScope.getVariantDslInfo().getFullName())) {
             VariantHelper.setupArchivesConfig(project, variantDependencies.getRuntimeClasspath());
 
             // add the artifact that will be published.

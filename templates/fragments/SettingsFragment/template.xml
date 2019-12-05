@@ -21,14 +21,6 @@
             help="The name of the fragment class to create"/>
 
     <parameter
-            id="fragmentTitle"
-            name="Title"
-            type="string"
-            constraints="nonempty"
-            default="Settings"
-            help="The title of the activity."/>
-
-    <parameter
             id="packageName"
             name="Package Name"
             type="string"

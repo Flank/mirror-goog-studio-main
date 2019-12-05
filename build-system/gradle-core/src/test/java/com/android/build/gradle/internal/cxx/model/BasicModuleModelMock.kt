@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
@@ -198,7 +197,7 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
         val gradleVariantConfiguration = mock(
-            GradleVariantConfiguration::class.java,
+            VariantDslInfo::class.java,
             throwUnmocked
         )
         val splits = mock(
@@ -228,7 +227,7 @@ open class BasicModuleModelMock {
 
         doReturn(splits).`when`(extension).splits
 
-        doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
+        doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantDslInfo
         doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
             .externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig

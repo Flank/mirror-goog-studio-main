@@ -1,6 +1,5 @@
 package ${kotlinEscapedPackageName}
 
-import android.content.Context
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
 import ${getMaterialComponentName('android.support.v7.widget.GridLayoutManager', useAndroidX)}
@@ -14,21 +13,14 @@ import ${applicationPackage}.R
 </#if>
 
 import ${kotlinEscapedPackageName}.dummy.DummyContent
-import ${kotlinEscapedPackageName}.dummy.DummyContent.DummyItem
 
 /**
  * A fragment representing a list of Items.
- * Activities containing this fragment MUST implement the
- * [${fragmentClass}.OnListFragmentInteractionListener] interface.
  */
 class ${fragmentClass} : Fragment() {
 
-    // TODO: Customize parameters
     private var columnCount = 1
 
-    private var listener: OnListFragmentInteractionListener? = null
-
-<#if includeFactory>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -37,7 +29,6 @@ class ${fragmentClass} : Fragment() {
         }
     }
 
-</#if>
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.${fragment_layout_list}, container, false)
@@ -49,43 +40,12 @@ class ${fragmentClass} : Fragment() {
                     columnCount <= 1 -> LinearLayoutManager(context)
                     else -> GridLayoutManager(context, columnCount)
                 }
-                adapter = ${adapterClassName}(DummyContent.ITEMS, listener)
+                adapter = ${adapterClassName}(DummyContent.ITEMS)
             }
         }
         return view
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnListFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnListFragmentInteractionListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson
-     * [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onListFragmentInteraction(item: DummyItem?)
-    }
-
-<#if includeFactory>
     companion object {
 
         // TODO: Customize parameter argument names
@@ -100,5 +60,4 @@ class ${fragmentClass} : Fragment() {
                     }
                 }
     }
-</#if>
 }

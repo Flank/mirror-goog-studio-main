@@ -223,14 +223,14 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
         )
     }
     // add renderscript compilation output if support mode is enabled.
-    if (scope.variantConfiguration.renderscriptSupportModeEnabled) {
+    if (scope.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
                 project.files(scope.artifacts.getFinalProduct(RENDERSCRIPT_LIB))
         val rsLibs = scope.globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)
         }
-        if (scope.variantConfiguration.renderscriptSupportModeBlasEnabled) {
+        if (scope.variantDslInfo.renderscriptSupportModeBlasEnabled) {
             val rsBlasLib = scope.globalScope.sdkComponents.supportBlasLibFolderProvider.orNull
             if (rsBlasLib == null || !rsBlasLib.isDirectory) {
                 throw GradleException(

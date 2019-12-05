@@ -179,10 +179,10 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             task.aaptIntermediateDir =
                     FileUtils.join(
-                            variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantConfiguration.dirName)
+                            variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantDslInfo.dirName)
 
             task.packageForR.set(variantScope.globalScope.project.provider {
-                variantScope.variantConfiguration.originalApplicationId
+                variantScope.variantDslInfo.originalApplicationId
             })
             task.packageForR.disallowChanges()
 

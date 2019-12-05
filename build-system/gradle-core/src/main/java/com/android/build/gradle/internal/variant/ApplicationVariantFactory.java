@@ -27,7 +27,8 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -69,19 +70,20 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @Override
     @NonNull
     public BaseVariantData createVariantData(
-            @NonNull GradleVariantConfiguration variantConfiguration,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
-                        globalScope, taskManager, variantConfiguration, recorder);
-        computeOutputs(variantConfiguration, variant, true);
+                        globalScope, taskManager, variantDslInfo, variantSources, recorder);
+        computeOutputs(variantDslInfo, variant, true);
 
         return variant;
     }
 
     protected void computeOutputs(
-            @NonNull GradleVariantConfiguration variantConfiguration,
+            @NonNull VariantDslInfo variantDslInfo,
             @NonNull ApplicationVariantData variant,
             boolean includeMainApk) {
         BaseExtension extension = globalScope.getExtension();
@@ -100,7 +102,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         OutputFactory outputFactory = variant.getOutputFactory();
         populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
 
-        restrictEnabledOutputs(variantConfiguration, variant.getOutputScope().getApkDatas());
+        restrictEnabledOutputs(variantDslInfo, variant.getOutputScope().getApkDatas());
     }
 
     private void populateMultiApkOutputs(
@@ -167,7 +169,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         // check supportedAbis in Ndk configuration versus ABI splits.
         Set<String> ndkConfigAbiFilters =
-                variantData.getVariantConfiguration().getNdkConfig().getAbiFilters();
+                variantData.getVariantDslInfo().getNdkConfig().getAbiFilters();
         if (ndkConfigAbiFilters == null || ndkConfigAbiFilters.isEmpty()) {
             return;
         }
@@ -182,10 +184,9 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
     }
 
-    private void restrictEnabledOutputs(
-            GradleVariantConfiguration configuration, List<ApkData> apkDataList) {
+    private void restrictEnabledOutputs(VariantDslInfo variantDslInfo, List<ApkData> apkDataList) {
 
-        Set<String> supportedAbis = configuration.getSupportedAbis();
+        Set<String> supportedAbis = variantDslInfo.getSupportedAbis();
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         String buildTargetAbi =
                 projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)

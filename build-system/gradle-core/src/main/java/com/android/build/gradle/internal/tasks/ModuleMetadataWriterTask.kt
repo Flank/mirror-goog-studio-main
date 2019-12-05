@@ -97,7 +97,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             super.configure(task)
             task.applicationId.set(variantProperties.applicationId)
             task.outputScope = variantScope.variantData.outputScope
-            task.debuggable = variantScope.variantConfiguration.buildType.isDebuggable
+            task.debuggable = variantScope.variantDslInfo.buildType.isDebuggable
         }
     }
 }

@@ -221,6 +221,9 @@ public interface SyncIssue {
      */
     int TYPE_USING_DEPRECATED_DSL_VALUE = 42;
 
+    /** The user or a plugin has tried to mutate a DSL value after it has been locked. */
+    int TYPE_EDIT_LOCKED_DSL_VALUE = 43;
+
     // NOTE: When adding a new type here, increment the index by 1. This index may not be consistent
     // with the corresponding value in studio_stats.proto (e.g., it could be lower by 1), because of
     // an indexing issue in the past (see http://issuetracker.google.com/138278313).

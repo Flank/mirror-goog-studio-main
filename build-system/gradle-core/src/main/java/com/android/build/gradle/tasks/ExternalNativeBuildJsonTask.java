@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -111,11 +111,11 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             task.generator = generator;
             task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
-            GradleVariantConfiguration config = getVariantScope().getVariantConfiguration();
+            VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
 
             if (artifacts.hasFinalProduct(
                             InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
-                    && config.getRenderscriptNdkModeEnabled()) {
+                    && variantDslInfo.getRenderscriptNdkModeEnabled()) {
                 artifacts.setTaskInputToFinalProduct(
                         InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE,
                         task.getRenderscriptSources());

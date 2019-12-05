@@ -57,10 +57,11 @@ import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.OldPostProcessingOptions;
 import com.android.build.gradle.internal.core.PostProcessingBlockOptions;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
@@ -187,14 +188,14 @@ public class VariantScopeImpl implements VariantScope {
                                                         globalScope.getIntermediatesDir(),
                                                         "processing-tools",
                                                         "runtime-deps",
-                                                        getVariantConfiguration().getDirName(),
+                                                        getVariantDslInfo().getDirName(),
                                                         "desugar_try_with_resources.jar")));
         this.postProcessingOptions = createPostProcessingOptions();
     }
 
     private PostProcessingOptions createPostProcessingOptions() {
         // This may not be the case with the experimental plugin.
-        BuildType buildType = variantData.getVariantConfiguration().getBuildType();
+        BuildType buildType = variantData.getVariantDslInfo().getBuildType();
         if (buildType.getPostProcessingConfiguration() == POSTPROCESSING_BLOCK) {
             return new PostProcessingBlockOptions(
                     buildType.getPostprocessing(), getType().isTestComponent());
@@ -269,14 +270,20 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     @NonNull
-    public GradleVariantConfiguration getVariantConfiguration() {
-        return variantData.getVariantConfiguration();
+    public VariantDslInfo getVariantDslInfo() {
+        return variantData.getVariantDslInfo();
+    }
+
+    @NonNull
+    @Override
+    public VariantSources getVariantSources() {
+        return variantData.getVariantSources();
     }
 
     @NonNull
     @Override
     public String getFullVariantName() {
-        return getVariantConfiguration().getFullName();
+        return getVariantDslInfo().getFullName();
     }
 
     @Override
@@ -333,7 +340,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean isCrunchPngs() {
         // If set for this build type, respect that.
-        Boolean buildTypeOverride = getVariantConfiguration().getBuildType().isCrunchPngs();
+        Boolean buildTypeOverride = getVariantDslInfo().getBuildType().isCrunchPngs();
         if (buildTypeOverride != null) {
             return buildTypeOverride;
         }
@@ -345,13 +352,13 @@ public class VariantScopeImpl implements VariantScope {
         }
         // If not overridden, use the default from the build type.
         //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
-        return getVariantConfiguration().getBuildType().isCrunchPngsDefault();
+        return getVariantDslInfo().getBuildType().isCrunchPngsDefault();
     }
 
     @Override
     public boolean consumesFeatureJars() {
         return getType().isBaseModule()
-                && getVariantConfiguration().getBuildType().isMinifyEnabled()
+                && getVariantDslInfo().getBuildType().isMinifyEnabled()
                 && globalScope.hasDynamicFeatures();
     }
 
@@ -375,7 +382,7 @@ public class VariantScopeImpl implements VariantScope {
     public boolean getNeedsMainDexListForBundle() {
         return getType().isBaseModule()
                 && globalScope.hasDynamicFeatures()
-                && getVariantConfiguration().getDexingType().getNeedsMainDexList();
+                && getVariantDslInfo().getDexingType().getNeedsMainDexList();
     }
 
     @Nullable
@@ -452,16 +459,16 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     private List<File> gatherProguardFiles(ProguardFileType type) {
-        GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
+        VariantDslInfo variantDslInfo = getVariantDslInfo();
 
         List<File> result =
                 new ArrayList<>(
                         BaseConfigAdapter.getProguardFiles(
-                                variantConfiguration.getDefaultConfig(), type));
+                                variantDslInfo.getDefaultConfig(), type));
 
         result.addAll(postProcessingOptions.getProguardFiles(type));
 
-        for (ProductFlavor flavor : variantConfiguration.getProductFlavors()) {
+        for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
             result.addAll(BaseConfigAdapter.getProguardFiles(flavor, type));
         }
 
@@ -501,7 +508,7 @@ public class VariantScopeImpl implements VariantScope {
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
                 || getMinSdkVersion().getCodename() != null
-                || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
+                || getVariantDslInfo().getTargetSdkVersion().getCodename() != null;
     }
 
     private boolean isPreviewTargetPlatform() {
@@ -524,7 +531,7 @@ public class VariantScopeImpl implements VariantScope {
                 extension.getCompileOptions().getCoreLibraryDesugaringEnabled() != null
                         && extension.getCompileOptions().getCoreLibraryDesugaringEnabled();
 
-        boolean multidexEnabled = getVariantConfiguration().isMultiDexEnabled();
+        boolean multidexEnabled = getVariantDslInfo().isMultiDexEnabled();
 
         Java8LangSupport langSupportType = getJava8LangSupportType();
         boolean langDesugarEnabled =
@@ -558,7 +565,7 @@ public class VariantScopeImpl implements VariantScope {
         // Assume Java8LangSupport is either D8 or R8 as we checked that in
         // isCoreLibraryDesugaringEnabled()
         if (getJava8LangSupportType() == Java8LangSupport.D8
-                && getVariantConfiguration().getBuildType().isDebuggable()) {
+                && getVariantDslInfo().getBuildType().isDebuggable()) {
             return false;
         }
         return true;
@@ -573,7 +580,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public DexingType getDexingType() {
-        return variantData.getVariantConfiguration().getDexingType();
+        return variantData.getVariantDslInfo().getDexingType();
     }
 
     @Override
@@ -584,19 +591,19 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public AndroidVersion getMinSdkVersion() {
-        return getVariantConfiguration().getMinSdkVersion();
+        return getVariantDslInfo().getMinSdkVersion();
     }
 
     @NonNull
     @Override
     public String getDirName() {
-        return getVariantConfiguration().getDirName();
+        return getVariantDslInfo().getDirName();
     }
 
     @NonNull
     @Override
     public Collection<String> getDirectorySegments() {
-        return getVariantConfiguration().getDirectorySegments();
+        return getVariantDslInfo().getDirectorySegments();
     }
 
     @NonNull
@@ -1107,19 +1114,8 @@ public class VariantScopeImpl implements VariantScope {
         checkState(getType() == UNIT_TEST, "Expected unit test type but found: " + getType());
 
         if (testedScope.getType().isAar()) {
-            if (globalScope
-                    .getExtension()
-                    .getTestOptions()
-                    .getUnitTests()
-                    .isIncludeAndroidResources()) {
-                // Unit tests that use Android resources require the same R.jar as Android tests
-                return this.getArtifacts()
-                        .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-            } else {
-                return testedScope
-                        .getArtifacts()
-                        .getFinalProduct(COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-            }
+            return this.getArtifacts()
+                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         } else {
             checkState(
                     testedScope.getType().isApk(),
@@ -1389,7 +1385,7 @@ public class VariantScopeImpl implements VariantScope {
                                         + "gradle.properties file to enable Java 8 "
                                         + "language support.",
                                 missingFlag.name()),
-                        getVariantConfiguration().getFullName());
+                        getVariantDslInfo().getFullName());
         return Java8LangSupport.INVALID;
     }
 
@@ -1414,7 +1410,7 @@ public class VariantScopeImpl implements VariantScope {
             String msg = String.format(template, flag.getPropertyName(), String.join(",", invalid));
             globalScope
                     .getErrorHandler()
-                    .reportError(Type.GENERIC, msg, getVariantConfiguration().getFullName());
+                    .reportError(Type.GENERIC, msg, getVariantDslInfo().getFullName());
             return false;
         }
     }
@@ -1469,7 +1465,7 @@ public class VariantScopeImpl implements VariantScope {
     public File getSymbolTableFile() {
         return new File(
                 globalScope.getIntermediatesDir(),
-                "symbols/" + variantData.getVariantConfiguration().getDirName());
+                "symbols/" + variantData.getVariantDslInfo().getDirName());
     }
 
     @NonNull

@@ -20,9 +20,12 @@ import com.android.SdkConstants.FN_LINT_JAR
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
@@ -53,13 +56,16 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
 
+    @get:Input
+    abstract val enableGradleWorkers: Property<Boolean>
+
     companion object {
         const val NAME = "prepareLintJarForPublish"
     }
 
     @TaskAction
     fun prepare() {
-        Workers.preferWorkers(projectName, path, workerExecutor).use {
+        Workers.preferWorkers(projectName, path, workerExecutor, enableGradleWorkers.get()).use {
             it.submit(
                 PublishLintJarWorkerRunnable::class.java, PublishLintJarRequest(
                     files = lintChecks.files,
@@ -85,6 +91,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
 
         override fun configure(task: PrepareLintJarForPublish) {
             task.lintChecks = scope.publishedCustomLintChecks
+            task.enableGradleWorkers.set(scope.projectOptions[BooleanOption.ENABLE_GRADLE_WORKERS])
         }
     }
 }

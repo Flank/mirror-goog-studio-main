@@ -37,7 +37,7 @@ namespace deploy {
 namespace {
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
-    "com/android/tools/deploy/instrument/ActivityThreadInstrumentation";
+    "com/android/tools/deploy/instrument/InstrumentationHooks";
 
 const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
 
@@ -254,6 +254,7 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 
   AddTransform(new ActivityThreadTransform());
+  AddTransform(new DexPathListTransform());
 
   if (!Instrument(jvmti, jni, instrument_jar_path)) {
     Log::E("Error instrumenting application.");

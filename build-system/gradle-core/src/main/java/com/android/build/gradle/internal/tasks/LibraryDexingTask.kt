@@ -84,6 +84,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             projectName,
             path,
             workerExecutor,
+            enableGradleWorkers.get(),
             MoreExecutors.newDirectExecutorService()
         ).use {
             it.submit(
@@ -121,7 +122,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
                 task.classes
             )
             val minSdkVersion =
-                scope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
+                scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion = minSdkVersion
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)

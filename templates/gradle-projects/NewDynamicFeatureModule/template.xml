@@ -2,7 +2,7 @@
 <template
     format="5"
     revision="1"
-    name="Dynamic Feature"
+    name="Dynamic Feature Module"
     description="Creates a new Android App Bundle module that can be dynamically delivered">
 
     <category value="Application" />

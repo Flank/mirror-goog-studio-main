@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.test
 
 import com.android.build.gradle.internal.tasks.getApkFiles
+import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.build.gradle.internal.testing.TestData
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -39,19 +39,24 @@ class BundleTestDataImpl(
     testApkDir: Provider<Directory>,
     private val moduleName: String?,
     private val apkBundle: FileCollection
-) : AbstractTestDataImpl(testVariantData.variantConfiguration, testApkDir, null) {
+) : AbstractTestDataImpl(
+    testVariantData.variantDslInfo,
+    testVariantData.variantSources,
+    testApkDir,
+    null
+) {
 
     override fun loadFromMetadataFile(metadataFile: File) {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
-    override fun getApplicationId(): String = testVariantData.variantConfiguration.applicationId
+    override fun getApplicationId(): String = testVariantData.variantDslInfo.applicationId
 
     override fun getTestedApplicationId(): String? =
-        testVariantData.variantConfiguration.testedApplicationId
+        testVariantData.variantDslInfo.testedApplicationId
 
     override fun isLibrary(): Boolean =
-        testVariantData.testedVariantData.variantConfiguration.type.isAar
+        testVariantData.testedVariantData.variantDslInfo.variantType.isAar
 
     override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider,

@@ -34,13 +34,6 @@
         name="Fragment class name" />
 
     <parameter
-        id="includeFactory"
-        name="Include fragment factory methods?"
-        type="boolean"
-        default="true"
-        help="Generate static fragment factory methods for easy instantiation" />
-
-    <parameter
         id="columnCount"
         name="Column Count"
         type="enum"

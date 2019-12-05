@@ -36,7 +36,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --invocation_id=%INVOCATIONID% ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
- --profile=%DISTDIR%\winprof%BUILDNUMBER%.json ^
+ --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
  --runs_per_test=5 ^
  -- //tools/base/bazel:perfgate_logs_collector_deploy.jar ^
  %TARGETS%

@@ -240,7 +240,7 @@ abstract class R8Task: ProguardConfigurableTask() {
 
             task.bootClasspath.from(variantScope.globalScope.fullBootClasspath)
             task.minSdkVersion.set(variantScope.minSdkVersion.featureLevel)
-            task.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
+            task.debuggable.set(variantScope.variantDslInfo.buildType.isDebuggable)
             task.disableTreeShaking.set(disableTreeShaking)
             task.disableMinification.set(disableMinification)
             task.messageReceiver = variantScope.globalScope.messageReceiver
@@ -254,7 +254,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                     .getFinalProductAsFileCollection(DUPLICATE_CLASSES_CHECK)
                     .get())
 
-            variantScope.variantConfiguration.multiDexKeepProguard?.let { multiDexKeepProguard ->
+            variantScope.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
                 task.mainDexRulesFiles.from(multiDexKeepProguard)
             }
 
@@ -267,7 +267,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 )
             }
 
-            variantScope.variantConfiguration.multiDexKeepFile?.let { multiDexKeepFile ->
+            variantScope.variantDslInfo.multiDexKeepFile?.let { multiDexKeepFile ->
                 task.mainDexListFiles.from(multiDexKeepFile)
             }
 

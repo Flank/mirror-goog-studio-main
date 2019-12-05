@@ -190,15 +190,15 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             val variantData = variantScope.variantData
 
-            val variantConfiguration = variantData.variantConfiguration
+            val variantDslInfo = variantData.variantDslInfo
 
             val project = variantScope.globalScope.project
             task.buildConfigPackageName.set(project.provider {
-                variantConfiguration.originalApplicationId
+                variantDslInfo.originalApplicationId
             })
             task.buildConfigPackageName.disallowChanges()
 
-            if (!variantConfiguration.type.isAar) {
+            if (!variantDslInfo.variantType.isAar) {
                 task.appPackageName.set(variantProperties.applicationId)
             }
             task.appPackageName.disallowChanges()
@@ -208,37 +208,37 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             // output version has been overridden, otherwise use the variant configuration
             task.versionCode.setDisallowChanges(
                 mainSplit?.versionCode
-                    ?: task.project.provider { variantConfiguration.versionCode })
+                    ?: task.project.provider { variantDslInfo.versionCode })
             task.versionName.setDisallowChanges(
                 mainSplit?.versionName
-                    ?: task.project.provider { variantConfiguration.versionName })
+                    ?: task.project.provider { variantDslInfo.versionName })
 
-            task.debuggable.set(project.provider { variantConfiguration.buildType.isDebuggable })
+            task.debuggable.set(project.provider { variantDslInfo.buildType.isDebuggable })
             task.debuggable.disallowChanges()
 
-            task.buildTypeName = variantConfiguration.buildType.name
+            task.buildTypeName = variantDslInfo.buildType.name
 
             // no need to memoize, variant configuration does that already.
-            task.flavorName.set(project.provider { variantConfiguration.flavorName })
+            task.flavorName.set(project.provider { variantDslInfo.flavorName })
             task.flavorName.disallowChanges()
 
             task.flavorNamesWithDimensionNames.set(project.provider {
-                variantConfiguration.flavorNamesWithDimensionNames
+                variantDslInfo.flavorNamesWithDimensionNames
             })
             task.flavorNamesWithDimensionNames.disallowChanges()
 
-            task.items.set(project.provider { variantConfiguration.buildConfigItems })
+            task.items.set(project.provider { variantDslInfo.buildConfigItems })
             task.items.disallowChanges()
 
             task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
 
-            if (variantScope.variantConfiguration.type.isTestComponent) {
+            if (variantScope.variantDslInfo.variantType.isTestComponent) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
                 )
             }
 
-            task.isLibrary = variantConfiguration.type.isAar
+            task.isLibrary = variantDslInfo.variantType.isAar
         }
     }
 }

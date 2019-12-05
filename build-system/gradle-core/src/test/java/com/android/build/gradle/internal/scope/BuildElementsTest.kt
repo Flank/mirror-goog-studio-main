@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.builder.core.VariantTypeImpl
 import com.android.utils.Pair
 import com.google.common.base.Charsets
@@ -29,7 +28,6 @@ import com.google.common.io.FileWriteMode
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
-import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -48,27 +46,21 @@ import java.io.StringReader
  */
 class BuildElementsTest {
 
-    @Mock private val variantConfiguration: GradleVariantConfiguration? = null
+    @Mock private val variantDslInfo: VariantDslInfo? = null
 
     @get:Rule
     var temporaryFolder = TemporaryFolder()
 
     @Before
     fun setUp() {
-        Workers.useDirectWorkerExecutor= true
         MockitoAnnotations.initMocks(this)
-        `when`(variantConfiguration!!.type).thenReturn(VariantTypeImpl.BASE_APK)
-    }
-
-    @After
-    fun tearDown() {
-        Workers.useDirectWorkerExecutor= false
+        `when`(variantDslInfo!!.variantType).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test
     @Throws(IOException::class)
     fun testPersistence() {
-        val outputFactory = OutputFactory("project", variantConfiguration)
+        val outputFactory = OutputFactory("project", variantDslInfo)
 
         outputFactory.addUniversalApk()
         val densityApkData = outputFactory.addFullSplit(

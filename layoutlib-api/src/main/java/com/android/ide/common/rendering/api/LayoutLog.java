@@ -188,4 +188,7 @@ public class LayoutLog implements ILayoutLog {
     public void error(String tag, String message, Throwable throwable, Object data) {
         error(tag, message, throwable, null, data);
     }
+
+    /** Logs messages coming from the Android Framework. */
+    public void logAndroidFramework(int priority, String tag, String message) {}
 }

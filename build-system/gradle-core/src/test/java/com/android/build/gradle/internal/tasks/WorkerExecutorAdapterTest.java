@@ -19,22 +19,16 @@ package com.android.build.gradle.internal.tasks;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Truth;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerConfiguration;
 import org.gradle.workers.WorkerExecutor;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -50,30 +44,10 @@ public class WorkerExecutorAdapterTest {
 
     @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-    @Before
-    public void setUp() {
-        Workers.INSTANCE.initFromProject(
-                new ProjectOptions(
-                        ImmutableMap.of(
-                                BooleanOption.ENABLE_GRADLE_WORKERS.getPropertyName(),
-                                Boolean.TRUE)),
-                ForkJoinPool.commonPool());
-    }
-
-    @After
-    public void tearDown() {
-        Workers.INSTANCE.initFromProject(
-                new ProjectOptions(
-                        ImmutableMap.of(
-                                BooleanOption.ENABLE_GRADLE_WORKERS.getPropertyName(),
-                                Boolean.FALSE)),
-                ForkJoinPool.commonPool());
-    }
-
     @Test
     public void testSingleDelegation() {
         WorkerExecutorFacade adapter =
-                Workers.INSTANCE.preferWorkers("test", ":test", workerExecutor);
+                Workers.INSTANCE.preferWorkers("test", ":test", workerExecutor, true);
         Parameter params = new Parameter("one", "two");
         adapter.submit(WorkAction.class, params);
         adapter.await();
@@ -103,7 +77,7 @@ public class WorkerExecutorAdapterTest {
     public void testMultipleDelegation() {
 
         WorkerExecutorFacade adapter =
-                Workers.INSTANCE.preferWorkers("test", ":test", workerExecutor);
+                Workers.INSTANCE.preferWorkers("test", ":test", workerExecutor, true);
         List<Parameter> parametersList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Parameter params = new Parameter("+" + i, "-" + i);

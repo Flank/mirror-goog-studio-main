@@ -23,7 +23,8 @@ import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -39,9 +40,10 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     public ApplicationVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull GradleVariantConfiguration config,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
-        super(globalScope, taskManager, config, recorder);
+        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
         testVariants = Maps.newHashMap();
     }
 

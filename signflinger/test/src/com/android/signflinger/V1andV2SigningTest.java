@@ -18,7 +18,7 @@ package com.android.signflinger;
 
 import org.junit.Test;
 
-public class V1andV2SigningTest extends TestBaseSigning {
+public class V1andV2SigningTest extends BaseSigning {
 
     @Test
     public void simpleZipWithOneFile() throws Exception {
@@ -44,9 +44,9 @@ public class V1andV2SigningTest extends TestBaseSigning {
                         .setV1CreatedBy("Signflinger")
                         .setV1TrustManifest(trustManifest)
                         .setMinSdkVersion(21)
-                        .setPrivateKey(signerConfig.privateKey)
-                        .setCertificates(signerConfig.certificates)
-                        .setExecutor(createExecutor());
+                        .setPrivateKey(signerConfig.getPrivateKey())
+                        .setCertificates(signerConfig.getCertificates())
+                        .setExecutor(Utils.createExecutor());
         return builder.build();
     }
 }

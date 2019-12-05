@@ -16,6 +16,8 @@ import com.android.resources.ResourceType;
  * not just its presence.
  */
 public interface ResourceItem extends Configurable {
+    FolderConfiguration DEFAULT_CONFIGURATION = new FolderConfiguration();
+
     String XLIFF_NAMESPACE_PREFIX = "urn:oasis:names:tc:xliff:document:";
     String XLIFF_G_TAG = "g";
     String ATTR_EXAMPLE = "example";

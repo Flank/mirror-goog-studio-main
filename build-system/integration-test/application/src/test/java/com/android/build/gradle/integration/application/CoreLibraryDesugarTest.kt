@@ -362,6 +362,54 @@ class CoreLibraryDesugarTest {
         }
     }
 
+    @Test
+    fun testWithDifferentMinSdkPerFlavor() {
+        app.buildFile.appendText("""
+
+            android {
+                flavorDimensions 'sdk'
+                productFlavors {
+                    sdk21 {
+                        minSdkVersion 21
+                    }
+                    sdk28 {
+                        minSdkVersion 28
+                    }
+                    sdk28b {
+                        minSdkVersion 28
+                    }
+                }
+            }
+        """.trimIndent())
+
+        project.executor().run(":app:assembleSdk21Debug")
+        val apk = app.getApk(GradleTestProject.ApkType.DEBUG, "sdk21")
+        val dex = getDexWithSpecificClass(programClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $programClass")
+        DexClassSubject.assertThat(dex.classes[programClass])
+            .hasMethodThatInvokes("getText", "Lj$/util/stream/Stream;->findFirst()Lj$/util/Optional;")
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $usedDesugarClass")
+        DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
+    }
+
+    @Test
+    fun testWithHighMinSdkDoesNotRewriteAnything() {
+        app.buildFile.appendText("""
+
+            android.defaultConfig.minSdkVersion = 28
+        """.trimIndent())
+
+        project.executor().run(":app:assembleDebug")
+        val apk = app.getApk(GradleTestProject.ApkType.DEBUG)
+        val dex = getDexWithSpecificClass(programClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $programClass")
+        DexClassSubject.assertThat(dex.classes[programClass])
+            .hasMethodThatInvokes("getText", "Ljava/util/stream/Stream;->findFirst()Ljava/util/Optional;")
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+        DexSubject.assertThat(desugarLibDex).isEqualTo(null)
+    }
+
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
         project.buildFile.appendText("""
