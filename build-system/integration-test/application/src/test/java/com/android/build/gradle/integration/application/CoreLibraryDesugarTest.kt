@@ -250,8 +250,8 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass2)
         // check consuming keep rules generated from file dependencies by DexFileDependenciesTask
         DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
-        // check unused API classes are not removed from desugar lib dex (D8 has this disabled)
-        DexSubject.assertThat(desugarLibDex).containsClasses(unusedDesugarClass)
+        // check unused API classes are removed from the from desugar lib dex.
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
     }
 
     @Test
@@ -268,8 +268,8 @@ class CoreLibraryDesugarTest {
             ?: fail("Failed to find the dex with class name $usedDesugarClass")
         DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass2)
         DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
-        // check unused API classes are not removed from desugar lib dex (D8 has this disabled)
-        DexSubject.assertThat(desugarLibDex).containsClasses(unusedDesugarClass)
+        // check unused API classes are removed from the from desugar lib dex.
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
     }
 
     @Test
