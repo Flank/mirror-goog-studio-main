@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.errors
 
-import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget.CONFIG_NAME
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.FakeEvalIssueReporter
@@ -41,19 +40,19 @@ class DeprecationReporterImplTest {
 
     @Test
     fun `test single output for deprecated options`() {
-        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, CONFIG_NAME)
-        reporter.reportDeprecatedOption(BooleanOption.BUILD_ONLY_TARGET_ABI.name, CONFIG_NAME)
+        reporter.reportOptionIssuesIfAny(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE, "true")
+        reporter.reportOptionIssuesIfAny(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE, "true")
 
         Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option 'BUILD_ONLY_TARGET_ABI' is deprecated and should not be used anymore.\n" +
-                    "It will be removed soon.")
+            "The option '${BooleanOption.JETIFIER_SKIP_IF_POSSIBLE.propertyName}' is deprecated and should not be used anymore.\n" +
+                    "It will be removed in a future release.")
     }
 
     @Test
     fun `test single output for experimental options`() {
-        reporter.reportExperimentalOption(BooleanOption.BUILD_ONLY_TARGET_ABI, "foo")
-        reporter.reportExperimentalOption(BooleanOption.BUILD_ONLY_TARGET_ABI, "foo")
-        reporter.reportExperimentalOption(BooleanOption.BUILD_ONLY_TARGET_ABI, "bar")
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, "foo")
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, "foo")
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, "bar")
 
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.buildOnlyTargetAbi=foo' is experimental and unsupported.\n" +

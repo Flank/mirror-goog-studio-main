@@ -297,17 +297,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                     Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
         }
 
-        if (projectOptions.hasDeprecatedOptions()) {
-            extraModelInfo
-                    .getDeprecationReporter()
-                    .reportDeprecatedOptions(projectOptions.getDeprecatedOptions());
-        }
-
-        if (!projectOptions.getExperimentalOptions().isEmpty()) {
-            projectOptions
-                    .getExperimentalOptions()
-                    .forEach(extraModelInfo.getDeprecationReporter()::reportExperimentalOption);
-        }
+        projectOptions
+                .getAllOptions()
+                .forEach(extraModelInfo.getDeprecationReporter()::reportOptionIssuesIfAny);
 
         // Enforce minimum versions of certain plugins
         GradlePluginUtils.enforceMinimumVersionsOfPlugins(project, syncIssueHandler);

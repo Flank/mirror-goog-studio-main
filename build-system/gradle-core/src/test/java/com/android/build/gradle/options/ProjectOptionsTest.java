@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.util.Arrays;
@@ -159,8 +160,9 @@ public class ProjectOptionsTest {
                                 "android.enableDesugar", "false",
                                 "android.enableD8", "false"));
 
-        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
-        assertThat(projectOptions.getDeprecatedOptions()).hasSize(2);
+        final FakeDeprecationReporter reporter1 = new FakeDeprecationReporter();
+        projectOptions.getAllOptions().forEach(reporter1::reportOptionIssuesIfAny);
+        assertThat(reporter1.getWarnings()).hasSize(2);
 
         projectOptions =
                 new ProjectOptions(
@@ -168,8 +170,9 @@ public class ProjectOptionsTest {
                                 "android.enableDesugar", "true",
                                 "android.enableD8", "false"));
 
-        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
-        assertThat(projectOptions.getDeprecatedOptions()).hasSize(1);
+        final FakeDeprecationReporter reporter2 = new FakeDeprecationReporter();
+        projectOptions.getAllOptions().forEach(reporter2::reportOptionIssuesIfAny);
+        assertThat(reporter2.getWarnings()).hasSize(1);
 
         projectOptions =
                 new ProjectOptions(
@@ -177,8 +180,9 @@ public class ProjectOptionsTest {
                                 "android.enableDesugar", "true",
                                 "android.enableD8", "true"));
 
-        assertThat(projectOptions.hasDeprecatedOptions()).isFalse();
-        assertThat(projectOptions.getDeprecatedOptions()).isEmpty();
+        final FakeDeprecationReporter reporter3 = new FakeDeprecationReporter();
+        projectOptions.getAllOptions().forEach(reporter3::reportOptionIssuesIfAny);
+        assertThat(reporter3.getWarnings()).isEmpty();
     }
 
     @Test
@@ -186,9 +190,10 @@ public class ProjectOptionsTest {
         ProjectOptions projectOptions =
                 new ProjectOptions(ImmutableMap.of("android.enableProfileJson", "true"));
 
-        assertThat(projectOptions.getExperimentalOptions()).hasSize(1);
-        assertThat(projectOptions.getExperimentalOptions().keySet())
-                .containsExactly(BooleanOption.ENABLE_PROFILE_JSON);
+        final FakeDeprecationReporter reporter = new FakeDeprecationReporter();
+        projectOptions.getAllOptions().forEach(reporter::reportOptionIssuesIfAny);
+        assertThat(reporter.getWarnings())
+                .containsExactly(BooleanOption.ENABLE_PROFILE_JSON.getPropertyName());
     }
 
     @Test

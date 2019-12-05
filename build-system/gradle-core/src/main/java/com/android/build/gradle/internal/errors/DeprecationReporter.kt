@@ -176,34 +176,11 @@ interface DeprecationReporter {
         deprecationTarget: DeprecationTarget)
 
     /**
-     * Reports a deprecated option usage.
+     * Reports issues with the given option if there are any.
      *
-     * @param option the deprecated option
-     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
-     * timing is added to the message.
+     * @param option the option to report issues for
+     * @param value the value of the option
      */
-    fun reportDeprecatedOption(
-        option: String,
-        deprecationTarget: DeprecationTarget
-    )
-
-    /**
-     * Reports deprecated options usage.
-     *
-     * @param options the set of deprecated options that were used.
-     */
-    fun reportDeprecatedOptions(options: Set<Option<*>>) {
-        for (option in options) {
-            reportDeprecatedOption(
-                option.propertyName,
-                (option.status as Option.Status.Deprecated).deprecationTarget
-            )
-        }
-    }
-
-    /**
-     * Reports experimental options usage.
-     */
-    fun reportExperimentalOption(option: Option<*>, value: String)
+    fun reportOptionIssuesIfAny(option: Option<*>, value: Any)
 
 }

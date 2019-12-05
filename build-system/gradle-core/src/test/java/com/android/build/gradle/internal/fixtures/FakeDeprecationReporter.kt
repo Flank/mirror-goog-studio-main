@@ -21,30 +21,30 @@ import com.android.build.gradle.options.Option
 
 class FakeDeprecationReporter: DeprecationReporter {
 
-    val deprecationWarnings = mutableListOf<String>()
+    val warnings = mutableListOf<String>()
 
     override fun reportDeprecatedUsage(newDslElement: String,
             oldDslElement: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        deprecationWarnings.add(oldDslElement)
+        warnings.add(oldDslElement)
     }
 
     override fun reportDeprecatedUsage(newDslElement: String,
             oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        deprecationWarnings.add(oldDslElement)
+        warnings.add(oldDslElement)
     }
 
     override fun reportObsoleteUsage(oldDslElement: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        deprecationWarnings.add(oldDslElement)
+        warnings.add(oldDslElement)
     }
 
     override fun reportObsoleteUsage(oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        deprecationWarnings.add(oldDslElement)
+        warnings.add(oldDslElement)
     }
 
     override fun reportDeprecatedApi(
@@ -53,7 +53,7 @@ class FakeDeprecationReporter: DeprecationReporter {
         url: String,
         deprecationTarget: DeprecationReporter.DeprecationTarget
     ) {
-        deprecationWarnings.add(oldApiElement)
+        warnings.add(oldApiElement)
     }
 
     override fun reportRenamedConfiguration(
@@ -62,7 +62,7 @@ class FakeDeprecationReporter: DeprecationReporter {
         deprecationTarget: DeprecationReporter.DeprecationTarget,
         url: String?
     ) {
-        deprecationWarnings.add(oldConfiguration)
+        warnings.add(oldConfiguration)
     }
 
     override fun reportDeprecatedConfiguration(
@@ -70,7 +70,7 @@ class FakeDeprecationReporter: DeprecationReporter {
         oldConfiguration: String,
         deprecationTarget: DeprecationReporter.DeprecationTarget
     ) {
-        deprecationWarnings.add(oldConfiguration)
+        warnings.add(oldConfiguration)
     }
 
     override fun reportDeprecatedValue(dslElement: String,
@@ -78,17 +78,17 @@ class FakeDeprecationReporter: DeprecationReporter {
             newValue: String?,
             url: String?,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        deprecationWarnings.add(dslElement)
+        warnings.add(dslElement)
     }
 
-    override fun reportDeprecatedOption(
-        option: String,
-        deprecationTarget: DeprecationReporter.DeprecationTarget
-    ) {
-        deprecationWarnings.add(option)
-    }
-
-    override fun reportExperimentalOption(option: Option<*>, value: String) {
-        deprecationWarnings.add(option.propertyName)
+    override fun reportOptionIssuesIfAny(option: Option<*>, value: Any) {
+        if (option.defaultValue == value) {
+            return
+        }
+        if (option.status is Option.Status.Deprecated
+            || option.status == Option.Status.EXPERIMENTAL
+        ) {
+            warnings.add(option.propertyName)
+        }
     }
 }
