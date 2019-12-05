@@ -40,7 +40,6 @@ import com.android.build.gradle.internal.dsl.BuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ComposeOptions
 import com.android.build.gradle.internal.dsl.ComposeOptionsImpl
-
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DexOptions
@@ -56,7 +55,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.BuilderConstants
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.errors.EvalIssueReporter
@@ -64,10 +62,8 @@ import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.repository.Revision
-import com.android.resources.Density
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
-import com.google.common.collect.Sets
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
@@ -622,25 +618,26 @@ abstract class BaseExtension protected constructor(
     }
 
     /**
-     * Returns the path to the Android SDK that Gradle uses for this project.
+     * The path to the Android SDK that Gradle uses for this project.
      *
      * To learn more about downloading and installing the Android SDK, read
      * [Update Your Tools with the SDK Manager](https://developer.android.com/studio/intro/update.html#sdk-manager)
      */
-    @NonNull
-    fun getSdkDirectory(): File {
-        return globalScope.sdkComponents.getSdkDirectory()
-    }
+    val sdkDirectory: File
+        get() {
+            return globalScope.sdkComponents.getSdkDirectory()
+        }
 
     /**
-     * Returns the path to the [Android NDK](https://developer.android.com/ndk/index.html) that Gradle uses for this project.
+     * The path to the [Android NDK](https://developer.android.com/ndk/index.html) that Gradle uses for this project.
      *
      * You can install the Android NDK by either
      * [using the SDK manager](https://developer.android.com/studio/intro/update.html#sdk-manager)
      * or downloading
      * [the standalone NDK package](https://developer.android.com/ndk/downloads/index.html).
      */
-    fun getNdkDirectory(): File {
+    val ndkDirectory: File
+        get() {
         // do not call this method from within the plugin code as it forces part of SDK initialization.
         return globalScope.sdkComponents.ndkFolderProvider.get()
     }
@@ -654,19 +651,21 @@ abstract class BaseExtension protected constructor(
         }
 
     /**
-     * Returns a path to the
+     * The path to the
      * [Android Debug Bridge (ADB)](https://developer.android.com/studio/command-line/adb.html)
      * executable from the Android SDK.
      */
-    fun getAdbExecutable(): File {
-        return globalScope.sdkComponents.adbExecutableProvider.get()
-    }
+    val adbExecutable: File
+        get() {
+            return globalScope.sdkComponents.adbExecutableProvider.get()
+        }
 
-    /** This property is deprecated. Instead, use [getAdbExecutable]. */
-    @Deprecated("This property is deprecated", ReplaceWith("getAdbExecutable"))
-    fun getAdbExe(): File {
-        return getAdbExecutable()
-    }
+    /** This property is deprecated. Instead, use [adbExecutable]. */
+    @Deprecated("This property is deprecated", ReplaceWith("adbExecutable"))
+    val adbExe: File
+        get() {
+            return adbExecutable
+        }
 
     fun getDefaultProguardFile(name: String): File {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
