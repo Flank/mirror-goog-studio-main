@@ -223,7 +223,6 @@ public class AidlTest {
         checkAar("ITest");
     }
 
-    // TODO(126399082): Remove this test
     @Test
     public void testJapaneseCharacters() throws IOException, InterruptedException {
         assumeNotWindows(); // b/145232750

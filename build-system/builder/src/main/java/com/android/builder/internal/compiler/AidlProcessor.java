@@ -32,13 +32,11 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
@@ -60,7 +58,6 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
     private final ProcessExecutor mProcessExecutor;
     @NonNull
     private  final ProcessOutputHandler mProcessOutputHandler;
-    @NonNull private final String javaEncoding;
 
     public AidlProcessor(
             @NonNull String aidlExecutable,
@@ -71,8 +68,7 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
             @Nullable Collection<String> packageWhiteList,
             @NonNull DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull String javaEncoding) {
+            @NonNull ProcessOutputHandler processOutputHandler) {
         mAidlExecutable = aidlExecutable;
         mFrameworkLocation = frameworkLocation;
         mImportFolders = importFolders;
@@ -86,47 +82,6 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
         mDependencyFileProcessor = dependencyFileProcessor;
         mProcessExecutor = processExecutor;
         mProcessOutputHandler = processOutputHandler;
-
-        this.javaEncoding = javaEncoding;
-    }
-
-    // TODO(126399082): Remove this once AIDL stops adding the line removed
-    private void removeAbsolutePathFromOutput(String relativeInputFile) throws IOException {
-        String outputFilePath =
-                mSourceOutputDir
-                        + File.separator
-                        + relativeInputFile.substring(0, relativeInputFile.lastIndexOf(".aidl"))
-                        + ".java";
-
-        // Copy the entire output file EXCEPT the line that has the path to the original file
-        File outputFile = new File(outputFilePath);
-        if (outputFile.exists()) {
-            StringBuilder outputFileBuilder = new StringBuilder();
-
-            // Only delete the first instance
-            boolean foundAbsolutePath = false;
-
-            // Read file and build output string
-            try (Scanner s = new Scanner(outputFile, javaEncoding)) {
-                while (s.hasNextLine()) {
-                    String line = s.nextLine();
-
-                    // Use full line match to reduce chance of unwanted behavior
-                    if (!foundAbsolutePath && line.startsWith(" * Original file: ")) {
-                        foundAbsolutePath = true;
-                    } else {
-                        outputFileBuilder.append(line + System.lineSeparator());
-                    }
-                }
-            }
-
-            // Only rewrite file if path was found
-            if (foundAbsolutePath) {
-                // Write output string back to file
-                Files.asCharSink(outputFile, Charset.forName(javaEncoding))
-                        .write(outputFileBuilder.toString());
-            }
-        }
     }
 
     @Override
@@ -162,9 +117,6 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
                 FileUtils.toSystemIndependentPath(
                         FileOpUtils.makeRelative(
                                 startDir.toFile(), inputFilePath.toFile(), FileOpUtils.create()));
-
-        // TODO(126399082): Remove this once AIDL stops adding the line removed
-        removeAbsolutePathFromOutput(relativeInputFile);
 
         // send the dependency file to the processor.
         DependencyData data = mDependencyFileProcessor.processFile(depFile);
