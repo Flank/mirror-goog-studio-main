@@ -106,6 +106,7 @@ import org.gradle.api.tasks.Input;
  *         <li><code>&#042;&#042;/overview.html</code>
  *         <li><code>&#042;&#042;/_&#042;</code>
  *         <li><code>&#042;&#042;/_&#042;/&#042;&#042;</code>
+ *         <li><code>&#042;&#042;/&#042;.kotlin_metadata</code> (kotlin metadata)
  *       </ul>
  * </ul>
  *
@@ -124,7 +125,7 @@ import org.gradle.api.tasks.Input;
  * <pre>
  * packagingOptions {
  *     pickFirsts = [] // Not really needed because the default is empty.
- *     merges = []     // Not really needed because the default is empty.
+ *     merges = []
  *     excludes = []
  * }
  * </pre>
@@ -186,6 +187,9 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         // Exclude stuff for unknown reasons
         exclude("**/_*");
         exclude("**/_*/**");
+
+        // Exclude kotlin metadata files
+        exclude("**/*.kotlin_metadata");
 
         // Merge services
         merge("/META-INF/services/**");
