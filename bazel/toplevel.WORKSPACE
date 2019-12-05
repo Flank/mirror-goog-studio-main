@@ -52,3 +52,15 @@ local_repository(
 load("@cov//:results.bzl", "setup_testlogs_loop_repo")
 
 setup_testlogs_loop_repo()
+
+load("@bazel_toolchains//rules/exec_properties:exec_properties.bzl",
+     "create_rbe_exec_properties_dict",
+     "custom_exec_properties")
+custom_exec_properties(
+    name = "exec_properties",
+    constants = {
+        "LARGE_MACHINE": create_rbe_exec_properties_dict(
+            pool = "large-machines",
+        ),
+    },
+)
