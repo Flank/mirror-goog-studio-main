@@ -218,6 +218,17 @@ public class RenderSession {
     }
 
     /**
+     * Requests execution of all the callbacks (used e.g. for animations) that should be executed
+     * before the specified time
+     *
+     * @param nanos absolute time in nanoseconds to know what callbacks to execute
+     * @return true if there are more callbacks left to execute (at a later time) in queue, false
+     *     otherwise
+     */
+    public boolean executeCallbacks(long nanos) {
+        return false;
+    }
+    /**
      * Discards the layout. No more actions can be called on this object.
      */
     public void dispose() {
