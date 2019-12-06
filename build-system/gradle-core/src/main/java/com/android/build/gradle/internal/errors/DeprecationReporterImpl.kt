@@ -191,7 +191,7 @@ class DeprecationReporterImpl(
         if (suppressedOptionWarnings.contains(option.propertyName)) {
             return
         }
-        if (option.defaultValue == value) {
+        if (option.status !is Option.Status.Removed && option.defaultValue == value) {
             return
         }
         when (option.status) {
@@ -213,8 +213,12 @@ class DeprecationReporterImpl(
                             "It will be removed ${(option.status as Option.Status.Deprecated).deprecationTarget.removalTime}."
                 )
             }
-            Option.Status.REMOVED -> {
-                // TODO: Report issues here (see RemovedOptions)
+            is Option.Status.Removed -> {
+                issueReporter.reportWarning(
+                    Type.GENERIC,
+                    "The option `${option.propertyName}' is deprecated and has been removed.\n" +
+                            (option.status as Option.Status.Removed).messageIfUsed
+                )
             }
         }
     }

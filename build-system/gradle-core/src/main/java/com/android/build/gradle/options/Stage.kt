@@ -69,9 +69,13 @@ sealed class ApiStage(status: Option.Status) : Stage(status) {
         ApiStage(Option.Status.Deprecated(removalTarget))
 
     /**
-     * Indicates that the API and the corresponding [BooleanOption] has been removed.
+     * Indicates that the API and the corresponding [Option] has been removed.
+     *
+     * @param removedVersion the version when the corresponding [Option] was removed
+     * @param messageIfUsed the error/warning message to be shown if the [Option] is used
      */
-    object Removed : ApiStage(Option.Status.REMOVED)
+    class Removed(val removedVersion: Version, val messageIfUsed: String) :
+        ApiStage(Option.Status.Removed(messageIfUsed))
 }
 
 /**
@@ -112,8 +116,12 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
     /**
      * Indicates that the feature is enforced: The feature is enabled by default and the
      * corresponding [BooleanOption] has been removed.
+     *
+     * @param removedVersion the version when the corresponding [BooleanOption] was removed
+     * @param messageIfUsed the error/warning message to be shown if the [Option] is used
      */
-    object Enforced : FeatureStage(Option.Status.REMOVED)
+    class Enforced(val removedVersion: Version, val messageIfUsed: String)
+        : FeatureStage(Option.Status.Removed(messageIfUsed))
 
     /**
      * Indicates that the feature will be removed soon because it was not / is no longer useful (see
@@ -128,6 +136,24 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
     /**
      * Indicates that the feature has been removed: The feature is disabled by default and the
      * corresponding [BooleanOption] has been removed.
+     *
+     * @param removedVersion the version when the corresponding [BooleanOption] was removed
+     * @param messageIfUsed the error/warning message to be shown if the [Option] is used
      */
-    object Removed : FeatureStage(Option.Status.REMOVED)
+    class Removed(val removedVersion: Version, val messageIfUsed: String)
+        : FeatureStage(Option.Status.Removed(messageIfUsed))
+}
+
+/** An Android Gradle plugin version. */
+enum class Version {
+
+    /**
+     * A version before version 4.0.0, used when the exact version is not known, except that it's
+     * guaranteed to be before 4.0.0.
+     */
+    VERSION_BEFORE_4_0_0,
+
+    VERSION_3_5_0,
+    VERSION_3_6_0,
+    VERSION_4_0_0,
 }

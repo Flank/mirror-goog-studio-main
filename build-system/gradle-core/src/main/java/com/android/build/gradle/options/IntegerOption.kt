@@ -17,6 +17,7 @@
 package com.android.build.gradle.options
 
 import com.android.builder.model.AndroidProject
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
 
 enum class IntegerOption(
     override val propertyName: String,
@@ -65,7 +66,20 @@ enum class IntegerOption(
     /**
      * Override the thread pool size dedicated to AAPT2 work units when not running with WorkerAPI.
      */
-    AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize", ApiStage.Experimental)
+    AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize", ApiStage.Experimental),
+
+    /* ------------
+     * REMOVED APIS
+     */
+
+    THREAD_POOL_SIZE(
+        "android.threadPoolSize",
+        ApiStage.Removed(
+            VERSION_BEFORE_4_0_0,
+            "The android.threadPoolSize property has no effect"
+        )
+    ),
+
     ;
 
     override val status = stage.status

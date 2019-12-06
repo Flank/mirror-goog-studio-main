@@ -292,11 +292,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
-        if (projectOptions.hasRemovedOptions()) {
-            syncIssueHandler.reportWarning(
-                    Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
-        }
-
         projectOptions
                 .getAllOptions()
                 .forEach(extraModelInfo.getDeprecationReporter()::reportOptionIssuesIfAny);

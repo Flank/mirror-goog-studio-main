@@ -82,11 +82,12 @@ class FakeDeprecationReporter: DeprecationReporter {
     }
 
     override fun reportOptionIssuesIfAny(option: Option<*>, value: Any) {
-        if (option.defaultValue == value) {
+        if (option.status !is Option.Status.Removed && option.defaultValue == value) {
             return
         }
         if (option.status is Option.Status.Deprecated
             || option.status == Option.Status.EXPERIMENTAL
+            || option.status is Option.Status.Removed
         ) {
             warnings.add(option.propertyName)
         }

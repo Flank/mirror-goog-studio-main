@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.options;
 
-import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
@@ -39,7 +38,7 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private final ImmutableMap<RemovedOptions, String> removedOptions;
+    private final ImmutableMap<ReplacedOption, String> replacedOptions;
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
@@ -47,7 +46,7 @@ public final class ProjectOptions {
     private final ImmutableMap<String, String> testRunnerArgs;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
-        removedOptions = readOptions(RemovedOptions.values(), properties);
+        replacedOptions = readOptions(ReplacedOption.values(), properties);
         booleanOptions = readOptions(BooleanOption.values(), properties);
         optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
@@ -168,28 +167,6 @@ public final class ProjectOptions {
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
 
-    public boolean hasRemovedOptions() {
-        return !removedOptions.isEmpty();
-    }
-
-    @NonNull
-    public String getRemovedOptionsErrorMessage() {
-        Preconditions.check(
-                hasRemovedOptions(),
-                "Has removed options should be checked before calling this method.");
-        StringBuilder builder =
-                new StringBuilder(
-                        "The following project options are deprecated and have been removed: \n");
-        removedOptions.forEach(
-                (option, errorMessage) -> {
-                    builder.append(option.getPropertyName())
-                            .append("\n")
-                            .append(errorMessage)
-                            .append("\n\n");
-                });
-        return builder.toString();
-    }
-
     public ImmutableMap<BooleanOption, Boolean> getExplicitlySetBooleanOptions() {
         return booleanOptions;
     }
@@ -208,7 +185,7 @@ public final class ProjectOptions {
 
     public ImmutableMap<Option<?>, Object> getAllOptions() {
         return new ImmutableMap.Builder()
-                .putAll(removedOptions)
+                .putAll(replacedOptions)
                 .putAll(booleanOptions)
                 .putAll(optionalBooleanOptions)
                 .putAll(integerOptions)

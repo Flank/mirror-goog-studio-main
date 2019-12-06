@@ -24,7 +24,7 @@ interface Option<out T> {
         object EXPERIMENTAL: Status()
         object STABLE: Status()
         class Deprecated(val deprecationTarget: DeprecationReporter.DeprecationTarget): Status()
-        object REMOVED: Status()
+        class Removed(val messageIfUsed: String): Status()
     }
 
     val propertyName: String
