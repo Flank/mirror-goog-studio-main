@@ -341,10 +341,7 @@ class CoreLibraryDesugarTest {
             "getText();"
         )
 
-        val result =
-            project.executor()
-                .withLoggingLevel(LoggingLevel.DEBUG)
-                .run("app:assembleRelease")
+        project.executor().run("app:assembleRelease")
 
         val keepRulesOutputDir =
             InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
@@ -359,11 +356,11 @@ class CoreLibraryDesugarTest {
                 "}$lineSeparator"
         assertTrue { collectKeepRulesUnderDirectory(keepRulesOutputDir) == expectedKeepRules }
 
-        // check keep rules file is consumed by L8 tool
-        val consumedKeepRulesFile = File(keepRulesOutputDir, "release/output").absolutePath
-        result.stdout.use {
-            ScannerSubject.assertThat(it).contains("[L8] Keep rules: $consumedKeepRulesFile")
-        }
+        val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $usedDesugarClass")
+        // check unused API classes are removed from the from desugar lib dex.
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
     }
 
     @Test
