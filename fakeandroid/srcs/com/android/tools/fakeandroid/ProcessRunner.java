@@ -32,8 +32,12 @@ public class ProcessRunner {
         myProcessEnv = processEnv;
     }
 
+    public static String getProcessPathRoot() {
+        return System.getProperty("user.dir") + File.separator;
+    }
+
     public static String getProcessPath(String property) {
-        return System.getProperty("user.dir") + File.separator + System.getProperty(property);
+         return getProcessPathRoot() + System.getProperty(property);
     }
 
     public void start() throws IOException {
@@ -106,9 +110,10 @@ public class ProcessRunner {
 
     /**
      * @param statement that defines a pattern to match in the output. The pattern should define a
-     *     group named [result] as the returned element from the input. Example Line: [art-input]
-     *     profiler.service.address=127.0.0.1:34801 Pattern:
-     *     (.*)(profiler.service.address=)(?<result>.*) Return: 127.0.0.1:34801
+     *     group named [result] as the returned element from the input. <br>
+     *     Input: transport.service.address=127.0.0.1:34801 <br>
+     *     Pattern: (.*)(transport.service.address=)(?<result>.*) <br>
+     *     Return: 127.0.0.1:34801
      * @return The value found in the result named group, or null if no value found.
      */
     public String waitForInput(Pattern statement) {
