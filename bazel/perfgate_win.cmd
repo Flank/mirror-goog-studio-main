@@ -37,6 +37,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
+ --remote_download_outputs=toplevel ^
  --runs_per_test=5 ^
  -- //tools/base/bazel:perfgate_logs_collector_deploy.jar ^
  %TARGETS%
