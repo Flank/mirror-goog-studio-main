@@ -71,12 +71,14 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     abstract val outputDirectory: DirectoryProperty
 
     override fun doTaskAction() {
-        LibraryJniLibsDelegate(
-            projectNativeLibs.get().asFile,
-            localJarsNativeLibs?.files ?: listOf(),
-            outputDirectory.get().asFile,
-            getWorkerFacadeWithThreads(useGradleExecutor = true)
-        ).copyFiles()
+        getWorkerFacadeWithThreads(useGradleExecutor = true).use { workers ->
+            LibraryJniLibsDelegate(
+                projectNativeLibs.get().asFile,
+                localJarsNativeLibs?.files ?: listOf(),
+                outputDirectory.get().asFile,
+                workers
+            ).copyFiles()
+        }
     }
 
     class LibraryJniLibsDelegate(
@@ -89,12 +91,10 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             FileUtils.cleanOutputDir(outputDirectory)
             val inputFiles = listOf(projectNativeLibs) + localJarsNativeLibs.toList()
             for (inputFile in inputFiles) {
-                workers.use {
-                    it.submit(
-                        LibraryJniLibsRunnable::class.java,
-                        LibraryJniLibsRunnable.Params(inputFile, outputDirectory)
-                    )
-                }
+                workers.submit(
+                    LibraryJniLibsRunnable::class.java,
+                    LibraryJniLibsRunnable.Params(inputFile, outputDirectory)
+                )
             }
         }
     }

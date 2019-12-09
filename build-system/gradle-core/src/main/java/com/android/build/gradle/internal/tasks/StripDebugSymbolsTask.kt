@@ -92,27 +92,31 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         get() = true
 
     override fun doFullTaskAction() {
-        StripDebugSymbolsDelegate(
-            getWorkerFacadeWithThreads(useGradleExecutor = false),
-            inputDir.get().asFile,
-            outputDir.get().asFile,
-            excludePatterns,
-            stripToolFinderProvider,
-            GradleProcessExecutor(execOperations::exec),
-            null
-        ).run()
+        getWorkerFacadeWithThreads(useGradleExecutor = false).use { workers ->
+            StripDebugSymbolsDelegate(
+                workers,
+                inputDir.get().asFile,
+                outputDir.get().asFile,
+                excludePatterns,
+                stripToolFinderProvider,
+                GradleProcessExecutor(execOperations::exec),
+                null
+            ).run()
+        }
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        StripDebugSymbolsDelegate(
-            getWorkerFacadeWithThreads(useGradleExecutor = false),
-            inputDir.get().asFile,
-            outputDir.get().asFile,
-            excludePatterns,
-            stripToolFinderProvider,
-            GradleProcessExecutor(execOperations::exec),
-            changedInputs
-        ).run()
+        getWorkerFacadeWithThreads(useGradleExecutor = false).use { workers ->
+            StripDebugSymbolsDelegate(
+                workers,
+                inputDir.get().asFile,
+                outputDir.get().asFile,
+                excludePatterns,
+                stripToolFinderProvider,
+                GradleProcessExecutor(execOperations::exec),
+                changedInputs
+            ).run()
+        }
     }
 
     class CreationAction(
@@ -187,19 +191,17 @@ class StripDebugSymbolsDelegate(
                     NEW, CHANGED -> {
                         val justCopyInput =
                             excludeMatchers.any { matcher -> matcher.matches(Paths.get(path)) }
-                        workers.use {
-                            it.submit(
-                                StripDebugSymbolsRunnable::class.java,
-                                StripDebugSymbolsRunnable.Params(
-                                    input,
-                                    output,
-                                    Abi.getByName(input.parentFile.name),
-                                    justCopyInput,
-                                    stripToolFinder,
-                                    processExecutor
-                                )
+                        workers.submit(
+                            StripDebugSymbolsRunnable::class.java,
+                            StripDebugSymbolsRunnable.Params(
+                                input,
+                                output,
+                                Abi.getByName(input.parentFile.name),
+                                justCopyInput,
+                                stripToolFinder,
+                                processExecutor
                             )
-                        }
+                        )
                     }
                     REMOVED -> FileUtils.deletePath(output)
                 }
@@ -212,21 +214,19 @@ class StripDebugSymbolsDelegate(
                 val path = FileUtils.relativePath(input, inputDir)
                 val output = File(outputDir, path)
                 val justCopyInput =
-                    excludeMatchers.any {matcher -> matcher.matches(Paths.get(path)) }
+                    excludeMatchers.any { matcher -> matcher.matches(Paths.get(path)) }
 
-                workers.use {
-                    it.submit(
-                        StripDebugSymbolsRunnable::class.java,
-                        StripDebugSymbolsRunnable.Params(
-                            input,
-                            output,
-                            Abi.getByName(input.parentFile.name),
-                            justCopyInput,
-                            stripToolFinder,
-                            processExecutor
-                        )
+                workers.submit(
+                    StripDebugSymbolsRunnable::class.java,
+                    StripDebugSymbolsRunnable.Params(
+                        input,
+                        output,
+                        Abi.getByName(input.parentFile.name),
+                        justCopyInput,
+                        stripToolFinder,
+                        processExecutor
                     )
-                }
+                )
             }
         }
 
@@ -297,23 +297,23 @@ private class StripDebugSymbolsRunnable @Inject constructor(val params: Params):
 }
 
 object UnstrippedLibs {
-    private val unstrippedLibs = mutableListOf<String>()
+    private val unstrippedLibs = mutableSetOf<String>()
 
+    @Synchronized
     fun reset() {
-        synchronized(unstrippedLibs) {
-            unstrippedLibs.removeAll { true }
-        }
+        unstrippedLibs.removeAll { true }
     }
 
+    @Synchronized
     fun add(name: String) {
-        synchronized(unstrippedLibs) {
-            unstrippedLibs.add(name)
-        }
+        unstrippedLibs.add(name)
     }
 
-    fun isNotEmpty() = synchronized(unstrippedLibs) { unstrippedLibs.isNotEmpty() }
+    @Synchronized
+    fun isNotEmpty() = unstrippedLibs.isNotEmpty()
 
-    fun getJoinedString() = synchronized(unstrippedLibs) { unstrippedLibs.sorted().joinToString() }
+    @Synchronized
+    fun getJoinedString() = unstrippedLibs.sorted().joinToString()
 }
 
 private fun compileGlob(pattern: String): PathMatcher {

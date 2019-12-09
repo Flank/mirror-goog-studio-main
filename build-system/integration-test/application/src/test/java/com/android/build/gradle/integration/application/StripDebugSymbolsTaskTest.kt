@@ -53,6 +53,8 @@ class StripDebugSymbolsTaskTest {
         doTest(project) {
             it.addFile("src/main/jniLibs/x86/foo.so", "foo")
             it.addFile("src/main/jniLibs/x86/bar.so", "bar")
+            it.addFile("src/main/jniLibs/x86_64/foo.so", "foo")
+            it.addFile("src/main/jniLibs/x86_64/bar.so", "bar")
             project.executor().run("stripDebugDebugSymbols").stdout.use { scanner ->
                 assertThat(scanner).contains(expectedWarning)
                 assertThat(scanner).doesNotContain("packaging it as is")
