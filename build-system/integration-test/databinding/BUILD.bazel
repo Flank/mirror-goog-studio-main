@@ -40,7 +40,6 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/databindingAndDagger",
     "//tools/base/build-system/integration-test:test-projects/databindingAndJetifier",
     "//tools/base/build-system/integration-test:test-projects/databindingAndKotlin",
-    "//tools/base/build-system/integration-test:test-projects/databindingIncremental",
     "//tools/base/build-system/integration-test:test-projects/databindingMultiModule",
     "//tools/base/build-system/integration-test:test-projects/databindingWithDynamicFeatures",
     "//tools/base/third_party/kotlin:kotlin-m2repository.zip",
