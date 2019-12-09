@@ -38,7 +38,15 @@ import java.util.stream.Stream
  * This can represent a past task action which result got loaded from a saved .json file or
  * the result of an executing of a task (or part of task) to save to a .json file.
  */
-open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<BuildOutput> {
+open class BuildElements(
+    val version: Int = METADATA_FILE_VERSION,
+    val applicationId: String,
+    val variantType: String,
+    val elements: Collection<BuildOutput>) : Iterable<BuildOutput> {
+
+    companion object {
+        const val METADATA_FILE_VERSION: Int = 1
+    }
 
     override fun iterator(): Iterator<BuildOutput> = elements.iterator()
 
@@ -94,10 +102,10 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
             AnchorOutputType::class.java,
             ExistingBuildElements.OutputTypeTypeAdapter()
         )
-        val gson = gsonBuilder.create()
+        val gson = gsonBuilder.setPrettyPrinting().create()
 
         // flatten and relativize the file paths to be persisted.
-        return gson.toJson(elements
+        return gson.toJson(BuildElements(version, applicationId, variantType, elements
             .asSequence()
             .map { buildOutput ->
                 BuildOutput(
@@ -107,7 +115,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
                     buildOutput.properties
                 )
             }
-            .toList())
+            .toList()))
     }
 
     @Throws(IOException::class)
@@ -170,7 +178,11 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
                 } catch (e: WorkerExecutorException) {
                     throw BuildException(e.message, e)
                 }
-                BuildElements(buildOutputs.build())
+                BuildElements(
+                    input.version,
+                    input.applicationId,
+                    input.variantType,
+                    buildOutputs.build())
             }
         }
 

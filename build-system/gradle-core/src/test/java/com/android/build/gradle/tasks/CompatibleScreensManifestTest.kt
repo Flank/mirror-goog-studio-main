@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
@@ -64,6 +66,8 @@ class CompatibleScreensManifestTest {
     @Suppress("DEPRECATION")
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer
+    @Mock private lateinit var variantData: BaseVariantData
+    @Mock private lateinit var variantProperties: VariantPropertiesImpl
 
     private lateinit var task: CompatibleScreensManifest
 
@@ -96,6 +100,12 @@ class CompatibleScreensManifestTest {
                 )
             )
         )
+        `when`(scope.variantData).thenReturn(variantData)
+        `when`(variantData.publicVariantPropertiesApi).thenReturn(variantProperties)
+        val applicationId = project.objects.property(String::class.java)
+        applicationId.set("com.foo")
+        `when`(variantProperties.applicationId).thenReturn(applicationId)
+        `when`(variantData.type).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test
@@ -112,6 +122,8 @@ class CompatibleScreensManifestTest {
         assertThat(task.minSdkVersion.get()).isEqualTo("21")
         assertThat(task.screenSizes).containsExactly("xxhpi", "xxxhdpi")
         assertThat(task.outputFolder.get().asFile).isEqualTo(temporaryFolder.root)
+        assertThat(task.applicationId.get()).isEqualTo("com.foo")
+        assertThat(task.variantType.get()).isEqualTo(VariantTypeImpl.BASE_APK.toString())
     }
 
     @Test
@@ -124,6 +136,8 @@ class CompatibleScreensManifestTest {
         task.variantName = "variant"
         task.minSdkVersion.set("22" )
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
+        task.applicationId.set("com.foo")
+        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
 
         task.taskAction()
         val buildElements = ExistingBuildElements.from(
@@ -151,6 +165,8 @@ class CompatibleScreensManifestTest {
         task.variantName = "variant"
         task.minSdkVersion.set("22")
         task.screenSizes = ImmutableSet.of("xhdpi")
+        task.applicationId.set("com.foo")
+        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
 
         task.taskAction()
 
@@ -183,6 +199,8 @@ class CompatibleScreensManifestTest {
         task.variantName = "variant"
         task.minSdkVersion.set(task.project.provider { null })
         task.screenSizes = ImmutableSet.of("xhdpi")
+        task.applicationId.set("com.foo")
+        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
 
         task.taskAction()
 
@@ -221,6 +239,8 @@ class CompatibleScreensManifestTest {
         task.variantName = "variant"
         task.minSdkVersion.set("23")
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
+        task.applicationId.set("com.foo")
+        task.variantType.set(VariantTypeImpl.BASE_APK.toString())
 
         task.taskAction()
 

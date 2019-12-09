@@ -56,6 +56,7 @@ public final class JavaArtifactStub extends BaseArtifactStub implements JavaArti
                 name,
                 compileTaskName,
                 assembleTaskName,
+                new File("none"),
                 classesFolder,
                 classesFolders,
                 javaResourcesFolder,

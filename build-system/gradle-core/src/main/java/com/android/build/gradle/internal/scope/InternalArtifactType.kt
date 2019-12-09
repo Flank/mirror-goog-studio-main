@@ -408,6 +408,9 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // implementation in the current variant
     object ANALYZE_DEPENDENCIES_REPORT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
+    // Artifacts privately shared with Android Studio.
+    object APK_IDE_MODEL: InternalArtifactType<RegularFile>(FILE), Replaceable
+
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location
      * for instance.

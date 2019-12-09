@@ -134,6 +134,7 @@ class OperationsImpl(
      * @param taskProvider the [TaskProvider] for the task producing the artifact
      * @param property: the field reference to retrieve the output from the task
      */
+    @JvmName("setInitialProvider")
     internal fun <FILE_TYPE, TASK> setInitialProvider(
         taskProvider: TaskProvider<TASK>,
         property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>): SingleInitialProviderRequestImpl<TASK, FILE_TYPE>
@@ -293,13 +294,31 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
     private val from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
 ) {
     var fileName: String? = null
-    var buildOutputLocation: String? = null
+    private var buildOutputLocation: String? = null
+    private var buildOutputLocationResolver: ((TASK) -> DirectoryProperty)? = null
 
+    /**
+     * Internal API to set the location of the directory where the produced [FILE_TYPE] should
+     * be located in.
+     *
+     * @param location a directory absolute path
+     */
     fun atLocation(location: String?): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
         buildOutputLocation = location
         return this
     }
 
+    /**
+     * Internal API to set the location of the directory where the produced [FILE_TYPE] should be
+     * located in.
+     *
+     * @param location a method reference on the [TASK] to return a [DirectoryProperty]
+     */
+    fun atLocation(location: (TASK) -> DirectoryProperty)
+            : SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
+        buildOutputLocationResolver = location
+        return this
+    }
 
     fun withName(name: String): SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
         fileName = name
@@ -314,6 +333,9 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
         taskProvider.configure {
             val outputAbsolutePath = if (buildOutputLocation != null) {
                 File(buildOutputLocation, fileName.orEmpty())
+            } else if (buildOutputLocationResolver != null) {
+                val resolver = buildOutputLocationResolver!!
+                File(resolver.invoke(it).get().asFile, fileName.orEmpty())
             } else {
                 operationsImpl.getOutputDirectory(type,
                     if (artifactContainer.hasCustomProviders()) taskProvider.name else "",

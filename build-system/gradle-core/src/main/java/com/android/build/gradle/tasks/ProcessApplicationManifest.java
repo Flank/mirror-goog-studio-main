@@ -274,15 +274,31 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                 properties));
             }
         }
-        new BuildElements(mergedManifestOutputs.build())
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getApplicationId().get(),
+                        getVariantType().get(),
+                        mergedManifestOutputs.build())
                 .save(getManifestOutputDirectory());
-        new BuildElements(metadataFeatureMergedManifestOutputs.build())
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getApplicationId().get(),
+                        getVariantType().get(),
+                        metadataFeatureMergedManifestOutputs.build())
                 .save(getMetadataFeatureManifestOutputDirectory());
-        new BuildElements(bundleManifestOutputs.build()).save(
-                getBundleManifestOutputDirectory());
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getApplicationId().get(),
+                        getVariantType().get(),
+                        bundleManifestOutputs.build())
+                .save(getBundleManifestOutputDirectory());
 
         if (getInstantAppManifestOutputDirectory().isPresent()) {
-            new BuildElements(instantAppManifestOutputs.build())
+            new BuildElements(
+                            BuildElements.METADATA_FILE_VERSION,
+                            getApplicationId().get(),
+                            getVariantType().get(),
+                            instantAppManifestOutputs.build())
                     .save(getInstantAppManifestOutputDirectory());
         }
     }
@@ -454,6 +470,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             throw new RuntimeException("Unsupported type of ComponentIdentifier");
         }
     }
+
+    @Input
+    public abstract Property<String> getApplicationId();
+
+    @Input
+    public abstract Property<String> getVariantType();
 
     @Input
     @Optional
@@ -676,6 +698,17 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
+
+            task.getApplicationId()
+                    .set(
+                            variantScope
+                                    .getVariantData()
+                                    .getPublicVariantPropertiesApi()
+                                    .getApplicationId());
+            task.getApplicationId().disallowChanges();
+
+            task.getVariantType().set(variantScope.getVariantData().getType().toString());
+            task.getVariantType().disallowChanges();
 
             task.getMinSdkVersion()
                     .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));

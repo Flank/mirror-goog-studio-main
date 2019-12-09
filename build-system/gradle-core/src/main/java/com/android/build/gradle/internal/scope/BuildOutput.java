@@ -84,9 +84,6 @@ public final class BuildOutput implements OutputFile, Serializable {
         this.properties = properties;
     }
 
-    public void save(File folder) throws IOException {
-        new BuildElements(ImmutableList.of(this)).save(folder);
-    }
     /**
      * Returns information about the APK that will package this build output. If the {@link
      * #getType()} is {@link InternalArtifactType#APK}, this build output is an APK and this will

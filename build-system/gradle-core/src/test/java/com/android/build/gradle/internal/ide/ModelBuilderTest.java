@@ -174,6 +174,9 @@ public class ModelBuilderTest {
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
         new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        "com.android.test",
+                        VariantTypeImpl.BASE_APK.toString(),
                         ImmutableList.of(
                                 new BuildOutput(
                                         InternalArtifactType.APK.INSTANCE,
@@ -235,7 +238,12 @@ public class ModelBuilderTest {
                             apkOutput));
         }
 
-        new BuildElements(buildOutputBuilder.build()).save(variantOutputFolder);
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        "com.android.test",
+                        VariantTypeImpl.BASE_APK.toString(),
+                        buildOutputBuilder.build())
+                .save(variantOutputFolder);
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -282,6 +290,9 @@ public class ModelBuilderTest {
 
             OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
             new BuildElements(
+                            BuildElements.METADATA_FILE_VERSION,
+                            "com.android.test",
+                            VariantTypeImpl.BASE_APK.toString(),
                             ImmutableList.of(
                                     new BuildOutput(
                                             InternalArtifactType.APK.INSTANCE,
@@ -371,6 +382,9 @@ public class ModelBuilderTest {
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
         new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        "com.android.test",
+                        VariantTypeImpl.BASE_APK.toString(),
                         ImmutableList.of(
                                 new BuildOutput(
                                         InternalArtifactType.APK.INSTANCE,

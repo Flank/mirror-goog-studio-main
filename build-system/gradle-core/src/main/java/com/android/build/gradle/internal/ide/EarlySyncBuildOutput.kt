@@ -20,22 +20,10 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
-import com.android.build.gradle.internal.api.artifact.toArtifactType
-import com.android.build.gradle.internal.scope.AnchorOutputType
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.collect.ImmutableList
-import com.google.gson.GsonBuilder
-import com.google.gson.TypeAdapter
-import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonWriter
 import java.io.File
-import java.io.FileReader
 import java.io.IOException
-import java.io.Reader
 
 /**
  * Temporary class to load enough metadata to populate early model. should be deleted once
@@ -73,31 +61,20 @@ data class EarlySyncBuildOutput(
             }
 
             return try {
-                FileReader(metadataFile).use { reader: FileReader ->
-                    load(metadataFile, reader)
-                }
+                loadFile(metadataFile)
             } catch (e: IOException) {
                 ImmutableList.of<EarlySyncBuildOutput>()
             }
         }
 
-        private fun load(
-                metadataFile: File,
-                reader: Reader): Collection<EarlySyncBuildOutput> {
-            val gsonBuilder = GsonBuilder()
+        private fun loadFile(metadataFile: File): Collection<EarlySyncBuildOutput> {
 
             // TODO : remove use of ApkInfo and replace with EarlySyncApkInfo.
-            gsonBuilder.registerTypeAdapter(ApkData::class.java, ApkDataAdapter())
-            gsonBuilder.registerTypeAdapter(
-                    ArtifactType::class.java,
-                    OutputTypeTypeAdapter())
-            val gson = gsonBuilder.create()
-            val recordType = object : TypeToken<List<BuildOutput>>() {}.type
-            val buildOutputs = gson.fromJson<Collection<BuildOutput>>(reader, recordType)
+            val buildElements = ExistingBuildElements.from(metadataFile.parentFile)
 
             // Some produced BuildOutput's might have null apkData, mostly because
             // they're unused ones or not readable by the current adapter (b/129994596).
-            if (buildOutputs.any { it.apkData == null }) {
+            if (buildElements.any { it.apkData == null }) {
                 throw IllegalStateException(
                     """
                         Invalid file found (empty apk data).
@@ -108,7 +85,7 @@ data class EarlySyncBuildOutput(
 
             // resolve the file path to the current project location.
             val projectPath = metadataFile.parentFile.toPath()
-            return buildOutputs
+            return buildElements
                     .asSequence()
                     .map { buildOutput ->
                         EarlySyncBuildOutput(
@@ -119,85 +96,6 @@ data class EarlySyncBuildOutput(
                                 projectPath.resolve(buildOutput.outputPath).toFile())
                     }
                     .toList()
-        }
-
-        internal class ApkDataAdapter : TypeAdapter<ApkData>() {
-
-            @Throws(IOException::class)
-            override fun write(out: JsonWriter, value: ApkData?) {
-                throw IOException("Unexpected call to write")
-            }
-
-            @Throws(IOException::class)
-            override fun read(`in`: JsonReader): ApkData {
-                `in`.beginObject()
-                var outputType: String? = null
-                val filters = ImmutableList.builder<FilterData>()
-                var versionCode = 0
-
-                while (`in`.hasNext()) {
-                    when (`in`.nextName()) {
-                        "type" -> outputType = `in`.nextString()
-                        "splits" -> readFilters(`in`, filters)
-                        "versionCode" -> versionCode = `in`.nextInt()
-                        "enabled" -> `in`.nextBoolean()
-                        else -> `in`.nextString()
-                    }
-                }
-                `in`.endObject()
-
-                if (outputType == null) {
-                    throw IOException("invalid format ")
-                }
-                return ApkData.of(
-                    VariantOutput.OutputType.valueOf(outputType),
-                    filters.build(),
-                    versionCode
-                )
-            }
-
-            @Throws(IOException::class)
-            private fun readFilters(`in`: JsonReader,
-                    filters: ImmutableList.Builder<FilterData>) {
-
-                `in`.beginArray()
-                while (`in`.hasNext()) {
-                    `in`.beginObject()
-                    var filterType: VariantOutput.FilterType? = null
-                    var value: String? = null
-                    while (`in`.hasNext()) {
-                        when (`in`.nextName()) {
-                            "filterType" -> filterType = VariantOutput.FilterType.valueOf(`in`.nextString())
-                            "value" -> value = `in`.nextString()
-                        }
-                    }
-                    if (filterType != null && value != null) {
-                        filters.add(FilterDataImpl(filterType, value))
-                    }
-                    `in`.endObject()
-                }
-                `in`.endArray()
-            }
-        }
-
-        internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType<*>>() {
-            override fun write(out: JsonWriter?, value: ArtifactType<*>?) {
-                throw IOException("Unexpected call to write")
-            }
-
-            @Throws(IOException::class)
-            override fun read(`in`: JsonReader): ArtifactType<*> {
-                `in`.beginObject()
-                if (!`in`.nextName().endsWith("type")) {
-                    throw IOException("Invalid format")
-                }
-                val nextString = `in`.nextString()
-                val outputType: ArtifactType<*> =
-                    nextString.toArtifactType()
-
-                `in`.endObject()
-                return outputType
-            }
         }
     }
 }

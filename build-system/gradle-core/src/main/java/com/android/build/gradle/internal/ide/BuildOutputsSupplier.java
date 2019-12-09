@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -67,7 +68,12 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
                                     File[] files = outputFolder.listFiles();
                                     if (files != null && files.length > 0) {
                                         for (File file : files) {
-                                            processFile(taskOutputType, file, outputs);
+                                            if (!file.getName()
+                                                    .equals(
+                                                            ExistingBuildElements
+                                                                    .METADATA_FILE_NAME)) {
+                                                processFile(taskOutputType, file, outputs);
+                                            }
                                         }
                                     }
                                 });

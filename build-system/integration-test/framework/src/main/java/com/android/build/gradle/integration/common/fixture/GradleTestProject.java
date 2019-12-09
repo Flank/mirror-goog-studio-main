@@ -29,10 +29,14 @@ import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
 import com.android.build.gradle.internal.plugins.VersionCheckPlugin;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.Variant;
 import com.android.io.StreamException;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -1267,6 +1271,39 @@ public final class GradleTestProject implements TestRule {
         Preconditions.checkNotNull(
                 buildOutputContainer, "Build output model not found after build.");
         return buildOutputContainer.getOnlyModel();
+    }
+
+    /**
+     * Runs gradle on the project, and returns the (minimal) output model. Throws exception on
+     * failure.
+     *
+     * @param tasks Variadic list of tasks to execute.
+     * @return the output models for the project as map of output model name (variant name +
+     *     artifact name) to the associated {@link BuildElements}
+     */
+    @Nullable
+    public Map<String, BuildElements> executeAndReturnOutputModels(String... tasks)
+            throws IOException, InterruptedException {
+        executor().run(tasks);
+        ModelContainer<AndroidProject> androidProjectModelContainer =
+                model().ignoreSyncIssues().fetchAndroidProjects();
+        AndroidProject onlyModel = androidProjectModelContainer.getOnlyModel();
+        ImmutableMap.Builder<String, BuildElements> mapOfVariantOutputs = ImmutableMap.builder();
+        for (Variant variant : onlyModel.getVariants()) {
+            String postModelFile = variant.getMainArtifact().getPostAssembleTaskModelFile();
+            mapOfVariantOutputs.put(
+                    variant.getName(),
+                    ExistingBuildElements.from(new File(postModelFile).getParentFile()));
+            for (AndroidArtifact extraAndroidArtifact : variant.getExtraAndroidArtifacts()) {
+                String extraModelFile = extraAndroidArtifact.getPostAssembleTaskModelFile();
+                if (!extraModelFile.isEmpty()) {
+                    mapOfVariantOutputs.put(
+                            variant.getName() + extraAndroidArtifact.getName(),
+                            ExistingBuildElements.from(new File(extraModelFile).getParentFile()));
+                }
+            }
+        }
+        return mapOfVariantOutputs.build();
     }
 
     /**

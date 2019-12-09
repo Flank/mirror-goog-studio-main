@@ -276,6 +276,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Input
     public abstract Property<Integer> getMinSdkVersion();
 
+    @Input
+    public abstract Property<String> getApplicationId();
+
     /*
      * We don't really use this. But this forces a full build if the native libraries or dex
      * packaging mode changes.
@@ -341,6 +344,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
+
+    @org.gradle.api.tasks.OutputFile
+    public abstract RegularFileProperty getIdeModelOutputFile();
 
     /**
      * Returns the paths to generated APKs as @Input to this task, so that when the output file name
@@ -412,7 +418,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         apkCreatorType))
                 .into(getInternalArtifactType(), getOutputDirectory().get().getAsFile());
     }
-
 
     private void checkFileNameUniqueness() {
         BuildElements buildElements = ExistingBuildElements.from(taskInputType, getResourceFiles());
@@ -934,6 +939,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     .getProject()
                                     .provider(() -> variantScope.getMinSdkVersion().getApiLevel()));
             packageAndroidArtifact.getMinSdkVersion().disallowChanges();
+            packageAndroidArtifact
+                    .getApplicationId()
+                    .set(
+                            variantScope
+                                    .getVariantData()
+                                    .getPublicVariantPropertiesApi()
+                                    .getApplicationId());
+            packageAndroidArtifact.getApplicationId().disallowChanges();
 
             packageAndroidArtifact
                     .getResourceFiles()
