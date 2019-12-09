@@ -39,23 +39,6 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
     }
 
     @Override
-    public void reportDeprecatedUsage(
-            @NonNull String newDslElement,
-            @NonNull String oldDslElement,
-            @NonNull String url,
-            @NonNull DeprecationTarget deprecationTarget) {
-        // do nothing
-    }
-
-    @Override
-    public void reportObsoleteUsage(
-            @NonNull String oldDslElement,
-            @NonNull String url,
-            @NonNull DeprecationTarget deprecationTarget) {
-        // do nothing
-    }
-
-    @Override
     public void reportDeprecatedApi(
             @NonNull String newApiElement,
             @NonNull String oldApiElement,
@@ -68,8 +51,7 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
     public void reportRenamedConfiguration(
             @NonNull String newConfiguration,
             @NonNull String oldConfiguration,
-            @NonNull DeprecationTarget deprecationTarget,
-            @Nullable String url) {
+            @NonNull DeprecationTarget deprecationTarget) {
         // do nothing
     }
 
@@ -86,7 +68,6 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
             @NonNull String dslElement,
             @NonNull String oldValue,
             @Nullable String newValue,
-            @Nullable String url,
             @NonNull DeprecationTarget deprecationTarget) {
         // do nothing.
     }

@@ -29,20 +29,7 @@ class FakeDeprecationReporter: DeprecationReporter {
         warnings.add(oldDslElement)
     }
 
-    override fun reportDeprecatedUsage(newDslElement: String,
-            oldDslElement: String,
-            url: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        warnings.add(oldDslElement)
-    }
-
     override fun reportObsoleteUsage(oldDslElement: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        warnings.add(oldDslElement)
-    }
-
-    override fun reportObsoleteUsage(oldDslElement: String,
-            url: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
         warnings.add(oldDslElement)
     }
@@ -59,8 +46,7 @@ class FakeDeprecationReporter: DeprecationReporter {
     override fun reportRenamedConfiguration(
         newConfiguration: String,
         oldConfiguration: String,
-        deprecationTarget: DeprecationReporter.DeprecationTarget,
-        url: String?
+        deprecationTarget: DeprecationReporter.DeprecationTarget
     ) {
         warnings.add(oldConfiguration)
     }
@@ -76,7 +62,6 @@ class FakeDeprecationReporter: DeprecationReporter {
     override fun reportDeprecatedValue(dslElement: String,
             oldValue: String,
             newValue: String?,
-            url: String?,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
         warnings.add(dslElement)
     }

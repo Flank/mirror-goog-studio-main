@@ -56,26 +56,25 @@ sealed class ApiStage(status: Option.Status) : Stage(status) {
     /**
      * Indicates that the API is stable.
      */
-    object Stable: ApiStage(Option.Status.STABLE)
+    object Stable : ApiStage(Option.Status.STABLE)
 
     /**
      * Indicates that the API will be removed soon because it was not / is no longer useful (see
      * stage [Removed]).
      *
-     * @param removalTarget a target when the API and the corresponding [BooleanOption] will be
-     *     removed
+     * @param removalTarget a target when the API and the corresponding [Option] will be removed
      */
     class Deprecated(removalTarget: DeprecationReporter.DeprecationTarget) :
         ApiStage(Option.Status.Deprecated(removalTarget))
 
     /**
-     * Indicates that the API and the corresponding [Option] has been removed.
+     * Indicates that the API and the corresponding [Option] have been removed.
      *
-     * @param removedVersion the version when the corresponding [Option] was removed
-     * @param messageIfUsed the error/warning message to be shown if the [Option] is used
+     * @param removedVersion the version when the API and the corresponding [Option] were removed
+     * @param additionalMessage the additional message to be shown if the [Option] is used
      */
-    class Removed(val removedVersion: Version, val messageIfUsed: String) :
-        ApiStage(Option.Status.Removed(messageIfUsed))
+    class Removed(removedVersion: Version, additionalMessage: String) :
+        ApiStage(Option.Status.Removed(removedVersion, additionalMessage))
 }
 
 /**
@@ -107,7 +106,7 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
      * Indicates that the feature will be enforced soon (see stage [Enforced]).
      *
      * @param enforcementTarget a target when the feature will be enforced, at which point the
-     *     corresponding [BooleanOption] will be removed (hence this parameter has type
+     *     corresponding [Option] will be removed (hence this parameter has type
      *     `DeprecationTarget`)
      */
     class SoftlyEnforced(enforcementTarget: DeprecationReporter.DeprecationTarget) :
@@ -115,45 +114,81 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
 
     /**
      * Indicates that the feature is enforced: The feature is enabled by default and the
-     * corresponding [BooleanOption] has been removed.
+     * corresponding [Option] has been removed.
      *
-     * @param removedVersion the version when the corresponding [BooleanOption] was removed
-     * @param messageIfUsed the error/warning message to be shown if the [Option] is used
+     * @param enforcedVersion the version when the feature is enforced and the corresponding
+     *     [Option] was removed
+     * @param additionalMessage the additional message to be shown if the [Option] is used
      */
-    class Enforced(val removedVersion: Version, val messageIfUsed: String)
-        : FeatureStage(Option.Status.Removed(messageIfUsed))
+    class Enforced(enforcedVersion: Version, additionalMessage: String? = null) :
+        FeatureStage(Option.Status.Removed(enforcedVersion, additionalMessage))
 
     /**
      * Indicates that the feature will be removed soon because it was not / is no longer useful (see
      * stage [Removed]).
      *
-     * @param removalTarget a target when the feature and the corresponding [BooleanOption] will
-     *     be removed
+     * @param removalTarget a target when the feature and the corresponding [Option] will be removed
      */
     class Deprecated(removalTarget: DeprecationReporter.DeprecationTarget) :
         FeatureStage(Option.Status.Deprecated(removalTarget))
 
     /**
      * Indicates that the feature has been removed: The feature is disabled by default and the
-     * corresponding [BooleanOption] has been removed.
+     * corresponding [Option] has been removed.
      *
-     * @param removedVersion the version when the corresponding [BooleanOption] was removed
-     * @param messageIfUsed the error/warning message to be shown if the [Option] is used
+     * @param removedVersion the version when the feature and the corresponding [Option] were
+     *     removed
+     * @param additionalMessage the additional message to be shown if the [Option] is used
      */
-    class Removed(val removedVersion: Version, val messageIfUsed: String)
-        : FeatureStage(Option.Status.Removed(messageIfUsed))
+    class Removed(removedVersion: Version, additionalMessage: String? = null) :
+        FeatureStage(Option.Status.Removed(removedVersion, additionalMessage))
 }
 
 /** An Android Gradle plugin version. */
-enum class Version {
+enum class Version(
+
+    // Mark these properties as private to prevent external usages from constructing
+    // inconsistent messages from these values. They should use methods like
+    // getDeprecationTargetMessage() or getRemovedVersionMessage() instead.
 
     /**
-     * A version before version 4.0.0, used when the exact version is not known, except that it's
-     * guaranteed to be before 4.0.0.
+     * String value of the version.
+     *
+     * Note that since this value will be used in error/warning messages, it should be defined such
+     * that it fits well in the overall message:
+     *
+     *     "This feature will be / was removed in $stringValue of the Android Gradle plugin."
+     *
+     * For example, avoid assigning string values such as "AGP 4.0", as it will not go along well
+     * with the pre-formatted message.
      */
-    VERSION_BEFORE_4_0_0,
+    private val stringValue: String
+) {
 
-    VERSION_3_5_0,
-    VERSION_3_6_0,
-    VERSION_4_0_0,
+    /**
+     * A version before version 4.0, used when the exact version is not known, except that it's
+     * guaranteed to be before 4.0.
+     */
+    VERSION_BEFORE_4_0("a version before 4.0"),
+
+    FUTURE_VERSION("a future version"),
+
+    VERSION_3_5("version 3.5"),
+    VERSION_3_6("version 3.6"),
+    VERSION_4_0("version 4.0"),
+    VERSION_5_0("version 5.0"),
+
+    ;
+
+    fun getDeprecationTargetMessage(): String {
+        return "It will be removed in $stringValue of the Android Gradle plugin."
+    }
+
+    fun getRemovedVersionMessage(): String {
+        return if (this == VERSION_BEFORE_4_0) {
+            "It has been removed from the current version of the Android Gradle plugin."
+        } else {
+            "It was removed in $stringValue of the Android Gradle plugin."
+        }
+    }
 }
