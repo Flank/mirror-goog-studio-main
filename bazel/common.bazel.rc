@@ -119,4 +119,4 @@ test:remote --jvmopt='-Dandroid.remote.run=true'
 
 # Stop downloading of build outputs to the local machine and
 # removes a possibility of network/disk bottlenecks when using RBE.
-build:remote --remote_download_minimal
+build:remote --remote_download_toplevel
