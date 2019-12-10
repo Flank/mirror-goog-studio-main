@@ -1237,6 +1237,7 @@ public final class SdkConstants {
     public static final String TAG_GRADIENT = "gradient";
     public static final String TAG_INSET = "inset"; //$NON-NLS-1$
     public static final String TAG_LAYER_LIST = "layer-list"; //$NON-NLS-1$
+    public static final String TAG_NINE_PATCH = "nine-patch";
     public static final String TAG_PATH = "path";
     public static final String TAG_RIPPLE = "ripple";
     public static final String TAG_ROTATE = "rotate";
