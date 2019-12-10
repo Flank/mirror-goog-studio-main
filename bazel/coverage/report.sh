@@ -26,5 +26,5 @@ bazel test --define agent_coverage=true --config=remote -- "@cov//:${report_name
 echo "Processing raw coverage data"
 bazel build --config=remote -- "@cov//:${report_name}.lcov" || exit $?
 echo "Generating HTML report in ${html_dir}"
-genhtml -o ${html_dir} -p $(pwd) --no-function-coverage "bazel-genfiles/external/cov/${report_name}/lcov" || exit $?
+genhtml -o ${html_dir} -p $(pwd) --no-function-coverage "bazel-bin/external/cov/${report_name}/lcov" || exit $?
 echo "Done"
