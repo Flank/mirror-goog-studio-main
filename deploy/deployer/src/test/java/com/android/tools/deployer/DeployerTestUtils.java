@@ -29,7 +29,7 @@ public class DeployerTestUtils {
         File installer = new File(root, testInstaller);
         if (!installer.exists()) {
             // Running from IJ
-            File devRoot = new File(root, "bazel-genfiles/");
+            File devRoot = new File(root, "bazel-bin/");
             installer = new File(devRoot, testInstaller);
         }
         File installers = Files.createTempDirectory("installers").toFile();
@@ -47,7 +47,7 @@ public class DeployerTestUtils {
         File installer = new File(baseLocation, testInstaller);
         if (!installer.exists()) {
             // Running from IJ
-            File devRoot = new File(root, "bazel-genfiles/");
+            File devRoot = new File(root, "bazel-bin/");
             baseLocation = new File(devRoot, base);
             installer = new File(baseLocation, testInstaller);
         }
