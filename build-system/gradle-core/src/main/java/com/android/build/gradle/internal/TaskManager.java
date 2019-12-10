@@ -2360,45 +2360,12 @@ public abstract class TaskManager {
                                 .build());
     }
 
-    private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
-        final BuildFeatureValues features = variantScope.getGlobalScope().getBuildFeatures();
-        if (!features.getDataBinding() && !features.getViewBinding()) {
-            return;
-        }
-        final BaseVariantData variantData = variantScope.getVariantData();
-        VariantType type = variantData.getType();
-        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
-            if (!testedVariantData.getType().isAar()) {
-                return;
-            }
-        }
-        taskFactory.register(
-                new DataBindingMergeDependencyArtifactsTask.CreationAction(variantScope));
-    }
-
-    private void createDataBindingMergeBaseClassesTask(@NonNull VariantScope variantScope) {
-        final BaseVariantData variantData = variantScope.getVariantData();
-        VariantType type = variantData.getType();
-        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
-            if (!testedVariantData.getType().isAar()) {
-                return;
-            }
-        }
-
-        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(variantScope));
-    }
-
     protected void createDataBindingTasksIfNecessary(@NonNull VariantScope scope) {
         final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
         boolean dataBindingEnabled = features.getDataBinding();
         if (!dataBindingEnabled && !features.getViewBinding()) {
             return;
         }
-        createDataBindingMergeBaseClassesTask(scope);
-        createDataBindingMergeArtifactsTask(scope);
-
 
         VariantType type = scope.getType();
         if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
@@ -2407,6 +2374,11 @@ public abstract class TaskManager {
                 return;
             }
         }
+
+        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(scope));
+
+        taskFactory.register(
+                new DataBindingMergeDependencyArtifactsTask.CreationAction(scope));
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
