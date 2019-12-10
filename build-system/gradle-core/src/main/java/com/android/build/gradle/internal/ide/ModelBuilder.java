@@ -130,6 +130,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
@@ -1139,9 +1140,12 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         boolean isDataBindingEnabled = globalScope.getBuildFeatures().getDataBinding();
         boolean isViewBindingEnabled = globalScope.getBuildFeatures().getViewBinding();
+        Directory dataBindingSources =
+                scope.getArtifacts()
+                        .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)
+                        .getOrNull();
         boolean addBindingSources =
-                (isDataBindingEnabled || isViewBindingEnabled)
-                        && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE);
+                (isDataBindingEnabled || isViewBindingEnabled) && (dataBindingSources != null);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
         // Set this to the number of folders you expect to add explicitly in the code below.
@@ -1153,29 +1157,27 @@ public class ModelBuilder<Extension extends BaseExtension>
                 Lists.newArrayListWithExpectedSize(additionalFolders + extraFolders.size());
         folders.addAll(extraFolders);
 
-        folders.add(
+        Directory aidlSources =
                 scope.getArtifacts()
                         .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE)
-                        .get()
-                        .getAsFile());
+                        .getOrNull();
+        if (aidlSources != null) {
+            folders.add(aidlSources.getAsFile());
+        }
         folders.add(scope.getBuildConfigSourceOutputDir());
         boolean ndkMode = variantData.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
-            folders.add(
+            Directory renderscriptSources =
                     scope.getArtifacts()
                             .getFinalProduct(
                                     InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
-                            .get()
-                            .getAsFile());
+                            .getOrNull();
+            if (renderscriptSources != null) {
+                folders.add(renderscriptSources.getAsFile());
+            }
         }
-        if (addBindingSources
-                && scope.getArtifacts()
-                        .hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)) {
-            folders.add(
-                    scope.getArtifacts()
-                            .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)
-                            .get()
-                            .getAsFile());
+        if (addBindingSources) {
+            folders.add(dataBindingSources.getAsFile());
         }
         return folders;
     }
