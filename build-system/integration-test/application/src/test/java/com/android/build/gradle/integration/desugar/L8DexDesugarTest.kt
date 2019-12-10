@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.desugar
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -171,10 +172,14 @@ class L8DexDesugarTest {
             "")
         // check error message when L8DexDesugarLibTransform runs
         var result = project.executor().expectFailure().run("assembleDebug")
-        checkMissingCoreLibraryDependencyError(result.failureMessage)
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(MISSING_DEPS_ERROR)
+        }
         // check error message when L8DexDesugarLibTask runs
         result = project.executor().expectFailure().run("clean", "assembleRelease")
-        checkMissingCoreLibraryDependencyError(result.failureMessage)
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(MISSING_DEPS_ERROR)
+        }
     }
 
     private fun normalSetUp() {
@@ -190,12 +195,6 @@ class L8DexDesugarTest {
 
     }
 
-    private fun checkMissingCoreLibraryDependencyError(message: String?) {
-        TruthHelper.assertThat(message).contains("coreLibraryDesugaring configuration contains" +
-                " no dependencies. If you intend to enable core library desugaring, please add " +
-                "dependencies to coreLibraryDesugaring configuration.")
-    }
-
     private fun getDexWithDesugarClass(desugarClass: String, dexes: Collection<Dex>) : Dex? =
         dexes.find {
             checkValidClassName(desugarClass)
@@ -204,5 +203,8 @@ class L8DexDesugarTest {
 
     companion object {
         private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.3"
+        private const val MISSING_DEPS_ERROR = "coreLibraryDesugaring configuration contains no " +
+                "dependencies. If you intend to enable core library desugaring, please add " +
+                "dependencies to coreLibraryDesugaring configuration."
     }
 }

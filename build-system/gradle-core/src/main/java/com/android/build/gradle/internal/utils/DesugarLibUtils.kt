@@ -97,7 +97,7 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
  */
 private fun getDesugarLibConfiguration(project: Project): Configuration {
     val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
-    configuration.defaultDependencies {
+    if (configuration.dependencies.isEmpty()) {
         throw RuntimeException("$CONFIG_NAME_CORE_LIBRARY_DESUGARING configuration contains no " +
                 "dependencies. If you intend to enable core library desugaring, please add " +
                 "dependencies to $CONFIG_NAME_CORE_LIBRARY_DESUGARING configuration.")
