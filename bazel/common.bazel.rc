@@ -46,8 +46,8 @@ build --define=grpc_no_ares=true
 build --test_env=SHELL
 
 # Set flags for uploading to ResultStore
-build:cloud_resultstore --bes_backend=buildeventservice.googleapis.com
-build:cloud_resultstore --bes_timeout=60s
+# build:cloud_resultstore --bes_backend=buildeventservice.googleapis.com
+# build:cloud_resultstore --bes_timeout=60s
 build:cloud_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
 build:cloud_resultstore --project_id=908081808034
 build:cloud_resultstore --tls_enabled=true
