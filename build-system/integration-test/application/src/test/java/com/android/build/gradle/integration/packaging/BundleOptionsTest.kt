@@ -18,18 +18,17 @@ package com.android.build.gradle.integration.packaging
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Streams;
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Path
 
 class BundleOptionsTest {
 
@@ -77,6 +76,20 @@ class BundleOptionsTest {
         //assertThat(apksNoLanguageSplit).doesNotContain("standalone-hdpi.apk")
     }
 
+    @Test
+    fun testBundleModels() {
+        val projectModel = project.executeAndReturnModel(":bundleDebug")
+        // check that model files are present.
+        val mainArtifact = projectModel.onlyModel.getVariantByName("debug").mainArtifact
+        assertThat(mainArtifact.bundleTaskOutputListingFile).isNotNull()
+        val postBundleModel = File(mainArtifact.bundleTaskOutputListingFile!!)
+        assertThat(postBundleModel.exists()).isTrue()
+        val bundleInfo = ExistingBuildElements.fromFile(postBundleModel)
+        assertThat(bundleInfo.elements).hasSize(1)
+        val bundleFile = bundleInfo.elements.first().outputPath
+        assertThat(bundleFile).isNotNull()
+        assertThat(bundleFile.toFile().exists()).isTrue()
+    }
 
     private fun generateApks(): Set<String> {
         project.executor().run(":makeApkFromBundleForDebug")

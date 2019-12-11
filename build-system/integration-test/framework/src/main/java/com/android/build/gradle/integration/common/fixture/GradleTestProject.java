@@ -1290,12 +1290,12 @@ public final class GradleTestProject implements TestRule {
         AndroidProject onlyModel = androidProjectModelContainer.getOnlyModel();
         ImmutableMap.Builder<String, BuildElements> mapOfVariantOutputs = ImmutableMap.builder();
         for (Variant variant : onlyModel.getVariants()) {
-            String postModelFile = variant.getMainArtifact().getPostAssembleTaskModelFile();
+            String postModelFile = variant.getMainArtifact().getAssembleTaskOutputListingFile();
             mapOfVariantOutputs.put(
                     variant.getName(),
                     ExistingBuildElements.from(new File(postModelFile).getParentFile()));
             for (AndroidArtifact extraAndroidArtifact : variant.getExtraAndroidArtifacts()) {
-                String extraModelFile = extraAndroidArtifact.getPostAssembleTaskModelFile();
+                String extraModelFile = extraAndroidArtifact.getAssembleTaskOutputListingFile();
                 if (!extraModelFile.isEmpty()) {
                     mapOfVariantOutputs.put(
                             variant.getName() + extraAndroidArtifact.getName(),

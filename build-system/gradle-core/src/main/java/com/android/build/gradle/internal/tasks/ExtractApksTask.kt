@@ -16,9 +16,15 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.VariantOutput
+import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildElements
+import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
@@ -27,10 +33,12 @@ import com.android.utils.FileUtils
 import com.google.protobuf.util.JsonFormat
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -62,6 +70,15 @@ abstract class ExtractApksTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
+    @get:OutputFile
+    abstract val apksFromBundleIdeModel: RegularFileProperty
+
+    @get:Input
+    abstract val applicationId: Property<String>
+
+    @get:Input
+    abstract val variantType: Property<String>
+
     @get:Input
     var extractInstant = false
         private set
@@ -76,7 +93,10 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                     deviceConfig
                             ?: throw RuntimeException("Calling ExtractApk with no device config"),
                     outputDir.get().asFile,
-                    extractInstant
+                    extractInstant,
+                    apksFromBundleIdeModel.get().asFile,
+                    applicationId.get(),
+                    variantType.get()
                 )
             )
         }
@@ -86,7 +106,10 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         val apkSetArchive: File,
         val deviceConfig: File,
         val outputDir: File,
-        val extractInstant: Boolean
+        val extractInstant: Boolean,
+        val apksFromBundleIdeModel: File,
+        val applicationId: String,
+        val variantType: String
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -107,6 +130,18 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 .setInstant(params.extractInstant)
 
             command.build().execute()
+
+            BuildElements(
+                applicationId = params.applicationId,
+                variantType = params.variantType,
+                elements = listOf(
+                    BuildOutput(
+                        InternalArtifactType.EXTRACTED_APKS,
+                        ApkData.of(VariantOutput.OutputType.MAIN, listOf(), -1),
+                        params.outputDir
+                    )
+                )
+            ).saveToFile(params.apksFromBundleIdeModel)
         }
     }
 
@@ -125,6 +160,12 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 taskProvider,
                 ExtractApksTask::outputDir
             )
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL,
+                taskProvider,
+                ExtractApksTask::apksFromBundleIdeModel,
+                ExistingBuildElements.METADATA_FILE_NAME
+            )
         }
 
         override fun configure(task: ExtractApksTask) {
@@ -139,6 +180,9 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             }
 
             task.extractInstant = variantScope.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
+            task.applicationId.setDisallowChanges(
+                variantScope.variantData.publicVariantPropertiesApi.applicationId)
+            task.variantType.setDisallowChanges(variantScope.variantData.type.toString())
         }
     }
 }

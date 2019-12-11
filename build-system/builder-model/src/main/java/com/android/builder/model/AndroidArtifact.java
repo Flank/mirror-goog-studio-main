@@ -173,6 +173,17 @@ public interface AndroidArtifact extends BaseArtifact {
     String getBundleTaskName();
 
     /**
+     * Returns the path to the listing file generated after each {@link #getBundleTaskName()} task
+     * execution. The listing file will contain a reference to the produced bundle file (.aab).
+     * Returns null when {@link #getBundleTaskName()} returns null.
+     *
+     * @since 4.0
+     * @return the file path for the bundle model file.
+     */
+    @Nullable
+    String getBundleTaskOutputListingFile();
+
+    /**
      * Returns the name of the task used to generate APKs via the bundle file (.aab), or null if the
      * task is not supported.
      *
@@ -181,6 +192,17 @@ public interface AndroidArtifact extends BaseArtifact {
      */
     @Nullable
     String getApkFromBundleTaskName();
+
+    /**
+     * Returns the path to the model file generated after each {@link #getApkFromBundleTaskName()}
+     * task execution. The model will contain a reference to the folder where APKs from bundle are
+     * placed into. Returns null when {@link #getApkFromBundleTaskName()} returns null.
+     *
+     * @since 4.0
+     * @return the file path for the {@link #getApkFromBundleTaskName()} output model.
+     */
+    @Nullable
+    String getApkFromBundleTaskOutputListingFile();
 
     /**
      * Returns the code shrinker used by this artifact or null if no shrinker is used to build this

@@ -410,6 +410,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     // Artifacts privately shared with Android Studio.
     object APK_IDE_MODEL: InternalArtifactType<RegularFile>(FILE), Replaceable
+    object BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
+    object APK_FROM_BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

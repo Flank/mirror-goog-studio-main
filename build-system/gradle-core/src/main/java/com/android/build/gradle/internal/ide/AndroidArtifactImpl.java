@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.file.RegularFile;
 
 /**
  * Implementation of AndroidArtifact that is serializable
@@ -73,14 +74,16 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @Nullable private final TestOptions testOptions;
     @Nullable private final String instrumentedTestTaskName;
     @Nullable private final String bundleTaskName;
+    @Nullable private final String bundleTaskOutputListingFile;
     @Nullable private final String apkFromBundleTaskName;
+    @Nullable private final String apkFromBundleTaskOutputListingFile;
     @Nullable private final CodeShrinker codeShrinker;
 
     AndroidArtifactImpl(
             @NonNull String name,
             @NonNull String baseName,
             @NonNull String assembleTaskName,
-            @NonNull String postAssembleTaskModelFile,
+            @Nullable RegularFile postAssembleTaskModelFile,
             boolean isSigned,
             @Nullable String signingConfigName,
             @NonNull String applicationId,
@@ -105,7 +108,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @Nullable TestOptions testOptions,
             @Nullable String instrumentedTestTaskName,
             @Nullable String bundleTaskName,
+            @Nullable RegularFile bundleTaskOutputListingFile,
             @Nullable String apkFromBundleTaskName,
+            @Nullable RegularFile apkFromBundleTaskOutputListingFile,
             @Nullable CodeShrinker codeShrinker) {
         super(
                 name,
@@ -137,7 +142,15 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.testOptions = testOptions;
         this.instrumentedTestTaskName = instrumentedTestTaskName;
         this.bundleTaskName = bundleTaskName;
+        this.bundleTaskOutputListingFile =
+                bundleTaskOutputListingFile != null
+                        ? bundleTaskOutputListingFile.getAsFile().getAbsolutePath()
+                        : null;
         this.apkFromBundleTaskName = apkFromBundleTaskName;
+        this.apkFromBundleTaskOutputListingFile =
+                apkFromBundleTaskOutputListingFile != null
+                        ? apkFromBundleTaskOutputListingFile.getAsFile().getAbsolutePath()
+                        : null;
         this.codeShrinker = codeShrinker;
     }
 
@@ -330,6 +343,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(testOptions, that.testOptions)
                 && Objects.equals(instrumentedTestTaskName, that.instrumentedTestTaskName)
                 && Objects.equals(bundleTaskName, that.bundleTaskName)
+                && Objects.equals(bundleTaskOutputListingFile, that.bundleTaskOutputListingFile)
+                && Objects.equals(
+                        apkFromBundleTaskOutputListingFile, that.apkFromBundleTaskOutputListingFile)
                 && Objects.equals(codeShrinker, that.codeShrinker)
                 && Objects.equals(apkFromBundleTaskName, that.apkFromBundleTaskName);
     }
@@ -354,8 +370,10 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 testOptions,
                 instrumentedTestTaskName,
                 bundleTaskName,
+                bundleTaskOutputListingFile,
                 codeShrinker,
-                apkFromBundleTaskName);
+                apkFromBundleTaskName,
+                apkFromBundleTaskOutputListingFile);
     }
 
     @Override
@@ -375,8 +393,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("testOptions", testOptions)
                 .add("instrumentedTestTaskName", instrumentedTestTaskName)
                 .add("bundleTaskName", bundleTaskName)
+                .add("bundleTasOutputListingFile", bundleTaskName)
                 .add("codeShrinker", codeShrinker)
-                .add("apkFromBundleTaskName", apkFromBundleTaskName)
+                .add("apkFromBundleTaskOutputListingFile", apkFromBundleTaskName)
                 .toString();
     }
 
@@ -400,8 +419,20 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
 
     @Nullable
     @Override
+    public String getBundleTaskOutputListingFile() {
+        return bundleTaskOutputListingFile;
+    }
+
+    @Nullable
+    @Override
     public String getApkFromBundleTaskName() {
         return apkFromBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public String getApkFromBundleTaskOutputListingFile() {
+        return apkFromBundleTaskOutputListingFile;
     }
 
     @Nullable

@@ -133,7 +133,6 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
-import org.gradle.api.file.RegularFile;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -911,19 +910,15 @@ public class ModelBuilder<Extension extends BaseExtension>
             extraModelInfo.getSyncIssueHandler().reportError(Type.GENERIC, e);
         }
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
-        final RegularFile postAssembleModelFile =
-                scope.getArtifacts()
-                        .getOperations()
-                        .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
-                        .getOrNull();
 
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName() + "-" + variantDslInfo.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
-                postAssembleModelFile != null
-                        ? postAssembleModelFile.getAsFile().getAbsolutePath()
-                        : BaseArtifactImpl.NO_MODEL_FILE,
+                scope.getArtifacts()
+                        .getOperations()
+                        .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
+                        .getOrNull(),
                 variantDslInfo.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 applicationId,
@@ -952,7 +947,15 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getBundleTask() == null
                         ? scope.getTaskName("bundle")
                         : taskContainer.getBundleTask().getName(),
+                scope.getArtifacts()
+                        .getOperations()
+                        .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
+                        .getOrNull(),
                 ExtractApksTask.Companion.getTaskName(scope),
+                scope.getArtifacts()
+                        .getOperations()
+                        .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
+                        .getOrNull(),
                 scope.getCodeShrinker());
     }
 
