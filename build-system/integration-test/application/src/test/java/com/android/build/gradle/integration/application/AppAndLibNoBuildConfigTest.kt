@@ -88,6 +88,13 @@ class AppAndLibNoBuildConfigTest {
         project.getSubproject(":app").buildFile.appendText("""
 
             android.sourceSets.main.java.exclude "**/*.java"
+
+            android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_1_8
+                    targetCompatibility JavaVersion.VERSION_1_8
+                }
+            }
         """.trimIndent())
 
         project.execute("app:assembleDebug")
