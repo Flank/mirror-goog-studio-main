@@ -53,7 +53,7 @@ fun RecipeExecutor.googleMapsFragmentRecipe(
   }
   save(mapFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
 
-  mergeXml(debugGoogleMapsApiXml(projectData.debugKeystoreSha1 ?: "", packageName), debugResOut.resolve("values/google_maps_api.xml"))
+  mergeXml(debugGoogleMapsApiXml(projectData.debugKeystoreSha1!!, packageName), debugResOut.resolve("values/google_maps_api.xml"))
   mergeXml(releaseGoogleMapsApiXml(), releaseResOut.resolve("values/google_maps_api.xml"))
 
   open(srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
