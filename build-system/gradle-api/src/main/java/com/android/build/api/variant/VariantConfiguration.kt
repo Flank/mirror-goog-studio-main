@@ -27,12 +27,6 @@ import org.gradle.api.Named
  */
 @Incubating
 interface VariantConfiguration: Named {
-//    /**
-//     * Variant name, unique within a project.
-//     * @return the variant name
-//     */
-//    val name: String
-
     /**
      * Build Type name, might be replaced with access to locked DSL object once ready
      */
@@ -42,4 +36,7 @@ interface VariantConfiguration: Named {
      * List of flavor names, might be replaced with access to locked DSL objects once ready
      */
     val flavors: List<String>
+
+    /** Whether this variant should generate a debuggable apk.  */
+    val isDebuggable: Boolean
 }

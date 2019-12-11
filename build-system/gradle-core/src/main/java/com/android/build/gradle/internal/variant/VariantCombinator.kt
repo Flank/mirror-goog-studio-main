@@ -43,7 +43,7 @@ class VariantCombinator(
         // different paths for flavors or no flavors to optimize things a bit
 
         if (variantModel.productFlavors.isEmpty()) {
-            return computeFlavorLessVariants()
+            return computeFlavorlessVariants()
         }
 
         return computeVariantsWithFlavors()
@@ -52,16 +52,22 @@ class VariantCombinator(
     /**
      * Computes [VariantConfiguration] for the case where there are no flavors.
      */
-    private fun computeFlavorLessVariants() : List<VariantConfiguration> {
+    private fun computeFlavorlessVariants() : List<VariantConfiguration> {
         return if (variantModel.buildTypes.isEmpty()) {
             ImmutableList.of(VariantConfigurationImpl(variantName = "main"))
         } else {
             val builder = ImmutableList.builder<VariantConfiguration>()
 
             for (buildType in variantModel.buildTypes.keys) {
-                builder.add(VariantConfigurationImpl(
-                    variantName = buildType,
-                    buildType = buildType))
+                val isDebuggable =
+                    variantModel.buildTypes[buildType]?.buildType?.isDebuggable ?: false
+                builder.add(
+                    VariantConfigurationImpl(
+                        variantName = buildType,
+                        buildType = buildType,
+                        isDebuggable = isDebuggable
+                    )
+                )
             }
 
             builder.build()
@@ -118,10 +124,13 @@ class VariantCombinator(
             for (buildType in variantModel.buildTypes.keys) {
                 builder.addAll(flavorCombos.map {
                     val flavors = it.getFlavorNames()
+                    val isDebuggable =
+                        variantModel.buildTypes[buildType]?.buildType?.isDebuggable ?: false
                     VariantConfigurationImpl(
                         variantName = computeVariantName(flavors, buildType, variantType),
                         buildType = buildType,
-                        flavors = flavors
+                        flavors = flavors,
+                        isDebuggable = isDebuggable
                     )
                 })
             }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d81fdb51b5b3a2d65387aa86041e450b053a391467a0f7a3b3f26a6c015cb0e8
+f16c24db06ab0096d5246db4bc5c81eaac729678a4531f70c71cbe7500a3aa12
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -151,6 +151,7 @@ com.android.build.api.variant.Variant.setEnabled: void (boolean)
 com.android.build.api.variant.VariantConfiguration implements org.gradle.api.Named
 com.android.build.api.variant.VariantConfiguration.getBuildType: java.lang.String ()
 com.android.build.api.variant.VariantConfiguration.getFlavors: java.util.List<java.lang.String> ()
+com.android.build.api.variant.VariantConfiguration.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()

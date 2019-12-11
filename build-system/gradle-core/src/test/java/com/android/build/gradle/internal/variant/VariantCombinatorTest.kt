@@ -31,7 +31,7 @@ class VariantCombinatorTest {
         check(
             given = variantModel {
                 buildTypes {
-                    create("debug")
+                    create("debug", isDebuggable = true)
                     create("release")
                 }
             },
@@ -39,12 +39,14 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "debug",
                     buildType = "debug",
-                    flavors = emptyList()
+                    flavors = emptyList(),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "release",
                     buildType = "release",
-                    flavors = emptyList()
+                    flavors = emptyList(),
+                    isDebuggable = false
                 )
             )
         )
@@ -55,7 +57,7 @@ class VariantCombinatorTest {
         check(
             given = variantModel {
                 buildTypes {
-                    create("debug")
+                    create("debug", isDebuggable = true)
                     create("release")
                 }
                 productFlavors {
@@ -71,12 +73,14 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1")
+                    flavors = listOf("flavor1"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2")
+                    flavors = listOf("flavor2"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
@@ -97,7 +101,7 @@ class VariantCombinatorTest {
         check(
             given = variantModel {
                 buildTypes {
-                    create("debug")
+                    create("debug", isDebuggable = true)
                     create("release")
                 }
                 productFlavors {
@@ -120,22 +124,26 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorADebug",
                     buildType = "debug",
-                    flavors = listOf("flavor1", "flavorA")
+                    flavors = listOf("flavor1", "flavorA"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorBDebug",
                     buildType = "debug",
-                    flavors = listOf("flavor1", "flavorB")
+                    flavors = listOf("flavor1", "flavorB"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2FlavorADebug",
                     buildType = "debug",
-                    flavors = listOf("flavor2", "flavorA")
+                    flavors = listOf("flavor2", "flavorA"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2FlavorBDebug",
                     buildType = "debug",
-                    flavors = listOf("flavor2", "flavorB")
+                    flavors = listOf("flavor2", "flavorB"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorARelease",
@@ -169,7 +177,8 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "main",
                     buildType = null,
-                    flavors = emptyList()
+                    flavors = emptyList(),
+                    isDebuggable = false
                 )
             )
         )
@@ -208,7 +217,7 @@ class VariantCombinatorTest {
         check(
             given = variantModel {
                 buildTypes {
-                    create("debug")
+                    create("debug", isDebuggable = true)
                     create("release")
                 }
                 productFlavors {
@@ -225,12 +234,14 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1")
+                    flavors = listOf("flavor1"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2")
+                    flavors = listOf("flavor2"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
@@ -251,7 +262,7 @@ class VariantCombinatorTest {
         check(
             given = variantModel {
                 buildTypes {
-                    create("debug")
+                    create("debug", isDebuggable = true)
                     create("release")
                 }
                 productFlavors {
@@ -267,12 +278,14 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1")
+                    flavors = listOf("flavor1"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2")
+                    flavors = listOf("flavor2"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
@@ -301,7 +314,7 @@ class VariantCombinatorTest {
         check(
             given = variantModel {
                 buildTypes {
-                    create("debug")
+                    create("debug", isDebuggable = true)
                     create("release")
                 }
                 productFlavors {
@@ -317,12 +330,14 @@ class VariantCombinatorTest {
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1")
+                    flavors = listOf("flavor1"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2")
+                    flavors = listOf("flavor2"),
+                    isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",

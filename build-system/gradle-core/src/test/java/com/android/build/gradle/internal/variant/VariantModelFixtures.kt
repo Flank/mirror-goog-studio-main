@@ -60,7 +60,8 @@ class VariantModelBuilder {
             val btData = Mockito.mock(BuildTypeData::class.java)
             val bt = Mockito.mock(BuildType::class.java)
 
-            Mockito.`when`(bt.name).thenReturn(it)
+            Mockito.`when`(bt.name).thenReturn(it.name)
+            Mockito.`when`(bt.isDebuggable).thenReturn(it.isDebuggable)
             Mockito.`when`(btData.buildType).thenReturn(bt)
 
             btData
@@ -95,11 +96,13 @@ class VariantModelBuilder {
 }
 
 class BuildTypeBuilder {
-    val types = mutableListOf<String>()
-    fun create(type: String) {
-        types.add(type);
+    val types = mutableListOf<BuildTypeInfo>()
+    fun create(name: String, isDebuggable: Boolean = false) {
+        types.add(BuildTypeInfo(name, isDebuggable))
     }
 }
+
+data class BuildTypeInfo(val name: String, val isDebuggable: Boolean)
 
 class ProductFlavorBuilder {
     val flavors = mutableListOf<Pair<String?, String>>()

@@ -174,7 +174,8 @@ public abstract class BaseVariantData {
                 new VariantConfigurationImpl(
                         variantDslInfo.getFullName(),
                         variantDslInfo.getBuildType().getName(),
-                        variantDslInfo.getFlavorNamesWithDimensionNames());
+                        variantDslInfo.getFlavorNamesWithDimensionNames(),
+                        variantDslInfo.getBuildType().isDebuggable());
 
         outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantDslInfo);
 
