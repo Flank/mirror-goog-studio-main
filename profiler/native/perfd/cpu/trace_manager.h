@@ -102,7 +102,7 @@ class TraceManager final {
   // Note that the caller is responsible for parsing/reading the trace outputs
   // that should be generated in the returned ProfilingApp's configuration's
   // trace path.
-
+  //
   // TODO: currently we only support one ongoing capture per app, we should
   // look into supporting different types of captures simultaneously. e.g.
   // simpleperf while doing atrace, so users can correlate callstacks.
