@@ -154,6 +154,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitUtils;
+import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
@@ -1168,6 +1169,18 @@ public abstract class TaskManager<
             TaskFactoryUtils.dependsOn(
                     componentProperties.getTaskContainer().getResourceGenTask(),
                     generateResValuesTask);
+        }
+    }
+
+    public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
+        if (BooleanOption.ENABLE_MLKIT.getDefaultValue()) {
+            VariantScope scope = componentProperties.getVariantScope();
+            TaskProvider<GenerateMlModelClass> generateMlModelClassTask =
+                    taskFactory.register(
+                            new GenerateMlModelClass.CreationAction(componentProperties));
+            TaskFactoryUtils.dependsOn(
+                    componentProperties.getTaskContainer().getSourceGenTask(),
+                    generateMlModelClassTask);
         }
     }
 

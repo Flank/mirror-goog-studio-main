@@ -142,6 +142,10 @@ public abstract class AbstractAppTaskManager<
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(appVariantProperties);
 
+        // Add a task to auto-generate classes for helping run inference on ML model files under
+        // assets folder.
+        createMlkitTask(appVariantProperties);
+
         // Add a compile task
         createCompileTask(appVariantProperties);
 

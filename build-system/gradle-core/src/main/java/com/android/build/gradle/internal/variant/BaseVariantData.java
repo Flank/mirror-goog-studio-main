@@ -20,14 +20,12 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 
-import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -37,13 +35,12 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.SourceProvider;
-import com.android.ide.common.blame.MergingLog;
-import com.android.ide.common.blame.SourceFile;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -535,6 +532,14 @@ public abstract class BaseVariantData {
                         artifacts.getFinalProduct(
                                 InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE);
                 sourceSets.add(project.fileTree(rsFC).builtBy(rsFC));
+            }
+
+            if (getGlobalScope().getProjectOptions().get(BooleanOption.ENABLE_MLKIT)) {
+                Provider<Directory> mlkitModelClassSourceOut =
+                        getArtifacts().getFinalProduct(MLKIT_SOURCE_OUT.INSTANCE);
+                sourceSets.add(
+                        project.fileTree(mlkitModelClassSourceOut)
+                                .builtBy(mlkitModelClassSourceOut));
             }
 
             defaultJavaSources = sourceSets.build();
