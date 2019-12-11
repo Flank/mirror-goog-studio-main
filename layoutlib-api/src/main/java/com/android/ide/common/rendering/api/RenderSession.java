@@ -233,7 +233,7 @@ public class RenderSession {
      * Type of touch event, a substitute for MotionEvent type, so that clients of layoutlib are kept
      * android platform agnostic.
      */
-    enum TouchEventType {
+    public enum TouchEventType {
         PRESS,
         RELEASE,
         DRAG
