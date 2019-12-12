@@ -239,6 +239,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
+            it.println("-keep class " + Toy::class.java.name + " {*;}")
         }
 
         runR8(
@@ -278,6 +279,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
+            it.println("-keep class " + Toy::class.java.name + " {*;}")
         }
 
         runR8(
@@ -323,6 +325,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
+            it.println("-keep class " + Toy::class.java.name + " {*;}")
             it.println("-keep class " + CarbonForm::class.java.name + " {*;}")
         }
 
