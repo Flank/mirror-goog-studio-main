@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
+import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -478,7 +479,8 @@ class CoreLibraryDesugarTest {
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
         private const val CACHE_DIR = "agp_cache_dir"
-        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.4"
+        private const val DESUGAR_DEPENDENCY
+                = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
     }
 
     private val lineSeparator: String = System.lineSeparator()

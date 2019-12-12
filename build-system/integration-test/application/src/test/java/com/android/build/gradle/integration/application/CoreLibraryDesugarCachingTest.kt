@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -114,6 +115,7 @@ class CoreLibraryDesugarCachingTest {
         private const val L8_DEX_DESUGAR_LIB = ":app:l8DexDesugarLibRelease"
         private const val MERGE_DEX = ":app:mergeDexRelease"
         private const val DEX_BUILDER = ":app:dexBuilderRelease"
-        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.4"
+        private const val DESUGAR_DEPENDENCY
+                = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
     }
 }

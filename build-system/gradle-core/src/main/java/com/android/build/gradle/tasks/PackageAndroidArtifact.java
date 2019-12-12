@@ -1052,7 +1052,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public FileCollection getDexFolders() {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
-
             if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE)) {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX.INSTANCE)
@@ -1113,6 +1112,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         private FileCollection getDesugarLibDexIfExists() {
+            if (getVariantScope().getType().isDynamicFeature()) {
+                return getVariantScope().getGlobalScope().getProject().files();
+            }
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
                 return project.files(

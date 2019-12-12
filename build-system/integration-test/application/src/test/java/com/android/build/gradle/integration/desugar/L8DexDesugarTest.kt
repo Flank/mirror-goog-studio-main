@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.desugar
 
+import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
@@ -202,7 +203,8 @@ class L8DexDesugarTest {
         }
 
     companion object {
-        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.4"
+        private const val DESUGAR_DEPENDENCY
+                = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
         private const val MISSING_DEPS_ERROR = "coreLibraryDesugaring configuration contains no " +
                 "dependencies. If you intend to enable core library desugaring, please add " +
                 "dependencies to coreLibraryDesugaring configuration."
