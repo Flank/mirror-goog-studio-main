@@ -41,7 +41,8 @@ class InstallServer {
   ProtoPipe input_;
   ProtoPipe output_;
 
-  bool WriteStatus(proto::InstallServerResponse::Status status);
+  void HandleOverlayUpdate(const proto::OverlayUpdateRequest& request,
+                           proto::OverlayUpdateResponse* response) const;
 };
 
 // Starts an install server in a new process.

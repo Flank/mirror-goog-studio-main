@@ -211,6 +211,8 @@ cc_binary(
         "install_server.cc",
         "install_server.h",
         "main_server.cc",
+        "overlay.cc",
+        "overlay.h",
         "redirect_executor.cc",
         "redirect_executor.h",
         "runas_executor.h",

@@ -239,12 +239,25 @@ message DeltaInstallResponse {
   string install_output = 2;
 }
 
-message OverlayUpdateRequest {}
-message OverlayUpdateResponse {}
+message OverlayUpdateRequest {
+  string overlay_id = 1;
+  string expected_overlay_id = 2;
+}
+message OverlayUpdateResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ID_MISMATCH = 2;
+    UPDATE_FAILED = 3;
+  }
+
+  Status status = 1;
+  string error_message = 2;
+}
 
 message InstallServerRequest {
   oneof message {
-    OverlayUpdateRequest overlay_update = 1;
+    OverlayUpdateRequest overlay_request = 1;
   }
 }
 
@@ -253,9 +266,14 @@ message InstallServerResponse {
     UNKNOWN = 0;
     SERVER_STARTED = 1;
     SERVER_EXITED = 2;
+    REQUEST_COMPLETED = 3;
   }
-  oneof message {
-    Status status = 1;
-    OverlayUpdateResponse overlay_response = 2;
-  }
+
+  Status status = 1;
+
+  // Contains the events that occurred during the lifetime
+  // of the server. Only set when status is SERVER_EXITED.
+  repeated Event events = 2;
+
+  OverlayUpdateResponse overlay_response = 3;
 }

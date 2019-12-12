@@ -15,6 +15,7 @@
  */
 
 #include "tools/base/deploy/installer/install_server.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/installer/workspace.h"
 
@@ -30,7 +31,8 @@ namespace deploy {
 
 class InstallServerTest : public ::testing::Test {
  public:
-  InstallServerTest() {}
+  InstallServerTest() { DisableEventSystemForTests(); }
+
   void SetUp() override {}
 
   void TearDown() override {}
@@ -132,22 +134,58 @@ TEST_F(InstallServerTest, TestServerStartNoOverlay) {
 
 TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   std::thread server_thread;
-  std::deque<bool> success = {true};
+  std::deque<bool> success = {true, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
+  // // Don't call workspace init; it closes stdout.
   Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
 
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+
+  // Start the server and create an overlay
   auto client = StartServer(workspace, "fakepath", "fakepackage");
   ASSERT_FALSE(nullptr == client);
 
-  proto::InstallServerRequest request;
-  request.mutable_overlay_update();
+  request.mutable_overlay_request()->set_overlay_id("id");
   ASSERT_TRUE(client->Write(request));
 
-  proto::OverlayUpdateResponse response;
   ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::OK,
+            response.overlay_response().status());
+  ASSERT_TRUE(client->WaitForExit());
 
+  fake_exec.JoinServerThread();
+
+  // Attempt to update with an id mismatch
+  client = StartServer(workspace, "fakepath", "fakepackage");
+  ASSERT_FALSE(nullptr == client);
+
+  request.mutable_overlay_request()->set_overlay_id("next-id");
+  request.mutable_overlay_request()->set_expected_overlay_id("not-id");
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
+            response.overlay_response().status());
+  ASSERT_TRUE(client->WaitForExit());
+
+  fake_exec.JoinServerThread();
+
+  // Update correctly
+  client = StartServer(workspace, "fakepath", "fakepackage");
+  ASSERT_FALSE(nullptr == client);
+
+  request.mutable_overlay_request()->set_overlay_id("next-id");
+  request.mutable_overlay_request()->set_expected_overlay_id("id");
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::OK,
+            response.overlay_response().status());
   ASSERT_TRUE(client->WaitForExit());
 
   fake_exec.JoinServerThread();
