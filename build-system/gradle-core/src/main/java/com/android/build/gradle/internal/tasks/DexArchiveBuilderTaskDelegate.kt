@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.dexing.IncrementalDexSpec
 import com.android.build.gradle.internal.dexing.launchProcessing
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
 import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.ClassBucketGroup
@@ -48,6 +47,7 @@ import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
 import com.google.common.hash.Hashing
+import com.google.common.io.Closer
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
 import org.gradle.workers.IsolationMode
@@ -195,13 +195,9 @@ class DexArchiveBuilderTaskDelegate(
         override val type = ClassFileProviderFactory::class.java
     }
 
-    /** Wrapper around the [com.android.builder.dexing.r8.ClassFileProviderFactory].  */
-    class ClasspathService(override val service: ClassFileProviderFactory) :
-        WorkerActionServiceRegistry.RegisteredService<ClassFileProviderFactory> {
-
-        override fun shutdown() {
-            // nothing to be done, as providerFactory is a closable
-        }
+    companion object {
+        // Shared state used by worker actions.
+        internal val sharedState = WorkerActionServiceRegistry()
     }
 
     fun doProcess() {
@@ -223,124 +219,125 @@ class DexArchiveBuilderTaskDelegate(
                 }
             }
 
-        val classpath = getClasspath(dexParams.withDesugaring)
-        val bootclasspath =
-            getBootClasspath(dexParams.desugarBootclasspath, dexParams.withDesugaring)
-
-        var bootclasspathServiceKey: ClasspathServiceKey? = null
-        var classpathServiceKey: ClasspathServiceKey? = null
         try {
-            ClassFileProviderFactory(bootclasspath).use { bootClasspathProvider ->
-                ClassFileProviderFactory(classpath).use { libraryClasspathProvider ->
-                    bootclasspathServiceKey = ClasspathServiceKey(bootClasspathProvider.id)
-                    classpathServiceKey = ClasspathServiceKey(libraryClasspathProvider.id)
-                    INSTANCE.registerService(
-                        bootclasspathServiceKey!!
-                    ) { ClasspathService(bootClasspathProvider) }
-                    INSTANCE.registerService(
-                        classpathServiceKey!!
-                    ) { ClasspathService(libraryClasspathProvider) }
+            Closer.create().use { closer ->
+                val classpath = getClasspath(dexParams.withDesugaring)
+                val bootclasspath =
+                    getBootClasspath(dexParams.desugarBootclasspath, dexParams.withDesugaring)
 
-                    val processInputType = {
-                            classes: Set<File>,
-                            changedClasses: Set<FileChange>,
-                            outputDir: File,
-                            outputKeepRules: File?,
-                            desugarGraphDir: File?, // Not null iff impactedFiles == null
-                            useAndroidBuildCache: Boolean,
-                            cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?,
-                            cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? ->
-                        processClassFromInput(
-                            inputFiles = classes,
-                            inputFileChanges = changedClasses,
-                            outputDir = outputDir,
-                            outputKeepRules = outputKeepRules,
-                            impactedFiles = impactedFiles,
-                            desugarGraphDir = desugarGraphDir,
-                            bootClasspathKey = bootclasspathServiceKey!!,
-                            bootClasspath = bootclasspath,
-                            classpathKey = classpathServiceKey!!,
-                            classpath = classpath,
-                            enableCaching = useAndroidBuildCache,
-                            cacheableDexes = cacheableDexes,
-                            cacheableKeepRules = cacheableKeepRules
-                        )
-                    }
-                    processInputType(
-                        projectClasses,
-                        projectChangedClasses,
-                        projectOutputDex,
-                        projectOutputKeepRules,
-                        desugarGraphDir?.resolve("currentProject").takeIf { impactedFiles == null },
-                        false, // useAndroidBuildCache
-                        null, // cacheableDexes
-                        null // cacheableKeepRules
-                    )
-                    processInputType(
-                        subProjectClasses,
-                        subProjectChangedClasses,
-                        subProjectOutputDex,
-                        subProjectOutputKeepRules,
-                        desugarGraphDir?.resolve("otherProjects").takeIf { impactedFiles == null },
-                        false, // useAndroidBuildCache
-                        null, // cacheableDexes
-                        null // cacheableKeepRules
-                    )
-                    processInputType(
-                        mixedScopeClasses,
-                        mixedScopeChangedClasses,
-                        mixedScopeOutputDex,
-                        mixedScopeOutputKeepRules,
-                        desugarGraphDir?.resolve("mixedScopes").takeIf { impactedFiles == null },
-                        false, // useAndroidBuildCache
-                        null, // cacheableDexes
-                        null // cacheableKeepRules
-                    )
-                    // Caching is currently not supported when isImpactedFilesComputedLazily == true
-                    val enableCachingForExternalLibs = !isImpactedFilesComputedLazily
-                    val cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
-                        mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
-                            .takeIf { enableCachingForExternalLibs }
-                    val cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
-                        mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
-                            .takeIf { enableCachingForExternalLibs }
-                    val shrinkDesugarLibrary = externalLibsOutputKeepRules != null
-                    processInputType(
-                        externalLibClasses,
-                        externalLibChangedClasses,
-                        externalLibsOutputDex,
-                        externalLibsOutputKeepRules,
-                        desugarGraphDir?.resolve("externalLibs").takeIf { impactedFiles == null },
-                        enableCachingForExternalLibs,
-                        cacheableDexes,
-                        cacheableKeepRules
-                    )
+                val bootClasspathProvider = ClassFileProviderFactory(bootclasspath)
+                closer.register(bootClasspathProvider)
+                val libraryClasspathProvider = ClassFileProviderFactory(classpath)
+                closer.register(libraryClasspathProvider)
 
-                    // all work items have been submitted, now wait for completion.
-                    if (useGradleWorkers) {
-                        workerExecutor.await()
-                    } else {
-                        executor.waitForTasksWithQuickFail<Any>(true)
-                    }
+                val bootclasspathServiceKey = ClasspathServiceKey(bootClasspathProvider.id)
+                val classpathServiceKey = ClasspathServiceKey(libraryClasspathProvider.id)
+                sharedState.registerServiceAsCloseable(
+                    bootclasspathServiceKey, bootClasspathProvider
+                ).also { closer.register(it) }
 
-                    // and finally populate the caches.
-                    if (cacheableDexes != null && cacheableDexes.isNotEmpty()) {
-                        cacheHandler.populateDexCache(cacheableDexes, shrinkDesugarLibrary)
-                    }
-                    if (cacheableKeepRules != null && cacheableKeepRules.isNotEmpty()) {
-                        cacheHandler.populateKeepRuleCache(cacheableKeepRules, shrinkDesugarLibrary)
-                    }
+                sharedState.registerServiceAsCloseable(
+                    classpathServiceKey, libraryClasspathProvider
+                ).also { closer.register(it) }
 
-                    loggerWrapper.verbose("Done with all dex archive conversions")
+                val processInputType = { classes: Set<File>,
+                    changedClasses: Set<FileChange>,
+                    outputDir: File,
+                    outputKeepRules: File?,
+                    desugarGraphDir: File?, // Not null iff impactedFiles == null
+                    useAndroidBuildCache: Boolean,
+                    cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>?,
+                    cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? ->
+                    processClassFromInput(
+                        inputFiles = classes,
+                        inputFileChanges = changedClasses,
+                        outputDir = outputDir,
+                        outputKeepRules = outputKeepRules,
+                        impactedFiles = impactedFiles,
+                        desugarGraphDir = desugarGraphDir,
+                        bootClasspathKey = bootclasspathServiceKey,
+                        bootClasspath = bootclasspath,
+                        classpathKey = classpathServiceKey,
+                        classpath = classpath,
+                        enableCaching = useAndroidBuildCache,
+                        cacheableDexes = cacheableDexes,
+                        cacheableKeepRules = cacheableKeepRules
+                    )
                 }
+                processInputType(
+                    projectClasses,
+                    projectChangedClasses,
+                    projectOutputDex,
+                    projectOutputKeepRules,
+                    desugarGraphDir?.resolve("currentProject").takeIf { impactedFiles == null },
+                    false, // useAndroidBuildCache
+                    null, // cacheableDexes
+                    null // cacheableKeepRules
+                )
+                processInputType(
+                    subProjectClasses,
+                    subProjectChangedClasses,
+                    subProjectOutputDex,
+                    subProjectOutputKeepRules,
+                    desugarGraphDir?.resolve("otherProjects").takeIf { impactedFiles == null },
+                    false, // useAndroidBuildCache
+                    null, // cacheableDexes
+                    null // cacheableKeepRules
+                )
+                processInputType(
+                    mixedScopeClasses,
+                    mixedScopeChangedClasses,
+                    mixedScopeOutputDex,
+                    mixedScopeOutputKeepRules,
+                    desugarGraphDir?.resolve("mixedScopes").takeIf { impactedFiles == null },
+                    false, // useAndroidBuildCache
+                    null, // cacheableDexes
+                    null // cacheableKeepRules
+                )
+                // Caching is currently not supported when isImpactedFilesComputedLazily == true
+                val enableCachingForExternalLibs = !isImpactedFilesComputedLazily
+                val cacheableDexes: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
+                    mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
+                        .takeIf { enableCachingForExternalLibs }
+                val cacheableKeepRules: MutableList<DexArchiveBuilderCacheHandler.CacheableItem>? =
+                    mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
+                        .takeIf { enableCachingForExternalLibs }
+                val shrinkDesugarLibrary = externalLibsOutputKeepRules != null
+                processInputType(
+                    externalLibClasses,
+                    externalLibChangedClasses,
+                    externalLibsOutputDex,
+                    externalLibsOutputKeepRules,
+                    desugarGraphDir?.resolve("externalLibs").takeIf { impactedFiles == null },
+                    enableCachingForExternalLibs,
+                    cacheableDexes,
+                    cacheableKeepRules
+                )
+
+                // all work items have been submitted, now wait for completion.
+                if (useGradleWorkers) {
+                    workerExecutor.await()
+                } else {
+                    executor.waitForTasksWithQuickFail<Any>(true)
+                }
+
+                // and finally populate the caches.
+                if (cacheableDexes != null && cacheableDexes.isNotEmpty()) {
+                    cacheHandler.populateDexCache(cacheableDexes, shrinkDesugarLibrary)
+                }
+                if (cacheableKeepRules != null && cacheableKeepRules.isNotEmpty()) {
+                    cacheHandler.populateKeepRuleCache(
+                        cacheableKeepRules,
+                        shrinkDesugarLibrary
+                    )
+                }
+
+                loggerWrapper.verbose("Done with all dex archive conversions");
             }
         } catch (e: Exception) {
             PluginCrashReporter.maybeReportException(e)
             loggerWrapper.error(null, Throwables.getStackTraceAsString(e))
             throw e
-        } finally {
-            classpathServiceKey?.let { INSTANCE.removeService(it) }
-            bootclasspathServiceKey?.let { INSTANCE.removeService(it) }
         }
     }
 

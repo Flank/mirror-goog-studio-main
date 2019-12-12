@@ -30,6 +30,9 @@ import java.util.zip.ZipFile
 import javax.inject.Inject
 import kotlin.streams.toList
 
+// Shared state used by worker actions.
+private val sharedState = WorkerActionServiceRegistry()
+
 /**
  * A class that checks for duplicate classes within an ArtifactCollection. Classes are assumed to be
  * duplicate if they have the same name and they are positioned within the same package (this is
@@ -45,28 +48,27 @@ class CheckDuplicateClassesDelegate(private val classesArtifacts: ArtifactCollec
 
     fun run(workers: WorkerExecutorFacade) {
         val artifactClasses = ArtifactClassesMap()
+        val artifactClassesKey = ArtifactClassesKey("artifactClasses${hashCode()}")
 
-        WorkerActionServiceRegistry
-            .Manager(artifactClasses, ArtifactClassesKey("artifactClasses${hashCode()}"))
-            .use { keyManager ->
-                workers.use { facade ->
-                    classesArtifacts.artifacts.forEach {
-                        facade.submit(
-                            ExtractClassesRunnable::class.java,
-                            ExtractClassesParams(it.id.displayName, it.file, keyManager.key!!)
-                        )
-                    }
-
-                    facade.await()
-
+        sharedState.registerServiceAsCloseable(artifactClassesKey, artifactClasses).use {
+            workers.use { facade ->
+                classesArtifacts.artifacts.forEach {
                     facade.submit(
-                        CheckDuplicatesRunnable::class.java,
-                        CheckDuplicatesParams(keyManager.key!!)
+                        ExtractClassesRunnable::class.java,
+                        ExtractClassesParams(it.id.displayName, it.file, artifactClassesKey)
                     )
-
-                    facade.await()
                 }
+
+                facade.await()
+
+                facade.submit(
+                    CheckDuplicatesRunnable::class.java,
+                    CheckDuplicatesParams(artifactClassesKey)
+                )
+
+                facade.await()
             }
+        }
     }
 }
 
@@ -80,7 +82,7 @@ private class ExtractClassesRunnable @Inject constructor(
     private val params: ExtractClassesParams) : Runnable {
 
     override fun run() {
-        val map = WorkerActionServiceRegistry.INSTANCE.getService(params.serviceKey).service
+        val map = sharedState.getService(params.serviceKey).service
         map[params.artifactName] = extractClasses(params.artifactFile)
     }
 }
@@ -108,7 +110,7 @@ private class CheckDuplicatesRunnable @Inject constructor(
 
     override fun run() {
 
-        val map = WorkerActionServiceRegistry.INSTANCE.getService(params.serviceKey).service
+        val map = sharedState.getService(params.serviceKey).service
         val maxSize = map.map { it.value.size }.sum()
         val classes = Maps.newHashMapWithExpectedSize<String, MutableList<String>>(maxSize)
 

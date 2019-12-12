@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Manager;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -33,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Closer;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -127,6 +126,10 @@ public class FixStackFramesDelegate {
      */
     private static final long CACHE_VERSION = 1;
 
+    // Shared state used in the worker actions.
+    private static final WorkerActionServiceRegistry sharedState =
+            new WorkerActionServiceRegistry();
+
     @NonNull private final Set<File> bootClasspath;
     @NonNull private final Set<File> classesToFix;
     @NonNull private final Set<File> referencedClasses;
@@ -174,30 +177,36 @@ public class FixStackFramesDelegate {
     private void processFiles(
             @NonNull WorkerExecutorFacade workers, @NonNull Map<File, FileStatus> changedInput)
             throws IOException {
-        try (WorkerExecutorFacade facade = workers;
-                URLClassLoader classLoader = createClassLoader();
-                Manager<URLClassLoader, ClassLoaderKey> classLoaderManager =
-                        new Manager<>(classLoader, new ClassLoaderKey("classLoader" + hashCode()));
-                Manager<FileCache, CacheKey> cacheManager =
-                        new Manager<>(userCache, new CacheKey("userCache" + hashCode()))) {
+
+        try (Closer closer = Closer.create()) {
+            closer.register(workers);
+            URLClassLoader classLoader = createClassLoader();
+            closer.register(classLoader);
+
+            ClassLoaderKey classLoaderKey = new ClassLoaderKey("classLoader" + hashCode());
+            closer.register(sharedState.registerServiceAsCloseable(classLoaderKey, classLoader));
+
+            CacheKey cacheKey;
+            if (userCache != null) {
+                cacheKey = new CacheKey("userCache" + hashCode());
+                closer.register(sharedState.registerServiceAsCloseable(cacheKey, userCache));
+            } else {
+                cacheKey = null;
+            }
             for (Map.Entry<File, FileStatus> entry : changedInput.entrySet()) {
                 File out = new File(outFolder, getUniqueName(entry.getKey()));
 
                 Files.deleteIfExists(out.toPath());
 
                 if (entry.getValue() == FileStatus.NEW || entry.getValue() == FileStatus.CHANGED) {
-                    facade.submit(
+                    workers.submit(
                             FixStackFramesRunnable.class,
-                            new Params(
-                                    entry.getKey(),
-                                    out,
-                                    classLoaderManager.getKey(),
-                                    cacheManager.getKey()));
+                            new Params(entry.getKey(), out, classLoaderKey, cacheKey));
                 }
             }
             // We keep waiting for all the workers to finnish so that all the work is done before
             // we remove services in Manager.close()
-            facade.await();
+            workers.await();
         }
     }
 
@@ -310,12 +319,12 @@ public class FixStackFramesDelegate {
         public void run() {
             try {
                 URLClassLoader classLoader =
-                        WorkerActionServiceRegistry.INSTANCE
+                        FixStackFramesDelegate.sharedState
                                 .getService(params.classLoaderKey)
                                 .getService();
                 FileCache userCache =
                         params.cacheKey != null
-                                ? WorkerActionServiceRegistry.INSTANCE
+                                ? FixStackFramesDelegate.sharedState
                                         .getService(params.cacheKey)
                                         .getService()
                                 : null;

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dexing
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTaskDelegate
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.DependencyGraphUpdater
 import com.android.builder.dexing.DexArchiveBuilder
@@ -223,9 +222,9 @@ private fun getDexArchiveBuilder(
                     dexPerClass = dexSpec.dexParams.dexPerClass,
                     withDesugaring = dexSpec.dexParams.withDesugaring,
                     desugarBootclasspath =
-                            INSTANCE.getService(dexSpec.dexParams.desugarBootclasspath).service,
+                            DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarBootclasspath).service,
                     desugarClasspath =
-                            INSTANCE.getService(dexSpec.dexParams.desugarClasspath).service,
+                    DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarClasspath).service,
                     coreLibDesugarConfig = dexSpec.dexParams.coreLibDesugarConfig,
                     coreLibDesugarOutputKeepRuleFile =
                     dexSpec.dexParams.coreLibDesugarOutputKeepRuleFile,
