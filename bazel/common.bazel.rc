@@ -1,6 +1,6 @@
 # Options applied to all Bazel invocations in the workspace.
-# This file is copied to //tools/bazel.rc from
-# //tools/base/bazel/toplevel.bazel.rc by repo init.
+# This file is imported by the os-specific rc files.
+# Those are included by the bazel wrapper scripts (bazel and bazel.cmd)
 
 # Remote Build Execution requires a strong hash function, such as SHA256.
 startup --host_jvm_args=-Dbazel.DigestFunction=SHA256

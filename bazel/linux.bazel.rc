@@ -25,3 +25,6 @@ build:release --copt=-fno-exceptions
 build:release --cxxopt=-fno-exceptions
 build:release --copt=-ffunction-sections
 build:release --cxxopt=-ffunction-sections
+
+#Block network by default on linux
+build --nosandbox_default_allow_network
