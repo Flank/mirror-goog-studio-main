@@ -34,6 +34,9 @@ public class AdbClient {
     private final IDevice device;
     private final ILogger logger;
 
+    public static final long DEFAULT_TIMEOUT = 5;
+    public static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MINUTES;
+
     public AdbClient(IDevice device, ILogger logger) {
         this.device = device;
         this.logger = logger;
@@ -62,15 +65,22 @@ public class AdbClient {
         return shell(parameters, null);
     }
 
+    public byte[] shell(String[] parameters, InputStream input) throws IOException {
+        return shell(
+                parameters, input, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
+    }
+
     /**
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
-    public byte[] shell(String[] parameters, InputStream input) throws IOException {
+    public byte[] shell(
+            String[] parameters, InputStream input, long maxTimeOutMs, TimeUnit timeUnit)
+            throws IOException {
         ByteArrayOutputReceiver receiver;
         try (Trace ignored = Trace.begin("adb shell" + Arrays.toString(parameters))) {
             receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
-                    String.join(" ", parameters), receiver, 5, TimeUnit.MINUTES, input);
+                    String.join(" ", parameters), receiver, maxTimeOutMs, timeUnit, input);
             return receiver.toByteArray();
         } catch (AdbCommandRejectedException
                 | ShellCommandUnresponsiveException
