@@ -1,4 +1,5 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
+load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -10,7 +11,6 @@ java_library(
             "common/src/main/**/*.java",
             # Need to include this here as platforms/latest_jar is not visible outside this package.
             "echo-sample/src/main/**/*.java",
-            "dynamic-layout-inspector/src/main/**/*.java",
             "app-inspection/src/main/**/*.java",
         ],
         # Since Energy profiler doesn't support compile-time instrumentation, don't include the src
@@ -22,24 +22,21 @@ java_library(
         "//conditions:default": ["//tools/base/profiler/native/agent:supportjni"],
     }),
     deps = [
-        ":temporary_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
     ],
 )
 
 java_library(
-    name = "perfa_java",
+    name = "perfa_java_core",
     srcs = glob([
         "perfa/src/main/**/*.java",
         "common/src/main/**/*.java",
         # Need to include this here as platforms/latest_jar is not visible outside this package.
         "echo-sample/src/main/**/*.java",
-        "dynamic-layout-inspector/src/main/**/*.java",
         "app-inspection/src/main/**/*.java",
     ]),
     deps = [
-        ":temporary_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         # TODO(b/77923456): Track version changes and revisit.
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
@@ -47,14 +44,13 @@ java_library(
     ],
 )
 
-java_library(
-    name = "temporary_java",
-    srcs = glob([
-        "temporary/src/main/**/*.java",
-    ]),
-    deps = [
-        "//prebuilts/studio/sdk:platforms/latest_jar",
+java_jarjar(
+    name = "perfa_java",
+    srcs = [
+        ":perfa_java_core",
+        "//tools/base/profiler/app/dynamic-layout-inspector:agent",
     ],
+    rules = "//tools/base/bazel:jarjar_rules.txt",
 )
 
 dex_library(

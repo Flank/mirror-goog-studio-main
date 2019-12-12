@@ -16,6 +16,12 @@
 
 package android.graphics;
 
+/**
+ * HardwareRenderer
+ *
+ * <p>This class is included because we call setPictureCaptureCallback and the interface {@link
+ * PictureCapturedCallback} is excluded in stubbed version of android.jar.
+ */
 public class HardwareRenderer {
     public void setPictureCaptureCallback(PictureCapturedCallback callback) {}
 
