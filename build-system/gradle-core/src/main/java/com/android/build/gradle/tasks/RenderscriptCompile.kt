@@ -86,9 +86,6 @@ abstract class RenderscriptCompile : NdkTask() {
     var optimLevel: Int = 0
 
     @get:Input
-    var isDebugBuild: Boolean = false
-
-    @get:Input
     var isNdkMode: Boolean = false
 
     @get:Input
@@ -161,7 +158,6 @@ abstract class RenderscriptCompile : NdkTask() {
             objDestDir,
             libDestDir,
             targetApi.get(),
-            isDebugBuild,
             optimLevel,
             isNdkMode,
             isSupportMode,
@@ -187,7 +183,6 @@ abstract class RenderscriptCompile : NdkTask() {
      * @param sourceOutputDir the output dir in which to generate the source code
      * @param resOutputDir the output dir in which to generate the bitcode file
      * @param targetApi the target api
-     * @param debugBuild whether the build is debug
      * @param optimLevel the optimization level
      * @param ndkMode whether the renderscript code should be compiled to generate C/C++ bindings
      * @param supportMode support mode flag to generate .so files.
@@ -204,7 +199,6 @@ abstract class RenderscriptCompile : NdkTask() {
         objOutputDir: File,
         libOutputDir: File,
         targetApi: Int,
-        debugBuild: Boolean,
         optimLevel: Int,
         ndkMode: Boolean,
         supportMode: Boolean,
@@ -232,7 +226,6 @@ abstract class RenderscriptCompile : NdkTask() {
             libOutputDir,
             buildToolInfo,
             targetApi,
-            debugBuild,
             optimLevel,
             ndkMode,
             supportMode,
@@ -297,7 +290,6 @@ abstract class RenderscriptCompile : NdkTask() {
             task.isSupportMode = variantDslInfo.renderscriptSupportModeEnabled
             task.useAndroidX = globalScope.projectOptions.get(BooleanOption.USE_ANDROID_X)
             task.isNdkMode = ndkMode
-            task.isDebugBuild = variantDslInfo.buildType.isRenderscriptDebuggable
             task.optimLevel = variantDslInfo.buildType.renderscriptOptimLevel
 
             task.sourceDirs = globalScope

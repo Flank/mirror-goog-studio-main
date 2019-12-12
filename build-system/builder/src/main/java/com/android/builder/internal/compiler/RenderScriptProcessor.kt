@@ -13,570 +13,482 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.builder.internal.compiler
 
+import com.android.SdkConstants
+import com.android.SdkConstants.FN_ANDROIDX_RENDERSCRIPT_PACKAGE
+import com.android.SdkConstants.FN_ANDROIDX_RS_JAR
+import com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR
+import com.android.SdkConstants.FN_RENDERSCRIPT_V8_PACKAGE
+import com.android.ide.common.internal.WaitableExecutor
+import com.android.ide.common.process.ProcessExecutor
+import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.ide.common.process.ProcessOutputHandler
+import com.android.sdklib.BuildToolInfo
+import com.android.sdklib.BuildToolInfo.PathId
+import com.android.utils.FileUtils
+import com.android.utils.ILogger
+import java.io.File
+import java.io.IOException
+import java.nio.file.Path
 
-package com.android.builder.internal.compiler;
-
-import static com.android.SdkConstants.EXT_BC;
-import static com.android.SdkConstants.FN_ANDROIDX_RENDERSCRIPT_PACKAGE;
-import static com.android.SdkConstants.FN_ANDROIDX_RS_JAR;
-import static com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR;
-import static com.android.SdkConstants.FN_RENDERSCRIPT_V8_PACKAGE;
-
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
-import com.android.ide.common.process.ProcessInfoBuilder;
-import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.ide.common.process.ProcessResult;
-import com.android.sdklib.BuildToolInfo;
-import com.android.utils.FileUtils;
-import com.android.utils.ILogger;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
+private const val LIBCLCORE_BC = "libclcore.bc"
 
 /**
  * Compiles Renderscript files.
  */
-public class RenderScriptProcessor {
+class RenderScriptProcessor(
+    private val sourceFolders: Collection<File>,
+    private val importFolders: Collection<File>,
+    private val sourceOutputDir: File,
+    private val resOutputDir: File,
+    private val objOutputDir: File,
+    private val libOutputDir: File,
+    private val buildToolInfo: BuildToolInfo,
+    targetApi: Int,
+    private val optimizationLevel: Int,
+    private val ndkMode: Boolean,
+    private val supportMode: Boolean,
+    private val useAndroidX: Boolean,
+    private val abiFilters: Set<String>?,
+    private val logger: ILogger
+) {
 
-    private static final String LIBCLCORE_BC = "libclcore.bc";
-
-    // ABI list, as pairs of (android-ABI, toolchain-ABI)
-    private static final class Abi {
-
-        @NonNull
-        private final String mDevice;
-        @NonNull
-        private final String mToolchain;
-        @NonNull
-        private final BuildToolInfo.PathId mLinker;
-        @NonNull
-        private final String[] mLinkerArgs;
-
-        Abi(@NonNull String device,
-            @NonNull String toolchain,
-            @NonNull BuildToolInfo.PathId linker,
-            @NonNull String... linkerArgs) {
-
-            mDevice = device;
-            mToolchain = toolchain;
-            mLinker = linker;
-            mLinkerArgs = linkerArgs;
-        }
-    }
-
-    private static final Abi[] ABIS_32 = {
-            new Abi("armeabi-v7a", "armv7-none-linux-gnueabi", BuildToolInfo.PathId.LD_ARM,
-                    "-dynamic-linker", "/system/bin/linker", "-X", "-m", "armelf_linux_eabi"),
-            new Abi("mips", "mipsel-unknown-linux", BuildToolInfo.PathId.LD_MIPS, "-EL"),
-            new Abi("x86", "i686-unknown-linux", BuildToolInfo.PathId.LD_X86, "-m", "elf_i386") };
-    private static final Abi[] ABIS_64 = {
-            new Abi("arm64-v8a", "aarch64-linux-android", BuildToolInfo.PathId.LD_ARM64, "-X"),
-            new Abi("x86_64", "x86_64-unknown-linux", BuildToolInfo.PathId.LD_X86_64, "-m", "elf_x86_64") };
-
-
-    public static final String RS_DEPS = "rsDeps";
-
-    @NonNull private final Collection<File> mSourceFolders;
-
-    @NonNull private final Collection<File> mImportFolders;
-
-    @NonNull
-    private final File mSourceOutputDir;
-
-    @NonNull
-    private final File mResOutputDir;
-
-    @NonNull
-    private final File mObjOutputDir;
-
-    @NonNull
-    private final File mLibOutputDir;
-
-    @NonNull
-    private final BuildToolInfo mBuildToolInfo;
-
-    @NonNull
-    private final ILogger mLogger;
-
-    private final int mTargetApi;
-
-    private final int mOptimizationLevel;
-
-    private final boolean mNdkMode;
-
-    private final boolean mSupportMode;
-
-    private final boolean mUseAndroidX;
-
-    private final Set<String> mAbiFilters;
 
     // These indicate whether to compile with ndk for 32 or 64 bits
-    private boolean is32Bit;
-    private boolean is64Bit;
+    private val is32Bit: Boolean
+    private val is64Bit: Boolean
+
+    private val rsLib: File?
+    private val libClCore: MutableMap<String, File> = mutableMapOf()
+
+    private val actualTargetApi = if (supportMode) maxOf(18, targetApi) else maxOf(11, targetApi)
+
+    // ABI list, as pairs of (android-ABI, toolchain-ABI)
+    private class Abi constructor(
+        val device: String,
+        val toolchain: String,
+        val linker: PathId,
+        vararg linkerArgs: String
+    ) {
+        val linkerArgs: Array<String> = arrayOf(*linkerArgs)
+
+    }
+
+    private val abis32 =
+        arrayOf(
+            Abi(
+                "armeabi-v7a", "armv7-none-linux-gnueabi", PathId.LD_ARM,
+                "-dynamic-linker", "/system/bin/linker", "-X", "-m", "armelf_linux_eabi"
+            ),
+            Abi(
+                "mips",
+                "mipsel-unknown-linux",
+                PathId.LD_MIPS,
+                "-EL"
+            ),
+            Abi(
+                "x86",
+                "i686-unknown-linux",
+                PathId.LD_X86,
+                "-m",
+                "elf_i386"
+            )
+        )
+    private val abis64 =
+        arrayOf(
+            Abi(
+                "arm64-v8a",
+                "aarch64-linux-android",
+                PathId.LD_ARM64,
+                "-X"
+            ),
+            Abi(
+                "x86_64",
+                "x86_64-unknown-linux",
+                PathId.LD_X86_64,
+                "-m",
+                "elf_x86_64"
+            )
+        )
 
 
-    private final File mRsLib;
-    private final Map<String, File> mLibClCore = Maps.newHashMap();
-
-    public RenderScriptProcessor(
-            @NonNull Collection<File> sourceFolders,
-            @NonNull Collection<File> importFolders,
-            @NonNull File sourceOutputDir,
-            @NonNull File resOutputDir,
-            @NonNull File objOutputDir,
-            @NonNull File libOutputDir,
-            @NonNull BuildToolInfo buildToolInfo,
-            int targetApi,
-            boolean debugBuild,
-            int optimizationLevel,
-            boolean ndkMode,
-            boolean supportMode,
-            boolean useAndroidX,
-            @Nullable Set<String> abiFilters,
-            @NonNull ILogger logger) {
-        mSourceFolders = sourceFolders;
-        mImportFolders = importFolders;
-        mSourceOutputDir = sourceOutputDir;
-        mResOutputDir = resOutputDir;
-        mObjOutputDir = objOutputDir;
-        mLibOutputDir = libOutputDir;
-        mBuildToolInfo = buildToolInfo;
-        mTargetApi = targetApi;
-        mOptimizationLevel = optimizationLevel;
-        mNdkMode = ndkMode;
-        mSupportMode = supportMode;
-        mUseAndroidX = useAndroidX;
-        mAbiFilters = abiFilters;
-        mLogger = logger;
-
+    init {
         if (supportMode) {
-            File rs = new File(mBuildToolInfo.getLocation(), "renderscript");
-            mRsLib = new File(rs, "lib");
-            File bcFolder = new File(mRsLib, "bc");
-            for (Abi abi : ABIS_32) {
-                File rsClCoreFile = new File(bcFolder, abi.mDevice + File.separatorChar + LIBCLCORE_BC);
+            val rs = File(buildToolInfo.location, "renderscript")
+            rsLib = File(rs, "lib")
+            val bcFolder = File(rsLib, "bc")
+            for (abi in abis32) {
+                val rsClCoreFile = File(
+                    bcFolder,
+                    abi.device + File.separatorChar + LIBCLCORE_BC
+                )
                 if (rsClCoreFile.exists()) {
-                    mLibClCore.put(abi.mDevice, rsClCoreFile);
+                    libClCore[abi.device] = rsClCoreFile
                 }
             }
-            for (Abi abi : ABIS_64) {
-                File rsClCoreFile = new File(bcFolder, abi.mDevice + File.separatorChar + LIBCLCORE_BC);
+            for (abi in abis64) {
+                val rsClCoreFile = File(
+                    bcFolder,
+                    abi.device + File.separatorChar + LIBCLCORE_BC
+                )
                 if (rsClCoreFile.exists()) {
-                    mLibClCore.put(abi.mDevice, rsClCoreFile);
+                    libClCore[abi.device] = rsClCoreFile
                 }
             }
         } else {
-            mRsLib = null;
+            rsLib = null
         }
-
-
         // If no abi filters were set, assume compilation for both 32 bit and 64 bit
         if (abiFilters == null || abiFilters.isEmpty()) {
-            is32Bit = true;
-            is64Bit = true;
+            is32Bit = true
+            is64Bit = true
         } else {
             // Check if abi filters contains an abi that is 32 bit
-            is32Bit =
-                    Arrays.stream(ABIS_32)
-                            .map((Abi abi) -> abi.mDevice)
-                            .anyMatch(abi -> mAbiFilters.contains(abi));
+            is32Bit = abis32.any { abi -> abiFilters.contains(abi.device) }
 
             // Check if abi filters contains an abi that is 64 bit
-            is64Bit =
-                    Arrays.stream(ABIS_64)
-                            .map((Abi abi) -> abi.mDevice)
-                            .anyMatch(abi -> mAbiFilters.contains(abi));
+            is64Bit = abis64.any { abi -> abiFilters.contains(abi.device) }
         }
-
         // Api < 21 does not support 64 bit ndk compilation
-        if (mTargetApi < 21 && is64Bit && mNdkMode) {
-            throw new RuntimeException(
-                    "Api version " + mTargetApi + " does not support 64 bit ndk compilation");
+        if (targetApi < 21 && is64Bit && ndkMode) {
+            throw RuntimeException(
+                "Api version $targetApi does not support 64 bit ndk compilation"
+            )
         }
-
     }
 
-    public static File getSupportJar(File buildToolsFolder, boolean useAndroidX) {
-        return new File(
-                getBaseRenderscriptLibFolder(buildToolsFolder),
-                (useAndroidX ? FN_ANDROIDX_RS_JAR : FN_RENDERSCRIPT_V8_JAR));
-    }
-
-    public static File getSupportNativeLibFolder(File buildToolsFolder) {
-        return new File(getBaseRenderscriptLibFolder(buildToolsFolder), "packaged");
-    }
-
-    public static File getSupportBlasLibFolder(File buildToolsFolder) {
-        return new File(getBaseRenderscriptLibFolder(buildToolsFolder), "blas");
-    }
-
-    private static File getBaseRenderscriptLibFolder(File buildToolsFolder) {
-        return new File(buildToolsFolder, "renderscript/lib");
-    }
-
-    public void build(
-            @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler)
-            throws InterruptedException, ProcessException, IOException {
-
-        List<File> renderscriptFiles = Lists.newArrayList();
-        for (File dir : mSourceFolders) {
+    fun build(
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler
+    ) {
+        val renderscriptFiles: MutableList<File> = mutableListOf()
+        for (dir in sourceFolders) {
             DirectoryWalker.builder()
-                    .root(dir.toPath())
-                    .extensions("rs", "fs")
-                    .action((start, path) -> renderscriptFiles.add(path.toFile()))
-                    .build()
-                    .walk();
+                .root(dir.toPath())
+                .extensions("rs", "fs")
+                .action { _, path: Path ->
+                    renderscriptFiles.add(
+                        path.toFile()
+                    )
+                }
+                .build()
+                .walk()
         }
-
         if (renderscriptFiles.isEmpty()) {
-            return;
+            return
         }
-
         // get the env var
-        Map<String, String> env = Maps.newHashMap();
+        val env: MutableMap<String, String?> = mutableMapOf()
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-            env.put("DYLD_LIBRARY_PATH", mBuildToolInfo.getLocation().getAbsolutePath());
+            env["DYLD_LIBRARY_PATH"] = buildToolInfo.location.absolutePath
         } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
-            env.put("LD_LIBRARY_PATH", mBuildToolInfo.getLocation().getAbsolutePath());
+            env["LD_LIBRARY_PATH"] = buildToolInfo.location.absolutePath
         }
-
-        doMainCompilation(renderscriptFiles, processExecutor, processOutputHandler, env);
-
-        if (mSupportMode) {
-            createSupportFiles(processExecutor, processOutputHandler, env);
+        doMainCompilation(renderscriptFiles, processExecutor, processOutputHandler, env)
+        if (supportMode) {
+            createSupportFiles(processExecutor, processOutputHandler, env)
         }
     }
 
-    private File getArchSpecificRawFolder(@NonNull String architecture) {
-        return FileUtils.join(mResOutputDir, SdkConstants.FD_RES_RAW, "bc" + architecture);
+    private fun getArchSpecificRawFolder(architecture: String): File {
+        return FileUtils.join(
+            resOutputDir,
+            SdkConstants.FD_RES_RAW,
+            "bc$architecture"
+        )
     }
 
-    private File getGenericRawFolder() {
-        return new File(mResOutputDir, SdkConstants.FD_RES_RAW);
-    }
+    private val genericRawFolder: File
+        get() = File(resOutputDir, SdkConstants.FD_RES_RAW)
 
-    private void doMainCompilation(
-            @NonNull List<File> inputFiles,
-            @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull Map<String, String> env)
-            throws ProcessException {
-
-        ArrayList<String> fixedBuilderArgs = new ArrayList<>();
-
-        String rsPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS);
-        String rsClangPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG);
-
-        List<String> architectures = new ArrayList();
-
+    private fun doMainCompilation(
+        inputFiles: List<File>,
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler,
+        env: Map<String, String?>
+    ) {
+        val architectures: MutableList<String> = mutableListOf()
         if (is32Bit) {
-            architectures.add("32");
+            architectures.add("32")
         }
         if (is64Bit) {
-            architectures.add("64");
+            architectures.add("64")
         }
 
-        // First add all the arguments that are common between the runs
+        if (actualTargetApi >= 21 && ndkMode) {
+            // Add the arguments that are specific to each run.
+            // Then, for each arch specific folder, run the compiler once.
+            for (arch in architectures) {
+                compileBCFiles(
+                    inputFiles,
+                    processExecutor,
+                    processOutputHandler,
+                    env,
+                    getArchSpecificRawFolder(arch),
+                    arch)
+            }
+        } else {
+            compileBCFiles(
+                inputFiles,
+                processExecutor,
+                processOutputHandler,
+                env,
+                genericRawFolder)
+        }
+    }
 
+    private fun compileBCFiles(
+        inputFiles: List<File>,
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler,
+        env: Map<String, String?>,
+        outputFile: File,
+        arch: String? = null
+    ) {
+        val builder = ProcessInfoBuilder()
+        val renderscript = buildToolInfo.getPath(PathId.LLVM_RS_CC)
+        check(renderscript?.let { File(it).isFile } == true) { "${PathId.LLVM_RS_CC} is missing" }
+        // compile all the files in a single pass
+        builder.setExecutable(renderscript)
+        builder.addEnvironments(env)
+
+        val rsPath = buildToolInfo.getPath(PathId.ANDROID_RS)
+        val rsClangPath =
+            buildToolInfo.getPath(PathId.ANDROID_RS_CLANG)
+        // First add all the arguments that are common between the runs.
         // add all import paths
-        fixedBuilderArgs.add("-I");
-        fixedBuilderArgs.add(rsPath);
-        fixedBuilderArgs.add("-I");
-        fixedBuilderArgs.add(rsClangPath);
-
-        for (File importPath : mImportFolders) {
-            if (importPath.isDirectory()) {
-                fixedBuilderArgs.add("-I");
-                fixedBuilderArgs.add(importPath.getAbsolutePath());
+        builder.addArgs("-I")
+        builder.addArgs(rsPath)
+        builder.addArgs("-I")
+        builder.addArgs(rsClangPath)
+        for (importPath in importFolders) {
+            if (importPath.isDirectory) {
+                builder.addArgs("-I")
+                builder.addArgs(importPath.absolutePath)
             }
         }
-
-        if (mSupportMode) {
-            if (mUseAndroidX) {
-                fixedBuilderArgs.add("-rs-package-name=" + FN_ANDROIDX_RENDERSCRIPT_PACKAGE);
+        if (supportMode) {
+            if (useAndroidX) {
+                builder.addArgs("-rs-package-name=$FN_ANDROIDX_RENDERSCRIPT_PACKAGE")
             } else {
-                fixedBuilderArgs.add("-rs-package-name=" + FN_RENDERSCRIPT_V8_PACKAGE);
+                builder.addArgs("-rs-package-name=$FN_RENDERSCRIPT_V8_PACKAGE")
             }
         }
-
         // source output
-        fixedBuilderArgs.add("-p");
-        fixedBuilderArgs.add(mSourceOutputDir.getAbsolutePath());
+        builder.addArgs("-p")
+        builder.addArgs(sourceOutputDir.absolutePath)
+        builder.addArgs("-target-api")
 
-        fixedBuilderArgs.add("-target-api");
-        int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
-        targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
-        fixedBuilderArgs.add(Integer.toString(targetApi));
-
+        builder.addArgs(actualTargetApi.toString())
         // input files
-        for (File sourceFile : inputFiles) {
-            fixedBuilderArgs.add(sourceFile.getAbsolutePath());
+        for (sourceFile in inputFiles) {
+            builder.addArgs(sourceFile.absolutePath)
         }
-
-        if (mNdkMode) {
-            fixedBuilderArgs.add("-reflect-c++");
+        if (ndkMode) {
+            builder.addArgs("-reflect-c++")
         }
-
-        fixedBuilderArgs.add("-O");
-        fixedBuilderArgs.add(Integer.toString(mOptimizationLevel));
-
+        builder.addArgs("-O")
+        builder.addArgs(optimizationLevel.toString())
+        // TODO(146349244): investigate this
         // Due to a device side bug, let's not enable this at this time.
         //        if (mDebugBuild) {
         //            command.add("-g");
         //        }
 
-        if (mTargetApi >= 21) {
-            // Add the arguments that are specific to each run.
-            // Then, for each arch specific folder, run the compiler once.
-            for (String arch : architectures) {
-                ArrayList<String> variableBuilderArgs = new ArrayList<>();
+        // Add the rest of the arguments and run the compiler once
+        // res output
+        builder.addArgs("-o")
+        // the renderscript compiler doesn't expect the top res folder,
+        // but the raw folder directly.
+        builder.addArgs(outputFile.absolutePath)
 
-                // res output
-                variableBuilderArgs.add("-o");
+        if (arch != null) {
+            builder.addArgs("-m$arch")
+        }
 
-                // the renderscript compiler doesn't expect the top res folder,
-                // but the raw folder directly.
-                variableBuilderArgs.add(getArchSpecificRawFolder(arch).getAbsolutePath());
+        val result = processExecutor.execute(builder.createProcess(), processOutputHandler)
+        result.rethrowFailure().assertNormalExitValue()
+    }
 
-                if (mNdkMode) {
-                    variableBuilderArgs.add("-m" + arch);
-                }
-
-                ArrayList<String> builderArgs = new ArrayList<>(variableBuilderArgs);
-                builderArgs.addAll(fixedBuilderArgs);
-                builderArgs.addAll(variableBuilderArgs);
-
-                compileSingleFile(processExecutor, processOutputHandler, env, builderArgs);
-            }
+    private fun createSupportFiles(
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler,
+        env: Map<String, String?>
+    ) { // get the generated BC files.
+        if (actualTargetApi < 21) {
+            val rawFolder = genericRawFolder
+            createSupportFilesHelper(rawFolder, abis32, processExecutor, processOutputHandler, env)
         } else {
-            ArrayList<String> variableBuilderArgs = new ArrayList<>();
-            // Add the rest of the arguments and run the compiler once
-            // res output
-            variableBuilderArgs.add("-o");
-
-            // the renderscript compiler doesn't expect the top res folder,
-            // but the raw folder directly.
-            variableBuilderArgs.add(getGenericRawFolder().getAbsolutePath());
-
-            ArrayList<String> builderArgs = new ArrayList<>(variableBuilderArgs);
-            builderArgs.addAll(fixedBuilderArgs);
-            builderArgs.addAll(variableBuilderArgs);
-
-            compileSingleFile(processExecutor, processOutputHandler, env, builderArgs);
+            val rawFolder32 = getArchSpecificRawFolder("32")
+            createSupportFilesHelper(
+                rawFolder32,
+                abis32,
+                processExecutor,
+                processOutputHandler,
+                env
+            )
+            val rawFolder64 = getArchSpecificRawFolder("64")
+            createSupportFilesHelper(
+                rawFolder64,
+                abis64,
+                processExecutor,
+                processOutputHandler,
+                env
+            )
         }
     }
 
-    private void compileSingleFile(
-            @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull Map<String, String> env,
-            @NonNull List<String> builderArgs)
-            throws ProcessException {
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-
-        String renderscript = mBuildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
-        if (renderscript == null || !new File(renderscript).isFile()) {
-            throw new IllegalStateException(BuildToolInfo.PathId.LLVM_RS_CC + " is missing");
-        }
-
-        // compile all the files in a single pass
-        builder.setExecutable(renderscript);
-        builder.addEnvironments(env);
-
-        for (String arg : builderArgs) {
-            builder.addArgs(arg);
-        }
-
-        ProcessResult result =
-                processExecutor.execute(builder.createProcess(), processOutputHandler);
-        result.rethrowFailure().assertNormalExitValue();
-    }
-
-    private void createSupportFiles(
-            @NonNull final ProcessExecutor processExecutor,
-            @NonNull final ProcessOutputHandler processOutputHandler,
-            @NonNull final Map<String, String> env)
-            throws IOException, InterruptedException, ProcessException {
-        // get the generated BC files.
-        int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
-        targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
-        if (targetApi < 21) {
-            File rawFolder = getGenericRawFolder();
-            createSupportFilesHelper(rawFolder, ABIS_32, processExecutor, processOutputHandler, env);
-        } else {
-            File rawFolder32 = getArchSpecificRawFolder("32");
-            createSupportFilesHelper(rawFolder32, ABIS_32, processExecutor,
-                    processOutputHandler, env);
-            File rawFolder64 = getArchSpecificRawFolder("64");
-            createSupportFilesHelper(rawFolder64, ABIS_64, processExecutor,
-                    processOutputHandler, env);
-        }
-    }
-
-    private void createSupportFilesHelper(
-            @NonNull final File rawFolder,
-            @NonNull final Abi[] abis,
-            @NonNull final ProcessExecutor processExecutor,
-            @NonNull final ProcessOutputHandler processOutputHandler,
-            @NonNull final Map<String, String> env)
-            throws IOException, InterruptedException, ProcessException {
-        WaitableExecutor mExecutor = WaitableExecutor.useGlobalSharedThreadPool();
-
-        Collection<File> files = Lists.newLinkedList();
+    private fun createSupportFilesHelper(
+        rawFolder: File,
+        abis: Array<Abi>,
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler,
+        env: Map<String, String?>
+    ) {
+        val mExecutor = WaitableExecutor.useGlobalSharedThreadPool()
+        val files: MutableCollection<File> = mutableListOf()
         DirectoryWalker.builder()
-                .root(rawFolder.toPath())
-                .extensions(EXT_BC)
-                .action((start, path) -> files.add(path.toFile()))
-                .build()
-                .walk();
-
-        for (final File bcFile : files) {
-            String name = bcFile.getName();
-            final String objName = name.replaceAll("\\.bc", ".o");
-            final String soName = "librs." + name.replaceAll("\\.bc", ".so");
-
-            for (final Abi abi : abis) {
-                if (mAbiFilters != null && !mAbiFilters.contains(abi.mDevice)) {
-                    continue;
+            .root(rawFolder.toPath())
+            .extensions(SdkConstants.EXT_BC)
+            .action { _, path: Path -> files.add(path.toFile()) }
+            .build()
+            .walk()
+        for (bcFile in files) {
+            val name = bcFile.name
+            val objName = name.replace("\\.bc".toRegex(), ".o")
+            val soName = "librs." + name.replace("\\.bc".toRegex(), ".so")
+            for (abi in abis) {
+                if (abiFilters != null && !abiFilters.contains(abi.device)) {
+                    continue
                 }
                 // only build for the ABIs bundled in Build-Tools.
-                if (mLibClCore.get(abi.mDevice) == null) {
+                if (libClCore[abi.device] == null) {
                     // warn the user to update Build-Tools if the desired ABI is not found.
-                    mLogger.warning("Skipped RenderScript support mode compilation for "
-                                    + abi.mDevice
-                                    + " : required components not found in Build-Tools "
-                                    + mBuildToolInfo.getRevision().toString()
-                                    + '\n'
-                                    + "Please check and update your BuildTools.");
-                    continue;
+                    logger.warning(
+                        """|Skipped RenderScript support mode compilation for ${abi.device} : required components not found in Build-Tools ${buildToolInfo.revision}
+                           |Please check and update your BuildTools.""".trimMargin("|")
+                    )
+                    continue
                 }
-
                 // make sure the dest folders exist
-                final File objAbiFolder = new File(mObjOutputDir, abi.mDevice);
-                if (!objAbiFolder.isDirectory() && !objAbiFolder.mkdirs()) {
-                    throw new IOException("Unable to create dir " + objAbiFolder.getAbsolutePath());
+                val objAbiFolder = File(objOutputDir, abi.device)
+                if (!objAbiFolder.isDirectory && !objAbiFolder.mkdirs()) {
+                    throw IOException("Unable to create dir ${objAbiFolder.absolutePath}")
                 }
-
-                final File libAbiFolder = new File(mLibOutputDir, abi.mDevice);
-                if (!libAbiFolder.isDirectory() && !libAbiFolder.mkdirs()) {
-                    throw new IOException("Unable to create dir " + libAbiFolder.getAbsolutePath());
+                val libAbiFolder = File(libOutputDir, abi.device)
+                if (!libAbiFolder.isDirectory && !libAbiFolder.mkdirs()) {
+                    throw IOException("Unable to create dir ${libAbiFolder.absolutePath}")
                 }
-
-                mExecutor.execute(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        File objFile = createSupportObjFile(
-                                bcFile,
-                                abi,
-                                objName,
-                                objAbiFolder,
-                                processExecutor,
-                                processOutputHandler,
-                                env);
-                        createSupportLibFile(
-                                objFile,
-                                abi,
-                                soName,
-                                libAbiFolder,
-                                processExecutor,
-                                processOutputHandler,
-                                env);
-                        return null;
-                    }
-                });
+                mExecutor.execute<Void> {
+                    val objFile = createSupportObjFile(
+                        bcFile,
+                        abi,
+                        objName,
+                        objAbiFolder,
+                        processExecutor,
+                        processOutputHandler,
+                        env
+                    )
+                    createSupportLibFile(
+                        objFile,
+                        abi,
+                        soName,
+                        libAbiFolder,
+                        processExecutor,
+                        processOutputHandler,
+                        env
+                    )
+                    null
+                }
             }
         }
-
-        mExecutor.waitForTasksWithQuickFail(true /*cancelRemaining*/);
+        mExecutor.waitForTasksWithQuickFail<Any>(true /*cancelRemaining*/)
     }
 
-    private File createSupportObjFile(
-            @NonNull File bcFile,
-            @NonNull Abi abi,
-            @NonNull String objName,
-            @NonNull File objAbiFolder,
-            @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull Map<String, String> env) throws ProcessException {
-
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(mBuildToolInfo.getPath(BuildToolInfo.PathId.BCC_COMPAT));
-        builder.addEnvironments(env);
-
-        builder.addArgs("-O" + Integer.toString(mOptimizationLevel));
-
-        File outFile = new File(objAbiFolder, objName);
-        builder.addArgs("-o", outFile.getAbsolutePath());
-
-        builder.addArgs("-fPIC");
-        builder.addArgs("-shared");
-
-        builder.addArgs("-rt-path", mLibClCore.get(abi.mDevice).getAbsolutePath());
-
-        builder.addArgs("-mtriple", abi.mToolchain);
-
-        builder.addArgs(bcFile.getAbsolutePath());
-
+    private fun createSupportObjFile(
+        bcFile: File,
+        abi: Abi,
+        objName: String,
+        objAbiFolder: File,
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler,
+        env: Map<String, String?>
+    ): File {
+        val builder = ProcessInfoBuilder()
+        builder.setExecutable(buildToolInfo.getPath(PathId.BCC_COMPAT))
+        builder.addEnvironments(env)
+        builder.addArgs("-O${optimizationLevel}")
+        val outFile = File(objAbiFolder, objName)
+        builder.addArgs("-o", outFile.absolutePath)
+        builder.addArgs("-fPIC")
+        builder.addArgs("-shared")
+        builder.addArgs("-rt-path", libClCore[abi.device]!!.absolutePath)
+        builder.addArgs("-mtriple", abi.toolchain)
+        builder.addArgs(bcFile.absolutePath)
         processExecutor.execute(
-                builder.createProcess(), processOutputHandler)
-                .rethrowFailure().assertNormalExitValue();
-
-        return outFile;
+            builder.createProcess(), processOutputHandler
+        )
+            .rethrowFailure().assertNormalExitValue()
+        return outFile
     }
 
-    private void createSupportLibFile(
-            @NonNull File objFile,
-            @NonNull Abi abi,
-            @NonNull String soName,
-            @NonNull File libAbiFolder,
-            @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull Map<String, String> env) throws ProcessException {
-
-        File intermediatesFolder = new File(mRsLib, "intermediates");
-        File intermediatesAbiFolder = new File(intermediatesFolder, abi.mDevice);
-        File packagedFolder = new File(mRsLib, "packaged");
-        File packagedAbiFolder = new File(packagedFolder, abi.mDevice);
-
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(mBuildToolInfo.getPath(abi.mLinker));
-        builder.addEnvironments(env);
-
+    private fun createSupportLibFile(
+        objFile: File,
+        abi: Abi,
+        soName: String,
+        libAbiFolder: File,
+        processExecutor: ProcessExecutor,
+        processOutputHandler: ProcessOutputHandler,
+        env: Map<String, String?>
+    ) {
+        val intermediatesFolder = File(rsLib, "intermediates")
+        val intermediatesAbiFolder = File(intermediatesFolder, abi.device)
+        val packagedFolder = File(rsLib, "packaged")
+        val packagedAbiFolder = File(packagedFolder, abi.device)
+        val builder = ProcessInfoBuilder()
+        builder.setExecutable(buildToolInfo.getPath(abi.linker))
+        builder.addEnvironments(env)
         builder.addArgs("--eh-frame-hdr")
-                .addArgs(abi.mLinkerArgs)
-                .addArgs("-shared", "-Bsymbolic", "-z", "noexecstack", "-z", "relro", "-z", "now");
-
-        File outFile = new File(libAbiFolder, soName);
-        builder.addArgs("-o", outFile.getAbsolutePath());
-
+            .addArgs(abi.linkerArgs)
+            .addArgs("-shared", "-Bsymbolic", "-z", "noexecstack", "-z", "relro", "-z", "now")
+        val outFile = File(libAbiFolder, soName)
+        builder.addArgs("-o", outFile.absolutePath)
         builder.addArgs(
-                "-L" + intermediatesAbiFolder.getAbsolutePath(),
-                "-L" + packagedAbiFolder.getAbsolutePath(),
-                "-soname",
-                soName,
-                objFile.getAbsolutePath(),
-                new File(intermediatesAbiFolder, "libcompiler_rt.a").getAbsolutePath(),
-                "-lRSSupport",
-                "-lm",
-                "-lc");
-
+            "-L${intermediatesAbiFolder.absolutePath}",
+            "-L${packagedAbiFolder.absolutePath}",
+            "-soname",
+            soName,
+            objFile.absolutePath,
+            File(intermediatesAbiFolder, "libcompiler_rt.a").absolutePath,
+            "-lRSSupport",
+            "-lm",
+            "-lc"
+        )
         processExecutor.execute(
-                builder.createProcess(), processOutputHandler)
-                .rethrowFailure().assertNormalExitValue();
+            builder.createProcess(), processOutputHandler
+        )
+            .rethrowFailure().assertNormalExitValue()
+    }
+
+    companion object {
+        fun getSupportJar(buildToolsFolder: File, useAndroidX: Boolean): File {
+            return File(
+                getBaseRenderscriptLibFolder(buildToolsFolder),
+                if (useAndroidX) FN_ANDROIDX_RS_JAR else FN_RENDERSCRIPT_V8_JAR
+            )
+        }
+
+        fun getSupportNativeLibFolder(buildToolsFolder: File): File {
+            return File(getBaseRenderscriptLibFolder(buildToolsFolder), "packaged")
+        }
+
+        fun getSupportBlasLibFolder(buildToolsFolder: File): File {
+            return File(getBaseRenderscriptLibFolder(buildToolsFolder), "blas")
+        }
+
+        private fun getBaseRenderscriptLibFolder(buildToolsFolder: File): File {
+            return File(buildToolsFolder, "renderscript/lib")
+        }
     }
 }
