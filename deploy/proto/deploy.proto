@@ -242,7 +242,15 @@ message DeltaInstallResponse {
 message OverlayUpdateRequest {
   string overlay_id = 1;
   string expected_overlay_id = 2;
+  repeated OverlayFile added_files = 3;
+  repeated string deleted_files = 4;
 }
+
+message OverlayFile {
+  string path = 1;
+  bytes content = 2;
+}
+
 message OverlayUpdateResponse {
   enum Status {
     UNKNOWN = 0;

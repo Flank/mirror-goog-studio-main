@@ -149,7 +149,22 @@ void InstallServer::HandleOverlayUpdate(
     return;
   }
 
-  // TODO: Write overlay files here.
+  for (const std::string& file : request.deleted_files()) {
+    if (!overlay.DeleteFile(file)) {
+      response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+      response->set_error_message("Could not delete file: '" + file + "'");
+      return;
+    }
+  }
+
+  for (const proto::OverlayFile& file : request.added_files()) {
+    if (!overlay.WriteFile(file.path(), file.content())) {
+      response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+      response->set_error_message("Could not write file: '" + file.path() +
+                                  "'");
+      return;
+    }
+  }
 
   if (!overlay.Commit()) {
     response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);

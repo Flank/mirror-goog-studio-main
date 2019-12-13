@@ -16,6 +16,7 @@
 
 #include "tools/base/deploy/installer/install_server.h"
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/installer/workspace.h"
 
@@ -137,7 +138,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   std::deque<bool> success = {true, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // // Don't call workspace init; it closes stdout.
+  // Don't call workspace init; it closes stdout.
   Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
 
   proto::InstallServerRequest request;
@@ -184,12 +185,78 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
 
   ASSERT_TRUE(client->Read(-1, &response));
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  ASSERT_EQ(proto::OverlayUpdateResponse::OK,
+  EXPECT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
+  EXPECT_EQ("", response.overlay_response().error_message());
   ASSERT_TRUE(client->WaitForExit());
 
   fake_exec.JoinServerThread();
 };
+
+TEST_F(InstallServerTest, TestServerOverlayFiles) {
+  std::thread server_thread;
+  std::deque<bool> success = {true, true};
+  FakeExecutor fake_exec(server_thread, success);
+
+  // // Don't call workspace init; it closes stdout.
+  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
+
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+
+  // Start the server and create an overlay
+  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  ASSERT_FALSE(nullptr == client);
+
+  request.mutable_overlay_request()->set_overlay_id("id");
+  proto::OverlayFile* added =
+      request.mutable_overlay_request()->add_added_files();
+  added->set_path("apk/hello.txt");
+  added->set_content("hello world");
+
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::OK,
+            response.overlay_response().status());
+  ASSERT_TRUE(client->WaitForExit());
+
+  std::string content;
+  ASSERT_TRUE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
+  ASSERT_EQ("hello world", content);
+
+  fake_exec.JoinServerThread();
+
+  // Start the server and overwrite and delete a file
+  client = StartServer(workspace, "fakepath", "fakepackage");
+  ASSERT_FALSE(nullptr == client);
+
+  request.mutable_overlay_request()->set_expected_overlay_id("id");
+  request.mutable_overlay_request()->set_overlay_id("next-id");
+  request.mutable_overlay_request()->clear_added_files();
+  added = request.mutable_overlay_request()->add_added_files();
+  added->set_path("apk/hello_2.txt");
+  added->set_content("hello again world");
+  request.mutable_overlay_request()->add_deleted_files("apk/hello.txt");
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::OK,
+            response.overlay_response().status());
+  ASSERT_TRUE(client->WaitForExit());
+
+  content.clear();
+  ASSERT_FALSE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
+  ASSERT_TRUE(content.empty());
+
+  content.clear();
+  ASSERT_TRUE(deploy::ReadFile(".overlay/apk/hello_2.txt", &content));
+  ASSERT_EQ("hello again world", content);
+
+  fake_exec.JoinServerThread();
+}
 
 TEST_F(InstallServerTest, TestNeedCopy) {
   std::thread server_thread;

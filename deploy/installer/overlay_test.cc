@@ -88,4 +88,25 @@ TEST_F(OverlayTest, TestOverlayWriteFile) {
   ASSERT_TRUE(overlay.Commit());
 };
 
+TEST_F(OverlayTest, TestOverlayDeleteFile) {
+  Overlay overlay("code_cache/.overlay", "id");
+  ASSERT_TRUE(overlay.Open());
+  ASSERT_TRUE(overlay.WriteFile("apk/test.txt", "alpha"));
+  ASSERT_TRUE(overlay.WriteFile("apk/sub/other.txt", "beta"));
+
+  ASSERT_EQ(0, access("code_cache/.overlay", F_OK));
+  CheckFile("code_cache/.overlay/apk/test.txt", "alpha");
+  CheckFile("code_cache/.overlay/apk/sub/other.txt", "beta");
+
+  ASSERT_TRUE(overlay.Commit());
+
+  ASSERT_TRUE(overlay.Open());
+  ASSERT_TRUE(overlay.DeleteFile("apk/test.txt"));
+
+  CheckFile("code_cache/.overlay/apk/sub/other.txt", "beta");
+  ASSERT_NE(0, access("code_cache/.overlay/apk/test.txt", F_OK));
+
+  ASSERT_TRUE(overlay.Commit());
+};
+
 }  // namespace deploy
