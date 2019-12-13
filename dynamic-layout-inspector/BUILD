@@ -75,7 +75,7 @@ cc_library(
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
@@ -83,8 +83,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/transport/agent",
-        "//tools/base/transport/agent:jvmti_helper",
+        "//tools/base/transport/native/agent",
+        "//tools/base/transport/native/agent:jvmti_helper",
         "//tools/base/transport/proto:cc_proto",
     ],
     alwayslink = 1,
@@ -102,7 +102,7 @@ cc_library(
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
@@ -110,10 +110,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/transport/agent",
-        "//tools/base/transport/agent:jni_wrappers",
+        "//tools/base/transport/native/agent",
+        "//tools/base/transport/native/agent:jni_wrappers",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
     alwayslink = 1,
 )

@@ -19,15 +19,15 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     deps = [
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
-        "//tools/base/transport/daemon",
+        "//tools/base/transport/native/daemon",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
 )
 
@@ -38,8 +38,8 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/tests",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native/tests",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     data = [
@@ -51,6 +51,6 @@ cc_test(
         ":profiler_graphics",
         "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
-        "//tools/base/transport/tests/test:testutils",
+        "//tools/base/transport/native/tests/test:testutils",
     ],
 )

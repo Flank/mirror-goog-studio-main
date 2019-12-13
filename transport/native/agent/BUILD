@@ -7,7 +7,7 @@ cc_library(
     hdrs = ["agent.h"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = [
@@ -16,8 +16,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/agent:memory_component",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
 )
 
@@ -30,7 +30,7 @@ cc_library(
         "scoped_local_ref.h",
     ],
     copts = ANDROID_COPTS + [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
     ],
     tags = [
         "no_windows",
@@ -38,7 +38,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/transport/utils",
+        "//tools/base/transport/native/utils",
     ],
 )
 
@@ -64,7 +64,7 @@ cc_binary(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-Itools/base/echo-sample",
         "-Itools/base/dynamic-layout-inspector/src/main/native/agent",
         "-Itools/base/app-inspection",
@@ -86,9 +86,9 @@ cc_binary(
         "//tools/base/echo-sample:agent_command",
         "//tools/base/echo-sample:jni",
         "//tools/base/profiler/native/perfa:perfa_lib",
-        "//tools/base/transport/agent",
+        "//tools/base/transport/native/agent",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
 )
 

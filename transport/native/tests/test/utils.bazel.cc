@@ -20,7 +20,7 @@
 namespace profiler {
 
 std::string TestUtils::getUtilsTestData(const std::string &path) {
-  return "tools/base/transport/tests/testdata/" + path;
+  return "tools/base/transport/native/tests/testdata/" + path;
 }
 
 }  // namespace profiler

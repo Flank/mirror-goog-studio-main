@@ -29,7 +29,7 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
@@ -37,10 +37,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/transport/agent",
-        "//tools/base/transport/agent:jni_wrappers",
+        "//tools/base/transport/native/agent",
+        "//tools/base/transport/native/agent:jni_wrappers",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
     alwayslink = 1,
 )
@@ -60,13 +60,13 @@ cc_library(
     srcs = ["memory_component.cc"],
     hdrs = ["memory_component.h"],
     copts = ANDROID_COPTS + [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
-    visibility = ["//tools/base/transport/agent:__pkg__"],
+    visibility = ["//tools/base/transport/native/agent:__pkg__"],
     deps = [
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
 )

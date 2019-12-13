@@ -28,14 +28,14 @@ cc_library(
         "transport_service.h",
     ],
     copts = ANDROID_COPTS + [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
 )
 
@@ -49,7 +49,7 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = [
@@ -72,7 +72,7 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = [

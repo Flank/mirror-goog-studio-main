@@ -5,7 +5,7 @@ cc_library(
         "utils.h",
     ],
     copts = [
-        "-Itools/base/transport/daemon",
+        "-Itools/base/transport/native/daemon",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],

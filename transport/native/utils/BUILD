@@ -108,7 +108,7 @@ cc_library(
         "uid_fetcher.h",
     ],
     copts = [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
         "-std=c++11",
     ],
@@ -143,12 +143,12 @@ cc_test(
         "uid_fetcher_test.cc",
     ],
     copts = [
-        "-Itools/base/transport/tests",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native/tests",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     data = [
-        "//tools/base/transport/tests/testdata",
+        "//tools/base/transport/native/tests/testdata",
     ],
     linkopts = [
         "-ldl",  # Needed for dladdr referenced in TermincationService
@@ -158,9 +158,9 @@ cc_test(
     deps = [
         ":utils",
         "//external:gmock_main",
-        "//tools/base/transport/daemon",
+        "//tools/base/transport/native/daemon",
+        "//tools/base/transport/native/tests/test:testutils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/tests/test:testutils",
     ],
 )
 
@@ -176,7 +176,7 @@ cc_test(
         "thread_name.h",
     ],
     copts = [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
