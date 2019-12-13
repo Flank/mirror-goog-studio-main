@@ -1221,6 +1221,26 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "org.jetbrains.dokka_dokka-android-gradle-plugin",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/dokka/dokka-android-gradle-plugin/0.9.17-g004:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.jetbrains.dokka_dokka-gradle-plugin"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.jetbrains.dokka_dokka-gradle-plugin",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/dokka/dokka-gradle-plugin/0.9.17-g004:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+    runtime_deps = [
+        ":org.jetbrains.kotlin_kotlin-reflect",
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "org.jetbrains.intellij.deps_trove4j",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/intellij/deps/trove4j/1.0.20181211:jar",
     visibility = ["//visibility:public"],
