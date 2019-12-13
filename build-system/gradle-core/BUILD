@@ -162,6 +162,7 @@ kotlin_test(
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-gradle-api",
         "//tools/base/repository:tools.repository",
+        "//tools/base/repository:tools.testlib",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",

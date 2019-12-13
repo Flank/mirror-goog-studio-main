@@ -131,6 +131,7 @@ kotlin_test(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
+        "//tools/base/repository:tools.testlib",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.android.tools.build_aapt2-proto",

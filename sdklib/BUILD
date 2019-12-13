@@ -129,6 +129,7 @@ kotlin_test(
         "//tools/base/device_validator:tools.dvlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
+        "//tools/base/repository:tools.testlib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",

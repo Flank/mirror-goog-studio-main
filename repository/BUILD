@@ -52,11 +52,9 @@ kotlin_library(
     resource_strip_prefix = "tools/base/repository",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
-    # TODO: Why is MockFileOp in main sources?
     deps = [
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.glassfish.jaxb_jaxb-runtime",
     ],
@@ -69,20 +67,27 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-coverage_java_test(
-    name = "tools.tests",
+java_library(
+    name = "tools.testlib",
     srcs = glob(["src/test/java/**"]),
-    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    test_class = "com.android.testutils.JarTestSuite",
+    visibility = ["//visibility:public"],  # contains com.android.repository.testframework
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":tools.repository",
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
+)
+
+coverage_java_test(
+    name = "tools.tests",
+    jvm_flags = ["-Dtest.suite.jar=tools.testlib.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [":tools.testlib"],
 )

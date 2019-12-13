@@ -1033,7 +1033,6 @@ public class JarContentsTest {
                 "com/android/repository/impl/sources/repo-sites-common-custom.xjb",
                 "com/android/repository/io/",
                 "com/android/repository/io/impl/",
-                "com/android/repository/testframework/",
                 "com/android/repository/util/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
