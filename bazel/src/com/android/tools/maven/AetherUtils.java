@@ -53,8 +53,13 @@ public class AetherUtils {
                             "https://jetbrains.bintray.com/intellij-third-party-dependencies")
                     .build();
 
+    static final RemoteRepository GRADLE_PLUGINS =
+            new RemoteRepository.Builder(
+                            "GradlePlugins", "default", "https://plugins.gradle.org/m2")
+                    .build();
+
     public static final ImmutableList<RemoteRepository> REPOSITORIES =
-            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE, INTELLIJ);
+            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE, INTELLIJ, GRADLE_PLUGINS);
 
     private AetherUtils() {}
 
