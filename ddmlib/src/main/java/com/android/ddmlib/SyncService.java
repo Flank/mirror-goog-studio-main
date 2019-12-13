@@ -34,8 +34,8 @@ import java.util.Date;
 
 /**
  * Sync service class to push/pull to/from devices/emulators, through the debug bridge.
- * <p>
- * To get a {@link SyncService} object, use {@link Device#getSyncService()}.
+ *
+ * <p>To get a {@link SyncService} object, use {@link IDevice#getSyncService()}.
  */
 public class SyncService {
 
@@ -159,7 +159,7 @@ public class SyncService {
     }
 
     private InetSocketAddress mAddress;
-    private Device mDevice;
+    private IDevice mDevice;
     private SocketChannel mChannel;
 
     /**
@@ -169,23 +169,25 @@ public class SyncService {
 
     /**
      * Creates a Sync service object.
+     *
      * @param address The address to connect to
-     * @param device the {@link Device} that the service connects to.
+     * @param device the {@link IDevice} that the service connects to.
      */
-    SyncService(InetSocketAddress address, Device device) {
+    public SyncService(InetSocketAddress address, IDevice device) {
         mAddress = address;
         mDevice = device;
     }
 
     /**
      * Opens the sync connection. This must be called before any calls to push[File] / pull[File].
-     * @return true if the connection opened, false if adb refuse the connection. This can happen
-     * if the {@link Device} is invalid.
+     *
+     * @return true if the connection opened, false if adb refuse the connection. This can happen if
+     *     the {@link IDevice} is invalid.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException If the connection to adb failed.
      */
-    boolean openSync() throws TimeoutException, AdbCommandRejectedException, IOException {
+    public boolean openSync() throws TimeoutException, AdbCommandRejectedException, IOException {
         try {
             mChannel = SocketChannel.open(mAddress);
             mChannel.configureBlocking(false);

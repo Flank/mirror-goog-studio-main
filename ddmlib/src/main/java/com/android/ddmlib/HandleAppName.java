@@ -16,7 +16,7 @@
 
 package com.android.ddmlib;
 
-import java.io.IOException;
+import com.android.ddmlib.internal.ClientImpl;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
@@ -29,34 +29,25 @@ final class HandleAppName extends ChunkHandler {
 
     private static final HandleAppName mInst = new HandleAppName();
 
-
     private HandleAppName() {}
 
-    /**
-     * Register for the packets we expect to get from the client.
-     */
+    /** Register for the packets we expect to get from the client. */
     public static void register(MonitorThread mt) {
         mt.registerChunkHandler(CHUNK_APNM, mInst);
     }
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {}
+    public void clientReady(ClientImpl client) {}
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {}
+    public void clientDisconnected(ClientImpl client) {}
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data,
-            boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
 
         Log.d("ddm-appname", "handling " + ChunkHandler.name(type));
 
@@ -71,7 +62,7 @@ final class HandleAppName extends ChunkHandler {
     /*
      * Handle a reply to our APNM message.
      */
-    private static void handleAPNM(Client client, ByteBuffer data) {
+    private static void handleAPNM(ClientImpl client, ByteBuffer data) {
         int appNameLen;
         String appName;
 
@@ -92,7 +83,7 @@ final class HandleAppName extends ChunkHandler {
         }
 
         // Newer devices (newer than user id support) send the package names associated with the app.
-        String packageName = Device.UNKNOWN_PACKAGE;
+        String packageName = IDevice.UNKNOWN_PACKAGE;
         if (data.hasRemaining()) {
             int dataRemaining = data.remaining();
             int packageNameLength = 0;
@@ -119,7 +110,7 @@ final class HandleAppName extends ChunkHandler {
         client = checkDebuggerPortForAppName(client, names.mProcessName);
 
         if (client != null) {
-            client.update(Client.CHANGE_NAME);
+            client.update(ClientImpl.CHANGE_NAME);
         }
     }
  }

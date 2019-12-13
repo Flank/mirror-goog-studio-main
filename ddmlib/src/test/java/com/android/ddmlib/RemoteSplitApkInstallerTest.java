@@ -15,6 +15,7 @@
  */
 package com.android.ddmlib;
 
+import com.android.ddmlib.internal.DeviceTest;
 import com.android.sdklib.AndroidVersion;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class RemoteSplitApkInstallerTest extends TestCase {
     private Long mTimeout;
     private TimeUnit mTimeUnit;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         mMockIDevice = DeviceTest.createMockDevice();
@@ -173,15 +175,20 @@ public class RemoteSplitApkInstallerTest extends TestCase {
     @Test
     public void testGetOptions() throws Exception {
         RemoteSplitApkInstaller installer = createInstaller();
-        assertEquals("-r -d", installer.getOptions(true, mInstallOptions));
-        assertEquals("-d", installer.getOptions(false, mInstallOptions));
-        assertEquals("-r", installer.getOptions(true, new ArrayList<String>()));
-        assertEquals("", installer.getOptions(false, new ArrayList<String>()));
-        assertEquals("-r -d", installer.getOptions(true, false, "123", mInstallOptions));
-        assertEquals("-r -p 123 -d", installer.getOptions(true, true, "123", mInstallOptions));
+        assertEquals("-r -d", SplitApkInstallerBase.getOptions(true, mInstallOptions));
+        assertEquals("-d", SplitApkInstallerBase.getOptions(false, mInstallOptions));
+        assertEquals("-r", SplitApkInstallerBase.getOptions(true, new ArrayList<String>()));
+        assertEquals("", SplitApkInstallerBase.getOptions(false, new ArrayList<String>()));
+        assertEquals(
+                "-r -d", SplitApkInstallerBase.getOptions(true, false, "123", mInstallOptions));
+        assertEquals(
+                "-r -p 123 -d",
+                SplitApkInstallerBase.getOptions(true, true, "123", mInstallOptions));
         mInstallOptions.add("-x");
-        assertEquals("-r -d -x", installer.getOptions(true, mInstallOptions));
-        assertEquals("-r -p 123 -d -x", installer.getOptions(true, true, "123", mInstallOptions));
+        assertEquals("-r -d -x", SplitApkInstallerBase.getOptions(true, mInstallOptions));
+        assertEquals(
+                "-r -p 123 -d -x",
+                SplitApkInstallerBase.getOptions(true, true, "123", mInstallOptions));
     }
 
     @Test

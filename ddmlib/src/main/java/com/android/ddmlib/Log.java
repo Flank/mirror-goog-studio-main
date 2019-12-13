@@ -149,26 +149,31 @@ public final class Log {
     private static final Set<ILogOutput> sOutputLoggers = Sets.newCopyOnWriteArraySet();
 
     private static final char[] mSpaceLine = new char[72];
-    private static final char[] mHexDigit = new char[]
-        { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+    private static final char[] mHexDigit =
+            new char[] {
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+            };
+
     static {
         /* prep for hex dump */
-        int i = mSpaceLine.length-1;
-        while (i >= 0)
+        int i = mSpaceLine.length - 1;
+        while (i >= 0) {
             mSpaceLine[i--] = ' ';
+        }
         mSpaceLine[0] = mSpaceLine[1] = mSpaceLine[2] = mSpaceLine[3] = '0';
         mSpaceLine[4] = '-';
     }
 
-    static final class Config {
-        static final boolean LOGV = true;
-        static final boolean LOGD = true;
+    public static final class Config {
+        public static final boolean LOGV = true;
+        public static final boolean LOGD = true;
     }
 
     private Log() {}
 
     /**
      * Outputs a {@link LogLevel#VERBOSE} level message.
+     *
      * @param tag The tag associated with the message.
      * @param message The message to output.
      */

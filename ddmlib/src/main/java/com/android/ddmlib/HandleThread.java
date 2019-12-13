@@ -16,13 +16,12 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/**
- * Handle thread status updates.
- */
-final class HandleThread extends ChunkHandler {
+/** Handle thread status updates. */
+public final class HandleThread extends ChunkHandler {
 
     public static final int CHUNK_THEN = type("THEN");
     public static final int CHUNK_THCR = type("THCR");
@@ -51,27 +50,23 @@ final class HandleThread extends ChunkHandler {
         mt.registerChunkHandler(CHUNK_STKL, mInst);
     }
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {
+    public void clientReady(ClientImpl client) throws IOException {
         Log.d("ddm-thread", "Now ready: " + client);
-        if (client.isThreadUpdateEnabled())
+        if (client.isThreadUpdateEnabled()) {
             sendTHEN(client, true);
+        }
     }
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {}
+    public void clientDisconnected(ClientImpl client) {}
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
 
         Log.d("ddm-thread", "handling " + ChunkHandler.name(type));
 
@@ -96,7 +91,7 @@ final class HandleThread extends ChunkHandler {
      * We should be tolerant of receiving a duplicate create message.  (It
      * shouldn't happen with the current implementation.)
      */
-    private void handleTHCR(Client client, ByteBuffer data) {
+    private void handleTHCR(ClientImpl client, ByteBuffer data) {
         int threadId, nameLen;
         String name;
 
@@ -107,20 +102,20 @@ final class HandleThread extends ChunkHandler {
         Log.v("ddm-thread", "THCR: " + threadId + " '" + name + "'");
 
         client.getClientData().addThread(threadId, name);
-        client.update(Client.CHANGE_THREAD_DATA);
+        client.update(ClientImpl.CHANGE_THREAD_DATA);
     }
 
     /*
      * Handle a thread death message.
      */
-    private void handleTHDE(Client client, ByteBuffer data) {
+    private void handleTHDE(ClientImpl client, ByteBuffer data) {
         int threadId;
 
         threadId = data.getInt();
         Log.v("ddm-thread", "THDE: " + threadId);
 
         client.getClientData().removeThread(threadId);
-        client.update(Client.CHANGE_THREAD_DATA);
+        client.update(ClientImpl.CHANGE_THREAD_DATA);
     }
 
     /*
@@ -137,7 +132,7 @@ final class HandleThread extends ChunkHandler {
      *  (4b) utime
      *  (4b) stime
      */
-    private void handleTHST(Client client, ByteBuffer data) {
+    private void handleTHST(ClientImpl client, ByteBuffer data) {
         int headerLen, bytesPerEntry, extraPerEntry;
         int threadCount;
 
@@ -146,8 +141,9 @@ final class HandleThread extends ChunkHandler {
         threadCount = data.getShort();
 
         headerLen -= 4;     // we've read 4 bytes
-        while (headerLen-- > 0)
+        while (headerLen-- > 0) {
             data.get();
+        }
 
         extraPerEntry = bytesPerEntry - 18;     // we want 18 bytes
 
@@ -185,14 +181,14 @@ final class HandleThread extends ChunkHandler {
                 data.get();
         }
 
-        client.update(Client.CHANGE_THREAD_DATA);
+        client.update(ClientImpl.CHANGE_THREAD_DATA);
     }
 
     /*
      * Handle a THNM (THread NaMe) message.  We get one of these after
      * somebody calls Thread.setName() on a running thread.
      */
-    private void handleTHNM(Client client, ByteBuffer data) {
+    private void handleTHNM(ClientImpl client, ByteBuffer data) {
         int threadId, nameLen;
         String name;
 
@@ -205,17 +201,15 @@ final class HandleThread extends ChunkHandler {
         ThreadInfo threadInfo = client.getClientData().getThread(threadId);
         if (threadInfo != null) {
             threadInfo.setThreadName(name);
-            client.update(Client.CHANGE_THREAD_DATA);
+            client.update(ClientImpl.CHANGE_THREAD_DATA);
         } else {
             Log.d("ddms", "Thread with id=" + threadId + " not found");
         }
     }
 
 
-    /**
-     * Parse an incoming STKL.
-     */
-    private void handleSTKL(Client client, ByteBuffer data) {
+    /** Parse an incoming STKL. */
+    private void handleSTKL(ClientImpl client, ByteBuffer data) {
         StackTraceElement[] trace;
         int i, threadId, stackDepth;
         @SuppressWarnings("unused")
@@ -252,29 +246,29 @@ final class HandleThread extends ChunkHandler {
         ThreadInfo threadInfo = client.getClientData().getThread(threadId);
         if (threadInfo != null) {
             threadInfo.setStackCall(trace);
-            client.update(Client.CHANGE_THREAD_STACKTRACE);
+            client.update(ClientImpl.CHANGE_THREAD_STACKTRACE);
         } else {
-            Log.d("STKL", String.format(
-                    "Got stackcall for thread %1$d, which does not exists (anymore?).", //$NON-NLS-1$
-                    threadId));
+            Log.d(
+                    "STKL",
+                    String.format(
+                            "Got stackcall for thread %1$d, which does not exists (anymore?).", //$NON-NLS-1$
+                            threadId));
         }
     }
 
 
-    /**
-     * Send a THEN (THread notification ENable) request to the client.
-     */
-    public static void sendTHEN(Client client, boolean enable)
-        throws IOException {
+    /** Send a THEN (THread notification ENable) request to the client. */
+    public static void sendTHEN(ClientImpl client, boolean enable) throws IOException {
 
         ByteBuffer rawBuf = allocBuffer(1);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
 
-        if (enable)
+        if (enable) {
             buf.put((byte)1);
-        else
+        } else {
             buf.put((byte)0);
+        }
 
         finishChunkPacket(packet, CHUNK_THEN, buf.position());
         Log.d("ddm-thread", "Sending " + name(CHUNK_THEN) + ": " + enable);
@@ -283,12 +277,11 @@ final class HandleThread extends ChunkHandler {
 
 
     /**
-     * Send a STKL (STacK List) request to the client.  The VM will suspend
-     * the target thread, obtain its stack, and return it.  If the thread
-     * is no longer running, a failure result will be returned.
+     * Send a STKL (STacK List) request to the client. The VM will suspend the target thread, obtain
+     * its stack, and return it. If the thread is no longer running, a failure result will be
+     * returned.
      */
-    public static void sendSTKL(Client client, int threadId)
-        throws IOException {
+    public static void sendSTKL(ClientImpl client, int threadId) throws IOException {
 
         if (false) {
             Log.d("ddm-thread", "would send STKL " + threadId);
@@ -308,11 +301,10 @@ final class HandleThread extends ChunkHandler {
 
 
     /**
-     * This is called periodically from the UI thread.  To avoid locking
-     * the UI while we request the updates, we create a new thread.
-     *
+     * This is called periodically from the UI thread. To avoid locking the UI while we request the
+     * updates, we create a new thread.
      */
-    static void requestThreadUpdate(final Client client) {
+    public static void requestThreadUpdate(final ClientImpl client) {
         if (client.isDdmAware() && client.isThreadUpdateEnabled()) {
             if (sThreadStatusReqRunning) {
                 Log.w("ddms", "Waiting for previous thread update req to finish");
@@ -336,7 +328,7 @@ final class HandleThread extends ChunkHandler {
         }
     }
 
-    static void requestThreadStackCallRefresh(final Client client, final int threadId) {
+    public static void requestThreadStackCallRefresh(final ClientImpl client, final int threadId) {
         if (client.isDdmAware() && client.isThreadUpdateEnabled()) {
             if (sThreadStackTraceReqRunning) {
                 Log.w("ddms", "Waiting for previous thread stack call req to finish");
@@ -358,13 +350,12 @@ final class HandleThread extends ChunkHandler {
                 }
             }.start();
         }
-
     }
 
     /*
      * Send a THST request to the specified client.
      */
-    private static void sendTHST(Client client) throws IOException {
+    private static void sendTHST(ClientImpl client) throws IOException {
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);

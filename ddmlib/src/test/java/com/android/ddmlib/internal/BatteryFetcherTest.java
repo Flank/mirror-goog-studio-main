@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
 
 public class BatteryFetcherTest extends TestCase {
 
@@ -72,9 +72,11 @@ public class BatteryFetcherTest extends TestCase {
      */
     public void testGetBattery_shellException() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
-        mockDevice.executeShellCommand(EasyMock.<String>anyObject(),
-                EasyMock.<IShellOutputReceiver>anyObject(),
-                EasyMock.anyLong(), EasyMock.<TimeUnit>anyObject());
+        mockDevice.executeShellCommand(
+                EasyMock.anyObject(),
+                EasyMock.anyObject(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject());
         EasyMock.expectLastCall().andThrow(new ShellCommandUnresponsiveException());
         EasyMock.replay(mockDevice);
 
@@ -93,9 +95,11 @@ public class BatteryFetcherTest extends TestCase {
      */
     public void testGetBattery_AssertionError() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
-        mockDevice.executeShellCommand(EasyMock.<String>anyObject(),
-                EasyMock.<IShellOutputReceiver>anyObject(),
-                EasyMock.anyLong(), EasyMock.<TimeUnit>anyObject());
+        mockDevice.executeShellCommand(
+                EasyMock.anyObject(),
+                EasyMock.anyObject(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject());
         EasyMock.expectLastCall().andThrow(new AssertionError());
         EasyMock.replay(mockDevice);
 

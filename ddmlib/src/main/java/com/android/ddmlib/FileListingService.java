@@ -26,8 +26,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Provides {@link Device} side file listing service.
- * <p>To get an instance for a known {@link Device}, call {@link Device#getFileListingService()}.
+ * Provides {@link IDevice} side file listing service.
+ *
+ * <p>To get an instance for a known {@link IDevice}, call {@link IDevice#getFileListingService()}.
  */
 public final class FileListingService {
 
@@ -104,7 +105,7 @@ public final class FileListingService {
             ".*" + // toolbox ls (<=M) didn't have the filename in the "/sdcard/" case!
             "$"); //$NON-NLS-1$
 
-    private Device mDevice;
+    private IDevice mDevice;
     private FileEntry mRoot;
 
     // Used for locking so final.
@@ -594,7 +595,7 @@ public final class FileListingService {
          */
         public void finishLinks(IDevice device, ArrayList<FileEntry> entries)
                 throws TimeoutException, AdbCommandRejectedException,
-                ShellCommandUnresponsiveException, IOException {
+                        ShellCommandUnresponsiveException, IOException {
             final int[] nLines = {0};
             MultiLineReceiver receiver =
                     new MultiLineReceiver() {
@@ -637,10 +638,11 @@ public final class FileListingService {
     }
 
     /**
-     * Classes which implement this interface provide a method that deals with asynchronous
-     * result from <code>ls</code> command on the device.
+     * Classes which implement this interface provide a method that deals with asynchronous result
+     * from <code>ls</code> command on the device.
      *
-     * @see FileListingService#getChildren(com.android.ddmlib.FileListingService.FileEntry, boolean, com.android.ddmlib.FileListingService.IListingReceiver)
+     * @see FileListingService#getChildren(FileListingService.FileEntry, boolean,
+     *     FileListingService.IListingReceiver)
      */
     public interface IListingReceiver {
         void setChildren(FileEntry entry, FileEntry[] children);
@@ -649,10 +651,11 @@ public final class FileListingService {
     }
 
     /**
-     * Creates a File Listing Service for a specified {@link Device}.
+     * Creates a File Listing Service for a specified {@link IDevice}.
+     *
      * @param device The Device the service is connected to.
      */
-    FileListingService(Device device) {
+    public FileListingService(IDevice device) {
         mDevice = device;
     }
 

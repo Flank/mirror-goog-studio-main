@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AdbHelper.AdbResponse;
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.ClientData.DebuggerStatus;
+import com.android.ddmlib.ClientTracker;
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
+import com.android.ddmlib.EmulatorConsole;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MonitorThread;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.utils.DebuggerPorts;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -39,24 +49,31 @@ import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
  * The {@link DeviceMonitor} monitors devices attached to adb.
  *
- * <p>On one thread, it runs the {@link com.android.ddmlib.DeviceMonitor.DeviceListMonitorTask}.
- * This establishes a socket connection to the adb host, and issues a {@link
- * #ADB_TRACK_DEVICES_COMMAND}. It then monitors that socket for all changes about device connection
- * and device state.
+ * <p>On one thread, it runs the {@link DeviceMonitor.DeviceListMonitorTask}. This establishes a
+ * socket connection to the adb host, and issues a {@link #ADB_TRACK_DEVICES_COMMAND}. It then
+ * monitors that socket for all changes about device connection and device state.
  *
  * <p>For each device that is detected to be online, it then opens a new socket connection to adb,
  * and issues a "track-jdwp" command to that device. On this connection, it monitors active clients
  * on the device. Note: a single thread monitors jdwp connections from all devices. The different
  * socket connections to adb (one per device) are multiplexed over a single selector.
  */
-final class DeviceMonitor implements ClientTracker {
+public final class DeviceMonitor implements ClientTracker {
     private static final String ADB_TRACK_DEVICES_COMMAND = "host:track-devices";
     private static final String ADB_TRACK_JDWP_COMMAND = "track-jdwp";
 
@@ -72,35 +89,32 @@ final class DeviceMonitor implements ClientTracker {
     private final Object mDevicesGuard = new Object();
 
     @GuardedBy("mDevicesGuard")
-    private ImmutableList<Device> mDevices = ImmutableList.of();
+    private ImmutableList<DeviceImpl> mDevices = ImmutableList.of();
 
     private final DebuggerPorts mDebuggerPorts =
             new DebuggerPorts(DdmPreferences.getDebugPortBase());
-    private final Map<Client, Integer> mClientsToReopen = new HashMap<Client, Integer>();
-    private final BlockingQueue<Pair<SocketChannel,Device>> mChannelsToRegister =
+    private final Map<ClientImpl, Integer> mClientsToReopen = new HashMap<ClientImpl, Integer>();
+    private final BlockingQueue<Pair<SocketChannel, DeviceImpl>> mChannelsToRegister =
             Queues.newLinkedBlockingQueue();
 
     /**
-     * Creates a new {@link DeviceMonitor} object and links it to the running
-     * {@link AndroidDebugBridge} object.
+     * Creates a new {@link DeviceMonitor} object and links it to the running {@link
+     * AndroidDebugBridge} object.
+     *
      * @param server the running {@link AndroidDebugBridge}.
      */
-    DeviceMonitor(@NonNull AndroidDebugBridge server) {
+    public DeviceMonitor(@NonNull AndroidDebugBridge server) {
         mServer = server;
     }
 
-    /**
-     * Starts the monitoring.
-     */
-    void start() {
+    /** Starts the monitoring. */
+    public void start() {
         mDeviceListMonitorTask = new DeviceListMonitorTask(mServer, new DeviceListUpdateListener());
         new Thread(mDeviceListMonitorTask, "Device List Monitor").start(); //$NON-NLS-1$
     }
 
-    /**
-     * Stops the monitoring.
-     */
-    void stop() {
+    /** Stops the monitoring. */
+    public void stop() {
         mQuit = true;
 
         if (mDeviceListMonitorTask != null) {
@@ -113,35 +127,34 @@ final class DeviceMonitor implements ClientTracker {
         }
     }
 
-    /**
-     * Returns whether the monitor is currently connected to the debug bridge server.
-     */
-    boolean isMonitoring() {
+    /** Returns whether the monitor is currently connected to the debug bridge server. */
+    public boolean isMonitoring() {
         return mDeviceListMonitorTask != null && mDeviceListMonitorTask.isMonitoring();
     }
 
-    int getConnectionAttemptCount() {
-        return mDeviceListMonitorTask == null ? 0
+    public int getConnectionAttemptCount() {
+        return mDeviceListMonitorTask == null
+                ? 0
                 : mDeviceListMonitorTask.getConnectionAttemptCount();
     }
 
-    int getRestartAttemptCount() {
+    public int getRestartAttemptCount() {
         return mDeviceListMonitorTask == null ? 0 : mDeviceListMonitorTask.getRestartAttemptCount();
     }
 
-    boolean hasInitialDeviceList() {
+    public boolean hasInitialDeviceList() {
         return mDeviceListMonitorTask != null && mDeviceListMonitorTask.hasInitialDeviceList();
     }
 
     /** Returns the devices. */
     @NonNull
-    Device[] getDevices() {
-        ImmutableList<Device> devices;
+    public IDevice[] getDevices() {
+        ImmutableList<DeviceImpl> devices;
         synchronized (mDevicesGuard) {
             devices = mDevices;
         }
         //noinspection ToArrayCallWithZeroLengthArrayArgument
-        return devices.toArray(new Device[0]);
+        return devices.toArray(new IDevice[0]);
     }
 
     @NonNull
@@ -150,9 +163,10 @@ final class DeviceMonitor implements ClientTracker {
     }
 
     @Override
-    public void trackClientToDropAndReopen(@NonNull Client client, int port) {
+    public void trackClientToDropAndReopen(@NonNull ClientImpl client, int port) {
         synchronized (mClientsToReopen) {
-            Log.d("DeviceMonitor",
+            Log.d(
+                    "DeviceMonitor",
                     "Adding " + client + " to list of client to reopen (" + port + ").");
             if (mClientsToReopen.get(client) == null) {
                 mClientsToReopen.put(client, port);
@@ -186,48 +200,48 @@ final class DeviceMonitor implements ClientTracker {
      * Returns an {@link ImmutableList} containing elements from the original collection and
      * elements from the toAdd collection without elements from the toRemove collection.
      */
-    private static ImmutableList<Device> addRemove(
-            Collection<Device> original, Collection<IDevice> toAdd, Collection<IDevice> toRemove) {
+    private static ImmutableList<DeviceImpl> addRemove(
+            Collection<DeviceImpl> original,
+            Collection<IDevice> toAdd,
+            Collection<IDevice> toRemove) {
         Set<IDevice> removed = Sets.newHashSet(toRemove);
-        ImmutableList.Builder<Device> resultBuilder = ImmutableList.builder();
-        for (Device next : original) {
+        ImmutableList.Builder<DeviceImpl> resultBuilder = ImmutableList.builder();
+        for (DeviceImpl next : original) {
             if (!removed.contains(next)) {
                 resultBuilder.add(next);
             }
         }
         for (IDevice next : toAdd) {
-            if (next instanceof Device) {
-                resultBuilder.add((Device) next);
+            if (next instanceof DeviceImpl) {
+                resultBuilder.add((DeviceImpl) next);
             }
         }
         return resultBuilder.build();
     }
 
-    /**
-     * Updates the device list with the new items received from the monitoring service.
-     */
-    private void updateDevices(@NonNull List<Device> newList) {
-        ImmutableList<Device> oldDevices;
+    /** Updates the device list with the new items received from the monitoring service. */
+    private void updateDevices(@NonNull List<DeviceImpl> newList) {
+        ImmutableList<DeviceImpl> oldDevices;
         synchronized (mDevicesGuard) {
             oldDevices = mDevices;
         }
         DeviceListComparisonResult result = DeviceListComparisonResult.compare(oldDevices, newList);
-        ImmutableList<Device> newDevices = addRemove(oldDevices, result.added, result.removed);
+        ImmutableList<DeviceImpl> newDevices = addRemove(oldDevices, result.added, result.removed);
         synchronized (mDevicesGuard) {
             mDevices = newDevices;
         }
 
         for (IDevice device : result.removed) {
-            removeDevice((Device) device);
+            removeDevice((DeviceImpl) device);
             AndroidDebugBridge.deviceDisconnected(device);
         }
 
-        List<Device> newlyOnline = Lists.newArrayListWithExpectedSize(newDevices.size());
+        List<DeviceImpl> newlyOnline = Lists.newArrayListWithExpectedSize(newDevices.size());
 
         for (Map.Entry<IDevice, DeviceState> entry : result.updated.entrySet()) {
-            Device device = (Device) entry.getKey();
+            DeviceImpl device = (DeviceImpl) entry.getKey();
             device.setState(entry.getValue());
-            device.update(Device.CHANGE_STATE);
+            device.update(IDevice.CHANGE_STATE);
 
             if (device.isOnline()) {
                 newlyOnline.add(device);
@@ -237,20 +251,21 @@ final class DeviceMonitor implements ClientTracker {
         for (IDevice device : result.added) {
             AndroidDebugBridge.deviceConnected(device);
             if (device.isOnline()) {
-                newlyOnline.add((Device) device);
+                newlyOnline.add((DeviceImpl) device);
             }
         }
 
         if (AndroidDebugBridge.getClientSupport()) {
-            for (Device device : newlyOnline) {
+            for (DeviceImpl device : newlyOnline) {
                 if (!startMonitoringDevice(device)) {
-                    Log.e("DeviceMonitor", "Failed to start monitoring "
-                            + device.getSerialNumber());
+                    Log.e(
+                            "DeviceMonitor",
+                            "Failed to start monitoring " + device.getSerialNumber());
                 }
             }
         }
 
-        for (Device device : newlyOnline) {
+        for (DeviceImpl device : newlyOnline) {
             queryAvdName(device);
 
             // Initiate a property fetch so that future requests can be served out of this cache.
@@ -259,7 +274,7 @@ final class DeviceMonitor implements ClientTracker {
         }
     }
 
-    private void removeDevice(@NonNull Device device) {
+    private void removeDevice(@NonNull DeviceImpl device) {
         device.setState(DeviceState.DISCONNECTED);
         device.clearClientList();
 
@@ -273,7 +288,7 @@ final class DeviceMonitor implements ClientTracker {
         }
     }
 
-    private static void queryAvdName(@NonNull Device device) {
+    private static void queryAvdName(@NonNull DeviceImpl device) {
         if (!device.isEmulator()) {
             return;
         }
@@ -287,10 +302,11 @@ final class DeviceMonitor implements ClientTracker {
 
     /**
      * Starts a monitoring service for a device.
+     *
      * @param device the device to monitor.
      * @return true if success.
      */
-    private boolean startMonitoringDevice(@NonNull Device device) {
+    private boolean startMonitoringDevice(@NonNull DeviceImpl device) {
         SocketChannel socketChannel = openAdbConnection();
 
         if (socketChannel != null) {
@@ -372,11 +388,11 @@ final class DeviceMonitor implements ClientTracker {
 
                 synchronized (mClientsToReopen) {
                     if (!mClientsToReopen.isEmpty()) {
-                        Set<Client> clients = mClientsToReopen.keySet();
+                        Set<ClientImpl> clients = mClientsToReopen.keySet();
                         MonitorThread monitorThread = MonitorThread.getInstance();
 
-                        for (Client client : clients) {
-                            Device device = client.getDeviceImpl();
+                        for (ClientImpl client : clients) {
+                            DeviceImpl device = (DeviceImpl) client.getDevice();
                             int pid = client.getClientData().getPid();
 
                             monitorThread.dropClient(client, false /* notify */);
@@ -392,7 +408,7 @@ final class DeviceMonitor implements ClientTracker {
                             }
                             Log.d("DeviceMonitor", "Reopening " + client);
                             openClient(device, pid, port, monitorThread);
-                            device.update(Device.CHANGE_CLIENT_LIST);
+                            device.update(IDevice.CHANGE_CLIENT_LIST);
                         }
 
                         mClientsToReopen.clear();
@@ -402,7 +418,7 @@ final class DeviceMonitor implements ClientTracker {
                 // register any new channels
                 while (!mChannelsToRegister.isEmpty()) {
                     try {
-                        Pair<SocketChannel, Device> data = mChannelsToRegister.take();
+                        Pair<SocketChannel, DeviceImpl> data = mChannelsToRegister.take();
                         data.getFirst().register(mSelector, SelectionKey.OP_READ, data.getSecond());
                     } catch (InterruptedException e) {
                         // doesn't block: this thread is the only reader and it reads only when
@@ -424,8 +440,8 @@ final class DeviceMonitor implements ClientTracker {
                     if (key.isValid() && key.isReadable()) {
                         Object attachment = key.attachment();
 
-                        if (attachment instanceof Device) {
-                            Device device = (Device)attachment;
+                        if (attachment instanceof DeviceImpl) {
+                            DeviceImpl device = (DeviceImpl) attachment;
 
                             SocketChannel socket = device.getClientMonitoringSocket();
 
@@ -435,7 +451,8 @@ final class DeviceMonitor implements ClientTracker {
 
                                     processIncomingJdwpData(device, socket, length);
                                 } catch (IOException ioe) {
-                                    Log.d("DeviceMonitor",
+                                    Log.d(
+                                            "DeviceMonitor",
                                             "Error reading jdwp list: " + ioe.getMessage());
                                     socket.close();
 
@@ -445,7 +462,8 @@ final class DeviceMonitor implements ClientTracker {
                                     }
                                     // restart the monitoring of that device
                                     if (hasDevice) {
-                                        Log.d("DeviceMonitor",
+                                        Log.d(
+                                                "DeviceMonitor",
                                                 "Restarting monitoring service for " + device);
                                         startMonitoringDevice(device);
                                     }
@@ -457,12 +475,11 @@ final class DeviceMonitor implements ClientTracker {
             } catch (IOException e) {
                 Log.e("DeviceMonitor", "Connection error while monitoring clients.");
             }
-
         } while (!mQuit);
     }
 
-    private static boolean sendDeviceMonitoringRequest(@NonNull SocketChannel socket,
-            @NonNull Device device)
+    private static boolean sendDeviceMonitoringRequest(
+            @NonNull SocketChannel socket, @NonNull DeviceImpl device)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
         try {
@@ -485,8 +502,9 @@ final class DeviceMonitor implements ClientTracker {
         }
     }
 
-    private void processIncomingJdwpData(@NonNull Device device,
-            @NonNull SocketChannel monitorSocket, int length) throws IOException {
+    private void processIncomingJdwpData(
+            @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
+            throws IOException {
 
         // This methods reads @length bytes from the @monitorSocket channel.
         // These bytes correspond to the pids of the current set of processes on the device.
@@ -518,16 +536,16 @@ final class DeviceMonitor implements ClientTracker {
 
             MonitorThread monitorThread = MonitorThread.getInstance();
 
-            List<Client> clients = device.getClientList();
-            Map<Integer, Client> existingClients = new HashMap<Integer, Client>();
+            List<ClientImpl> clients = device.getClientList();
+            Map<Integer, ClientImpl> existingClients = new HashMap<Integer, ClientImpl>();
 
             synchronized (clients) {
-                for (Client c : clients) {
+                for (ClientImpl c : clients) {
                     existingClients.put(c.getClientData().getPid(), c);
                 }
             }
 
-            Set<Client> clientsToRemove = new HashSet<Client>();
+            Set<ClientImpl> clientsToRemove = new HashSet<ClientImpl>();
             for (Integer pid : existingClients.keySet()) {
                 if (!newPids.contains(pid)) {
                     clientsToRemove.add(existingClients.get(pid));
@@ -545,19 +563,20 @@ final class DeviceMonitor implements ClientTracker {
             }
 
             if (!pidsToAdd.isEmpty() || !clientsToRemove.isEmpty()) {
-                AndroidDebugBridge.deviceChanged(device, Device.CHANGE_CLIENT_LIST);
+                AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_CLIENT_LIST);
             }
         }
     }
 
     /** Opens and creates a new client. */
-    private static void openClient(@NonNull Device device, int pid, int port,
-            @NonNull MonitorThread monitorThread) {
+    private static void openClient(
+            @NonNull DeviceImpl device, int pid, int port, @NonNull MonitorThread monitorThread) {
 
         SocketChannel clientSocket;
         try {
-            clientSocket = AdbHelper.createPassThroughConnection(
-                    AndroidDebugBridge.getSocketAddress(), device, pid);
+            clientSocket =
+                    AdbHelper.createPassThroughConnection(
+                            AndroidDebugBridge.getSocketAddress(), device, pid);
 
             // required for Selector
             clientSocket.configureBlocking(false);
@@ -565,34 +584,37 @@ final class DeviceMonitor implements ClientTracker {
             Log.d("DeviceMonitor", "Unknown Jdwp pid: " + pid);
             return;
         } catch (TimeoutException e) {
-            Log.w("DeviceMonitor",
-                    "Failed to connect to client '" + pid + "': timeout");
+            Log.w("DeviceMonitor", "Failed to connect to client '" + pid + "': timeout");
             return;
         } catch (AdbCommandRejectedException e) {
             Log.d(
                     "DeviceMonitor",
                     "Adb rejected connection to client '" + pid + "': " + e.getMessage());
             return;
-
         } catch (IOException ioe) {
-            Log.w("DeviceMonitor",
+            Log.w(
+                    "DeviceMonitor",
                     "Failed to connect to client '" + pid + "': " + ioe.getMessage());
-            return ;
+            return;
         }
 
         createClient(device, pid, clientSocket, port, monitorThread);
     }
 
     /** Creates a client and register it to the monitor thread */
-    private static void createClient(@NonNull Device device, int pid, @NonNull SocketChannel socket,
-            int debuggerPort, @NonNull MonitorThread monitorThread) {
+    private static void createClient(
+            @NonNull DeviceImpl device,
+            int pid,
+            @NonNull SocketChannel socket,
+            int debuggerPort,
+            @NonNull MonitorThread monitorThread) {
 
         /*
          * Successfully connected to something. Create a Client object, add
          * it to the list, and initiate the JDWP handshake.
          */
 
-        Client client = new Client(device, socket, pid);
+        ClientImpl client = new ClientImpl(device, socket, pid);
 
         if (client.sendHandshake()) {
             try {
@@ -630,7 +652,7 @@ final class DeviceMonitor implements ClientTracker {
     }
 
     @Override
-    public void trackDisconnectedClient(@NonNull Client client) {
+    public void trackDisconnectedClient(@NonNull ClientImpl client) {
         mDebuggerPorts.free(client.getDebuggerListenPort());
     }
 
@@ -683,12 +705,12 @@ final class DeviceMonitor implements ClientTracker {
         @Override
         public void connectionError(@NonNull Exception e) {
             // TODO(b/37104675): Clearing the device list in response to an exception is probably the wrong thing to do.
-            ImmutableList<Device> devices;
+            ImmutableList<DeviceImpl> devices;
             synchronized (mDevicesGuard) {
                 devices = mDevices;
                 mDevices = ImmutableList.of();
             }
-            for (Device device : devices) {
+            for (DeviceImpl device : devices) {
                 removeDevice(device);
                 AndroidDebugBridge.deviceDisconnected(device);
             }
@@ -696,9 +718,9 @@ final class DeviceMonitor implements ClientTracker {
 
         @Override
         public void deviceListUpdate(@NonNull Map<String, DeviceState> devices) {
-            List<Device> l = Lists.newArrayListWithExpectedSize(devices.size());
+            List<DeviceImpl> l = Lists.newArrayListWithExpectedSize(devices.size());
             for (Map.Entry<String, DeviceState> entry : devices.entrySet()) {
-                l.add(new Device(DeviceMonitor.this, entry.getKey(), entry.getValue()));
+                l.add(new DeviceImpl(DeviceMonitor.this, entry.getKey(), entry.getValue()));
             }
             // now merge the new devices with the old ones.
             updateDevices(l);
@@ -706,12 +728,13 @@ final class DeviceMonitor implements ClientTracker {
     }
 
     @VisibleForTesting
-    static class DeviceListComparisonResult {
-        @NonNull public final Map<IDevice,DeviceState> updated;
+    public static class DeviceListComparisonResult {
+        @NonNull public final Map<IDevice, DeviceState> updated;
         @NonNull public final List<IDevice> added;
         @NonNull public final List<IDevice> removed;
 
-        private DeviceListComparisonResult(@NonNull Map<IDevice,DeviceState> updated,
+        private DeviceListComparisonResult(
+                @NonNull Map<IDevice, DeviceState> updated,
                 @NonNull List<IDevice> added,
                 @NonNull List<IDevice> removed) {
             this.updated = updated;
@@ -720,11 +743,13 @@ final class DeviceMonitor implements ClientTracker {
         }
 
         @NonNull
-        public static DeviceListComparisonResult compare(@NonNull List<? extends IDevice> previous,
+        public static DeviceListComparisonResult compare(
+                @NonNull List<? extends IDevice> previous,
                 @NonNull List<? extends IDevice> current) {
             current = Lists.newArrayList(current);
 
-            final Map<IDevice,DeviceState> updated = Maps.newHashMapWithExpectedSize(current.size());
+            final Map<IDevice, DeviceState> updated =
+                    Maps.newHashMapWithExpectedSize(current.size());
             final List<IDevice> added = Lists.newArrayListWithExpectedSize(1);
             final List<IDevice> removed = Lists.newArrayListWithExpectedSize(1);
 
@@ -746,8 +771,8 @@ final class DeviceMonitor implements ClientTracker {
         }
 
         @Nullable
-        private static IDevice find(@NonNull List<? extends IDevice> devices,
-                @NonNull IDevice device) {
+        private static IDevice find(
+                @NonNull List<? extends IDevice> devices, @NonNull IDevice device) {
             for (IDevice d : devices) {
                 if (d.getSerialNumber().equals(device.getSerialNumber())) {
                     return d;
@@ -759,7 +784,7 @@ final class DeviceMonitor implements ClientTracker {
     }
 
     @VisibleForTesting
-    static class DeviceListMonitorTask implements Runnable {
+    public static class DeviceListMonitorTask implements Runnable {
         private final byte[] mLengthBuffer = new byte[4];
 
         private final AndroidDebugBridge mBridge;
@@ -890,7 +915,7 @@ final class DeviceMonitor implements ClientTracker {
         }
 
         @VisibleForTesting
-        static Map<String, DeviceState> parseDeviceListResponse(@Nullable String result) {
+        public static Map<String, DeviceState> parseDeviceListResponse(@Nullable String result) {
             Map<String, DeviceState> deviceStateMap = Maps.newHashMap();
             String[] devices = result == null ? new String[0] : result.split("\n"); //$NON-NLS-1$
 

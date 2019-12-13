@@ -16,10 +16,10 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
@@ -35,15 +35,14 @@ public class DdmJdwpExtension extends JdwpExtension {
         CLIENT_DISCONNECTED
     }
 
-    @NonNull
-    private final ConcurrentMap<Integer, ChunkHandler> mHandlerMap;
+    @NonNull private final ConcurrentMap<Integer, ChunkHandler> mHandlerMap;
 
     public DdmJdwpExtension() {
         mHandlerMap = new ConcurrentHashMap<Integer, ChunkHandler>();
     }
 
     @Override
-    public void intercept(@NonNull  Client client) {
+    public void intercept(@NonNull ClientImpl client) {
         client.addJdwpInterceptor(new DdmInterceptor(client));
     }
 
@@ -51,7 +50,7 @@ public class DdmJdwpExtension extends JdwpExtension {
         mHandlerMap.putIfAbsent(type, handler);
     }
 
-    void broadcast(Event event, @NonNull  Client client) {
+    void broadcast(Event event, @NonNull ClientImpl client) {
         Log.d("ddms", "broadcast " + event + ": " + client);
 
         /*
@@ -73,8 +72,7 @@ public class DdmJdwpExtension extends JdwpExtension {
                         // later. May need to propagate farther. The
                         // trouble is that not all values for "event" may
                         // actually throw an exception.
-                        Log.w("ddms",
-                                "Got exception while broadcasting 'ready'");
+                        Log.w("ddms", "Got exception while broadcasting 'ready'");
                         return;
                     }
                     break;
@@ -87,7 +85,7 @@ public class DdmJdwpExtension extends JdwpExtension {
         }
     }
 
-    void ddmSeen(@NonNull Client client) {
+    void ddmSeen(@NonNull ClientImpl client) {
         // on first DDM packet received, broadcast a "ready" message
         if (!client.ddmSeen()) {
             broadcast(Event.CLIENT_READY, client);
@@ -97,7 +95,8 @@ public class DdmJdwpExtension extends JdwpExtension {
     /**
      * Returns "true" if this JDWP packet has a JDWP command type.
      *
-     * This never returns "true" for reply packets.
+     * <p>This never returns "true" for reply packets.
+     *
      * @param packet
      */
     static boolean isDdmPacket(JdwpPacket packet) {
@@ -106,10 +105,9 @@ public class DdmJdwpExtension extends JdwpExtension {
 
     public class DdmInterceptor extends JdwpInterceptor {
 
-        @NonNull
-        private final Client mClient;
+        @NonNull private final ClientImpl mClient;
 
-        public DdmInterceptor(@NonNull  Client client) {
+        public DdmInterceptor(@NonNull ClientImpl client) {
             mClient = client;
         }
 

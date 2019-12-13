@@ -22,6 +22,8 @@ import static com.android.ddmlib.Debugger.ConnectionState.ST_READY;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.ClientData.DebuggerStatus;
+import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.DeviceImpl;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
@@ -42,7 +44,7 @@ public class Debugger extends JdwpAgent {
     enum ConnectionState {
         ST_NOT_CONNECTED,
         ST_AWAIT_SHAKE,
-        ST_READY;
+        ST_READY
     }
 
     /**
@@ -64,18 +66,15 @@ public class Debugger extends JdwpAgent {
     private ConnectionState mConnState;
 
     /* peer */
-    private final Client mClient; // client we're forwarding to/from
+    private final ClientImpl mClient; // client we're forwarding to/from
     private int mListenPort;        // listen to me
     private ServerSocketChannel mListenChannel;
 
     /* this goes up and down; synchronize methods that access the field */
     private SocketChannel mChannel;
 
-    /**
-     * Create a new Debugger object, configured to listen for connections
-     * on a specific port.
-     */
-    Debugger(Client client, int listenPort) throws IOException {
+    /** Create a new Debugger object, configured to listen for connections on a specific port. */
+    public Debugger(ClientImpl client, int listenPort) throws IOException {
         super(client.getJdwpProtocol());
         mClient = client;
         mListenPort = listenPort;
@@ -83,9 +82,10 @@ public class Debugger extends JdwpAgent {
         mListenChannel = ServerSocketChannel.open();
         mListenChannel.configureBlocking(false);        // required for Selector
 
-        InetSocketAddress addr = new InetSocketAddress(
-                InetAddress.getByName("localhost"), //$NON-NLS-1$
-                listenPort);
+        InetSocketAddress addr =
+                new InetSocketAddress(
+                        InetAddress.getByName("localhost"), //$NON-NLS-1$
+                        listenPort);
         mListenChannel.socket().setReuseAddress(true);  // enable SO_REUSEADDR
         mListenChannel.socket().bind(addr);
         mListenPort = mListenChannel.socket().getLocalPort();
@@ -122,10 +122,8 @@ public class Debugger extends JdwpAgent {
         return mConnState;
     }
 
-    /**
-     * Returns "true" if a debugger is currently attached to us.
-     */
-    boolean isDebuggerAttached() {
+    /** Returns "true" if a debugger is currently attached to us. */
+    public boolean isDebuggerAttached() {
         return mChannel != null;
     }
 
@@ -135,7 +133,10 @@ public class Debugger extends JdwpAgent {
     @Override
     public String toString() {
         // mChannel != null means we have connection, ST_READY means it's going
-        return "[Debugger " + mListenPort + "-->" + mClient.getClientData().getPid()
+        return "[Debugger "
+                + mListenPort
+                + "-->"
+                + mClient.getClientData().getPid()
                 + ((mConnState != ST_READY) ? " inactive]" : " active]");
     }
 
@@ -146,10 +147,8 @@ public class Debugger extends JdwpAgent {
         mListenChannel.register(sel, SelectionKey.OP_ACCEPT, this);
     }
 
-    /**
-     * Return the Client being debugged.
-     */
-    Client getClient() {
+    /** Return the Client being debugged. */
+    ClientImpl getClient() {
         return mClient;
     }
 
@@ -207,7 +206,7 @@ public class Debugger extends JdwpAgent {
 
                 ClientData cd = mClient.getClientData();
                 cd.setDebuggerConnectionStatus(DebuggerStatus.DEFAULT);
-                mClient.update(Client.CHANGE_DEBUGGER_STATUS);
+                mClient.update(ClientImpl.CHANGE_DEBUGGER_STATUS);
             }
         } catch (IOException ioe) {
             Log.w("ddms", "Failed to close data " + this);
@@ -215,10 +214,10 @@ public class Debugger extends JdwpAgent {
     }
 
     /**
-     * Close the socket that's listening for new connections and (if
-     * we're connected) the debugger data socket.
+     * Close the socket that's listening for new connections and (if we're connected) the debugger
+     * data socket.
      */
-    synchronized void close() {
+    public synchronized void close() {
         try {
             if (mListenChannel != null) {
                 mListenChannel.close();
@@ -272,10 +271,10 @@ public class Debugger extends JdwpAgent {
                             + this
                             + " (recycling client connection as well)");
             closeData();
-            Client client = getClient();
+            ClientImpl client = getClient();
             // we should drop the client, but also attempt to reopen it.
             // This is done by the DeviceMonitor.
-            client.getDeviceImpl()
+            ((DeviceImpl) client.getDevice())
                     .getClientTracker()
                     .trackClientToDropAndReopen(
                             client, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
@@ -354,7 +353,7 @@ public class Debugger extends JdwpAgent {
 
                     ClientData cd = mClient.getClientData();
                     cd.setDebuggerConnectionStatus(DebuggerStatus.ATTACHED);
-                    mClient.update(Client.CHANGE_DEBUGGER_STATUS);
+                    mClient.update(ClientImpl.CHANGE_DEBUGGER_STATUS);
 
                     // see if we have another packet in the buffer
                     return getJdwpPacket();

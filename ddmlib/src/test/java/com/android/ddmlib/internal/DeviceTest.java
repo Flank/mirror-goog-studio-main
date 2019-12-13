@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.IShellOutputReceiver;
+import com.android.ddmlib.RemoteSplitApkInstaller;
+import com.android.ddmlib.ScreenRecorderOptions;
+import com.android.ddmlib.SplitApkInstaller;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.ArrayList;
@@ -31,20 +36,23 @@ public class DeviceTest extends TestCase {
     public void testScreenRecorderOptions() {
         ScreenRecorderOptions options =
                 new ScreenRecorderOptions.Builder().setBitRate(6).setSize(600, 400).build();
-        assertEquals("screenrecord --size 600x400 --bit-rate 6000000 /sdcard/1.mp4",
-                Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+        assertEquals(
+                "screenrecord --size 600x400 --bit-rate 6000000 /sdcard/1.mp4",
+                DeviceImpl.getScreenRecorderCommand("/sdcard/1.mp4", options));
 
         options = new ScreenRecorderOptions.Builder().setTimeLimit(100, TimeUnit.SECONDS).build();
-        assertEquals("screenrecord --time-limit 100 /sdcard/1.mp4",
-                Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+        assertEquals(
+                "screenrecord --time-limit 100 /sdcard/1.mp4",
+                DeviceImpl.getScreenRecorderCommand("/sdcard/1.mp4", options));
 
         options = new ScreenRecorderOptions.Builder().setTimeLimit(4, TimeUnit.MINUTES).build();
-        assertEquals("screenrecord --time-limit 180 /sdcard/1.mp4",
-                Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+        assertEquals(
+                "screenrecord --time-limit 180 /sdcard/1.mp4",
+                DeviceImpl.getScreenRecorderCommand("/sdcard/1.mp4", options));
     }
 
     public void testInstallPackages() throws Exception {
-        IDevice mMockIDevice = createMockDevice();
+        IDevice mMockDevice = createMockDevice();
         List<File> apks = new ArrayList<File>();
         for (int i = 0; i < 3; i++) {
             File apkFile = File.createTempFile("test", ".apk");
@@ -52,42 +60,43 @@ public class DeviceTest extends TestCase {
         }
         List<String> installOptions = new ArrayList<String>();
         installOptions.add("-d");
-        mMockIDevice.installPackages(apks, true, installOptions);
-        mMockIDevice.installPackages(apks, true, installOptions, 1000L, TimeUnit.MINUTES);
-        EasyMock.expect(mMockIDevice.getVersion())
+        mMockDevice.installPackages(apks, true, installOptions);
+        mMockDevice.installPackages(apks, true, installOptions, 1000L, TimeUnit.MINUTES);
+        EasyMock.expect(mMockDevice.getVersion())
                 .andStubReturn(
                         new AndroidVersion(
                                 AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
         EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
-        SplitApkInstaller.create(mMockIDevice, apks, true, installOptions);
+        EasyMock.replay(mMockDevice);
+        SplitApkInstaller.create(mMockDevice, apks, true, installOptions);
         for (File apkFile : apks) {
             apkFile.delete();
         }
     }
 
     public void testInstallRemotePackages() throws Exception {
-        IDevice mMockIDevice = createMockDevice();
+        IDevice mMockDevice = createMockDevice();
         List<String> remoteApkPaths = new ArrayList<String>();
         remoteApkPaths.add("/data/local/tmp/foo.apk");
         remoteApkPaths.add("/data/local/tmp/foo.dm");
         List<String> installOptions = new ArrayList<String>();
         installOptions.add("-d");
-        mMockIDevice.installRemotePackages(remoteApkPaths, true, installOptions);
-        mMockIDevice.installRemotePackages(
+        mMockDevice.installRemotePackages(remoteApkPaths, true, installOptions);
+        mMockDevice.installRemotePackages(
                 remoteApkPaths, true, installOptions, 1000L, TimeUnit.MINUTES);
-        EasyMock.expect(mMockIDevice.getVersion())
+        EasyMock.expect(mMockDevice.getVersion())
                 .andStubReturn(
                         new AndroidVersion(
                                 AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
         EasyMock.expectLastCall();
-        EasyMock.replay(mMockIDevice);
-        RemoteSplitApkInstaller.create(mMockIDevice, remoteApkPaths, true, installOptions);
+        EasyMock.replay(mMockDevice);
+        RemoteSplitApkInstaller.create(mMockDevice, remoteApkPaths, true, installOptions);
     }
 
     /** Helper method that sets the mock device to return the given response on a shell command */
     @SuppressWarnings("unchecked")
-    static void injectShellResponse(IDevice mockDevice, final String response) throws Exception {
+    public static void injectShellResponse(IDevice mockDevice, final String response)
+            throws Exception {
         IAnswer<Object> shellAnswer =
                 () -> {
                     // insert small delay to simulate latency
@@ -107,8 +116,8 @@ public class DeviceTest extends TestCase {
     }
 
     /** Helper method that sets the mock device to throw the given exception on a shell command */
-    static void injectShellExceptionResponse(@NonNull IDevice mockDevice, @NonNull Throwable e)
-            throws Exception {
+    public static void injectShellExceptionResponse(
+            @NonNull IDevice mockDevice, @NonNull Throwable e) throws Exception {
         mockDevice.executeShellCommand(
                 EasyMock.anyObject(),
                 EasyMock.anyObject(),
@@ -118,7 +127,7 @@ public class DeviceTest extends TestCase {
     }
 
     /** Helper method that creates a mock device. */
-    static IDevice createMockDevice() {
+    public static IDevice createMockDevice() {
         IDevice mockDevice = EasyMock.createMock(IDevice.class);
         EasyMock.expect(mockDevice.getSerialNumber()).andStubReturn("serial");
         EasyMock.expect(mockDevice.isOnline()).andStubReturn(Boolean.TRUE);

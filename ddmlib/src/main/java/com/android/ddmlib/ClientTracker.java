@@ -17,10 +17,11 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.internal.ClientImpl;
 
-/** Tracks device {@link Client clients} */
-interface ClientTracker {
-    void trackDisconnectedClient(@NonNull Client client);
+/** Tracks device {@link ClientImpl clients} */
+public interface ClientTracker {
+    void trackDisconnectedClient(@NonNull ClientImpl client);
 
-    void trackClientToDropAndReopen(@NonNull Client client, int port);
+    void trackClientToDropAndReopen(@NonNull ClientImpl client, int port);
 }

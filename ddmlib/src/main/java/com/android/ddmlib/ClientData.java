@@ -19,6 +19,8 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.HeapSegment.HeapSegmentElement;
+import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.DeviceImpl;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -33,9 +35,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 
-/**
- * Contains the data of a {@link Client}.
- */
+/** Contains the data of a {@link ClientImpl}. */
 public class ClientData {
     /* This is a place to stash data associated with a Client, such as thread
     * states or heap data.  ClientData maps 1:1 to Client, but it's a little
@@ -72,32 +72,36 @@ public class ClientData {
     public enum AllocationTrackingStatus {
         /**
          * Allocation tracking status: unknown.
-         * <p>This happens right after a {@link Client} is discovered
-         * by the {@link AndroidDebugBridge}, and before the {@link Client} answered the query
-         * regarding its allocation tracking status.
-         * @see Client#requestAllocationStatus()
+         *
+         * <p>This happens right after a {@link ClientImpl} is discovered by the {@link
+         * AndroidDebugBridge}, and before the {@link ClientImpl} answered the query regarding its
+         * allocation tracking status.
+         *
+         * @see ClientImpl#requestAllocationStatus()
          */
         UNKNOWN,
-        /** Allocation tracking status: the {@link Client} is not tracking allocations. */
+        /** Allocation tracking status: the {@link ClientImpl} is not tracking allocations. */
         OFF,
-        /** Allocation tracking status: the {@link Client} is tracking allocations. */
+        /** Allocation tracking status: the {@link ClientImpl} is tracking allocations. */
         ON
     }
 
     public enum MethodProfilingStatus {
         /**
          * Method profiling status: unknown.
-         * <p>This happens right after a {@link Client} is discovered
-         * by the {@link AndroidDebugBridge}, and before the {@link Client} answered the query
-         * regarding its method profiling status.
-         * @see Client#requestMethodProfilingStatus()
+         *
+         * <p>This happens right after a {@link ClientImpl} is discovered by the {@link
+         * AndroidDebugBridge}, and before the {@link ClientImpl} answered the query regarding its
+         * method profiling status.
+         *
+         * @see ClientImpl#requestMethodProfilingStatus()
          */
         UNKNOWN,
-        /** Method profiling status: the {@link Client} is not profiling method calls. */
+        /** Method profiling status: the {@link ClientImpl} is not profiling method calls. */
         OFF,
-        /** Method profiling status: the {@link Client} is tracing method calls. */
+        /** Method profiling status: the {@link ClientImpl} is tracing method calls. */
         TRACER_ON,
-        /** Method profiling status: the {@link Client} is being profiled via sampling. */
+        /** Method profiling status: the {@link ClientImpl} is being profiled via sampling. */
         SAMPLER_ON
     }
 
@@ -149,13 +153,16 @@ public class ClientData {
     private static IAllocationTrackingHandler sAllocationTrackingHandler;
 
     // owning Client
-    private final Client mClient;
+    private final ClientImpl mClient;
 
     // the client's process ID
     private final int mPid;
 
     // Java VM identification string
     private String mVmIdentifier;
+
+    // client's underlying package name (R+ only)
+    private String mPackageName = DeviceImpl.UNKNOWN_PACKAGE;
 
     // client's self-description
     private Names mClientNames = UNINITIALIZED;
@@ -417,13 +424,14 @@ public class ClientData {
      * Handlers able to act on allocation tracking info
      */
     public interface IAllocationTrackingHandler {
-      /**
-       * Called when an allocation tracking was successful.
-       * @param data the data containing the encoded allocations.
-       *             See {@link AllocationsParser#parse(java.nio.ByteBuffer)} for parsing this data.
-       * @param client the client for which allocations were tracked.
-       */
-      void onSuccess(@NonNull byte[] data, @NonNull Client client);
+        /**
+         * Called when an allocation tracking was successful.
+         *
+         * @param data the data containing the encoded allocations. See {@link
+         *     AllocationsParser#parse(ByteBuffer)} for parsing this data.
+         * @param client the client for which allocations were tracked.
+         */
+        void onSuccess(@NonNull byte[] data, @NonNull Client client);
     }
 
     public void setHprofData(byte[] data) {
@@ -469,8 +477,9 @@ public class ClientData {
     }
 
     /**
-     * This method is deprecated. Please register an {@link com.android.ddmlib.AndroidDebugBridge.IClientChangeListener} with
-     * {@link AndroidDebugBridge#addClientChangeListener(AndroidDebugBridge.IClientChangeListener)}
+     * This method is deprecated. Please register an {@link
+     * AndroidDebugBridge.IClientChangeListener} with {@link
+     * AndroidDebugBridge#addClientChangeListener(AndroidDebugBridge.IClientChangeListener)}
      */
     @Deprecated
     public static void setAllocationTrackingHandler(@NonNull IAllocationTrackingHandler handler) {
@@ -484,12 +493,12 @@ public class ClientData {
     }
 
     /** Generic constructor. */
-    ClientData(@NonNull Client client, int pid) {
+    public ClientData(@NonNull ClientImpl client, int pid) {
         mClient = client;
         mPid = pid;
 
         mDebuggerInterest = DebuggerStatus.DEFAULT;
-        mThreadMap = new TreeMap<Integer,ThreadInfo>();
+        mThreadMap = new TreeMap<Integer, ThreadInfo>();
     }
 
     /**
@@ -596,10 +605,8 @@ public class ClientData {
         return mDebuggerInterest;
     }
 
-    /**
-     * Sets debugger connection status.
-     */
-    void setDebuggerConnectionStatus(DebuggerStatus status) {
+    /** Sets debugger connection status. */
+    public void setDebuggerConnectionStatus(DebuggerStatus status) {
         mDebuggerInterest = status;
     }
 
@@ -676,8 +683,9 @@ public class ClientData {
 
     /**
      * Returns the list of threads as {@link ThreadInfo} objects.
-     * <p>The list is empty until a thread update was requested with
-     * {@link Client#requestThreadUpdate()}.
+     *
+     * <p>The list is empty until a thread update was requested with {@link
+     * ClientImpl#requestThreadUpdate()}.
      */
     public synchronized ThreadInfo[] getThreads() {
         Collection<ThreadInfo> threads = mThreadMap.values();
@@ -691,20 +699,22 @@ public class ClientData {
         return mThreadMap.get(threadId);
     }
 
-    synchronized void clearThreads() {
+    public synchronized void clearThreads() {
         mThreadMap.clear();
     }
 
     /**
      * Returns the list of {@link NativeAllocationInfo}.
-     * @see Client#requestNativeHeapInformation()
+     *
+     * @see ClientImpl#requestNativeHeapInformation()
      */
     public synchronized List<NativeAllocationInfo> getNativeAllocationList() {
         return Collections.unmodifiableList(mNativeAllocationList);
     }
 
     /**
-     * adds a new {@link NativeAllocationInfo} to the {@link Client}
+     * adds a new {@link NativeAllocationInfo} to the {@link ClientImpl}
+     *
      * @param allocInfo The {@link NativeAllocationInfo} to add.
      */
     synchronized void addNativeAllocation(NativeAllocationInfo allocInfo) {
@@ -720,7 +730,8 @@ public class ClientData {
 
     /**
      * Returns the total native memory.
-     * @see Client#requestNativeHeapInformation()
+     *
+     * @see ClientImpl#requestNativeHeapInformation()
      */
     public synchronized int getTotalNativeMemory() {
         return mNativeTotalMemory;
@@ -747,7 +758,8 @@ public class ClientData {
 
     /**
      * Returns the allocation tracking status.
-     * @see Client#requestAllocationStatus()
+     *
+     * @see ClientImpl#requestAllocationStatus()
      */
     public synchronized AllocationTrackingStatus getAllocationStatus() {
         return mAllocationStatus;
@@ -759,7 +771,8 @@ public class ClientData {
 
     /**
      * Returns the raw data for tracked allocations.
-     * @see Client#requestAllocationDetails()
+     *
+     * @see ClientImpl#requestAllocationDetails()
      */
     public synchronized byte[] getAllocationsData() {
         return mAllocationsData;
@@ -772,7 +785,8 @@ public class ClientData {
 
     /**
      * Returns the list of tracked allocations.
-     * @see Client#requestAllocationDetails()
+     *
+     * @see ClientImpl#requestAllocationDetails()
      */
     @Nullable
     public synchronized AllocationInfo[] getAllocations() {
@@ -787,10 +801,10 @@ public class ClientData {
     }
 
     /**
-     * Returns true if the {@link Client} supports the given <var>feature</var>
+     * Returns true if the {@link ClientImpl} supports the given <var>feature</var>
+     *
      * @param feature The feature to test.
      * @return true if the feature is supported
-     *
      * @see ClientData#FEATURE_PROFILING
      * @see ClientData#FEATURE_HPROF
      */
@@ -826,7 +840,8 @@ public class ClientData {
 
     /**
      * Returns the method profiling status.
-     * @see Client#requestMethodProfilingStatus()
+     *
+     * @see ClientImpl#requestMethodProfilingStatus()
      */
     public synchronized MethodProfilingStatus getMethodProfilingStatus() {
         return mProfilingStatus;

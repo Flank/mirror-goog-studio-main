@@ -16,14 +16,13 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
-/**
- * Handle the "hello" chunk (HELO) and feature discovery.
- */
-final class HandleHello extends ChunkHandler {
+/** Handle the "hello" chunk (HELO) and feature discovery. */
+public final class HandleHello extends ChunkHandler {
 
     public static final int CHUNK_HELO = ChunkHandler.type("HELO");
     public static final int CHUNK_FEAT = ChunkHandler.type("FEAT");
@@ -32,47 +31,41 @@ final class HandleHello extends ChunkHandler {
 
     private HandleHello() {}
 
-    /**
-     * Register for the packets we expect to get from the client.
-     */
+    /** Register for the packets we expect to get from the client. */
     public static void register(MonitorThread mt) {
         mt.registerChunkHandler(CHUNK_HELO, mInst);
     }
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {
+    public void clientReady(ClientImpl client) {
         Log.d("ddm-hello", "Now ready: " + client);
     }
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {
+    public void clientDisconnected(ClientImpl client) {
         Log.d("ddm-hello", "Now disconnected: " + client);
     }
 
     /**
      * Sends HELLO-type commands to the VM after a good handshake.
+     *
      * @param client
      * @param serverProtocolVersion
      * @throws IOException
      */
-    public static void sendHelloCommands(Client client, int serverProtocolVersion)
+    public static void sendHelloCommands(ClientImpl client, int serverProtocolVersion)
             throws IOException {
         sendHELO(client, serverProtocolVersion);
         sendFEAT(client);
         HandleProfiling.sendMPRQ(client);
     }
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
 
         Log.d("ddm-hello", "handling " + ChunkHandler.name(type));
 
@@ -89,7 +82,7 @@ final class HandleHello extends ChunkHandler {
     /*
      * Handle a reply to our HELO message.
      */
-    private static void handleHELO(Client client, ByteBuffer data) {
+    private static void handleHELO(ClientImpl client, ByteBuffer data) {
         int version, pid, vmIdentLen, appNameLen;
         String vmIdent, processName;
 
@@ -157,7 +150,7 @@ final class HandleHello extends ChunkHandler {
             }
         }
 
-        String packageName = Device.UNKNOWN_PACKAGE;
+        String packageName = IDevice.UNKNOWN_PACKAGE;
         if (data.hasRemaining()) {
             try {
                 int packageNameLength = data.getInt();
@@ -184,24 +177,20 @@ final class HandleHello extends ChunkHandler {
 
             cd.setNativeDebuggable(nativeDebuggable);
         } else {
-            Log.e("ddm-hello", "Received pid (" + pid + ") does not match client pid ("
-                    + cd.getPid() + ")");
+            Log.e(
+                    "ddm-hello",
+                    "Received pid (" + pid + ") does not match client pid (" + cd.getPid() + ")");
         }
 
         client = checkDebuggerPortForAppName(client, processName);
 
         if (client != null) {
-            client.update(Client.CHANGE_NAME);
+            client.update(ClientImpl.CHANGE_NAME);
         }
     }
 
-
-    /**
-     * Send a HELO request to the client.
-     */
-    public static void sendHELO(Client client, int serverProtocolVersion)
-        throws IOException
-    {
+    /** Send a HELO request to the client. */
+    public static void sendHELO(ClientImpl client, int serverProtocolVersion) throws IOException {
         ByteBuffer rawBuf = allocBuffer(4);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -209,15 +198,14 @@ final class HandleHello extends ChunkHandler {
         buf.putInt(serverProtocolVersion);
 
         finishChunkPacket(packet, CHUNK_HELO, buf.position());
-        Log.d("ddm-hello", "Sending " + name(CHUNK_HELO)
-            + " ID=0x" + Integer.toHexString(packet.getId()));
+        Log.d(
+                "ddm-hello",
+                "Sending " + name(CHUNK_HELO) + " ID=0x" + Integer.toHexString(packet.getId()));
         client.send(packet, mInst);
     }
 
-    /**
-     * Handle a reply to our FEAT request.
-     */
-    private static void handleFEAT(Client client, ByteBuffer data) {
+    /** Handle a reply to our FEAT request. */
+    private static void handleFEAT(ClientImpl client, ByteBuffer data) {
         int featureCount;
         int i;
 
@@ -231,10 +219,8 @@ final class HandleHello extends ChunkHandler {
         }
     }
 
-    /**
-     * Send a FEAT request to the client.
-     */
-    public static void sendFEAT(Client client) throws IOException {
+    /** Send a FEAT request to the client. */
+    public static void sendFEAT(ClientImpl client) throws IOException {
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);

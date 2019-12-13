@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.DeviceImpl;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpCommands;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
@@ -46,7 +48,7 @@ public class DebuggerTest extends TestCase {
     private EmptyAdbServer emptyAdbServer;
     private SocketChannel debuggerClientChannel;
     private SocketChannel emptyAdbServerClientChannel;
-    private Client client;
+    private ClientImpl client;
     private Debugger debugger;
     private CompletableFuture<Void> emptyAdbServerFuture;
 
@@ -69,8 +71,8 @@ public class DebuggerTest extends TestCase {
         ClientTracker deviceMonitor = EasyMock.createMock(ClientTracker.class);
 
         emptyAdbServerClientChannel = SocketChannel.open();
-        Device device = new Device(deviceMonitor, "11", IDevice.DeviceState.ONLINE);
-        client = new Client(device, emptyAdbServerClientChannel, 1);
+        DeviceImpl device = new DeviceImpl(deviceMonitor, "11", IDevice.DeviceState.ONLINE);
+        client = new ClientImpl(device, emptyAdbServerClientChannel, 1);
 
         debuggerClientChannel = SocketChannel.open();
         debugger = new Debugger(client, 0);

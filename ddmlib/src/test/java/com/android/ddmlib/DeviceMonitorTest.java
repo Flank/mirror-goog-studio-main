@@ -16,22 +16,20 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-
+import com.android.ddmlib.internal.DeviceMonitor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
 
 public class DeviceMonitorTest extends TestCase {
     public void testDeviceListMonitor() {
-        Map<String, IDevice.DeviceState> map = DeviceMonitor.DeviceListMonitorTask
-                .parseDeviceListResponse(
-                          "R32C801BL5K\tdevice\n"
-                        + "0079864fd1d150fd\tunauthorized\n"
-                        + "002ee7a50f6642d3\tsideload\n");
+        Map<String, IDevice.DeviceState> map =
+                DeviceMonitor.DeviceListMonitorTask.parseDeviceListResponse(
+                        "R32C801BL5K\tdevice\n"
+                                + "0079864fd1d150fd\tunauthorized\n"
+                                + "002ee7a50f6642d3\tsideload\n");
 
         assertEquals(IDevice.DeviceState.ONLINE, map.get("R32C801BL5K"));
         assertEquals(IDevice.DeviceState.UNAUTHORIZED, map.get("0079864fd1d150fd"));
@@ -39,17 +37,17 @@ public class DeviceMonitorTest extends TestCase {
     }
 
     public void testDeviceListComparator() {
-        List<IDevice> previous = Arrays.asList(
-                mockDevice("1", IDevice.DeviceState.ONLINE),
-                mockDevice("2", IDevice.DeviceState.BOOTLOADER)
-        );
-        List<IDevice> current = Arrays.asList(
-                mockDevice("2", IDevice.DeviceState.ONLINE),
-                mockDevice("3", IDevice.DeviceState.OFFLINE)
-        );
+        List<IDevice> previous =
+                Arrays.asList(
+                        mockDevice("1", IDevice.DeviceState.ONLINE),
+                        mockDevice("2", IDevice.DeviceState.BOOTLOADER));
+        List<IDevice> current =
+                Arrays.asList(
+                        mockDevice("2", IDevice.DeviceState.ONLINE),
+                        mockDevice("3", IDevice.DeviceState.OFFLINE));
 
-        DeviceMonitor.DeviceListComparisonResult result = DeviceMonitor.DeviceListComparisonResult
-                .compare(previous, current);
+        DeviceMonitor.DeviceListComparisonResult result =
+                DeviceMonitor.DeviceListComparisonResult.compare(previous, current);
 
         assertEquals(1, result.updated.size());
         assertEquals(IDevice.DeviceState.ONLINE, result.updated.get(previous.get(1)));

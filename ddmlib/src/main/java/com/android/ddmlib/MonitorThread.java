@@ -17,8 +17,10 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
@@ -35,10 +37,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Monitor open connections.
- */
-final class MonitorThread extends Thread {
+/** Monitor open connections. */
+public final class MonitorThread extends Thread {
 
     private final DdmJdwpExtension mDdmJdwpExtension;
 
@@ -46,7 +46,7 @@ final class MonitorThread extends Thread {
 
     // List of clients we're paying attention to
     // Used for locking so final.
-    final private ArrayList<Client> mClientList;
+    private final ArrayList<ClientImpl> mClientList;
 
     // The almighty mux
     private Selector mSelector;
@@ -60,10 +60,8 @@ final class MonitorThread extends Thread {
 
     private int mDebugSelectedPort = -1;
 
-    /**
-     * "Selected" client setup to answer debugging connection to the mNewDebugSelectedPort port.
-     */
-    private Client mSelectedClient = null;
+    /** "Selected" client setup to answer debugging connection to the mNewDebugSelectedPort port. */
+    private ClientImpl mSelectedClient = null;
 
     // singleton
     private static MonitorThread sInstance;
@@ -73,7 +71,7 @@ final class MonitorThread extends Thread {
      */
     private MonitorThread() {
         super("Monitor");
-        mClientList = new ArrayList<Client>();
+        mClientList = new ArrayList<ClientImpl>();
 
         mNewDebugSelectedPort = DdmPreferences.getSelectedDebugPort();
 
@@ -89,17 +87,14 @@ final class MonitorThread extends Thread {
         return sInstance = new MonitorThread();
     }
 
-    /**
-     * Get singleton instance of the client monitor thread.
-     */
-    static MonitorThread getInstance() {
+    /** Get singleton instance of the client monitor thread. */
+    public static MonitorThread getInstance() {
         return sInstance;
     }
 
 
-    /**
-     * Sets or changes the port number for "debug selected".
-     */
+    /** Sets or changes the port number for "debug selected". */
+    @Deprecated
     synchronized void setDebugSelectedPort(int port) throws IllegalStateException {
         if (sInstance == null) {
             return;
@@ -122,50 +117,48 @@ final class MonitorThread extends Thread {
 
     /**
      * Sets the client to accept debugger connection on the custom "Selected debug port".
+     *
      * @param selectedClient the client. Can be null.
      */
-    synchronized void setSelectedClient(Client selectedClient) {
+    @Deprecated
+    public synchronized void setSelectedClient(ClientImpl selectedClient) {
         if (sInstance == null) {
             return;
         }
 
         if (mSelectedClient != selectedClient) {
-            Client oldClient = mSelectedClient;
+            ClientImpl oldClient = mSelectedClient;
             mSelectedClient = selectedClient;
 
             if (oldClient != null) {
-                oldClient.update(Client.CHANGE_PORT);
+                oldClient.update(ClientImpl.CHANGE_PORT);
             }
 
             if (mSelectedClient != null) {
-                mSelectedClient.update(Client.CHANGE_PORT);
+                mSelectedClient.update(ClientImpl.CHANGE_PORT);
             }
         }
     }
 
-    /**
-     * Returns the client accepting debugger connection on the custom "Selected debug port".
-     */
-    Client getSelectedClient() {
+    /** Returns the client accepting debugger connection on the custom "Selected debug port". */
+    @Deprecated
+    public ClientImpl getSelectedClient() {
         return mSelectedClient;
     }
 
 
     /**
-     * Returns "true" if we want to retry connections to clients if we get a bad
-     * JDWP handshake back, "false" if we want to just mark them as bad and
-     * leave them alone.
+     * Returns "true" if we want to retry connections to clients if we get a bad JDWP handshake
+     * back, "false" if we want to just mark them as bad and leave them alone.
      */
-    boolean getRetryOnBadHandshake() {
+    public boolean getRetryOnBadHandshake() {
         return true; // TODO? make configurable
     }
 
-    /**
-     * Get an array of known clients.
-     */
-    Client[] getClients() {
+    /** Get an array of known clients. */
+    ClientImpl[] getClients() {
         synchronized (mClientList) {
-            return mClientList.toArray(new Client[0]);
+            return mClientList.toArray(new ClientImpl[0]);
         }
     }
 
@@ -249,7 +242,7 @@ final class MonitorThread extends Thread {
                     iter.remove();
 
                     try {
-                        if (key.attachment() instanceof Client) {
+                        if (key.attachment() instanceof ClientImpl) {
                             processClientActivity(key);
                         }
                         else if (key.attachment() instanceof Debugger) {
@@ -289,7 +282,7 @@ final class MonitorThread extends Thread {
      * Something happened. Figure out what.
      */
     private void processClientActivity(SelectionKey key) {
-        Client client = (Client)key.attachment();
+        ClientImpl client = (ClientImpl) key.attachment();
 
         try {
             if (!key.isReadable() || !key.isValid()) {
@@ -339,11 +332,14 @@ final class MonitorThread extends Thread {
 
     /**
      * Drops a client from the monitor.
-     * <p>This will lock the {@link Client} list of the {@link Device} running <var>client</var>.
+     *
+     * <p>This will lock the {@link ClientImpl} list of the {@link IDevice} running
+     * <var>client</var>.
+     *
      * @param client
      * @param notify
      */
-    synchronized void dropClient(Client client, boolean notify) {
+    public synchronized void dropClient(ClientImpl client, boolean notify) {
         if (sInstance == null) {
             return;
         }
@@ -364,11 +360,11 @@ final class MonitorThread extends Thread {
     }
 
     /**
-     * Drops the provided list of clients from the monitor. This will lock the {@link Client}
-     * list of the {@link Device} running each of the clients.
+     * Drops the provided list of clients from the monitor. This will lock the {@link ClientImpl}
+     * list of the {@link IDevice} running each of the clients.
      */
-    synchronized void dropClients(Collection<? extends Client> clients, boolean notify) {
-        for (Client c : clients) {
+    public synchronized void dropClients(Collection<? extends ClientImpl> clients, boolean notify) {
+        for (ClientImpl c : clients) {
             dropClient(c, notify);
         }
     }
@@ -467,7 +463,7 @@ final class MonitorThread extends Thread {
             // since we're quitting, lets drop all the client and disconnect
             // the DebugSelectedPort
             synchronized (mClientList) {
-                for (Client c : mClientList) {
+                for (ClientImpl c : mClientList) {
                     c.close(false /* notify */);
                     mDdmJdwpExtension.broadcast(DdmJdwpExtension.Event.CLIENT_DISCONNECTED, c);
                 }
@@ -493,12 +489,11 @@ final class MonitorThread extends Thread {
     }
 
     /**
-     * Add a new Client to the list of things we monitor. Also adds the client's
-     * channel and the client's debugger listener to the selection list. This
-     * should only be called from one thread (the VMWatcherThread) to avoid a
-     * race between "alreadyOpen" and Client creation.
+     * Add a new Client to the list of things we monitor. Also adds the client's channel and the
+     * client's debugger listener to the selection list. This should only be called from one thread
+     * (the VMWatcherThread) to avoid a race between "alreadyOpen" and Client creation.
      */
-    synchronized void addClient(Client client) {
+    public synchronized void addClient(ClientImpl client) {
         if (sInstance == null) {
             return;
         }
@@ -559,13 +554,13 @@ final class MonitorThread extends Thread {
         try {
             mDebugSelectedChan.socket().bind(addr);
             if (mSelectedClient != null) {
-                mSelectedClient.update(Client.CHANGE_PORT);
+                mSelectedClient.update(ClientImpl.CHANGE_PORT);
             }
 
             mDebugSelectedChan.register(mSelector, SelectionKey.OP_ACCEPT, this);
 
             return true;
-        } catch (java.net.BindException e) {
+        } catch (BindException e) {
             displayDebugSelectedBindError(mNewDebugSelectedPort);
 
             // do not attempt to reopen it.

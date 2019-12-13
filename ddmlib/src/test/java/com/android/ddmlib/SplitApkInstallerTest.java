@@ -15,6 +15,7 @@
  */
 package com.android.ddmlib;
 
+import com.android.ddmlib.internal.DeviceTest;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class SplitApkInstallerTest extends TestCase {
     private Long mTimeout;
     private TimeUnit mTimeUnit;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         mMockIDevice = DeviceTest.createMockDevice();
@@ -52,6 +54,7 @@ public class SplitApkInstallerTest extends TestCase {
         mTimeUnit = TimeUnit.SECONDS;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         for (File apkFile : mLocalApks) {

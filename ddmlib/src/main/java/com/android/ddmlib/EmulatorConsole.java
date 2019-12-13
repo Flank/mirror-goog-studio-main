@@ -171,13 +171,17 @@ public final class EmulatorConsole {
 
     public static final String RESULT_OK = null;
 
-    private static final Pattern sEmulatorRegexp = Pattern.compile(Device.RE_EMULATOR_SN);
-    private static final Pattern sVoiceStatusRegexp = Pattern.compile(
-            "gsm\\s+voice\\s+state:\\s*([a-z]+)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static final Pattern sDataStatusRegexp = Pattern.compile(
-            "gsm\\s+data\\s+state:\\s*([a-z]+)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static final Pattern sDownloadSpeedRegexp = Pattern.compile(
-            "\\s+download\\s+speed:\\s+(\\d+)\\s+bits.*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static final Pattern sEmulatorRegexp = Pattern.compile(IDevice.RE_EMULATOR_SN);
+    private static final Pattern sVoiceStatusRegexp =
+            Pattern.compile(
+                    "gsm\\s+voice\\s+state:\\s*([a-z]+)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static final Pattern sDataStatusRegexp =
+            Pattern.compile(
+                    "gsm\\s+data\\s+state:\\s*([a-z]+)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static final Pattern sDownloadSpeedRegexp =
+            Pattern.compile(
+                    "\\s+download\\s+speed:\\s+(\\d+)\\s+bits.*",
+                    Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     private static final Pattern sMinLatencyRegexp = Pattern.compile(
             "\\s+minimum\\s+latency:\\s+(\\d+)\\s+ms", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 
@@ -210,11 +214,12 @@ public final class EmulatorConsole {
     private byte[] mBuffer = new byte[1024];
 
     /**
-     * Returns an {@link EmulatorConsole} object for the given {@link Device}. This can
-     * be an already existing console, or a new one if it hadn't been created yet.
-     * Note: emulator consoles don't automatically close when an emulator exists. It is the
-     * responsibility of higher level code to explicitly call {@link #close()} when the emulator
-     * corresponding to a open console is killed.
+     * Returns an {@link EmulatorConsole} object for the given {@link IDevice}. This can be an
+     * already existing console, or a new one if it hadn't been created yet. Note: emulator consoles
+     * don't automatically close when an emulator exists. It is the responsibility of higher level
+     * code to explicitly call {@link #close()} when the emulator corresponding to a open console is
+     * killed.
+     *
      * @param d The device that the console links to.
      * @return an <code>EmulatorConsole</code> object or <code>null</code> if the connection failed.
      */
@@ -271,7 +276,7 @@ public final class EmulatorConsole {
         synchronized (sEmulators) {
             EmulatorConsole console = sEmulators.get(port);
             if (console == null) {
-                Log.v(LOG_TAG, "Creating emulator console for " + Integer.toString(port));
+                Log.v(LOG_TAG, "Creating emulator console for " + port);
                 console = new EmulatorConsole(port);
                 sEmulators.put(port, console);
             }
@@ -330,7 +335,7 @@ public final class EmulatorConsole {
                     }
                 }
             } catch (IOException e) {
-                Log.w(LOG_TAG, "Failed to start Emulator console for " + Integer.toString(mPort));
+                Log.w(LOG_TAG, "Failed to start Emulator console for " + mPort);
                 return false;
             } catch (AndroidLocation.AndroidLocationException e) {
                 Log.w(LOG_TAG, "Failed to get emulator console auth token");
@@ -619,8 +624,7 @@ public final class EmulatorConsole {
             try {
                 bCommand = command.getBytes(DEFAULT_ENCODING);
             } catch (UnsupportedEncodingException e) {
-                Log.w(LOG_TAG, "wrong encoding when sending " + command + " to " +
-                        Integer.toString(mPort));
+                Log.w(LOG_TAG, "wrong encoding when sending " + command + " to " + mPort);
                 // wrong encoding...
                 return result;
             }
@@ -630,8 +634,7 @@ public final class EmulatorConsole {
 
             result = true;
         } catch (Exception e) {
-            Log.d(LOG_TAG, "Exception sending command " + command + " to " +
-                Integer.toString(mPort));
+            Log.d(LOG_TAG, "Exception sending command " + command + " to " + mPort);
             return false;
         }
 
@@ -708,7 +711,7 @@ public final class EmulatorConsole {
             String msg = new String(mBuffer, 0, buf.position(), DEFAULT_ENCODING);
             return msg.split("\r\n"); //$NON-NLS-1$
         } catch (IOException e) {
-            Log.d(LOG_TAG, "Exception reading lines for " + Integer.toString(mPort));
+            Log.d(LOG_TAG, "Exception reading lines for " + mPort);
             return null;
         }
     }

@@ -29,8 +29,8 @@ public class SplitApkInstaller extends SplitApkInstallerBase {
 
     @NonNull private final List<File> mApks;
 
-    private SplitApkInstaller(@NonNull IDevice device, @NonNull List<File> apks,
-            @NonNull String options) {
+    private SplitApkInstaller(
+            @NonNull IDevice device, @NonNull List<File> apks, @NonNull String options) {
         super(device, options);
         this.mApks = apks;
     }

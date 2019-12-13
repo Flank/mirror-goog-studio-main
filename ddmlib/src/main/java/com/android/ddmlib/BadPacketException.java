@@ -17,11 +17,9 @@
 
 package com.android.ddmlib;
 
-/**
- * Thrown if the contents of a packet are bad.
- */
+/** Thrown if the contents of a packet are bad. */
 @SuppressWarnings("serial")
-class BadPacketException extends RuntimeException {
+public class BadPacketException extends RuntimeException {
     public BadPacketException()
     {
         super();

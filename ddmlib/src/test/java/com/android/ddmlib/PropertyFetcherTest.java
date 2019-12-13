@@ -16,6 +16,7 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.PropertyFetcher.GetPropReceiver;
+import com.android.ddmlib.internal.DeviceTest;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;

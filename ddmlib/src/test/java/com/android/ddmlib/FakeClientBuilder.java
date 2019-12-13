@@ -21,13 +21,14 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
+import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.mockito.ArgumentMatcher;
 
 public class FakeClientBuilder {
-    Client client = mock(Client.class);
+    ClientImpl client = mock(ClientImpl.class);
 
     public FakeClientBuilder registerResponse(
             ArgumentMatcher<JdwpPacket> request, int responseType, ByteBuffer payload)

@@ -16,52 +16,39 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/**
- * Submit an exit request.
- */
-final class HandleExit extends ChunkHandler {
+/** Submit an exit request. */
+public final class HandleExit extends ChunkHandler {
 
     public static final int CHUNK_EXIT = type("EXIT");
 
     private static final HandleExit mInst = new HandleExit();
 
-
     private HandleExit() {}
 
-    /**
-     * Register for the packets we expect to get from the client.
-     */
+    /** Register for the packets we expect to get from the client. */
     public static void register(MonitorThread mt) {}
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {}
+    public void clientReady(ClientImpl client) {}
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {}
+    public void clientDisconnected(ClientImpl client) {}
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
         handleUnknownChunk(client, type, data, isReply, msgId);
     }
 
-    /**
-     * Send an EXIT request to the client.
-     */
-    public static void sendEXIT(Client client, int status)
-        throws IOException
-    {
+    /** Send an EXIT request to the client. */
+    public static void sendEXIT(ClientImpl client, int status) throws IOException {
         ByteBuffer rawBuf = allocBuffer(4);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);

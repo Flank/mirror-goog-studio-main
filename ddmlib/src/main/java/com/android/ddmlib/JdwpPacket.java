@@ -132,18 +132,13 @@ public final class JdwpPacket {
         return (mFlags & REPLY_PACKET) != 0;
     }
 
-    /**
-     * Returns "true" if this JDWP packet is a reply with a nonzero
-     * error code.
-     */
-    boolean isError() {
+    /** Returns "true" if this JDWP packet is a reply with a nonzero error code. */
+    public boolean isError() {
         return isReply() && mErrCode != 0;
     }
 
-    /**
-     * Returns "true" if this JDWP packet has no data.
-     */
-    boolean isEmpty() {
+    /** Returns "true" if this JDWP packet has no data. */
+    public boolean isEmpty() {
         return (mLength == JDWP_HEADER_LEN);
     }
 
@@ -166,9 +161,9 @@ public final class JdwpPacket {
     /**
      * Write our packet to "chan".
      *
-     * The JDWP packet starts at offset 0 and ends at mBuffer.position().
+     * <p>The JDWP packet starts at offset 0 and ends at mBuffer.position().
      */
-    void write(SocketChannel chan) throws IOException {
+    public void write(SocketChannel chan) throws IOException {
         assert mLength > 0;
 
         int oldPosn = mBuffer.position();
@@ -216,10 +211,9 @@ public final class JdwpPacket {
     /**
      * Consume the JDWP packet.
      *
-     * On entry and exit, "position" is at the end of data in buffer.
+     * <p>On entry and exit, "position" is at the end of data in buffer.
      */
-    void consume()
-    {
+    public void consume() {
         /*
          * The "flip" call sets "limit" equal to the position (usually the
          * end of data) and "position" equal to zero.
@@ -240,23 +234,22 @@ public final class JdwpPacket {
     }
 
     /**
-     * Find the JDWP packet at the start of "buf".  The start is known,
-     * but the length has to be parsed out.
+     * Find the JDWP packet at the start of "buf". The start is known, but the length has to be
+     * parsed out.
      *
-     * On entry, the packet data in "buf" must start at offset 0 and end
-     * at "position".  "limit" should be set to the buffer capacity.  This
-     * method does not alter "buf"s attributes.
+     * <p>On entry, the packet data in "buf" must start at offset 0 and end at "position". "limit"
+     * should be set to the buffer capacity. This method does not alter "buf"s attributes.
      *
-     * Returns a new JdwpPacket if a full one is found in the buffer.  If
-     * not, returns null.  Throws an exception if the data doesn't look like
-     * a valid JDWP packet.
+     * <p>Returns a new JdwpPacket if a full one is found in the buffer. If not, returns null.
+     * Throws an exception if the data doesn't look like a valid JDWP packet.
      */
-    static JdwpPacket findPacket(ByteBuffer buf) {
+    public static JdwpPacket findPacket(ByteBuffer buf) {
         int count = buf.position();
         int length, id, flags, cmdSet, cmd;
 
-        if (count < JDWP_HEADER_LEN)
+        if (count < JDWP_HEADER_LEN) {
             return null;
+        }
 
         ByteOrder oldOrder = buf.order();
         buf.order(ChunkHandler.CHUNK_ORDER);

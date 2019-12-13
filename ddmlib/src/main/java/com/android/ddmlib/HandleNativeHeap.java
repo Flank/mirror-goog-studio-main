@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.internal.ClientImpl;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,10 +24,8 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-/**
- * Handle thread status updates.
- */
-final class HandleNativeHeap extends ChunkHandler {
+/** Handle thread status updates. */
+public final class HandleNativeHeap extends ChunkHandler {
 
     public static final int CHUNK_NHGT = type("NHGT"); //$NON-NLS-1$
     public static final int CHUNK_NHSG = type("NHSG"); //$NON-NLS-1$
@@ -99,23 +98,18 @@ final class HandleNativeHeap extends ChunkHandler {
         mt.registerChunkHandler(CHUNK_NHEN, mInst);
     }
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {}
+    public void clientReady(ClientImpl client) {}
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {}
+    public void clientDisconnected(ClientImpl client) {}
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
 
         Log.d("ddm-nativeheap", "handling " + ChunkHandler.name(type));
 
@@ -133,13 +127,11 @@ final class HandleNativeHeap extends ChunkHandler {
             handleUnknownChunk(client, type, data, isReply, msgId);
         }
 
-        client.update(Client.CHANGE_NATIVE_HEAP_DATA);
+        client.update(ClientImpl.CHANGE_NATIVE_HEAP_DATA);
     }
 
-    /**
-     * Send an NHGT (Native Thread GeT) request to the client.
-     */
-    public static void sendNHGT(Client client) throws IOException {
+    /** Send an NHGT (Native Thread GeT) request to the client. */
+    public static void sendNHGT(ClientImpl client) throws IOException {
 
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
@@ -166,7 +158,7 @@ final class HandleNativeHeap extends ChunkHandler {
     /*
      * Handle our native heap data.
      */
-    private void handleNHGT(Client client, ByteBuffer data) {
+    private void handleNHGT(ClientImpl client, ByteBuffer data) {
         ClientData clientData = client.getClientData();
 
         Log.d("ddm-nativeheap", "NHGT: " + data.limit() + " bytes");
@@ -266,8 +258,8 @@ final class HandleNativeHeap extends ChunkHandler {
         }
     }
 
-    private void handleNHSG(Client client, ByteBuffer data) {
-        byte dataCopy[] = new byte[data.limit()];
+    private void handleNHSG(ClientImpl client, ByteBuffer data) {
+        byte[] dataCopy = new byte[data.limit()];
         data.rewind();
         data.get(dataCopy);
         data = ByteBuffer.wrap(dataCopy);

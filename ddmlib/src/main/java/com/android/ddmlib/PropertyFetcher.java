@@ -25,10 +25,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Fetches and caches 'getprop' values from device.
- */
-class PropertyFetcher {
+/** Fetches and caches 'getprop' values from device. */
+public final class PropertyFetcher {
     /** the amount of time to wait between unsuccessful prop fetch attempts */
     private static final String GETPROP_COMMAND = "getprop"; //$NON-NLS-1$
     private static final Pattern GETPROP_PATTERN = Pattern.compile("^\\[([^]]+)\\]\\:\\s*\\[(.*)\\]$"); //$NON-NLS-1$
@@ -66,8 +64,7 @@ class PropertyFetcher {
             //   line 3]
             String multiLineLabel = null;
             String multiLineValue = null;
-            for (int i = 0; i < lines.length; i++) {
-                String line = lines[i];
+            for (String line : lines) {
                 // If the line is empty in a multi-line property, we keep it, as its part of the
                 // property field.
                 if (multiLineLabel == null && (line.isEmpty() || line.startsWith("#"))) {

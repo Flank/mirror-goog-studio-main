@@ -16,12 +16,10 @@
 package com.android.ddmlib.jdwp;
 
 import com.android.annotations.NonNull;
-import com.android.ddmlib.Client;
+import com.android.ddmlib.internal.ClientImpl;
 
 public abstract class JdwpExtension {
 
-    /**
-     * Allows an extension to register interceptors to capture JDWP traffic.
-     */
-    public abstract void intercept(@NonNull Client client);
+    /** Allows an extension to register interceptors to capture JDWP traffic. */
+    public abstract void intercept(@NonNull ClientImpl client);
 }

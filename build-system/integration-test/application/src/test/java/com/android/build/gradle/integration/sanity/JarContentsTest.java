@@ -76,6 +76,7 @@ public class JarContentsTest {
                 "com/android/ddmlib/logcat/",
                 "com/android/ddmlib/testrunner/",
                 "com/android/ddmlib/utils/",
+                "com/android/ddmlib/internal/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");

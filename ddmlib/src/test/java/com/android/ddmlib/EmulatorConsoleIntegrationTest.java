@@ -19,6 +19,7 @@ import static com.android.ddmlib.IDevice.DeviceState.ONLINE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.internal.DeviceImpl;
 import com.android.prefs.AndroidLocation;
 import com.android.testutils.SystemPropertyOverrides;
 import com.google.common.truth.Truth;
@@ -73,7 +74,7 @@ public class EmulatorConsoleIntegrationTest extends TestCase {
 
     public void testGetEmulatorConsole() throws Exception {
         try (FakeEmulatorDevice fakeEmulator = FakeEmulatorDevice.createStarted(false, false)) {
-            Device device = new Device(null, fakeEmulator.getName(), ONLINE);
+            DeviceImpl device = new DeviceImpl(null, fakeEmulator.getName(), ONLINE);
             EmulatorConsole console = EmulatorConsole.getConsole(device);
             Truth.assertThat(console).isNotNull();
         }
@@ -81,7 +82,7 @@ public class EmulatorConsoleIntegrationTest extends TestCase {
 
     public void testGetEmulatorConsole_requiringAuthAndSucceeds() throws Exception {
         try (FakeEmulatorDevice fakeEmulator = FakeEmulatorDevice.createStarted(true, false)) {
-            Device device = new Device(null, fakeEmulator.getName(), ONLINE);
+            DeviceImpl device = new DeviceImpl(null, fakeEmulator.getName(), ONLINE);
             EmulatorConsole console = EmulatorConsole.getConsole(device);
             Truth.assertThat(console).isNotNull();
         }
@@ -89,7 +90,7 @@ public class EmulatorConsoleIntegrationTest extends TestCase {
 
     public void testGetEmulatorConsole_requiringAuthButAuthFails() throws Exception {
         try (FakeEmulatorDevice fakeEmulator = FakeEmulatorDevice.createStarted(true, true)) {
-            Device device = new Device(null, fakeEmulator.getName(), ONLINE);
+            DeviceImpl device = new DeviceImpl(null, fakeEmulator.getName(), ONLINE);
             EmulatorConsole console = EmulatorConsole.getConsole(device);
             Truth.assertThat(console).isNull();
         }

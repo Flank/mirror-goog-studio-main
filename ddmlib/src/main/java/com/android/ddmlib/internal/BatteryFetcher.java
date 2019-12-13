@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MultiLineReceiver;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.concurrent.Future;

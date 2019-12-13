@@ -18,15 +18,13 @@ package com.android.ddmlib;
 
 import com.android.ddmlib.ClientData.AllocationTrackingStatus;
 import com.android.ddmlib.ClientData.IHprofDumpHandler;
-
+import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
-/**
- * Handle heap status updates.
- */
-final class HandleHeap extends ChunkHandler {
+/** Handle heap status updates. */
+public final class HandleHeap extends ChunkHandler {
 
     public static final int CHUNK_HPIF = type("HPIF");
     public static final int CHUNK_HPST = type("HPST");
@@ -68,25 +66,20 @@ final class HandleHeap extends ChunkHandler {
         mt.registerChunkHandler(CHUNK_REAL, mInst);
     }
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {
+    public void clientReady(ClientImpl client) throws IOException {
         client.initializeHeapUpdateStatus();
     }
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {}
+    public void clientDisconnected(ClientImpl client) {}
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
         Log.d("ddm-heap", "handling " + ChunkHandler.name(type));
 
         if (type == CHUNK_HPIF) {
@@ -113,7 +106,7 @@ final class HandleHeap extends ChunkHandler {
     /*
      * Handle a heap info message.
      */
-    private void handleHPIF(Client client, ByteBuffer data) {
+    private void handleHPIF(ClientImpl client, ByteBuffer data) {
         Log.d("ddm-heap", "HPIF!");
         try {
             int numHeaps = data.getInt();
@@ -127,19 +120,24 @@ final class HandleHeap extends ChunkHandler {
                 long bytesAllocated = (long)data.getInt() & 0x00ffffffff;
                 long objectsAllocated = (long)data.getInt() & 0x00ffffffff;
 
-                client.getClientData().setHeapInfo(heapId, maxHeapSize,
-                        heapSize, bytesAllocated, objectsAllocated, timeStamp, reason);
-                client.update(Client.CHANGE_HEAP_DATA);
+                client.getClientData()
+                        .setHeapInfo(
+                                heapId,
+                                maxHeapSize,
+                                heapSize,
+                                bytesAllocated,
+                                objectsAllocated,
+                                timeStamp,
+                                reason);
+                client.update(ClientImpl.CHANGE_HEAP_DATA);
             }
         } catch (BufferUnderflowException ex) {
             Log.w("ddm-heap", "malformed HPIF chunk from client");
         }
     }
 
-    /**
-     * Send an HPIF (HeaP InFo) request to the client.
-     */
-    public static void sendHPIF(Client client, int when) throws IOException {
+    /** Send an HPIF (HeaP InFo) request to the client. */
+    public static void sendHPIF(ClientImpl client, int when) throws IOException {
         ByteBuffer rawBuf = allocBuffer(1);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -154,43 +152,40 @@ final class HandleHeap extends ChunkHandler {
     /*
      * Handle a heap segment series start message.
      */
-    private void handleHPST(Client client, ByteBuffer data) {
+    private void handleHPST(ClientImpl client, ByteBuffer data) {
         /* Clear out any data that's sitting around to
          * get ready for the chunks that are about to come.
          */
-//xxx todo: only clear data that belongs to the heap mentioned in <data>.
+        //xxx todo: only clear data that belongs to the heap mentioned in <data>.
         client.getClientData().getVmHeapData().clearHeapData();
     }
 
     /*
      * Handle a heap segment series end message.
      */
-    private void handleHPEN(Client client, ByteBuffer data) {
+    private void handleHPEN(ClientImpl client, ByteBuffer data) {
         /* Let the UI know that we've received all of the
          * data for this heap.
          */
-//xxx todo: only seal data that belongs to the heap mentioned in <data>.
+        //xxx todo: only seal data that belongs to the heap mentioned in <data>.
         client.getClientData().getVmHeapData().sealHeapData();
-        client.update(Client.CHANGE_HEAP_DATA);
+        client.update(ClientImpl.CHANGE_HEAP_DATA);
     }
 
     /*
      * Handle a heap segment message.
      */
-    private void handleHPSG(Client client, ByteBuffer data) {
-        byte dataCopy[] = new byte[data.limit()];
+    private void handleHPSG(ClientImpl client, ByteBuffer data) {
+        byte[] dataCopy = new byte[data.limit()];
         data.rewind();
         data.get(dataCopy);
         data = ByteBuffer.wrap(dataCopy);
         client.getClientData().getVmHeapData().addHeapData(data);
-//xxx todo: add to the heap mentioned in <data>
+        //xxx todo: add to the heap mentioned in <data>
     }
 
-    /**
-     * Sends an HPSG (HeaP SeGment) request to the client.
-     */
-    public static void sendHPSG(Client client, int when, int what)
-        throws IOException {
+    /** Sends an HPSG (HeaP SeGment) request to the client. */
+    public static void sendHPSG(ClientImpl client, int when, int what) throws IOException {
 
         ByteBuffer rawBuf = allocBuffer(2);
         JdwpPacket packet = new JdwpPacket(rawBuf);
@@ -200,16 +195,12 @@ final class HandleHeap extends ChunkHandler {
         buf.put((byte)what);
 
         finishChunkPacket(packet, CHUNK_HPSG, buf.position());
-        Log.d("ddm-heap", "Sending " + name(CHUNK_HPSG) + ": when="
-            + when + ", what=" + what);
+        Log.d("ddm-heap", "Sending " + name(CHUNK_HPSG) + ": when=" + when + ", what=" + what);
         client.send(packet, mInst);
     }
 
-    /**
-     * Sends an HPGC request to the client.
-     */
-    public static void sendHPGC(Client client)
-        throws IOException {
+    /** Sends an HPGC request to the client. */
+    public static void sendHPGC(ClientImpl client) throws IOException {
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -224,13 +215,12 @@ final class HandleHeap extends ChunkHandler {
     /**
      * Sends an HPDU request to the client.
      *
-     * We will get an HPDU response when the heap dump has completed.  On
-     * failure we get a generic failure response.
+     * <p>We will get an HPDU response when the heap dump has completed. On failure we get a generic
+     * failure response.
      *
      * @param fileName name of output file (on device)
      */
-    public static void sendHPDU(Client client, String fileName)
-        throws IOException {
+    public static void sendHPDU(ClientImpl client, String fileName) throws IOException {
         ByteBuffer rawBuf = allocBuffer(4 + fileName.length() * 2);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -239,7 +229,7 @@ final class HandleHeap extends ChunkHandler {
         ByteBufferUtil.putString(buf, fileName);
 
         finishChunkPacket(packet, CHUNK_HPDU, buf.position());
-        Log.d("ddm-heap", "Sending " + name(CHUNK_HPDU) + " '" + fileName +"'");
+        Log.d("ddm-heap", "Sending " + name(CHUNK_HPDU) + " '" + fileName + "'");
         client.send(packet, mInst);
         client.getClientData().setPendingHprofDump(fileName);
     }
@@ -247,17 +237,16 @@ final class HandleHeap extends ChunkHandler {
     /**
      * Sends an HPDS request to the client.
      *
-     * We will get an HPDS response when the heap dump has completed.  On
-     * failure we get a generic failure response.
+     * <p>We will get an HPDS response when the heap dump has completed. On failure we get a generic
+     * failure response.
      *
-     * This is more expensive for the device than HPDU, because the entire
-     * heap dump is held in RAM instead of spooled out to a temp file.  On
-     * the other hand, permission to write to /sdcard is not required.
+     * <p>This is more expensive for the device than HPDU, because the entire heap dump is held in
+     * RAM instead of spooled out to a temp file. On the other hand, permission to write to /sdcard
+     * is not required.
      *
      * @param fileName name of output file (on device)
      */
-    public static void sendHPDS(Client client)
-        throws IOException {
+    public static void sendHPDS(ClientImpl client) throws IOException {
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -270,7 +259,7 @@ final class HandleHeap extends ChunkHandler {
     /*
      * Handle notification of completion of a HeaP DUmp.
      */
-    private void handleHPDU(Client client, ByteBuffer data) {
+    private void handleHPDU(ClientImpl client, ByteBuffer data) {
         byte result;
 
         // get the filename and make the client not have pending HPROF dump anymore.
@@ -295,7 +284,7 @@ final class HandleHeap extends ChunkHandler {
             client.getClientData().clearHprofData();
             Log.w("ddm-heap", "Heap dump request failed (check device log)");
         }
-        client.update(Client.CHANGE_HPROF);
+        client.update(ClientImpl.CHANGE_HPROF);
         client.getClientData().clearHprofData();
     }
 
@@ -303,7 +292,7 @@ final class HandleHeap extends ChunkHandler {
      * Handle HeaP Dump Streaming response.  "data" contains the full
      * hprof dump.
      */
-    private void handleHPDS(Client client, ByteBuffer data) {
+    private void handleHPDS(ClientImpl client, ByteBuffer data) {
         byte[] stuff = new byte[data.capacity()];
         data.get(stuff, 0, stuff.length);
 
@@ -313,15 +302,12 @@ final class HandleHeap extends ChunkHandler {
         if (handler != null) {
             handler.onSuccess(stuff, client);
         }
-        client.update(Client.CHANGE_HPROF);
+        client.update(ClientImpl.CHANGE_HPROF);
         client.getClientData().clearHprofData();
     }
 
-    /**
-     * Sends a REAE (REcent Allocation Enable) request to the client.
-     */
-    public static void sendREAE(Client client, boolean enable)
-        throws IOException {
+    /** Sends a REAE (REcent Allocation Enable) request to the client. */
+    public static void sendREAE(ClientImpl client, boolean enable) throws IOException {
         ByteBuffer rawBuf = allocBuffer(1);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -333,11 +319,8 @@ final class HandleHeap extends ChunkHandler {
         client.send(packet, mInst);
     }
 
-    /**
-     * Sends a REAQ (REcent Allocation Query) request to the client.
-     */
-    public static void sendREAQ(Client client)
-        throws IOException {
+    /** Sends a REAQ (REcent Allocation Query) request to the client. */
+    public static void sendREAQ(ClientImpl client) throws IOException {
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -349,11 +332,8 @@ final class HandleHeap extends ChunkHandler {
         client.send(packet, mInst);
     }
 
-    /**
-     * Sends a REAL (REcent ALlocation) request to the client.
-     */
-    public static void sendREAL(Client client)
-        throws IOException {
+    /** Sends a REAL (REcent ALlocation) request to the client. */
+    public static void sendREAL(ClientImpl client) throws IOException {
         ByteBuffer rawBuf = allocBuffer(0);
         JdwpPacket packet = new JdwpPacket(rawBuf);
         ByteBuffer buf = getChunkDataBuf(rawBuf);
@@ -368,20 +348,20 @@ final class HandleHeap extends ChunkHandler {
     /*
      * Handle the response from our REcent Allocation Query message.
      */
-    private void handleREAQ(Client client, ByteBuffer data) {
+    private void handleREAQ(ClientImpl client, ByteBuffer data) {
         boolean enabled;
 
         enabled = (data.get() != 0);
         Log.d("ddm-heap", "REAQ says: enabled=" + enabled);
 
         client.getClientData().setAllocationStatus(enabled ? AllocationTrackingStatus.ON : AllocationTrackingStatus.OFF);
-        client.update(Client.CHANGE_HEAP_ALLOCATION_STATUS);
+        client.update(ClientImpl.CHANGE_HEAP_ALLOCATION_STATUS);
     }
 
     /*
      * Handle a REcent ALlocation response.
      */
-    private void handleREAL(Client client, ByteBuffer data) {
+    private void handleREAL(ClientImpl client, ByteBuffer data) {
         Log.e("ddm-heap", "*** Received " + name(CHUNK_REAL));
 
         byte[] stuff = new byte[data.capacity()];
@@ -396,7 +376,7 @@ final class HandleHeap extends ChunkHandler {
         }
 
         client.getClientData().setAllocationsData(stuff);
-        client.update(Client.CHANGE_HEAP_ALLOCATIONS);
+        client.update(ClientImpl.CHANGE_HEAP_ALLOCATIONS);
 
         // Clean up after everything has been notified (synchronously).
         client.getClientData().setAllocationsData(null);

@@ -17,8 +17,7 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.Log.LogLevel;
-
-import java.io.IOException;
+import com.android.ddmlib.internal.ClientImpl;
 import java.nio.ByteBuffer;
 
 /**
@@ -30,33 +29,25 @@ final class HandleTest extends ChunkHandler {
 
     private static final HandleTest mInst = new HandleTest();
 
-
     private HandleTest() {}
 
-    /**
-     * Register for the packets we expect to get from the client.
-     */
+    /** Register for the packets we expect to get from the client. */
     public static void register(MonitorThread mt) {
         mt.registerChunkHandler(CHUNK_TEST, mInst);
     }
 
-    /**
-     * Client is ready.
-     */
+    /** Client is ready. */
     @Override
-    public void clientReady(Client client) throws IOException {}
+    public void clientReady(ClientImpl client) {}
 
-    /**
-     * Client went away.
-     */
+    /** Client went away. */
     @Override
-    public void clientDisconnected(Client client) {}
+    public void clientDisconnected(ClientImpl client) {}
 
-    /**
-     * Chunk handler entry point.
-     */
+    /** Chunk handler entry point. */
     @Override
-    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+    public void handleChunk(
+            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
 
         Log.d("ddm-test", "handling " + ChunkHandler.name(type));
 
@@ -70,8 +61,7 @@ final class HandleTest extends ChunkHandler {
     /*
      * Handle a thread creation message.
      */
-    private void handleTEST(Client client, ByteBuffer data)
-    {
+    private static void handleTEST(ClientImpl client, ByteBuffer data) {
         /*
          * Can't call data.array() on a read-only ByteBuffer, so we make
          * a copy.
