@@ -67,7 +67,7 @@ class L8DexDesugarLibTaskTest {
 
     companion object {
         val bootClasspath = TestUtils.getPlatformFile("android.jar")
-        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.3").toFile())
-        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.9.0")
+        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.4").toFile())
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.11.0")
     }
 }

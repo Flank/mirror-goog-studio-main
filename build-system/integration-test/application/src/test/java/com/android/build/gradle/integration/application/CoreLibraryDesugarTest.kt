@@ -478,7 +478,7 @@ class CoreLibraryDesugarTest {
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
         private const val CACHE_DIR = "agp_cache_dir"
-        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.3"
+        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.4"
     }
 
     private val lineSeparator: String = System.lineSeparator()

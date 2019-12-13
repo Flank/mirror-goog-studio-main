@@ -582,7 +582,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             classes,
             ImmutableList.of<Class<*>>(ClassWithDesugarApi::class.java)
         )
-        val libConfiguration =  TestUtils.getDesugarLibConfigContentWithVersion("0.9.0")
+        val libConfiguration =  TestUtils.getDesugarLibConfigContentWithVersion("0.11.0")
         val outputKeepRulesDir = tmp.newFolder()
         runR8(
             classes = listOf(classes.toFile()),

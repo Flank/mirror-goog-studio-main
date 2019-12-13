@@ -55,7 +55,7 @@ class L8ToolTest {
 
     companion object {
         val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar").toPath())
-        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.3"))
-        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.9.0")
+        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.4"))
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.11.0")
     }
 }
