@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -47,10 +48,29 @@ class BasicInstantExecutionTest {
         ).create()
 
     @Test
-    fun testTaskGraphSerialization() {
-        executor().run("assemble")
+    fun testUpToDate() {
+        executor().run("assembleDebug")
 
         assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()
+        executor().run("assembleDebug")
+    }
+
+    @Test
+    fun testCleanBuild() {
+        executor().run("assembleDebug")
+        executor().run("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testWhenInvokedFromTheIde() {
+        executor()
+            .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+            .run("assembleDebug")
+
+        assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()
+        executor()
+            .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+            .run("assembleDebug")
     }
 
     private fun executor(): GradleTaskExecutor =

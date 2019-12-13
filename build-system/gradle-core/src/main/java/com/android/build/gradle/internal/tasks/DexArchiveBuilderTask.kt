@@ -22,6 +22,7 @@ import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DxDexParameters
+import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -35,7 +36,6 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.DexOptions
 import com.android.builder.dexing.DexerTool
 import com.android.builder.utils.FileCache
-import com.android.ide.common.blame.MessageReceiver
 import com.android.sdklib.AndroidVersion
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -148,8 +148,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
     private var userLevelCache: FileCache? = null
 
-    private lateinit var messageReceiver: MessageReceiver
-
     override fun doTaskAction(inputChanges: InputChanges) {
         DexArchiveBuilderTaskDelegate(
             isIncremental = inputChanges.isIncremental,
@@ -190,7 +188,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             useGradleWorkers = useGradleWorkers.get(),
             workerExecutor = workerExecutor,
             userLevelCache = userLevelCache,
-            messageReceiver = messageReceiver
+            messageReceiver = MessageReceiverImpl(dexParams.errorFormatMode.get(), logger)
         ).doProcess()
     }
 
@@ -410,7 +408,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.dxDexParams.dxNoOptimizeFlagPresent.set(
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
-            task.messageReceiver = variantScope.globalScope.messageReceiver
             task.userLevelCache = userLevelCache
             if (variantScope.isCoreLibraryDesugaringEnabled) {
                 task.dexParams.coreLibDesugarConfig
