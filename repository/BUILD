@@ -19,7 +19,7 @@ iml_module(
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-compress",
-        "//tools/idea/.idea/libraries:jimfs",
+        "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:Objenesis[test]",
