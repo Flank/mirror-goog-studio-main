@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -56,8 +57,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         get() = outputScope.mainSplit.versionName
 
     @get:Input
-    var debuggable: Boolean = false
-    private set
+    abstract val debuggable: Property<Boolean>
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -68,7 +68,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
                 applicationId = applicationId.get(),
                 versionCode = versionCode.toString(),
                 versionName = versionName,
-                debuggable = debuggable
+                debuggable = debuggable.get()
             )
 
         declaration.save(outputFile.get().asFile)
@@ -97,7 +97,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             super.configure(task)
             task.applicationId.set(variantProperties.applicationId)
             task.outputScope = variantScope.variantData.outputScope
-            task.debuggable = variantScope.variantDslInfo.buildType.isDebuggable
+            task.debuggable
+                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
         }
     }
 }

@@ -791,7 +791,7 @@ public abstract class TaskManager {
     protected static boolean appliesCustomClassTransforms(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
         final VariantType type = scope.getType();
-        return scope.getVariantDslInfo().getBuildType().isDebuggable()
+        return scope.getVariantData().getPublicVariantApi().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()
                 && !getAdvancedProfilingTransforms(options).isEmpty();
@@ -1692,10 +1692,9 @@ public abstract class TaskManager {
     public void maybeCreateLintVitalTask(
             @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
         VariantScope variantScope = variantData.getScope();
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         if (!isLintVariant(variantScope)
-                || variantDslInfo.getBuildType().isDebuggable()
+                || variantScope.getVariantData().getPublicVariantApi().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
@@ -2222,7 +2221,7 @@ public abstract class TaskManager {
         } else {
             boolean produceSeparateOutputs =
                     dexingType == DexingType.NATIVE_MULTIDEX
-                            && variantScope.getVariantDslInfo().getBuildType().isDebuggable();
+                            && variantScope.getVariantData().getPublicVariantApi().isDebuggable();
 
             taskFactory.register(
                     new DexMergingTask.CreationAction(

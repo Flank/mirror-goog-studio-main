@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.tasks
 import com.android.apksig.ApkSigner
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.StringOption
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
@@ -159,7 +159,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
-            if (!variantScope.variantDslInfo.buildType.isDebuggable) {
+            if (!variantScope.variantData.publicVariantApi.isDebuggable) {
                 task.signingConfig = SigningConfigProvider.create(variantScope)
             }
         }

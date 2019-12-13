@@ -71,8 +71,7 @@ import java.io.IOException
 @CacheableTask
 abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
-    var debuggable: Boolean = false
-        private set
+    abstract val debuggable: Property<Boolean>
 
     private lateinit var aaptOptions: AaptOptions
 
@@ -125,8 +124,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
     @get:Input
-    var excludeResSources: Boolean = false
-        private set
+    abstract val excludeResSourcesForReleaseBundles: Property<Boolean>
 
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
@@ -164,7 +162,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             options = aaptOptions,
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
-            debuggable = debuggable,
+            debuggable = debuggable.get(),
             packageId = resOffset.orNull,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
@@ -173,7 +171,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                     checkNotNull(getInputResourcesDir().orNull?.asFile)
                 ).build(),
             resourceConfigs = ImmutableSet.copyOf(resConfig),
-            excludeSources = excludeResSources
+            // We only want to exclude res sources for release builds and when the flag is turned on
+            // This will result in smaller release bundles
+            excludeSources = excludeResSourcesForReleaseBundles.get() && debuggable.get().not()
         )
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", outputFile.absolutePath)
@@ -292,13 +292,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 task.resOffset.disallowChanges()
             }
 
-            task.debuggable = variantDslInfo.buildType.isDebuggable
+            task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
-            // We only want to exclude res sources for release builds and when the flag is turned on
-            // This will result in smaller release bundles
-            task.excludeResSources = !task.debuggable
-                    && projectOptions.get(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
+            task.excludeResSourcesForReleaseBundles
+                .setDisallowChanges(
+                    projectOptions.get(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
+                )
 
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)

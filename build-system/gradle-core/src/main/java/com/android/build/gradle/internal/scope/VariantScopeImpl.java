@@ -555,7 +555,7 @@ public class VariantScopeImpl implements VariantScope {
         // Assume Java8LangSupport is either D8 or R8 as we checked that in
         // isCoreLibraryDesugaringEnabled()
         if (getJava8LangSupportType() == Java8LangSupport.D8
-                && getVariantDslInfo().getBuildType().isDebuggable()) {
+                && getVariantData().getPublicVariantApi().isDebuggable()) {
             return false;
         }
         return true;

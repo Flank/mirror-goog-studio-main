@@ -26,26 +26,26 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.TypedefRemover
 import com.android.utils.FileUtils
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import com.android.builder.packaging.JarCreator
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.InputFiles
 import java.io.File
 import java.util.function.Predicate
 import java.util.function.Supplier
@@ -331,7 +331,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.jarCreatorType.setDisallowChanges(variantScope.jarCreatorType)
 
             task.debugBuild
-                .setDisallowChanges(variantScope.variantDslInfo.buildType.isDebuggable)
+                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES

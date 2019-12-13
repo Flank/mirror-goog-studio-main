@@ -213,8 +213,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 mainSplit?.versionName
                     ?: task.project.provider { variantDslInfo.versionName })
 
-            task.debuggable.set(project.provider { variantDslInfo.buildType.isDebuggable })
-            task.debuggable.disallowChanges()
+            task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
 
             task.buildTypeName = variantDslInfo.buildType.name
 

@@ -463,6 +463,6 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     private static boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
-        return !scope.getVariantDslInfo().getBuildType().isDebuggable();
+        return !scope.getVariantData().getPublicVariantApi().isDebuggable();
     }
 }

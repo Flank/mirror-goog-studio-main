@@ -1372,7 +1372,7 @@ public class VariantManager implements VariantModel {
             GradleBuildVariant.Builder profileBuilder =
                     ProcessProfileWriter.getOrCreateVariant(
                                     project.getPath(), variantData.getName())
-                            .setIsDebug(variantDslInfo.getBuildType().isDebuggable())
+                            .setIsDebug(variantData.getPublicVariantApi().isDebuggable())
                             .setMinSdkVersion(
                                     AnalyticsUtil.toProto(variantDslInfo.getMinSdkVersion()))
                             .setMinifyEnabled(variantScope.getCodeShrinker() != null)

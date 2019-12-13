@@ -165,7 +165,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Input
     val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
 
-    private var debuggable: Boolean = false
+    @get:Input
+    abstract val debuggable: Property<Boolean>
 
     private lateinit var aaptOptions: AaptOptions
 
@@ -470,7 +471,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(config.variantType)
-            task.setDebuggable(config.buildType.isDebuggable)
+            task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
@@ -877,7 +878,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val buildTargetDensity: String? = task.buildTargetDensity
         val aaptOptions: AaptOptions = task.aaptOptions
         val variantType: VariantType = task.type
-        val debuggable: Boolean = task.getDebuggable()
+        val debuggable: Boolean = task.debuggable.get()
         val packageId: Int? = task.resOffset.orNull
         val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =
@@ -910,15 +911,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     fun setType(type: VariantType) {
         this.type = type
-    }
-
-    @Input
-    fun getDebuggable(): Boolean {
-        return debuggable
-    }
-
-    fun setDebuggable(debuggable: Boolean) {
-        this.debuggable = debuggable
     }
 
     fun setMergeBlameLogFolder(mergeBlameLogFolder: File) {

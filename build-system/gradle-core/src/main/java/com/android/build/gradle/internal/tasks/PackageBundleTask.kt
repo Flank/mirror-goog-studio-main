@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -31,6 +32,7 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -99,8 +101,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         get() = bundleFile.get().asFile.name
 
     @get:Input
-    var isDebugBuild: Boolean = false
-        private set
+    abstract val debuggable: Property<Boolean>
 
     override fun doTaskAction() {
         getWorkerFacadeWithWorkers().use {
@@ -119,7 +120,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     bundleDeps = if(bundleDeps.isPresent) bundleDeps.get().asFile else null,
                     // do not compress the bundle in debug builds where it will be only used as an
                     // intermediate artifact
-                    uncompressBundle = isDebugBuild
+                    uncompressBundle = debuggable.get()
                 )
             )
         }
@@ -312,7 +313,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 )
             }
 
-            task.isDebugBuild = variantScope.variantDslInfo.buildType.isDebuggable
+            task.debuggable
+                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
         }
     }
 }

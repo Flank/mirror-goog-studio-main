@@ -221,8 +221,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.variantTypeName.setDisallowChanges(variantData.type.name)
 
-            task.debuggableBuildType
-                .setDisallowChanges(variantData.variantDslInfo.buildType.isDebuggable)
+            task.debuggableBuildType.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
 
             task.multiOutputPolicy.setDisallowChanges(variantData.multiOutputPolicy)
 
