@@ -28,7 +28,8 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
         //tools/... \
         -//tools/base/build-system/integration-test/... \
         -//tools/adt/idea/android-lang:intellij.android.lang.tests_tests \
-        -//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests
+        -//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests \
+        -//tools/base/build-system/builder:tests.test
 
 readonly bazel_status=$?
 
