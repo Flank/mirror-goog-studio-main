@@ -2,7 +2,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
-load(":sdk.bzl", "sdk_java_binary", "sdk_package", "combine_licenses")
+load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 
 # managed by go/iml_to_build
 iml_module(
