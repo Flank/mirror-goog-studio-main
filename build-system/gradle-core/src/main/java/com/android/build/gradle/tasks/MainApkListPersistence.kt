@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.VariantOutput
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -45,8 +46,7 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
     abstract val outputFile: RegularFileProperty
 
     @get:Nested
-    lateinit var apkDataList : List<ApkData>
-        private set
+    abstract val apkDataList : ListProperty<ApkData>
 
     @get:Input
     abstract val apkVersionCodes: ListProperty<Int>
@@ -54,7 +54,7 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
     public override fun doTaskAction() {
         FileUtils.deleteIfExists(outputFile.get().asFile)
         FileUtils.createFile(outputFile.get().asFile,
-            ExistingBuildElements.persistApkList(apkDataList))
+            ExistingBuildElements.persistApkList(apkDataList.get()))
     }
 
     class CreationAction(
@@ -81,11 +81,11 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
         override fun configure(task: MainApkListPersistence) {
             super.configure(task)
 
-            task.apkDataList = variantScope.outputScope.apkDatas
-            variantScope.outputScope.apkDatas.forEach {
-                val variantOutput = it.variantOutput
-                if (variantOutput != null) {
-                    task.apkVersionCodes.add(variantOutput.versionCode)
+            val variantOutputs = variantScope.variantData.publicVariantPropertiesApi.outputs
+            variantOutputs.forEach {
+                if (it.isEnabled.get()) {
+                    task.apkDataList.add(it.apkData)
+                    task.apkVersionCodes.add(it.versionCode)
                 }
             }
         }

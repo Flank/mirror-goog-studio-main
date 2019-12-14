@@ -200,14 +200,14 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                                 InternalArtifactType.APK.INSTANCE,
                                 mainApkInfo.getType(),
                                 mainApkInfo.getFilters(),
-                                mainApkInfo.getVersionCode(),
+                                -1,
                                 splitOutputsSupplier.guessOutputFile(
                                         baseName + SdkConstants.DOT_ANDROID_PACKAGE)),
                         new EarlySyncBuildOutput(
                                 InternalArtifactType.APK.INSTANCE,
                                 mainApkInfo.getType(),
                                 mainApkInfo.getFilters(),
-                                mainApkInfo.getVersionCode(),
+                                -1,
                                 manifestSupplier.guessOutputFile(
                                         SdkConstants.ANDROID_MANIFEST_XML))));
     }

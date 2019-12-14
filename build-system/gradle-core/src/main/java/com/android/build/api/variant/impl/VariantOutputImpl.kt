@@ -17,14 +17,19 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.VariantOutput
+import com.android.build.gradle.internal.scope.ApkData
 import org.gradle.api.provider.Property
 
-internal class VariantOutputImpl(
+class VariantOutputImpl(
     override val versionCode: Property<Int>,
     override val versionName: Property<String>,
-    val type: VariantOutput.OutputType
+    override val isEnabled: Property<Boolean>,
+    val apkData: ApkData
 ) : VariantOutput {
 
     override val outputType: String
-        get() = type.name
+        get() = apkData.outputType
+
+    override val isUniversal: Boolean
+        get() = apkData.isUniversal()
 }

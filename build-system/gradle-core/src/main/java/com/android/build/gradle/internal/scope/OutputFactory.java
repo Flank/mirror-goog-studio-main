@@ -213,6 +213,11 @@ public class OutputFactory {
             return fullName;
         }
 
+        @Override
+        public boolean isUniversal() {
+            return true;
+        }
+
         @NonNull
         @Override
         public String getDirName() {

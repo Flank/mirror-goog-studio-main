@@ -20,6 +20,7 @@ import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -32,14 +33,14 @@ internal open class VariantPropertiesImpl(
     configuration: VariantConfiguration
 ) : VariantProperties, VariantConfiguration by configuration{
 
-    private val variantOutputs= mutableListOf<VariantOutput>()
+    private val variantOutputs= mutableListOf<VariantOutputImpl>()
     private val variantDslInfo = variantScope.variantDslInfo
 
     override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java).apply {
         setDisallowChanges(dslScope.providerFactory.provider { variantDslInfo.applicationId })
     }
 
-    fun addVariantOutput(outputType: com.android.build.VariantOutput.OutputType): VariantOutputImpl {
+    fun addVariantOutput(apkData: ApkData): VariantOutputImpl {
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
@@ -47,7 +48,7 @@ internal open class VariantPropertiesImpl(
         val versionCodeProperty = initializeProperty(Int::class.java, "$name::versionCode")
         if (versionCode <= 0) {
             versionCodeProperty.set(
-                variantScope.globalScope.project.provider<Int> {
+                dslScope.providerFactory.provider {
                     variantDslInfo.manifestVersionCodeSupplier.asInt
                 })
         } else {
@@ -58,15 +59,19 @@ internal open class VariantPropertiesImpl(
         val versionName = variantDslInfo.getVersionName(true)
         val versionNameProperty = initializeProperty(String::class.java, "$name::versionName")
         versionNameProperty.set(
-            variantScope.globalScope.project.provider<String> {
+            dslScope.providerFactory.provider {
                 versionName ?: variantDslInfo.manifestVersionNameSupplier.get()
             }
         )
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
-            VariantOutput.OutputType.valueOf(outputType.name)
-        ).also { variantOutputs.add(it) }
+            initializeProperty(Boolean::class.java, "$name::isEnabled").value(true),
+            apkData
+        ).also {
+            apkData.variantOutput = it
+            variantOutputs.add(it)
+        }
     }
 
     override val outputs: VariantOutputList

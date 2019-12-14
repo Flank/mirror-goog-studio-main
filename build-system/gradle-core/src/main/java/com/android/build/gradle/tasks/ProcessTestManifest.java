@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.TestManifestGenerator;
@@ -48,7 +47,6 @@ import com.android.manifmerger.PlaceholderHandler;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -71,6 +69,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -97,7 +96,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
     private ArtifactCollection manifests;
 
-    private OutputScope outputScope;
+    private ApkData apkData;
 
     private FileCollection navigationJsons;
 
@@ -106,9 +105,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         super(objectFactory);
     }
 
-    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    public OutputScope getOutputScope() {
-        return outputScope;
+    @Nested
+    @Optional
+    public ApkData getApkData() {
+        return apkData;
     }
 
     @Override
@@ -129,24 +129,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             BuildOutput mainSplit = manifestOutputs.iterator().next();
             testedApplicationId = mainSplit.getProperties().get(BuildOutputProperty.PACKAGE_ID);
         }
-        // TODO : LOAD FROM APK_LIST...
-        List<ApkData> apkDatas = outputScope.getApkDatas();
-        if (apkDatas.isEmpty()) {
-            throw new RuntimeException("No output defined for test module, please file a bug");
-        }
-        if (apkDatas.size() > 1) {
-            throw new RuntimeException(
-                    "Test modules only support a single split, this one defines"
-                            + Joiner.on(",").join(apkDatas));
-        }
-        ApkData mainApkData = apkDatas.get(0);
         File manifestOutputFolder =
-                Strings.isNullOrEmpty(mainApkData.getDirName())
+                Strings.isNullOrEmpty(apkData.getDirName())
                         ? getManifestOutputDirectory().get().getAsFile()
-                        : getManifestOutputDirectory()
-                                .get()
-                                .file(mainApkData.getDirName())
-                                .getAsFile();
+                        : getManifestOutputDirectory().get().file(apkData.getDirName()).getAsFile();
 
 
         FileUtils.mkdirs(manifestOutputFolder);
@@ -179,9 +165,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                         getVariantType().get(),
                         ImmutableList.of(
                                 new BuildOutput(
-                                        MERGED_MANIFESTS.INSTANCE,
-                                        mainApkData,
-                                        manifestOutputFile)))
+                                        MERGED_MANIFESTS.INSTANCE, apkData, manifestOutputFile)))
                 .save(getManifestOutputDirectory().get().getAsFile());
     }
 
@@ -559,7 +543,13 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantSources::getMainManifestIfExists));
             task.getTestManifestFile().disallowChanges();
 
-            task.outputScope = getVariantScope().getOutputScope();
+            task.apkData =
+                    getVariantScope()
+                            .getVariantData()
+                            .getPublicVariantPropertiesApi()
+                            .getOutputs()
+                            .getMainSplit()
+                            .getApkData();
 
             task.getVariantType().set(getVariantScope().getVariantData().getType().toString());
             task.getVariantType().disallowChanges();

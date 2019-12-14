@@ -198,7 +198,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
-            task.mainSplit = variantScope.variantData.outputScope.mainSplit
+            task.mainSplit = variantScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
 
             task.dex = if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
                 variantScope

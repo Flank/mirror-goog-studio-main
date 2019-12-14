@@ -60,6 +60,20 @@ interface VariantOutput {
      */
     val versionName: Property<String>
 
+    /**
+     * Returns a modifiable [Property] to enable or disable the production of this [VariantOutput]
+     *
+     * @return a [Property] to enable or disable this output.
+     */
+    val isEnabled: Property<Boolean>
+
+    /**
+     * Returns true if this [VariantOutput] represents a Universal APK, false otherwise.
+     *
+     * @return a readonly boolean whether this output is a universal APK or not.
+     */
+    val isUniversal: Boolean
+
     /** Returns the output type of the referenced APK. */
     val outputType: String
 }

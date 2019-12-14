@@ -30,7 +30,6 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -54,7 +53,6 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.DesugarLibUtils;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -89,6 +87,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -205,7 +204,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
 
-    protected OutputScope outputScope;
+    protected List<String> apkFileNames = new ArrayList<>();
 
     protected String projectBaseName;
 
@@ -347,12 +346,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
      */
     @Input
     public Collection<String> getApkNames() {
-        // this task does not handle packaging of the configuration splits.
-        return outputScope
-                .getApkDatas()
-                .stream()
-                .map(ApkData::getOutputFileName)
-                .collect(Collectors.toList());
+        return apkFileNames;
     }
 
     @InputFile
@@ -954,7 +948,18 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     variantScope.getIncrementalDir(
                                             packageAndroidArtifact.getName()),
                                     "tmp"));
-            packageAndroidArtifact.outputScope = outputScope;
+
+            variantScope
+                    .getVariantData()
+                    .getPublicVariantPropertiesApi()
+                    .getOutputs()
+                    .forEach(
+                            variantOutput -> {
+                                packageAndroidArtifact.apkFileNames.add(
+                                        variantOutput.getApkData().getOutputFileName());
+                            });
+            // sort strings by natural order to make it stable across executions.
+            packageAndroidArtifact.apkFileNames.sort(String::compareTo);
 
             packageAndroidArtifact.fileCache = fileCache;
             packageAndroidArtifact.aaptOptionsNoCompress =
@@ -1022,24 +1027,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             GlobalScope globalScope = variantScope.getGlobalScope();
 
-            if (variantScope.getVariantData().getMultiOutputPolicy()
-                    == MultiOutputPolicy.MULTI_APK) {
-                task.getJniFolders()
-                        .from(
-                                PerModuleBundleTaskKt.getNativeLibsFiles(
-                                        variantScope, packageCustomClassDependencies));
-            } else {
-                Set<String> filters =
-                        AbiSplitOptions.getAbiFilters(
-                                globalScope.getExtension().getSplits().getAbiFilters());
-
-                task.getJniFolders()
-                        .from(
-                                filters.isEmpty()
-                                        ? PerModuleBundleTaskKt.getNativeLibsFiles(
-                                                variantScope, packageCustomClassDependencies)
-                                        : project.files());
-            }
+            task.getJniFolders()
+                    .from(
+                            PerModuleBundleTaskKt.getNativeLibsFiles(
+                                    variantScope, packageCustomClassDependencies));
 
             variantScope
                     .getArtifacts()

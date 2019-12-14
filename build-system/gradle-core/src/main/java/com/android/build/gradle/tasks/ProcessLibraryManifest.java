@@ -461,7 +461,14 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
-            task.mainSplit.set(project.provider(getVariantScope().getOutputScope()::getMainSplit));
+            task.mainSplit.set(
+                    project.provider(
+                            getVariantScope()
+                                            .getVariantData()
+                                            .getPublicVariantPropertiesApi()
+                                            .getOutputs()
+                                            .getMainSplit()
+                                    ::getApkData));
             task.mainSplit.disallowChanges();
 
             task.isNamespaced =

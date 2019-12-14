@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -349,10 +348,6 @@ public class ModelBuilderTest {
 
         OutputScope outputScopeMock = Mockito.mock(OutputScope.class);
         when(variantScope.getOutputScope()).thenReturn(outputScopeMock);
-        ApkData apkDataMock = Mockito.mock(ApkData.class);
-        when(outputScopeMock.getMainSplit()).thenReturn(apkDataMock);
-        when(apkDataMock.getOutputFileName()).thenReturn("test.aar");
-
 
         VariantDslInfo testVariantConfiguration = Mockito.mock(VariantDslInfo.class);
         when(testVariantConfiguration.getDirName()).thenReturn("test/name");

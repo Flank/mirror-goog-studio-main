@@ -19,11 +19,11 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
+import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.google.common.collect.ImmutableList;
 import org.gradle.api.model.ObjectFactory;
@@ -56,11 +56,14 @@ public class VariantOutputFactory {
         this.deprecationReporter = deprecationReporter;
     }
 
-    public VariantOutput create(
-            ApkData apkData, com.android.build.api.variant.VariantOutput variantApi) {
+    public VariantOutput create(VariantOutputImpl variantApi) {
         BaseVariantOutput variantOutput =
                 objectFactory.newInstance(
-                        targetClass, apkData, taskContainer, deprecationReporter, variantApi);
+                        targetClass,
+                        variantApi.getApkData(),
+                        taskContainer,
+                        deprecationReporter,
+                        variantApi);
         extension.getBuildOutputs().add(variantOutput);
         if (deprecatedVariantPublicApi != null) {
             deprecatedVariantPublicApi.addOutputs(ImmutableList.of(variantOutput));

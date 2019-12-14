@@ -48,7 +48,7 @@ public class TestVariantData extends ApkVariantData {
         this.testedVariantData = testedVariantData;
 
         // create default output
-        getOutputFactory().addMainApk();
+        getPublicVariantPropertiesApi().addVariantOutput(getOutputFactory().addMainApk());
     }
 
     @NonNull

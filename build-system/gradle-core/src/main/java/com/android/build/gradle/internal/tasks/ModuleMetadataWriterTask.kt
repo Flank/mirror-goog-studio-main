@@ -48,13 +48,11 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
     private lateinit var outputScope: OutputScope
 
     @get:Input
-    val versionCode
-        get() = outputScope.mainSplit.versionCode
+    abstract val versionCode: Property<Int>
 
     @get:Input
     @get:Optional
-    val versionName
-        get() = outputScope.mainSplit.versionName
+    abstract val versionName: Property<String>
 
     @get:Input
     abstract val debuggable: Property<Boolean>
@@ -66,8 +64,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         val declaration =
             ModuleMetadata(
                 applicationId = applicationId.get(),
-                versionCode = versionCode.toString(),
-                versionName = versionName,
+                versionCode = versionCode.get().toString(),
+                versionName = versionName.orNull,
                 debuggable = debuggable.get()
             )
 
@@ -99,6 +97,11 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             task.outputScope = variantScope.variantData.outputScope
             task.debuggable
                 .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+            task.versionCode.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi
+                .outputs.getMainSplit().versionCode)
+            task.versionName.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi
+                .outputs.getMainSplit().versionName)
+
         }
     }
 }

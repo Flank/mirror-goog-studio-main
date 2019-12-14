@@ -220,7 +220,6 @@ class ExistingBuildElements {
             if (value.versionName != null) {
                 out.name("versionName").value(value.versionName)
             }
-            out.name("enabled").value(value.isEnabled)
             if (value.filterName != null) {
                 out.name("filterName").value(value.filterName)
             }
@@ -240,7 +239,6 @@ class ExistingBuildElements {
             val filters = ImmutableList.builder<FilterData>()
             var versionCode = 0
             var versionName: String? = null
-            var enabled = true
             var outputFile: String? = null
             var fullName: String? = null
             var baseName: String? = null
@@ -253,7 +251,6 @@ class ExistingBuildElements {
                     "splits" -> readFilters(reader, filters)
                     "versionCode" -> versionCode = reader.nextInt()
                     "versionName" -> versionName = reader.nextString()
-                    "enabled" -> enabled = reader.nextBoolean()
                     "outputFile" -> outputFile = reader.nextString()
                     "filterName" -> filterName = reader.nextString()
                     "baseName" -> baseName = reader.nextString()
@@ -275,7 +272,6 @@ class ExistingBuildElements {
                     outputFile,
                     fullName ?: "",
                     baseName ?: "",
-                    enabled,
                     dirName ?: "")
         }
 

@@ -21,7 +21,6 @@ import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
-import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
@@ -148,21 +147,14 @@ public class ApiObjectFactory {
                                 .getGlobalScope()
                                 .getDslScope()
                                 .getDeprecationReporter());
-        variantData
-                .getOutputScope()
-                .getApkDatas()
-                .forEach(
-                        apkData -> {
-                            // set the version on the new api variant object.
-                            VariantOutputImpl variantOutput =
-                                    variantData
-                                            .getPublicVariantPropertiesApi()
-                                            .addVariantOutput(apkData.getType());
-                            apkData.setVariantOutput(variantOutput);
 
-                            // pass the new api variant output object so the override method can
-                            // delegate to the new location.
-                            variantData.variantOutputFactory.create(apkData, variantOutput);
-                        });
+        variantData
+                .getPublicVariantPropertiesApi()
+                .getOutputs()
+                .forEach(
+                        variantOutput ->
+                                // pass the new api variant output object so the override method can
+                                // delegate to the new location.
+                                variantData.variantOutputFactory.create(variantOutput));
     }
 }

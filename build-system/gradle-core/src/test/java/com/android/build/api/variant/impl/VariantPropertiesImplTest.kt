@@ -20,6 +20,7 @@ import com.android.build.VariantOutput
 import com.android.build.api.artifact.Operations
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -47,6 +48,7 @@ class VariantPropertiesImplTest {
     @Mock lateinit var variantScope: VariantScope
     @Mock lateinit var globalScope: GlobalScope
     @Mock lateinit var variantDslInfo: VariantDslInfo
+    @Mock lateinit var apkData: ApkData
     @Mock lateinit var operations: Operations
     @Mock lateinit var publicConfiguration: com.android.build.api.variant.VariantConfiguration
     @Mock lateinit var dslScope: DslScope
@@ -74,7 +76,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
             .thenReturn(Supplier<String?> { "foo" })
 
-        properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
+        properties.addVariantOutput(apkData)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(10)
@@ -91,7 +93,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.getVersionCode(true)).thenReturn(23)
         Mockito.`when`(variantDslInfo.getVersionName(true)).thenReturn("bar")
 
-        properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
+        properties.addVariantOutput(apkData)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(23)
@@ -109,7 +111,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.getVersionCode(true)).thenReturn(23)
         Mockito.`when`(variantDslInfo.getVersionName(true)).thenReturn("bar")
 
-        properties.addVariantOutput(VariantOutput.OutputType.FULL_SPLIT)
+        properties.addVariantOutput(apkData)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         // we expect the DSL-provided versions to trump the manifest-provided versions.

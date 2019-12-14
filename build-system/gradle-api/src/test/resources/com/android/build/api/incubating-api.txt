@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ac599ede1d578bd28c5bd4d1730787eeca421d4abee5c8ff29e3250a6610dfee
+6119f00ab90196f30c6a93a89ec934f4202b9f0e13a2a3ce58cd4f13a130be27
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -183,6 +183,8 @@ com.android.build.api.variant.VariantOutput$OutputType.values: com.android.build
 com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.VariantOutput.getVersionName: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.VariantOutput.isEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.VariantOutput.isUniversal: boolean ()
 com.android.build.api.variant.VariantProperties implements com.android.build.api.variant.VariantConfiguration, com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.VariantProperties.getOperations: com.android.build.api.artifact.Operations ()

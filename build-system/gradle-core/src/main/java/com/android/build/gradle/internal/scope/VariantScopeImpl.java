@@ -636,12 +636,6 @@ public class VariantScopeImpl implements VariantScope {
                 null;
     }
 
-    @NonNull
-    @Override
-    public File getSplitApkOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/split-apk/" + getDirName());
-    }
-
     // Precomputed file paths.
 
     @Override
