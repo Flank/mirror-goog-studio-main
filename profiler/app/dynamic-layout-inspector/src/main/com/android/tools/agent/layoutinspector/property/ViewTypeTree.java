@@ -20,7 +20,11 @@ import android.view.View;
 import android.view.inspector.InspectionCompanion;
 import android.view.inspector.InspectionCompanionProvider;
 import android.view.inspector.StaticInspectionCompanionProvider;
-import java.util.*;
+import androidx.annotation.NonNull;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Holds a tree of {@link ViewType}s.
@@ -33,29 +37,32 @@ public class ViewTypeTree {
             new StaticInspectionCompanionProvider();
     private Map<Class<? extends View>, ViewType<? extends View>> typeMap = new HashMap<>();
 
+    @NonNull
     @SuppressWarnings("unchecked")
-    public <V extends View> ViewType<V> typeOf(V view) {
+    public <V extends View> ViewType<V> typeOf(@NonNull V view) {
         return typeOf((Class<V>) view.getClass());
     }
 
-    private <V extends View> ViewType<V> typeOf(Class<V> viewClass) {
+    @NonNull
+    private <V extends View> ViewType<V> typeOf(@NonNull Class<V> viewClass) {
         return innerTypeOf(viewClass);
     }
 
-    private <V extends View> ViewType<V> innerTypeOf(Class<V> viewClass) {
+    @NonNull
+    private <V extends View> ViewType<V> innerTypeOf(@NonNull Class<V> viewClass) {
         @SuppressWarnings("unchecked")
         ViewType<V> type = (ViewType<V>) typeMap.get(viewClass);
         if (type != null) {
             return type;
         }
 
-        InspectionCompanion inspectionCompanion = loadInspectionCompanion(viewClass);
+        InspectionCompanion<View> inspectionCompanion = loadInspectionCompanion(viewClass);
         @SuppressWarnings("unchecked")
         ViewType<? extends View> superType =
                 !viewClass.getCanonicalName().equals("android.view.View")
                         ? innerTypeOf((Class<? extends View>) viewClass.getSuperclass())
                         : null;
-        List<InspectionCompanion> companions = new ArrayList<>();
+        List<InspectionCompanion<View>> companions = new ArrayList<>();
         if (superType != null) {
             companions.addAll(superType.getInspectionCompanions());
         }
@@ -74,13 +81,14 @@ public class ViewTypeTree {
             properties = mapper.getProperties();
         }
 
-        //noinspection unchecked
-        type = new ViewType(nodeName, viewClass.getCanonicalName(), properties, companions);
+        type = new ViewType<>(nodeName, viewClass.getCanonicalName(), properties, companions);
         typeMap.put(viewClass, type);
         return type;
     }
 
-    private <V extends View> InspectionCompanion<V> loadInspectionCompanion(Class<V> javaClass) {
-        return inspectionCompanionProvider.provide(javaClass);
+    private <V extends View> InspectionCompanion<View> loadInspectionCompanion(
+            @NonNull Class<V> javaClass) {
+        //noinspection unchecked
+        return (InspectionCompanion<View>) inspectionCompanionProvider.provide(javaClass);
     }
 }

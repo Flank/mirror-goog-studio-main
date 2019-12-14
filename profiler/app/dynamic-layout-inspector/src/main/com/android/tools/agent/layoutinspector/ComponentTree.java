@@ -20,10 +20,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 /** Services for writing the view hierarchy into a ComponentTreeEvent protobuf. */
@@ -37,7 +37,7 @@ class ComponentTree {
      * @param view the root of the tree to load the component tree for
      * @param event a handle to a ComponentTreeEvent protobuf to pass back in native calls
      */
-    public void writeTree(long event, View view)
+    public void writeTree(long event, @NonNull View view)
             throws LayoutInspectorService.LayoutModifiedException {
         // We shouldn't come in here more than once.
         assert !mStringTable.entries().iterator().hasNext();
@@ -46,9 +46,9 @@ class ComponentTree {
         loadStringTable(event);
     }
 
-    private void loadView(long buffer, View view, boolean isSubView)
+    private void loadView(long buffer, @NonNull View view, boolean isSubView)
             throws LayoutInspectorService.LayoutModifiedException {
-        long viewId = getUniqueDrawingId(view);
+        long viewId = view.getUniqueDrawingId();
         Class<? extends View> klass = view.getClass();
         int packageName = toInt(getPackageName(klass));
         int className = toInt(klass.getSimpleName());
@@ -85,7 +85,7 @@ class ComponentTree {
             addIdResource(
                     viewBuffer, toInt(id.getNamespace()), toInt(id.getType()), toInt(id.getName()));
         }
-        Resource layout = Resource.fromResourceId(view, getSourceLayoutResId(view));
+        Resource layout = Resource.fromResourceId(view, view.getSourceLayoutResId());
         if (layout != null) {
             addLayoutResource(
                     viewBuffer,
@@ -113,34 +113,14 @@ class ComponentTree {
         }
     }
 
-    private long getUniqueDrawingId(View view) {
-        try {
-            // TODO: Call this method directly when we compile against android-Q
-            Method method = View.class.getDeclaredMethod("getUniqueDrawingId");
-            Long layoutId = (Long) method.invoke(view);
-            return layoutId != null ? layoutId : 0;
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            return 0;
-        }
-    }
-
-    private int getSourceLayoutResId(View view) {
-        try {
-            // TODO: Call this method directly when we compile against android-Q
-            Method method = View.class.getDeclaredMethod("getSourceLayoutResId");
-            Integer layoutId = (Integer) method.invoke(view);
-            return layoutId != null ? layoutId : 0;
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            return 0;
-        }
-    }
-
-    private String getPackageName(Class<? extends View> klass) {
-        Package pkg = klass.getPackage();
+    @Nullable
+    private static String getPackageName(@NonNull Class<? extends View> cls) {
+        Package pkg = cls.getPackage();
         return pkg != null ? pkg.getName() : null;
     }
 
-    private String getTextValue(View view) {
+    @Nullable
+    private static String getTextValue(@NonNull View view) {
         if (!(view instanceof TextView)) {
             return null;
         }
@@ -149,12 +129,12 @@ class ComponentTree {
         return sequence != null ? sequence.toString() : null;
     }
 
-    private int toInt(String value) {
+    private int toInt(@Nullable String value) {
         return mStringTable.generateStringId(value);
     }
 
     /** Adds a string entry into the ComponentTreeEvent protobuf. */
-    private native void addString(long event, int id, String str);
+    private native void addString(long event, int id, @NonNull String str);
 
     /** Adds a view to a ComponentTreeEvent or a View protobuf */
     private native long addView(

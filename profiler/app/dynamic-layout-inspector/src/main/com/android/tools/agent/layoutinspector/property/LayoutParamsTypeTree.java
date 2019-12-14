@@ -4,6 +4,8 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.inspector.InspectionCompanion;
 import android.view.inspector.InspectionCompanionProvider;
 import android.view.inspector.StaticInspectionCompanionProvider;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,33 +20,35 @@ import java.util.Map;
 public class LayoutParamsTypeTree {
     private InspectionCompanionProvider inspectionCompanionProvider =
             new StaticInspectionCompanionProvider();
-    private Map<Class<? extends LayoutParams>, LayoutParamsType<? extends LayoutParams>> typeMap =
-            new HashMap<>();
+    private Map<Class<? extends LayoutParams>, LayoutParamsType> typeMap = new HashMap<>();
 
-    @SuppressWarnings("unchecked")
-    public <L extends LayoutParams> LayoutParamsType<L> typeOf(L layoutParams) {
-        return typeOf((Class<L>) layoutParams.getClass());
+    @NonNull
+    public <L extends LayoutParams> LayoutParamsType typeOf(@NonNull L layoutParams) {
+        return typeOf(layoutParams.getClass());
     }
 
-    public <L extends LayoutParams> LayoutParamsType<L> typeOf(Class<L> layoutParamsClass) {
+    @NonNull
+    public <L extends LayoutParams> LayoutParamsType typeOf(@NonNull Class<L> layoutParamsClass) {
         return innerTypeOf(layoutParamsClass);
     }
 
-    private <L extends LayoutParams> LayoutParamsType<L> innerTypeOf(Class<L> layoutParamsClass) {
-        @SuppressWarnings("unchecked")
-        LayoutParamsType<L> type = (LayoutParamsType<L>) typeMap.get(layoutParamsClass);
+    @NonNull
+    private <L extends LayoutParams> LayoutParamsType innerTypeOf(
+            @NonNull Class<L> layoutParamsClass) {
+        LayoutParamsType type = typeMap.get(layoutParamsClass);
         if (type != null) {
             return type;
         }
 
-        InspectionCompanion inspectionCompanion = loadInspectionCompanion(layoutParamsClass);
+        InspectionCompanion<LayoutParams> inspectionCompanion =
+                loadInspectionCompanion(layoutParamsClass);
         @SuppressWarnings("unchecked")
-        LayoutParamsType<? extends LayoutParams> superType =
+        LayoutParamsType superType =
                 !layoutParamsClass.getCanonicalName().equals("android.view.ViewGroup.LayoutParams")
                         ? innerTypeOf(
                                 (Class<? extends LayoutParams>) layoutParamsClass.getSuperclass())
                         : null;
-        List<InspectionCompanion> companions = new ArrayList<>();
+        List<InspectionCompanion<LayoutParams>> companions = new ArrayList<>();
         if (superType != null) {
             companions.addAll(superType.getInspectionCompanions());
         }
@@ -63,7 +67,6 @@ public class LayoutParamsTypeTree {
             properties = mapper.getProperties();
         }
 
-        //noinspection unchecked
         type =
                 new LayoutParamsType(
                         nodeName, layoutParamsClass.getCanonicalName(), properties, companions);
@@ -71,8 +74,10 @@ public class LayoutParamsTypeTree {
         return type;
     }
 
-    private <L extends LayoutParams> InspectionCompanion<L> loadInspectionCompanion(
-            Class<L> javaClass) {
-        return inspectionCompanionProvider.provide(javaClass);
+    @Nullable
+    private <L extends LayoutParams> InspectionCompanion<LayoutParams> loadInspectionCompanion(
+            @NonNull Class<L> javaClass) {
+        //noinspection unchecked
+        return (InspectionCompanion<LayoutParams>) inspectionCompanionProvider.provide(javaClass);
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.tools.agent.layoutinspector.property;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +30,13 @@ public class Property {
     private Resource mSource;
     private final List<Resource> mResolutionStack;
 
-    public Property(PropertyType type) {
+    public Property(@NonNull PropertyType type) {
         mType = type;
         mValueType = type.getType();
         mResolutionStack = new ArrayList<>();
     }
 
+    @NonNull
     public PropertyType getPropertyType() {
         return mType;
     }
@@ -45,19 +48,21 @@ public class Property {
      * are encoded e.g. a string is stored as an Integer which represent an id in the string table
      * that is generated along with the properties.
      */
+    @Nullable
     public Object getValue() {
         return mValue;
     }
 
+    @NonNull
     public ValueType getValueType() {
         return mValueType;
     }
 
-    public void setType(ValueType type) {
+    public void setType(@NonNull ValueType type) {
         mValueType = type;
     }
 
-    public void setValue(Object value) {
+    public void setValue(@Nullable Object value) {
         mValue = value;
     }
 
@@ -66,15 +71,17 @@ public class Property {
      *
      * <p>This can be a layout file or from a style.
      */
+    @Nullable
     public Resource getSource() {
         return mSource;
     }
 
-    public void setSource(Resource source) {
+    public void setSource(@Nullable Resource source) {
         mSource = source;
     }
 
     /** Get the resolution stack for this property. */
+    @NonNull
     public List<Resource> getResolutionStack() {
         return mResolutionStack;
     }

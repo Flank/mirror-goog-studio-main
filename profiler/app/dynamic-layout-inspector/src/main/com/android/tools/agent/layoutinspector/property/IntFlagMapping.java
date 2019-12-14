@@ -15,6 +15,7 @@
  */
 package com.android.tools.agent.layoutinspector.property;
 
+import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ class IntFlagMapping {
      * @param value The value of the property
      * @return The names of the enabled flags, empty if no flags enabled
      */
+    @NonNull
     public Set<String> of(int value) {
         Set<String> enabledFlagNames = new HashSet<>();
         int alreadyIncluded = 0;
@@ -51,7 +53,7 @@ class IntFlagMapping {
      * @param target The target value to compare the masked value with
      * @param name The name of the flag to include if enabled
      */
-    public void add(int mask, int target, String name) {
+    public void add(int mask, int target, @NonNull String name) {
         mFlags.add(new Flag(mask, target, name));
     }
 
@@ -61,7 +63,7 @@ class IntFlagMapping {
         private final int mTarget;
         private final int mMask;
 
-        private Flag(int mask, int target, String name) {
+        private Flag(int mask, int target, @NonNull String name) {
             mTarget = target;
             mMask = mask;
             mName = name;

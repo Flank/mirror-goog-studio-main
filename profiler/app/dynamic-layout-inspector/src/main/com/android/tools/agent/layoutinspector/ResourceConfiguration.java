@@ -21,6 +21,8 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.LocaleList;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
 import java.lang.reflect.InvocationTargetException;
@@ -31,11 +33,11 @@ import java.util.Locale;
 class ResourceConfiguration {
     private final StringTable mStringTable;
 
-    public ResourceConfiguration(StringTable stringTable) {
+    public ResourceConfiguration(@NonNull StringTable stringTable) {
         mStringTable = stringTable;
     }
 
-    public void writeConfiguration(long event, View view) {
+    public void writeConfiguration(long event, @NonNull View view) {
         Context context = view.getContext();
         addAppData(
                 event,
@@ -74,7 +76,7 @@ class ResourceConfiguration {
                 config.screenHeightDp);
 
         LocaleList locales = config.getLocales();
-        if (locales.size() > 0) {
+        if (!locales.isEmpty()) {
             Locale locale = locales.get(0);
             addLocale(
                     event,
@@ -85,9 +87,10 @@ class ResourceConfiguration {
         }
     }
 
-    private int getThemeResId(Context context) {
+    private static int getThemeResId(@NonNull Context context) {
         try {
             // This method is hidden:
+            //noinspection JavaReflectionMemberAccess
             Method method = Context.class.getDeclaredMethod("getThemeResId");
             Integer themeId = (Integer) method.invoke(context);
             return themeId != null ? themeId : 0;
@@ -96,7 +99,7 @@ class ResourceConfiguration {
         }
     }
 
-    private int toInt(String value) {
+    private int toInt(@Nullable String value) {
         return mStringTable.generateStringId(value);
     }
 

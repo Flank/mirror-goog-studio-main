@@ -17,13 +17,15 @@
 package com.android.tools.agent.layoutinspector.common;
 
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
 public class StringTable {
     private final Map<String, Integer> mStringMap = new HashMap<>();
 
-    public int generateStringId(String str) {
+    public int generateStringId(@Nullable String str) {
         if (TextUtils.isEmpty(str)) {
             return 0;
         }
@@ -36,6 +38,7 @@ public class StringTable {
         return newId;
     }
 
+    @NonNull
     public Iterable<Map.Entry<String, Integer>> entries() {
         return mStringMap.entrySet();
     }

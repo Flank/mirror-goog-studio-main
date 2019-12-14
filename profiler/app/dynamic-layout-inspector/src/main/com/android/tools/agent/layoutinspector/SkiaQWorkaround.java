@@ -22,6 +22,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,10 +39,11 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 class SkiaQWorkaround {
 
-    private static Object getFieldValue(Object o, String fieldName) {
+    @Nullable
+    private static Object getFieldValue(@NonNull Object o, @NonNull String fieldName) {
         Field f = null;
 
-        for (Class c = o.getClass(); c != null && f == null; c = c.getSuperclass()) {
+        for (Class<?> c = o.getClass(); c != null && f == null; c = c.getSuperclass()) {
             try {
                 f = c.getDeclaredField(fieldName);
             } catch (NoSuchFieldException e) {
@@ -58,15 +61,18 @@ class SkiaQWorkaround {
         return null;
     }
 
+    @Nullable
     static AutoCloseable startRenderingCommandsCapture(
-            View tree, Executor executor, Callable<OutputStream> callback) {
+            @NonNull View tree,
+            @NonNull Executor executor,
+            @NonNull Callable<OutputStream> callback) {
         final Object attachInfo = getFieldValue(tree, "mAttachInfo");
 
         if (attachInfo == null) {
             throw new IllegalArgumentException("Given view isn't attached");
         }
         final Handler handler = (Handler) getFieldValue(attachInfo, "mHandler");
-        if (handler.getLooper() != Looper.myLooper()) {
+        if (handler == null || handler.getLooper() != Looper.myLooper()) {
             throw new IllegalStateException(
                     "Called on the wrong thread."
                             + " Must be called on the thread that owns the given View");
@@ -79,6 +85,7 @@ class SkiaQWorkaround {
         return null;
     }
 
+    @SuppressWarnings("resource")
     private static class StreamingPictureCallbackHandler
             implements AutoCloseable, HardwareRenderer.PictureCapturedCallback, Runnable {
         private final HardwareRenderer mRenderer;
@@ -91,7 +98,9 @@ class SkiaQWorkaround {
         private Thread mRenderThread;
 
         private StreamingPictureCallbackHandler(
-                HardwareRenderer renderer, Callable<OutputStream> callback, Executor executor) {
+                @NonNull HardwareRenderer renderer,
+                @NonNull Callable<OutputStream> callback,
+                @NonNull Executor executor) {
             mRenderer = renderer;
             mCallback = callback;
             mExecutor = executor;
@@ -107,7 +116,7 @@ class SkiaQWorkaround {
         }
 
         @Override
-        public void onPictureCaptured(Picture picture) {
+        public void onPictureCaptured(@NonNull Picture picture) {
             mLock.lock();
             if (mStopListening) {
                 mLock.unlock();
@@ -123,6 +132,7 @@ class SkiaQWorkaround {
                 needsInvoke = false;
             }
             try {
+                //noinspection JavaReflectionMemberAccess
                 Picture.class
                         .getDeclaredMethod("writeToStream", OutputStream.class)
                         .invoke(picture, mByteStream);

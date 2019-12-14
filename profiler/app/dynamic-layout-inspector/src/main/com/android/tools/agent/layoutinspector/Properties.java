@@ -17,7 +17,8 @@
 package com.android.tools.agent.layoutinspector;
 
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
 import com.android.tools.agent.layoutinspector.property.LayoutParamsTypeTree;
@@ -39,12 +40,13 @@ class Properties {
      * @param view the view to load the properties for
      * @param event a handle to a PropertyEvent protobuf to pass back in native calls
      */
-    void writeProperties(View view, long event) {
+    void writeProperties(@NonNull View view, long event) {
         mStringTable.clear();
         ViewTypeTree typeTree = new ViewTypeTree();
         LayoutParamsTypeTree layoutTypeTree = new LayoutParamsTypeTree();
-        ViewNode<View, LayoutParams> node =
-                new ViewNode(typeTree.typeOf(view), layoutTypeTree.typeOf(view.getLayoutParams()));
+        ViewNode<View> node =
+                new ViewNode<>(
+                        typeTree.typeOf(view), layoutTypeTree.typeOf(view.getLayoutParams()));
         node.readProperties(view);
         Resource layout = node.getLayoutResource(view);
         if (layout != null) {
@@ -71,7 +73,7 @@ class Properties {
     }
 
     private void addPropertyAndSourceResolutionStack(
-            long event, Property property, boolean isLayout) {
+            long event, @NonNull Property property, boolean isLayout) {
         long propertyId = addProperty(event, property, isLayout);
         Resource source = property.getSource();
         if (propertyId != 0) {
@@ -92,7 +94,7 @@ class Properties {
         }
     }
 
-    private long addProperty(long event, Property property, boolean isLayout) {
+    private long addProperty(long event, @NonNull Property property, boolean isLayout) {
         PropertyType propertyType = property.getPropertyType();
         ValueType valueType = property.getValueType();
         int name = toInt(propertyType.getName());
@@ -114,6 +116,7 @@ class Properties {
                 return addIntProperty(event, name, isLayout, type, (int) value);
             case GRAVITY:
             case INT_FLAG:
+                //noinspection unchecked
                 return addIntFlagProperty(event, name, isLayout, type, (Set<String>) value);
             case INT64:
                 return addLongProperty(event, name, isLayout, type, (long) value);
@@ -142,12 +145,12 @@ class Properties {
         }
     }
 
-    private int toInt(String value) {
+    private int toInt(@Nullable String value) {
         return mStringTable.generateStringId(value);
     }
 
     private long addIntFlagProperty(
-            long event, int name, boolean isLayout, int type, Set<String> value) {
+            long event, int name, boolean isLayout, int type, @NonNull Set<String> value) {
         long propertyEvent = addFlagProperty(event, name, isLayout, type);
         for (String flag : value) {
             addFlagPropertyValue(propertyEvent, toInt(flag));
@@ -156,7 +159,7 @@ class Properties {
     }
 
     /** Adds a string entry into the event protobuf. */
-    private native void addString(long event, int id, String str);
+    private native void addString(long event, int id, @NonNull String str);
 
     /** Adds an int32 property value into the event protobuf. */
     private native long addIntProperty(long event, int name, boolean isLayout, int type, int value);

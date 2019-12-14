@@ -18,12 +18,18 @@ package com.android.tools.agent.layoutinspector;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inspector.WindowInspector;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -32,7 +38,7 @@ import java.util.concurrent.Executors;
  * This (singleton) class can register a callback to, whenever a view is updated, send the current
  * skia picture back to studio.
  */
-@SuppressWarnings("unused") // invoked via jni
+@SuppressWarnings({"unused", "Convert2Lambda"}) // invoked via jni
 public class LayoutInspectorService {
     private final Properties properties = new Properties();
     private final Object lock = new Object();
@@ -43,6 +49,7 @@ public class LayoutInspectorService {
 
     static class LayoutModifiedException extends Exception {}
 
+    @NonNull
     public static LayoutInspectorService instance() {
         if (sInstance == null) {
             sInstance = new LayoutInspectorService();
@@ -52,20 +59,19 @@ public class LayoutInspectorService {
 
     private LayoutInspectorService() {}
 
-    /** This method is called when a layout inspector command is recieved by the agent. */
+    /** This method is called when a layout inspector command is received by the agent. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStartLayoutInspectorCommand() {
         List<View> roots = getRootViews();
-        if (roots != null) {
-            for (View root : roots) {
-                startLayoutInspector(root);
-            }
+        for (View root : roots) {
+            startLayoutInspector(root);
         }
         detectRootChange = new DetectRootViewChange(this);
         detectRootChange.start(roots);
     }
 
-    public void startLayoutInspector(View root) {
+    public void startLayoutInspector(@NonNull View root) {
+        @SuppressWarnings("resource")
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         final Callable<OutputStream> callable =
                 new Callable<OutputStream>() {
@@ -80,7 +86,7 @@ public class LayoutInspectorService {
         final Executor executor =
                 new Executor() {
                     @Override
-                    public void execute(final Runnable command) {
+                    public void execute(@NonNull final Runnable command) {
                         realExecutor.execute(
                                 new Runnable() {
                                     @Override
@@ -155,11 +161,10 @@ public class LayoutInspectorService {
         }
     }
 
+    @NonNull
     public List<View> getRootViews() {
         try {
-            Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
-            Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
-            List<View> views = (List<View>) getViewsMethod.invoke(null);
+            List<View> views = WindowInspector.getGlobalWindowViews();
             List<View> result = new ArrayList<>();
             for (View view : views) {
                 if (view.getVisibility() == View.VISIBLE && view.isAttachedToWindow()) {
@@ -177,7 +182,7 @@ public class LayoutInspectorService {
         } catch (Throwable e) {
             e.printStackTrace();
             sendErrorMessage(e);
-            return null;
+            return Collections.emptyList();
         }
     }
 
@@ -188,13 +193,13 @@ public class LayoutInspectorService {
     private native long freeSendRequest(long request);
 
     /** Initializes the request as a ComponentTree and returns an event handle */
-    private native long initComponentTree(long request, long[] allIds);
+    private native long initComponentTree(long request, @NonNull long[] allIds);
 
     /** Sends a component tree to Android Studio. */
-    private native long sendComponentTree(long request, byte[] image, int len, int id);
+    private native long sendComponentTree(long request, @NonNull byte[] image, int len, int id);
 
     /** This method is called when a new image has been snapped. */
-    private void captureAndSendComponentTree(byte[] image, View root) {
+    private void captureAndSendComponentTree(@NonNull byte[] image, @Nullable View root) {
         long request = 0;
         try {
             request = allocateSendRequest();
@@ -268,8 +273,9 @@ public class LayoutInspectorService {
         }
     }
 
-    private View findViewById(View parent, long id) {
-        if (parent != null && getUniqueDrawingId(parent) == id) {
+    @Nullable
+    private static View findViewById(@Nullable View parent, long id) {
+        if (parent != null && parent.getUniqueDrawingId() == id) {
             return parent;
         }
         if (!(parent instanceof ViewGroup)) {
@@ -286,27 +292,17 @@ public class LayoutInspectorService {
         return null;
     }
 
-    private long getUniqueDrawingId(View view) {
-        try {
-            // TODO: Call this method directly when we compile against android-Q
-            Method method = View.class.getDeclaredMethod("getUniqueDrawingId");
-            Long layoutId = (Long) method.invoke(view);
-            return layoutId != null ? layoutId : 0;
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            return 0;
-        }
-    }
-
     /** Sends an LayoutInspector Event with an error message back to Studio */
-    private native void sendErrorMessage(String message);
+    private native void sendErrorMessage(@NonNull String message);
 
-    private void sendErrorMessage(Throwable e) {
+    private void sendErrorMessage(@NonNull Throwable e) {
+        //noinspection resource
         ByteArrayOutputStream error = new ByteArrayOutputStream();
         e.printStackTrace(new PrintStream(error));
         sendErrorMessage(error.toString());
     }
 
-    private void applyPropertyEdit(View view, int attributeId, int value) {
+    private void applyPropertyEdit(@NonNull View view, int attributeId, int value) {
         switch (attributeId) {
             case android.R.attr.padding:
                 view.setPadding(value, value, value, value);

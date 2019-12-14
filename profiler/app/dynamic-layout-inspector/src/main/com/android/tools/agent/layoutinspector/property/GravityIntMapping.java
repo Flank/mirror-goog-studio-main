@@ -1,6 +1,7 @@
 package com.android.tools.agent.layoutinspector.property;
 
 import android.view.Gravity;
+import androidx.annotation.NonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,10 +34,11 @@ public class GravityIntMapping implements IntFunction<Set<String>> {
     }
 
     @Override
+    @NonNull
     public Set<String> apply(int value) {
         Set<String> values = gravityIntFlagMapping.of(value);
         if ((value & Gravity.RELATIVE_LAYOUT_DIRECTION) != 0) {
-            values = new HashSet(values);
+            values = new HashSet<>(values);
             if (values.remove("left")) {
                 values.add("start");
             }

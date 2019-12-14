@@ -18,6 +18,8 @@ package com.android.tools.agent.layoutinspector.common;
 
 import android.content.res.Resources;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Holds a snapshot of a ResourceReference.
@@ -30,13 +32,14 @@ public class Resource {
     private final String mNamespace;
     private final String mName;
 
-    private Resource(String type, String namespace, String name) {
+    private Resource(@NonNull String type, @NonNull String namespace, @NonNull String name) {
         mType = type;
         mNamespace = namespace;
         mName = name;
     }
 
-    public static Resource fromResourceId(View view, int resourceId) {
+    @Nullable
+    public static Resource fromResourceId(@NonNull View view, int resourceId) {
         if (resourceId <= 0) {
             return null;
         }
@@ -54,24 +57,24 @@ public class Resource {
         }
     }
 
+    @NonNull
     public String getType() {
         return mType;
     }
 
+    @NonNull
     public String getNamespace() {
         return mNamespace;
     }
 
+    @NonNull
     public String getName() {
         return mName;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return String.format("resource:(@%s:%s/%s)", mNamespace, mType, mName);
-    }
-
-    public static String toString(Resource resource) {
-        return resource != null ? resource.toString() : "";
     }
 }

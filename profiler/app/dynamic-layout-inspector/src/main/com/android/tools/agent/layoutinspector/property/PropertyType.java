@@ -16,6 +16,8 @@
 
 package com.android.tools.agent.layoutinspector.property;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.util.Set;
 import java.util.function.IntFunction;
 
@@ -28,13 +30,15 @@ public class PropertyType {
     private IntFunction<String> mEnumMapping;
     private IntFunction<Set<String>> mFlagMapping;
 
-    public PropertyType(String name, int attributeId, int propertyId, ValueType type) {
+    public PropertyType(
+            @NonNull String name, int attributeId, int propertyId, @NonNull ValueType type) {
         mName = name;
         mAttributeId = attributeId;
         mPropertyId = propertyId;
         mType = type;
     }
 
+    @NonNull
     public String getName() {
         return mName;
     }
@@ -43,26 +47,30 @@ public class PropertyType {
         return mAttributeId;
     }
 
+    @SuppressWarnings("unused")
     public int getPropertyId() {
         return mPropertyId;
     }
 
+    @NonNull
     public ValueType getType() {
         return mType;
     }
 
-    public void setEnumMapping(IntFunction<String> enumMapping) {
+    public void setEnumMapping(@NonNull IntFunction<String> enumMapping) {
         mEnumMapping = enumMapping;
     }
 
+    @Nullable
     public IntFunction<String> getEnumMapping() {
         return mEnumMapping;
     }
 
-    public void setFlagMapping(IntFunction<Set<String>> flagMapping) {
+    public void setFlagMapping(@NonNull IntFunction<Set<String>> flagMapping) {
         mFlagMapping = flagMapping;
     }
 
+    @Nullable
     public IntFunction<Set<String>> getFlagMapping() {
         return mFlagMapping;
     }

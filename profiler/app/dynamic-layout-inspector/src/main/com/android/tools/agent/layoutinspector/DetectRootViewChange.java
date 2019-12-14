@@ -18,6 +18,7 @@ package com.android.tools.agent.layoutinspector;
 
 import android.os.AsyncTask;
 import android.view.View;
+import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +38,7 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
         myService = service;
     }
 
-    public void start(List<View> roots) {
+    public void start(@NonNull List<View> roots) {
         myRoots = roots;
         myQuit = false;
         execute();
@@ -53,7 +54,7 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
             try {
                 Thread.sleep(ONE_SECOND);
                 List<View> newRoots = myService.getRootViews();
-                if (newRoots != null && !newRoots.equals(myRoots)) {
+                if (!newRoots.equals(myRoots)) {
                     List<View> newlyAdded = new ArrayList<>(newRoots);
                     newlyAdded.removeAll(myRoots);
                     myRoots.removeAll(newRoots);
@@ -63,7 +64,6 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
                     for (View added : newlyAdded) {
                         myService.startLayoutInspector(added);
                     }
-
                     myRoots = newRoots;
                 }
             } catch (Exception ex) {

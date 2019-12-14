@@ -23,25 +23,25 @@ import android.graphics.Interpolator;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.inspector.PropertyReader;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.common.Resource;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.IntFunction;
 
 /** Holds the properties (including their values) of a View. */
-public class ViewNode<V extends View, L extends LayoutParams> {
+public class ViewNode<V extends View> {
     private ViewType<V> mType;
-    private LayoutParamsType<L> mLayoutParamsType;
+    private LayoutParamsType mLayoutParamsType;
     private List<Property> mViewProperties;
     private List<Property> mLayoutProperties;
 
-    public ViewNode(ViewType<V> type, LayoutParamsType<L> layoutParamsType) {
+    public ViewNode(@NonNull ViewType<V> type, @NonNull LayoutParamsType layoutParamsType) {
         mType = type;
         mLayoutParamsType = layoutParamsType;
         mViewProperties = new ArrayList<>();
@@ -54,38 +54,30 @@ public class ViewNode<V extends View, L extends LayoutParams> {
         }
     }
 
+    @NonNull
     public ViewType<V> getType() {
         return mType;
     }
 
+    @NonNull
     public List<Property> getViewProperties() {
         return mViewProperties;
     }
 
+    @NonNull
     public List<Property> getLayoutProperties() {
         return mLayoutProperties;
     }
 
-    public void readProperties(V view) {
+    public void readProperties(@NonNull V view) {
         PropertyReader viewReader = new SimplePropertyReader<>(view, mViewProperties, true);
         mType.readProperties(view, viewReader);
         PropertyReader layoutReader = new SimplePropertyReader<>(view, mLayoutProperties, false);
         mLayoutParamsType.readProperties(view.getLayoutParams(), layoutReader);
     }
 
-    public Resource getLayoutResource(V view) {
-        return Resource.fromResourceId(view, getSourceLayoutResId(view));
-    }
-
-    private int getSourceLayoutResId(V view) {
-        try {
-            // TODO: Call this method directly when we compile against android-Q
-            Method method = View.class.getDeclaredMethod("getSourceLayoutResId");
-            Integer layoutId = (Integer) method.invoke(view);
-            return layoutId != null ? layoutId : 0;
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            return 0;
-        }
+    public Resource getLayoutResource(@NonNull V view) {
+        return Resource.fromResourceId(view, view.getSourceLayoutResId());
     }
 
     private static class SimplePropertyReader<V extends View> implements PropertyReader {
@@ -94,10 +86,11 @@ public class ViewNode<V extends View, L extends LayoutParams> {
         private final Map<Integer, Integer> mResourceMap;
         private final boolean mIsViewProperties;
 
-        SimplePropertyReader(V view, List<Property> properties, boolean isViewProperties) {
+        SimplePropertyReader(
+                @NonNull V view, @NonNull List<Property> properties, boolean isViewProperties) {
             mView = view;
             mProperties = properties;
-            mResourceMap = getAttributeSourceResourceMap(view);
+            mResourceMap = view.getAttributeSourceResourceMap();
             mIsViewProperties = isViewProperties;
         }
 
@@ -142,7 +135,7 @@ public class ViewNode<V extends View, L extends LayoutParams> {
         }
 
         @Override
-        public void readObject(int id, Object o) {
+        public void readObject(int id, @Nullable Object o) {
             if (o instanceof String) {
                 readAny(id, o.toString().intern());
                 mProperties.get(id).setType(ValueType.STRING);
@@ -179,7 +172,7 @@ public class ViewNode<V extends View, L extends LayoutParams> {
         }
 
         @Override
-        public void readColor(int id, Color color) {
+        public void readColor(int id, @NonNull Color color) {
             readAny(id, color);
         }
 
@@ -192,14 +185,20 @@ public class ViewNode<V extends View, L extends LayoutParams> {
         public void readIntEnum(int id, int value) {
             Property property = mProperties.get(id);
             PropertyType type = property.getPropertyType();
-            readAny(id, type.getEnumMapping().apply(value));
+            IntFunction<String> mapping = type.getEnumMapping();
+            if (mapping != null) {
+                readAny(id, mapping.apply(value));
+            }
         }
 
         @Override
         public void readIntFlag(int id, int value) {
             Property property = mProperties.get(id);
             PropertyType type = property.getPropertyType();
-            readAny(id, type.getFlagMapping().apply(value));
+            IntFunction<Set<String>> mapping = type.getFlagMapping();
+            if (mapping != null) {
+                readAny(id, mapping.apply(value));
+            }
         }
 
         @Override
@@ -207,7 +206,7 @@ public class ViewNode<V extends View, L extends LayoutParams> {
             readAny(id, Resource.fromResourceId(mView, value));
         }
 
-        private void readAny(int id, Object value) {
+        private void readAny(int id, @Nullable Object value) {
             Property property = mProperties.get(id);
             PropertyType type = property.getPropertyType();
             property.setValue(value);
@@ -217,40 +216,14 @@ public class ViewNode<V extends View, L extends LayoutParams> {
             }
         }
 
+        @Nullable
         private Resource getResourceValueOfAttribute(int attributeId) {
             Integer resourceId = mResourceMap.get(attributeId);
             return resourceId != null ? Resource.fromResourceId(mView, resourceId) : null;
         }
 
-        private Map<Integer, Integer> getAttributeSourceResourceMap(V view) {
-            try {
-                // TODO: Call this method directly when we compile against android-Q
-                Method method = View.class.getDeclaredMethod("getAttributeSourceResourceMap");
-                //noinspection unchecked
-                return (Map<Integer, Integer>) method.invoke(view);
-            } catch (NoSuchMethodException
-                    | IllegalAccessException
-                    | InvocationTargetException ex) {
-                return Collections.emptyMap();
-            }
-        }
-
-        private int[] getAttributeResolutionStack(V view, int attributeId) {
-            try {
-                // TODO: Call this method directly when we compile against android-Q
-                Method method =
-                        View.class.getDeclaredMethod("getAttributeResolutionStack", Integer.TYPE);
-                //noinspection unchecked
-                return (int[]) method.invoke(view, attributeId);
-            } catch (NoSuchMethodException
-                    | IllegalAccessException
-                    | InvocationTargetException ex) {
-                return new int[0];
-            }
-        }
-
-        private void addResolutionStack(List<Resource> stack, int attributeId) {
-            int[] ids = getAttributeResolutionStack(mView, attributeId);
+        private void addResolutionStack(@NonNull List<Resource> stack, int attributeId) {
+            int[] ids = mView.getAttributeResolutionStack(attributeId);
             for (int id : ids) {
                 stack.add(Resource.fromResourceId(mView, id));
             }

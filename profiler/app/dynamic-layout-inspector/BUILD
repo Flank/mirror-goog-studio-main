@@ -9,6 +9,7 @@ java_test(
         ":agent",
         ":fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
@@ -22,6 +23,7 @@ java_library(
     deps = [
         ":fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
     ],
 )
 

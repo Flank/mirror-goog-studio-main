@@ -17,7 +17,9 @@
 package com.android.tools.agent.layoutinspector.property;
 
 import android.view.View;
-import android.view.inspector.*;
+import android.view.inspector.InspectionCompanion;
+import android.view.inspector.PropertyReader;
+import androidx.annotation.NonNull;
 import java.util.List;
 
 /**
@@ -29,38 +31,43 @@ public class ViewType<V extends View> {
     private String mNodeName;
     private String mJavaName;
     private List<PropertyType> mProperties;
-    private List<InspectionCompanion> mInspectionCompanions;
+    private List<InspectionCompanion<View>> mInspectionCompanions;
 
     ViewType(
-            String nodeName,
-            String javaName,
-            List<PropertyType> properties,
-            List<InspectionCompanion> inspectionCompanions) {
+            @NonNull String nodeName,
+            @NonNull String javaName,
+            @NonNull List<PropertyType> properties,
+            @NonNull List<InspectionCompanion<View>> inspectionCompanions) {
         mNodeName = nodeName;
         mJavaName = javaName;
         mProperties = properties;
         mInspectionCompanions = inspectionCompanions;
     }
 
+    @SuppressWarnings("unused")
+    @NonNull
     public String getNodeName() {
         return mNodeName;
     }
 
+    @SuppressWarnings("unused")
+    @NonNull
     public String getJavaName() {
         return mJavaName;
     }
 
-    List<InspectionCompanion> getInspectionCompanions() {
+    @NonNull
+    List<InspectionCompanion<View>> getInspectionCompanions() {
         return mInspectionCompanions;
     }
 
+    @NonNull
     List<PropertyType> getProperties() {
         return mProperties;
     }
 
-    void readProperties(V view, PropertyReader propertyReader) {
-        for (InspectionCompanion companion : mInspectionCompanions) {
-            //noinspection unchecked
+    void readProperties(@NonNull V view, @NonNull PropertyReader propertyReader) {
+        for (InspectionCompanion<View> companion : mInspectionCompanions) {
             companion.readProperties(view, propertyReader);
         }
     }
