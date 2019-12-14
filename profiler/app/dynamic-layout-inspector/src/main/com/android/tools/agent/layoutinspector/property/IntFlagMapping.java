@@ -20,9 +20,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntFunction;
 
 /** Loose adoption of android.view.inspector.IntFlagMapping */
-class IntFlagMapping {
+public class IntFlagMapping implements IntFunction<Set<String>> {
     private final List<Flag> mFlags = new ArrayList<>();
 
     /**
@@ -31,8 +32,9 @@ class IntFlagMapping {
      * @param value The value of the property
      * @return The names of the enabled flags, empty if no flags enabled
      */
+    @Override
     @NonNull
-    public Set<String> of(int value) {
+    public Set<String> apply(int value) {
         Set<String> enabledFlagNames = new HashSet<>();
         int alreadyIncluded = 0;
 

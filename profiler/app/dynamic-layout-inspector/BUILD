@@ -4,7 +4,13 @@ java_test(
     name = "agent_tests",
     srcs = glob(["src/test/**/*"]),
     jvm_flags = ["-Dtest.suite.jar=agent_tests.jar"],
+    resource_strip_prefix = "tools/base/profiler/app/dynamic-layout-inspector/src/testResources",
+    resources = ["src/testResources/mockito-extensions/org.mockito.plugins.MockMaker"],
     test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        ":fake_android",  # Must be before android.jar
+        "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
+    ],
     deps = [
         ":agent",
         ":fake_android",
@@ -14,6 +20,7 @@ java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )
 

@@ -20,6 +20,7 @@ import android.content.res.Resources;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Holds a snapshot of a ResourceReference.
@@ -32,7 +33,8 @@ public class Resource {
     private final String mNamespace;
     private final String mName;
 
-    private Resource(@NonNull String type, @NonNull String namespace, @NonNull String name) {
+    @VisibleForTesting
+    public Resource(@NonNull String type, @NonNull String namespace, @NonNull String name) {
         mType = type;
         mNamespace = namespace;
         mName = name;

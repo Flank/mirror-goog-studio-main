@@ -36,7 +36,7 @@ public class GravityIntMapping implements IntFunction<Set<String>> {
     @Override
     @NonNull
     public Set<String> apply(int value) {
-        Set<String> values = gravityIntFlagMapping.of(value);
+        Set<String> values = gravityIntFlagMapping.apply(value);
         if ((value & Gravity.RELATIVE_LAYOUT_DIRECTION) != 0) {
             values = new HashSet<>(values);
             if (values.remove("left")) {
