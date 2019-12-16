@@ -23,6 +23,8 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.truth.Truth
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -47,30 +49,49 @@ class BasicInstantExecutionTest {
                 .build()
         ).create()
 
+    @Before
+    fun setUp() {
+        project.testDir.resolve(".instant-execution-state").deleteRecursively()
+
+        // Disable lint because of http://b/146208910
+        listOf("app", "lib").forEach {
+            project.getSubproject(it).buildFile.appendText("""
+
+            android {
+                lintOptions {
+                    checkReleaseBuilds false
+                }
+            }
+        """.trimIndent())
+        }
+    }
+
     @Test
     fun testUpToDate() {
-        executor().run("assembleDebug")
-
+        executor().run("assemble")
         assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()
-        executor().run("assembleDebug")
+        val result = executor().run("assemble")
+        Truth.assertThat(result.didWorkTasks).isEmpty()
     }
 
     @Test
     fun testCleanBuild() {
-        executor().run("assembleDebug")
-        executor().run("clean", "assembleDebug")
+        executor().run("assemble")
+        executor().run("clean")
+        executor().run("assemble")
     }
 
     @Test
     fun testWhenInvokedFromTheIde() {
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-            .run("assembleDebug")
+            .run("assemble")
 
         assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()
+        executor().run("clean")
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-            .run("assembleDebug")
+            .run("assemble")
     }
 
     private fun executor(): GradleTaskExecutor =

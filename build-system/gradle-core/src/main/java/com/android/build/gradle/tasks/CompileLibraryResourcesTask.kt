@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
 import com.android.build.gradle.internal.services.getAapt2WorkersBuildService
-import com.android.build.gradle.internal.services.registerForWorkers
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
@@ -125,7 +124,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                     projectName,
                     path,
                     aapt2ServiceKey,
-                    aapt2WorkersBuildService.get().registerForWorkers(),
+                    aapt2WorkersBuildService.get().getWorkersServiceKey(),
                     errorFormatMode,
                     requests.build(),
                     useJvmResourceCompiler

@@ -68,6 +68,7 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
     }
 
     private val aapt2ThreadPool: ForkJoinPool = ForkJoinPool(parameters.aapt2ThreadPoolSize.get())
+    private val serviceKey = lazy { registerForWorkers() }
 
     @Synchronized
     fun getWorkerForAapt2(
@@ -92,7 +93,29 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
         return Workers.ProfileAwareExecutorServiceAdapter(projectName, owner, executor!!)
     }
 
+    /**
+     * Returns the key that should be used to access the workers service registry to get this build
+     * service.
+     */
+    fun getWorkersServiceKey(): WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService> =
+        serviceKey.value
+
+    private fun registerForWorkers(): WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService> {
+        val key = Aapt2WorkersBuildServiceKey()
+        val service = object : WorkerActionServiceRegistry.RegisteredService<Aapt2WorkersBuildService> {
+            override val service: Aapt2WorkersBuildService
+                get() = this@Aapt2WorkersBuildService
+
+            override fun shutdown() {
+                // lifecycle is managed by Gradle
+            }
+        }
+        WorkerActionServiceRegistry.INSTANCE.registerService(key) { service }
+        return key
+    }
+
     override fun close() {
+        WorkerActionServiceRegistry.INSTANCE.removeService(serviceKey.value)
         aapt2ThreadPool.shutdown()
     }
 }
@@ -102,18 +125,4 @@ private data class Aapt2WorkersBuildServiceKey(val id: String = AAPT2_WORKERS_BU
     WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService> {
     override val type: Class<Aapt2WorkersBuildService>
         get() = Aapt2WorkersBuildService::class.java
-}
-
-fun Aapt2WorkersBuildService.registerForWorkers(): WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService> {
-    val key = Aapt2WorkersBuildServiceKey()
-    val service = object : WorkerActionServiceRegistry.RegisteredService<Aapt2WorkersBuildService> {
-        override val service: Aapt2WorkersBuildService
-            get() = this@registerForWorkers
-
-        override fun shutdown() {
-            // lifecycle is managed by Gradle
-        }
-    }
-    WorkerActionServiceRegistry.INSTANCE.registerService(key) { service }
-    return key
 }
