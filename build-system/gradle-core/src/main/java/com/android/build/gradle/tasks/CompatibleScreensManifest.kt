@@ -34,10 +34,12 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -67,9 +69,8 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val outputFolder: DirectoryProperty
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val apkList: RegularFileProperty
+    @get:Nested
+    abstract val apkDataList : ListProperty<ApkData>
 
     @get:Input
     @get:Optional
@@ -80,13 +81,13 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
         BuildElements(
             applicationId = applicationId.get(),
             variantType = variantType.get(),
-            elements = ExistingBuildElements.loadApkList(apkList.get().asFile).mapNotNull {
-            val generatedManifest = generate(it)
-            if (generatedManifest != null)
-                BuildOutput(COMPATIBLE_SCREEN_MANIFEST, it, generatedManifest)
-            else
-                null
-        }.toList()).save(outputFolder.get().asFile)
+            elements = apkDataList.get().mapNotNull {
+                val generatedManifest = generate(it)
+                if (generatedManifest != null)
+                    BuildOutput(COMPATIBLE_SCREEN_MANIFEST, it, generatedManifest)
+                else
+                    null
+            }.toList()).save(outputFolder.get().asFile)
     }
 
     private fun generate(apkData: ApkData): File? {
@@ -168,8 +169,10 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             task.variantType.set(variantScope.variantData.type.toString())
             task.variantType.disallowChanges()
 
-            variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST,
-                task.apkList)
+            variantScope.variantData.publicVariantPropertiesApi.outputs.getEnabledVariantOutputs().forEach {
+                task.apkDataList.add(it.apkData)
+            }
+            task.apkDataList.disallowChanges()
 
             task.minSdkVersion.set(
                 task.project.provider {

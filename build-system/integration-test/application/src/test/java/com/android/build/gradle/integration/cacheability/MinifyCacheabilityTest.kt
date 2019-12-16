@@ -87,7 +87,6 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
         DID_WORK to setOf(
             ":createMinifiedCompatibleScreenManifests",
             ":extractProguardFiles",
-            ":mainApkListPersistenceMinified",
             ":mergeMinifiedResources",
             ":packageMinified",
             ":processMinifiedManifest",

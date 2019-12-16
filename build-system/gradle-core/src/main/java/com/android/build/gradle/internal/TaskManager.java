@@ -174,7 +174,6 @@ import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.LintFixTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
 import com.android.build.gradle.tasks.LintPerVariantTask;
-import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
@@ -1597,9 +1596,6 @@ public abstract class TaskManager {
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
-
-        // persist variant's output
-        taskFactory.register(new MainApkListPersistence.CreationAction(variantScope));
 
         // Add a task to process the manifest
         createProcessTestManifestTask(

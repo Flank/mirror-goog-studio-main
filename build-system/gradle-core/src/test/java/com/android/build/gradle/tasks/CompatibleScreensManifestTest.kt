@@ -18,9 +18,11 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -33,7 +35,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.sdklib.AndroidVersion
-import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -111,6 +112,16 @@ class CompatibleScreensManifestTest {
         val configAction = CompatibleScreensManifest.CreationAction(
                 scope, setOf("xxhpi", "xxxhdpi")
         )
+        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
+        val variantOutputList = VariantOutputList(
+            listOf(
+                VariantOutputImpl(
+                    FakeGradleProperty(value = 0),
+                    FakeGradleProperty(value =""),
+                    FakeGradleProperty(value =true),
+                    outputFactory.addMainApk())
+            ))
+        `when`(variantProperties.outputs).thenReturn(variantOutputList)
 
         configAction.configure(task)
 
@@ -127,8 +138,7 @@ class CompatibleScreensManifestTest {
     fun testNoSplit() {
 
         val outputFactory = OutputFactory(PROJECT, variantDslInfo)
-        val mainApk = outputFactory.addMainApk()
-        writeApkList(listOf(mainApk))
+        task.apkDataList.add(outputFactory.addMainApk())
 
         task.variantName = "variant"
         task.minSdkVersion.set("22" )
@@ -157,7 +167,7 @@ class CompatibleScreensManifestTest {
                         )
                 )
         )
-        writeApkList(listOf(splitApk))
+        task.apkDataList.add(splitApk)
 
         task.variantName = "variant"
         task.minSdkVersion.set("22")
@@ -183,15 +193,14 @@ class CompatibleScreensManifestTest {
     fun testSingleSplitWithoutMinSdkVersion() {
 
         val outputFactory = OutputFactory(PROJECT, variantDslInfo)
-        val splitApk = outputFactory.addFullSplit(
+        task.apkDataList.add(outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
                                 VariantOutput.FilterType.DENSITY,
                                 "xhdpi"
                         )
                 )
-        )
-        writeApkList(listOf(splitApk))
+        ))
 
         task.variantName = "variant"
         task.minSdkVersion.set(task.project.provider { null })
@@ -215,23 +224,22 @@ class CompatibleScreensManifestTest {
     fun testMultipleSplitsWithMinSdkVersion() {
 
         val outputFactory = OutputFactory(PROJECT, variantDslInfo)
-        val xhdpiSplit = outputFactory.addFullSplit(
+        task.apkDataList.add(outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
                                 VariantOutput.FilterType.DENSITY,
                                 "xhdpi"
                         )
                 )
-        )
-        val xxhdpiSplit = outputFactory.addFullSplit(
+        ))
+        task.apkDataList.add(outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
                                 VariantOutput.FilterType.DENSITY,
                                 "xxhdpi"
                         )
                 )
-        )
-        writeApkList(listOf(xhdpiSplit, xxhdpiSplit))
+        ))
 
         task.variantName = "variant"
         task.minSdkVersion.set("23")
@@ -258,12 +266,6 @@ class CompatibleScreensManifestTest {
         assertThat(xml).contains("<compatible-screens>")
         assertThat(xml)
             .contains("<screen android:screenSize=\"xxhdpi\" android:screenDensity=\"480\" />")
-    }
-
-    private fun writeApkList(apkDataList: List<ApkData>) {
-        val apkList = temporaryFolder.newFile("apk_list.json")
-        FileUtils.writeToFile(apkList,ExistingBuildElements.persistApkList(apkDataList))
-        task.apkList.set(apkList)
     }
 
     companion object {

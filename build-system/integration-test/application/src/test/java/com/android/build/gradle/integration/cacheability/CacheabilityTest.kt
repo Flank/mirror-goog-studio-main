@@ -69,7 +69,6 @@ class CacheabilityTest {
                     ":app:mergeExtDexDebug",
                     ":app:mergeDebugJniLibFolders",
                     ":app:processDebugManifest",
-                    ":app:mainApkListPersistenceDebug",
                     ":app:validateSigningDebug",
                     ":app:createDebugCompatibleScreenManifests",
                     ":app:javaPreCompileDebugUnitTest",

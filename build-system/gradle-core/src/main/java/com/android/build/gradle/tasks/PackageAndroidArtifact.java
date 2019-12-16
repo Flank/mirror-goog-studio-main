@@ -349,10 +349,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return apkFileNames;
     }
 
-    @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract RegularFileProperty getApkList();
-
     private static BuildOutput computeBuildOutputFile(
             ApkData apkInfo,
             OutputFileProvider outputFileProvider,
@@ -1028,11 +1024,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .from(
                             PerModuleBundleTaskKt.getNativeLibsFiles(
                                     variantScope, packageCustomClassDependencies));
-
-            variantScope
-                    .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                            InternalArtifactType.APK_LIST.INSTANCE, task.getApkList());
 
             task.setSigningConfig(SigningConfigProvider.create(variantScope));
         }

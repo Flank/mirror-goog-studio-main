@@ -70,7 +70,6 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
-import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -134,7 +133,6 @@ public class ApplicationTaskManager extends TaskManager {
         // Add a task to publish the applicationId.
         createApplicationIdWriterTask(variantScope);
 
-        taskFactory.register(new MainApkListPersistence.CreationAction(variantScope));
         createBuildArtifactReportTask(variantScope);
 
         // Add a task to check the manifest

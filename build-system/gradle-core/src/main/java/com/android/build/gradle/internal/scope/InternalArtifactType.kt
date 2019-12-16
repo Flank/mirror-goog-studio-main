@@ -319,7 +319,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object APK_ZIP: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "apk-zips")
     object AAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     object INSTANTAPP_BUNDLE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    object SPLIT_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     object APK_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // an intermediate bundle that contains only the current module

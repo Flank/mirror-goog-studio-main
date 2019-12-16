@@ -144,29 +144,6 @@ class ExistingBuildElements {
         }
 
         @JvmStatic
-        fun persistApkList(apkDatas: Collection<ApkData>): String {
-            val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeHierarchyAdapter(ApkData::class.java, ApkDataAdapter())
-            val gson = gsonBuilder.create()
-            return gson.toJson(apkDatas)
-        }
-
-        @JvmStatic
-        @Throws(FileNotFoundException::class)
-        fun loadApkList(file: File): Collection<ApkData> {
-            val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeHierarchyAdapter(ApkData::class.java, ApkDataAdapter())
-            gsonBuilder.registerTypeAdapter(
-                    ArtifactType::class.java,
-                    OutputTypeTypeAdapter())
-            val gson = gsonBuilder.create()
-            val recordType = object : TypeToken<List<ApkData>>() {}.type
-            return FileReader(file).use {
-                gson.fromJson(it, recordType)
-            }
-        }
-
-        @JvmStatic
         fun load(
                 projectPath: Path,
                 outputType: ArtifactType<Directory>?,
