@@ -32,7 +32,7 @@ typealias PackageName = String
 typealias GradlePluginVersion = String
 typealias JavaVersion = String
 typealias Revision = String
-
+typealias FormFactorNames = Map<FormFactor, List<String>>
 enum class Language(val string: String, val extension: String) {
   Java("Java", "java"),
   Kotlin("Kotlin", "kt")
@@ -60,10 +60,12 @@ data class ProjectTemplateData(
   val buildToolsVersion: Revision,
   val rootDir: File,
   val applicationPackage: PackageName?,
-  val includedFormFactorNames: Map<FormFactor, List<String>>
-): TemplateData() {
-  fun hasFormFactor(ff: FormFactor) = !includedFormFactorNames[ff].isNullOrEmpty()
-}
+  val includedFormFactorNames: FormFactorNames,
+  val debugKeystoreSha1: String?,
+  val overridePathCheck: Boolean? = false // To disable android plugin checking for ascii in paths (windows tests)
+): TemplateData()
+
+fun FormFactorNames.has(ff: FormFactor) = !this[ff].isNullOrEmpty()
 
 // TODO(qumeric): create a more generic mechanism which will support modifying other modules
 /**

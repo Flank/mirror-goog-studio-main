@@ -16,9 +16,9 @@
 
 package com.android.tools.agent.app.inspection;
 
-import static com.android.tools.agent.app.inspection.Responses.replyError;
-import static com.android.tools.agent.app.inspection.Responses.replySuccess;
-import static com.android.tools.agent.app.inspection.Responses.sendCrash;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEvent;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseError;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseSuccess;
 
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
@@ -67,16 +67,17 @@ public class AppInspectionService {
             return;
         }
         if (mInspectors.containsKey(inspectorId)) {
-            replyError(commandId, "Inspector with the given id " + inspectorId + " already exists");
+            sendServiceResponseError(
+                    commandId, "Inspector with the given id " + inspectorId + " already exists");
             return;
         }
         ClassLoader mainClassLoader = mainThreadClassLoader();
         if (mainClassLoader == null) {
-            replyError(commandId, "Failed to find a main thread");
+            sendServiceResponseError(commandId, "Failed to find a main thread");
             return;
         }
         if (!new File(dexPath).exists()) {
-            replyError(commandId, "Failed to find a file with path: " + dexPath);
+            sendServiceResponseError(commandId, "Failed to find a file with path: " + dexPath);
             return;
         }
 
@@ -100,13 +101,15 @@ public class AppInspectionService {
                 }
             }
             if (inspector == null) {
-                replyError(commandId, "Failed to find InspectorFactory with id " + inspectorId);
+                sendServiceResponseError(
+                        commandId, "Failed to find InspectorFactory with id " + inspectorId);
                 return;
             }
-            replySuccess(commandId);
+            sendServiceResponseSuccess(commandId);
         } catch (Throwable e) {
             e.printStackTrace();
-            replyError(commandId, "Failed during instantiating inspector with id " + inspectorId);
+            sendServiceResponseError(
+                    commandId, "Failed during instantiating inspector with id " + inspectorId);
         }
     }
 
@@ -116,12 +119,12 @@ public class AppInspectionService {
             return;
         }
         if (!mInspectors.containsKey(inspectorId)) {
-            replyError(
+            sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
         doDispose(inspectorId);
-        replySuccess(commandId);
+        sendServiceResponseSuccess(commandId);
     }
 
     @SuppressWarnings("unused") // invoked via jni
@@ -131,7 +134,7 @@ public class AppInspectionService {
         }
         Inspector inspector = mInspectors.get(inspectorId);
         if (inspector == null) {
-            replyError(
+            sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
@@ -139,7 +142,7 @@ public class AppInspectionService {
             inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(commandId));
         } catch (Throwable t) {
             t.printStackTrace();
-            sendCrash(
+            sendCrashEvent(
                     inspectorId,
                     "Inspector "
                             + inspectorId
@@ -162,7 +165,7 @@ public class AppInspectionService {
     private boolean failNull(String name, Object value, int commandId) {
         boolean result = value == null;
         if (result) {
-            replyError(commandId, "Argument " + name + " must not be null");
+            sendServiceResponseError(commandId, "Argument " + name + " must not be null");
         }
         return result;
     }

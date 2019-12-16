@@ -25,45 +25,43 @@ import org.junit.runners.Parameterized
 
 class IncrementalPackagerBuilderV1SignatureTest(
     private val v1Enabled: Boolean,
-    private val v2Enabled: Boolean,
+    private val v1Configured: Boolean,
     private val minSdk: Int,
     private val targetSdk: Int?,
     private val expectedOutput: Boolean
 ) {
     @Test
     fun testV1Enablement() {
-        assertThat(IncrementalPackagerBuilder.enableV1Signing(v1Enabled, v2Enabled, minSdk, targetSdk)).isEqualTo(expectedOutput)
+        assertThat(IncrementalPackagerBuilder.enableV1Signing(v1Enabled, v1Configured, minSdk, targetSdk)).isEqualTo(expectedOutput)
     }
 
     companion object {
-        @Parameterized.Parameters(name = "v1Enabled={0}, v2Enabled={1}, minSdk={2}, targetSdk={3}")
+        @Parameterized.Parameters(name = "v1Enabled={0}, v1Configured={1}, minSdk={2}, targetSdk={3}")
         @JvmStatic
         fun data(): Array<Array<Any?>> {
             return arrayOf<Array<Any?>>(
-                arrayOf(false, false, 23, null, false), // If v1Enabled=false, it is always false
-                arrayOf(false, false, 23, 23, false),
-                arrayOf(false, false, 23, 24, false),
-                arrayOf(false, false, 24, null, false),
-                arrayOf(false, false, 24, 23, false),
-                arrayOf(false, false, 24, 24, false),
+                // If v1SigningEnabled is explicitly enabled by the user, we do v1 signing
+                arrayOf(true, true, 23, null, true),
+                arrayOf(true, true, 23, 23, true),
+                arrayOf(true, true, 23, 24, true),
+                arrayOf(true, true, 24, null, true),
+                arrayOf(true, true, 24, 23, true),
+                arrayOf(true, true, 24, 24, true),
+                // If v1SigningEnabled is explicitly disabled by the user, we don't do v1 signing
                 arrayOf(false, true, 23, null, false),
                 arrayOf(false, true, 23, 23, false),
                 arrayOf(false, true, 23, 24, false),
                 arrayOf(false, true, 24, null, false),
                 arrayOf(false, true, 24, 23, false),
                 arrayOf(false, true, 24, 24, false),
-                arrayOf(true, false, 23, null, true), // else if v2Enabled=false, it is true
+                // If the user has not explicitly enabled v1 signing, it can be automatically
+                // disabled based on the min sdk and target sdk
+                arrayOf(true, false, 23, null, true),
                 arrayOf(true, false, 23, 23, true),
-                arrayOf(true, false, 23, 24, true),
-                arrayOf(true, false, 24, null, true),
-                arrayOf(true, false, 24, 23, true),
-                arrayOf(true, false, 24, 24, true),
-                arrayOf(true, true, 23, null, true), // else it is false if one of minSdk or targetSdk is 24+
-                arrayOf(true, true, 23, 23, true),
-                arrayOf(true, true, 23, 24, false),
-                arrayOf(true, true, 24, null, false),
-                arrayOf(true, true, 24, 23, false),
-                arrayOf(true, true, 24, 24, false)
+                arrayOf(true, false, 23, 24, false),
+                arrayOf(true, false, 24, null, false),
+                arrayOf(true, false, 24, 23, false),
+                arrayOf(true, false, 24, 24, false)
             )
         }
     }

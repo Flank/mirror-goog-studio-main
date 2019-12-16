@@ -1,4 +1,4 @@
-<#if Mobileincluded!false>
+<#if isNewProject!false>
   package ${kotlinEscapedPackageName}.${sharedModule}
 <#else>
   package ${kotlinEscapedPackageName}

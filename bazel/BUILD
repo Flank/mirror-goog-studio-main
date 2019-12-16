@@ -96,7 +96,10 @@ java_binary(
 
 java_library(
     name = "bazel_generator",
-    srcs = glob(["src/com/android/tools/bazel/**"]),
+    srcs = glob([
+        "src/com/android/tools/bazel/**",
+        "src/com/intellij/util/graph/*",
+    ]),
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//tools/idea/.idea/libraries:JDOM",

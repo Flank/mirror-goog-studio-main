@@ -16,20 +16,17 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import org.gradle.api.Action
 import com.android.build.api.attributes.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
+import org.gradle.api.Action
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -46,8 +43,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
-private val jarTypeOnly = Action { container: AttributeContainer ->
-    container.attribute(ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.type)
+private val aarOrJarType = Action { container: AttributeContainer ->
+    container.attribute(ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.AAR_OR_JAR.type)
 }
 
 /** Task to write the list of transitive dependencies.  */
@@ -57,31 +54,14 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
+    private lateinit var runtimeAarOrJarDeps: ArtifactCollection
+
     @get:Input
-    val content: Set<String> by lazy {
-        // incoming.ResolutionResult will not return direct file dependencies for jars, and so
-        // jars would not be properly marked as packed in an apk. Instead query via artifactView,
-        // in addition filtering only for file based dependencies. This is checked by a
-        // DynamicApp integration test (`test bundleDebug task`), which checks jar deps are properly
-        // packaged.
-        runtimeClasspath.incoming.resolutionResult.allComponents
-            .asSequence()
-            .map { it.toIdString() }
-            .plus(
-                runtimeClasspath.incoming.artifactView { config ->
-                        config.attributes(jarTypeOnly)
-                        config.componentFilter { id ->
-                            !(id is ProjectComponentIdentifier || id is ModuleComponentIdentifier) }}
-                    .artifacts
-                    .asSequence()
-                    .map{ it.toIdString()})
-            .toSortedSet()
-    }
+    val content: List<String>
+       get() = runtimeAarOrJarDeps.map { it.toIdString() }.sorted()
 
     // the list of packaged dependencies by transitive dependencies.
     private lateinit var transitivePackagedDeps : ArtifactCollection
-
-    private lateinit var runtimeClasspath: Configuration
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -106,9 +86,10 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
         }
 
         // compute the overall content
-        val filteredContent = content.asSequence()
-            .filter { !apkFilters.contains(it) && !contentFilters.contains(it) && it != projectPath }
-            .toSortedSet()
+        val filteredContent =
+            content.filter {
+                !apkFilters.contains(it) && !contentFilters.contains(it) && it != projectPath
+            }.sorted()
 
         val asFile = outputFile.get().asFile
         FileUtils.mkdirs(asFile.parentFile)
@@ -142,7 +123,14 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
         override fun configure(task: PackagedDependenciesWriterTask) {
             super.configure(task)
             task.projectPath = variantScope.globalScope.project.path
-            task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
+
+            task.runtimeAarOrJarDeps =
+                variantScope.variantDependencies
+                    .runtimeClasspath
+                    .incoming
+                    .artifactView { it.attributes(aarOrJarType) }
+                    .artifacts
+            task.dependsOn(task.runtimeAarOrJarDeps.artifactFiles)
 
             task.transitivePackagedDeps =
                 variantScope.getArtifactCollection(

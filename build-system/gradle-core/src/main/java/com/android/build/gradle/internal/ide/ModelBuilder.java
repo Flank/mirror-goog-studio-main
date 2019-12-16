@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
@@ -129,8 +130,10 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -588,7 +591,8 @@ public class ModelBuilder<Extension extends BaseExtension>
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+        // Need access to the merged flavors for the model, so we cast.
+        VariantDslInfoImpl variantDslInfo = (VariantDslInfoImpl) variantData.getVariantDslInfo();
 
         File manifest = variantData.getVariantSources().getMainManifestIfExists();
         if (manifest != null) {
@@ -825,29 +829,10 @@ public class ModelBuilder<Extension extends BaseExtension>
         return result;
     }
 
-    private void checkSigningConfig(
-            @NonNull VariantScope scope, @NonNull VariantDslInfo configuration) {
-
-        if (scope.getType().isDynamicFeature()) {
-            if (configuration.getMergedFlavor().getSigningConfig() != null
-                    || configuration.getBuildType().getSigningConfig() != null) {
-                String message =
-                        "Signing configuration should not be declared in the "
-                                + "dynamic-feature. Dynamic-features use the signing configuration "
-                                + "declared in the application module.";
-                extraModelInfo
-                        .getSyncIssueHandler()
-                        .reportWarning(Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
-            }
-        }
-    }
-
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
         VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-
-        checkSigningConfig(scope, variantDslInfo);
 
         SigningConfig signingConfig = variantDslInfo.getSigningConfig();
         String signingConfigName = null;
@@ -926,10 +911,19 @@ public class ModelBuilder<Extension extends BaseExtension>
             extraModelInfo.getSyncIssueHandler().reportError(Type.GENERIC, e);
         }
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
+        final RegularFile postAssembleModelFile =
+                scope.getArtifacts()
+                        .getOperations()
+                        .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
+                        .getOrNull();
+
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName() + "-" + variantDslInfo.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
+                postAssembleModelFile != null
+                        ? postAssembleModelFile.getAsFile().getAbsolutePath()
+                        : BaseArtifactImpl.NO_MODEL_FILE,
                 variantDslInfo.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 applicationId,
@@ -1156,9 +1150,12 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         boolean isDataBindingEnabled = globalScope.getBuildFeatures().getDataBinding();
         boolean isViewBindingEnabled = globalScope.getBuildFeatures().getViewBinding();
+        Directory dataBindingSources =
+                scope.getArtifacts()
+                        .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)
+                        .getOrNull();
         boolean addBindingSources =
-                (isDataBindingEnabled || isViewBindingEnabled)
-                        && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE);
+                (isDataBindingEnabled || isViewBindingEnabled) && (dataBindingSources != null);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
         // Set this to the number of folders you expect to add explicitly in the code below.
@@ -1170,30 +1167,27 @@ public class ModelBuilder<Extension extends BaseExtension>
                 Lists.newArrayListWithExpectedSize(additionalFolders + extraFolders.size());
         folders.addAll(extraFolders);
 
-        folders.add(
+        Directory aidlSources =
                 scope.getArtifacts()
                         .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE)
-                        .get()
-                        .getAsFile());
+                        .getOrNull();
+        if (aidlSources != null) {
+            folders.add(aidlSources.getAsFile());
+        }
         folders.add(scope.getBuildConfigSourceOutputDir());
-        Boolean ndkMode =
-                variantData.getVariantDslInfo().getMergedFlavor().getRenderscriptNdkModeEnabled();
-        if (ndkMode == null || !ndkMode) {
-            folders.add(
+        boolean ndkMode = variantData.getVariantDslInfo().getRenderscriptNdkModeEnabled();
+        if (!ndkMode) {
+            Directory renderscriptSources =
                     scope.getArtifacts()
                             .getFinalProduct(
                                     InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
-                            .get()
-                            .getAsFile());
+                            .getOrNull();
+            if (renderscriptSources != null) {
+                folders.add(renderscriptSources.getAsFile());
+            }
         }
-        if (addBindingSources
-                && scope.getArtifacts()
-                        .hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)) {
-            folders.add(
-                    scope.getArtifacts()
-                            .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)
-                            .get()
-                            .getAsFile());
+        if (addBindingSources) {
+            folders.add(dataBindingSources.getAsFile());
         }
         return folders;
     }

@@ -47,5 +47,11 @@ std::string to_string(const T& n) {
   return stm.str();
 }
 
+bool ReadFile(const std::string& file_path, std::string* content);
+
+// Writes a file to the specified path with the specified content. Overwrites
+// any existing file at that path.
+bool WriteFile(const std::string& file_path, const std::string& content);
+
 }  // namespace deploy
 #endif

@@ -15,6 +15,7 @@
  */
 #include "start_cpu_trace.h"
 
+#include "perfd/cpu/commands/trace_command_utils.h"
 #include "perfd/sessions/sessions_manager.h"
 #include "proto/cpu.pb.h"
 
@@ -51,20 +52,7 @@ Status StartCpuTrace::ExecuteOn(Daemon* daemon) {
 
   vector<Event> events_to_send;
   if (capture != nullptr) {
-    Event event;
-    event.set_pid(command().pid());
-    event.set_kind(Event::CPU_TRACE);
-    event.set_group_id(capture->trace_id);
-    event.set_command_id(command().command_id());
-
-    auto* trace_info = event.mutable_cpu_trace()
-                           ->mutable_trace_started()
-                           ->mutable_trace_info();
-    trace_info->set_trace_id(capture->trace_id);
-    trace_info->set_from_timestamp(capture->start_timestamp);
-    trace_info->set_to_timestamp(capture->end_timestamp);
-    trace_info->mutable_configuration()->CopyFrom(capture->configuration);
-    trace_info->mutable_start_status()->CopyFrom(capture->start_status);
+    Event event = PopulateCpuTraceEvent(*capture, command(), false);
     status_event.set_group_id(capture->trace_id);
 
     events_to_send.push_back(status_event);

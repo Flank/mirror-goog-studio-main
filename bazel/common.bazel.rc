@@ -1,6 +1,6 @@
 # Options applied to all Bazel invocations in the workspace.
-# This file is copied to //tools/bazel.rc from
-# //tools/base/bazel/toplevel.bazel.rc by repo init.
+# This file is imported by the os-specific rc files.
+# Those are included by the bazel wrapper scripts (bazel and bazel.cmd)
 
 # Remote Build Execution requires a strong hash function, such as SHA256.
 startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
@@ -106,10 +106,6 @@ build:remote --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 # Needed for remote execution (see https://github.com/bazelbuild/bazel/issues/7254)
 build:remote --define=EXECUTOR=remote
 
-# Compute MD5 digests of files with multiple threads. Testing to see if this
-# leads to better performance with RBE. See b/77543953.
-build:remote --experimental_multi_threaded_digest=true
-
 # Enable remote execution so actions are performed on the remote systems.
 build:remote --remote_executor=remotebuildexecution.googleapis.com
 
@@ -123,4 +119,4 @@ test:remote --jvmopt='-Dandroid.remote.run=true'
 
 # Stop downloading of build outputs to the local machine and
 # removes a possibility of network/disk bottlenecks when using RBE.
-build:remote --remote_download_minimal
+build:remote --remote_download_toplevel

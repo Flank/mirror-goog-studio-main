@@ -17,9 +17,10 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
-import org.gradle.model.Managed;
+import com.android.build.api.dsl.ExternalNativeBuild;
 
-@Managed
+/** @deprecated Use {@link ExternalNativeBuild} */
+@Deprecated
 public interface CoreExternalNativeBuild {
     @NonNull
     CoreNdkBuildOptions getNdkBuild();

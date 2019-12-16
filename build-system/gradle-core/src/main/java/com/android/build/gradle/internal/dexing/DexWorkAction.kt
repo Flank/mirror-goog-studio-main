@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dexing
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTaskDelegate
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.DependencyGraphUpdater
 import com.android.builder.dexing.DexArchiveBuilder
@@ -111,11 +110,20 @@ fun launchProcessing(
 
         // Compute impacted files based on the desugaring graph and the changed (removed, modified,
         // added) files, if they are not precomputed.
-        val unchangedButImpactedFiles = if (canBeIncremental) {
-            impactedFiles ?: desugarGraph!!.getAllDependents(changedFiles)
+        val changedAndImpactedFiles = if (canBeIncremental) {
+            val unchangedButImpactedFiles =
+                impactedFiles ?: desugarGraph!!.getAllDependents(changedFiles)
+            changedFiles + unchangedButImpactedFiles
         } else {
             // In non-incremental mode, this set must be null as we won't use it.
             null
+        }
+
+        // Remove stale nodes in the desugaring graph
+        if (impactedFiles == null && canBeIncremental) {
+            // Note that the `changedAndImpactedFiles` set may contain added files, which should not
+            // exist in the graph and will be ignored.
+            changedAndImpactedFiles!!.forEach { desugarGraph!!.removeNode(it) }
         }
 
         // Process the class files and update the desugaring graph
@@ -130,11 +138,7 @@ fun launchProcessing(
             outputPath = dexWorkActionParams.dexSpec.outputPath,
             desugarGraphUpdater = desugarGraph,
             processIncrementally = canBeIncremental,
-            changedAndImpactedFiles = if (canBeIncremental) {
-                changedFiles + unchangedButImpactedFiles!!
-            } else {
-                null
-            }
+            changedAndImpactedFiles = changedAndImpactedFiles
         )
 
         // Store the desugaring graph for use in the next build. If dexing failed earlier, it is
@@ -155,7 +159,10 @@ private fun process(
     outputPath: File,
     desugarGraphUpdater: DependencyGraphUpdater<File>?,
     processIncrementally: Boolean,
-    changedAndImpactedFiles: Set<File>? // Not null iff processIncrementally == true
+    // Not null iff processIncrementally == true.
+    // Note that this set may contain removed files, but the implementation below makes sure we
+    // won't process removed files.
+    changedAndImpactedFiles: Set<File>?
 ) {
     // Filter to select a subset of the class files to process:
     //   - In incremental mode, process only changed (modified, added) or unchanged-but-impacted
@@ -215,9 +222,9 @@ private fun getDexArchiveBuilder(
                     dexPerClass = dexSpec.dexParams.dexPerClass,
                     withDesugaring = dexSpec.dexParams.withDesugaring,
                     desugarBootclasspath =
-                            INSTANCE.getService(dexSpec.dexParams.desugarBootclasspath).service,
+                            DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarBootclasspath).service,
                     desugarClasspath =
-                            INSTANCE.getService(dexSpec.dexParams.desugarClasspath).service,
+                    DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarClasspath).service,
                     coreLibDesugarConfig = dexSpec.dexParams.coreLibDesugarConfig,
                     coreLibDesugarOutputKeepRuleFile =
                     dexSpec.dexParams.coreLibDesugarOutputKeepRuleFile,

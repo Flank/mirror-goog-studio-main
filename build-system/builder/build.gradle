@@ -41,6 +41,7 @@ dependencies {
     testCompile libs.equalsverifier
     testCompile libs.jimfs
     testCompile project(':base:testutils')
+    testCompile testFixtures(project(":base:repository"))
 }
 
 test {

@@ -99,6 +99,8 @@ private val kotlinKeywords = listOf(
 
 fun underlinesToCamelCase(string: String): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
 
+fun extractLetters(string: String) = string.filter(Character::isLetter)
+
 /**
  * Finds a resource given a file path and a context class. The implementation takes cares of the details of different file path
  * separators in different operating systems.

@@ -35,6 +35,7 @@ inline int64_t gettid() noexcept {
   return tid;
 }
 
+bool enabled = true;
 std::vector<Event>* events = new std::vector<Event>();
 }  // namespace
 
@@ -49,6 +50,8 @@ void InitEventSystem() {
   Trace::Init();
   events->clear();
 }
+
+void DisableEventSystemForTests() { enabled = false; }
 
 static inline void AddEvent(Event::Type type, const std::string& text) {
   AddRawEvent({GetTime(), type, getpid(), gettid(), text});
@@ -79,7 +82,11 @@ void EndPhase() {
   Trace::End();
 }
 
-void AddRawEvent(const Event& event) { events->emplace_back(event); }
+void AddRawEvent(const Event& event) {
+  if (enabled) {
+    events->emplace_back(event);
+  }
+}
 
 std::unique_ptr<std::vector<Event>> ConsumeEvents() {
   std::unique_ptr<std::vector<Event>> ptr(events);

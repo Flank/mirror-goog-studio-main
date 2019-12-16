@@ -23,7 +23,7 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -44,7 +44,7 @@ public interface VariantFactory {
 
     @NonNull
     BaseVariantData createVariantData(
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfoImpl variantDslInfo,
             @NonNull VariantSources variantSources,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder);

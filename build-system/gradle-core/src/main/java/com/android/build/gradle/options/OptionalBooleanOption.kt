@@ -17,6 +17,7 @@
 package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
 import com.android.builder.model.AndroidProject
 
 enum class OptionalBooleanOption(
@@ -32,7 +33,21 @@ enum class OptionalBooleanOption(
      *
      * It is included as an OptionalBooleanOption in order that its value, if set, is recorded in the AGP analytics.
      */
-    FIREBASE_PERF_PLUGIN_ENABLE_FLAG("firebasePerformanceInstrumentationEnabled", ApiStage.Stable)
+    FIREBASE_PERF_PLUGIN_ENABLE_FLAG("firebasePerformanceInstrumentationEnabled", ApiStage.Stable),
+
+    /* ----------------
+     * REMOVED FEATURES
+     */
+
+    @Suppress("unused")
+    SERIAL_AAPT2(
+        "android.injected.aapt2.serial",
+        FeatureStage.Removed(
+            VERSION_BEFORE_4_0_0,
+            "Invoking AAPT2 serially is no longer supported."
+        )
+    ),
+
     ;
 
     override val status = stage.status

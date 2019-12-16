@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
@@ -412,6 +413,8 @@ public abstract class TaskManager {
         // By resolving it here we avoid configuration problems. The value returned will be cached
         // and returned immediately later when this method is invoked.
         Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);
+
+        createCoreLibraryDesugaringConfig(project);
     }
 
     private void configureCustomLintChecksConfig() {
@@ -616,6 +619,18 @@ public abstract class TaskManager {
                 "Configuration providing various types of Android JAR file");
         androidJarConfig.setCanBeConsumed(false);
         return androidJarConfig;
+    }
+
+    public static void createCoreLibraryDesugaringConfig(@NonNull Project project) {
+        Configuration coreLibraryDesugaring =
+                project.getConfigurations().findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING);
+        if (coreLibraryDesugaring == null) {
+            coreLibraryDesugaring =
+                    project.getConfigurations().create(CONFIG_NAME_CORE_LIBRARY_DESUGARING);
+            coreLibraryDesugaring.setVisible(false);
+            coreLibraryDesugaring.setCanBeConsumed(false);
+            coreLibraryDesugaring.setDescription("Configuration to desugar libraries");
+        }
     }
 
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
@@ -2345,53 +2360,34 @@ public abstract class TaskManager {
                                 .build());
     }
 
-    private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
-        final BuildFeatureValues features = variantScope.getGlobalScope().getBuildFeatures();
-        if (!features.getDataBinding() && !features.getViewBinding()) {
-            return;
-        }
-        final BaseVariantData variantData = variantScope.getVariantData();
-        VariantType type = variantData.getType();
-        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
-            if (!testedVariantData.getType().isAar()) {
-                return;
-            }
-        }
-        taskFactory.register(
-                new DataBindingMergeDependencyArtifactsTask.CreationAction(variantScope));
-    }
-
-    private void createDataBindingMergeBaseClassesTask(@NonNull VariantScope variantScope) {
-        final BaseVariantData variantData = variantScope.getVariantData();
-        VariantType type = variantData.getType();
-        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
-            if (!testedVariantData.getType().isAar()) {
-                return;
-            }
-        }
-
-        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(variantScope));
-    }
-
     protected void createDataBindingTasksIfNecessary(@NonNull VariantScope scope) {
         final BuildFeatureValues features = scope.getGlobalScope().getBuildFeatures();
         boolean dataBindingEnabled = features.getDataBinding();
         if (!dataBindingEnabled && !features.getViewBinding()) {
             return;
         }
-        createDataBindingMergeBaseClassesTask(scope);
-        createDataBindingMergeArtifactsTask(scope);
-
 
         VariantType type = scope.getType();
-        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = checkNotNull(scope.getTestedVariantData());
-            if (!testedVariantData.getType().isAar()) {
+        if (type.isForTesting()) {
+            BaseVariantData testedVariantData = scope.getTestedVariantData();
+            if (testedVariantData == null) {
+                // This is a com.android.test module.
+                if (dataBindingEnabled) {
+                    getLogger()
+                            .error("Data binding cannot be enabled in a com.android.test project");
+                    return;
+                }
+                // else viewBinding must be enabled which is fine.
+            } else if (!extension.getDataBinding().isEnabledForTests()
+                    && !testedVariantData.getType().isAar()) {
                 return;
             }
         }
+
+        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(scope));
+
+        taskFactory.register(
+                new DataBindingMergeDependencyArtifactsTask.CreationAction(scope));
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 

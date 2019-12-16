@@ -63,64 +63,47 @@ class JvmtiAllocator : public dex::Writer::Allocator {
 
 class Transform {
  public:
-  virtual std::string GetClassName() = 0;
-  virtual void Apply(std::shared_ptr<ir::DexFile> dex_ir) = 0;
-  virtual ~Transform() = default;
-};
+  Transform(const std::string& class_name, const std::string& method_name,
+            const std::string& method_signature, const std::string& entry_hook,
+            const std::string& exit_hook)
+      : class_name_(class_name),
+        target_method_name_(method_name),
+        target_method_sig_(method_signature),
+        entry_hook_name_(entry_hook),
+        exit_hook_name_(exit_hook) {}
 
-class ActivityThreadTransform : public Transform {
- public:
-  std::string GetClassName() { return "android/app/ActivityThread"; }
-  void Apply(shared_ptr<ir::DexFile> dex_ir) {
-    static const ir::MethodId kHandlePackageBroadcast(
-        "Landroid/app/ActivityThread;", "handleDispatchPackageBroadcast",
-        "(I[Ljava/lang/String;)V");
-    static const ir::MethodId kEntryHook(
-        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
-        "handleDispatchPackageBroadcastEntry");
-    static const ir::MethodId kExitHook(
-        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
-        "handleDispatchPackageBroadcastExit");
+  std::string GetClassName() const { return class_name_; }
 
+  void Apply(std::shared_ptr<ir::DexFile> dex_ir) const {
     slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(
-        kEntryHook, slicer::EntryHook::Tweak::ThisAsObject);
-    mi.AddTransformation<slicer::ExitHook>(kExitHook);
-    if (!mi.InstrumentMethod(kHandlePackageBroadcast)) {
-      Log::E("Failed to instrument ActivityThread");
+    if (!entry_hook_name_.empty()) {
+      const ir::MethodId entry_hook(kHookClassName, entry_hook_name_.c_str());
+      mi.AddTransformation<slicer::EntryHook>(
+          entry_hook, slicer::EntryHook::Tweak::ThisAsObject);
+    }
+    if (!exit_hook_name_.empty()) {
+      const ir::MethodId exit_hook(kHookClassName, exit_hook_name_.c_str());
+      mi.AddTransformation<slicer::ExitHook>(exit_hook);
+    }
+    const std::string class_name = "L" + class_name_ + ";";
+    const ir::MethodId target_method(class_name.c_str(),
+                                     target_method_name_.c_str(),
+                                     target_method_sig_.c_str());
+    if (!mi.InstrumentMethod(target_method)) {
+      Log::E("Failed to instrument: %s", class_name_.c_str());
     }
   }
+
+ private:
+  const char* kHookClassName =
+      "Lcom/android/tools/deploy/instrument/InstrumentationHooks;";
+
+  std::string class_name_;
+  std::string target_method_name_;
+  std::string target_method_sig_;
+  std::string entry_hook_name_;
+  std::string exit_hook_name_;
 };
-
-class DexPathListTransform : public Transform {
- public:
-  std::string GetClassName() { return "dalvik/system/DexPathList$Element"; }
-  void Apply(shared_ptr<ir::DexFile> dex_ir) {
-    static const ir::MethodId kHandlePackageBroadcast(
-        "Ldalvik/system/DexPathList$Element;", "findResource",
-        "(Ljava/lang/String;)Ljava/net/URL;");
-    static const ir::MethodId kEntryHook(
-        "Lcom/android/tools/deploy/instrument/InstrumentationHooks;",
-        "handleFindResourceEntry");
-
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(
-        kEntryHook, slicer::EntryHook::Tweak::ThisAsObject);
-    if (!mi.InstrumentMethod(kHandlePackageBroadcast)) {
-      Log::E("Failed to instrument DexPathList$Element");
-    }
-  }
-};
-
-// TODO: Static globals are gross, but we also only have one class being
-// instrumented, so anything more elegant feels like overkill right now. If we
-// instrument a few more things, probably worth refactoring this.
-
-// Takes ownership of the Transform object.
-// TODO: use std::unique_ptr<Transform>
-void AddTransform(Transform* transform);
-const unordered_map<string, Transform*>& GetTransforms();
-void DeleteTransforms();
 
 }  // namespace deploy
 

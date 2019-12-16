@@ -50,7 +50,8 @@ class SharedExecutorResourceCompilationService(
   private val resourceCompilerExecutor = Workers.withThreads(projectName, owner)
 
   override fun submitCompile(request: CompileResourceRequest) {
-    if (useJvmResourceCompiler && canCompileResourceInJvm(request.inputFile)) {
+    if (useJvmResourceCompiler &&
+        canCompileResourceInJvm(request.inputFile, request.isPngCrunching)) {
       resourceCompilerExecutor.submit(
         ResourceCompilerRunnable::class.java,
         ResourceCompilerRunnable.Params(request)

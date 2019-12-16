@@ -318,24 +318,7 @@ interface AndroidConfig {
      */
     val lintOptions: LintOptions
 
-    /**
-     * Specifies options for external native build using [CMake](https://cmake.org/) or
-     * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
-     *
-     *
-     * When using
-     * [Android Studio 2.2 or higher](https://developer.android.com/studio/index.html) with
-     * [Android plugin 2.2.0 or higher](https://developer.android.com/studio/releases/gradle-plugin.html),
-     * you can compile C and C++ code into a native library that Gradle packages into your APK.
-     *
-     *
-     * To learn more, read
-     * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html).
-     *
-     * @see com.android.build.gradle.internal.dsl.ExternalNativeBuild
-     *
-     * @since 2.2.0
-     */
+    /** Replaced by [com.android.build.api.dsl.CommonExtension.externalNativeBuild] */
     val externalNativeBuild: CoreExternalNativeBuild
 
     /**

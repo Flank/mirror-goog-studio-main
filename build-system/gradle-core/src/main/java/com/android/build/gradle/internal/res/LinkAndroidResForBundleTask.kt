@@ -247,11 +247,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         override fun configure(task: LinkAndroidResForBundleTask) {
             super.configure(task)
 
+            val variantScope = variantScope
             val variantData = variantScope.variantData
-
             val projectOptions = variantScope.globalScope.projectOptions
-
-            val config = variantData.variantDslInfo
+            val variantDslInfo = variantData.variantDslInfo
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
@@ -260,13 +259,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             // output version has been overridden, otherwise use the variant configuration
             task.versionCode.set(
                 mainSplit?.versionCode ?: task.project.provider {
-                    config.versionCode
+                    variantDslInfo.versionCode
                 }
             )
             task.versionCode.disallowChanges()
             task.versionName.setDisallowChanges(
                 mainSplit?.versionName ?: task.project.provider {
-                    config.versionName
+                    variantDslInfo.versionName
                 }
             )
 
@@ -289,7 +288,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 task.resOffset.disallowChanges()
             }
 
-            task.debuggable = config.buildType.isDebuggable
+            task.debuggable = variantDslInfo.buildType.isDebuggable
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             // We only want to exclude res sources for release builds and when the flag is turned on
@@ -306,8 +305,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.aapt2Version = aapt2Version
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
-            task.resConfig =
-                    variantScope.variantDslInfo.mergedFlavor.resourceConfigurations
+            task.resConfig = variantScope.variantDslInfo.resourceConfigurations
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 

@@ -47,7 +47,7 @@ interface RecipeExecutor {
   fun addClasspathDependency(mavenCoordinate: String)
 
   /** Determines if a module/project already have a dependency. */
-  fun hasDependency(mavenCoordinate: String, configuration: String? = null): Boolean
+  fun hasDependency(mavenCoordinate: String): Boolean
 
   /**
    * Records a library dependency

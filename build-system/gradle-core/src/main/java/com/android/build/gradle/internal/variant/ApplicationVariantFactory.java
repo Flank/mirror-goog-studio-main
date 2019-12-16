@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -70,7 +71,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @Override
     @NonNull
     public BaseVariantData createVariantData(
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfoImpl variantDslInfo,
             @NonNull VariantSources variantSources,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
@@ -271,6 +272,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             return;
         }
 
+        // below is for dynamic-features only.
+
         EvalIssueReporter issueReporter = globalScope.getErrorHandler();
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
@@ -281,6 +284,30 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                                 + buildType.getBuildType().getName()
                                 + "'.\nTo enable minification for a dynamic feature "
                                 + "module, set minifyEnabled to true in the base module.");
+            }
+        }
+
+        // check if any of the build types or flavors have a signing config.
+        String message =
+                "Signing configuration should not be declared in build types of "
+                        + "dynamic-feature. Dynamic-features use the signing configuration "
+                        + "declared in the application module.";
+        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+            if (buildType.getBuildType().getSigningConfig() != null) {
+                issueReporter.reportWarning(
+                        Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
+            }
+        }
+
+        message =
+                "Signing configuration should not be declared in product flavors of "
+                        + "dynamic-feature. Dynamic-features use the signing configuration "
+                        + "declared in the application module.";
+        for (ProductFlavorData<ProductFlavor> productFlavor : model.getProductFlavors().values()) {
+            if (productFlavor.getProductFlavor().getSigningConfig() != null) {
+
+                issueReporter.reportWarning(
+                        Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
             }
         }
     }

@@ -16,157 +16,18 @@
 
 package com.android.build.gradle.internal.fixtures
 
-import org.gradle.api.DomainObjectSet
-import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
-import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.NamedDomainObjectList
-import org.gradle.api.NamedDomainObjectSet
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
-import org.gradle.internal.reflect.JavaReflectionUtil
-import java.lang.reflect.Constructor
+import org.gradle.testfixtures.ProjectBuilder
 
 /**
- * a fake [ObjectFactory] to used in tests.
- *
- * This just calls the constructor directly.
+ * a fake [ObjectFactory] to use in tests.
  *
  */
-class FakeObjectFactory : ObjectFactory {
-    override fun <T : Any?> namedDomainObjectList(p0: Class<T>): NamedDomainObjectList<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <T : Any?> polymorphicDomainObjectContainer(p0: Class<T>): ExtensiblePolymorphicDomainObjectContainer<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <T : Any?> namedDomainObjectSet(p0: Class<T>): NamedDomainObjectSet<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun fileTree(): ConfigurableFileTree {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <T : Any?> domainObjectContainer(p0: Class<T>): NamedDomainObjectContainer<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <T : Any?> domainObjectContainer(
-        p0: Class<T>,
-        p1: NamedDomainObjectFactory<T>
-    ): NamedDomainObjectContainer<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <T : Any?> domainObjectSet(p0: Class<T>): DomainObjectSet<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <K : Any?, V : Any?> mapProperty(p0: Class<K>, p1: Class<V>): MapProperty<K, V> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun sourceDirectorySet(p0: String, p1: String): SourceDirectorySet {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun directoryProperty(): DirectoryProperty {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun fileProperty(): RegularFileProperty {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <T : Any?> newInstance(theClass: Class<out T>, vararg constructorParams: Any?): T {
-        @Suppress("UNCHECKED_CAST")
-        val constructors: Array<out Constructor<T>> = theClass.declaredConstructors as Array<out Constructor<T>>
-
-        val actualParamsTypes = getParamTypes(constructorParams)
-
-        for (constructor in constructors) {
-            if (checkCompatibility(actualParamsTypes, constructor.parameterTypes)) {
-                return constructor.newInstance(*constructorParams)
-            }
+class FakeObjectFactory  {
+    companion object {
+        @JvmStatic
+        fun getFactory() : ObjectFactory {
+            return ProjectBuilder.builder().build().objects
         }
-
-        throw RuntimeException("Failed to find matching constructor for $actualParamsTypes")
     }
-
-    override fun <T : Any?> property(p0: Class<T>?): Property<T> {
-        return FakeGradleProperty()
-    }
-
-    override fun <T : Named?> named(p0: Class<T>?, p1: String?): T {
-        TODO("not implemented")
-    }
-
-    override fun <T : Any?> listProperty(p0: Class<T>?): ListProperty<T> {
-        TODO("not implemented")
-    }
-
-    override fun <T : Any?> setProperty(p0: Class<T>?): SetProperty<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun fileCollection(): ConfigurableFileCollection {
-        TODO("not implemented")
-    }
-
-    private fun getParamTypes(params: Array<out Any?>): Array<Class<*>?> {
-        val result = arrayOfNulls<Class<*>>(params.size)
-
-        for (i in result.indices) {
-            val param = params[i]
-            if (param != null) {
-                var pType: Class<*> = param.javaClass
-                if (pType.isPrimitive) {
-                    pType = JavaReflectionUtil.getWrapperTypeForPrimitiveType(pType)
-                }
-
-                result[i] = pType
-            }
-        }
-
-        return result
-    }
-
-    private fun checkCompatibility(argumentTypes: Array<Class<*>?>, parameterTypes: Array<Class<*>?>): Boolean {
-        if (argumentTypes.size != parameterTypes.size) {
-            return false
-        }
-
-        for (i in argumentTypes.indices) {
-            val argumentType = argumentTypes[i]
-            var parameterType: Class<*>? = parameterTypes[i]
-
-            val primitive = parameterType?.isPrimitive ?: false
-            if (primitive) {
-                if (argumentType == null) {
-                    return false
-                }
-
-                parameterType = JavaReflectionUtil.getWrapperTypeForPrimitiveType(parameterType)
-            }
-
-            if (argumentType != null && !parameterType!!.isAssignableFrom(argumentType)) {
-                return false
-            }
-        }
-
-        return true
-    }
-
 }

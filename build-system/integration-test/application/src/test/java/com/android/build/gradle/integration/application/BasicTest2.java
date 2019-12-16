@@ -23,6 +23,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
@@ -32,19 +33,17 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
-import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableSet;
@@ -53,12 +52,10 @@ import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -111,12 +108,12 @@ public class BasicTest2 {
                     "android.arch.lifecycle:viewmodel:" + ANDROID_ARCH_VERSION + "@aar");
 
     public static ModelContainer<AndroidProject> modelContainer;
-    public static ProjectBuildOutput outputModel;
+    public static Map<String, BuildElements> outputModels;
 
     @BeforeClass
     public static void getModel() throws Exception {
-        outputModel =
-                project.executeAndReturnOutputModel("clean", "assemble", "assembleAndroidTest");
+        outputModels =
+                project.executeAndReturnOutputModels("clean", "assemble", "assembleAndroidTest");
         // basic project overwrites buildConfigField which emits a sync warning
         modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
         modelContainer
@@ -174,10 +171,9 @@ public class BasicTest2 {
                 .named("debug compile task name")
                 .isEqualTo("compileDebugSources");
 
-        VariantBuildOutput debugVariantOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
+        BuildElements debugVariantOutputs = outputModels.get(BuilderConstants.DEBUG);
 
-        Collection<OutputFile> debugVariantOutputFiles = debugVariantOutput.getOutputs();
+        Collection<BuildOutput> debugVariantOutputFiles = debugVariantOutputs.getElements();
         assertThat(debugVariantOutputFiles).named("debug outputs").isNotNull();
         assertThat(debugVariantOutputFiles).named("debug outputs").hasSize(1);
 
@@ -240,23 +236,13 @@ public class BasicTest2 {
         // size 1 = rs output (resValue output is not included as, like the R classes, studio generates an in-memory representation)
         assertThat(generatedResFolders).named("test generated res folders").hasSize(1);
 
-        Collection<TestVariantBuildOutput> testVariantBuildOutputs =
-                debugVariantOutput.getTestingVariants();
-        List<TestVariantBuildOutput> androidTestVariantOutputs =
-                testVariantBuildOutputs
-                        .stream()
-                        .filter(
-                                testVariant ->
-                                        testVariant
-                                                .getType()
-                                                .equals(TestVariantBuildOutput.ANDROID_TEST))
-                        .collect(Collectors.toList());
+        BuildElements androidTestVariantOutputs =
+                outputModels.get(BuilderConstants.DEBUG + ARTIFACT_NAME_ANDROID_TEST);
 
         assertThat(androidTestVariantOutputs)
                 .named("Test Variant Outputs with type ANDROID_TEST")
                 .hasSize(1);
-        TestVariantBuildOutput androidTestVariantOutput =
-                Iterables.getOnlyElement(androidTestVariantOutputs);
+        BuildOutput androidTestVariantOutput = Iterables.getOnlyElement(androidTestVariantOutputs);
 
         assertThat(androidTestVariantOutput.getOutputs())
                 .named("Test Variant Output output files")
@@ -325,12 +311,11 @@ public class BasicTest2 {
                 .named("release compile task name")
                 .isEqualTo("compileReleaseSources");
 
-        Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
-        assertThat(variantBuildOutputs).hasSize(2);
-        VariantBuildOutput releaseVariantOutput =
-                ProjectBuildOutputUtils.getVariantBuildOutput(outputModel, "release");
+        BuildOutput releaseVariantOutput =
+                Iterables.getOnlyElement(outputModels.get(BuilderConstants.RELEASE).getElements());
 
-        Collection<OutputFile> releaseVariantOutputFiles = releaseVariantOutput.getOutputs();
+        Collection<? extends OutputFile> releaseVariantOutputFiles =
+                releaseVariantOutput.getOutputs();
         assertThat(releaseVariantOutputFiles).named("debug outputs").isNotNull();
         assertThat(releaseVariantOutputFiles).named("debug outputs").hasSize(1);
 
@@ -344,9 +329,8 @@ public class BasicTest2 {
                 .named("release output versionCode")
                 .isEqualTo(13);
 
-        AndroidArtifact relTestInfo =
-                VariantUtils.getOptionalAndroidArtifact(
-                        releaseVariant, AndroidProject.ARTIFACT_ANDROID_TEST);
+        BuildElements relTestInfo =
+                outputModels.get(BuilderConstants.RELEASE + ARTIFACT_NAME_ANDROID_TEST);
         assertThat(relTestInfo).named("release test artifact").isNull();
 
         // check release dependencies

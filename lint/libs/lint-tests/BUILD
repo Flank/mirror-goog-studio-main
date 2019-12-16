@@ -76,6 +76,7 @@ kotlin_test(
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint/cli",
         "//tools/base/repository:tools.repository",
+        "//tools/base/repository:tools.testlib",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",

@@ -20,7 +20,7 @@ import android.app.Activity
 import android.os.Bundle
 
 class LibraryActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 }

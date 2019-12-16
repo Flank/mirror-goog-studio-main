@@ -18,21 +18,24 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.builder.model.TestOptions.Execution;
 import com.android.utils.HelpfulEnumConverter;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import groovy.lang.Closure;
 import javax.inject.Inject;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.util.ConfigureUtil;
 
 /** Options for running tests. */
 @SuppressWarnings("unused") // Exposed in the DSL.
-public class TestOptions {
+public class TestOptions
+        implements com.android.build.api.dsl.TestOptions<TestOptions.UnitTestOptions> {
     private static final HelpfulEnumConverter<Execution> EXECUTION_CONVERTER =
             new HelpfulEnumConverter<>(Execution.class);
 
@@ -52,8 +55,17 @@ public class TestOptions {
     @NonNull private final UnitTestOptions unitTests;
 
     @Inject
-    public TestOptions(ObjectFactory objectFactory) {
-        this.unitTests = objectFactory.newInstance(UnitTestOptions.class, objectFactory);
+    public TestOptions(DslScope dslScope) {
+        this.unitTests = dslScope.getObjectFactory().newInstance(UnitTestOptions.class, dslScope);
+    }
+
+    public void unitTests(Action<UnitTestOptions> action) {
+        action.execute(unitTests);
+    }
+
+    @Override
+    public void unitTests(Function1<? super UnitTestOptions, Unit> action) {
+        action.invoke(unitTests);
     }
 
     /**
@@ -70,6 +82,7 @@ public class TestOptions {
      *
      * @since 1.2.0
      */
+    @Override
     @NonNull
     public UnitTestOptions getUnitTests() {
         return unitTests;
@@ -154,7 +167,7 @@ public class TestOptions {
     }
 
     /** Options for controlling unit tests execution. */
-    public static class UnitTestOptions {
+    public static class UnitTestOptions implements com.android.build.api.dsl.UnitTestOptions {
         // Used by testTasks.all below, DSL docs generator can't handle diamond operator.
         private final DomainObjectSet<Test> testTasks;
 
@@ -162,8 +175,8 @@ public class TestOptions {
         private boolean includeAndroidResources;
 
         @Inject
-        public UnitTestOptions(@NonNull ObjectFactory objectFactory) {
-            testTasks = objectFactory.domainObjectSet(Test.class);
+        public UnitTestOptions(@NonNull DslScope dslScope) {
+            testTasks = dslScope.getObjectFactory().domainObjectSet(Test.class);
         }
 
         /**

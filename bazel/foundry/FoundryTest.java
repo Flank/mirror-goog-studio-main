@@ -101,7 +101,7 @@ public final class FoundryTest {
     public void testArmLinuxLinker() {
         if (REMOTE_PROP) {
             execute(
-                    "prebuilts/studio/sdk/linux/build-tools/28.0.3/arm-linux-androideabi-ld --help");
+                    "prebuilts/studio/sdk/linux/build-tools/29.0.2/arm-linux-androideabi-ld --help");
         }
     }
 

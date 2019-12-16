@@ -50,7 +50,7 @@ public class BuildTypeTest {
             FakeDslScope.createFakeDslScope(
                     new NoOpIssueReporter(),
                     new NoOpDeprecationReporter(),
-                    new FakeObjectFactory(),
+                    FakeObjectFactory.getFactory(),
                     new FakeLogger(),
                     new FakeBuildFeatureValues(),
                     new FakeProviderFactory());
@@ -94,6 +94,8 @@ public class BuildTypeTest {
 
                     // Manually call getters that don't need to be copied.
                     original.getPostProcessingConfiguration();
+                    // Covered by original.isDefault
+                    original.getIsDefault();
                 });
     }
 

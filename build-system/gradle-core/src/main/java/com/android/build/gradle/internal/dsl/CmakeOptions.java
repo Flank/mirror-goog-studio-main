@@ -18,27 +18,14 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.model.CoreCmakeOptions;
 import java.io.File;
 import javax.inject.Inject;
-import org.gradle.api.Project;
 
-/**
- * DSL object for per-module CMake configurations, such as the path to your <code>CMakeLists.txt
- * </code> build script and external native build output directory.
- *
- * <p>To include CMake projects in your Gradle build, you need to use Android Studio 2.2 and higher
- * with Android plugin for Gradle 2.2.0 and higher. To learn more about Android Studio's support for
- * external native builds, read <a
- * href="https://developer.android.com/studio/projects/add-native-code.html">Add C and C++ Code to
- * Your Project</a>.
- *
- * <p>If you want to instead build your native libraries using ndk-build, see {@link
- * com.android.build.gradle.internal.dsl.NdkBuildOptions}.
- */
-public class CmakeOptions implements CoreCmakeOptions {
-    @NonNull
-    private final Project project;
+/** See {@link com.android.build.api.dsl.CmakeOptions} */
+public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl.CmakeOptions {
+    @NonNull private final DslScope dslScope;
 
     @Nullable
     private File path;
@@ -49,8 +36,8 @@ public class CmakeOptions implements CoreCmakeOptions {
     @Nullable private String version;
 
     @Inject
-    public CmakeOptions(@NonNull Project project) {
-        this.project = project;
+    public CmakeOptions(@NonNull DslScope dslScope) {
+        this.dslScope = dslScope;
     }
 
     /**
@@ -84,7 +71,7 @@ public class CmakeOptions implements CoreCmakeOptions {
     }
 
     public void setPath(@Nullable Object path) {
-        this.path = project.file(path);
+        this.path = dslScope.file(path);
     }
 
     @Override
@@ -133,7 +120,7 @@ public class CmakeOptions implements CoreCmakeOptions {
 
     @Override
     public void setBuildStagingDirectory(@NonNull File buildStagingDirectory) {
-        this.buildStagingDirectory = project.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 
     /**
@@ -186,6 +173,6 @@ public class CmakeOptions implements CoreCmakeOptions {
     }
 
     public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = project.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 }

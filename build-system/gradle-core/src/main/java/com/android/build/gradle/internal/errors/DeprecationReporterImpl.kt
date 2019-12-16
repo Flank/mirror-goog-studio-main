@@ -184,34 +184,42 @@ class DeprecationReporterImpl(
                 url)
     }
 
-    override fun reportDeprecatedOption(
-        option: String,
-        deprecationTarget: DeprecationTarget
-    ) {
-        if (suppressedOptionWarnings.contains(option)) {
+    override fun reportOptionIssuesIfAny(option: Option<*>, value: Any) {
+        if (checkAndSet(option, value)) {
             return
         }
-        if (!checkAndSet(option, null)) {
-            issueReporter.reportWarning(
-                Type.UNSUPPORTED_PROJECT_OPTION_USE,
-                "The option '$option' is deprecated and should not be used anymore.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}.")
-        }
-    }
-
-
-    override fun reportExperimentalOption(option: Option<*>, value: String) {
         if (suppressedOptionWarnings.contains(option.propertyName)) {
             return
         }
-        if (!checkAndSet(option, value)) {
-            issueReporter.reportWarning(
-                Type.UNSUPPORTED_PROJECT_OPTION_USE,
-                "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
-                        (if (option.defaultValue != null) "The current default is '${option.defaultValue.toString()}'.\n" else "") +
-                        option.additionalInfo,
-                option.propertyName
-            )
+        if (option.status !is Option.Status.Removed && option.defaultValue == value) {
+            return
+        }
+        when (option.status) {
+            Option.Status.EXPERIMENTAL -> {
+                issueReporter.reportWarning(
+                    Type.UNSUPPORTED_PROJECT_OPTION_USE,
+                    "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
+                            (if (option.defaultValue != null) "The current default is '${option.defaultValue.toString()}'.\n" else "") +
+                            option.additionalInfo,
+                    option.propertyName
+                )
+            }
+            Option.Status.STABLE -> { // No issues
+            }
+            is Option.Status.Deprecated -> {
+                issueReporter.reportWarning(
+                    Type.UNSUPPORTED_PROJECT_OPTION_USE,
+                    "The option '${option.propertyName}' is deprecated and should not be used anymore.\n" +
+                            "It will be removed ${(option.status as Option.Status.Deprecated).deprecationTarget.removalTime}."
+                )
+            }
+            is Option.Status.Removed -> {
+                issueReporter.reportWarning(
+                    Type.GENERIC,
+                    "The option `${option.propertyName}' is deprecated and has been removed.\n" +
+                            (option.status as Option.Status.Removed).messageIfUsed
+                )
+            }
         }
     }
 
@@ -220,6 +228,8 @@ class DeprecationReporterImpl(
          * Set of obsolete APIs that have been warned already.
          */
         private val obsoleteApis = mutableSetOf<String>()
+
+        /** Options that have already been checked for issues. */
         private val options = mutableSetOf<OptionInfo>()
 
         /**
@@ -237,11 +247,11 @@ class DeprecationReporterImpl(
         }
 
         /**
-         * Checks if the given Option has already been warned about, and adds it if not.
+         * Checks if the given Option has already been checked for issues, and records it if not.
          *
-         * @return true if the Option is already part of the set.
+         * @return true if the Option has already been checked for issues
          */
-        fun checkAndSet(option: Any, value: String?): Boolean = synchronized(options) {
+        fun checkAndSet(option: Any, value: Any): Boolean = synchronized(options) {
             val info = OptionInfo(option, value)
             return if (options.contains(info)) {
                 true
@@ -250,7 +260,6 @@ class DeprecationReporterImpl(
                 false
             }
         }
-
 
         fun clean() {
             synchronized(obsoleteApis) {
@@ -265,5 +274,5 @@ class DeprecationReporterImpl(
 
 data class OptionInfo(
     val option: Any,
-    val value: String?
+    val value: Any
 )

@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -33,15 +34,30 @@ import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Test desugaring using D8. */
+@RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
+
+    @Parameterized.Parameters(name = "withIncrementalDesugaringV2_{0}")
+    public static Iterable<Boolean> parameters() {
+        return ImmutableList.of(true, false);
+    }
+
+    private boolean withIncrementalDesugaringV2;
+
+    public D8DesugaringTest(boolean withIncrementalDesugaringV2) {
+        this.withIncrementalDesugaringV2 = withIncrementalDesugaringV2;
+    }
 
     @Rule
     public GradleTestProject project =
@@ -53,6 +69,10 @@ public class D8DesugaringTest {
                                             HelloWorldApp.noBuildFile(),
                                             ":lib",
                                             new EmptyAndroidTestApp())))
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2.getPropertyName()
+                                    + "="
+                                    + withIncrementalDesugaringV2)
                     .create();
 
     @Before

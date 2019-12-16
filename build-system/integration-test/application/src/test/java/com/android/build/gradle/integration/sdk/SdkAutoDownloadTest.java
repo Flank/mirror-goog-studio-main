@@ -71,7 +71,7 @@ public class SdkAutoDownloadTest {
     private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION =
             TestUtils.getLatestAndroidPlatform().replace("android-", "");
-    private static final String NDK_VERSION = "19.0.5106443-rc1";
+    private static final String NDK_VERSION = "20.0.5594570";
     private static final String CMAKE_VERSION = "3.6.0";
 
     @Rule
@@ -107,14 +107,11 @@ public class SdkAutoDownloadTest {
         // noinspection SpellCheckingInspection SHAs.
         String licensesHash =
                 String.format(
-                        "e6b7c2ab7fa2298c15165e9583d0acf0b04a2232%n"
-                                + "8933bad161af4178b1185d1a37fbf41ea5269c55%n"
-                                + "d56f5187479451eabf01fb78af6dfcb131a6481e%n");
+                        "8933bad161af4178b1185d1a37fbf41ea5269c55%n"
+                                + "d56f5187479451eabf01fb78af6dfcb131a6481e%n"
+                                + "24333f8a63b6825ea9c5514f83c2829b004d1fee%n");
 
-        String previewLicenseHash =
-                String.format(
-                        "84831b9409646a918e30573bab4c9c91346d8abd%n"
-                                + "79120722343a6f314e0719f863036c702b0e6b2a%n");
+        String previewLicenseHash = String.format("84831b9409646a918e30573bab4c9c91346d8abd%n");
 
         Files.write(licenseFile.toPath(), licensesHash.getBytes(StandardCharsets.UTF_8));
         Files.write(
@@ -128,7 +125,7 @@ public class SdkAutoDownloadTest {
 
 
         TestFileUtils.appendToFile(
-                project.getBuildFile(), "android.defaultConfig.minSdkVersion = 19");
+                project.getBuildFile(), "android.defaultConfig.minSdkVersion = 29");
     }
 
     private void installPlatforms() throws IOException {

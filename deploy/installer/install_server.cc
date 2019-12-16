@@ -20,6 +20,7 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/overlay.h"
 #include "tools/base/deploy/installer/runas_executor.h"
 
 using ServerResponse = proto::InstallServerResponse;
@@ -87,8 +88,10 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
 }  // namespace
 
 void InstallServer::Run() {
-  LogEvent("Install server started");
-  if (!WriteStatus(ServerResponse::SERVER_STARTED)) {
+  ServerResponse response;
+
+  response.set_status(ServerResponse::SERVER_STARTED);
+  if (!output_.Write(response)) {
     ErrEvent("Could not write server start message");
     return;
   }
@@ -99,21 +102,62 @@ void InstallServer::Run() {
     return;
   }
 
-  if (request.has_overlay_update()) {
-    proto::OverlayUpdateResponse response;
+  // Handle an overlay request, if we have one.
+  if (request.has_overlay_request()) {
+    HandleOverlayUpdate(request.overlay_request(),
+                        response.mutable_overlay_response());
+    response.set_status(ServerResponse::REQUEST_COMPLETED);
     output_.Write(response);
+    response.clear_overlay_response();
   }
 
-  LogEvent("Install server finished");
-  if (!WriteStatus(ServerResponse::SERVER_EXITED)) {
+  // Consume traces and proto events.
+  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
+  for (Event& event : *events) {
+    ConvertEventToProtoEvent(event, response.add_events());
+  }
+
+  // Send the final server response.
+  response.set_status(ServerResponse::SERVER_EXITED);
+  if (!output_.Write(response)) {
     ErrEvent("Could not write server exit message");
   }
 }
 
-bool InstallServer::WriteStatus(ServerResponse::Status status) {
-  ServerResponse message;
-  message.set_status(status);
-  return output_.Write(message);
+void InstallServer::HandleOverlayUpdate(
+    const proto::OverlayUpdateRequest& request,
+    proto::OverlayUpdateResponse* response) const {
+  char current_dir[PATH_MAX];
+  if (getcwd(current_dir, PATH_MAX) == nullptr) {
+    response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+    response->set_error_message("Could not get current working directory: "_s +
+                                strerror(errno));
+    return;
+  }
+
+  const std::string overlay_folder = current_dir + "/.overlay"_s;
+  if (!request.expected_overlay_id().empty() &&
+      !Overlay::Exists(overlay_folder, request.expected_overlay_id())) {
+    response->set_status(proto::OverlayUpdateResponse::ID_MISMATCH);
+    return;
+  }
+
+  Overlay overlay(overlay_folder, request.overlay_id());
+  if (!overlay.Open()) {
+    response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+    response->set_error_message("Could not open overlay");
+    return;
+  }
+
+  // TODO: Write overlay files here.
+
+  if (!overlay.Commit()) {
+    response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+    response->set_error_message("Could not commit overlay update");
+    return;
+  }
+
+  response->set_status(proto::OverlayUpdateResponse::OK);
 }
 
 std::unique_ptr<InstallClient> StartServer(const Workspace& workspace,

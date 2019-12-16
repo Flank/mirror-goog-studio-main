@@ -22,6 +22,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
@@ -291,22 +292,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
-        if (projectOptions.hasRemovedOptions()) {
-            syncIssueHandler.reportWarning(
-                    Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
-        }
-
-        if (projectOptions.hasDeprecatedOptions()) {
-            extraModelInfo
-                    .getDeprecationReporter()
-                    .reportDeprecatedOptions(projectOptions.getDeprecatedOptions());
-        }
-
-        if (!projectOptions.getExperimentalOptions().isEmpty()) {
-            projectOptions
-                    .getExperimentalOptions()
-                    .forEach(extraModelInfo.getDeprecationReporter()::reportExperimentalOption);
-        }
+        projectOptions
+                .getAllOptions()
+                .forEach(extraModelInfo.getDeprecationReporter()::reportOptionIssuesIfAny);
 
         // Enforce minimum versions of certain plugins
         GradlePluginUtils.enforceMinimumVersionsOfPlugins(project, syncIssueHandler);
@@ -322,7 +310,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         project.getLogger(),
                         new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
-                        new DslVariableFactory(syncIssueHandler));
+                        new DslVariableFactory(syncIssueHandler),
+                        project::file);
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
@@ -446,7 +435,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         // link the extension buildFeature to the BuildFeatureValues in DslScope
         ((BuildFeatureValuesImpl) globalScope.getDslScope().getBuildFeatures())
-                .setDslBuildFeatures(extension.getBuildFeatures());
+                .setDslBuildFeatures(((CommonExtension) extension).getBuildFeatures());
 
         globalScope.setExtension(extension);
 

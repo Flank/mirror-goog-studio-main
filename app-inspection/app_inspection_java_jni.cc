@@ -21,18 +21,21 @@
 #include "unistd.h"
 #include "utils/log.h"
 
+using app_inspection::AppInspectionEvent;
 using app_inspection::AppInspectionResponse;
 using profiler::Log;
 
 namespace app_inspection {
 
-void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
-                                         AppInspectionResponse::Status status,
-                                         jstring error_message) {
+void EnqueueAppInspectionResponse(
+    JNIEnv *env, int32_t command_id, AppInspectionResponse::Status status,
+    jstring error_message,
+    std::function<void(AppInspectionResponse *)> initialize_response) {
   profiler::JStringWrapper message(env, error_message);
   profiler::Agent::Instance().SubmitAgentTasks(
-      {[command_id, status, message](profiler::proto::AgentService::Stub &stub,
-                                     grpc::ClientContext &ctx) mutable {
+      {[command_id, status, message, initialize_response](
+           profiler::proto::AgentService::Stub &stub,
+           grpc::ClientContext &ctx) {
         profiler::proto::SendEventRequest request;
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::APP_INSPECTION_RESPONSE);
@@ -42,27 +45,49 @@ void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
         inspection_response->set_command_id(command_id);
         inspection_response->set_status(status);
         inspection_response->set_error_message(message.get().c_str());
-        inspection_response->mutable_service_response();
+        initialize_response(inspection_response);
         profiler::proto::EmptyResponse response;
         return stub.SendEvent(&ctx, request, &response);
       }});
 }
 
+void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
+                                         AppInspectionResponse::Status status,
+                                         jstring error_message) {
+  EnqueueAppInspectionResponse(env, command_id, status, error_message,
+                               [](AppInspectionResponse *response) {
+                                 response->mutable_service_response();
+                               });
+}
+
 void EnqueueAppInspectionRawResponse(JNIEnv *env, int32_t command_id,
-                                     jbyteArray response_data, int32_t length) {
+                                     AppInspectionResponse::Status status,
+                                     jbyteArray response_data, int32_t length,
+                                     jstring error_message) {
   profiler::JByteArrayWrapper data(env, response_data, length);
+  EnqueueAppInspectionResponse(env, command_id, status, error_message,
+                               [data](AppInspectionResponse *response) {
+                                 auto *raw_response =
+                                     response->mutable_raw_response();
+                                 raw_response->set_content(data.get());
+                               });
+}
+
+void EnqueueAppInspectionEvent(
+    JNIEnv *env, jstring inspector_id,
+    std::function<void(AppInspectionEvent *)> initialize_event) {
+  profiler::JStringWrapper id(env, inspector_id);
   profiler::Agent::Instance().SubmitAgentTasks(
-      {[command_id, data](profiler::proto::AgentService::Stub &stub,
-                          grpc::ClientContext &ctx) mutable {
+      {[id, initialize_event](profiler::proto::AgentService::Stub &stub,
+                              grpc::ClientContext &ctx) {
         profiler::proto::SendEventRequest request;
         auto *event = request.mutable_event();
-        event->set_kind(profiler::proto::Event::APP_INSPECTION_RESPONSE);
+        event->set_kind(profiler::proto::Event::APP_INSPECTION_EVENT);
         event->set_is_ended(true);
         event->set_pid(getpid());
-        auto *inspection_response = event->mutable_app_inspection_response();
-        inspection_response->set_command_id(command_id);
-        auto *raw_response = inspection_response->mutable_raw_response();
-        raw_response->set_content(data.get());
+        auto *inspection_event = event->mutable_app_inspection_event();
+        inspection_event->set_inspector_id(id.get().c_str());
+        initialize_event(inspection_event);
         profiler::proto::EmptyResponse response;
         return stub.SendEvent(&ctx, request, &response);
       }});
@@ -71,43 +96,21 @@ void EnqueueAppInspectionRawResponse(JNIEnv *env, int32_t command_id,
 void EnqueueAppInspectionRawEvent(JNIEnv *env, jstring inspector_id,
                                   jbyteArray event_data, int32_t length) {
   profiler::JByteArrayWrapper data(env, event_data, length);
-  profiler::JStringWrapper id(env, inspector_id);
-  profiler::Agent::Instance().SubmitAgentTasks(
-      {[data, id](profiler::proto::AgentService::Stub &stub,
-                  grpc::ClientContext &ctx) mutable {
-        profiler::proto::SendEventRequest request;
-        auto *event = request.mutable_event();
-        event->set_kind(profiler::proto::Event::APP_INSPECTION_EVENT);
-        event->set_is_ended(true);
-        event->set_pid(getpid());
-        auto *inspection_event = event->mutable_app_inspection_event();
-        inspection_event->set_inspector_id(id.get().c_str());
-        auto *raw_event = inspection_event->mutable_raw_event();
-        raw_event->set_content(data.get());
-        profiler::proto::EmptyResponse response;
-        return stub.SendEvent(&ctx, request, &response);
-      }});
+  EnqueueAppInspectionEvent(env, inspector_id,
+                            [data](AppInspectionEvent *event) {
+                              auto *raw_event = event->mutable_raw_event();
+                              raw_event->set_content(data.get());
+                            });
 }
 
 void EnqueueAppInspectionCrashEvent(JNIEnv *env, jstring inspector_id,
                                     jstring error_message) {
-  profiler::JStringWrapper id(env, inspector_id);
   profiler::JStringWrapper message(env, error_message);
-  profiler::Agent::Instance().SubmitAgentTasks(
-      {[id, message](profiler::proto::AgentService::Stub &stub,
-                     grpc::ClientContext &ctx) mutable {
-        profiler::proto::SendEventRequest request;
-        auto *event = request.mutable_event();
-        event->set_kind(profiler::proto::Event::APP_INSPECTION_EVENT);
-        event->set_is_ended(true);
-        event->set_pid(getpid());
-        auto *inspection_event = event->mutable_app_inspection_event();
-        inspection_event->set_inspector_id(id.get().c_str());
-        auto *crash_event = inspection_event->mutable_crash_event();
+  EnqueueAppInspectionEvent(
+      env, inspector_id, [message](AppInspectionEvent *event) {
+        auto *crash_event = event->mutable_crash_event();
         crash_event->set_error_message(message.get().c_str());
-        profiler::proto::EmptyResponse response;
-        return stub.SendEvent(&ctx, request, &response);
-      }});
+      });
 }
 
 jobject CreateAppInspectionService(JNIEnv *env) {
@@ -190,36 +193,44 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
 
 extern "C" {
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_Responses_replyError(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendServiceResponseError(
     JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
   app_inspection::EnqueueAppInspectionServiceResponse(
       env, command_id, AppInspectionResponse::ERROR, error_message);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_Responses_replySuccess(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendServiceResponseSuccess(
     JNIEnv *env, jobject obj, jint command_id) {
   app_inspection::EnqueueAppInspectionServiceResponse(
       env, command_id, AppInspectionResponse::SUCCESS, nullptr);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_Responses_replyRaw(
-    JNIEnv *env, jobject obj, jint command_id, jbyteArray response_data,
-    jint length) {
-  app_inspection::EnqueueAppInspectionRawResponse(env, command_id,
-                                                  response_data, length);
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendRawResponseError(
+    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
+  app_inspection::EnqueueAppInspectionRawResponse(
+      env, command_id, AppInspectionResponse::ERROR, nullptr, 0, error_message);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_Responses_sendCrash(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendRawResponseSuccess(
+    JNIEnv *env, jobject obj, jint command_id, jbyteArray response_data,
+    jint length) {
+  app_inspection::EnqueueAppInspectionRawResponse(
+      env, command_id, AppInspectionResponse::SUCCESS, response_data, length,
+      nullptr);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendCrashEvent(
     JNIEnv *env, jobject obj, jstring inspector_id, jstring error_message) {
   app_inspection::EnqueueAppInspectionCrashEvent(env, inspector_id,
                                                  error_message);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_Responses_sendRaw(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendRawEvent(
     JNIEnv *env, jobject obj, jstring inspector_id, jbyteArray event_data,
     jint length) {
   app_inspection::EnqueueAppInspectionRawEvent(env, inspector_id, event_data,

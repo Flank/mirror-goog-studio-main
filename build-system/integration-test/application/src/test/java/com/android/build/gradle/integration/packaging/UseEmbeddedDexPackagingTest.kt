@@ -52,7 +52,7 @@ class UseEmbeddedDexPackagingTest(private val embeddedDex: PackageEmbeddedDex) {
                     """
                         apply plugin: 'com.android.application'
                         android {
-                          compileSdkVersion 'android-Q'
+                          compileSdkVersion 'android-29'
                         }
                     """.trimIndent()
                 )

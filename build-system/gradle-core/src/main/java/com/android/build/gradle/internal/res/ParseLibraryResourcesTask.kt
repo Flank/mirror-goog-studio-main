@@ -110,7 +110,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
                     librarySymbolsFile = librarySymbolsFile.get().asFile,
                     incremental = incremental,
                     changedResources = changedResources,
-                    partialRDir = partialRDir.get().asFile,
+                    partialRDir = partialRDir.orNull?.asFile,
                     enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds.get()
                 )
             )
@@ -158,12 +158,15 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
                     ParseLibraryResourcesTask::librarySymbolsFile,
                     SdkConstants.FN_R_DEF_TXT
             )
-            variantScope.artifacts.producesDir(
-                    InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY,
-                    taskProvider,
-                    ParseLibraryResourcesTask::partialRDir,
-                    SdkConstants.FD_PARTIAL_R
-            )
+            if (variantScope.globalScope
+                            .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS]) {
+                variantScope.artifacts.producesDir(
+                        InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY,
+                        taskProvider,
+                        ParseLibraryResourcesTask::partialRDir,
+                        SdkConstants.FD_PARTIAL_R
+                )
+            }
         }
 
         override fun configure(task: ParseLibraryResourcesTask) {
@@ -171,11 +174,6 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             task.platformAttrRTxt.set(variantScope.globalScope.platformAttrs)
             task.enablePartialRIncrementalBuilds.setDisallowChanges(variantScope.globalScope
                     .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS])
-
-            if (task.enablePartialRIncrementalBuilds.get()){
-                task.partialRDir.set(variantScope.artifacts
-                        .getFinalProduct(InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY))
-            }
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_RES,

@@ -19,30 +19,11 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 
-fun RecipeExecutor.addKotlinPlugins()  {
-  applyPlugin("kotlin-android")
-  applyPlugin("kotlin-android-extensions")
-}
-
-fun RecipeExecutor.addKotlinDependencies(generateKotlin: Boolean) {
-  if (generateKotlin) {
-    addDependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:\$kotlin_version\"")
-  }
-}
-
-fun RecipeExecutor.setKotlinVersion() {
-    setExtVar("kotlin_version", "\${kotlinVersion}")
+fun RecipeExecutor.setKotlinVersion(kotlinVersion: String) {
+    setExtVar("kotlin_version", kotlinVersion)
     addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:\$kotlin_version")
 }
 
-fun RecipeExecutor.addKotlinToBaseProject(language: Language, isNewProject: Boolean = false) {
-  if (!isNewProject && language == Language.Kotlin) {
-    setKotlinVersion()
-  }
-}
-
-// TODO(qumeric): The two functions above, addKotlinPlugins and addKotlinDependencies, are duplicating the work of addAllKotlinDependencies,
-//                when creating a new module (isNewProject == true).
 fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   val projectData = data.projectTemplateData
   if (!data.isNew && projectData.language == Language.Kotlin) {
@@ -50,7 +31,7 @@ fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
     applyPlugin("kotlin-android-extensions")
     if (!hasDependency("org.jetbrains.kotlin:kotlin-stdlib")) {
       addDependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:\$kotlin_version")
-      setKotlinVersion()
+      setKotlinVersion(projectData.kotlinVersion)
     }
   }
 }

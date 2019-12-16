@@ -28,8 +28,19 @@ java_binary(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/28.0.3"],
+    srcs = [":build-tools/29.0.2"],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "build-tools/28.0.3",
+    srcs = sdk_glob(
+        include = ["build-tools/28.0.3/**"],
+    ),
+    visibility = [
+        "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
+    ],
 )
 
 filegroup(
@@ -39,11 +50,11 @@ filegroup(
 )
 
 filegroup(
-    name = "build-tools/28.0.3",
+    name = "build-tools/29.0.2",
     srcs = sdk_glob(
-        include = ["build-tools/28.0.3/**"],
+        include = ["build-tools/29.0.2/**"],
     ),
-    visibility = ["//visibility:public"],
+    visibility = ["//visibility:private"],
 )
 
 filegroup(
@@ -136,20 +147,26 @@ filegroup(
 )
 
 filegroup(
+    name = "platforms/latest_build_only",
+    srcs = [":platforms/android-29_build_only"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-28"],
+    srcs = [":platforms/android-29"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-Q"],
+    srcs = [":platforms/android-29"],  # Currently there isn't a preview available
     visibility = ["//visibility:public"],
 )
 
 java_import(
     name = "platforms/latest_jar",
-    jars = sdk_path(["platforms/android-28/android.jar"]),
+    jars = sdk_path(["platforms/android-29/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/base/deploy/agent/instrumentation:__pkg__",
@@ -160,13 +177,8 @@ java_import(
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
-    name = "platforms/android-27",
-    # TODO: Restrict the visibility of this group. Although the comment above says "private", the default
-    # visibility is public.
-)
-
-platform_filegroup(
-    name = "platforms/android-Q",
+    name = "platforms/android-29",
+    #visibility = ["//visibility:private"],
     visibility = [
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
@@ -174,7 +186,16 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-28",
-    visibility = ["//visibility:public"],  # TODO: revert visibility when platforms/latest becomes android-28
+    visibility = [
+        "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
+    ],
+)
+
+platform_filegroup(
+    name = "platforms/android-27",
+    # TODO: Restrict the visibility of this group. Although the comment above says "private", the default
+    # visibility is public.
 )
 
 platform_filegroup(

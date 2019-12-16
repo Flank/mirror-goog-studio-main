@@ -18,8 +18,10 @@ package com.android.build.gradle.integration.desugar
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.AndroidArchive.checkValidClassName
@@ -47,6 +49,9 @@ class L8DexDesugarTest {
         project.buildFile.appendText(
             """
             android.compileOptions.coreLibraryDesugaringEnabled = true
+            dependencies {
+                coreLibraryDesugaring "$DESUGAR_DEPENDENCY"
+            }
         """.trimIndent()
         )
     }
@@ -157,6 +162,26 @@ class L8DexDesugarTest {
         project.executor().run("assembleDebug")
     }
 
+    @Test
+    fun testMissingCoreLibraryDependency() {
+        normalSetUp()
+        // make sure core library dependency is missing
+        TestFileUtils.searchAndReplace(
+            project.buildFile,
+            """coreLibraryDesugaring "$DESUGAR_DEPENDENCY"""",
+            "")
+        // check error message when L8DexDesugarLibTransform runs
+        var result = project.executor().expectFailure().run("assembleDebug")
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(MISSING_DEPS_ERROR)
+        }
+        // check error message when L8DexDesugarLibTask runs
+        result = project.executor().expectFailure().run("clean", "assembleRelease")
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(MISSING_DEPS_ERROR)
+        }
+    }
+
     private fun normalSetUp() {
         project.buildFile.appendText(
             """
@@ -175,4 +200,11 @@ class L8DexDesugarTest {
             checkValidClassName(desugarClass)
             it.classes.keys.contains(desugarClass)
         }
+
+    companion object {
+        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.4"
+        private const val MISSING_DEPS_ERROR = "coreLibraryDesugaring configuration contains no " +
+                "dependencies. If you intend to enable core library desugaring, please add " +
+                "dependencies to coreLibraryDesugaring configuration."
+    }
 }

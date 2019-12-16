@@ -42,6 +42,8 @@ public class DefaultSigningConfig implements SigningConfig {
     private String mStoreType = KeyStore.getDefaultType();
     private boolean mV1SigningEnabled = true;
     private boolean mV2SigningEnabled = true;
+    private boolean mV1SigningConfigured = false;
+    private boolean mV2SigningConfigured = false;
 
     /**
      * Creates a {@link DefaultSigningConfig} that uses the default debug alias and passwords.
@@ -136,6 +138,7 @@ public class DefaultSigningConfig implements SigningConfig {
 
     public void setV1SigningEnabled(boolean enabled) {
         mV1SigningEnabled = enabled;
+        mV1SigningConfigured = true;
     }
 
     @Override
@@ -144,6 +147,27 @@ public class DefaultSigningConfig implements SigningConfig {
     }
 
     public void setV2SigningEnabled(boolean enabled) {
+        mV2SigningEnabled = enabled;
+        mV2SigningConfigured = true;
+    }
+
+    /** Returns whether v1SigningEnabled is configured by the user through DSL. */
+    public boolean isV1SigningConfigured() {
+        return mV1SigningConfigured;
+    }
+
+    /** Returns whether v2SigningEnabled is configured by the user through DSL. */
+    public boolean isV2SigningConfigured() {
+        return mV2SigningConfigured;
+    }
+
+    /** Note: this function is only used by AGP internally, not by users. */
+    protected void internalSetV1SigningEnabled(boolean enabled) {
+        mV1SigningEnabled = enabled;
+    }
+
+    /** Note: this function is only used by AGP internally, not by users. */
+    protected void internalSetV2SigningEnabled(boolean enabled) {
         mV2SigningEnabled = enabled;
     }
 
@@ -184,6 +208,8 @@ public class DefaultSigningConfig implements SigningConfig {
             return false;
         if (mV1SigningEnabled != that.mV1SigningEnabled) return false;
         if (mV2SigningEnabled != that.mV2SigningEnabled) return false;
+        if (mV1SigningConfigured != that.mV1SigningConfigured) return false;
+        if (mV2SigningConfigured != that.mV2SigningConfigured) return false;
 
         return true;
     }
@@ -200,6 +226,8 @@ public class DefaultSigningConfig implements SigningConfig {
         result = 31 * result + (mStoreType != null ? mStoreType.hashCode() : 0);
         result = 31 * result + (mV1SigningEnabled ? 17 : 0);
         result = 31 * result + (mV2SigningEnabled ? 17 : 0);
+        result = 31 * result + (mV1SigningConfigured ? 17 : 0);
+        result = 31 * result + (mV2SigningConfigured ? 17 : 0);
         return result;
     }
 
@@ -213,6 +241,8 @@ public class DefaultSigningConfig implements SigningConfig {
                 .add("storeType", mStoreType)
                 .add("v1SigningEnabled", mV1SigningEnabled)
                 .add("v2SigningEnabled", mV2SigningEnabled)
+                .add("v1SigningConfigured", mV1SigningConfigured)
+                .add("v2SigningConfigured", mV2SigningConfigured)
                 .toString();
     }
 }

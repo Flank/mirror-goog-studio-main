@@ -18,6 +18,7 @@ package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
@@ -29,14 +30,25 @@ import org.gradle.api.Incubating
 @Incubating
 interface LibraryExtension<
         BuildTypeT : BuildType,
+        CMakeOptionsT : CmakeOptions,
         DefaultConfigT : DefaultConfig,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig>
+        SigningConfigT : SigningConfig,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT : UnitTestOptions>
     : CommonExtension<
+        LibraryBuildFeatures,
         BuildTypeT,
+        CMakeOptionsT,
         DefaultConfigT,
+        ExternalNativeBuildT,
+        NdkBuildOptionsT,
         ProductFlavorT,
         SigningConfigT,
+        TestOptionsT,
+        UnitTestOptionsT,
         LibraryVariant,
         LibraryVariantProperties>,
     TestedExtension {

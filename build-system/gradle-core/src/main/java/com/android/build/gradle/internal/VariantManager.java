@@ -44,9 +44,9 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
-import com.android.build.gradle.internal.core.MergedFlavor;
 import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
@@ -544,10 +544,9 @@ public class VariantManager implements VariantModel {
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection(
             @NonNull VariantDslInfo variantDslInfo) {
-        MergedFlavor mergedFlavors = variantDslInfo.getMergedFlavor();
         ObjectFactory factory = project.getObjects();
 
-        return mergedFlavors
+        return variantDslInfo
                 .getMissingDimensionStrategies()
                 .entrySet()
                 .stream()
@@ -588,6 +587,8 @@ public class VariantManager implements VariantModel {
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         // Arguments passed to an ArtifactTransform must not be null
+        final boolean jetifierSkipIfPossible =
+                globalScope.getProjectOptions().get(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE);
         final String jetifierBlackList =
                 Strings.nullToEmpty(
                         globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
@@ -596,6 +597,7 @@ public class VariantManager implements VariantModel {
                     JetifyTransform.class,
                     spec -> {
                         spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getSkipIfPossible().set(jetifierSkipIfPossible);
                         spec.getParameters().getBlackListOption().set(jetifierBlackList);
                         spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
                         spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
@@ -604,6 +606,7 @@ public class VariantManager implements VariantModel {
                     JetifyTransform.class,
                     spec -> {
                         spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getSkipIfPossible().set(jetifierSkipIfPossible);
                         spec.getParameters().getBlackListOption().set(jetifierBlackList);
                         spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
                         spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
@@ -1100,7 +1103,7 @@ public class VariantManager implements VariantModel {
 
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        VariantDslInfo variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
         VariantSources variantSources = variantBuilder.createVariantSources();
 
         // Only record release artifacts
@@ -1265,7 +1268,8 @@ public class VariantManager implements VariantModel {
                         globalScope.getErrorHandler(),
                         this::canParseManifest);
 
-        VariantDslInfo testedVariantDslInfo = testedVariantData.getVariantDslInfo();
+        VariantDslInfoImpl testedVariantDslInfo =
+                (VariantDslInfoImpl) testedVariantData.getVariantDslInfo();
 
         variantBuilder.setTestedVariant(testedVariantDslInfo);
 
@@ -1336,32 +1340,32 @@ public class VariantManager implements VariantModel {
 
         BaseVariantData variantForAndroidTest = null;
 
-            if (!ignore) {
+        if (!ignore) {
             BaseVariantData variantData =
                     createVariantDataForVariantType(buildType, productFlavorList, variantType);
-                addVariant(variantData);
+            addVariant(variantData);
 
             VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-                VariantScope variantScope = variantData.getScope();
+            VariantScope variantScope = variantData.getScope();
 
             int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();
             int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
-                if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
-                    globalScope
-                            .getDslScope()
-                            .getIssueReporter()
-                            .reportWarning(
-                                    EvalIssueReporter.Type.GENERIC,
-                                    String.format(
-                                            Locale.US,
-                                            "minSdkVersion (%d) is greater than targetSdkVersion"
-                                                    + " (%d) for variant \"%s\". Please change the"
-                                                    + " values such that minSdkVersion is less than or"
-                                                    + " equal to targetSdkVersion.",
-                                            minSdkVersion,
-                                            targetSdkVersion,
-                                            variantData.getName()));
-                }
+            if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
+                globalScope
+                        .getDslScope()
+                        .getIssueReporter()
+                        .reportWarning(
+                                EvalIssueReporter.Type.GENERIC,
+                                String.format(
+                                        Locale.US,
+                                        "minSdkVersion (%d) is greater than targetSdkVersion"
+                                                + " (%d) for variant \"%s\". Please change the"
+                                                + " values such that minSdkVersion is less than or"
+                                                + " equal to targetSdkVersion.",
+                                        minSdkVersion,
+                                        targetSdkVersion,
+                                        variantData.getName()));
+            }
 
             GradleBuildVariant.Builder profileBuilder =
                     ProcessProfileWriter.getOrCreateVariant(
@@ -1382,38 +1386,36 @@ public class VariantManager implements VariantModel {
                                                     .getTestOptions()
                                                     .getExecutionEnum()));
 
-                if (variantScope.getCodeShrinker() != null) {
-                    profileBuilder.setCodeShrinker(
-                            AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
-                }
+            if (variantScope.getCodeShrinker() != null) {
+                profileBuilder.setCodeShrinker(
+                        AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
+            }
 
             if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
                 profileBuilder.setTargetSdkVersion(
                         AnalyticsUtil.toProto(variantDslInfo.getTargetSdkVersion()));
                 }
-            if (variantDslInfo.getMergedFlavor().getMaxSdkVersion() != null) {
+            if (variantDslInfo.getMaxSdkVersion() != null) {
                 profileBuilder.setMaxSdkVersion(
-                        ApiVersion.newBuilder()
-                                .setApiLevel(variantDslInfo.getMergedFlavor().getMaxSdkVersion()));
-                }
-
-                VariantScope.Java8LangSupport supportType =
-                        variantData.getScope().getJava8LangSupportType();
-                if (supportType != VariantScope.Java8LangSupport.INVALID
-                        && supportType != VariantScope.Java8LangSupport.UNUSED) {
-                    profileBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
-                }
-
-                if (variantFactory.hasTestScope()) {
-                    if (buildTypeData == testBuildTypeData) {
-                        variantForAndroidTest = variantData;
-                    }
-
-                    TestVariantData unitTestVariantData =
-                            createTestVariantData(variantData, UNIT_TEST);
-                    addVariant(unitTestVariantData);
-                }
+                        ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
             }
+
+            VariantScope.Java8LangSupport supportType =
+                    variantData.getScope().getJava8LangSupportType();
+            if (supportType != VariantScope.Java8LangSupport.INVALID
+                    && supportType != VariantScope.Java8LangSupport.UNUSED) {
+                profileBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
+            }
+
+            if (variantFactory.hasTestScope()) {
+                if (buildTypeData == testBuildTypeData) {
+                    variantForAndroidTest = variantData;
+                }
+
+                TestVariantData unitTestVariantData = createTestVariantData(variantData, UNIT_TEST);
+                addVariant(unitTestVariantData);
+            }
+        }
 
         if (variantForAndroidTest != null) {
             TestVariantData androidTestVariantData =

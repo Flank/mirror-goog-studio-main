@@ -53,6 +53,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
@@ -277,7 +278,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             aapt2FromMaven, LoggerWrapper(logger)
         )
 
-        val workers = getWorkerFacadeWithWorkers().use {
+        getWorkerFacadeWithWorkers().use {
             val unprocessedManifest = manifestBuildElements.toMutableList()
             val mainOutput = chooseOutput(manifestBuildElements)
 
@@ -436,12 +437,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ImmutableSet.copyOf(splits.abiFilters)
                 else
                     ImmutableSet.of()
-                val resConfigSet = ImmutableSet.copyOf(
-                    variantScope
-                        .variantDslInfo
-                        .mergedFlavor
-                        .resourceConfigurations
-                )
+                val resConfigSet = variantScope.variantDslInfo.resourceConfigurations
 
                 task.splitList = SplitList(densitySet, languageSet, abiSet, resConfigSet)
             } else {
@@ -670,13 +666,19 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             @Synchronized
             @Throws(IOException::class)
             fun appendOutput(
-                output: BuildOutput, resPackageOutputFolder: File
+                applicationId: String,
+                variantType: VariantType,
+                output: BuildOutput,
+                resPackageOutputFolder: File
             ) {
                 val buildOutputs = ArrayList(
                     ExistingBuildElements.from(resPackageOutputFolder).elements
                 )
                 buildOutputs.add(output)
-                BuildElements(buildOutputs).save(resPackageOutputFolder)
+                BuildElements(
+                    applicationId = applicationId,
+                    variantType = variantType.toString(),
+                    elements = buildOutputs).save(resPackageOutputFolder)
             }
         }
 
@@ -826,6 +828,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     )
                 }
                 appendOutput(
+                    params.applicationId.orEmpty(),
+                    params.variantType,
                     BuildOutput(
                         InternalArtifactType.PROCESSED_RES,
                         params.apkData,
@@ -861,6 +865,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
         val originalApplicationId: String? = task.originalApplicationId.get()
+        val applicationId: String? = task.applicationId.get()
         val sourceOutputDir: File? = task.getSourceOutputDir()
         val textSymbolOutputFile: File? = task.textSymbolOutputFileProperty.orNull?.asFile
         val proguardOutputFile: File? = task.proguardOutputFile.orNull?.asFile

@@ -186,7 +186,7 @@ public final class SymbolIo {
             throws IOException {
         Iterator<String> linesIterator = lines.iterator();
         int startLine = checkFileTypeHeader(linesIterator, readConfiguration, filename);
-        SymbolTable.Builder table =
+        SymbolTable.FastBuilder table =
                 new SymbolLineReader(readConfiguration, linesIterator, filename, startLine)
                         .readLines();
         if (tablePackage != null) {
@@ -234,7 +234,7 @@ public final class SymbolIo {
                                 + file);
             }
             String tablePackage = linesIterator.next().trim();
-            SymbolTable.Builder table =
+            SymbolTable.FastBuilder table =
                     new SymbolLineReader(readConfiguration, linesIterator, filePath, startLine + 1)
                             .readLines();
 
@@ -276,7 +276,7 @@ public final class SymbolIo {
     }
 
     private static class SymbolLineReader {
-        @NonNull private final SymbolTable.Builder table = SymbolTable.builder();
+        @NonNull private final SymbolTable.FastBuilder table = new SymbolTable.FastBuilder();
 
         @NonNull private final Iterator<String> lines;
         @NonNull private final String filename;
@@ -310,7 +310,7 @@ public final class SymbolIo {
         }
 
         @NonNull
-        SymbolTable.Builder readLines() throws IOException {
+        SymbolTable.FastBuilder readLines() throws IOException {
             if (!lines.hasNext()) {
                 return table;
             }
@@ -380,7 +380,8 @@ public final class SymbolIo {
             return table;
         }
 
-        private void handleStyleable(@NonNull SymbolTable.Builder table, @NonNull SymbolData data)
+        private void handleStyleable(
+                @NonNull SymbolTable.FastBuilder table, @NonNull SymbolData data)
                 throws IOException {
             if (readConfiguration.singleLineStyleable) {
                 String canonicalName =

@@ -29,14 +29,25 @@ import org.gradle.api.Incubating
 @Incubating
 interface TestExtension<
         BuildTypeT : BuildType,
+        CMakeOptionsT : CmakeOptions,
         DefaultConfigT : DefaultConfig,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : SigningConfig,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT : UnitTestOptions> :
     CommonExtension<
+            TestBuildFeatures,
             BuildTypeT,
+            CMakeOptionsT,
             DefaultConfigT,
+            ExternalNativeBuildT,
+            NdkBuildOptionsT,
             ProductFlavorT,
             SigningConfigT,
+            TestOptionsT,
+            UnitTestOptionsT,
             TestVariant,
             TestVariantProperties> {
     // TODO(b/140406102)

@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.services.getAapt2WorkersBuildService
-import com.android.build.gradle.internal.services.registerForWorkers
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.options.BooleanOption
@@ -130,7 +129,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
         val aapt2ServiceKey = registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
-        val aapt2WorkersBuildServiceKey = aapt2WorkersBuildService.get().registerForWorkers()
+        val aapt2WorkersBuildServiceKey = aapt2WorkersBuildService.get().getWorkersServiceKey()
         val parameter = Params(
             projectName = projectName,
             owner = path,
@@ -331,7 +330,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                             )
 
                             if (useJvmResourceCompiler &&
-                              canCompileResourceInJvm(request.inputFile)) {
+                              canCompileResourceInJvm(request.inputFile, request.isPngCrunching)) {
                                 workerExecutor.submit(
                                   ResourceCompilerRunnable::class.java,
                                   ResourceCompilerRunnable.Params(request)

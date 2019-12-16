@@ -20,7 +20,11 @@ android {
         versionCode 1
         versionName "1.0"
 
+  <#if useAndroidX>
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  <#else>
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+  </#if>
     }
 <#if javaVersion?? && (javaVersion != "1.6" && buildApi lt 21 || javaVersion != "1.7")>
 

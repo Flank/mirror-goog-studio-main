@@ -274,15 +274,31 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                 properties));
             }
         }
-        new BuildElements(mergedManifestOutputs.build())
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getApplicationId().get(),
+                        getVariantType().get(),
+                        mergedManifestOutputs.build())
                 .save(getManifestOutputDirectory());
-        new BuildElements(metadataFeatureMergedManifestOutputs.build())
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getApplicationId().get(),
+                        getVariantType().get(),
+                        metadataFeatureMergedManifestOutputs.build())
                 .save(getMetadataFeatureManifestOutputDirectory());
-        new BuildElements(bundleManifestOutputs.build()).save(
-                getBundleManifestOutputDirectory());
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getApplicationId().get(),
+                        getVariantType().get(),
+                        bundleManifestOutputs.build())
+                .save(getBundleManifestOutputDirectory());
 
         if (getInstantAppManifestOutputDirectory().isPresent()) {
-            new BuildElements(instantAppManifestOutputs.build())
+            new BuildElements(
+                            BuildElements.METADATA_FILE_VERSION,
+                            getApplicationId().get(),
+                            getVariantType().get(),
+                            instantAppManifestOutputs.build())
                     .save(getInstantAppManifestOutputDirectory());
         }
     }
@@ -454,6 +470,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             throw new RuntimeException("Unsupported type of ComponentIdentifier");
         }
     }
+
+    @Input
+    public abstract Property<String> getApplicationId();
+
+    @Input
+    public abstract Property<String> getVariantType();
 
     @Input
     @Optional
@@ -642,7 +664,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             super.configure(task);
 
             final VariantScope variantScope = getVariantScope();
-            final VariantDslInfo config = variantScope.getVariantDslInfo();
+            final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
             final VariantSources variantSources = variantScope.getVariantSources();
             final GlobalScope globalScope = variantScope.getGlobalScope();
 
@@ -669,7 +691,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // optional manifest files too.
             if (variantScope.getTaskContainer().getMicroApkTask() != null
-                    && config.getBuildType().isEmbedMicroApp()) {
+                    && variantDslInfo.getBuildType().isEmbedMicroApp()) {
                 task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
@@ -677,28 +699,33 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
 
-            task.getMinSdkVersion()
+            task.getApplicationId()
                     .set(
-                            project.provider(
-                                    () -> {
-                                        ApiVersion minSdk =
-                                                config.getMergedFlavor().getMinSdkVersion();
-                                        return minSdk == null ? null : minSdk.getApiString();
-                                    }));
+                            variantScope
+                                    .getVariantData()
+                                    .getPublicVariantPropertiesApi()
+                                    .getApplicationId());
+            task.getApplicationId().disallowChanges();
+
+            task.getVariantType().set(variantScope.getVariantData().getType().toString());
+            task.getVariantType().disallowChanges();
+
+            task.getMinSdkVersion()
+                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
                     .set(
                             project.provider(
                                     () -> {
-                                        ApiVersion targetSdk =
-                                                config.getMergedFlavor().getTargetSdkVersion();
-                                        return targetSdk == null ? null : targetSdk.getApiString();
+                                        ApiVersion targetSdk = variantDslInfo.getTargetSdkVersion();
+                                        return targetSdk.getApiLevel() < 1
+                                                ? null
+                                                : targetSdk.getApiString();
                                     }));
             task.getTargetSdkVersion().disallowChanges();
 
-            task.getMaxSdkVersion()
-                    .set(project.provider(config.getMergedFlavor()::getMaxSdkVersion));
+            task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
             task.getOptionalFeatures()
@@ -746,15 +773,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.packageOverride.set(variantProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
-                    task.getProject().provider(config::getManifestPlaceholders));
+                    task.getProject().provider(variantDslInfo::getManifestPlaceholders));
             task.manifestPlaceholders.disallowChanges();
             task.getMainManifest().set(project.provider(variantSources::getMainManifestFilePath));
             task.getMainManifest().disallowChanges();
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.isFeatureSplitVariantType = config.getVariantType().isDynamicFeature();
-            task.buildTypeName = config.getBuildType().getName();
+            task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
+            task.buildTypeName = variantDslInfo.getBuildType().getName();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

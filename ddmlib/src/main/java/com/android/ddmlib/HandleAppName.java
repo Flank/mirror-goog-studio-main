@@ -82,16 +82,32 @@ final class HandleAppName extends ChunkHandler {
         int userId = -1;
         boolean validUserId = false;
         if (data.hasRemaining()) {
+            int dataRemaining = data.remaining();
             try {
                 userId = data.getInt();
                 validUserId = true;
             } catch (BufferUnderflowException e) {
-                // two integers + utf-16 string
-                int expectedPacketLength = 8 + appNameLen * 2;
-
                 Log.e("ddm-appname", "Insufficient data in APNM chunk to retrieve user id.");
-                Log.e("ddm-appname", "Actual chunk length: " + data.capacity());
-                Log.e("ddm-appname", "Expected chunk length: " + expectedPacketLength);
+                Log.e("ddm-appname", "Actual chunk length: " + dataRemaining);
+                Log.e("ddm-appname", "Expected chunk length: 4"); // 4 bytes for userId int
+            }
+        }
+
+        // Newer devices (newer than user id support) send the package names associated with the app.
+        String packageName = null;
+        if (data.hasRemaining()) {
+            int dataRemaining = data.remaining();
+            int packageNameLength = 0;
+            try {
+                packageNameLength = data.getInt();
+                packageName = ByteBufferUtil.getString(data, packageNameLength);
+            } catch (BufferUnderflowException e) {
+                // one integer + utf-16 string
+                int expectedChunkLength = 4 + packageNameLength * 2;
+
+                Log.e("ddm-appname", "Insufficient data in APNM chunk to retrieve package name.");
+                Log.e("ddm-appname", "Actual chunk length: " + dataRemaining);
+                Log.e("ddm-appname", "Expected chunk length: " + expectedChunkLength);
             }
         }
 
@@ -103,6 +119,10 @@ final class HandleAppName extends ChunkHandler {
 
             if (validUserId) {
                 cd.setUserId(userId);
+            }
+
+            if (packageName != null) {
+                cd.setPackageName(packageName);
             }
         }
 

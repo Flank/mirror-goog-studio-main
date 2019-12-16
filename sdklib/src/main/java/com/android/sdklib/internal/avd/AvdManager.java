@@ -28,7 +28,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.FileOpFileWrapper;
@@ -2041,7 +2040,7 @@ public class AvdManager {
                 log.info("SD Card already present with same size, was not changed.\n");
             }
         }
-        if (mFop instanceof MockFileOp) {
+        if (mFop.getClass().getSimpleName().equals("MockFileOp")) {
             // We don't have a real filesystem, so we won't be able to run the tool. Skip.
             runMkSdcard = false;
         }

@@ -68,7 +68,10 @@ class BuildElementsTest {
 
         // simulate output
         val outputForSplit = temporaryFolder.newFile()
-        val persistedState = BuildElements(ImmutableList.of(BuildOutput(
+        val persistedState = BuildElements(
+            applicationId = "com.app.example",
+            variantType = "debug",
+            elements = ImmutableList.of(BuildOutput(
                 COMPATIBLE_SCREEN_MANIFEST,
                 densityApkData,
                 outputForSplit)))
@@ -76,10 +79,9 @@ class BuildElementsTest {
 
         // load the persisted state.
         val reader = StringReader(persistedState)
-        val buildOutputs = BuildElements(
-                ExistingBuildElements.load(temporaryFolder.root.toPath(),
+        val buildOutputs = ExistingBuildElements.load(temporaryFolder.root.toPath(),
                         COMPATIBLE_SCREEN_MANIFEST,
-                        reader))
+                        reader)
 
         // check that persisted was loaded correctly.
         assertThat(buildOutputs).hasSize(1)
@@ -107,11 +109,15 @@ class BuildElementsTest {
         val outputFile = File(folder, "output.json")
         FileUtils.write(
                 outputFile,
-                "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                "{\n" +
+                        "  \"version\": 1,\n" +
+                        "  \"applicationId\": \"com.app.example\",\n" +
+                        "  \"variantType\": \"debug\",\n" +
+                        "  \"elements\": [{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
                         + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
-                        + "\"split\":\"\"}}]")
+                        + "\"split\":\"\"}}]}")
         val mergedManifests = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         assertThat(mergedManifests
                 .asSequence()
@@ -127,11 +133,14 @@ class BuildElementsTest {
         val outputFile = File(folder, "output.json")
         FileUtils.write(
             outputFile,
-            "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+            "{\n" +
+                    "  \"applicationId\": \"com.app.example\",\n" +
+                    "  \"variantType\": \"debug\",\n" +
+                    "  \"elements\": [{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
                     + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                     + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                     + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
-                    + "\"split\":\"\"}}]")
+                    + "\"split\":\"\"}}]}")
 
         val buildElements = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         val elementByType = buildElements.elementByType(VariantOutput.OutputType.MAIN)
@@ -147,11 +156,14 @@ class BuildElementsTest {
         val outputFile = File(folder, "output.json")
         FileUtils.write(
                 outputFile,
-                "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                "{\n" +
+                        "  \"applicationId\": \"com.app.example\",\n" +
+                        "  \"variantType\": \"debug\",\n" +
+                        "  \"elements\": [{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
                         + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
-                        + "\"split\":\"\"}}]")
+                        + "\"split\":\"\"}}]}")
         assertThat(ExistingBuildElements.from(APK, outputFile)).isEmpty()
         val buildOutputs = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         assertThat(buildOutputs).hasSize(1)
@@ -171,11 +183,14 @@ class BuildElementsTest {
         val outputFile = File(folder, "output.json")
         FileUtils.write(
                 outputFile,
-                ("[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                ("{\n" +
+                        "  \"applicationId\": \"com.app.example\",\n" +
+                        "  \"variantType\": \"debug\",\n" +
+                        "  \"elements\": [{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
                         + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic\","
-                        + "\"split\":\"\"}}]"))
+                        + "\"split\":\"\"}}]}"))
         val buildOutputs = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         assertThat(buildOutputs).hasSize(1)
         val buildOutput = Iterators.getOnlyElement(buildOutputs.iterator())
@@ -201,7 +216,9 @@ class BuildElementsTest {
         assertThat(buildOutput.outputFile.absolutePath).contains(temporaryFolder.root.absolutePath)
 
         val gsonOutput = BuildElements(
-                ImmutableList.of(buildOutput)).persist(temporaryFolder.root.toPath())
+            applicationId = "com.app.example",
+            variantType = "debug",
+            elements = ImmutableList.of(buildOutput)).persist(temporaryFolder.root.toPath())
 
         assertThat(gsonOutput).isNotEmpty()
         assertThat(gsonOutput).doesNotContain(temporaryFolder.root.name)

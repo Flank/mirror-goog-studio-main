@@ -7,6 +7,7 @@
     minApi="9"
     minBuildApi="9">
 
+    <formfactor value="Mobile" />
     <category value="Fragment" />
 
     <parameter
@@ -59,6 +60,11 @@
         default="fragment_item_list_dialog"
         suggest="${fragmentToLayout(fragmentClass)}_list_dialog"
         name="List layout file name" />
+
+    <!-- TODO: Replace with a proper thumbnail for modal bottom sheet -->
+    <thumbs>
+        <thumb>template_blank_fragment.png</thumb>
+    </thumbs>
 
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />

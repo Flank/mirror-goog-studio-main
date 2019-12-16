@@ -4,6 +4,7 @@
 platform-tools:{adb*,api/*,package.xml,*.dll}
 
 # Build tools
+build-tools;29.0.2
 build-tools;28.0.3
 build-tools;28.0.0
 build-tools;27.0.3
@@ -16,7 +17,7 @@ build-tools;25.0.0
 build-tools;24.0.3
 
 # Platforms. There's no Google APIs for 25.
-platforms;android-Q
+platforms;android-29
 platforms;android-28
 platforms;android-27
 platforms;android-25
@@ -24,7 +25,7 @@ platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
 # Sources
-sources;android-28:{package.xml,android/view/View.java}
+sources;android-29:{package.xml,android/view/View.java}
 sources;android-27:{package.xml,android/view/View.java}
 sources;android-24:{package.xml,android/view/View.java}
 sources;android-25:{package.xml,android/view/View.java}
@@ -34,9 +35,6 @@ platforms;android-23:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-21:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-19:**:{data/**,skins/**,templates/**,*-src.jar}
 
-# Tools and Emulator
-# mksdcard for AvdListDialogTest; support/* for typo checking and annotations
-tools:{package.xml,mksdcard*,support/*}
 # emulator isn't needed at this point and is stubbed out
 emulator:package.xml
 

@@ -31,7 +31,13 @@
             to="${escapeXmlAttribute(resOut)}/mipmap-xhdpi" />
     <copy from="root/res/mipmap-xxhdpi"
             to="${escapeXmlAttribute(resOut)}/mipmap-xxhdpi" />
+    <copy from="root/res/mipmap-xxxhdpi"
+            to="${escapeXmlAttribute(resOut)}/mipmap-xxxhdpi" />
 
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
+
+    <#if generateKotlin && useAndroidX>
+        <dependency mavenUrl="androidx.core:core-ktx:+" />
+    </#if>
 </recipe>

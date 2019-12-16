@@ -2,7 +2,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
-load(":sdk.bzl", "sdk_java_binary", "sdk_package", "combine_licenses")
+load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 
 # managed by go/iml_to_build
 iml_module(
@@ -129,6 +129,7 @@ kotlin_test(
         "//tools/base/device_validator:tools.dvlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
+        "//tools/base/repository:tools.testlib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",

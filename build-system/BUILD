@@ -192,6 +192,9 @@ maven_repo(
     artifacts = GRADLE_PLUGIN_ARTIFACTS + [
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-compiler-embeddable",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.3.61-dev-withExperimentalGoogleExtensions-20191127:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-compiler/0.1.0-dev03:jar",
     ],
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )

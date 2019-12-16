@@ -99,4 +99,10 @@ public interface ResourceItem extends Configurable {
      * lists.
      */
     boolean isFileBased();
+
+    /** Returns the repository this resource belongs to. */
+    @NonNull
+    default SingleNamespaceResourceRepository getRepository() {
+        throw new UnsupportedOperationException();
+    }
 }

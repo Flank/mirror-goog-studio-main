@@ -80,6 +80,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull String name,
             @NonNull String baseName,
             @NonNull String assembleTaskName,
+            @NonNull String postAssembleTaskModelFile,
             boolean isSigned,
             @Nullable String signingConfigName,
             @NonNull String applicationId,
@@ -109,6 +110,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         super(
                 name,
                 assembleTaskName,
+                postAssembleTaskModelFile,
                 compileTaskName,
                 classesFolder,
                 additionalClassFolders,

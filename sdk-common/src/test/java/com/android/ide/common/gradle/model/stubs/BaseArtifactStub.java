@@ -32,6 +32,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
     @NonNull private final String myName;
     @NonNull private final String myCompileTaskName;
     @NonNull private final String myAssembleTaskName;
+    @NonNull private final File myPostAssembleTaskModelFile;
     @NonNull private final File myClassesFolder;
     @NonNull private final File myJavaResourcesFolder;
     @NonNull private final Dependencies myDependencies;
@@ -48,6 +49,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
                 "name",
                 "compile",
                 "assemble",
+                new File("postAssembleModel"),
                 new File("classes"),
                 new HashSet<>(),
                 new File("javaResources"),
@@ -64,6 +66,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
             @NonNull String name,
             @NonNull String compileTaskName,
             @NonNull String assembleTaskName,
+            @NonNull File postAssembleTaskModelFile,
             @NonNull File classesFolder,
             @NonNull Set<File> classesFolders,
             @NonNull File javaResourcesFolder,
@@ -77,6 +80,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
         myName = name;
         myCompileTaskName = compileTaskName;
         myAssembleTaskName = assembleTaskName;
+        myPostAssembleTaskModelFile = postAssembleTaskModelFile;
         myClassesFolder = classesFolder;
         myAdditionalClassesFolders = classesFolders;
         myJavaResourcesFolder = javaResourcesFolder;
@@ -165,6 +169,12 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
     @NonNull
     public Set<File> getAdditionalClassesFolders() {
         return myAdditionalClassesFolders;
+    }
+
+    @NonNull
+    @Override
+    public String getPostAssembleTaskModelFile() {
+        return myPostAssembleTaskModelFile.getAbsolutePath();
     }
 
     @Override

@@ -301,6 +301,11 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
         this.variantOutput = variantOutput;
     }
 
+    private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+    }
+
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         versionCode = getVersionCode();
         versionName = getVersionName();

@@ -442,7 +442,7 @@ class SdkDirectLoadingStrategyTest {
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
 
-        val buildToolDirectory = sdkRoot.resolve("build-tools/28.0.3")
+        val buildToolDirectory = sdkRoot.resolve("build-tools/29.0.2")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
             ToolsRevisionUtils.MIN_BUILD_TOOLS_REV)
         assertThat(sdkDirectLoadingStrategy.getAidlExecutable()).isEqualTo(

@@ -18,9 +18,10 @@ package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.model.AndroidProject
-import com.android.build.gradle.options.Option.Status.EXPERIMENTAL
-import com.android.build.gradle.options.Option.Status.STABLE
-import com.android.build.gradle.options.Option.Status.REMOVED
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
+import com.android.build.gradle.options.Version.VERSION_3_5_0
+import com.android.build.gradle.options.Version.VERSION_3_6_0
+import com.android.build.gradle.options.Version.VERSION_4_0_0
 
 enum class BooleanOption(
     override val propertyName: String,
@@ -147,12 +148,209 @@ enum class BooleanOption(
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
+    /** Incremental dexing with desugaring using D8's new API for desugaring graph computation. */
+    ENABLE_INCREMENTAL_DESUGARING_V2("android.enableIncrementalDesugaringV2", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
 
     ENABLE_DESUGAR("android.enableDesugar", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.DESUGAR_TOOL)),
     ENABLE_D8("android.enableD8", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.LEGACY_DEXER)),
+
+    /** Whether Jetifier will skip libraries that already support AndroidX. */
+    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.IN_A_FUTURE_RELEASE)),
+
+    /* -----------------
+     * ENFORCED FEATURES
+     */
+
+    @Suppress("unused")
+    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION(
+        "android.enableImprovedDependenciesResolution",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "The android.enableImprovedDependenciesResolution property does not have any effect. "
+                    + "Dependency resolution is only performed during task execution phase."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_NEW_RESOURCE_PROCESSING(
+        "android.enableNewResourceProcessing",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "New resource processing is now always enabled."
+        )
+    ),
+
+    @Suppress("unused")
+    DISABLE_RES_MERGE_IN_LIBRARY(
+        "android.disable.res.merge",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "Resources from dependencies are never merged in libraries."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_DAEMON_MODE_AAPT2(
+        "android.enableAapt2DaemonMode",
+        true,
+        FeatureStage.Enforced(VERSION_BEFORE_4_0_0, "AAPT2 daemon mode is now always enabled.")
+    ),
+
+    @Suppress("unused")
+    ENABLE_INCREMENTAL_DESUGARING(
+        "android.enableIncrementalDesugaring",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "This property has no effect, incremental desugaring is always enabled."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_CORE_LAMBDA_STUBS(
+        "android.enableCoreLambdaStubs",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "This property has no effect, core-lambda-stubs.jar is always in the bootclasspath."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_DEX_ARCHIVE(
+        "android.useDexArchive",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "This property has no effect, incremental dexing is always used."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_AAPT2(
+        "android.enableAapt2",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "This property has no effect, AAPT2 is now always used."
+        )
+    ),
+
+    @Suppress("unused")
+    USE_AAPT2_FROM_MAVEN(
+        "android.useAapt2FromMaven",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "This property has no effect and AAPT2 from maven.google.com is now always used. "
+                    + "If you wish to use a local executable of AAPT2 please use the "
+                    + "'android.aapt2FromMavenOverride' option."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_D8_MAIN_DEX_LIST(
+        "android.enableD8MainDexList",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "This property has no effect, D8 is always used to compute the main dex list."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_DATA_BINDING_V2(
+        "android.databinding.enableV2",
+        true,
+        FeatureStage.Enforced(VERSION_BEFORE_4_0_0, "Databinding v1 is removed.")
+    ),
+
+    ENABLE_SEPARATE_R_CLASS_COMPILATION(
+        "android.enableSeparateRClassCompilation",
+        true,
+        FeatureStage.Enforced(
+            VERSION_BEFORE_4_0_0,
+            "Separate R class compilation has been enabled and can no longer be disabled."
+        )
+    ),
+
+    /* ----------------
+     * REMOVED FEATURES
+     */
+
+    @Suppress("unused")
+    ENABLE_IN_PROCESS_AAPT2(
+        "android.enableAapt2jni",
+        false,
+        FeatureStage.Removed(VERSION_BEFORE_4_0_0, "AAPT2 JNI has been removed.")
+    ),
+
+    @Suppress("unused")
+    ENABLE_DEPRECATED_NDK(
+        "android.useDeprecatedNdk",
+        false,
+        FeatureStage.Removed(VERSION_BEFORE_4_0_0, "NdkCompile is no longer supported")
+    ),
+
+    @Suppress("unused")
+    INJECT_SDK_MAVEN_REPOS(
+        "android.injectSdkMavenRepos",
+        false,
+        FeatureStage.Removed(
+            VERSION_3_5_0,
+            "The ability to inject the Android SDK maven repos is removed in AGP 3.5"
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_UNIT_TEST_BINARY_RESOURCES(
+        "android.enableUnitTestBinaryResources",
+        false,
+        FeatureStage.Removed(
+            VERSION_BEFORE_4_0_0,
+            "The raw resource for unit test functionality is removed."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_EXPERIMENTAL_FEATURE_DATABINDING(
+        "android.enableExperimentalFeatureDatabinding",
+        false,
+        FeatureStage.Removed(
+            VERSION_4_0_0,
+            "This property has no effect. The features plugin was removed in AGP 4.0.")
+    ),
+
+    @Suppress("unused")
+    ENABLE_SEPARATE_APK_RESOURCES(
+        "android.enableSeparateApkRes",
+        false,
+        FeatureStage.Removed(VERSION_BEFORE_4_0_0, "Instant run is replaced by apply changes.")
+    ),
+
+    @Suppress("unused")
+    KEEP_TIMESTAMPS_IN_APK(
+        "android.keepTimestampsInApk",
+        false,
+        FeatureStage.Removed(
+            VERSION_3_6_0,
+            "The ability to keep timestamps in the APK is removed in AGP 3.6"
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_SEPARATE_ANNOTATION_PROCESSING(
+        "android.enableSeparateAnnotationProcessing",
+        false,
+        FeatureStage.Removed(VERSION_4_0_0, "This feature was removed in AGP 4.0")
+    ),
 
     ; // end of enums
 

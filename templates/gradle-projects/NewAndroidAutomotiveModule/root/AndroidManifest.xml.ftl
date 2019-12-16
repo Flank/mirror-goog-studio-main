@@ -9,7 +9,8 @@
             android:allowBackup="true"
             android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher"
-            android:roundIcon="@mipmap/ic_launcher_round"            android:supportsRtl="true"
-            android:theme="@style/AppTheme"/>
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme" />
 
 </manifest>

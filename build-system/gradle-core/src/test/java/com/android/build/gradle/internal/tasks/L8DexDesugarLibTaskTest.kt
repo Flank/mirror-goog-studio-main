@@ -61,13 +61,13 @@ class L8DexDesugarLibTaskTest {
         val dexFile = output.resolve("classes1000.dex")
         DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/stream/Stream;")
         DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/Optional;")
-        // check unused API classes are not removed from desugar lib dex (L8 has this disabled)
-        DexSubject.assertThatDex(dexFile).containsClasses("Lj$/time/LocalTime;")
+        // check unused API classes are removed from the from desugar lib dex.
+        DexSubject.assertThatDex(dexFile).doesNotContainClasses("Lj$/time/LocalTime;")
     }
 
     companion object {
         val bootClasspath = TestUtils.getPlatformFile("android.jar")
-        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.2").toFile())
-        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.8.0")
+        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.4").toFile())
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.11.0")
     }
 }

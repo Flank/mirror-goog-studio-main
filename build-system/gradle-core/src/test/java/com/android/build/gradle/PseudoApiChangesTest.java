@@ -22,7 +22,9 @@ import com.google.common.io.Resources;
 import com.google.common.reflect.ClassPath;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 
@@ -31,6 +33,16 @@ public class PseudoApiChangesTest {
     private static final URL API_LIST_URL =
             Resources.getResource(PseudoApiChangesTest.class, "pseudo-api.txt");
 
+    private static final ImmutableSet<String> EXCLUDED_IMPL_CLASSES =
+            ImmutableSet.of(
+                    "ActionableVariantObjectOperationsExecutor",
+                    "AndroidSourceSetFactory",
+                    "DslAdaptersKt",
+                    "DslVariableFactory",
+                    "NoOpDeprecationReporter",
+                    "NoOpIssueReporter",
+                    "VariantOutputFactory");
+
     @Test
     public void stableImplementationClassesTest() throws IOException {
         getApiTester().checkApiElements();
@@ -38,9 +50,7 @@ public class PseudoApiChangesTest {
 
     static ApiTester getApiTester() throws IOException {
 
-        ImmutableSet<ClassPath.ClassInfo> allClasses =
-                ClassPath.from(BaseExtension.class.getClassLoader())
-                        .getTopLevelClasses("com.android.build.gradle");
+        ImmutableSet<ClassPath.ClassInfo> allClasses = getPseudoApiClasses();
 
         List<ClassPath.ClassInfo> classes =
                 allClasses
@@ -63,5 +73,26 @@ public class PseudoApiChangesTest {
                         + "to update the API file.\n"
                         + "DslExtensionClassStableApiUpdater will apply the following changes if run:\n",
                 API_LIST_URL);
+    }
+
+    private static ImmutableSet<ClassPath.ClassInfo> getPseudoApiClasses() throws IOException {
+        ClassPath classPath = ClassPath.from(BaseExtension.class.getClassLoader());
+        ImmutableSet.Builder<ClassPath.ClassInfo> builder = ImmutableSet.builder();
+        builder.addAll(classPath.getTopLevelClasses("com.android.build.gradle"));
+        builder.addAll(classPath.getTopLevelClassesRecursive("com.android.build.gradle.api"));
+
+        Set<String> excludedImplClasses = new HashSet<>(EXCLUDED_IMPL_CLASSES);
+        for (ClassPath.ClassInfo aClass :
+                classPath.getTopLevelClasses("com.android.build.gradle.internal.dsl")) {
+            if (aClass.getSimpleName().endsWith("Impl")
+                    || excludedImplClasses.remove(aClass.getSimpleName())) {
+                continue;
+            }
+            builder.add(aClass);
+        }
+        if (!excludedImplClasses.isEmpty()) {
+            throw new IllegalStateException("Excluded classes not found: " + excludedImplClasses);
+        }
+        return builder.build();
     }
 }

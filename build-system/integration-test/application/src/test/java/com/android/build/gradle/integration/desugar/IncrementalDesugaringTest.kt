@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROJECT_DEX_ARCHIVE
 import com.android.build.gradle.internal.scope.getOutputDir
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -39,14 +40,14 @@ import java.io.File
  */
 @RunWith(FilterableParameterized::class)
 class IncrementalDesugaringTest(
-    @Suppress("UNUSED_PARAMETER") withIncrementalDesugaringV2: Boolean
+    @Suppress("UNUSED_PARAMETER") private val withIncrementalDesugaringV2: Boolean
 ) {
 
     companion object {
 
         @Parameterized.Parameters(name = "incrementalDesugaringV2_{0}")
         @JvmStatic
-        fun parameters() = listOf(false) // TODO Add a test for incrementalDesugaringV2
+        fun parameters() = listOf(true, false)
     }
 
     @get:Rule
@@ -131,7 +132,11 @@ class IncrementalDesugaringTest(
         )
 
         incrementalTestHelper = IncrementalTestHelper(
-            executor = project.executor(),
+            executor = project.executor().with(
+                BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2,
+                withIncrementalDesugaringV2
+            ),
+            buildTask = "dexBuilderDebug",
             filesToTrackChanges = setOf(
                 interfaceWithDefaultMethodClassFile,
                 classUsingInterfaceWithDefaultMethodClassFile,

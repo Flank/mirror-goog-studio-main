@@ -20,7 +20,6 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
@@ -41,8 +40,8 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.DefaultApiVersion
 import com.android.repository.Revision
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.gradle.api.invocation.Gradle
@@ -168,7 +167,7 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val minSdkVersion = DefaultApiVersion(19)
+    val minSdkVersion = AndroidVersion(19)
     val cmakeFinder = mock(
         CmakeLocator::class.java,
         throwUnmocked
@@ -196,7 +195,7 @@ open class BasicModuleModelMock {
             AbiSplitOptions::class.java,
             throwUnmocked
         )
-        val gradleVariantConfiguration = mock(
+        val variantDslInfo = mock(
             VariantDslInfo::class.java,
             throwUnmocked
         )
@@ -206,10 +205,6 @@ open class BasicModuleModelMock {
         )
         val buildType = mock(
             BuildType::class.java,
-            throwUnmocked
-        )
-        val mergedFlavor = mock(
-            MergedFlavor::class.java,
             throwUnmocked
         )
 
@@ -227,17 +222,15 @@ open class BasicModuleModelMock {
 
         doReturn(splits).`when`(extension).splits
 
-        doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantDslInfo
-        doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
-            .externalNativeBuildOptions
-        doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
-        doReturn(buildType).`when`(gradleVariantConfiguration).buildType
-        doReturn(mergedFlavor).`when`(gradleVariantConfiguration).mergedFlavor
+        doReturn(variantDslInfo).`when`(baseVariantData).variantDslInfo
+        doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
+        doReturn(coreNdkOptions).`when`(variantDslInfo).ndkConfig
+        doReturn(buildType).`when`(variantDslInfo).buildType
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
         doReturn(true).`when`(buildType).isDebuggable
-        doReturn(minSdkVersion).`when`(mergedFlavor).minSdkVersion
+        doReturn(minSdkVersion).`when`(variantDslInfo).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }

@@ -30,6 +30,7 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.testutils.TestUtils
+import com.android.testutils.apk.Aab
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
@@ -81,6 +82,7 @@ class DynamicAppTest {
         "/base/manifest/AndroidManifest.xml",
         "/base/res/layout/base_layout.xml",
         "/base/resources.pb",
+        "/base/root/com/example/localLibJavaRes.txt",
         "/feature1/dex/classes.dex",
         "/feature1/manifest/AndroidManifest.xml",
         "/feature1/res/layout/feature_layout.xml",
@@ -109,6 +111,7 @@ class DynamicAppTest {
         mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
 
     private val jarClasses:  List<String> = listOf("Lcom/example/Foo/Foo;")
+    private val aarClasses:  List<String> = listOf("Lcom/example/locallib/BuildConfig;")
 
     @Test
     @Throws(IOException::class)
@@ -209,22 +212,32 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
-            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
+        Aab(bundleFile).use { aab ->
+            assertThat(aab.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
+
+            val dex = Dex(aab.getEntry("base/dex/classes.dex")!!)
             // Legacy multidex is applied to the dex of the base directly for the case
             // when the build author has excluded all the features from fusing.
             assertThat(dex).containsExactlyClassesIn(mainDexClasses)
 
-            val dex2 = Dex(it.getEntry("base/dex/classes2.dex")!!)
-            assertThat(dex2).containsClassesIn(jarClasses)
+            jarClasses.forEach { jarClass ->
+                assertThat(aab.containsClass("base", jarClass)).isTrue()
+                assertThat(aab.containsClass("feature1", jarClass)).isFalse()
+                assertThat(aab.containsClass("feature2", jarClass)).isFalse()
+            }
+
+            aarClasses.forEach { aarClass ->
+                assertThat(aab.containsClass("base", aarClass)).isTrue()
+                assertThat(aab.containsClass("feature1", aarClass)).isFalse()
+                assertThat(aab.containsClass("feature2", aarClass)).isFalse()
+            }
 
             // The main dex list must also analyze the classes from features.
             val mainDexListInBundle =
-                Files.readAllLines(it.getEntry(MAIN_DEX_LIST_PATH)).map { "L" + it.removeSuffix(".class") + ";" }
+                Files.readAllLines(aab.getEntry(MAIN_DEX_LIST_PATH))
+                    .map { "L" + it.removeSuffix(".class") + ";" }
 
             assertThat(mainDexListInBundle).containsExactlyElementsIn(mainDexListClassesInBundle)
-
         }
 
         // also test that the feature manifest contains the feature name.
@@ -276,6 +289,13 @@ class DynamicAppTest {
             "AndroidManifest.xml")
         assertThat(baseBundleManifest).isFile()
         assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")
+    }
+
+    // regression test for Issue 145688738
+    @Test
+    fun `test bundleRelease task`() {
+        val bundleTaskName = getBundleTaskName("release")
+        project.execute("app:$bundleTaskName")
     }
 
     @Test

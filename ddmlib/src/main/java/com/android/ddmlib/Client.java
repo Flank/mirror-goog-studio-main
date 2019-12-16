@@ -131,7 +131,7 @@ public class Client extends JdwpAgent {
 
         mConnState = ST_INIT;
 
-        mClientData = new ClientData(pid);
+        mClientData = new ClientData(this, pid);
 
         mThreadUpdateEnabled = DdmPreferences.getInitialThreadUpdate();
         mHeapInfoUpdateEnabled = DdmPreferences.getInitialHeapUpdate();

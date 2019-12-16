@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -9,10 +8,10 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.builder.core.BuilderConstants;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Maps;
 import java.io.IOException;
@@ -25,7 +24,7 @@ import org.junit.Test;
 
 /** Assemble tests for densitySplit. */
 public class DensitySplitTest {
-    private static ProjectBuildOutput outputModel;
+    private static BuildElements buildElements;
 
     @ClassRule
     public static GradleTestProject project =
@@ -33,21 +32,19 @@ public class DensitySplitTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
+        buildElements =
+                project.executeAndReturnOutputModels("clean", "assembleDebug")
+                        .get(BuilderConstants.DEBUG);
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        outputModel = null;
     }
 
     @Test
     public void testPackaging() throws IOException {
-        VariantBuildOutput debugOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
-
-        Collection<OutputFile> outputFiles = debugOutput.getOutputs();
+        Collection<BuildOutput> outputFiles = buildElements.getElements();
         assertThat(outputFiles).hasSize(5);
 
         Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG);
@@ -80,10 +77,8 @@ public class DensitySplitTest {
 
     @Test
     public void checkVersionCodeInModel() {
-        VariantBuildOutput debugOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
-        Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
+        Collection<BuildOutput> debugOutputs = buildElements.getElements();
         assertEquals(5, debugOutputs.size());
 
         // build a map of expected outputs and their versionCode

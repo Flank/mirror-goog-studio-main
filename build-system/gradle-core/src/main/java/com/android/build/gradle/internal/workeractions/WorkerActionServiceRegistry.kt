@@ -41,34 +41,6 @@ class WorkerActionServiceRegistry {
         fun shutdown()
     }
 
-    class Manager<Obj : Any, Key : ServiceKey<Obj>>(
-        private val obj: Obj?,
-        proposedKey: Key) : Closeable {
-
-        val key = if (obj != null) proposedKey else null
-
-        init {
-            key?.let {
-
-                val service = object : RegisteredService<Obj> {
-
-                    override val service: Obj
-                        get() = obj!!
-
-                    override fun shutdown() {}
-                }
-
-                INSTANCE.registerService(it) { service }
-            }
-        }
-
-        override fun close() {
-            key?.let {
-                INSTANCE.removeService(it)
-            }
-        }
-    }
-
     private val services: MutableMap<ServiceKey<*>, RegisteredService<*>> = mutableMapOf()
 
     /** Registers a service that can be retrieved by use of the service key */
@@ -77,6 +49,29 @@ class WorkerActionServiceRegistry {
         if (services[key] == null) {
             services.put(key, serviceFactory.invoke())
         }
+    }
+
+    /**
+     * Registers a service that can be retrieved by use of the service key. [Closeable] is returned
+     * which should be used to managed the service lifecycle in the registry. Once [Closeable.close]
+     * is invoked, service is removed.
+     *
+     * If service with the same key is already registered, old service is not overwritten. Also,
+     * invoker will receive a no-op [Closeable]. This means that it is responsibility of the invoker
+     * that registers the service to also remove it.
+     *
+     * If service is null, service registration is ignored, and a no-op [Closeable] is returned.
+     */
+    @Synchronized
+    fun <T : Any> registerServiceAsCloseable(key: ServiceKey<T>, service: T?): Closeable {
+        if (key in services || service == null) return Closeable { }
+
+        services[key] = object : RegisteredService<T> {
+            override val service: T = service
+
+            override fun shutdown() {}
+        }
+        return Closeable { removeService(key) }
     }
 
     /** Get a previously registered service */
@@ -126,5 +121,3 @@ class WorkerActionServiceRegistry {
         }
     }
 }
-
-

@@ -34,8 +34,6 @@
 
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 
-    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
-
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
 <#macro copyIconCommands destination>
@@ -92,4 +90,5 @@
 <#if generateKotlin && useAndroidX>
     <dependency mavenUrl="androidx.core:core-ktx:+" />
 </#if>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 </recipe>

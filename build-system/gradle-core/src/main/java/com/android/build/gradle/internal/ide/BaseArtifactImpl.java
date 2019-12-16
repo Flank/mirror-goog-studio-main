@@ -33,9 +33,12 @@ import java.util.Set;
 @Immutable
 abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
 
+    public static final String NO_MODEL_FILE = "";
+
     @NonNull private final Collection<File> generatedSourceFolders;
     @NonNull private final String name;
     @NonNull private final String assembleTaskName;
+    @NonNull private final String postAssembleTaskModelFile;
     @NonNull private final String compileTaskName;
     @NonNull private final File classesFolder;
     @NonNull private final File javaResourcesFolder;
@@ -48,6 +51,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     BaseArtifactImpl(
             @NonNull String name,
             @NonNull String assembleTaskName,
+            @NonNull String postAssembleTaskModelFile,
             @NonNull String compileTaskName,
             @NonNull File classesFolder,
             @NonNull Set<File> additionalClassesFolders,
@@ -59,6 +63,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
             @NonNull Collection<File> generatedSourceFolders) {
         this.name = name;
         this.assembleTaskName = assembleTaskName;
+        this.postAssembleTaskModelFile = postAssembleTaskModelFile;
         this.compileTaskName = compileTaskName;
         this.classesFolder = classesFolder;
         this.additionalClassesFolders = additionalClassesFolders;
@@ -86,6 +91,12 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     @Override
     public String getAssembleTaskName() {
         return assembleTaskName;
+    }
+
+    @NonNull
+    @Override
+    public String getPostAssembleTaskModelFile() {
+        return postAssembleTaskModelFile;
     }
 
     @NonNull
@@ -154,6 +165,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
         return Objects.equals(generatedSourceFolders, that.generatedSourceFolders)
                 && Objects.equals(name, that.name)
                 && Objects.equals(assembleTaskName, that.assembleTaskName)
+                && Objects.equals(postAssembleTaskModelFile, that.postAssembleTaskModelFile)
                 && Objects.equals(compileTaskName, that.compileTaskName)
                 && Objects.equals(classesFolder, that.classesFolder)
                 && Objects.equals(additionalClassesFolders, that.additionalClassesFolders)
@@ -170,6 +182,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
                 generatedSourceFolders,
                 name,
                 assembleTaskName,
+                postAssembleTaskModelFile,
                 compileTaskName,
                 classesFolder,
                 additionalClassesFolders,

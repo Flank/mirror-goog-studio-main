@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.core.VariantType;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -200,49 +201,43 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
             final String subfolderName =
                     taskKind == TaskKind.CONNECTED ? "/connected/" : "/devices/";
 
-            task.getResultsDir()
-                    .set(
-                            scope.getProject()
-                                    .provider(
-                                            () -> {
-                                                String dir =
-                                                        scope.getExtension()
-                                                                .getTestOptions()
-                                                                .getResultsDir();
-                                                String rootLocation =
-                                                        dir != null && !dir.isEmpty()
-                                                                ? dir
-                                                                : defaultResultsDir;
-                                                return scope.getProject()
-                                                        .getLayout()
-                                                        .getProjectDirectory()
-                                                        .dir(
-                                                                rootLocation
-                                                                        + subfolderName
-                                                                        + FD_FLAVORS_ALL);
-                                            }));
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getResultsDir(),
+                    scope.getProject()
+                            .provider(
+                                    () -> {
+                                        String dir =
+                                                scope.getExtension()
+                                                        .getTestOptions()
+                                                        .getResultsDir();
+                                        String rootLocation =
+                                                dir != null && !dir.isEmpty()
+                                                        ? dir
+                                                        : defaultResultsDir;
+                                        return scope.getProject()
+                                                .getLayout()
+                                                .getProjectDirectory()
+                                                .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
+                                    }));
 
-            task.getResultsDir()
-                    .set(
-                            scope.getProject()
-                                    .provider(
-                                            () -> {
-                                                String dir =
-                                                        scope.getExtension()
-                                                                .getTestOptions()
-                                                                .getReportDir();
-                                                String rootLocation =
-                                                        dir != null && !dir.isEmpty()
-                                                                ? dir
-                                                                : defaultReportsDir;
-                                                return scope.getProject()
-                                                        .getLayout()
-                                                        .getProjectDirectory()
-                                                        .dir(
-                                                                rootLocation
-                                                                        + subfolderName
-                                                                        + FD_FLAVORS_ALL);
-                                            }));
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getReportsDir(),
+                    scope.getProject()
+                            .provider(
+                                    () -> {
+                                        String dir =
+                                                scope.getExtension()
+                                                        .getTestOptions()
+                                                        .getReportDir();
+                                        String rootLocation =
+                                                dir != null && !dir.isEmpty()
+                                                        ? dir
+                                                        : defaultReportsDir;
+                                        return scope.getProject()
+                                                .getLayout()
+                                                .getProjectDirectory()
+                                                .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
+                                    }));
         }
     }
 }

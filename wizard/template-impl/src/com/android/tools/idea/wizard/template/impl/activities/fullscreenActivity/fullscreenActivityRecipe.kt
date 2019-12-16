@@ -56,7 +56,7 @@ fun RecipeExecutor.fullscreenActivityRecipe(
            manifestOut.resolve("AndroidManifest.xml"))
 
   val finalResOut = moduleData.baseFeature?.dir?.resolve("src/debug/res") ?: resOut
-  generateThemeStyles(moduleData.themesData.main, moduleData.isDynamic, useMaterial2, finalResOut, finalResOut)
+  generateThemeStyles(moduleData.themesData.main, moduleData.isDynamic, useMaterial2, resOut, finalResOut)
 
   mergeXml(fullscreenColors(), finalResOut.resolve("values/colors.xml"))
   mergeXml(fullscreenAttrs(), finalResOut.resolve("values/attrs.xml"))

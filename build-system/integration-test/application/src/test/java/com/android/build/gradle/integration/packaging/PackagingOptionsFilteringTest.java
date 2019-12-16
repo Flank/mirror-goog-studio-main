@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.integration.packaging;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.utils.FileUtils;
@@ -26,6 +27,7 @@ import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,10 +37,16 @@ import org.junit.Test;
  */
 public class PackagingOptionsFilteringTest {
 
+    private GradleTestProject app;
+
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("kotlinApp").create();
+
+    @Before
+    public void setup() {
+        app = project.getSubproject(":app");
+    }
 
     /**
      * Creates a dummy file.
@@ -48,7 +56,7 @@ public class PackagingOptionsFilteringTest {
      * @throws IOException I/O failed
      */
     private void dummyFile(@NonNull byte[] contents, @NonNull String... paths) throws Exception {
-        File file = FileUtils.join(project.getTestDir(), paths);
+        File file = FileUtils.join(app.getTestDir(), paths);
         FileUtils.mkdirs(file.getParentFile());
         Files.write(file.toPath(), contents);
     }
@@ -60,7 +68,7 @@ public class PackagingOptionsFilteringTest {
      * @throws IOException I/O failed
      */
     private void appendBuild(@NonNull String text) throws Exception {
-        File buildFile = project.getBuildFile();
+        File buildFile = app.getBuildFile();
         String contents = com.google.common.io.Files.toString(buildFile, Charsets.US_ASCII);
         contents += System.lineSeparator() + text;
         com.google.common.io.Files.asCharSink(buildFile, Charsets.US_ASCII).write(contents);
@@ -86,9 +94,9 @@ public class PackagingOptionsFilteringTest {
         dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
         dummyFile(c3, "src", "main", "resources", "foo", "svn", "not-ignored-4");
 
-        project.execute(":assembleDebug");
+        app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
         apk.doesNotContainJavaResource(".svn/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/.svn/ignored-2");
@@ -118,9 +126,9 @@ public class PackagingOptionsFilteringTest {
         dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
         dummyFile(c3, "src", "main", "resources", "foo", "cvs.cvs", "not-ignored-4");
 
-        project.execute(":assembleDebug");
+        app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
         apk.doesNotContainJavaResource("CVS/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/cvs/ignored-2");
@@ -150,9 +158,9 @@ public class PackagingOptionsFilteringTest {
         dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
         dummyFile(c3, "src", "main", "resources", "foo", "SCCS.1", "not-ignored-4");
 
-        project.execute(":assembleDebug");
+        app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
         apk.doesNotContainJavaResource("SCCS/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/SCCS/ignored-2");
@@ -182,9 +190,9 @@ public class PackagingOptionsFilteringTest {
         dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
         dummyFile(c3, "src", "main", "resources", "foo", "x_", "not-ignored-4");
 
-        project.execute(":assembleDebug");
+        app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
         apk.doesNotContainJavaResource("_/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/__/ignored-2");
@@ -192,6 +200,13 @@ public class PackagingOptionsFilteringTest {
         apk.doesNotContainJavaResource("foo/bar/_blah/ignored-3");
         apk.containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
         apk.containsJavaResourceWithContent("foo/x_/not-ignored-4", c3);
+    }
+
+    @Test
+    public void byDefaultKotlinMetaDataAreIgnored() throws Exception {
+        app.execute("assembleDebug");
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
+        apk.doesNotContain("/kotlin/text/UStringsKt.kotlin_metadata");
     }
 
     /**
@@ -220,9 +235,9 @@ public class PackagingOptionsFilteringTest {
         dummyFile(c2, "src", "main", "resources", "some", "sensitive", "files", "dont");
         dummyFile(c2, "src", "main", "resources", "pkg", "ccvs", "very-sensitive-info");
 
-        project.execute(":assembleDebug");
+        app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
         apk.doesNotContainJavaResource("I_am_ign");
         apk.containsJavaResourceWithContent("ssccs/I stay", c0);
         apk.doesNotContainJavaResource("Ignoring/this/fileign");
@@ -243,7 +258,8 @@ public class PackagingOptionsFilteringTest {
         appendBuild("    packagingOptions {");
         appendBuild("        excludes = [");
         appendBuild("            '**/*ign',");
-        appendBuild("            '**/sensitive/**'");
+        appendBuild("            '**/sensitive/**',");
+        appendBuild("            '/META-INF/MANIFEST.MF',");
         appendBuild("        ]");
         appendBuild("    }");
         appendBuild("}");
@@ -260,9 +276,9 @@ public class PackagingOptionsFilteringTest {
         dummyFile(c2, "src", "main", "resources", "some", "sensitive", "files", "dont");
         dummyFile(c2, "src", "main", "resources", "pkg", "cvs2", "very-sensitive-info");
 
-        project.execute(":assembleDebug");
+        app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG));
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
         apk.doesNotContainJavaResource("I_am_ign");
         apk.containsJavaResourceWithContent("sccs2/I stay", c0);
         apk.doesNotContainJavaResource("Ignoring/this/fileign");

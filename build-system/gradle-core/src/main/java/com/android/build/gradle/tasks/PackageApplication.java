@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
@@ -132,6 +132,14 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                             PackageApplication::getOutputDirectory,
                             outputDirectory.getAbsolutePath(),
                             "");
+
+            getVariantScope()
+                    .getArtifacts()
+                    .getOperations()
+                    .setInitialProvider(taskProvider, PackageApplication::getIdeModelOutputFile)
+                    .atLocation(PackageApplication::getOutputDirectory)
+                    .withName(ExistingBuildElements.METADATA_FILE_NAME)
+                    .on(InternalArtifactType.APK_IDE_MODEL.INSTANCE);
         }
 
         @Override

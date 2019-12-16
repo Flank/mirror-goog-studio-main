@@ -1121,6 +1121,7 @@ public final class SdkConstants {
     public static final String TAG_INCLUDE = "include";
     public static final String TAG_DEEP_LINK = "deepLink";
     public static final String TAG_NAVIGATION = "navigation";
+    public static final String ATTR_MODULE_NAME = "moduleName";
 
     public static final String VIEW = "View"; //$NON-NLS-1$
     public static final String VIEW_GROUP = "ViewGroup"; //$NON-NLS-1$
@@ -1236,6 +1237,7 @@ public final class SdkConstants {
     public static final String TAG_GRADIENT = "gradient";
     public static final String TAG_INSET = "inset"; //$NON-NLS-1$
     public static final String TAG_LAYER_LIST = "layer-list"; //$NON-NLS-1$
+    public static final String TAG_NINE_PATCH = "nine-patch";
     public static final String TAG_PATH = "path";
     public static final String TAG_RIPPLE = "ripple";
     public static final String TAG_ROTATE = "rotate";
@@ -2684,7 +2686,7 @@ public final class SdkConstants {
     public static final String GRADLE_ANDROID_TEST_API_CONFIGURATION = "androidTestApi";
 
     public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
-    public static final String CURRENT_BUILD_TOOLS_VERSION = "28.0.3";
+    public static final String CURRENT_BUILD_TOOLS_VERSION = "29.0.2";
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";
     public static final String DESIGN_LIB_ARTIFACT = "com.android.support:design";

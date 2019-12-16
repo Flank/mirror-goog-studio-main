@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -35,7 +38,7 @@ open class BaseAppModuleExtension(
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
-    publicExtensionImpl: ApplicationExtensionImpl
+    private val publicExtensionImpl: ApplicationExtensionImpl
 ) : AppExtension(
     project,
     projectOptions,
@@ -44,8 +47,40 @@ open class BaseAppModuleExtension(
     sourceSetManager,
     extraModelInfo,
     true
-), ApplicationExtension<BuildType, DefaultConfig, ProductFlavor, SigningConfig> by publicExtensionImpl,
+), ApplicationExtension<
+        BuildType,
+        CmakeOptions,
+        DefaultConfig,
+        ExternalNativeBuild,
+        NdkBuildOptions,
+        ProductFlavor,
+        SigningConfig,
+        TestOptions,
+        TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+
+    override val dataBinding: DataBindingOptions =
+        project.objects.newInstance(
+            DataBindingOptions::class.java,
+            publicExtensionImpl.buildFeatures,
+            projectOptions,
+            globalScope.dslScope
+        )
+
+    override val viewBinding: ViewBindingOptions =
+        project.objects.newInstance(
+            ViewBindingOptionsImpl::class.java,
+            publicExtensionImpl.buildFeatures,
+            projectOptions,
+            globalScope.dslScope
+        )
+
+    // this is needed because the impl class needs this but the interface does not,
+    // so CommonExtension does not define it, which means, that even though it's part of
+    // ApplicationExtensionImpl, the implementation by delegate does not bring it.
+    fun buildFeatures(action: Action<ApplicationBuildFeatures>) {
+        publicExtensionImpl.buildFeatures(action)
+    }
 
     var dynamicFeatures: MutableSet<String> = mutableSetOf()
 

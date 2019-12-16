@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
@@ -32,7 +32,7 @@ public abstract class AndroidArtifactVariantData extends BaseVariantData {
     protected AndroidArtifactVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfoImpl variantDslInfo,
             @NonNull VariantSources variantSources,
             @NonNull Recorder recorder) {
         super(globalScope, taskManager, variantDslInfo, variantSources, recorder);

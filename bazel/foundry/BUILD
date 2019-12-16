@@ -1,3 +1,8 @@
+load(
+    "@bazel_toolchains//rules/exec_properties:exec_properties.bzl",
+    "create_rbe_exec_properties_dict",
+)
+
 package(default_visibility = ["//visibility:public"])
 
 platform(
@@ -9,28 +14,14 @@ platform(
         "@bazel_toolchains//constraints:xenial",
         "@bazel_toolchains//constraints/sanitizers:support_msan",
     ],
-    remote_execution_properties = """
-          properties: {
-            name: "container-image"
-            value:"docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:b346bf48fd581e5445a3fe7982359a957b088c35c6b3735c0a35be0c8db6d2c1"
-          }
-          properties: {
-            name: "dockerNetwork"
-            value: "off"
-          }
-          properties: {
-            name: "dockerUseURandom"
-            value: "true"
-          }
-          properties: {
-            name: "dockerAddCapabilities"
-            value: "SYS_NICE"
-          }
-          properties: {
-            name: "OSFamily"
-            value: "Linux"
-          }
-         """,
+    exec_properties = create_rbe_exec_properties_dict(
+        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:b346bf48fd581e5445a3fe7982359a957b088c35c6b3735c0a35be0c8db6d2c1",
+        docker_add_capabilities = "SYS_NICE",
+        docker_network = "off",
+        docker_use_urandom = True,
+        gce_machine_type = "n1-standard-4",
+        os_family = "Linux",
+    ),
 )
 
 platform(
@@ -39,16 +30,11 @@ platform(
         "@bazel_tools//platforms:x86_64",
         "@bazel_tools//platforms:windows",
     ],
-    remote_execution_properties = """
-        properties: {
-          name: "container-image"
-          value: "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows1803-as@sha256:e75260564cf7f4236867382a9d6340f25afb0afe8d65a9f65e0a748a92d1d5a3"
-        }
-        properties: {
-          name: "OSFamily"
-          value: "Windows"
-        }
-       """,
+    exec_properties = create_rbe_exec_properties_dict(
+        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows1803-as@sha256:e75260564cf7f4236867382a9d6340f25afb0afe8d65a9f65e0a748a92d1d5a3",
+        gce_machine_type = "n1-standard-4",
+        os_family = "Windows",
+    ),
 )
 
 # This test is run explicitly on the foundry bot as will not pass on

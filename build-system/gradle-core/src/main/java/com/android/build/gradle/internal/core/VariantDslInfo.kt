@@ -16,45 +16,23 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.api.JavaCompileOptions
-import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
-import com.android.build.gradle.internal.dsl.BaseFlavor
+import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
-import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.options.StringOption
-import com.android.builder.core.BuilderConstants
-import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.DefaultManifestParser
-import com.android.builder.core.ManifestAttributeSupplier
-import com.android.builder.core.VariantAttributesProvider
+import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ClassField
-import com.android.builder.model.InstantRun
-import com.android.builder.model.SourceProvider
-import com.android.ide.common.rendering.api.ResourceNamespace
-import com.android.ide.common.resources.AssetSet
-import com.android.ide.common.resources.ResourceSet
+import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
-import com.android.utils.appendCapitalized
-import com.android.utils.combineAsCamelCase
-import com.google.common.base.Joiner
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
-import com.google.common.collect.Sets
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
+import org.gradle.api.Project
 import java.io.File
-import java.util.function.BooleanSupplier
-import java.util.function.Function
 import java.util.function.IntSupplier
 import java.util.function.Supplier
 
@@ -66,68 +44,25 @@ import java.util.function.Supplier
  * Use [VariantBuilder] to instantiate.
  *
  */
-open class VariantDslInfo internal constructor(
-    val fullName: String,
-    val flavorName: String,
-    val variantType: VariantType,
-    val defaultConfig: DefaultConfig,
-    manifestFile: File,
-    val buildType: BuildType,
+interface VariantDslInfo {
+
+    val fullName: String
+
+    val flavorName: String
+
+    val variantType: VariantType
+
+    val buildType: BuildType
+
     /** The list of product flavors. Items earlier in the list override later items.  */
-    val productFlavors: List<ProductFlavor>,
-    private val signingConfigOverride: SigningConfig? = null,
-    manifestAttributeSupplier: ManifestAttributeSupplier? = null,
+    val productFlavors: List<ProductFlavor>
+
     /**
      * Optional tested config in case this variant is used for testing another variant.
      *
      * @see VariantType.isTestComponent
      */
-    val testedVariant: VariantDslInfo? = null,
-    private val projectOptions: ProjectOptions,
-    private val issueReporter: EvalIssueReporter,
-    isInExecutionPhase: BooleanSupplier
-) {
-
-    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavors, issueReporter)
-
-    /** Variant-specific build Config fields.  */
-    private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
-
-    /** Variant-specific res values.  */
-    private val mResValues: MutableMap<String, ClassField> = Maps.newTreeMap()
-
-    /**
-     * For reading the attributes from the main manifest file in the default source set, combining
-     * the results with the current flavor.
-     */
-    private val mVariantAttributesProvider: VariantAttributesProvider
-
-    private val mergedNdkConfig = MergedNdkConfig()
-    private val mergedExternalNativeBuildOptions =
-        MergedExternalNativeBuildOptions()
-    private val mergedJavaCompileOptions = MergedJavaCompileOptions()
-
-    init {
-
-        val manifestParser =
-            manifestAttributeSupplier
-                ?: DefaultManifestParser(
-                    manifestFile,
-                    isInExecutionPhase,
-                    variantType.requiresManifest,
-                    issueReporter
-                )
-        mVariantAttributesProvider = VariantAttributesProvider(
-            mergedFlavor,
-            buildType,
-            variantType.isTestComponent,
-            manifestParser,
-            manifestFile,
-            fullName
-        )
-        mergeOptions()
-    }
-
+    val testedVariant: VariantDslInfo?
 
     /**
      * Returns a full name that includes the given splits name.
@@ -135,21 +70,7 @@ open class VariantDslInfo internal constructor(
      * @param splitName the split name
      * @return a unique name made up of the variant and split names.
      */
-    fun computeFullNameWithSplits(splitName: String): String {
-        val sb = StringBuilder()
-        val flavorName = flavorName
-        if (!flavorName.isEmpty()) {
-            sb.append(flavorName)
-            sb.appendCapitalized(splitName)
-        } else {
-            sb.append(splitName)
-        }
-        sb.appendCapitalized(buildType.name)
-        if (variantType.isTestComponent) {
-            sb.append(variantType.suffix)
-        }
-        return sb.toString()
-    }
+    fun computeFullNameWithSplits(splitName: String): String
 
     /**
      * Returns the full, unique name of the variant, including BuildType, flavors and test, dash
@@ -157,41 +78,14 @@ open class VariantDslInfo internal constructor(
      *
      * @return the name of the variant
      */
-    val baseName : String by lazy {
-        val sb = StringBuilder()
-        if (productFlavors.isNotEmpty()) {
-            for (pf in productFlavors) {
-                sb.append(pf.name).append('-')
-            }
-        }
-        sb.append(buildType.name)
-        if (variantType.isTestComponent) {
-            sb.append('-').append(variantType.prefix)
-        }
-
-        sb.toString()
-    }
-
+    val baseName : String
     /**
      * Returns a base name that includes the given splits name.
      *
      * @param splitName the split name
      * @return a unique name made up of the variant and split names.
      */
-    fun computeBaseNameWithSplits(splitName: String): String {
-        val sb = StringBuilder()
-        if (productFlavors.isNotEmpty()) {
-            for (pf in productFlavors) {
-                sb.append(pf.name).append('-')
-            }
-        }
-        sb.append(splitName).append('-')
-        sb.append(buildType.name)
-        if (variantType.isTestComponent) {
-            sb.append('-').append(variantType.prefix)
-        }
-        return sb.toString()
-    }
+    fun computeBaseNameWithSplits(splitName: String): String
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -202,9 +96,8 @@ open class VariantDslInfo internal constructor(
      *
      * @return the directory name for the variant
      */
-    val dirName: String by lazy {
-        Joiner.on('/').join(directorySegments)
-    }
+    val dirName: String
+
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -212,22 +105,7 @@ open class VariantDslInfo internal constructor(
      *
      * @return the directory name for the variant
      */
-    val directorySegments: Collection<String?> by lazy {
-        val builder =
-            ImmutableList.builder<String>()
-        if (variantType.isTestComponent) {
-            builder.add(variantType.prefix)
-        }
-        if (!productFlavors.isEmpty()) {
-            builder.add(
-                combineAsCamelCase(
-                    productFlavors, ProductFlavor::getName
-                )
-            )
-        }
-        builder.add(buildType.name)
-        builder.build()
-    }
+    val directorySegments: Collection<String?>
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -238,23 +116,7 @@ open class VariantDslInfo internal constructor(
      *
      * @return the directory name for the variant
      */
-    fun computeDirNameWithSplits(vararg splitNames: String): String {
-        val sb = StringBuilder()
-        if (variantType.isTestComponent) {
-            sb.append(variantType.prefix).append("/")
-        }
-        if (!productFlavors.isEmpty()) {
-            for (flavor in productFlavors) {
-                sb.append(flavor.name)
-            }
-            sb.append('/')
-        }
-        for (splitName in splitNames) {
-            sb.append(splitName).append('/')
-        }
-        sb.append(buildType.name)
-        return sb.toString()
-    }
+    fun computeDirNameWithSplits(vararg splitNames: String): String
 
     /**
      * Return the names of the applied flavors.
@@ -265,32 +127,8 @@ open class VariantDslInfo internal constructor(
      * @return the list, possibly empty if there are no flavors.
      */
     val flavorNamesWithDimensionNames: List<String>
-        get() {
-            if (productFlavors.isEmpty()) {
-                return emptyList()
-            }
-            val names: List<String>
-            val count = productFlavors.size
-            if (count > 1) {
-                names =
-                    Lists.newArrayListWithCapacity(count * 2)
-                for (i in 0 until count) {
-                    names.add(productFlavors[i].name)
-                    names.add(productFlavors[i].dimension)
-                }
-            } else {
-                names = listOf(productFlavors[0].name)
-            }
-            return names
-        }
 
-
-    fun hasFlavors(): Boolean {
-        return productFlavors.isNotEmpty()
-    }
-
-    private val testedPackage: String
-        get() = testedVariant?.applicationId ?: ""
+    fun hasFlavors(): Boolean
 
     /**
      * Returns the original application ID before any overrides from flavors. If the variant is a
@@ -299,8 +137,7 @@ open class VariantDslInfo internal constructor(
      *
      * @return the original application ID
      */
-    open val originalApplicationId: String
-        get() = mVariantAttributesProvider.getOriginalApplicationId(testedPackage)
+    val originalApplicationId: String
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could
@@ -308,24 +145,11 @@ open class VariantDslInfo internal constructor(
      *
      * @return the application ID
      */
-    open val applicationId: String
-        get() = mVariantAttributesProvider.getApplicationId(testedPackage)
+    val applicationId: String
 
-    open val testApplicationId: String
-        get() = mVariantAttributesProvider.getTestApplicationId(testedPackage)
+    val testApplicationId: String
 
     val testedApplicationId: String?
-        get() {
-            if (variantType.isTestComponent) {
-                val tested = testedVariant!!
-                return if (tested.variantType.isAar) {
-                    applicationId
-                } else {
-                    tested.applicationId
-                }
-            }
-            return null
-        }
 
     /**
      * Returns the application id override value coming from the Product Flavor and/or the Build
@@ -334,7 +158,6 @@ open class VariantDslInfo internal constructor(
      * @return the id override or null
      */
     val idOverride: String?
-        get() = mVariantAttributesProvider.idOverride
 
     /**
      * Returns the version name for this variant. This could be specified by the product flavors,
@@ -344,11 +167,6 @@ open class VariantDslInfo internal constructor(
      * @return the version name or null if none defined
      */
     val versionName: String?
-        get() {
-            val override =
-                projectOptions[StringOption.IDE_VERSION_NAME_OVERRIDE]
-            return override ?: getVersionName(false)
-        }
 
     /**
      * Returns the version name for this variant. This could be specified by the product flavors,
@@ -358,9 +176,7 @@ open class VariantDslInfo internal constructor(
      * @param ignoreManifest whether or not the manifest is ignored when getting the version code
      * @return the version name or null if none defined
      */
-    fun getVersionName(ignoreManifest: Boolean): String? {
-        return mVariantAttributesProvider.getVersionName(ignoreManifest)
-    }
+    fun getVersionName(ignoreManifest: Boolean): String?
 
     /**
      * Returns the version code for this variant. This could be specified by the product flavors,
@@ -369,11 +185,6 @@ open class VariantDslInfo internal constructor(
      * @return the version code or -1 if there was none defined.
      */
     val versionCode: Int
-        get() {
-            val override =
-                projectOptions[IntegerOption.IDE_VERSION_CODE_OVERRIDE]
-            return override ?: getVersionCode(false)
-        }
 
     /**
      * Returns the version code for this variant. This could be specified by the product flavors,
@@ -382,15 +193,11 @@ open class VariantDslInfo internal constructor(
      * @param ignoreManifest whether or not the manifest is ignored when getting the version code
      * @return the version code or -1 if there was none defined.
      */
-    fun getVersionCode(ignoreManifest: Boolean): Int {
-        return mVariantAttributesProvider.getVersionCode(ignoreManifest)
-    }
+    fun getVersionCode(ignoreManifest: Boolean): Int
 
     val manifestVersionNameSupplier: Supplier<String?>
-        get() = mVariantAttributesProvider.manifestVersionNameSupplier
 
     val manifestVersionCodeSupplier: IntSupplier
-        get() = mVariantAttributesProvider.manifestVersionCodeSupplier
 
     /**
      * Returns the instrumentationRunner to use to test this variant, or if the variant is a test,
@@ -399,32 +206,12 @@ open class VariantDslInfo internal constructor(
      * @return the instrumentation test runner name
      */
     val instrumentationRunner: String
-        get() {
-            var config: VariantDslInfo = this
-            if (variantType.isTestComponent) {
-                config = testedVariant!!
-            }
-            val runner = config.mVariantAttributesProvider.instrumentationRunner
-            if (runner != null) {
-                return runner
-            }
-            return if (isLegacyMultiDexMode) {
-                MULTIDEX_TEST_RUNNER
-            } else DEFAULT_TEST_RUNNER
-        }
 
     /**
      * Returns the instrumentationRunner arguments to use to test this variant, or if the variant is
      * a test, the ones to use to test the tested variant
      */
     val instrumentationRunnerArguments: Map<String, String>
-        get() {
-            var config: VariantDslInfo = this
-            if (variantType.isTestComponent) {
-                config = testedVariant!!
-            }
-            return config.mergedFlavor.testInstrumentationRunnerArguments
-        }
 
     /**
      * Returns handleProfiling value to use to test this variant, or if the variant is a test, the
@@ -433,13 +220,6 @@ open class VariantDslInfo internal constructor(
      * @return the handleProfiling value
      */
     val handleProfiling: Boolean
-        get() {
-            var config: VariantDslInfo = this
-            if (variantType.isTestComponent) {
-                config = testedVariant!!
-            }
-            return config.mVariantAttributesProvider.handleProfiling ?: DEFAULT_HANDLE_PROFILING
-        }
 
     /**
      * Returns functionalTest value to use to test this variant, or if the variant is a test, the
@@ -448,21 +228,12 @@ open class VariantDslInfo internal constructor(
      * @return the functionalTest value
      */
     val functionalTest: Boolean
-        get() {
-            var config: VariantDslInfo = this
-            if (variantType.isTestComponent) {
-                config = testedVariant!!
-            }
-            return config.mVariantAttributesProvider.functionalTest ?: DEFAULT_FUNCTIONAL_TEST
-        }
 
     /** Gets the test label for this variant  */
     val testLabel: String?
-        get() = mVariantAttributesProvider.testLabel
 
     /** Reads the package name from the manifest. This is unmodified by the build type.  */
     val packageFromManifest: String
-        get() = mVariantAttributesProvider.packageName// default to 1 for minSdkVersion.
 
     /**
      * Return the minSdkVersion for this variant.
@@ -474,24 +245,8 @@ open class VariantDslInfo internal constructor(
      * @return the minSdkVersion
      */
     val minSdkVersion: AndroidVersion
-        get() {
-            if (testedVariant != null) {
-                return testedVariant.minSdkVersion
-            }
-            var minSdkVersion = mergedFlavor.minSdkVersion
-            if (minSdkVersion == null) { // default to 1 for minSdkVersion.
-                minSdkVersion =
-                    DefaultApiVersion.create(Integer.valueOf(1))
-            }
-            return AndroidVersion(
-                minSdkVersion.apiLevel,
-                minSdkVersion.codename
-            )
-        }
 
-    /** Returns the minSdkVersion as integer.  */
-    val minSdkVersionValue: Int
-        get() = minSdkVersion.featureLevel// default to -1 if not in build.gradle file.
+    val maxSdkVersion: Int?
 
     /**
      * Return the targetSdkVersion for this variant.
@@ -503,25 +258,16 @@ open class VariantDslInfo internal constructor(
      * @return the targetSdkVersion
      */
     val targetSdkVersion: ApiVersion
-        get() {
-            if (testedVariant != null) {
-                return testedVariant.targetSdkVersion
-            }
-            var targetSdkVersion =
-                mergedFlavor.targetSdkVersion
-            if (targetSdkVersion == null) { // default to -1 if not in build.gradle file.
-                targetSdkVersion =
-                    DefaultApiVersion.create(Integer.valueOf(-1))
-            }
-            return targetSdkVersion
-        }
 
     val renderscriptTarget: Int
-        get() {
-            val targetApi = mergedFlavor.renderscriptTargetApi ?: -1
-            val minSdk = minSdkVersionValue
-            return if (targetApi > minSdk) targetApi else minSdk
-        }
+
+    val isWearAppUnbundled: Boolean?
+
+    val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
+
+    val resourceConfigurations: ImmutableSet<String>
+
+    val vectorDrawables: VectorDrawablesOptions
 
     /**
      * Adds a variant-specific BuildConfig field.
@@ -532,10 +278,7 @@ open class VariantDslInfo internal constructor(
      */
     fun addBuildConfigField(
         type: String, name: String, value: String
-    ) {
-        val classField: ClassField = ClassFieldImpl(type, name, value)
-        mBuildConfigFields[name] = classField
-    }
+    )
 
     /**
      * Adds a variant-specific res value.
@@ -544,12 +287,7 @@ open class VariantDslInfo internal constructor(
      * @param name the name of the field
      * @param value the value of the field
      */
-    fun addResValue(type: String, name: String, value: String) {
-        val classField: ClassField = ClassFieldImpl(type, name, value)
-        mResValues[name] = classField
-    }// keep track of the names already added. This is because we show where the items
-// come from so we cannot just put everything a map and let the new ones override the
-// old ones.
+    fun addResValue(type: String, name: String, value: String)
 
     /**
      * Returns a list of items for the BuildConfig class.
@@ -561,39 +299,6 @@ open class VariantDslInfo internal constructor(
      * @return a list of items.
      */
     val buildConfigItems: List<Any>
-        get() {
-            val fullList: MutableList<Any> =
-                Lists.newArrayList()
-            // keep track of the names already added. This is because we show where the items
-            // come from so we cannot just put everything a map and let the new ones override the
-            // old ones.
-            val usedFieldNames = mutableSetOf<String>()
-
-            var list: Collection<ClassField> = mBuildConfigFields.values
-            if (!list.isEmpty()) {
-                fullList.add("Fields from the variant")
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            list = buildType.buildConfigFields.values
-            if (!list.isEmpty()) {
-                fullList.add("Fields from build type: " + buildType.name)
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            for (flavor in productFlavors) {
-                list = flavor.buildConfigFields.values
-                if (!list.isEmpty()) {
-                    fullList.add("Fields from product flavor: " + flavor.name)
-                    fillFieldList(fullList, usedFieldNames, list)
-                }
-            }
-            list = defaultConfig.buildConfigFields.values
-            if (!list.isEmpty()) {
-                fullList.add("Fields from default config.")
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            return fullList
-        }// start from the lowest priority and just add it all. Higher priority fields
-// will replace lower priority ones.
 
     /**
      * Return the merged build config fields for the variant.
@@ -605,19 +310,6 @@ open class VariantDslInfo internal constructor(
      * @return a map of merged fields
      */
     val mergedBuildConfigFields: Map<String, ClassField>
-        get() {
-            val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
-
-            // start from the lowest priority and just add it all. Higher priority fields
-            // will replace lower priority ones.
-            mergedMap.putAll(defaultConfig.buildConfigFields)
-            for (i in productFlavors.indices.reversed()) {
-                mergedMap.putAll(productFlavors[i].buildConfigFields)
-            }
-            mergedMap.putAll(buildType.buildConfigFields)
-            mergedMap.putAll(mBuildConfigFields)
-            return mergedMap
-        }
 
     /**
      * Return the merged res values for the variant.
@@ -629,18 +321,6 @@ open class VariantDslInfo internal constructor(
      * @return a map of merged fields
      */
     val mergedResValues: Map<String, ClassField>
-        get() {
-            // start from the lowest priority and just add it all. Higher priority fields
-            // will replace lower priority ones.
-            val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
-            mergedMap.putAll(defaultConfig.resValues)
-            for (i in productFlavors.indices.reversed()) {
-                mergedMap.putAll(productFlavors[i].resValues)
-            }
-            mergedMap.putAll(buildType.resValues)
-            mergedMap.putAll(mResValues)
-            return mergedMap
-        }
 
     /**
      * Returns a list of generated resource values.
@@ -652,60 +332,12 @@ open class VariantDslInfo internal constructor(
      * @return a list of items.
      */
     val resValues: List<Any>
-        get() {
-            val fullList: MutableList<Any> =
-                Lists.newArrayList()
-            // keep track of the names already added. This is because we show where the items
-            // come from so we cannot just put everything a map and let the new ones override the
-            // old ones.
-            val usedFieldNames: MutableSet<String> = Sets.newHashSet()
-            var list: Collection<ClassField> = mResValues.values
-            if (!list.isEmpty()) {
-                fullList.add("Values from the variant")
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            list = buildType.resValues.values
-            if (!list.isEmpty()) {
-                fullList.add("Values from build type: " + buildType.name)
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            for (flavor in productFlavors) {
-                list = flavor.resValues.values
-                if (!list.isEmpty()) {
-                    fullList.add("Values from product flavor: " + flavor.name)
-                    fillFieldList(fullList, usedFieldNames, list)
-                }
-            }
-            list = defaultConfig.resValues.values
-            if (!list.isEmpty()) {
-                fullList.add("Values from default config.")
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            return fullList
-        }
 
     val signingConfig: SigningConfig?
-        get() {
-            if (variantType.isDynamicFeature) {
-                return null
-            }
-            if (signingConfigOverride != null) {
-                return signingConfigOverride
-            }
-            val signingConfig: SigningConfig? = buildType.signingConfig
-            // cast builder.SigningConfig to dsl.SigningConfig because MergedFlavor merges
-            // dsl.SigningConfig of ProductFlavor objects
-            return signingConfig ?: mergedFlavor.signingConfig as SigningConfig?
-        }
 
     val isSigningReady: Boolean
-        get() {
-            val signingConfig = signingConfig
-            return signingConfig != null && signingConfig.isSigningReady
-        }
 
     val isTestCoverageEnabled: Boolean
-        get() = buildType.isTestCoverageEnabled// so far, blindly override the build type placeholders
 
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build
@@ -714,96 +346,30 @@ open class VariantDslInfo internal constructor(
      * @return the merged manifest placeholders for a build variant.
      */
     val manifestPlaceholders: Map<String, Any>
-        get() {
-            val mergedFlavorsPlaceholders =
-                mergedFlavor.manifestPlaceholders
-            // so far, blindly override the build type placeholders
-            mergedFlavorsPlaceholders.putAll(buildType.manifestPlaceholders)
-            return mergedFlavorsPlaceholders
-        }
 
     // Only require specific multidex opt-in for legacy multidex.
     val isMultiDexEnabled: Boolean
-        get() {
-            // Only require specific multidex opt-in for legacy multidex.
-            return buildType.multiDexEnabled
-                ?: mergedFlavor.multiDexEnabled
-                ?: (minSdkVersion.featureLevel >= 21)
-        }
 
     val multiDexKeepFile: File?
-        get() {
-            var value = buildType.multiDexKeepFile
-            if (value != null) {
-                return value
-            }
-            value = mergedFlavor.multiDexKeepFile
-            return value
-        }
 
     val multiDexKeepProguard: File?
-        get() {
-            var value = buildType.multiDexKeepProguard
-            if (value != null) {
-                return value
-            }
-            value = mergedFlavor.multiDexKeepProguard
-            return value
-        }
 
     val isLegacyMultiDexMode: Boolean
-        get() = dexingType === DexingType.LEGACY_MULTIDEX
 
     // dynamic features can always be build in native multidex mode
     val dexingType: DexingType
-        get() = if (variantType.isDynamicFeature) {
-            if (buildType.multiDexEnabled != null
-                || mergedFlavor.multiDexEnabled != null
-            ) {
-                issueReporter
-                    .reportWarning(
-                        EvalIssueReporter.Type.GENERIC,
-                        "Native multidex is always used for dynamic features. Please "
-                                + "remove 'multiDexEnabled true|false' from your "
-                                + "build.gradle file."
-                    )
-            }
-            // dynamic features can always be build in native multidex mode
-            DexingType.NATIVE_MULTIDEX
-        } else if (isMultiDexEnabled) {
-            if (minSdkVersion.featureLevel < 21) DexingType.LEGACY_MULTIDEX else DexingType.NATIVE_MULTIDEX
-        } else {
-            DexingType.MONO_DEX
-        }// default is false.
 
     /** Returns the renderscript support mode.  */
     val renderscriptSupportModeEnabled: Boolean
-        get() {
-            val value = mergedFlavor.renderscriptSupportModeEnabled
-            return value ?: false
-            // default is false.
-        }// default is false.
 
     /** Returns the renderscript BLAS support mode.  */
     val renderscriptSupportModeBlasEnabled: Boolean
-        get() {
-            val value = mergedFlavor.renderscriptSupportModeBlasEnabled
-            return value ?: false
-            // default is false.
-        }// default is false.
 
     /** Returns the renderscript NDK mode.  */
     val renderscriptNdkModeEnabled: Boolean
-        get() {
-            val value = mergedFlavor.renderscriptNdkModeEnabled
-            return value ?: false
-            // default is false.
-        }
 
     /** Returns true if the variant output is a bundle.  */
     val isBundled: Boolean
-        get() = variantType.isAar// Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
-// debuggable.
 
     /**
      * Returns the minimum SDK version for this variant, potentially overridden by a property passed
@@ -812,48 +378,10 @@ open class VariantDslInfo internal constructor(
      * @see .getMinSdkVersion
      */
     val minSdkVersionWithTargetDeviceApi: AndroidVersion
-        get() {
-            val targetApiLevel =
-                projectOptions[IntegerOption.IDE_TARGET_DEVICE_API]
-            return if (targetApiLevel != null && isMultiDexEnabled && buildType.isDebuggable) { // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
-// debuggable.
-                val minVersion: Int =
-                    if (targetSdkVersion.apiLevel > 1) Integer.min(
-                        targetSdkVersion.apiLevel,
-                        targetApiLevel
-                    ) else targetApiLevel
-                AndroidVersion(minVersion)
-            } else {
-                minSdkVersion
-            }
-        }
-
-    /**
-     * Merge Gradle specific options from build types, product flavors and default config.
-     */
-    private fun mergeOptions() {
-        computeMergedOptions(
-            mergedJavaCompileOptions,
-            { javaCompileOptions },
-            { javaCompileOptions }
-        )
-        computeMergedOptions(
-            mergedNdkConfig,
-            { ndkConfig },
-            { ndkConfig }
-        )
-        computeMergedOptions(
-            mergedExternalNativeBuildOptions,
-            { externalNativeBuildOptions },
-            { externalNativeBuildOptions }
-        )
-    }
 
     val ndkConfig: CoreNdkOptions
-        get() = mergedNdkConfig
 
     val externalNativeBuildOptions: CoreExternalNativeBuildOptions
-        get() = mergedExternalNativeBuildOptions
 
     /**
      * Returns the ABI filters associated with the artifact, or null if there are no filters.
@@ -862,178 +390,15 @@ open class VariantDslInfo internal constructor(
      * others.
      */
     val supportedAbis: Set<String>?
-        get() = mergedNdkConfig.abiFilters
 
-    /**
-     * Merge a specific option in GradleVariantConfiguration.
-     *
-     *
-     * It is assumed that merged option type with a method to reset and append is created for the
-     * option being merged.
-     *
-     *
-     * The order of priority is BuildType, ProductFlavors, and default config. ProductFlavor
-     * added earlier has higher priority than ProductFlavor added later.
-     *
-     * @param mergedOption The merged option store in the GradleVariantConfiguration.
-     * @param productFlavorOptionGetter A Function to return the option from a ProductFlavor.
-     * @param getBuildTypeOption A Function to return the option from a BuildType.
-     * @param reset A method to return 'option' to its default state.
-     * @param append A BiConsumer to combine two options into one. Option in second input argument
-     * takes priority and overwrite option in the first input argument.
-     * @param <CoreOptionsT> The core type of the option being merge.
-     * @param <MergedOptionsT> The merge option type.
-    </MergedOptionsT></CoreOptionsT> */
-    private fun <CoreOptionsT, MergedOptionsT: MergedOptions<CoreOptionsT>> computeMergedOptions(
-        mergedOption: MergedOptionsT,
-        getFlavorOption: BaseFlavor.() -> CoreOptionsT?,
-        getBuildTypeOption: BuildType.() -> CoreOptionsT?
-    ) {
-        mergedOption.reset()
 
-        val defaultOption = defaultConfig.getFlavorOption()
-        if (defaultOption != null) {
-            mergedOption.append(defaultOption)
-        }
-        // reverse loop for proper order
-        for (i in productFlavors.indices.reversed()) {
-            val flavorOption = productFlavors[i].getFlavorOption()
-            if (flavorOption != null) {
-                mergedOption.append(flavorOption)
-            }
-        }
-        val buildTypeOption = buildType.getBuildTypeOption()
-        if (buildTypeOption != null) {
-            mergedOption.append(buildTypeOption)
-        }
-    }
+    fun gatherProguardFiles(type: ProguardFileType): List<File>
 
     val javaCompileOptions: JavaCompileOptions
-        get() = mergedJavaCompileOptions
 
-    /** Returns a status code indicating whether Instant Run is supported and why.  */
-    fun getInstantRunSupportStatus(globalScope: GlobalScope): Int {
-        return InstantRun.STATUS_REMOVED
-    }
+    fun createOldPostProcessingOptions(project: Project) : PostProcessingOptions
 
-    // add the lower priority one, to override them with the higher priority ones.
-    // cant use merge flavor as it's not a prop on the base class.
-    // reverse loop for proper order
     val defaultGlslcArgs: List<String>
-        get() {
-            val optionMap: MutableMap<String, String> =
-                Maps.newHashMap()
-            // add the lower priority one, to override them with the higher priority ones.
-            for (option in defaultConfig.shaders.glslcArgs) {
-                optionMap[getKey(option)] = option
-            }
-            // cant use merge flavor as it's not a prop on the base class.
-            // reverse loop for proper order
-            for (i in productFlavors.indices.reversed()) {
-                for (option in productFlavors[i].shaders.glslcArgs) {
-                    optionMap[getKey(option)] = option
-                }
-            }
-            // then the build type
-            for (option in buildType.shaders.glslcArgs) {
-                optionMap[getKey(option)] = option
-            }
-            return Lists.newArrayList(optionMap.values)
-        }
 
-    // first collect all possible keys.
     val scopedGlslcArgs: Map<String, List<String>>
-        get() {
-            val scopedArgs: MutableMap<String, List<String>> =
-                Maps.newHashMap()
-            // first collect all possible keys.
-            val keys = scopedGlslcKeys
-            for (key in keys) { // first add to a temp map to resolve overridden values
-                val optionMap: MutableMap<String, String> =
-                    Maps.newHashMap()
-                // we're going to go from lower priority, to higher priority elements, and for each
-                // start with the non scoped version, and then add the scoped version.
-                // 1. default config, global.
-                for (option in defaultConfig.shaders.glslcArgs) {
-                    optionMap[getKey(option)] = option
-                }
-                // 1b. default config, scoped.
-                for (option in defaultConfig.shaders.scopedGlslcArgs[key]) {
-                    optionMap[getKey(option)] = option
-                }
-                // 2. the flavors.
-                // cant use merge flavor as it's not a prop on the base class.
-                // reverse loop for proper order
-                for (i in productFlavors.indices.reversed()) { // global
-                    for (option in productFlavors[i].shaders.glslcArgs) {
-                        optionMap[getKey(option)] = option
-                    }
-                    // scoped.
-                    for (option in productFlavors[i].shaders.scopedGlslcArgs[key]) {
-                        optionMap[getKey(option)] = option
-                    }
-                }
-                // 3. the build type, global
-                for (option in buildType.shaders.glslcArgs) {
-                    optionMap[getKey(option)] = option
-                }
-                // 3b. the build type, scoped.
-                for (option in buildType.shaders.scopedGlslcArgs[key]) {
-                    optionMap[getKey(option)] = option
-                }
-                // now add the full value list.
-                scopedArgs[key] = ImmutableList.copyOf(optionMap.values)
-            }
-            return scopedArgs
-        }
-
-    private val scopedGlslcKeys: Set<String>
-        get() {
-            val keys: MutableSet<String> =
-                Sets.newHashSet()
-            keys.addAll(defaultConfig.shaders.scopedGlslcArgs.keySet())
-            for (flavor in productFlavors) {
-                keys.addAll(flavor.shaders.scopedGlslcArgs.keySet())
-            }
-            keys.addAll(buildType.shaders.scopedGlslcArgs.keySet())
-            return keys
-        }
-
-    companion object {
-
-        private const val DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner"
-        private const val MULTIDEX_TEST_RUNNER =
-            "com.android.test.runner.MultiDexTestRunner"
-        private const val DEFAULT_HANDLE_PROFILING = false
-        private const val DEFAULT_FUNCTIONAL_TEST = false
-
-        /**
-         * Fills a list of Object from a given list of ClassField only if the name isn't in a set. Each
-         * new item added adds its name to the list.
-         *
-         * @param outList the out list
-         * @param usedFieldNames the list of field names already in the list
-         * @param list the list to copy items from
-         */
-        private fun fillFieldList(
-            outList: MutableList<Any>,
-            usedFieldNames: MutableSet<String>,
-            list: Collection<ClassField>
-        ) {
-            for (f in list) {
-                val name = f.name
-                if (!usedFieldNames.contains(name)) {
-                    usedFieldNames.add(f.name)
-                    outList.add(f)
-                }
-            }
-        }
-
-        private fun getKey(fullOption: String): String {
-            val pos = fullOption.lastIndexOf('=')
-            return if (pos == -1) {
-                fullOption
-            } else fullOption.substring(0, pos)
-        }
-    }
 }

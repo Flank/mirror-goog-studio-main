@@ -245,6 +245,20 @@ public class BuildType extends AbstractBuildType
     }
 
     @Override
+    public boolean isDefault() {
+        return this.isDefault.get();
+    }
+
+    @Override
+    public void setDefault(boolean isDefault) {
+        this.isDefault.set(isDefault);
+    }
+
+    public void setIsDefault(boolean isDefault) {
+        this.isDefault.set(isDefault);
+    }
+
+    @Override
     protected void _initWith(@NonNull BaseConfig that) {
         super._initWith(that);
         BuildType thatBuildType = (BuildType) that;
@@ -261,7 +275,7 @@ public class BuildType extends AbstractBuildType
         isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
         matchingFallbacks = ImmutableList.copyOf(thatBuildType.getMatchingFallbacks());
         // we don't want to dynamically link these values. We just want to copy the current value.
-        isDefault.set(thatBuildType.getIsDefault().get());
+        isDefault.set(thatBuildType.isDefault());
     }
 
     /** Override as DSL objects have no reason to be compared for equality. */

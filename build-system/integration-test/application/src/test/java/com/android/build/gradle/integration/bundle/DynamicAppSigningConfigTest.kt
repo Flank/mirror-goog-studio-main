@@ -61,14 +61,12 @@ class DynamicAppSigningConfigTest {
         val container = project.model().ignoreSyncIssues().fetchAndroidProjects()
 
         assertThat(container).rootBuild().project(":feature1")
-                .hasSingleIssue(
-                        EvalIssueReporter.Severity.WARNING.severity,
-                        SyncIssue.TYPE_SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
-                        null,
-                    "Signing configuration should not be declared in the "
-                            + "dynamic-feature. Dynamic-features use the signing configuration "
-                            + "declared in the application module."
-                )
+            .hasSingleIssue(
+                EvalIssueReporter.Severity.WARNING.severity,
+                SyncIssue.TYPE_SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
+                null,
+                "Signing configuration should not be declared in build types of dynamic-feature. Dynamic-features use the signing configuration declared in the application module."
+            )
     }
 
     @Test

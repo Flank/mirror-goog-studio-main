@@ -22,4 +22,5 @@ import org.gradle.api.Named
 /** DSL object to configure build types. */
 @Incubating
 interface BuildType: Named {
+    var isDefault: Boolean
 }

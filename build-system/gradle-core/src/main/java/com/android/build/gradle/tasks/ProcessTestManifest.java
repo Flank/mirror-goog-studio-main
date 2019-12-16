@@ -174,6 +174,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                 getTmpDir());
 
         new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        getTestApplicationId().get(),
+                        getVariantType().get(),
                         ImmutableList.of(
                                 new BuildOutput(
                                         MERGED_MANIFESTS.INSTANCE,
@@ -440,6 +443,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     public abstract Property<Boolean> getFunctionalTest();
 
     @Input
+    public abstract Property<String> getVariantType();
+
+    @Input
     @Optional
     public abstract Property<String> getTestLabel();
 
@@ -554,6 +560,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.getTestManifestFile().disallowChanges();
 
             task.outputScope = getVariantScope().getOutputScope();
+
+            task.getVariantType().set(getVariantScope().getVariantData().getType().toString());
+            task.getVariantType().disallowChanges();
 
             task.setTmpDir(
                     FileUtils.join(

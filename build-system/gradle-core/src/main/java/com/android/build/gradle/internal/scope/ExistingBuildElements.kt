@@ -21,6 +21,7 @@ import com.android.build.FilterData
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.ide.FilterDataImpl
+import com.android.builder.core.VariantTypeImpl
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
@@ -44,7 +45,7 @@ class ExistingBuildElements {
 
     companion object {
 
-        private const val METADATA_FILE_NAME = "output.json"
+        const val METADATA_FILE_NAME = "output.json"
 
         /**
          * create a [BuildElements] from an existing [Directory].
@@ -55,7 +56,10 @@ class ExistingBuildElements {
         fun from(artifactType: ArtifactType<Directory>, directoryProvider: Provider<Directory>): BuildElements {
             return if (directoryProvider.isPresent) {
                 from(artifactType, directoryProvider.get().asFile)
-            } else BuildElements(listOf())
+            } else BuildElements(version = BuildElements.METADATA_FILE_VERSION,
+                applicationId = "",
+                variantType = VariantTypeImpl.BASE_APK.toString(),
+                elements = listOf())
         }
 
         /**
@@ -97,16 +101,22 @@ class ExistingBuildElements {
             elementType: ArtifactType<Directory>?,
                 metadataFile: File?): BuildElements {
             if (metadataFile == null || !metadataFile.exists()) {
-                return BuildElements(ImmutableList.of())
+                return BuildElements(version = BuildElements.METADATA_FILE_VERSION,
+                    applicationId = "",
+                    variantType = VariantTypeImpl.BASE_APK.toString(),
+                    elements = ImmutableList.of())
             }
             try {
                 FileReader(metadataFile).use { reader ->
-                    return BuildElements(load(metadataFile.parentFile.toPath(),
+                    return load(metadataFile.parentFile.toPath(),
                         elementType,
-                        reader))
+                        reader)
                 }
             } catch (e: IOException) {
-                return BuildElements(ImmutableList.of<BuildOutput>())
+                return BuildElements(version = BuildElements.METADATA_FILE_VERSION,
+                    applicationId = "",
+                    variantType = VariantTypeImpl.BASE_APK.toString(),
+                    elements = ImmutableList.of<BuildOutput>())
             }
         }
 
@@ -152,7 +162,7 @@ class ExistingBuildElements {
         fun load(
                 projectPath: Path,
                 outputType: ArtifactType<Directory>?,
-                reader: Reader): Collection<BuildOutput> {
+                reader: Reader): BuildElements {
             val gsonBuilder = GsonBuilder()
 
             gsonBuilder.registerTypeAdapter(ApkData::class.java, ApkDataAdapter())
@@ -160,10 +170,13 @@ class ExistingBuildElements {
                     ArtifactType::class.java,
                     OutputTypeTypeAdapter())
             val gson = gsonBuilder.create()
-            val recordType = object : TypeToken<List<BuildOutput>>() {}.type
-            val buildOutputs = gson.fromJson<Collection<BuildOutput>>(reader, recordType)
+            val buildOutputs = gson.fromJson<BuildElements>(reader, BuildElements::class.java)
             // resolve the file path to the current project location.
-            return buildOutputs
+            return BuildElements(
+                version = buildOutputs.version,
+                applicationId = buildOutputs.applicationId,
+                variantType = buildOutputs.variantType,
+                elements = buildOutputs
                     .asSequence()
                     .filter { outputType == null || it.type.name() == outputType.name() }
                     .map { buildOutput ->
@@ -173,7 +186,7 @@ class ExistingBuildElements {
                                 projectPath.resolve(buildOutput.outputPath),
                                 buildOutput.properties)
                     }
-                    .toList()
+                    .toList())
         }
     }
 

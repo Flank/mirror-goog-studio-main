@@ -33,6 +33,8 @@ public class TestActivity extends Activity {
         counter++;
     }
 
+    public static StaticVarInit.BgThread staticVarInit = null;
+
     public static void updateAppInfo() {
         ActivityThread.currentActivityThread()
                 .getApplicationThread()
@@ -87,5 +89,37 @@ public class TestActivity extends Activity {
     public void getNewClassStatus() {
         System.out.println(
                 "public=" + new Wrapper().getPublic() + "package=" + new Wrapper().getPackage());
+    }
+
+    public void startBackgroundThread() throws Exception {
+        staticVarInit = new StaticVarInit.BgThread();
+        System.out.println(staticVarInit.startThread());
+    }
+
+    public void waitBackgroundThread() throws Exception {
+        System.out.println(staticVarInit.waitThread());
+    }
+
+    public void getStaticFinalInt() {
+        int x = -1;
+
+        try {
+            x =
+                    StaticVarInit.AddStaticFinalInt.class
+                            .getDeclaredField("X")
+                            .getInt(StaticVarInit.AddStaticFinalInt.class);
+        } catch (IllegalAccessException e) {
+            System.out.println("IllegalAccessException on StaticVarInit.AddStaticFinalInt.X");
+            return;
+        } catch (NoSuchFieldException e) {
+            System.out.println("NoSuchFieldException on StaticVarInit.AddStaticFinalInt.X");
+            return;
+        }
+
+        System.out.println("StaticVarInit.X = " + x);
+    }
+
+    public void getStaticIntFromVirtual() {
+        System.out.println("getStaticIntFromVirtual = " + new StaticVarInit().virtualGetY());
     }
 }

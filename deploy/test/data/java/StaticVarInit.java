@@ -17,10 +17,24 @@ package app;
 
 import java.util.concurrent.CountDownLatch;
 
-public class StaticVarInit {
+// TODO: These redefinition only works on final class right now.
+public final class StaticVarInit {
     public static class AddStaticFinalInt {
-        // public static final int X = 0; // Will be added in swap.
+        // public static final int X = 99; // Will be added in swap.
     }
+
+    // Will be added in swap.
+    // public static int Y = 89;
+
+    // Will be added in swap.
+    // public static int staticGetY() {
+    //    return Y;
+    //}
+
+    public int virtualGetY() {
+        return -89; // Will be changed to staticGetY();
+    }
+
 
     public static class BgThread {
         private final CountDownLatch counter1 = new CountDownLatch(1);

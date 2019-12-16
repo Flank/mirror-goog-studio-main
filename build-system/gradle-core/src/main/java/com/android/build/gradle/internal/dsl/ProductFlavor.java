@@ -156,6 +156,20 @@ public class ProductFlavor extends BaseFlavor implements com.android.build.api.d
     }
 
     @Override
+    public boolean isDefault() {
+        return isDefault.get();
+    }
+
+    @Override
+    public void setDefault(boolean isDefault) {
+        this.isDefault.set(isDefault);
+    }
+
+    public void setIsDefault(boolean isDefault) {
+        this.isDefault.set(isDefault);
+    }
+
+    @Override
     @NonNull
     protected DimensionRequest computeRequestedAndFallBacks(@NonNull List<String> requestedValues) {
         // in order to have different fallbacks per variant for missing dimensions, we are

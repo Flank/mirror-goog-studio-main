@@ -242,9 +242,9 @@ public class AdbInstaller implements Installer {
             throw new IOException("Unsupported abis: " + Arrays.toString(abis.toArray()));
         }
 
-        adb.shell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY}, null);
+        adb.shell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY});
         adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
-        adb.shell(new String[] {"chmod", "+x", INSTALLER_PATH}, null);
+        adb.shell(new String[] {"chmod", "+x", INSTALLER_PATH});
 
         installerFile.delete();
     }

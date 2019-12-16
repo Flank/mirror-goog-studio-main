@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
 
-open class BuildFeaturesImpl : BuildFeatures {
+abstract class BuildFeaturesImpl : BuildFeatures {
     override var aidl: Boolean? = null
     override var compose: Boolean? = null
     override var buildConfig: Boolean? = null

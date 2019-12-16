@@ -16,19 +16,16 @@
 
 package com.android.build.gradle.options;
 
-import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
@@ -41,51 +38,19 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private final ImmutableMap<RemovedOptions, String> removedOptions;
+    private final ImmutableMap<ReplacedOption, String> replacedOptions;
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
-    private final ImmutableSet<Option<?>> deprecatedOptions;
-    private final ImmutableMap<Option<?>, String> experimentalOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
-        ImmutableSet.Builder<Option<?>> deprecatedOptionsBuilder = ImmutableSet.builder();
-        ImmutableMap.Builder<Option<?>, String> experimentalOptionsBuilder = ImmutableMap.builder();
-
-        removedOptions =
-                readOptions(
-                        RemovedOptions.values(),
-                        properties,
-                        deprecatedOptionsBuilder,
-                        experimentalOptionsBuilder);
-        booleanOptions =
-                readOptions(
-                        BooleanOption.values(),
-                        properties,
-                        deprecatedOptionsBuilder,
-                        experimentalOptionsBuilder);
-        optionalBooleanOptions =
-                readOptions(
-                        OptionalBooleanOption.values(),
-                        properties,
-                        deprecatedOptionsBuilder,
-                        experimentalOptionsBuilder);
-        integerOptions =
-                readOptions(
-                        IntegerOption.values(),
-                        properties,
-                        deprecatedOptionsBuilder,
-                        experimentalOptionsBuilder);
-        stringOptions =
-                readOptions(
-                        StringOption.values(),
-                        properties,
-                        deprecatedOptionsBuilder,
-                        experimentalOptionsBuilder);
-        deprecatedOptions = deprecatedOptionsBuilder.build();
-        experimentalOptions = experimentalOptionsBuilder.build();
+        replacedOptions = readOptions(ReplacedOption.values(), properties);
+        booleanOptions = readOptions(BooleanOption.values(), properties);
+        optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
+        integerOptions = readOptions(IntegerOption.values(), properties);
+        stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
     }
 
@@ -135,10 +100,7 @@ public final class ProjectOptions {
     @NonNull
     private static <OptionT extends Option<ValueT>, ValueT>
             ImmutableMap<OptionT, ValueT> readOptions(
-                    @NonNull OptionT[] values,
-                    @NonNull Map<String, ?> properties,
-                    @NonNull ImmutableSet.Builder<Option<?>> deprecatedOptions,
-                    @NonNull ImmutableMap.Builder<Option<?>, String> experimentalOptions) {
+                    @NonNull OptionT[] values, @NonNull Map<String, ?> properties) {
         Map<String, OptionT> optionLookup =
                 Arrays.stream(values).collect(Collectors.toMap(Option::getPropertyName, v -> v));
         ImmutableMap.Builder<OptionT, ValueT> valuesBuilder = ImmutableMap.builder();
@@ -147,13 +109,6 @@ public final class ProjectOptions {
             if (option != null) {
                 ValueT value = option.parse(property.getValue());
                 valuesBuilder.put(option, value);
-                if (!Objects.equals(option.getDefaultValue(), value)) {
-                    if (option.getStatus() instanceof Option.Status.Deprecated) {
-                        deprecatedOptions.add(option);
-                    } else if (option.getStatus() == Option.Status.EXPERIMENTAL.INSTANCE) {
-                        experimentalOptions.put(option, value.toString());
-                    }
-                }
             }
         }
         return valuesBuilder.build();
@@ -212,28 +167,6 @@ public final class ProjectOptions {
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
 
-    public boolean hasRemovedOptions() {
-        return !removedOptions.isEmpty();
-    }
-
-    @NonNull
-    public String getRemovedOptionsErrorMessage() {
-        Preconditions.check(
-                hasRemovedOptions(),
-                "Has removed options should be checked before calling this method.");
-        StringBuilder builder =
-                new StringBuilder(
-                        "The following project options are deprecated and have been removed: \n");
-        removedOptions.forEach(
-                (option, errorMessage) -> {
-                    builder.append(option.getPropertyName())
-                            .append("\n")
-                            .append(errorMessage)
-                            .append("\n\n");
-                });
-        return builder.toString();
-    }
-
     public ImmutableMap<BooleanOption, Boolean> getExplicitlySetBooleanOptions() {
         return booleanOptions;
     }
@@ -250,15 +183,13 @@ public final class ProjectOptions {
         return stringOptions;
     }
 
-    public boolean hasDeprecatedOptions() {
-        return !deprecatedOptions.isEmpty();
-    }
-
-    public ImmutableSet<Option<?>> getDeprecatedOptions() {
-        return deprecatedOptions;
-    }
-
-    public ImmutableMap<Option<?>, String> getExperimentalOptions() {
-        return experimentalOptions;
+    public ImmutableMap<Option<?>, Object> getAllOptions() {
+        return new ImmutableMap.Builder()
+                .putAll(replacedOptions)
+                .putAll(booleanOptions)
+                .putAll(optionalBooleanOptions)
+                .putAll(integerOptions)
+                .putAll(stringOptions)
+                .build();
     }
 }

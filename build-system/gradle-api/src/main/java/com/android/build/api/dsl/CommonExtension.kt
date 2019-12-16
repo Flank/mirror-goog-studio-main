@@ -31,10 +31,16 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 @Incubating
 interface CommonExtension<
+        BuildFeaturesT: BuildFeatures,
         BuildTypeT : BuildType,
+        CMakeOptionsT: CmakeOptions,
         DefaultConfigT : DefaultConfig,
+        ExternalNativeBuildT: ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        NdkBuildOptionsT: NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
+        TestOptionsT: TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT: UnitTestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
@@ -61,6 +67,16 @@ interface CommonExtension<
     fun compileSdkVersion(version: String)
     /** @see compileSdkVersion */
     fun compileSdkVersion(apiLevel: Int)
+
+    /**
+     * A list of build features that can be enabled or disabled on the Android Project.
+     */
+    val buildFeatures: BuildFeaturesT
+
+    /**
+     * A list of build features that can be enabled or disabled on the Android Project.
+     */
+    fun buildFeatures(action: BuildFeaturesT.() -> Unit)
 
     /**
      * Encapsulates all build type configurations for this project.
@@ -189,6 +205,61 @@ interface CommonExtension<
      * see [SigningConfig].
      */
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)
+
+
+    /**
+     * Specifies options for external native build using [CMake](https://cmake.org/) or
+     * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
+     *
+     *
+     * When using
+     * [Android Studio 2.2 or higher](https://developer.android.com/studio/index.html) with
+     * [Android plugin 2.2.0 or higher](https://developer.android.com/studio/releases/gradle-plugin.html),
+     * you can compile C and C++ code into a native library that Gradle packages into your APK.
+     *
+     *
+     * To learn more, read
+     * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html).
+     *
+     * @see ExternalNativeBuild
+     *
+     * @since 2.2.0
+     */
+
+    val externalNativeBuild: ExternalNativeBuildT
+    /**
+     * Specifies options for external native build using [CMake](https://cmake.org/) or
+     * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
+     *
+     *
+     * When using
+     * [Android Studio 2.2 or higher](https://developer.android.com/studio/index.html) with
+     * [Android plugin 2.2.0 or higher](https://developer.android.com/studio/releases/gradle-plugin.html),
+     * you can compile C and C++ code into a native library that Gradle packages into your APK.
+     *
+     *
+     * To learn more, read
+     * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html).
+     *
+     * @see ExternalNativeBuild
+     *
+     * @since 2.2.0
+     */
+    fun externalNativeBuild(action: ExternalNativeBuildT.()->Unit)
+
+    /**
+     * Specifies options for how the Android plugin should run local and instrumented tests.
+     *
+     * For more information about the properties you can configure in this block, see [TestOptions].
+     */
+    val testOptions: TestOptionsT
+
+    /**
+     * Specifies options for how the Android plugin should run local and instrumented tests.
+     *
+     * For more information about the properties you can configure in this block, see [TestOptions].
+     */
+    fun testOptions(action: TestOptionsT.() -> Unit)
 
     /**
      * Adds a [Action] to be performed on all [Variant] objects associated with this module.

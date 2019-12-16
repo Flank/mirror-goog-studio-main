@@ -24,6 +24,7 @@ dependencies {
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')
+    compile testFixtures(project(":base:repository"))
 
     compile libs.kotlin_stdlib
 

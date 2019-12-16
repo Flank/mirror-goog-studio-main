@@ -18,27 +18,15 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.model.CoreNdkBuildOptions;
 import java.io.File;
 import javax.inject.Inject;
-import org.gradle.api.Project;
 
-/**
- * DSL object for per-module ndk-build configurations, such as the path to your <code>Android.mk
- * </code> build script and external native build output directory.
- *
- * <p>To include ndk-build projects in your Gradle build, you need to use Android Studio 2.2 and
- * higher with Android plugin for Gradle 2.2.0 and higher. To learn more about Android Studio's
- * support for external native builds, read <a
- * href="https://developer.android.com/studio/projects/add-native-code.html">Add C and C++ Code to
- * Your Project</a>.
- *
- * <p>If you want to instead build your native libraries using CMake, see {@link
- * com.android.build.gradle.internal.dsl.CmakeOptions}.
- */
-public class NdkBuildOptions implements CoreNdkBuildOptions {
-    @NonNull
-    private final Project project;
+/** See {@link com.android.build.api.dsl.NdkBuildOptions} */
+public class NdkBuildOptions
+        implements CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuildOptions {
+    @NonNull private final DslScope dslScope;
 
     @Nullable
     private File path;
@@ -46,8 +34,8 @@ public class NdkBuildOptions implements CoreNdkBuildOptions {
     @Nullable private File buildStagingDirectory;
 
     @Inject
-    public NdkBuildOptions(@NonNull Project project) {
-        this.project = project;
+    public NdkBuildOptions(@NonNull DslScope dslScope) {
+        this.dslScope = dslScope;
     }
 
     /**
@@ -79,7 +67,7 @@ public class NdkBuildOptions implements CoreNdkBuildOptions {
     }
 
     public void setPath(@NonNull Object path) {
-        this.path = project.file(path);
+        this.path = dslScope.file(path);
     }
 
     @Override
@@ -124,10 +112,10 @@ public class NdkBuildOptions implements CoreNdkBuildOptions {
 
     @Override
     public void setBuildStagingDirectory(@NonNull File buildStagingDirectory) {
-        this.buildStagingDirectory = project.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 
     public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = project.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 }

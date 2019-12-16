@@ -144,7 +144,12 @@ public class PackageAndroidArtifactTest {
                                         -1),
                                 new File("/tmp/fileen.out")));
 
-        PackageAndroidArtifact.checkFileNameUniqueness(new BuildElements(outputFiles));
+        PackageAndroidArtifact.checkFileNameUniqueness(
+                new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        "com.app.example",
+                        "debug",
+                        outputFiles));
     }
 
     @Test
@@ -170,7 +175,12 @@ public class PackageAndroidArtifactTest {
                                         -1),
                                 new File("/tmp/file.out")));
         try {
-            PackageAndroidArtifact.checkFileNameUniqueness(new BuildElements(outputFiles));
+            PackageAndroidArtifact.checkFileNameUniqueness(
+                    new BuildElements(
+                            BuildElements.METADATA_FILE_VERSION,
+                            "com.app.example",
+                            "debug",
+                            outputFiles));
         } catch (Exception e) {
             assertThat(e.getMessage())
                     .contains(

@@ -34,7 +34,6 @@
 
 namespace deploy {
 
-namespace {
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/InstrumentationHooks";
@@ -44,7 +43,7 @@ const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
 const std::string kInstrumentationJarName =
     "instruments-"_s + instrumentation_jar_hash + ".jar";
 
-static unordered_map<string, Transform*> transforms;
+const Transform* current_transform = nullptr;
 
 #define FILE_MODE (S_IRUSR | S_IWUSR)
 
@@ -107,6 +106,22 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
   return true;
 }
 
+bool ApplyTransform(jvmtiEnv* jvmti, JNIEnv* jni, const Transform& transform) {
+  jclass klass = jni->FindClass(transform.GetClassName().c_str());
+  if (jni->ExceptionCheck()) {
+    ErrEvent("Could not find class for instrumentation: " +
+             transform.GetClassName());
+    jni->ExceptionClear();
+    return false;
+  }
+  current_transform = &transform;
+  bool success =
+      CheckJvmti(jvmti->RetransformClasses(1, &klass),
+                 "Could not retransform class: " + transform.GetClassName());
+  jni->DeleteLocalRef(klass);
+  return success;
+}
+
 bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
   // The breadcrumb class stores some checks between runs of the agent.
   // We can't use the class from the FindClass call because it may not have
@@ -135,62 +150,37 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
     return true;
   }
 
+  const Transform activity_thread = Transform(
+      "android/app/ActivityThread", "handleDispatchPackageBroadcast",
+      "(I[Ljava/lang/String;)V", "handleDispatchPackageBroadcastEntry",
+      "handleDispatchPackageBroadcastExit");
+
+  const Transform dex_path_list = Transform(
+      "dalvik/system/DexPathList$Element", "findResource",
+      "(Ljava/lang/String;)Ljava/net/URL;", "handleFindResourceEntry", "");
+
   bool success = true;
-  std::vector<jclass> classes;
-  for (auto& transform : GetTransforms()) {
-    jclass klass = jni->FindClass(transform.first.c_str());
-    if (jni->ExceptionCheck()) {
-      ErrEvent("Could not find class for instrumentation: " + transform.first);
-      jni->ExceptionClear();
-      success = false;
-    }
-    classes.emplace_back(klass);
-  }
+  success &=
+      CheckJvmti(jvmti->SetEventNotificationMode(
+                     JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
+                 "Could not enable class file load hook event");
 
-  if (success) {
-    success &=
-        CheckJvmti(jvmti->SetEventNotificationMode(
-                       JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
-                   "Could not enable class file load hook event");
-    success &=
-        CheckJvmti(jvmti->RetransformClasses(classes.size(), classes.data()),
-                   "Could not retransform classes");
+  success &= ApplyTransform(jvmti, jni, activity_thread);
+  success &= ApplyTransform(jvmti, jni, dex_path_list);
 
-    // Failing to disable this event does not actually have any bearing on
-    // whether or not instrumentation was a success, so we do not modify the
-    // success flag.
-    CheckJvmti(jvmti->SetEventNotificationMode(
-                   JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
-               "Could not disable class file load hook event");
-  }
+  // Failing to disable this event does not actually have any bearing on
+  // whether or not instrumentation was a success, so we do not modify the
+  // success flag.
+  CheckJvmti(jvmti->SetEventNotificationMode(
+                 JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
+             "Could not disable class file load hook event");
 
   if (success) {
     breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
     LogEvent("Finished instrumenting");
   }
 
-  DeleteTransforms();
-  for (jclass klass : classes) {
-    jni->DeleteLocalRef(klass);
-  }
-
   return success;
-}
-}  // namespace
-
-void AddTransform(Transform* transform) {
-  transforms[transform->GetClassName()] = transform;
-}
-
-const unordered_map<std::string, Transform*>& GetTransforms() {
-  return transforms;
-}
-
-// The agent never truly "exits", so we need to take extra care to free memory.
-void DeleteTransforms() {
-  for (auto& transform : transforms) {
-    delete transform.second;
-  }
 }
 
 // Event that fires when the agent loads a class file.
@@ -199,13 +189,13 @@ extern "C" void JNICALL Agent_ClassFileLoadHook(
     const char* name, jobject protection_domain, jint class_data_len,
     const unsigned char* class_data, jint* new_class_data_len,
     unsigned char** new_class_data) {
-  auto iter = GetTransforms().find(name);
-  if (iter == GetTransforms().end()) {
+  if (current_transform == nullptr ||
+      current_transform->GetClassName() != name) {
     return;
   }
 
   // The class name needs to be in JNI-format.
-  string descriptor = "L" + iter->first + ";";
+  string descriptor = "L" + current_transform->GetClassName() + ";";
 
   dex::Reader reader(class_data, class_data_len);
   auto class_index = reader.FindClassIndex(descriptor.c_str());
@@ -216,7 +206,7 @@ extern "C" void JNICALL Agent_ClassFileLoadHook(
 
   reader.CreateClassIr(class_index);
   auto dex_ir = reader.GetIr();
-  iter->second->Apply(dex_ir);
+  current_transform->Apply(dex_ir);
 
   size_t new_image_size = 0;
   dex::u1* new_image = nullptr;
@@ -252,9 +242,6 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     Log::E("Error loading instrumentation dex.");
     return false;
   }
-
-  AddTransform(new ActivityThreadTransform());
-  AddTransform(new DexPathListTransform());
 
   if (!Instrument(jvmti, jni, instrument_jar_path)) {
     Log::E("Error instrumenting application.");

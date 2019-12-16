@@ -202,7 +202,9 @@ abstract class SymbolTable protected constructor() {
     /** [ResourceType]s present in the table. */
     val resourceTypes: Set<ResourceType> get() = symbols.rowKeySet()
 
-    /** Builder that creates a symbol table.  */
+    /**
+     * Builder that creates a symbol table. Use [FastBuilder], if possible, instead of this class.
+     */
     class Builder {
 
         private var tablePackage = ""
@@ -326,25 +328,7 @@ abstract class SymbolTable protected constructor() {
          * @param tablePackage; must be a valid java package name
          */
         fun tablePackage(tablePackage: String): Builder {
-            if (!tablePackage.isEmpty() && !SourceVersion.isName(tablePackage)) {
-                for (segment in Splitter.on('.').split(tablePackage)) {
-                    if (!SourceVersion.isIdentifier(segment)) {
-                        throw IllegalArgumentException(
-                                "Package '$tablePackage' from AndroidManifest.xml is not a valid " +
-                                        "Java package name as '$segment' is not a valid Java " +
-                                        "identifier.")
-                    }
-                    if (SourceVersion.isKeyword(segment)) {
-                        throw IllegalArgumentException(
-                                "Package '$tablePackage' from AndroidManifest.xml is not a valid " +
-                                        "Java package name as '$segment' is a Java keyword.")
-                    }
-                }
-                // Shouldn't happen.
-                throw IllegalArgumentException(
-                        "Package '$tablePackage' from AndroidManifest.xml is not a valid Java " +
-                                "package name.")
-            }
+            verifyTablePackage(tablePackage)
             this.tablePackage = tablePackage
             return this
         }
@@ -398,6 +382,56 @@ abstract class SymbolTable protected constructor() {
         fun build(): SymbolTable {
             return SymbolTableImpl(tablePackage,
                     ImmutableTable.copyOf(symbols))
+        }
+    }
+
+    /**
+     * A builder that creates a symbol table. Use this class instead of [Builder], if possible.
+     */
+    class FastBuilder {
+
+        private var tablePackage = ""
+
+        private val symbols: ImmutableTable.Builder<ResourceType, String, Symbol> =
+            ImmutableTable.builder()
+
+        /**
+         * Adds a symbol to the table to be built. The table must not contain a symbol with the same
+         * resource type and name.
+         *
+         * @param symbol the symbol to add
+         */
+        fun add(symbol: Symbol) {
+            symbols.put(symbol.resourceType, symbol.canonicalName, symbol)
+        }
+
+        /**
+         * Adds all symbols in the given collection to the table. This is semantically equivalent
+         * to calling [.add] for all symbols.
+         *
+         * @param symbols the symbols to add
+         */
+        fun addAll(symbols: Collection<Symbol>) {
+            symbols.forEach { this.add(it) }
+        }
+
+        /**
+         * Sets the table package. See [SymbolTable] description.
+         *
+         * @param tablePackage; must be a valid java package name
+         */
+        fun tablePackage(tablePackage: String) {
+            verifyTablePackage(tablePackage)
+            this.tablePackage = tablePackage
+        }
+
+        /**
+         * Builds a symbol table with all symbols added.
+         *
+         * @return the symbol table
+         */
+        fun build(): SymbolTable {
+            return SymbolTableImpl(tablePackage, symbols.build())
         }
     }
 
@@ -496,4 +530,29 @@ abstract class SymbolTable protected constructor() {
     }
 
     class IllegalResourceVisibilityException(description: String) : Exception(description)
+}
+
+/**
+ * Verifies that tablePackage is valid. See [SymbolTable] description.
+ */
+private fun verifyTablePackage(tablePackage: String) {
+    if (tablePackage.isNotEmpty() && !SourceVersion.isName(tablePackage)) {
+        for (segment in Splitter.on('.').split(tablePackage)) {
+            if (!SourceVersion.isIdentifier(segment)) {
+                throw IllegalArgumentException(
+                    "Package '$tablePackage' from AndroidManifest.xml is not a valid " +
+                            "Java package name as '$segment' is not a valid Java " +
+                            "identifier.")
+            }
+            if (SourceVersion.isKeyword(segment)) {
+                throw IllegalArgumentException(
+                    "Package '$tablePackage' from AndroidManifest.xml is not a valid " +
+                            "Java package name as '$segment' is a Java keyword.")
+            }
+        }
+        // Shouldn't happen.
+        throw IllegalArgumentException(
+            "Package '$tablePackage' from AndroidManifest.xml is not a valid Java " +
+                    "package name.")
+    }
 }

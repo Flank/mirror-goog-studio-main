@@ -356,7 +356,7 @@ public class ApplicationTaskManager extends TaskManager {
         final VariantType variantType = scope.getType();
 
         if (variantType.isBaseModule()) {
-            Boolean unbundledWearApp = variantDslInfo.getMergedFlavor().getWearAppUnbundled();
+            Boolean unbundledWearApp = variantDslInfo.isWearAppUnbundled();
 
             if (!Boolean.TRUE.equals(unbundledWearApp)
                     && variantDslInfo.getBuildType().isEmbedMicroApp()) {

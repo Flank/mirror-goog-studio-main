@@ -89,8 +89,6 @@ abstract class AidlCompile : NonIncrementalTask() {
     @get:Inject
     abstract val execOperations: ExecOperations
 
-    private lateinit var javaEncoding: String
-
     // Given the same version, the path or contents of the AIDL tool may change across platforms,
     // but it would still produce the same output (given the same inputs)---see bug 138920846.
     // Therefore, the path or contents of the tool should not be an input. Instead, we set the
@@ -160,8 +158,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                 packageWhitelist,
                 DepFileProcessor(),
                 GradleProcessExecutor(execOperations::exec),
-                LoggedProcessOutputHandler(LoggerWrapper(logger)),
-                javaEncoding
+                LoggedProcessOutputHandler(LoggerWrapper(logger))
             )
 
             for (dir in sourceFolders) {
@@ -236,8 +233,6 @@ abstract class AidlCompile : NonIncrementalTask() {
             if (variantDslInfo.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
             }
-
-            task.javaEncoding = scope.globalScope.extension.compileOptions.encoding
         }
     }
 

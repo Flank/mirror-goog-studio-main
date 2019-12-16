@@ -71,7 +71,7 @@ class WorkerExecutorResourceCompilationService(
     if (useJvmResourceCompiler) {
       // First remove all values files to be consumed by the kotlin compiler.
       val valuesRequests = requests.filter {
-        canCompileResourceInJvm(it.inputFile)
+        canCompileResourceInJvm(it.inputFile, it.isPngCrunching)
       }
       requests.removeAll(valuesRequests)
       for (request in valuesRequests) {

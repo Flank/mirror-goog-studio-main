@@ -42,6 +42,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @NonNull private final String myName;
     @NonNull private final String myCompileTaskName;
+    @NonNull private final String myPostAssembleModelFile;
     @NonNull private final String myAssembleTaskName;
     @NonNull private final File myClassesFolder;
     @NonNull private final IdeDependencies myDependencies;
@@ -64,6 +65,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myName = "";
         myCompileTaskName = "";
         myAssembleTaskName = "";
+        myPostAssembleModelFile = "";
         //noinspection ConstantConditions
         myClassesFolder = null;
         myDependencies = new IdeDependenciesImpl();
@@ -90,6 +92,8 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myName = artifact.getName();
         myCompileTaskName = artifact.getCompileTaskName();
         myAssembleTaskName = artifact.getAssembleTaskName();
+        myPostAssembleModelFile =
+                IdeModel.copyNewProperty(artifact::getPostAssembleTaskModelFile, "");
         myClassesFolder = artifact.getClassesFolder();
         myJavaResourcesFolder = IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null);
         myDependencies = copy(artifact.getDependencies(), modelCache);
@@ -180,6 +184,12 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull
     public String getAssembleTaskName() {
         return myAssembleTaskName;
+    }
+
+    @NonNull
+    @Override
+    public String getPostAssembleTaskModelFile() {
+        return myPostAssembleModelFile;
     }
 
     @Override
@@ -284,6 +294,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 && Objects.equals(myName, artifact.myName)
                 && Objects.equals(myCompileTaskName, artifact.myCompileTaskName)
                 && Objects.equals(myAssembleTaskName, artifact.myAssembleTaskName)
+                && Objects.equals(myPostAssembleModelFile, artifact.myPostAssembleModelFile)
                 && Objects.equals(myClassesFolder, artifact.myClassesFolder)
                 && Objects.equals(myAdditionalClassFolders, artifact.myAdditionalClassFolders)
                 && Objects.equals(myJavaResourcesFolder, artifact.myJavaResourcesFolder)
@@ -312,6 +323,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 myName,
                 myCompileTaskName,
                 myAssembleTaskName,
+                myPostAssembleModelFile,
                 myClassesFolder,
                 myJavaResourcesFolder,
                 myDependencies,

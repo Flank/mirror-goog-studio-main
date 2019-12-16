@@ -17,12 +17,14 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.Version
+import com.android.build.gradle.options.StringOption
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor
+import com.android.tools.build.jetifier.processor.transform.bytecode.AmbiguousStringJetifierException
+import com.android.tools.build.jetifier.processor.transform.bytecode.InvalidByteCodeException
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
-import org.gradle.api.artifacts.transform.ArtifactTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -34,12 +36,15 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 
 /**
- * [ArtifactTransform] to convert a third-party library that uses old support libraries into an
- * equivalent library that uses new support libraries.
+ * [TransformAction] to convert a third-party library that uses old support libraries into an
+ * equivalent library that uses AndroidX.
  */
 abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
 
     interface Parameters : GenericTransformParameters {
+        @get:Input
+        val skipIfPossible: Property<Boolean>
+
         @get:Input
         val blackListOption: Property<String>
     }
@@ -129,14 +134,33 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
             jetifierProcessor.transform2(
                 input = setOf(FileMapping(aarOrJarFile, outputFile)),
                 copyUnmodifiedLibsAlso = true,
-                skipLibsWithAndroidXReferences = false
+                skipLibsWithAndroidXReferences = parameters.skipIfPossible.get()
             )
         } catch (exception: Exception) {
-            throw RuntimeException(
+            var message =
                 "Failed to transform '$aarOrJarFile' using Jetifier." +
-                        " Reason: ${exception.message}. (Run with --stacktrace for more details.)",
-                exception
-            )
+                        " Reason: ${exception.javaClass.simpleName}, message: ${exception.message}." +
+                        " (Run with --stacktrace for more details.)"
+            message += if (exception is InvalidByteCodeException /* Bug 140747218 */
+                || exception is AmbiguousStringJetifierException /* Bug 116745353 */) {
+                "\nThis is a known exception, and Jetifier won't be able to jetify this library.\n" +
+                        "Suggestions:\n" +
+                        " - If you believe this library doesn't need to be jetified (e.g., if it" +
+                        " already supports AndroidX, or if it doesn't use support" +
+                        " libraries/AndroidX at all), please add" +
+                        " ${StringOption.JETIFIER_BLACKLIST.propertyName} = {comma-separated list" +
+                        " of regular expressions (or simply names) of the libraries that you" +
+                        " don't want to be jetified} to the gradle.properties file.\n" +
+                        " - If you believe this library needs to be jetified (e.g., if it uses" +
+                        " old support libraries and breaks your app if it isn't jetified), please" +
+                        " contact the library's authors to update this library to support" +
+                        " AndroidX and use the supported version once it is released.\n" +
+                        "If you need further help, please file a bug at" +
+                        " http://issuetracker.google.com/issues/new?component=460323."
+            } else {
+                "\nPlease file a bug at http://issuetracker.google.com/issues/new?component=460323."
+            }
+            throw RuntimeException(message, exception)
         }
 
         check(result.librariesMap.size == 1)

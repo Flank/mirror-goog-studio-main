@@ -29,8 +29,11 @@ import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerActivityTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blankFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.fullscreenFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.googleMapsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.loginFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.googleAdMobAdsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.listFragment.listFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.modalBottomSheetTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
@@ -43,5 +46,5 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
     fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate, navigationDrawerActivityTemplate, blankFragmentTemplate,
     fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate,
-    scrollFragmentTemplate)
+    scrollFragmentTemplate, listFragmentTemplate, modalBottomSheetTemplate, googleMapsFragmentTemplate)
 }
