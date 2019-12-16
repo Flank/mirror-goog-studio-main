@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-50a20720ebba51882c295207c775dd5dd8047c3a37802661e9f6009feefd7aa6
+ac599ede1d578bd28c5bd4d1730787eeca421d4abee5c8ff29e3250a6610dfee
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -112,6 +112,12 @@ com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functio
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.NdkBuildOptions
+com.android.build.api.dsl.NdkBuildOptions.buildStagingDirectory: void (java.lang.Object)
+com.android.build.api.dsl.NdkBuildOptions.getBuildStagingDirectory: java.io.File ()
+com.android.build.api.dsl.NdkBuildOptions.getPath: java.io.File ()
+com.android.build.api.dsl.NdkBuildOptions.path: void (java.lang.Object)
+com.android.build.api.dsl.NdkBuildOptions.setBuildStagingDirectory: void (java.io.File)
+com.android.build.api.dsl.NdkBuildOptions.setPath: void (java.io.File)
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)

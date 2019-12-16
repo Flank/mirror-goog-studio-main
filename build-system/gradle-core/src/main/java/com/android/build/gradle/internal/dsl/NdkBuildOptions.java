@@ -38,28 +38,6 @@ public class NdkBuildOptions
         this.dslScope = dslScope;
     }
 
-    /**
-     * Specifies the relative path to your <code>Android.mk</code> build script.
-     *
-     * <p>For example, if your ndk-build script is in the same folder as your module-level <code>
-     * build.gradle</code> file, you simply pass the following:
-     *
-     * <pre>
-     * android {
-     *     externalNativeBuild {
-     *         ndkBuild {
-     *             // Tells Gradle to find the root ndk-build script in the same
-     *             // directory as the module's build.gradle file. Gradle requires this
-     *             // build script to add your ndk-build project as a build dependency and
-     *             // pull your native sources into your Android project.
-     *             path "Android.mk"
-     *         }
-     *     }
-     * }
-     * </pre>
-     *
-     * @since 2.2.0
-     */
     @Nullable
     @Override
     public File getPath() {
@@ -75,35 +53,11 @@ public class NdkBuildOptions
         this.path = path;
     }
 
-    /**
-     * Specifies the path to your external native build output directory.
-     *
-     * <p>If you do not specify a value for this property, the Android plugin uses the <code>
-     * &lt;project_dir&gt;/&lt;module&gt;/.externalNativeBuild/</code> directory by default.
-     *
-     * <p>If you specify a path that does not exist, the Android plugin creates it for you. Relative
-     * paths are relative to the <code>build.gradle</code> file, as shown below:
-     *
-     * <pre>
-     * android {
-     *     externalNativeBuild {
-     *         ndkBuild {
-     *             // Tells Gradle to put outputs from external native
-     *             // builds in the path specified below.
-     *             buildStagingDirectory "./outputs/ndk-build"
-     *         }
-     *     }
-     * }
-     * </pre>
-     *
-     * <p>If you specify a path that's a subdirectory of your project's temporary <code>build/
-     * </code> directory, you get a build error. That's because files in this directory do not
-     * persist through clean builds. So, you should either keep using the default <code>
-     * &lt;project_dir&gt;/&lt;module&gt;/.externalNativeBuild/</code> directory or specify a path
-     * outside the temporary build directory.
-     *
-     * @since 3.0.0
-     */
+    @Override
+    public void path(@NonNull Object path) {
+        this.path = dslScope.file(path);
+    }
+
     @Nullable
     @Override
     public File getBuildStagingDirectory() {
@@ -116,6 +70,11 @@ public class NdkBuildOptions
     }
 
     public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
+        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
+    }
+
+    @Override
+    public void buildStagingDirectory(@NonNull Object buildStagingDirectory) {
         this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 }
