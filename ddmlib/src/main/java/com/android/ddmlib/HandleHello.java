@@ -91,7 +91,7 @@ final class HandleHello extends ChunkHandler {
      */
     private static void handleHELO(Client client, ByteBuffer data) {
         int version, pid, vmIdentLen, appNameLen;
-        String vmIdent, appName;
+        String vmIdent, processName;
 
         version = data.getInt();
         pid = data.getInt();
@@ -99,20 +99,19 @@ final class HandleHello extends ChunkHandler {
         appNameLen = data.getInt();
 
         vmIdent = ByteBufferUtil.getString(data, vmIdentLen);
-        appName = ByteBufferUtil.getString(data, appNameLen);
+        processName = ByteBufferUtil.getString(data, appNameLen);
 
         Log.d(
                 "ddm-hello",
                 String.format(
-                        "HELO: v=%d, pid=%d, vm='%s', app='%s'", version, pid, vmIdent, appName));
+                        "HELO: v=%d, pid=%d, vm='%s', app='%s'",
+                        version, pid, vmIdent, processName));
 
         // Newer devices send user id in the APNM packet.
-        int userId = -1;
-        boolean validUserId = false;
+        Integer userId = null;
         if (data.hasRemaining()) {
             try {
                 userId = data.getInt();
-                validUserId = true;
             } catch (BufferUnderflowException e) {
                 // five integers + two utf-16 strings
                 int expectedPacketLength = 20 + appNameLen * 2 + vmIdentLen * 2;
@@ -158,7 +157,7 @@ final class HandleHello extends ChunkHandler {
             }
         }
 
-        String packageName = null;
+        String packageName = Device.UNKNOWN_PACKAGE;
         if (data.hasRemaining()) {
             try {
                 int packageNameLength = data.getInt();
@@ -173,11 +172,7 @@ final class HandleHello extends ChunkHandler {
 
         if (cd.getPid() == pid) {
             cd.setVmIdentifier(vmIdent);
-            cd.setClientDescription(appName);
-
-            if (validUserId) {
-                cd.setUserId(userId);
-            }
+            cd.setNames(new ClientData.Names(processName, userId, packageName));
 
             if (validAbi) {
                 cd.setAbi(abi);
@@ -188,16 +183,12 @@ final class HandleHello extends ChunkHandler {
             }
 
             cd.setNativeDebuggable(nativeDebuggable);
-
-            if (packageName != null) {
-                cd.setPackageName(packageName);
-            }
         } else {
             Log.e("ddm-hello", "Received pid (" + pid + ") does not match client pid ("
                     + cd.getPid() + ")");
         }
 
-        client = checkDebuggerPortForAppName(client, appName);
+        client = checkDebuggerPortForAppName(client, processName);
 
         if (client != null) {
             client.update(Client.CHANGE_NAME);

@@ -52,6 +52,8 @@ public class ClientData {
     /** Temporary name of VM to be ignored. */
     private static final String PRE_INITIALIZED = "<pre-initialized>"; //$NON-NLS-1$
 
+    private static final Names UNINITIALIZED = new Names(null, null, null);
+
     public enum DebuggerStatus {
         /** Debugger connection status: not waiting on one, not connected to one, but accepting
          * new connections. This is the default value. */
@@ -155,17 +157,8 @@ public class ClientData {
     // Java VM identification string
     private String mVmIdentifier;
 
-    // client's underlying package name (R+ only)
-    private String mPackageName = Device.UNKNOWN_PACKAGE;
-
     // client's self-description
-    private String mClientDescription;
-
-    // client's user id (on device in a multi user environment)
-    private int mUserId;
-
-    // client's user id is valid
-    private boolean mValidUserId;
+    private Names mClientNames = UNINITIALIZED;
 
     // client's ABI
     private String mAbi;
@@ -530,7 +523,7 @@ public class ClientData {
      */
     @Nullable
     public String getClientDescription() {
-        return mClientDescription;
+        return mClientNames.mProcessName;
     }
 
     /**
@@ -538,7 +531,7 @@ public class ClientData {
      * @return user id if set, -1 otherwise
      */
     public int getUserId() {
-        return mUserId;
+        return mClientNames.mUserId == null ? -1 : mClientNames.mUserId;
     }
 
     /**
@@ -547,7 +540,7 @@ public class ClientData {
      * be set.
      */
     public boolean isValidUserId() {
-        return mValidUserId;
+        return mClientNames != UNINITIALIZED;
     }
 
     /** Returns the abi flavor (32-bit or 64-bit) of the application, null if unknown or not set. */
@@ -562,13 +555,12 @@ public class ClientData {
     }
 
     /**
-     * Sets client description.
+     * Sets the process, user ID (i.e. personal vs work profile), and package names.
      *
-     * There may be a race between HELO and APNM.  Rather than try
-     * to enforce ordering on the device, we just don't allow an empty
-     * name to replace a specified one.
+     * <p>There may be a race between HELO and APNM. Rather than try to enforce ordering on the
+     * device, we just don't allow the pre-initialized name to replace a specified one.
      */
-    void setClientDescription(String description) {
+    void setNames(Names names) {
         /*
          * The application VM is first named <pre-initialized> before being assigned
          * its real name.
@@ -576,14 +568,9 @@ public class ClientData {
          * another one setting the final actual name. So if we get a SetClientDescription
          * with this value we ignore it.
          */
-        if (!description.isEmpty() && !PRE_INITIALIZED.equals(description)) {
-            mClientDescription = description;
+        if (!names.mProcessName.isEmpty() && !PRE_INITIALIZED.equals(names.mProcessName)) {
+            mClientNames = names;
         }
-    }
-
-    void setUserId(int id) {
-        mUserId = id;
-        mValidUserId = true;
     }
 
     void setAbi(String abi) {
@@ -860,10 +847,6 @@ public class ClientData {
         return mPendingMethodProfiling;
     }
 
-    void setPackageName(String packageName) {
-        mPackageName = packageName;
-    }
-
     /**
      * Returns the application's real package name if there is protocol support. If there is no
      * protocol support, returns the attempted derivation of the package name from the app name (to
@@ -873,15 +856,17 @@ public class ClientData {
     public String getPackageName() {
         // Use the reported package name if the version (R+) supports it.
         if (mClient.getDevice().supportsFeature(IDevice.Feature.REAL_PKG_NAME)) {
-            return mPackageName;
+            return mClientNames.mPackageName;
         }
         // Try to infer the package name.
         // Check for multi-process app name that might have a following format - "$applicationId:$processName"
-        if (mClientDescription == null) {
+        if (mClientNames.mProcessName == null) {
             return null;
         }
-        int colonPos = mClientDescription.indexOf(':');
-        return (colonPos == -1) ? mClientDescription : mClientDescription.substring(0, colonPos);
+        int colonPos = mClientNames.mProcessName.indexOf(':');
+        return (colonPos == -1)
+                ? mClientNames.mProcessName
+                : mClientNames.mProcessName.substring(0, colonPos);
     }
 
     /**
@@ -895,6 +880,18 @@ public class ClientData {
             return String.format("/data/user/%d/%s", getUserId(), packageName);
         }
         return "/data/data/" + packageName;
+    }
+
+    public static class Names {
+        public final String mProcessName;
+        public final Integer mUserId;
+        public final String mPackageName;
+
+        Names(String processName, Integer id, String packageName) {
+            this.mProcessName = processName;
+            mUserId = id;
+            this.mPackageName = packageName;
+        }
     }
 }
 
