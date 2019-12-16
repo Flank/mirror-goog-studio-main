@@ -105,8 +105,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         OutputFactory outputFactory = variant.getOutputFactory();
         populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
 
-        variant.getOutputScope()
-                .getApkDatas()
+        outputFactory
+                .finalizeApkDataList()
                 .forEach(
                         apkData ->
                                 variant.getPublicVariantPropertiesApi().addVariantOutput(apkData));

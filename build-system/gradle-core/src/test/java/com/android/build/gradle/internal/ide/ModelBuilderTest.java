@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.SyncOptions;
@@ -345,9 +344,6 @@ public class ModelBuilderTest {
         when(regularFileMock.getAsFile()).thenReturn(temporaryFolder.getRoot());
         when(artifacts.getFinalProduct(InternalArtifactType.AAR.INSTANCE))
                 .thenReturn(new FakeGradleProvider<>(regularFileMock));
-
-        OutputScope outputScopeMock = Mockito.mock(OutputScope.class);
-        when(variantScope.getOutputScope()).thenReturn(outputScopeMock);
 
         VariantDslInfo testVariantConfiguration = Mockito.mock(VariantDslInfo.class);
         when(testVariantConfiguration.getDirName()).thenReturn("test/name");

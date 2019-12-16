@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.RegularFileProperty
@@ -44,8 +43,6 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
     @get:Input
     abstract val applicationId: Property<String>
-
-    private lateinit var outputScope: OutputScope
 
     @get:Input
     abstract val versionCode: Property<Int>
@@ -94,7 +91,6 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         override fun configure(task: ModuleMetadataWriterTask) {
             super.configure(task)
             task.applicationId.set(variantProperties.applicationId)
-            task.outputScope = variantScope.variantData.outputScope
             task.debuggable
                 .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
             task.versionCode.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi

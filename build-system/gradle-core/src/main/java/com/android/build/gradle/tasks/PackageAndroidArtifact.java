@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.signing.SigningConfigProvider;
@@ -69,6 +68,7 @@ import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
@@ -887,7 +887,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
         @NonNull protected final SingleArtifactType<Directory> inputResourceFilesType;
-        @NonNull protected final OutputScope outputScope;
         @Nullable private final com.android.builder.utils.FileCache fileCache;
         @NonNull private final ArtifactType<Directory> manifestType;
         private final boolean packageCustomClassDependencies;
@@ -897,14 +896,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
-                @Nullable com.android.builder.utils.FileCache fileCache,
-                @NonNull OutputScope outputScope,
+                @Nullable FileCache fileCache,
                 boolean packageCustomClassDependencies) {
             super(variantScope);
             this.project = variantScope.getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
-            this.outputScope = outputScope;
             this.manifestType = manifestType;
             this.fileCache = fileCache;
             this.packageCustomClassDependencies = packageCustomClassDependencies;

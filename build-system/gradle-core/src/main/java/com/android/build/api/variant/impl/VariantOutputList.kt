@@ -25,6 +25,17 @@ internal class VariantOutputList(
     private val variantOutputs: List<VariantOutputImpl>): List<VariantOutputImpl> by variantOutputs {
 
     /**
+     * Return a [List] of [VariantOutputImpl] for variant output which [VariantOutput.outputType]
+     * is the same as the passed parameter.
+     *
+     * @param outputType desired output type filter.
+     * @return a possibly empty [List] of [VariantOutputImpl]
+     */
+    fun getSplitsByType(outputType: VariantOutput.OutputType): List<VariantOutputImpl> =
+        variantOutputs.filter { it.outputType == outputType.toString() }
+
+
+    /**
      * Returns the list of enabled [VariantOutput]
      */
     fun getEnabledVariantOutputs(): List<VariantOutputImpl> =

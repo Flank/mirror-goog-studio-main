@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
@@ -61,7 +60,6 @@ class CompatibleScreensManifestTest {
 
     @Mock internal lateinit var scope: VariantScope
     @Mock internal lateinit var globalScope: GlobalScope
-    @Mock private lateinit var outputScope: OutputScope
     @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
@@ -82,7 +80,6 @@ class CompatibleScreensManifestTest {
         MockitoAnnotations.initMocks(this)
         `when`(scope.fullVariantName).thenReturn("fullVariantName")
         `when`(scope.variantDslInfo).thenReturn(variantDslInfo)
-        `when`(scope.outputScope).thenReturn(outputScope)
         `when`(scope.globalScope).thenReturn(globalScope)
         `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(scope.taskContainer).thenReturn(taskContainer)

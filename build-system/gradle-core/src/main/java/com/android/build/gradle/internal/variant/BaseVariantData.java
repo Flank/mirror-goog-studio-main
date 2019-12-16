@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
@@ -238,11 +237,6 @@ public abstract class BaseVariantData {
     @NonNull
     public TaskContainer getTaskContainer() {
         return taskContainer;
-    }
-
-    @NonNull
-    public OutputScope getOutputScope() {
-        return outputFactory.getOutput();
     }
 
     @NonNull

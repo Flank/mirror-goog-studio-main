@@ -1314,12 +1314,6 @@ public class VariantScopeImpl implements VariantScope {
         return FileUtils.join(globalScope.getOutputsDir(), BuilderConstants.EXT_LIB_ARCHIVE);
     }
 
-    @Override
-    @NonNull
-    public OutputScope getOutputScope() {
-        return variantData.getOutputScope();
-    }
-
     @NonNull
     @Override
     public VariantDependencies getVariantDependencies() {
