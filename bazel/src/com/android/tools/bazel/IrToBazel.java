@@ -29,6 +29,7 @@ import com.android.tools.bazel.model.Label;
 import com.android.tools.bazel.model.Package;
 import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
+import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
@@ -166,7 +167,7 @@ public class IrToBazel {
                                     // TODO: Fix all these dependencies correctly
                                     String target;
                                     if (relJar.startsWith("prebuilts/tools/common/m2")) {
-                                        target = "jar";
+                                        target = pickTargetNameForMavenArtifact(file);
                                     } else {
                                         target = packageRelative.replaceAll("\\.jar$", "");
                                     }
@@ -245,6 +246,44 @@ public class IrToBazel {
         return relJar.startsWith("bazel-bin");
     }
 
+    /**
+     * Computes name for the {@code java_import} target corresponding to {@code file}.
+     *
+     * <p>The input file needs to be inside a directory structure of a Maven repository. The file's
+     * extension and classifier are taken into account. For example:
+     *
+     * <ul>
+     *   <li>Target for {@code junit-4.12.jar} is {@code jar}
+     *   <li>Target for {@code trove4j-1.0.20160824.jar} is {@code jar}
+     *   <li>Target for {@code guice-4.2.1-no_aop.jar} is {@code no_aop.jar}
+     * </ul>
+     */
+    private static String pickTargetNameForMavenArtifact(File file) {
+        String fileName = file.getName();
+        File versionDir = file.getParentFile();
+        Verify.verifyNotNull(versionDir, "'%s' is not a valid maven artifact file name.", fileName);
+        String version = versionDir.getName();
+        int indexOfVersion = fileName.lastIndexOf(version);
+        Verify.verify(
+                indexOfVersion > 0, "'%s' is not a valid maven artifact file name.", fileName);
+
+        int indexOfExtension = fileName.lastIndexOf('.');
+        Verify.verify(
+                indexOfExtension > 0, "'%s' is not a valid maven artifact file name.", fileName);
+        String result = fileName.substring(indexOfExtension + 1);
+
+        int indexOfClassifier = indexOfVersion + version.length();
+        Verify.verify(
+                indexOfClassifier < fileName.length(),
+                "'%s' is not a valid maven artifact file name.",
+                fileName);
+        if (fileName.charAt(indexOfClassifier) == '-') {
+            String classifier = fileName.substring(indexOfClassifier + 1, indexOfExtension);
+            result = classifier + "." + result;
+        }
+
+        return result;
+    }
 
     private static class CountingListener implements Workspace.GenerationListener {
         private final PrintWriter printWriter;
