@@ -27,7 +27,7 @@ dependencies {
     testCompile project(':base:apkparser:apkanalyzer')
     testCompile libs.truth
     testCompile files(Jvm.current().toolsJar)
-
+    testCompile testFixtures(project(":base:repository"))
 }
 
 sourceSets {

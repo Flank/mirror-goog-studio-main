@@ -21,6 +21,7 @@ dependencies {
     testCompile libs.junit
     testCompile libs.truth
     testCompile project(':base:testutils')
+    testCompile testFixtures(project(":base:repository"))
 }
 
 test {

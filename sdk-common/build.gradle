@@ -35,6 +35,7 @@ dependencies {
     testCompile libs.mockito_core
     testCompile libs.truth
     testCompile libs.equalsverifier
+    testCompile testFixtures(project(":base:repository"))
 }
 
 protobuf {

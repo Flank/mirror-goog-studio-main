@@ -11,7 +11,10 @@ iml_module(
     iml_files = ["android.sdktools.repository.iml"],
     test_coverage = True,
     test_resources = ["src/test/resources"],
-    test_srcs = ["src/test/java"],
+    test_srcs = [
+        "src/test/java",
+        "src/testFixtures/java",
+    ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -69,7 +72,10 @@ maven_pom(
 
 java_library(
     name = "tools.testlib",
-    srcs = glob(["src/test/java/**"]),
+    srcs = glob([
+        "src/test/java/**",
+        "src/testFixtures/java/**",
+    ]),
     resources = glob(["src/test/resources/**"]),
     visibility = ["//visibility:public"],  # contains com.android.repository.testframework
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
