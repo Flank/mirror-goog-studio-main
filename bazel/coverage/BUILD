@@ -203,6 +203,25 @@ coverage_report(
     ],
 )
 
+# Coverage report for Profilers
+coverage_report(
+    name = "profilers",
+    srcpath_include = [
+        "tools/adt/idea/android-transport/src/com/android/tools/idea/transport",
+        "tools/adt/idea/profilers-android/src/com/android/tools/idea/profilers",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers",
+        "tools/adt/idea/transport-database/src/main/java/com/android/tools/datastore",
+    ],
+    tests = [
+        "//tools/adt/idea/android-transport:intellij.android.transport_tests",
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+        "//tools/adt/idea/transport-database:intellij.android.transportDatabase_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
@@ -215,6 +234,7 @@ combine_report_definitions(
         "spliteditor",
         "resourcemanager",
         "layouteditor",
+        "profilers",
     ],
 )
 
