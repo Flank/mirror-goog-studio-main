@@ -163,7 +163,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 UAnnotated::class.java, true
             ) ?: break
 
-            for (annotation in owner.annotations) {
+            //noinspection AndroidLintExternalAnnotations
+            for (annotation in owner.uAnnotations) {
                 val name = annotation.qualifiedName
                 if (RESTRICT_TO_ANNOTATION.isEquals(name)) {
                     val restrictionScope = getRestrictionScope(annotation)

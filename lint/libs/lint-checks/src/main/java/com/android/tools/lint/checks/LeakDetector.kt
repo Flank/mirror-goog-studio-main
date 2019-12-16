@@ -50,6 +50,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UObjectLiteralExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UResolvable
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElement
@@ -233,7 +234,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
             }
 
             for (method in containingClass.constructors) {
-                val methodBody = context.uastContext.getMethodBody(method) ?: continue
+                val methodBody = UastFacade.getMethodBody(method) ?: continue
                 val assignedToAppContext = Ref(false)
 
                 methodBody.accept(

@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_XML
-import com.android.tools.lint.LintCoreApplicationEnvironment
+import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.Warning
@@ -642,7 +642,8 @@ class TestLintResult internal constructor(
     }
 
     private fun cleanup() {
-        LintCoreApplicationEnvironment.disposeApplicationEnvironment()
+        task.client?.disposeProjects(emptyList())
+        UastEnvironment.ensureDisposed()
     }
 
     @Throws(BadLocationException::class)

@@ -44,6 +44,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
                     new LintCliClient(CLIENT_UNIT_TESTS) {
                         @Override
                         public IssueRegistry getRegistry() {
+                            IssueRegistry registry = super.getRegistry();
                             if (registry == null) {
                                 registry =
                                         new IssueRegistry() {
@@ -57,6 +58,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
                                                         ManifestDetector.MOCK_LOCATION);
                                             }
                                         };
+                                super.setRegistry(registry);
                             }
                             return registry;
                         }

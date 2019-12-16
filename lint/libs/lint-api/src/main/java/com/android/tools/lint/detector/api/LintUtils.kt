@@ -122,7 +122,9 @@ import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.objectweb.asm.Opcodes
@@ -2106,6 +2108,10 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     }
 
     return null
+}
+
+fun PsiMethod.getUMethod(): UMethod? {
+    return UastFacade.convertElementWithParent(this, UMethod::class.java) as? UMethod
 }
 
 // For compatibility reasons

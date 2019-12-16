@@ -66,7 +66,7 @@ fun searchForInterproceduralThreadAnnotationViolations(
             element.isAnnotatedWith(annotation) ||
                     element.javaPsi.containingClass?.isAnnotatedWith(annotation) ?: false
         }
-        is CallTarget.Lambda -> element.annotations.any { it.qualifiedName == annotation }
+        is CallTarget.Lambda -> element.uAnnotations.any { it.qualifiedName == annotation }
         is CallTarget.DefaultCtor -> element.isAnnotatedWith(annotation)
     }
 

@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.android.tools.lint.LintCoreApplicationEnvironment;
+import com.android.tools.lint.UastEnvironment;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
@@ -175,7 +175,7 @@ public class ConstantEvaluatorTest extends TestCase {
             Object expected, @Language("JAVA") String source, final String targetVariable) {
         checkJavaUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
-        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
+        UastEnvironment.ensureDisposed();
     }
 
     private static void checkStatements(
@@ -234,7 +234,7 @@ public class ConstantEvaluatorTest extends TestCase {
                         + "}\n";
 
         checkKotlinUast(expected, source, "expression");
-        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
+        UastEnvironment.ensureDisposed();
     }
 
     public void testStrings() {

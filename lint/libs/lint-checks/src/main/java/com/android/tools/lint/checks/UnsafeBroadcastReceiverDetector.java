@@ -61,6 +61,7 @@ import java.util.Set;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Document;
@@ -747,7 +748,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         // report a finding at all in this case.)
         PsiParameter parameter = method.getParameterList().getParameters()[1];
         OnReceiveVisitor visitor = new OnReceiveVisitor(context.getEvaluator(), parameter);
-        context.getUastContext().getMethodBody(method).accept(visitor);
+        UastFacade.INSTANCE.getMethodBody(method).accept(visitor);
         if (!visitor.getCallsGetAction()) {
             String report;
             if (!visitor.getUsesIntent()) {

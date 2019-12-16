@@ -17,7 +17,6 @@
 package com.android.tools.lint.client.api
 
 import com.android.tools.lint.detector.api.isKotlin
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
@@ -27,7 +26,7 @@ import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
-import org.jetbrains.uast.UastContext
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.java.JavaUAnnotation
 
@@ -45,9 +44,8 @@ class AnnotationLookup {
                 // We sometimes get binaries out of Kotlin files after a resolve; find the
                 // original AST nodes
                 val project = resolved.project
-                val uastContext = ServiceManager.getService(project, UastContext::class.java)
                 val cls =
-                    uastContext.convertElement(resolved, null, UClass::class.java) as UClass?
+                    UastFacade.convertElement(resolved, null, UClass::class.java) as UClass?
                 cls?.let {
                     kotlinClass = it
                     resolvedKotlinClassCache[resolved] = it
@@ -75,9 +73,7 @@ class AnnotationLookup {
                             PsiManager.getInstance(project)
                                 .findFile(resolved.containingFile?.virtualFile!!)
                         if (psiFile != null) {
-                            val uastContext =
-                                ServiceManager.getService(project, UastContext::class.java)
-                            uastContext.convertElementWithParent(
+                            UastFacade.convertElementWithParent(
                                 psiFile,
                                 UFile::class.java
                             ) as? UFile
@@ -99,7 +95,7 @@ class AnnotationLookup {
         if (kotlinClass != null) {
             val annotationQualifiedName = annotation.qualifiedName
             if (annotationQualifiedName != null) {
-                for (uAnnotation in (kotlinClass as UAnnotated).annotations) {
+                for (uAnnotation in (kotlinClass as UAnnotated).uAnnotations) {
                     if (annotationQualifiedName == uAnnotation.qualifiedName) {
                         return uAnnotation
                     }

@@ -46,7 +46,7 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
             explanation = """
                 Lint supports XML files with "external annotations", which means any detectors that
                 recognize certain annotations should get them from `JavaEvaluator.getAllAnnotations`
-                and not by calling `annotations` directly on UAST or PSI elements.
+                and not by calling `uAnnotations` directly on UAST or PSI elements.
             """.trimIndent(),
             severity = Severity.ERROR,
             implementation = Implementation(
@@ -63,8 +63,8 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames() = listOf("getAnnotations")
-    override fun getApplicableReferenceNames() = listOf("annotations")
+    override fun getApplicableMethodNames() = listOf("getAnnotations", "getUAnnotations")
+    override fun getApplicableReferenceNames() = listOf("annotations", "uAnnotations")
 
     override fun visitMethodCall(
         context: JavaContext,

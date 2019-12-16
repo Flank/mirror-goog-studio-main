@@ -95,7 +95,7 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
                 if (modifierList.hasModifierProperty(PsiModifier.PUBLIC)) {
                     return
                 }
-                for (annotation in node.annotations) {
+                for (annotation in node.uAnnotations) {
                     if (annotation.qualifiedName == JAVASCRIPT_INTERFACE_CLS) {
                         context.report(
                             ISSUE, node as UElement, context.getNameLocation(node),

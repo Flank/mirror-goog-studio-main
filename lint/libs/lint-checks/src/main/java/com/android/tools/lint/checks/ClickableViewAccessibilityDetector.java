@@ -49,8 +49,7 @@ import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USuperExpression;
-import org.jetbrains.uast.UastContext;
-import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
@@ -199,7 +198,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
                 context.report(ISSUE, onTouchEvent, context.getNameLocation(onTouchEvent), message);
             } else {
                 // If we override performClick, ensure that it is called inside onTouchEvent.
-                UastContext uastContext = UastUtils.getUastContext(declaration);
+                UastFacade uastContext = UastFacade.INSTANCE;
                 UElement uastMethod = uastContext.convertElement(onTouchEvent, null, UMethod.class);
                 if (uastMethod != null && !performsClick(uastMethod)) {
                     String message =
@@ -216,7 +215,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
         // Ensure that, if performClick is implemented, performClick calls super.performClick.
         if (performClick != null) {
             // If we override performClick, ensure that it is called inside onTouchEvent.
-            UastContext uastContext = UastUtils.getUastContext(declaration);
+            UastFacade uastContext = UastFacade.INSTANCE;
             UElement uastMethod = uastContext.convertElement(performClick, null, UMethod.class);
             if (uastMethod != null && !performsClickCallsSuper(uastMethod)) {
                 String message =
@@ -236,7 +235,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
         PsiMethod[] onTouchMethods = declaration.findMethodsByName(ON_TOUCH, false);
         for (PsiMethod method : onTouchMethods) {
             if (evaluator.parametersMatch(method, CLASS_VIEW, MOTION_EVENT_CLS)) {
-                UastContext uastContext = UastUtils.getUastContext(declaration);
+                UastFacade uastContext = UastFacade.INSTANCE;
                 UElement uastMethod = uastContext.convertElement(method, null, UMethod.class);
                 if (uastMethod != null && !performsClick(uastMethod)) {
                     String message =

@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.gradle;
 
-import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static java.io.File.separator;
 
@@ -91,7 +90,7 @@ public class LintGradleClient extends LintCliClient {
         this.sdkHome = sdkHome;
         this.variantInputs = variantInputs;
         this.baselineVariantName = baselineVariantName;
-        this.registry = registry;
+        setRegistry(registry);
         this.buildToolInfoRevision = buildToolInfoRevision;
         this.resolver = resolver;
         this.variant = variant;
@@ -122,6 +121,7 @@ public class LintGradleClient extends LintCliClient {
     @NonNull
     @Override
     public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
+        DefaultConfiguration overrideConfiguration = getOverrideConfiguration();
         if (overrideConfiguration != null) {
             return overrideConfiguration;
         }
@@ -139,7 +139,7 @@ public class LintGradleClient extends LintCliClient {
             Map<String, Integer> overrides = lintOptions.getSeverityOverrides();
             if (overrides != null && !overrides.isEmpty()) {
                 return new CliConfiguration(
-                        lintXml, getConfiguration(), project, flags.isFatalOnly()) {
+                        lintXml, getConfiguration(), project, getFlags().isFatalOnly()) {
                     @NonNull
                     @Override
                     public Severity getSeverity(@NonNull Issue issue) {
@@ -150,7 +150,7 @@ public class LintGradleClient extends LintCliClient {
                         if (optionSeverity != null) {
                             Severity severity = SyncOptions.getSeverity(issue, optionSeverity);
 
-                            if (flags.isFatalOnly() && severity != Severity.FATAL) {
+                            if (getFlags().isFatalOnly() && severity != Severity.FATAL) {
                                 return Severity.IGNORE;
                             }
 
@@ -222,7 +222,7 @@ public class LintGradleClient extends LintCliClient {
 
     @Override
     @NonNull
-    protected LintRequest createLintRequest(@NonNull List<File> files) {
+    protected LintRequest createLintRequest(@NonNull List<? extends File> files) {
         LintRequest lintRequest = new LintRequest(this, files);
         LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
         Project project =
@@ -246,11 +246,6 @@ public class LintGradleClient extends LintCliClient {
         return driver;
     }
 
-    /** Whether lint should continue running after a baseline has been created */
-    public static boolean continueAfterBaseLineCreated() {
-        return VALUE_TRUE.equals(System.getProperty("lint.baselines.continue"));
-    }
-
     /**
      * Run lint with the given registry, optionally fix any warnings found and return the resulting
      * warnings
@@ -261,7 +256,7 @@ public class LintGradleClient extends LintCliClient {
         int exitCode = run(registry, Collections.emptyList());
 
         if (exitCode == LintCliFlags.ERRNO_CREATED_BASELINE) {
-            if (continueAfterBaseLineCreated()) {
+            if (LintCliClient.Companion.continueAfterBaseLineCreated()) {
                 return Pair.of(Collections.emptyList(), driver.getBaseline());
             }
             throw new GradleException("Aborting build since new baseline file was created");
@@ -272,7 +267,7 @@ public class LintGradleClient extends LintCliClient {
                     "Aborting build since sources were modified to apply quickfixes after compilation");
         }
 
-        return Pair.of(warnings, driver.getBaseline());
+        return Pair.of(getWarnings(), driver.getBaseline());
     }
 
     /**

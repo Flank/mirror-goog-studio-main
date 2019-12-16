@@ -40,10 +40,11 @@ public class TextReporterTest extends AbstractCheckTest {
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
-            TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
+            LintCliFlags flags = client.getFlags();
+            TextReporter reporter = new TextReporter(client, flags, file, writer, true);
             Project project =
                     Project.create(client, new File("/foo/bar/Foo"), new File("/foo/bar/Foo"));
-            client.flags.setShowEverything(true);
+            flags.setShowEverything(true);
 
             Warning warning1 =
                     new Warning(
@@ -133,11 +134,12 @@ public class TextReporterTest extends AbstractCheckTest {
             //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
-            TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
-            client.flags.setExplainIssues(true);
+            LintCliFlags flags = client.getFlags();
+            TextReporter reporter = new TextReporter(client, flags, file, writer, true);
+            flags.setExplainIssues(true);
             Project project =
                     Project.create(client, new File("/foo/bar/Foo"), new File("/foo/bar/Foo"));
-            client.flags.setShowEverything(true);
+            flags.setShowEverything(true);
 
             Warning warning1 =
                     new Warning(

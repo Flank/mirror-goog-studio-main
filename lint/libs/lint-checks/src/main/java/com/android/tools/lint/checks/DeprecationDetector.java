@@ -88,6 +88,7 @@ public class DeprecationDetector extends ResourceXmlDetector {
                         rootElement,
                         context.getNameLocation(rootElement),
                         "The `android.preference` library is deprecated, it is recommended that you migrate to the AndroidX Preference library instead.");
+                return;
             }
             if (tagName.startsWith("androidx.preference.")) {
                 // Qualified androidx preference tags can skip inheritance checking.

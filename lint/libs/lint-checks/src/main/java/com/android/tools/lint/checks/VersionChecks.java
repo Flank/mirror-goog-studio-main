@@ -50,7 +50,7 @@ import org.jetbrains.uast.USwitchClauseExpressionWithBody;
 import org.jetbrains.uast.UThrowExpression;
 import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UastBinaryOperator;
-import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastPrefixOperator;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
@@ -267,8 +267,13 @@ public class VersionChecks {
                             evaluator.computeArgumentMapping(call, method);
                     PsiParameter parameter = mapping.get(prev);
                     if (parameter != null) {
-                        UastContext context = UastUtils.getUastContext(element);
-                        UMethod uMethod = context.getMethod(method);
+                        UastFacade uastFacade = UastFacade.INSTANCE;
+                        UMethod uMethod =
+                                (UMethod)
+                                        uastFacade.convertElementWithParent(method, UMethod.class);
+                        if (uMethod == null) {
+                            return false;
+                        }
                         Ref<UCallExpression> match = new Ref<>();
                         String parameterName = parameter.getName();
                         uMethod.accept(
@@ -375,8 +380,8 @@ public class VersionChecks {
                 PsiField field = (PsiField) resolved;
                 PsiModifierList modifierList = field.getModifierList();
                 if (modifierList != null && modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
-                    UastContext context = UastUtils.getUastContext(element);
-                    UExpression initializer = context.getInitializerBody(field);
+                    UastFacade facade = UastFacade.INSTANCE;
+                    UExpression initializer = facade.getInitializerBody(field);
                     if (initializer != null) {
                         Boolean ok =
                                 isVersionCheckConditional(
@@ -465,8 +470,8 @@ public class VersionChecks {
 
         // Unconditional version utility method? If so just attempt to call it
         if (!method.hasModifierProperty(PsiModifier.ABSTRACT)) {
-            UastContext context = UastUtils.getUastContext(call);
-            UExpression body = context.getMethodBody(method);
+            UastFacade facade = UastFacade.INSTANCE;
+            UExpression body = facade.getMethodBody(method);
             if (body == null) {
                 return null;
             }

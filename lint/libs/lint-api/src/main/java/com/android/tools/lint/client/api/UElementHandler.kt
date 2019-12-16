@@ -66,6 +66,7 @@ import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
+import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.visitor.UastVisitor
 
 /**
@@ -286,6 +287,10 @@ open class UElementHandler {
 
     open fun visitWhileExpression(node: UWhileExpression) {
         error(UWhileExpression::class.java)
+    }
+
+    open fun visitYieldExpression(node: UYieldExpression) {
+        error(UYieldExpression::class.java)
     }
 
     companion object {

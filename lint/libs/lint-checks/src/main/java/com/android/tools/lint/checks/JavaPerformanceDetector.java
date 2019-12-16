@@ -38,6 +38,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
@@ -229,14 +230,17 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                     String argument = node.getValueArguments().get(0).asSourceString();
 
                     String replacedType = typeName.substring(typeName.lastIndexOf('.') + 1);
-                    LintFix fix =
-                            LintFix.create()
-                                    .name("Replace with valueOf()", true)
-                                    .replace()
-                                    .pattern("(new\\s+" + replacedType + ")")
-                                    .with(replacedType + ".valueOf")
-                                    .autoFix()
-                                    .build();
+                    LintFix fix = null;
+                    if (!Lint.isKotlin(node.getSourcePsi())) {
+                        fix =
+                                LintFix.create()
+                                        .name("Replace with valueOf()", true)
+                                        .replace()
+                                        .pattern("(new\\s+" + replacedType + ")")
+                                        .with(replacedType + ".valueOf")
+                                        .autoFix()
+                                        .build();
+                    }
                     mContext.report(
                             USE_VALUE_OF,
                             node,

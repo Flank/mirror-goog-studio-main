@@ -32,8 +32,6 @@ import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UVariable;
-import org.jetbrains.uast.UastContext;
-import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
@@ -119,8 +117,7 @@ public class TypeEvaluator {
 
         UElement resolved = node;
         if (resolved instanceof UReferenceExpression) {
-            UastContext uastContext = UastUtils.getUastContext(node);
-            resolved = UastUtils.tryResolveUDeclaration(resolved, uastContext);
+            resolved = UastLintUtils.tryResolveUDeclaration(resolved);
         }
 
         if (resolved instanceof UMethod) {

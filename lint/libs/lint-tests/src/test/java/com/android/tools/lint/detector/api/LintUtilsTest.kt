@@ -28,6 +28,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliClient
+import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.checks.infrastructure.ClassName
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFile
@@ -66,7 +67,6 @@ import com.google.common.collect.Iterables
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import com.intellij.openapi.Disposable
-import com.intellij.psi.PsiFile
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.mockito.Mockito.`when`
@@ -384,10 +384,12 @@ class LintUtilsTest : TestCase() {
         xml = TestFiles.xml("res/values/strings.xml", "<resources>\n</resources>\n")
         context = createXmlContext(xml.getContents(), File(xml.targetPath))
         assertNull(getLocale(context))
+        dispose(context)
 
         xml = TestFiles.xml("res/values-no/strings.xml", "<resources>\n</resources>\n")
         context = createXmlContext(xml.getContents(), File(xml.targetPath))
         assertEquals("no", getLocale(context)!!.language)
+        dispose(context)
 
         xml = TestFiles.xml(
             "res/values/strings.xml",
@@ -397,6 +399,7 @@ class LintUtilsTest : TestCase() {
         )
         context = createXmlContext(xml.getContents(), File(xml.targetPath))
         assertEquals("nb", getLocale(context)!!.language)
+        dispose(context)
 
         // tools:locale wins over folder location
         xml = TestFiles.xml(
@@ -407,6 +410,13 @@ class LintUtilsTest : TestCase() {
         )
         context = createXmlContext(xml.getContents(), File(xml.targetPath))
         assertEquals("nb", getLocale(context)!!.language)
+        dispose(context)
+
+        UastEnvironment.ensureDisposed()
+    }
+
+    private fun dispose(context: XmlContext) {
+        (context.project.client as? LintCliClient)?.disposeProjects(listOf(context.project))
     }
 
     fun testGetLocaleAndRegion() {
@@ -1016,7 +1026,7 @@ class LintUtilsTest : TestCase() {
                 val uFile = uastParser.parse(context)
                 context.uastFile = uFile
                 assert(uFile != null)
-                context.setJavaFile(uFile!!.sourcePsi as PsiFile)
+                context.setJavaFile(uFile!!.sourcePsi)
             }
 
             val disposable = Disposable {

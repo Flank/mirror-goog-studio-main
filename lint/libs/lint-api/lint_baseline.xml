@@ -11,7 +11,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/AnnotationLookup.kt"
             line="102"/>
@@ -19,7 +19,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/helpers/DefaultJavaEvaluator.kt"
             line="117"/>
@@ -27,7 +27,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/helpers/DefaultJavaEvaluator.kt"
             line="150"/>
@@ -35,7 +35,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/JavaEvaluator.kt"
             line="721"/>
@@ -43,7 +43,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
             line="3326"/>
@@ -51,7 +51,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
             line="3326"/>
@@ -59,7 +59,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
             line="3390"/>

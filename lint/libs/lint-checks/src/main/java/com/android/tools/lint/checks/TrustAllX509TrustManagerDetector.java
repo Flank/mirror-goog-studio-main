@@ -40,6 +40,7 @@ import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UReturnExpression;
 import org.jetbrains.uast.UastEmptyExpression;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -104,7 +105,7 @@ public class TrustAllX509TrustManagerDetector extends Detector
             // reporting an issue if none of these calls are found. ControlFlowGraph
             // may be useful here.
 
-            UExpression body = context.getUastContext().getMethodBody(method);
+            UExpression body = UastFacade.INSTANCE.getMethodBody(method);
 
             ComplexBodyVisitor visitor = new ComplexBodyVisitor();
             if (body != null) {

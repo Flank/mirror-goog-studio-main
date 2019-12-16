@@ -18,8 +18,7 @@ package com.android.tools.lint.gradle
 
 import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.KotlinLintAnalyzerFacade
-import com.android.tools.lint.LintCoreApplicationEnvironment
-import com.android.tools.lint.LintCoreProjectEnvironment
+import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.annotations.Extractor
 import com.android.tools.lint.gradle.api.ExtractAnnotationRequest
 import com.intellij.openapi.util.Disposer
@@ -39,11 +38,11 @@ class LintExtractAnnotations {
         val sourceFiles = request.sourceFiles
         val roots = request.roots
 
-        val appEnv = LintCoreApplicationEnvironment.get()
         val parentDisposable = Disposer.newDisposable()
+        val environment = UastEnvironment.create(parentDisposable)
 
         try {
-            val projectEnvironment = LintCoreProjectEnvironment.create(parentDisposable, appEnv)
+            val projectEnvironment = environment.projectEnvironment
             projectEnvironment.registerPaths(roots)
             val parsedUnits = Extractor.createUnitsForFiles(
                 projectEnvironment.project,
@@ -68,7 +67,7 @@ class LintExtractAnnotations {
             throw UncheckedIOException(e)
         } finally {
             Disposer.dispose(parentDisposable)
-            LintCoreApplicationEnvironment.clearAccessorCache()
+            UastEnvironment.ensureDisposed()
         }
     }
 }

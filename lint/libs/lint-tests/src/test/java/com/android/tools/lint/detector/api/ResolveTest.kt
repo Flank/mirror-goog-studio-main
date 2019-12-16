@@ -24,7 +24,7 @@ import junit.framework.TestCase
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UResolvable
-import org.jetbrains.uast.visitor.UastVisitor
+import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 
@@ -66,7 +66,7 @@ class ResolveTest : TestCase() {
             """
             UFile (package = pkg) [package pkg...]
                 UClass (name = TestKt) [public final class TestKt {...}]
-                    UAnnotationMethod (name = test) [public static final fun test() : void {...}]
+                    UMethod (name = test) [public static final fun test() : void {...}]
                         UBlockExpression [{...}]
                             UQualifiedReferenceExpression [Foo.test()] => PsiMethod:test
                                 USimpleNameReferenceExpression (identifier = Foo) [Foo] => PsiClass:Foo
@@ -102,7 +102,7 @@ class ResolveTest : TestCase() {
             UFile (package = ) [import kotlin.reflect.full.declaredMemberFunctions...]
                 UImportStatement (isOnDemand = false) [import kotlin.reflect.full.declaredMemberFunctions] => <FAILED>
                 UClass (name = KotlinTest) [public final class KotlinTest {...}]
-                    UAnnotationMethod (name = test) [public final fun test() : void {...}]
+                    UMethod (name = test) [public final fun test() : void {...}]
                         UBlockExpression [{...}]
                             UQualifiedReferenceExpression [KotlinTest.members] => <FAILED>
                                 UClassLiteralExpression [KotlinTest]
@@ -110,7 +110,7 @@ class ResolveTest : TestCase() {
                             UQualifiedReferenceExpression [KotlinTest.declaredMemberFunctions] => <FAILED>
                                 UClassLiteralExpression [KotlinTest]
                                 USimpleNameReferenceExpression (identifier = declaredMemberFunctions) [declaredMemberFunctions] => PsiMethod:getDeclaredMemberFunctions
-                    UAnnotationMethod (name = KotlinTest) [public fun KotlinTest() = UastEmptyExpression]
+                    UMethod (name = KotlinTest) [public fun KotlinTest() = UastEmptyExpression]
             """.trimIndent().trim(),
             file?.asResolveString()?.trim()
         )
@@ -143,7 +143,7 @@ class ResolveTest : TestCase() {
                 UImportStatement (isOnDemand = false) [import lib.Bar] => <FAILED>
                 UImportStatement (isOnDemand = false) [import lib.Bar2] => PsiClass:Bar2
                 UClass (name = TestKt) [public final class TestKt {...}]
-                    UAnnotationMethod (name = test) [public static final fun test() : void {...}]
+                    UMethod (name = test) [public static final fun test() : void {...}]
                         UBlockExpression [{...}]
                             UDeclarationsExpression [var bar: lib.Bar = <init>("hello1")]
                                 ULocalVariable (name = bar) [var bar: lib.Bar = <init>("hello1")]
@@ -266,7 +266,7 @@ private fun UFile.asResolveString() = ResolveLogger().apply {
     this@asResolveString.accept(this)
 }.toString()
 
-class ResolveLogger : UastVisitor {
+class ResolveLogger : AbstractUastVisitor() {
 
     val builder = StringBuilder()
 

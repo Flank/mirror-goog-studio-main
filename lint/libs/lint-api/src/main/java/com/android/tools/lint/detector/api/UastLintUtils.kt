@@ -37,17 +37,23 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.UastContext
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getUastContext
+import org.jetbrains.uast.toUElementOfType
 
 class UastLintUtils {
     companion object {
+        @JvmStatic
+        fun UElement.tryResolveUDeclaration(): UDeclaration? {
+            return (this as? UResolvable)?.resolve().toUElementOfType()
+        }
 
         /** Returns the containing file for the given element  */
         @JvmStatic
@@ -158,9 +164,9 @@ class UastLintUtils {
             if (!currVariable.hasModifierProperty(PsiModifier.FINAL) && (currVariable is PsiLocalVariable || currVariable is PsiParameter)) {
                 val containingFunction = call.getContainingUMethod()
                 if (containingFunction != null) {
-                    val context = call.getUastContext()
                     val finder = ConstantEvaluator.LastAssignmentFinder(
-                        currVariable, call, context, null, -1)
+                        currVariable, call, null, -1
+                    )
                     containingFunction.accept(finder)
                     lastAssignment = finder.lastAssignment
                 }
@@ -191,7 +197,6 @@ class UastLintUtils {
         fun findLastValue(
             variable: PsiVariable,
             call: UElement,
-            context: UastContext,
             evaluator: ConstantEvaluator
         ): Any? {
             var value: Any? = null
@@ -202,13 +207,14 @@ class UastLintUtils {
                     val body = containingFunction.uastBody
                     if (body != null) {
                         val finder = ConstantEvaluator.LastAssignmentFinder(
-                            variable, call, context, evaluator, 1)
+                            variable, call, evaluator, 1
+                        )
                         body.accept(finder)
                         value = finder.currentValue
                     }
                 }
             } else {
-                val initializer = context.getInitializerBody(variable)
+                val initializer = UastFacade.getInitializerBody(variable)
                 if (initializer != null) {
                     value = initializer.evaluate()
                 }

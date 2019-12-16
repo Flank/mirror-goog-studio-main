@@ -68,6 +68,9 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         ANY_THREAD_ANNOTATION.newName()
     )
 
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
+        type == METHOD_CALL || type == METHOD_CALL_CLASS || type == METHOD_CALL_PARAMETER
+
     /**
      * Handles a given UAST node relevant to our annotations.
      *
@@ -99,7 +102,6 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ) {
         if (method == null) return
         val usagePsi = usage.sourcePsi ?: return
-
         if (usagePsi.getUserData(CHECKED) == true) return
         usagePsi.putUserData(CHECKED, true)
 

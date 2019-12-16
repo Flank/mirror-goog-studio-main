@@ -169,7 +169,7 @@ public class TestLintClient extends LintCliClient {
 
     protected void setLintTask(@Nullable TestLintTask task) {
         if (task != null && task.optionSetter != null) {
-            task.optionSetter.set(flags);
+            task.optionSetter.set(getFlags());
         }
 
         // Client should not be used outside of the check process
@@ -304,9 +304,10 @@ public class TestLintClient extends LintCliClient {
         // Reset state here in case a client is reused for multiple runs
         output = new StringBuilder();
         writer.getBuffer().setLength(0);
+        List<Warning> warnings = getWarnings();
         warnings.clear();
-        errorCount = 0;
-        warningCount = 0;
+        setErrorCount(0);
+        setWarningCount(0);
 
         String result = analyze(files, issues);
 
@@ -383,6 +384,7 @@ public class TestLintClient extends LintCliClient {
         } catch (IOException ignore) {
             mocker = task.projectMocks.get(dir);
         }
+        LintCliFlags flags = getFlags();
         if (mocker != null && mocker.getProject() != null) {
             mocker.syncFlagsTo(flags);
             flags.setFatalOnly(task.vital);
@@ -435,7 +437,7 @@ public class TestLintClient extends LintCliClient {
         if (!files.isEmpty()) {
             GradleModelMocker mocker = task.projectMocks.get(files.get(0));
             if (mocker != null) {
-                mocker.syncFlagsTo(flags);
+                mocker.syncFlagsTo(getFlags());
             }
         }
 
@@ -483,6 +485,7 @@ public class TestLintClient extends LintCliClient {
 
         // Check compare contract
         Warning prev = null;
+        List<Warning> warnings = getWarnings();
         for (Warning warning : warnings) {
             if (prev != null) {
                 boolean equals = warning.equals(prev);
@@ -513,8 +516,8 @@ public class TestLintClient extends LintCliClient {
             prev = warning;
         }
 
-        LintStats stats = LintStats.Companion.create(errorCount, warningCount);
-        for (Reporter reporter : flags.getReporters()) {
+        LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
+        for (Reporter reporter : getFlags().getReporters()) {
             reporter.write(stats, warnings);
         }
 
@@ -772,7 +775,7 @@ public class TestLintClient extends LintCliClient {
         // Make sure errors are unique! See documentation for #allowDuplicates.
         if (!task.allowDuplicates) {
             Warning prev = null;
-            for (Warning warning : warnings) {
+            for (Warning warning : getWarnings()) {
                 assertNotSame(warning, prev);
                 assert prev == null || !warning.equals(prev)
                         : "Warning (message, location) reported more than once: " + warning;
@@ -1185,10 +1188,6 @@ public class TestLintClient extends LintCliClient {
         }
 
         return super.openConnection(url, timeout);
-    }
-
-    public void setRegistry(IssueRegistry registry) {
-        this.registry = registry;
     }
 
     public static class TestProject extends Project {

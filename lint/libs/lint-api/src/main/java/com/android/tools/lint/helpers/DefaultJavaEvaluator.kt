@@ -119,10 +119,10 @@ open class DefaultJavaEvaluator(
             // Therefore, call into UAST to get the full Kotlin annotations, but also
             // merge in external annotations and inherited annotations from the class
             // files, and pick unique.
-            val annotations = owner.annotations
+            val annotations = owner.uAnnotations
             val psiAnnotations = getAllAnnotations(owner.psi, inHierarchy)
 
-            if (!annotations.isEmpty()) {
+            if (annotations.isNotEmpty()) {
                 if (psiAnnotations.isEmpty()) {
                     return annotations
                 }
@@ -152,7 +152,7 @@ open class DefaultJavaEvaluator(
             return JavaUAnnotation.wrap(psiAnnotations)
         }
 
-        return owner.annotations
+        return owner.uAnnotations
     }
 
     override fun getAllAnnotations(

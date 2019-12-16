@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.getUMethod
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.intellij.psi.PsiClass
@@ -80,7 +81,7 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         val parameter = parameters[1]
 
         val visitor = ParameterEscapesVisitor(cls, parameter)
-        val method = context.uastContext.getMethod(declaration)
+        val method = declaration.getUMethod() ?: return
         method.accept(visitor)
         if (visitor.variableEscapes()) {
             reportError(context, viewHolder, parameter)
@@ -110,7 +111,7 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         declaration: UMethod,
         references: List<UCallExpression>?
     ) {
-        if (references != null && !references.isEmpty()) {
+        if (references != null && references.isNotEmpty()) {
             val targets = Lists.newArrayList<UCallExpression>()
             val sources = Lists.newArrayList<UCallExpression>()
             for (ref in references) {

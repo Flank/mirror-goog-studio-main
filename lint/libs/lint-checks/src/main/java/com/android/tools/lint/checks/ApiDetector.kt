@@ -2602,7 +2602,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return -1
             }
 
-            for (annotation in annotated.annotations) {
+            //noinspection AndroidLintExternalAnnotations
+            for (annotation in annotated.uAnnotations) {
                 val fqcn = annotation.qualifiedName
                 if (fqcn != null && isApiLevelAnnotation(fqcn)) {
                     val attributeList = annotation.attributeValues

@@ -2925,6 +2925,90 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testSuspendFunctions() {
+        // Regression test for b/141622949 along with some additional scenarios from
+        // failing metalava tests
+        lint().files(
+                        manifest().minSdk(19),
+                        kotlin(
+                                ""
+                                        + "@file:Suppress(\"NOTHING_TO_INLINE\", \"RedundantVisibilityModifier\", \"unused\")\n"
+                                        + "package test.pkg\n"
+                                        + "import android.content.Context\n"
+                                        + "import android.net.ConnectivityManager\n"
+                                        + "class MainActivity : android.app.Activity() {\n"
+                                        + "    val cm = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager\n"
+                                        + "    fun works1() = cm.activeNetwork\n"
+                                        + "    private fun works2() = cm.activeNetwork\n"
+                                        + "    suspend fun works3() = cm.activeNetwork\n"
+                                        + "    private suspend fun fails() = cm.activeNetwork\n"
+                                        + "\n"
+                                        + "    inline fun <T> a(t: T) = cm.activeNetwork\n"
+                                        + "    inline fun <reified T> b(t: T) = cm.activeNetwork\n"
+                                        + "    private inline fun <reified T> c(t: T) = cm.activeNetwork\n"
+                                        + "    internal inline fun <reified T> d(t: T) = cm.activeNetwork\n"
+                                        + "    public inline fun <reified T> e(t: T) = cm.activeNetwork\n"
+                                        + "    inline fun <reified T> T.f(t: T) = cm.activeNetwork\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/MainActivity.kt:7: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    fun works1() = cm.activeNetwork\n"
+                                + "                      ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:8: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    private fun works2() = cm.activeNetwork\n"
+                                + "                              ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:9: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    suspend fun works3() = cm.activeNetwork\n"
+                                + "                              ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:10: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    private suspend fun fails() = cm.activeNetwork\n"
+                                + "                                     ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:12: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    inline fun <T> a(t: T) = cm.activeNetwork\n"
+                                + "                                ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:13: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    inline fun <reified T> b(t: T) = cm.activeNetwork\n"
+                                + "                                        ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:14: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    private inline fun <reified T> c(t: T) = cm.activeNetwork\n"
+                                + "                                                ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:15: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    internal inline fun <reified T> d(t: T) = cm.activeNetwork\n"
+                                + "                                                 ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:16: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    public inline fun <reified T> e(t: T) = cm.activeNetwork\n"
+                                + "                                               ~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MainActivity.kt:17: Error: Call requires API level 23 (current min is 19): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    inline fun <reified T> T.f(t: T) = cm.activeNetwork\n"
+                                + "                                          ~~~~~~~~~~~~~\n"
+                                + "10 errors, 0 warnings");
+    }
+
+    public void testReifiedFunctions() {
+        // Regression test for
+        // https://youtrack.jetbrains.com/issue/KT-34316
+        lint().files(
+                        manifest().minSdk(19),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "import android.content.Context\n"
+                                        + "inline fun <reified T> Context.systemService1() = getSystemService(T::class.java)\n"
+                                        + "inline fun Context.systemService2() = getSystemService(String::class.java)"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/.java).kt:3: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
+                                + "inline fun <reified T> Context.systemService1() = getSystemService(T::class.java)\n"
+                                + "                                                  ~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/.java).kt:4: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
+                                + "inline fun Context.systemService2() = getSystemService(String::class.java)\n"
+                                + "                                      ~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     public void testThisCall() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=93158
         // Make sure we properly resolve super classes in Class.this.call()

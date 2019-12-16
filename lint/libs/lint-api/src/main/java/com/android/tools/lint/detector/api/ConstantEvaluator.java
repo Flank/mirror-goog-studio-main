@@ -79,7 +79,7 @@ import org.jetbrains.uast.UResolvable;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UastBinaryOperator;
-import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastPrefixOperator;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
@@ -264,8 +264,7 @@ public class ConstantEvaluator {
                 }
 
                 PsiVariable variable = (PsiVariable) resolved;
-                UastContext uastContext = UastUtils.getUastContext(node);
-                Object value = UastLintUtils.findLastValue(variable, node, uastContext, this);
+                Object value = UastLintUtils.findLastValue(variable, node, this);
 
                 if (value != null) {
                     if (surroundedByVariableCheck(node, variable)) {
@@ -938,12 +937,11 @@ public class ConstantEvaluator {
         public LastAssignmentFinder(
                 @NonNull PsiVariable variable,
                 @NonNull UElement endAt,
-                @NonNull UastContext context,
                 @Nullable ConstantEvaluator constantEvaluator,
                 int variableLevel) {
             mVariable = variable;
             mEndAt = endAt;
-            UExpression initializer = context.getInitializerBody(variable);
+            UExpression initializer = UastFacade.INSTANCE.getInitializerBody(variable);
             mLastAssignment = initializer;
             mConstantEvaluator = constantEvaluator;
             if (initializer != null && constantEvaluator != null) {
