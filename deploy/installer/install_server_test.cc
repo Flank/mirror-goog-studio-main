@@ -34,9 +34,7 @@ class InstallServerTest : public ::testing::Test {
  public:
   InstallServerTest() { DisableEventSystemForTests(); }
 
-  void SetUp() override {}
-
-  void TearDown() override {}
+  void TearDown() override { ASSERT_EQ(0, system("rm -rf .overlay")); }
 };
 
 class FakeExecutor : public Executor {
@@ -192,6 +190,48 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
 
   fake_exec.JoinServerThread();
 };
+
+TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
+  std::thread server_thread;
+  std::deque<bool> success = {true, true, true};
+  FakeExecutor fake_exec(server_thread, success);
+
+  // Don't call workspace init; it closes stdout.
+  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
+
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+
+  // Start the server and create an overlay
+  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  ASSERT_FALSE(nullptr == client);
+
+  request.mutable_overlay_request()->set_overlay_id("id");
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::OK,
+            response.overlay_response().status());
+  ASSERT_TRUE(client->WaitForExit());
+
+  fake_exec.JoinServerThread();
+
+  // Attempt to update with an un-set expected id.
+  client = StartServer(workspace, "fakepath", "fakepackage");
+  ASSERT_FALSE(nullptr == client);
+
+  request.mutable_overlay_request()->set_overlay_id("next-id");
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->Read(-1, &response));
+  ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
+  ASSERT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
+            response.overlay_response().status());
+  ASSERT_TRUE(client->WaitForExit());
+
+  fake_exec.JoinServerThread();
+}
 
 TEST_F(InstallServerTest, TestServerOverlayFiles) {
   std::thread server_thread;
