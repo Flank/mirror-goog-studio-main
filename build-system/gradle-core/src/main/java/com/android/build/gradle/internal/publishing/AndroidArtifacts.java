@@ -107,8 +107,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
     private static final String TYPE_FEATURE_NAME = "android-feature-name";
 
-
-    // types for metadata content.
+    // types for reverse metadata content.
     private static final String TYPE_REVERSE_METADATA_FEATURE_DECLARATION =
             "android-reverse-metadata-feature-decl";
     private static final String TYPE_REVERSE_METADATA_FEATURE_MANIFEST =
@@ -116,6 +115,8 @@ public class AndroidArtifacts {
     private static final String TYPE_REVERSE_METADATA_CLASSES = "android-reverse-metadata-classes";
     private static final String TYPE_REVERSE_METADATA_JAVA_RES =
             "android-reverse-metadata-java-res";
+    private static final String TYPE_REVERSE_METADATA_NATIVE_DEBUG_METADATA =
+            "android-reverse-metadata-native-debug-metadata";
 
     public static final String TYPE_MOCKABLE_JAR = "android-mockable-jar";
     public static final Attribute<Boolean> MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
@@ -377,6 +378,9 @@ public class AndroidArtifacts {
         REVERSE_METADATA_FEATURE_MANIFEST(TYPE_REVERSE_METADATA_FEATURE_MANIFEST),
         REVERSE_METADATA_CLASSES(TYPE_REVERSE_METADATA_CLASSES),
         REVERSE_METADATA_JAVA_RES(TYPE_REVERSE_METADATA_JAVA_RES),
+        // The .so.dbg and .so.sym files containing the debug metadata from the corresponding .so
+        // files
+        REVERSE_METADATA_NATIVE_DEBUG_METADATA(TYPE_REVERSE_METADATA_NATIVE_DEBUG_METADATA),
 
         // types for querying only. Not publishable.
         AAR(TYPE_AAR),

@@ -24,12 +24,14 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -46,6 +48,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -86,6 +89,13 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     @get:Optional
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val integrityConfigFile: RegularFileProperty
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val nativeDebugMetadataDirs: ConfigurableFileCollection
+
+    @get:Input
+    abstract val nativeDebugSymbolLevel: Property<NativeDebugSymbolLevel>
 
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
@@ -128,6 +138,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     mainDexList = mainDexList.orNull?.asFile,
                     obfuscationMappingFile = if (obsfuscationMappingFile.isPresent) obsfuscationMappingFile.get().asFile else null,
                     integrityConfigFile = if (integrityConfigFile.isPresent) integrityConfigFile.get().asFile else null,
+                    nativeDebugMetadataDirs = nativeDebugMetadataDirs.files,
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
@@ -136,7 +147,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     // do not compress the bundle in debug builds where it will be only used as an
                     // intermediate artifact
                     uncompressBundle = debuggable.get(),
-                    bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig
+                    bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig,
+                    nativeDebugSymbolLevel = nativeDebugSymbolLevel.get()
                 )
             )
         }
@@ -149,13 +161,15 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val mainDexList: File?,
         val obfuscationMappingFile: File?,
         val integrityConfigFile: File?,
+        val nativeDebugMetadataDirs: Set<File>,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
         val bundleFlags: BundleFlags,
         val bundleFile: File,
         val bundleDeps: File?,
         val uncompressBundle: Boolean,
-        val bundleNeedsFusedStandaloneConfig: Boolean
+        val bundleNeedsFusedStandaloneConfig: Boolean,
+        val nativeDebugSymbolLevel: NativeDebugSymbolLevel
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params) : Runnable {
@@ -256,6 +270,26 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 }
             }
 
+            val nativeDebugMetadataPredicate = { file: File ->
+                when (params.nativeDebugSymbolLevel) {
+                    NativeDebugSymbolLevel.NONE -> false
+                    NativeDebugSymbolLevel.SYMBOL_TABLE ->
+                        file.name.endsWith(".so.sym", ignoreCase = true)
+                    NativeDebugSymbolLevel.FULL ->
+                        file.name.endsWith(".so.dbg", ignoreCase = true)
+                }
+            }
+
+            params.nativeDebugMetadataDirs.forEach { dir ->
+                FileUtils.getAllFiles(dir).filter(nativeDebugMetadataPredicate).forEach { file ->
+                    command.addMetadataFile(
+                        "com.android.tools.build.debugsymbols",
+                        "${file.parentFile.name}/${file.name}",
+                        file.toPath()
+                    )
+                }
+            }
+
             command.build().execute()
         }
 
@@ -286,6 +320,15 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         @get:Input
         val enableUncompressedNativeLibs: Boolean
     ) : Serializable
+
+    enum class NativeDebugSymbolLevel {
+        /** Package native debug info *and* native symbol table */
+        FULL,
+        /** Package native symbol table but not native debug info */
+        SYMBOL_TABLE,
+        /** Don't package native debug info or native symbol table */
+        NONE
+    }
 
     /**
      * CreateAction for a Task that will pack the bundle artifact.
@@ -344,6 +387,45 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 task.integrityConfigFile
             )
 
+            task.debuggable
+                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+
+            val nativeDebugSymbolLevel =
+                creationConfig.globalScope.projectOptions[StringOption.BUNDLE_NATIVE_DEBUG_METADATA]
+            task.nativeDebugSymbolLevel.set(
+                if (nativeDebugSymbolLevel == null || task.debuggable.get()) {
+                    NativeDebugSymbolLevel.NONE
+                } else {
+                    try {
+                        NativeDebugSymbolLevel.valueOf(
+                            nativeDebugSymbolLevel.toUpperCase(Locale.US)
+                        )
+                    } catch (e: IllegalArgumentException) {
+                        NativeDebugSymbolLevel.NONE
+                        throw RuntimeException(
+                            "Unsupported value for ${StringOption.BUNDLE_NATIVE_DEBUG_METADATA}: " +
+                                    "$nativeDebugSymbolLevel. Supported values are " +
+                                    "${NativeDebugSymbolLevel.values().joinToString()}."
+                        )
+                    }
+                }
+            )
+            if (task.nativeDebugSymbolLevel.get() != NativeDebugSymbolLevel.NONE) {
+                task.nativeDebugMetadataDirs.from(
+                    creationConfig.artifacts.getFinalProduct(
+                        InternalArtifactType.NATIVE_DEBUG_METADATA
+                    )
+                )
+                task.nativeDebugMetadataDirs.from(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
+                        AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA
+                    )
+                )
+            }
+            task.nativeDebugMetadataDirs.disallowChanges()
+
             task.aaptOptionsNoCompress =
             creationConfig.globalScope.extension.aaptOptions.noCompress
 
@@ -367,9 +449,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 InternalArtifactType.APK_MAPPING,
                 task.obsfuscationMappingFile
             )
-
-            task.debuggable
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
             if (creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
                 && task.assetPackZips.isPresent) {

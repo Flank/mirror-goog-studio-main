@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEA
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
+import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_DEBUG_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_DEPENDENCIES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
@@ -184,6 +185,10 @@ class PublishingSpecs {
                 reverseMetadata(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
                 reverseMetadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 reverseMetadata(PACKAGED_DEPENDENCIES, ArtifactType.PACKAGED_DEPENDENCIES)
+                reverseMetadata(
+                    NATIVE_DEBUG_METADATA,
+                    ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA
+                )
 
                 reverseMetadata(DESUGAR_LIB_PROJECT_KEEP_RULES, ArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
                 reverseMetadata(DESUGAR_LIB_SUBPROJECT_KEEP_RULES, ArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES)

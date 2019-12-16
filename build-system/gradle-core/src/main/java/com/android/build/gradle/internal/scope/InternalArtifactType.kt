@@ -220,6 +220,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object MERGED_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // native libs stripped of debug symbols
     object STRIPPED_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // debug metadata extracted from native libs
+    object NATIVE_DEBUG_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // Assets created by compiling shader
     object SHADER_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable

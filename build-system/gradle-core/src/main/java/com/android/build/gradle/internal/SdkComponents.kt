@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
 import com.android.build.gradle.internal.ndk.NdkHandler
@@ -127,8 +128,23 @@ open class SdkComponents(
     val supportBlasLibFolderProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getSupportBlasLibFolder() }
 
     val ndkFolderProvider: Provider<File> = project.providers.provider { ndkHandlerSupplier.get().ndkPlatform.getOrThrow().ndkDirectory }
+    val ndkRevisionProvider: Provider<Revision> =
+        project.providers.provider { ndkHandlerSupplier.get().ndkPlatform.getOrThrow().revision }
     val stripExecutableFinderProvider: Provider<SymbolStripExecutableFinder> =
         project.providers.provider { createSymbolStripExecutableFinder(ndkHandlerSupplier.get()) }
+    val objcopyExecutableMapProvider: Provider<Map<Abi, File>> =
+        project.providers.provider {
+            val ndkHandler = ndkHandlerSupplier.get()
+            if (!ndkHandler.ndkPlatform.isConfigured) {
+                return@provider mapOf<Abi, File>()
+            }
+            val objcopyExecutables = mutableMapOf<Abi, File>()
+            for (abi in ndkHandler.ndkPlatform.getOrThrow().supportedAbis) {
+                objcopyExecutables[abi] =
+                    ndkHandler.ndkPlatform.getOrThrow().ndkInfo.getObjcopyExecutable(abi)
+            }
+            return@provider objcopyExecutables
+        }
 
     @Synchronized
     fun unload() {

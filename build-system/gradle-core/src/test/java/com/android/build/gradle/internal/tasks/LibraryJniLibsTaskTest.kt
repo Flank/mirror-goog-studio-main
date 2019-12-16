@@ -17,15 +17,14 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.TestInputsGenerator
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
-import java.io.File
-import java.io.Serializable
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 /** Tests for [LibraryJniLibsTask].  */
 class LibraryJniLibsTaskTest {
@@ -39,23 +38,7 @@ class LibraryJniLibsTaskTest {
     @Before
     fun setUp() {
         outputDirectory = tmpDir.newFile("out")
-
-        workers = object: WorkerExecutorFacade {
-            override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
-                val configuration =
-                    WorkerExecutorFacade.Configuration(
-                        parameter, WorkerExecutorFacade.IsolationMode.NONE, listOf()
-                    )
-                val action =
-                    actionClass.getConstructor(configuration.parameter.javaClass)
-                        .newInstance(configuration.parameter)
-                action.run()
-            }
-
-            override fun await() {}
-
-            override fun close() {}
-        }
+        workers = testWorkers
     }
 
     @Test

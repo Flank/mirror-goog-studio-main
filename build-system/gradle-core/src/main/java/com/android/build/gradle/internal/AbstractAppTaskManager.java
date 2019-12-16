@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
+import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -157,6 +158,9 @@ public abstract class AbstractAppTaskManager<
         createCompileTask(appVariantProperties);
 
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(appVariantProperties));
+
+        taskFactory.register(
+                new ExtractNativeDebugMetadataTask.CreationAction(appVariantProperties));
 
         createPackagingTask(apkCreationConfig);
 

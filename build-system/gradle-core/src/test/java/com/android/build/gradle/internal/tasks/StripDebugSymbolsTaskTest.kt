@@ -96,22 +96,7 @@ class StripDebugSymbolsTaskTest {
             SymbolStripExecutableFinder(mapOf(Pair(Abi.X86, fakeExe), Pair(Abi.ARMEABI, fakeExe)))
         )
 
-        workers = object: WorkerExecutorFacade {
-            override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
-                val configuration =
-                    WorkerExecutorFacade.Configuration(
-                        parameter, WorkerExecutorFacade.IsolationMode.NONE, listOf()
-                    )
-                val action =
-                    actionClass.getConstructor(configuration.parameter.javaClass)
-                        .newInstance(configuration.parameter)
-                action.run()
-            }
-
-            override fun await() {}
-
-            override fun close() {}
-        }
+        workers = testWorkers
     }
 
     @Test
@@ -204,4 +189,21 @@ class StripDebugSymbolsTaskTest {
         val armeabiFooPath = FileUtils.relativePossiblyNonExistingPath(armeabiFoo, inputDir)
         assertThat(File(outputDir, armeabiFooPath)).doesNotExist()
     }
+}
+
+val testWorkers = object: WorkerExecutorFacade {
+    override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
+        val configuration =
+            WorkerExecutorFacade.Configuration(
+                parameter, WorkerExecutorFacade.IsolationMode.NONE, listOf()
+            )
+        val action =
+            actionClass.getConstructor(configuration.parameter.javaClass)
+                .newInstance(configuration.parameter)
+        action.run()
+    }
+
+    override fun await() {}
+
+    override fun close() {}
 }
