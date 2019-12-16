@@ -19,16 +19,16 @@ package com.android.build.gradle.integration.resources
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.res.namespaced.registerAaptService
-import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.useAaptDaemon
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
-import com.google.common.truth.Truth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.StdLogger
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assume
 import org.junit.Ignore
@@ -86,10 +86,13 @@ class Aapt2FromMavenTest {
     }
 
     private fun testRunningAapt2FromMaven(artifact: FileCollection) {
+        val buildService = object : Aapt2DaemonBuildService() {
+            override fun getParameters(): BuildServiceParameters.None = TODO()
+        }
         val registry = WorkerActionServiceRegistry()
 
         val serviceKey =
-            registerAaptService(artifact, StdLogger(StdLogger.Level.INFO), registry)
+            buildService.registerAaptService(artifact, StdLogger(StdLogger.Level.INFO), registry)
 
         val outDir = temporaryFolder.newFolder()
         val inFile = createFileToCompile()

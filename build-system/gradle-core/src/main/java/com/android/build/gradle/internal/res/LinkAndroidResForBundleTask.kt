@@ -22,11 +22,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -127,6 +128,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     var excludeResSources: Boolean = false
         private set
 
+    @get:Internal
+    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+
     private var compiledDependenciesResources: ArtifactCollection? = null
 
     override fun doTaskAction() {
@@ -175,7 +179,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             logger.info("Aapt output file {}", outputFile.absolutePath)
         }
 
-        val aapt2ServiceKey = registerAaptService(
+        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
             aapt2FromMaven = aapt2FromMaven,
             logger = LoggerWrapper(logger)
         )
@@ -324,6 +328,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                     AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                 )
             }
+            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }
 }

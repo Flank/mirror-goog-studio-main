@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.rewriteLinkException
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.useAaptDaemon
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
@@ -47,7 +49,7 @@ class Aapt2LinkRunnable @Inject constructor(
     }
 
     class Params(
-        val aapt2ServiceKey: Aapt2ServiceKey,
+        val aapt2ServiceKey: Aapt2DaemonServiceKey,
         val request: AaptPackageConfig,
         val errorFormatMode: SyncOptions.ErrorFormatMode
     ) : Serializable

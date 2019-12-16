@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.DependenciesGraph.Node
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
@@ -50,7 +51,7 @@ class NonNamespacedDependenciesLinker(
     private val outputStaticLibrariesDirectory: File,
     private val intermediateDirectory: File,
     private val pool: ForkJoinPool,
-    private val aapt2ServiceKey: Aapt2ServiceKey,
+    private val aapt2ServiceKey: Aapt2DaemonServiceKey,
     private val aaptOptions: AaptOptions = AaptOptions(),
     private val errorFormatMode: SyncOptions.ErrorFormatMode,
     private val androidJarPath: String

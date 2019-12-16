@@ -66,12 +66,12 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -243,6 +243,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         threadRecorder = ThreadRecorder.get();
 
         Aapt2Workers.registerAapt2WorkersBuildService(project, projectOptions);
+        Aapt2Daemon.registerAapt2DaemonBuildService(project);
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
@@ -356,13 +357,13 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                                 project.getPath(),
                                 null,
                                 () -> {
-                                    if (!projectOptions.get(
-                                            BooleanOption.KEEP_SERVICES_BETWEEN_BUILDS)) {
-                                        WorkerActionServiceRegistry.INSTANCE
-                                                .shutdownAllRegisteredServices(
-                                                        ForkJoinPool.commonPool());
-                                    }
                                     Main.clearInternTables();
+                                    // Because some registrations may happen w/o gradle build
+                                    // service (from artifact transforms), we need to explicitly
+                                    // invoked this method.
+                                    Aapt2Daemon.getAapt2DaemonServiceRegistry()
+                                            .shutdownAllRegisteredServices(
+                                                    ForkJoinPool.commonPool());
                                 });
                         DeprecationReporterImpl.Companion.clean();
                     }

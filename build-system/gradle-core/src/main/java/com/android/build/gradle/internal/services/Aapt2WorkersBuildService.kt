@@ -30,6 +30,7 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.services.BuildServiceRegistration
 import org.gradle.workers.WorkerExecutor
+import java.io.Closeable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
 
@@ -37,8 +38,8 @@ private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
 private const val AAPT2_WORKERS_BUILD_SERVICE_NAME = "aapt2-workers-build-service"
 
 /**
- *  Registers aapt2 workers build services. This makes it available for querying, but using
- * [getAapt2WorkersBuildService]
+ * Registers aapt2 workers build services. This makes it available for querying, by using
+ * [getAapt2WorkersBuildService] method.
  */
 fun registerAapt2WorkersBuildService(project: Project, projectOptions: ProjectOptions) {
     project.gradle.sharedServices.registerIfAbsent(
@@ -60,6 +61,8 @@ fun getAapt2WorkersBuildService(project: Project): Provider<out Aapt2WorkersBuil
             as BuildServiceRegistration<Aapt2WorkersBuildService, Aapt2WorkersBuildService.Params>)
         .service
 
+val aapt2WorkersServiceRegistry = WorkerActionServiceRegistry()
+
 /** Build service used to access shared thread pool used for aapt2. */
 abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.Params>,
     AutoCloseable {
@@ -67,8 +70,11 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
         val aapt2ThreadPoolSize: Property<Int>
     }
 
+    /** Key to access the build service, and handle to close it when done. */
+    private class WorkerServiceInfo(val key: Aapt2WorkersBuildServiceKey, val closeable: Closeable)
+
     private val aapt2ThreadPool: ForkJoinPool = ForkJoinPool(parameters.aapt2ThreadPoolSize.get())
-    private val serviceKey = lazy { registerForWorkers() }
+    private val serviceInfo = lazy { registerForWorkers() }
 
     @Synchronized
     fun getWorkerForAapt2(
@@ -98,24 +104,16 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
      * service.
      */
     fun getWorkersServiceKey(): WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService> =
-        serviceKey.value
+        serviceInfo.value.key
 
-    private fun registerForWorkers(): WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService> {
+    private fun registerForWorkers(): WorkerServiceInfo {
         val key = Aapt2WorkersBuildServiceKey()
-        val service = object : WorkerActionServiceRegistry.RegisteredService<Aapt2WorkersBuildService> {
-            override val service: Aapt2WorkersBuildService
-                get() = this@Aapt2WorkersBuildService
-
-            override fun shutdown() {
-                // lifecycle is managed by Gradle
-            }
-        }
-        WorkerActionServiceRegistry.INSTANCE.registerService(key) { service }
-        return key
+        val closeable = aapt2WorkersServiceRegistry.registerServiceAsCloseable(key, this)
+        return WorkerServiceInfo(key, closeable)
     }
 
     override fun close() {
-        WorkerActionServiceRegistry.INSTANCE.removeService(serviceKey.value)
+        serviceInfo.value.closeable.close()
         aapt2ThreadPool.shutdown()
     }
 }

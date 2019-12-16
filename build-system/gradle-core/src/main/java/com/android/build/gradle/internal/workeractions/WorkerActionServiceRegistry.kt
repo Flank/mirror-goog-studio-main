@@ -27,11 +27,6 @@ import java.util.concurrent.Executor
  * See implementations of [ServiceKey] to find services.
  */
 class WorkerActionServiceRegistry {
-    companion object {
-        @JvmField
-        val INSTANCE = WorkerActionServiceRegistry()
-    }
-
     interface ServiceKey<T : Any>: Serializable {
         val type: Class<T>
     }
@@ -61,6 +56,11 @@ class WorkerActionServiceRegistry {
      * that registers the service to also remove it.
      *
      * If service is null, service registration is ignored, and a no-op [Closeable] is returned.
+     *
+     * A note about using this method in tasks with worker actions. If try-with-resources is used,
+     * users of this API should make sure [Closeable.close] is not invoked before all build
+     * operations that require the registered service complete. If task action does not wait for
+     * the worker actions to finish, using gradle build services is a better fit.
      */
     @Synchronized
     fun <T : Any> registerServiceAsCloseable(key: ServiceKey<T>, service: T?): Closeable {
@@ -71,7 +71,7 @@ class WorkerActionServiceRegistry {
 
             override fun shutdown() {}
         }
-        return Closeable { removeService(key) }
+        return Closeable { synchronized(this@WorkerActionServiceRegistry) { services.remove(key) } }
     }
 
     /** Get a previously registered service */
@@ -89,17 +89,6 @@ class WorkerActionServiceRegistry {
         throw IllegalStateException(
                 "Service $key not registered. Available services: " +
                         "[${services.keys.joinToString(separator = ", ")}].")
-    }
-
-    /**
-     * Removes a previously registered service.
-     *
-     * It is the caller's responsibility to shut down the service.
-     */
-    @Synchronized
-    fun <T : Any> removeService(key: ServiceKey<T>): RegisteredService<T>? {
-        @Suppress("UNCHECKED_CAST") // Type matched when stored in service map.
-        return services.remove(key) as RegisteredService<T>?
     }
 
     @Synchronized

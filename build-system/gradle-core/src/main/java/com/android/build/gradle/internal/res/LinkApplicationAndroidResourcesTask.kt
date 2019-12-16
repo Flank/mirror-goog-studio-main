@@ -32,9 +32,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
-import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
-import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -42,6 +39,10 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getAaptDaemon
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -53,7 +54,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
@@ -247,6 +247,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var useFinalIds: Boolean = true
         private set
 
+    @get:Internal
+    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
@@ -274,7 +277,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             sharedLibraryDependencies!!.files
         else
             emptySet()
-        val aapt2ServiceKey = registerAaptService(
+        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
             aapt2FromMaven, LoggerWrapper(logger)
         )
 
@@ -509,6 +512,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.manifestMergeBlameFile = variantScope.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
+            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }
 
@@ -789,7 +793,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     }
 
                     @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-                    Preconditions.checkNotNull<Aapt2ServiceKey>(
+                    Preconditions.checkNotNull<Aapt2DaemonServiceKey>(
                         params.aapt2ServiceKey, "AAPT2 daemon manager service not initialized"
                     )
                     val logger = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
@@ -854,7 +858,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val featureResourcePackages: Set<File>,
         val apkData: ApkData,
         val generateCode: Boolean,
-        val aapt2ServiceKey: Aapt2ServiceKey?,
+        val aapt2ServiceKey: Aapt2DaemonServiceKey?,
         val compiledDependenciesResourcesDirs: List<File>,
         task: LinkApplicationAndroidResourcesTask,
         val rClassOutputJar: File? = null

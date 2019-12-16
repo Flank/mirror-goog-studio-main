@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
@@ -85,6 +87,9 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     lateinit var androidJar: Provider<File>
         private set
 
+    @get:Internal
+    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override fun doTaskAction() {
@@ -110,7 +115,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 customPackageForR = packageForR.get(),
                 intermediateDir = aaptIntermediateDir)
 
-        val aapt2ServiceKey = registerAaptService(
+        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
             aapt2FromMaven = aapt2FromMaven,
             logger = LoggerWrapper(logger)
         )
@@ -195,6 +200,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
             )
+            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }
 

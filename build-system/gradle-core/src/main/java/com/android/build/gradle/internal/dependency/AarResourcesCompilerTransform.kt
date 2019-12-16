@@ -21,7 +21,7 @@ import com.android.SdkConstants.FD_RES
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.res.namespaced.registerAaptService
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.options.SyncOptions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.xml.AndroidManifestParser
@@ -70,6 +70,8 @@ abstract class AarResourcesCompilerTransform :
             }
         }
 
+        // Until build services are supported in artifact transforms, we need to use this method.
+        @Suppress("DEPRECATION")
         val aapt2ServiceKey =
             registerAaptService(
                 parameters.aapt2FromMaven,
