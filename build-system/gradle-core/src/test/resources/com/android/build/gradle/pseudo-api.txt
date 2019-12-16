@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-44c69492336d2c1fd767de5271b33b0838b5dee666887b6105193726d5b19d91
+cb6d4244a35dfdd501507a26fd96ec11b1ab1bcfc0e357dce665ee8cc569ba38
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -169,6 +169,7 @@ com.android.build.gradle.LibraryExtension.aidlPackageWhiteList: void (java.lang.
 com.android.build.gradle.LibraryExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LibraryBuildFeatures, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.buildFeatures: void (org.gradle.api.Action<com.android.build.api.dsl.LibraryBuildFeatures>)
 com.android.build.gradle.LibraryExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>>)
+com.android.build.gradle.LibraryExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.compileSdkVersion: void (int)
 com.android.build.gradle.LibraryExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.gradle.LibraryExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
@@ -180,6 +181,8 @@ com.android.build.gradle.LibraryExtension.getBuildFeatures: com.android.build.ap
 com.android.build.gradle.LibraryExtension.getBuildFeatures: com.android.build.api.dsl.LibraryBuildFeatures ()
 com.android.build.gradle.LibraryExtension.getBuildTypes: java.util.Collection ()
 com.android.build.gradle.LibraryExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType> ()
+com.android.build.gradle.LibraryExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
+com.android.build.gradle.LibraryExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.LibraryExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.gradle.LibraryExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.LibraryExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
@@ -248,6 +251,7 @@ com.android.build.gradle.TestExtension.addVariant: void (com.android.build.gradl
 com.android.build.gradle.TestExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestBuildFeatures, kotlin.Unit>)
 com.android.build.gradle.TestExtension.buildFeatures: void (org.gradle.api.Action<com.android.build.api.dsl.TestBuildFeatures>)
 com.android.build.gradle.TestExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>>)
+com.android.build.gradle.TestExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.compileSdkVersion: void (int)
 com.android.build.gradle.TestExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.gradle.TestExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
@@ -259,6 +263,8 @@ com.android.build.gradle.TestExtension.getBuildFeatures: com.android.build.api.d
 com.android.build.gradle.TestExtension.getBuildFeatures: com.android.build.api.dsl.TestBuildFeatures ()
 com.android.build.gradle.TestExtension.getBuildTypes: java.util.Collection ()
 com.android.build.gradle.TestExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType> ()
+com.android.build.gradle.TestExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
+com.android.build.gradle.TestExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.TestExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.gradle.TestExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.TestExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
@@ -574,6 +580,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.buildFeatures: void
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.buildFeatures: void (org.gradle.api.Action<com.android.build.api.dsl.ApplicationBuildFeatures>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.bundle: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptions>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
@@ -585,6 +592,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildFeatures: c
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildTypes: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBundle: com.android.build.gradle.internal.dsl.BundleOptions ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
@@ -829,6 +838,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.<init>: com.androi
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicFeatureBuildFeatures, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.buildFeatures: void (org.gradle.api.Action<com.android.build.api.dsl.DynamicFeatureBuildFeatures>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>>)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.compileSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
@@ -839,6 +849,8 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getBuildFeatures: 
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getBuildFeatures: com.android.build.api.dsl.DynamicFeatureBuildFeatures ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getBuildTypes: java.util.Collection ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType> ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()

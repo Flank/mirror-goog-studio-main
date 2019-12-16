@@ -35,7 +35,7 @@ class KotlinDslTest {
     val projectDirectory = TemporaryFolder()
 
     private lateinit var plugin: AppPlugin
-    private lateinit var android: ApplicationExtension<*, *, *, *, *, *, *, *, *>
+    private lateinit var android: ApplicationExtension<*, *, *, *, *, *, *, *, *, *>
     private lateinit var project: Project
 
     @Before

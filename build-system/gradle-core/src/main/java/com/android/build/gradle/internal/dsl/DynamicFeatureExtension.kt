@@ -21,6 +21,7 @@ import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
+import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -43,6 +44,7 @@ internal open class DynamicFeatureExtension(
 ), DynamicFeatureExtension<
         BuildType,
         CmakeOptions,
+        CompileOptions,
         DefaultConfig,
         ExternalNativeBuild,
         NdkBuildOptions,

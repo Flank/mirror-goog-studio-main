@@ -20,6 +20,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.ViewBindingOptions
+import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
@@ -72,6 +73,7 @@ open class LibraryExtension(
     com.android.build.api.dsl.LibraryExtension<
             BuildType,
             CmakeOptions,
+            CompileOptions,
             DefaultConfig,
             ExternalNativeBuild,
             NdkBuildOptions,
