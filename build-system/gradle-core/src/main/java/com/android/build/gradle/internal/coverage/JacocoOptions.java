@@ -19,10 +19,7 @@ package com.android.build.gradle.internal.coverage;
 import com.android.annotations.NonNull;
 import javax.inject.Inject;
 
-/**
- * DSL object for configuring JaCoCo settings.
- */
-public class JacocoOptions {
+public class JacocoOptions implements com.android.build.api.dsl.JacocoOptions {
 
     /** Default JaCoCo version. */
     public static final String DEFAULT_VERSION = "0.7.9";
@@ -32,13 +29,13 @@ public class JacocoOptions {
 
     @NonNull private String version = DEFAULT_VERSION;
 
-    /** Returns the version of JaCoCo to use. */
+    @Override
     @NonNull
     public String getVersion() {
         return version;
     }
 
-    /** Set the version of JaCoCo to use. */
+    @Override
     public void setVersion(@NonNull String version) {
         this.version = version;
     }

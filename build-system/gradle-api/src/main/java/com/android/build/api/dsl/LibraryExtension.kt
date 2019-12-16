@@ -34,6 +34,8 @@ interface LibraryExtension<
         CompileOptionsT : CompileOptions,
         DefaultConfigT : DefaultConfig,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        JacocoOptionsT : JacocoOptions,
+
         NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
@@ -46,6 +48,7 @@ interface LibraryExtension<
         CompileOptionsT,
         DefaultConfigT,
         ExternalNativeBuildT,
+        JacocoOptionsT,
         NdkBuildOptionsT,
         ProductFlavorT,
         SigningConfigT,

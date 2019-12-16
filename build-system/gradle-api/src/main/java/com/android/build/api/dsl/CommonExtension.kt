@@ -37,6 +37,7 @@ interface CommonExtension<
         CompileOptionsT : CompileOptions,
         DefaultConfigT : DefaultConfig,
         ExternalNativeBuildT: ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        JacocoOptionsT : JacocoOptions,
         NdkBuildOptionsT: NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
@@ -119,6 +120,38 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [BuildType]
      */
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
+
+
+    /**
+     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
+     *
+     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
+     * ` file:
+     *
+     * ```
+     * android {
+     *     jacoco {
+     *         version "<jacoco-version>"
+     *     }
+     * }
+     * ```
+     */
+    val jacoco: JacocoOptionsT
+    /**
+     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
+     *
+     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
+     * ` file:
+     *
+     * ```
+     * android {
+     *     jacoco {
+     *         version "<jacoco-version>"
+     *     }
+     * }
+     * ```
+     */
+    fun jacoco(action: JacocoOptionsT.() -> Unit)
 
     /**
      * Encapsulates all product flavors configurations for this project.

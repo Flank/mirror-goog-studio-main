@@ -24,6 +24,7 @@ import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -55,6 +56,7 @@ class DynamicFeatureExtensionImpl(
             CompileOptions,
             DefaultConfig,
             ExternalNativeBuild,
+            JacocoOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

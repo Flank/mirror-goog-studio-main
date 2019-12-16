@@ -22,6 +22,7 @@ import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
@@ -76,6 +77,7 @@ open class LibraryExtension(
             CompileOptions,
             DefaultConfig,
             ExternalNativeBuild,
+            JacocoOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

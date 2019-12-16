@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-cb6d4244a35dfdd501507a26fd96ec11b1ab1bcfc0e357dce665ee8cc569ba38
+acf24c090ac81f6cc914100ff813bbc1f56ad394f2bb0ee920d26016b61e6b62
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -192,6 +192,8 @@ com.android.build.gradle.LibraryExtension.getDefaultConfig: com.android.build.gr
 com.android.build.gradle.LibraryExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.gradle.LibraryExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
 com.android.build.gradle.LibraryExtension.getExternalNativeBuild: com.android.build.gradle.internal.model.CoreExternalNativeBuild ()
+com.android.build.gradle.LibraryExtension.getJacoco: com.android.build.api.dsl.JacocoOptions ()
+com.android.build.gradle.LibraryExtension.getJacoco: com.android.build.gradle.internal.coverage.JacocoOptions ()
 com.android.build.gradle.LibraryExtension.getLibraryVariants: org.gradle.api.internal.DefaultDomainObjectSet<com.android.build.gradle.api.LibraryVariant> ()
 com.android.build.gradle.LibraryExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.LibraryExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
@@ -200,6 +202,7 @@ com.android.build.gradle.LibraryExtension.getSigningConfigs: org.gradle.api.Name
 com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.LibraryExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
+com.android.build.gradle.LibraryExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.coverage.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.LibraryVariantProperties> ()
 com.android.build.gradle.LibraryExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryVariantProperties, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.onVariantProperties: void (org.gradle.api.Action<com.android.build.api.variant.LibraryVariantProperties>)
@@ -274,6 +277,8 @@ com.android.build.gradle.TestExtension.getDefaultConfig: com.android.build.gradl
 com.android.build.gradle.TestExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.gradle.TestExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
 com.android.build.gradle.TestExtension.getExternalNativeBuild: com.android.build.gradle.internal.model.CoreExternalNativeBuild ()
+com.android.build.gradle.TestExtension.getJacoco: com.android.build.api.dsl.JacocoOptions ()
+com.android.build.gradle.TestExtension.getJacoco: com.android.build.gradle.internal.coverage.JacocoOptions ()
 com.android.build.gradle.TestExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.TestExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.TestExtension.getSigningConfigs: java.util.Collection ()
@@ -284,6 +289,7 @@ com.android.build.gradle.TestExtension.getTestBuildType: java.lang.String ()
 com.android.build.gradle.TestExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.TestExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.TestExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
+com.android.build.gradle.TestExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.coverage.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.TestVariantProperties> ()
 com.android.build.gradle.TestExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.TestVariantProperties, kotlin.Unit>)
 com.android.build.gradle.TestExtension.onVariantProperties: void (org.gradle.api.Action<com.android.build.api.variant.TestVariantProperties>)
@@ -604,6 +610,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDynamicFeatures:
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getExternalNativeBuild: com.android.build.gradle.internal.model.CoreExternalNativeBuild ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getJacoco: com.android.build.api.dsl.JacocoOptions ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getJacoco: com.android.build.gradle.internal.coverage.JacocoOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: java.util.Collection ()
@@ -611,6 +619,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: 
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.coverage.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.AppVariantProperties> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AppVariantProperties, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.onVariantProperties: void (org.gradle.api.Action<com.android.build.api.variant.AppVariantProperties>)
@@ -860,6 +869,8 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDefaultConfig: 
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getExternalNativeBuild: com.android.build.gradle.internal.model.CoreExternalNativeBuild ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getJacoco: com.android.build.api.dsl.JacocoOptions ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getJacoco: com.android.build.gradle.internal.coverage.JacocoOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSigningConfigs: java.util.Collection ()
@@ -867,6 +878,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSigningConfigs:
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.coverage.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<com.android.build.api.variant.DynamicFeatureVariantProperties> ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.DynamicFeatureVariantProperties, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariantProperties: void (org.gradle.api.Action<com.android.build.api.variant.DynamicFeatureVariantProperties>)

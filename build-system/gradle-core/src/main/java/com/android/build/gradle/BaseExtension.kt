@@ -131,8 +131,6 @@ abstract class BaseExtension protected constructor(
         objectFactory.newInstance(DexOptions::class.java, extraModelInfo.deprecationReporter)
     override val packagingOptions: PackagingOptions =
         objectFactory.newInstance(PackagingOptions::class.java)
-    override val jacoco: JacocoOptions =
-        objectFactory.newInstance(JacocoOptions::class.java)
     override val splits: Splits =
         objectFactory.newInstance(Splits::class.java, objectFactory)
     override val adbOptions: AdbOptions =
@@ -440,20 +438,7 @@ abstract class BaseExtension protected constructor(
         action.execute(packagingOptions)
     }
 
-    /**
-     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
-     *
-     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
-     * ` file:
-     *
-     * ```
-     * android {
-     *     jacoco {
-     *         version "&ltjacoco-version&gt"
-     *     }
-     * }
-     * ```
-     */
+
     fun jacoco(action: Action<JacocoOptions>) {
         checkWritability()
         action.execute(jacoco)
@@ -698,6 +683,8 @@ abstract class BaseExtension protected constructor(
     abstract fun defaultConfig(action: Action<DefaultConfig>)
 
     abstract override val externalNativeBuild: ExternalNativeBuild
+
+    abstract override val jacoco: JacocoOptions
 
     abstract override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
     abstract fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
