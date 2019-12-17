@@ -33,8 +33,10 @@ import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
 import static com.android.SdkConstants.REFERENCE_STYLE;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TAG_ACTION;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
+import static com.android.SdkConstants.TAG_NAVIGATION;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_SAFE;
@@ -899,6 +901,11 @@ public class ResourceUsageModel {
                                 // and find all the id's.)  Therefore, treat these as read for
                                 // now; longer term, it would be cool if we could track uses of
                                 // the binding field instead.
+                                markReachable(addResource(url.type, url.name, null));
+                            } else if (isId && TAG_ACTION.equals(element.getTagName()) &&
+                                    TAG_NAVIGATION.equals(element.getOwnerDocument().getDocumentElement().getTagName())) {
+                                // Actions on navigation items are read by the navigation framework
+                                // so treat as read
                                 markReachable(addResource(url.type, url.name, null));
                             } else {
                                 resource = declareResource(url.type, url.name, attr);

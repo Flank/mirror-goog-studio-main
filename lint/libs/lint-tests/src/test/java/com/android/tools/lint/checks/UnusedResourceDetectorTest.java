@@ -1095,6 +1095,68 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n")));
     }
 
+    public void testNavigation() throws Exception {
+        // Regression test for https://issuetracker.google.com/145687664
+
+        lint().files(
+                        xml(
+                                "res/navigation/graph.xml",
+                                ""
+                                        + "<navigation xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:id=\"@+id/navigation\"\n"
+                                        + "    app:startDestination=\"@id/importFragment\">\n"
+                                        + "\n"
+                                        + "    <fragment\n"
+                                        + "        android:id=\"@+id/importFragment\"\n"
+                                        + "        android:name=\"com.android.demo.ImportFragment\"\n"
+                                        + "        android:label=\"main_fragment\">\n"
+                                        + "        <action\n"
+                                        + "            android:id=\"@+id/process_import\"\n"
+                                        + "            app:destination=\"@id/eventListFragment\" />\n"
+                                        + "    </fragment>\n"
+                                        + "    <fragment\n"
+                                        + "        android:id=\"@id/exportFragment\"\n"
+                                        + "        android:name=\"com.android.demo.ImportFragment\"\n"
+                                        + "        android:label=\"main_fragment\">\n"
+                                        + "        <action\n"
+                                        + "            android:id=\"@id/process_export\"\n"
+                                        + "            app:destination=\"@id/eventListFragment\" />\n"
+                                        + "    </fragment>\n"
+                                        + "</navigation>"),
+                        java(
+                                "src/my/pkg/MyTest.java",
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "class MyTest {\n"
+                                        + "    public void test() {\n"
+                                        + "        System.out.println(R.id.navigation);\n"
+                                        + "        System.out.println(R.navigation.graph);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                "src/test/pkg/R.java",
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "public class R {\n"
+                                        + "    public static class id {\n"
+                                        + "        public static final int navigation = 0;\n"
+                                        + "        public static final int importFragment = 1;\n"
+                                        + "        public static final int exportFragment = 2;\n"
+                                        + "        public static final int process_import = 3;\n"
+                                        + "        public static final int process_export = 4;\n"
+                                        + "        public static final int eventListFragment = 5;\n"
+                                        + "    }\n"
+                                        + "    public static class navigation {\n"
+                                        + "        public static final int graph = 6;\n"
+                                        + "    }\n"
+                                        + "}"))
+                .issues(UnusedResourceDetector.ISSUE_IDS, UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
+    }
+
     public void testToolsNamespaceReferences() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=226204
         mEnableIds = false;
