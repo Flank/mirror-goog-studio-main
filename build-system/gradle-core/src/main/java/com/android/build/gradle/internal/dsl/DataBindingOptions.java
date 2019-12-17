@@ -21,15 +21,14 @@ import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 
-/**
- * DSL object for configuring databinding options.
- */
-public class DataBindingOptions implements com.android.builder.model.DataBindingOptions {
-    @NonNull private final BuildFeatures features;
-    @NonNull private final ProjectOptions projectOptions;
+/** DSL object for configuring databinding options. */
+public class DataBindingOptions
+        implements com.android.builder.model.DataBindingOptions,
+                com.android.build.api.dsl.DataBindingOptions {
+    @NonNull private final Supplier<BuildFeatures> featuresProvider;
     @NonNull private final DslScope dslScope;
     private String version;
     private boolean addDefaultAdapters = true;
@@ -37,11 +36,8 @@ public class DataBindingOptions implements com.android.builder.model.DataBinding
 
     @Inject
     public DataBindingOptions(
-            @NonNull BuildFeatures features,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull DslScope dslScope) {
-        this.features = features;
-        this.projectOptions = projectOptions;
+            @NonNull Supplier<BuildFeatures> featuresProvider, @NonNull DslScope dslScope) {
+        this.featuresProvider = featuresProvider;
         this.dslScope = dslScope;
     }
 
@@ -67,11 +63,11 @@ public class DataBindingOptions implements com.android.builder.model.DataBinding
                         "android.buildFeatures.dataBinding",
                         "android.dataBinding.enabled",
                         DeprecationReporter.DeprecationTarget.VERSION_5_0);
-        Boolean bool = features.getDataBinding();
+        Boolean bool = featuresProvider.get().getDataBinding();
         if (bool != null) {
             return bool;
         }
-        return projectOptions.get(BooleanOption.BUILD_FEATURE_DATABINDING);
+        return dslScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_DATABINDING);
     }
 
     @Deprecated
@@ -82,7 +78,7 @@ public class DataBindingOptions implements com.android.builder.model.DataBinding
                         "android.dataBinding.enabled",
                         DeprecationReporter.DeprecationTarget.VERSION_5_0);
 
-        features.setDataBinding(enabled);
+        featuresProvider.get().setDataBinding(enabled);
     }
 
     /** Whether to add the default data binding adapters. */

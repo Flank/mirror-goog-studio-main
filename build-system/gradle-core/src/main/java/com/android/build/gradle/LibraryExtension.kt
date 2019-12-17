@@ -81,6 +81,7 @@ open class LibraryExtension(
             BuildType,
             CmakeOptions,
             CompileOptions,
+            DataBindingOptions,
             DefaultConfig,
             ExternalNativeBuild,
             JacocoOptions,
@@ -97,14 +98,6 @@ open class LibraryExtension(
     private var _packageBuildConfig = true
 
     private var _aidlPackageWhiteList: MutableCollection<String>? = null
-
-    override val dataBinding: DataBindingOptions =
-        dslScope.objectFactory.newInstance(
-            DataBindingOptions::class.java,
-            publicExtensionImpl.buildFeatures,
-            projectOptions,
-            globalScope.dslScope
-        )
 
     override val viewBinding: ViewBindingOptions =
         dslScope.objectFactory.newInstance(

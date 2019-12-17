@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ba6e0363e39e6857d5034f6e0c3333778d129d36f946642082b867ea97b1af23
+7947d625ebe0ecba1eda7968b837024d1867d8033b5be84a1cb90f7c302cdf37
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -182,6 +182,7 @@ com.android.build.gradle.LibraryExtension.buildTypes: void (org.gradle.api.Actio
 com.android.build.gradle.LibraryExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.compileSdkVersion: void (int)
 com.android.build.gradle.LibraryExtension.compileSdkVersion: void (java.lang.String)
+com.android.build.gradle.LibraryExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.DataBindingOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
 com.android.build.gradle.LibraryExtension.executeVariantOperations: void (com.android.build.api.variant.LibraryVariant)
 com.android.build.gradle.LibraryExtension.executeVariantOperations: void (com.android.build.api.variant.Variant)
@@ -200,6 +201,7 @@ com.android.build.gradle.LibraryExtension.getBuildTypes: org.gradle.api.NamedDom
 com.android.build.gradle.LibraryExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.gradle.LibraryExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.LibraryExtension.getCompileSdkVersion: java.lang.String ()
+com.android.build.gradle.LibraryExtension.getDataBinding: com.android.build.api.dsl.DataBindingOptions ()
 com.android.build.gradle.LibraryExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.LibraryExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
 com.android.build.gradle.LibraryExtension.getDefaultConfig: com.android.build.api.dsl.DefaultConfig ()
@@ -275,6 +277,7 @@ com.android.build.gradle.TestExtension.buildTypes: void (org.gradle.api.Action<?
 com.android.build.gradle.TestExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.compileSdkVersion: void (int)
 com.android.build.gradle.TestExtension.compileSdkVersion: void (java.lang.String)
+com.android.build.gradle.TestExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.DataBindingOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
 com.android.build.gradle.TestExtension.executeVariantOperations: void (com.android.build.api.variant.TestVariant)
 com.android.build.gradle.TestExtension.executeVariantOperations: void (com.android.build.api.variant.Variant)
@@ -293,6 +296,7 @@ com.android.build.gradle.TestExtension.getBuildTypes: org.gradle.api.NamedDomain
 com.android.build.gradle.TestExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.gradle.TestExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.TestExtension.getCompileSdkVersion: java.lang.String ()
+com.android.build.gradle.TestExtension.getDataBinding: com.android.build.api.dsl.DataBindingOptions ()
 com.android.build.gradle.TestExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.TestExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
 com.android.build.gradle.TestExtension.getDefaultConfig: com.android.build.api.dsl.DefaultConfig ()
@@ -615,6 +619,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.bundle: void (org.g
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (java.lang.String)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.DataBindingOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantOperations: void (com.android.build.api.variant.AppVariant)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantOperations: void (com.android.build.api.variant.Variant)
@@ -634,6 +639,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBundle: com.andr
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileSdkVersion: java.lang.String ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDataBinding: com.android.build.api.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDefaultConfig: com.android.build.api.dsl.DefaultConfig ()
@@ -851,8 +857,8 @@ com.android.build.gradle.internal.dsl.CoreProductFlavor.getShaders: com.android.
 com.android.build.gradle.internal.dsl.CoreShaderOptions
 com.android.build.gradle.internal.dsl.CoreShaderOptions.getGlslcArgs: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.CoreShaderOptions.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()
-com.android.build.gradle.internal.dsl.DataBindingOptions implements com.android.builder.model.DataBindingOptions
-com.android.build.gradle.internal.dsl.DataBindingOptions.<init>: com.android.build.gradle.internal.dsl.DataBindingOptions (com.android.build.api.dsl.BuildFeatures, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.DataBindingOptions implements com.android.builder.model.DataBindingOptions, com.android.build.api.dsl.DataBindingOptions
+com.android.build.gradle.internal.dsl.DataBindingOptions.<init>: com.android.build.gradle.internal.dsl.DataBindingOptions (java.util.function.Supplier<com.android.build.api.dsl.BuildFeatures>, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.DataBindingOptions.getAddDefaultAdapters: boolean ()
 com.android.build.gradle.internal.dsl.DataBindingOptions.getVersion: java.lang.String ()
 com.android.build.gradle.internal.dsl.DataBindingOptions.isEnabled: boolean ()
@@ -887,6 +893,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.buildTypes: void (
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.compileSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.compileSdkVersion: void (java.lang.String)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.DataBindingOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.executeVariantOperations: void (com.android.build.api.variant.DynamicFeatureVariant)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.executeVariantOperations: void (com.android.build.api.variant.Variant)
@@ -904,6 +911,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getBuildTypes: org
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getCompileSdkVersion: java.lang.String ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDataBinding: com.android.build.api.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDataBinding: com.android.builder.model.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getDefaultConfig: com.android.build.api.dsl.DefaultConfig ()

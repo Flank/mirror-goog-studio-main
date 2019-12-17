@@ -37,6 +37,7 @@ interface CommonExtension<
         BuildTypeT : BuildType,
         CMakeOptionsT: CmakeOptions,
         CompileOptionsT : CompileOptions,
+        DataBindingOptionsT : DataBindingOptions,
         DefaultConfigT : DefaultConfig,
         ExternalNativeBuildT: ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
         JacocoOptionsT : JacocoOptions,
@@ -155,6 +156,21 @@ interface CommonExtension<
      */
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
 
+    /**
+     * Specifies options for the
+     * [Data Binding Library](https://developer.android.com/topic/libraries/data-binding/index.html).
+     *
+     * For more information about the properties you can configure in this block, see [DataBindingOptions]
+     */
+    val dataBinding: DataBindingOptionsT
+
+    /**
+     * Specifies options for the
+     * [Data Binding Library](https://developer.android.com/topic/libraries/data-binding/index.html).
+     *
+     * For more information about the properties you can configure in this block, see [DataBindingOptions]
+     */
+    fun dataBinding(action: DataBindingOptionsT.() -> Unit)
 
     /**
      * Configure JaCoCo version that is used for offline instrumentation and coverage report.

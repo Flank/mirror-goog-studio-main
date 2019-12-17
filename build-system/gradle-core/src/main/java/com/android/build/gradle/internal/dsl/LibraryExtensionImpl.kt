@@ -59,6 +59,7 @@ class LibraryExtensionImpl(
             BuildType,
             CmakeOptions,
             CompileOptions,
+            DataBindingOptions,
             DefaultConfig,
             ExternalNativeBuild,
             JacocoOptions,

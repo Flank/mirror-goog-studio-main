@@ -51,6 +51,7 @@ internal open class DynamicFeatureExtension(
         BuildType,
         CmakeOptions,
         CompileOptions,
+        DataBindingOptions,
         DefaultConfig,
         ExternalNativeBuild,
         JacocoOptions,
@@ -60,14 +61,6 @@ internal open class DynamicFeatureExtension(
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant, DynamicFeatureVariantProperties> by publicExtensionImpl {
-
-    override val dataBinding: DataBindingOptions =
-        dslScope.objectFactory.newInstance(
-            DataBindingOptions::class.java,
-            publicExtensionImpl.buildFeatures,
-            projectOptions,
-            dslScope
-        )
 
     override val viewBinding: ViewBindingOptions =
         dslScope.objectFactory.newInstance(

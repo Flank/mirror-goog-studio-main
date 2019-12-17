@@ -59,6 +59,7 @@ open class TestExtension(
             BuildType,
             CmakeOptions,
             CompileOptions,
+            DataBindingOptions,
             DefaultConfig,
             ExternalNativeBuild,
             JacocoOptions,
@@ -73,14 +74,6 @@ open class TestExtension(
         dslScope.objectFactory.domainObjectSet(ApplicationVariant::class.java)
 
     private var _targetProjectPath: String? = null
-
-    override val dataBinding: DataBindingOptions =
-        dslScope.objectFactory.newInstance(
-            DataBindingOptions::class.java,
-            publicExtensionImpl.buildFeatures,
-            projectOptions,
-            globalScope.dslScope
-        )
 
     override val viewBinding: ViewBindingOptions =
         dslScope.objectFactory.newInstance(

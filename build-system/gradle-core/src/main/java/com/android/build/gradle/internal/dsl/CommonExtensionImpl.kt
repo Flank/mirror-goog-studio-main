@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import java.util.function.Supplier
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
@@ -52,6 +53,7 @@ abstract class CommonExtensionImpl<
         BuildTypeT,
         CmakeOptions,
         CompileOptions,
+        DataBindingOptions,
         DefaultConfigT,
         ExternalNativeBuild,
         JacocoOptions,
@@ -108,6 +110,17 @@ abstract class CommonExtensionImpl<
 
     override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>) {
         action.execute(buildTypes)
+    }
+
+    override val dataBinding: DataBindingOptions =
+        dslScope.objectFactory.newInstance(
+            DataBindingOptions::class.java,
+            Supplier { buildFeatures },
+            dslScope
+        )
+
+    override fun dataBinding(action: DataBindingOptions.() -> Unit) {
+        action.invoke(dataBinding)
     }
 
     override fun defaultConfig(action: Action<DefaultConfigT>) {

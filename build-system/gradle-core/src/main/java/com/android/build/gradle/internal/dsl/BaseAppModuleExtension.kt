@@ -57,6 +57,7 @@ open class BaseAppModuleExtension(
         BuildType,
         CmakeOptions,
         CompileOptions,
+        DataBindingOptions,
         DefaultConfig,
         ExternalNativeBuild,
         JacocoOptions,
@@ -66,14 +67,6 @@ open class BaseAppModuleExtension(
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<AppVariant, AppVariantProperties> by publicExtensionImpl {
-
-    override val dataBinding: DataBindingOptions =
-        dslScope.objectFactory.newInstance(
-            DataBindingOptions::class.java,
-            publicExtensionImpl.buildFeatures,
-            projectOptions,
-            dslScope
-        )
 
     override val viewBinding: ViewBindingOptions =
         dslScope.objectFactory.newInstance(
