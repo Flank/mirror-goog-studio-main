@@ -16,13 +16,13 @@
 
 package com.android.tools.binaries;
 
+import com.android.tools.bazel.BazelToolsLogger;
 import com.android.tools.bazel.ImlToIr;
 import com.android.tools.bazel.IrToBazel;
 import com.android.tools.bazel.StudioConfiguration;
 import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.utils.WorkspaceUtils;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -33,6 +33,7 @@ public class ImlToBazel {
 
         Path workspace = null;
         boolean dryRun = false;
+        boolean warningsAsErrors = false;
         String project = "tools/idea";
         String imlGraph = null;
 
@@ -47,6 +48,8 @@ public class ImlToBazel {
                 imlGraph = args.next();
             } else if (arg.equals("--dry_run")){
                 dryRun = true;
+            } else if (arg.equals("--warnings_as_errors")) {
+                warningsAsErrors = true;
             } else {
                 System.err.println("Unknown argument: " + arg);
                 System.exit(1);
@@ -57,8 +60,12 @@ public class ImlToBazel {
         }
 
         long now = System.nanoTime();
+        int filesUpdated = 0;
         try {
-            run(workspace, dryRun, project, imlGraph);
+            filesUpdated = run(workspace, project, imlGraph, dryRun, warningsAsErrors);
+        } catch (ProjectLoadingException e) {
+            System.err.println(e.issues + " issues encountered.");
+            System.exit(e.issues);
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);
@@ -67,18 +74,47 @@ public class ImlToBazel {
         System.err.println(String.format("Total time: %d.%03ds", milli / 1000, milli % 1000));
 
         // JPS creates a shared thread executor that creates non-daemon threads. There is no way to access that to shut it down, so we exit
-        System.exit(0);
+        System.exit(dryRun ? filesUpdated : 0);
     }
 
-    public static int run(Path workspace, boolean dryRun, String project, String imlGraph)
+    public static int run(
+            Path workspace,
+            String project,
+            String imlGraph,
+            boolean dryRun,
+            boolean warningsAsErrors)
             throws IOException {
-        PrintWriter writer = new PrintWriter(System.err, true);
         StudioConfiguration configuration = new StudioConfiguration();
+        BazelToolsLogger logger = new BazelToolsLogger();
 
         ImlToIr imlToIr = new ImlToIr();
-        IrToBazel irToBazel = new IrToBazel(dryRun);
+        IrProject irProject = imlToIr.convert(workspace, project, imlGraph, logger);
 
-        IrProject irProject = imlToIr.convert(workspace, project, imlGraph, writer);
-        return irToBazel.convert(irProject, writer, configuration);
+        check(logger, warningsAsErrors);
+
+        IrToBazel irToBazel = new IrToBazel(logger, dryRun);
+        int packagesUpdated = irToBazel.convert(irProject, configuration);
+
+        check(logger, warningsAsErrors);
+
+        return packagesUpdated;
+    }
+
+    private static void check(BazelToolsLogger logger, boolean warningsAsErrors) {
+        if (warningsAsErrors && logger.getTotalIssuesCount() > 0) {
+            throw new ProjectLoadingException(logger.getTotalIssuesCount());
+        }
+
+        if (logger.getErrorCount() > 0) {
+            throw new ProjectLoadingException(logger.getErrorCount());
+        }
+    }
+
+    public static class ProjectLoadingException extends RuntimeException {
+        public final int issues;
+
+        public ProjectLoadingException(int issues) {
+            this.issues = issues;
+        }
     }
 }

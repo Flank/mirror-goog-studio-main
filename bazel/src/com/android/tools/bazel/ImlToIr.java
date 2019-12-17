@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -87,7 +86,7 @@ public class ImlToIr {
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
     public IrProject convert(
-            Path workspace, String projectPath, String imlGraph, PrintWriter writer)
+            Path workspace, String projectPath, String imlGraph, BazelToolsLogger logger)
             throws IOException {
         projectPath = workspace.resolve(projectPath).toString();
         // Depending on class initialization order this property will be read, so it needs to be set.
@@ -99,7 +98,9 @@ public class ImlToIr {
 
         JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
         JpsProjectLoader.loadProject(project, pathVariables, projectPath);
-        writer.println("Loaded project " + project.getName() + " with " + project.getModules().size() + " modules.");
+        logger.info(
+                "Loaded project %s with %d modules.",
+                project.getName(), project.getModules().size());
 
         IrProject irProject = new IrProject(workspace.toFile());
 
@@ -107,14 +108,15 @@ public class ImlToIr {
                 .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
         List<File> excludedFiles = excludedFiles(excludes);
 
-        JpsGraph compileGraph = new JpsGraph(project, COMPILE_SCOPE);
-        JpsGraph testCompileGraph = new JpsGraph(project, TEST_COMPILE_SCOPE);
-        JpsGraph runtimeGraph = new JpsGraph(project, RUNTIME_COMPILE_SCOPE);
-        JpsGraph testCompileRuntimeGraph = new JpsGraph(project, RUNTIME_TEST_COMPILE_SCOPE);
+        JpsGraph compileGraph = new JpsGraph(project, COMPILE_SCOPE, logger);
+        JpsGraph testCompileGraph = new JpsGraph(project, TEST_COMPILE_SCOPE, logger);
+        JpsGraph runtimeGraph = new JpsGraph(project, RUNTIME_COMPILE_SCOPE, logger);
+        JpsGraph testCompileRuntimeGraph =
+                new JpsGraph(project, RUNTIME_TEST_COMPILE_SCOPE, logger);
 
         Dot dot = new Dot("iml_graph");
 
-        printCycleWarnings(writer, testCompileGraph);
+        printCycleWarnings(logger, testCompileGraph);
 
         // We have to create the IrModules first because even iterating in topological order,
         // we do so on a test+compile scope, but there are still runtime dependency cycles.
@@ -159,13 +161,10 @@ public class ImlToIr {
 
                     if (library == null) {
                         if (!ignoreWarnings(jpsModule)) {
-                            System.err.println(
-                                    String.format(
-                                            "Module %s: invalid item '%s' in the dependencies list",
-                                            jpsModule.getName(),
-                                            libraryDependency
-                                                    .getLibraryReference()
-                                                    .getLibraryName()));
+                            logger.warning(
+                                    "Module %s: invalid item '%s' in the dependencies list",
+                                    jpsModule.getName(),
+                                    libraryDependency.getLibraryReference().getLibraryName());
                         }
                         continue;  // Like IDEA, ignore dependencies on non-existent libraries.
                     }
@@ -196,7 +195,7 @@ public class ImlToIr {
                             } else {
                                 dependencyDescription = "Library " + libraryName;
                             }
-                            System.err.println(
+                            logger.warning(
                                     dependencyDescription
                                             + " points to non existing file: "
                                             + file);
@@ -215,7 +214,7 @@ public class ImlToIr {
                     JpsModule dep = moduleDependency.getModule();
                     if (dep == null) {
                         if (!ignoreWarnings(module.getName())) {
-                            System.err.println(
+                            logger.warning(
                                     "Invalid module dependency: "
                                             + moduleDependency.getModuleReference().getModuleName()
                                             + " from "
@@ -272,14 +271,19 @@ public class ImlToIr {
         return irProject;
     }
 
-    private static void printCycleWarnings(PrintWriter writer, JpsGraph graph) {
+    private static void printCycleWarnings(BazelToolsLogger logger, JpsGraph graph) {
         for (List<JpsModule> component : graph.getConnectedComponents()) {
             // If the component has more than one element, there is a cycle:
             if (component.size() > 1 && !isCycleAllowed(component)) {
-                writer.println("Found circular module dependency: " + component.size() + " modules");
+                StringBuilder message = new StringBuilder();
+                message.append("Found circular module dependency: ")
+                        .append(component.size())
+                        .append(" modules");
                 for (JpsModule module : component) {
-                    writer.println("        " + module.getName());
+                    message.append("        ").append(module.getName());
                 }
+
+                logger.warning(message.toString());
             }
         }
     }

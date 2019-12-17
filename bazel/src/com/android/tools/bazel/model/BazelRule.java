@@ -16,7 +16,9 @@
 
 package com.android.tools.bazel.model;
 
-import com.android.tools.bazel.parser.ast.*;
+import com.android.tools.bazel.parser.ast.Build;
+import com.android.tools.bazel.parser.ast.CallExpression;
+import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.io.IOException;

@@ -34,7 +34,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,13 +44,14 @@ import java.util.Map;
 public class IrToBazel {
 
     private final boolean dryRun;
+    private final BazelToolsLogger logger;
 
-    public IrToBazel(boolean dryRun) {
+    public IrToBazel(BazelToolsLogger logger, boolean dryRun) {
         this.dryRun = dryRun;
+        this.logger = logger;
     }
 
-    public int convert(IrProject bazelProject, PrintWriter progress, Configuration config)
-            throws IOException {
+    public int convert(IrProject bazelProject, Configuration config) throws IOException {
 
         File projectDir = bazelProject.getBaseDir().toPath().resolve("tools/idea").toFile();
         Path workspace = bazelProject.getBaseDir().toPath();
@@ -179,7 +179,7 @@ public class IrToBazel {
                                         throw new IllegalStateException("Cannot add jar " + packageRelative, e);
                                     }
                                 } else {
-                                    System.err.println("Cannot find package for:" + relJar);
+                                    logger.warning("Cannot find package for %s", relJar);
                                 }
                             }
                         }
@@ -230,11 +230,11 @@ public class IrToBazel {
         rules.values().stream().filter(ImlModule::isExport).sorted(Comparator.comparing(BazelRule::getLabel))
                 .forEach(imlProject::addModule);
 
-        progress.println("Updating BUILD files...");
-        CountingListener listener = new CountingListener(progress, dryRun);
+        logger.info("Updating BUILD files...");
+        CountingListener listener = new CountingListener(logger, dryRun);
         bazel.generate(listener);
 
-        progress.println(String.format("%d BUILD file(s) updated.", listener.getUpdatedPackages()));
+        logger.info("%d BUILD file(s) updated.", listener.getUpdatedPackages());
         return listener.getUpdatedPackages();
     }
 
@@ -286,20 +286,29 @@ public class IrToBazel {
     }
 
     private static class CountingListener implements Workspace.GenerationListener {
-        private final PrintWriter printWriter;
+        private final BazelToolsLogger logger;
         private final boolean dryRun;
         private int updatedPackages = 0;
 
-        private CountingListener(PrintWriter printWriter, boolean dryRun) {
-            this.printWriter = printWriter;
+        private CountingListener(BazelToolsLogger logger, boolean dryRun) {
+            this.logger = logger;
             this.dryRun = dryRun;
         }
 
         @Override
         public boolean packageUpdated(String packageName) {
             updatedPackages++;
-            printWriter.append("Updated ").append(packageName).append("/BUILD").println();
+            if (dryRun) {
+                logger.info("%s/BUILD out of date.", packageName);
+            } else {
+                logger.info("Updated %s/BUILD", packageName);
+            }
             return !dryRun;
+        }
+
+        @Override
+        public void error(String description) {
+            logger.error(description);
         }
 
         int getUpdatedPackages() {

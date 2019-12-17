@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +56,7 @@ public class Package {
     }
 
     @NotNull
-    private File buildFile(@NotNull File dir) {
+    private static File buildFile(@NotNull File dir) {
         // Use test files if found.
         for (int i = 0; i < Workspace.BUILD_FILES.length; i++) {
             File file = new File(dir, Workspace.BUILD_FILES[i]);
@@ -103,20 +104,18 @@ public class Package {
                         Files.copy(tmp, build);
                     } else {
                         keepFile = true;
-                        System.err.println(
+                        listener.error(
                                 "diff " + tmp.getAbsolutePath() + " " + build.getAbsolutePath());
                     }
                 }
             } finally {
                 if (!keepFile) {
-                    tmp.delete();
+                    if (!tmp.delete()) {
+                        listener.error("Failed to delete " + tmp.getPath());
+                    }
                 }
             }
         }
-    }
-
-    public BazelRule getRule(String name) {
-        return rules.get(name.toLowerCase());
     }
 
     public ImmutableSet<BazelRule> getRules() {
@@ -137,9 +136,9 @@ public class Package {
     }
 
     public void addRule(BazelRule rule) {
-        if (rules.get(rule.getName().toLowerCase()) != null) {
+        if (rules.get(rule.getName().toLowerCase(Locale.US)) != null) {
             throw new IllegalStateException("Package \"" + this.name + "\", cannot add rule:\n" + rule.toString());
         }
-        rules.put(rule.getName().toLowerCase(), rule);
+        rules.put(rule.getName().toLowerCase(Locale.US), rule);
     }
 }

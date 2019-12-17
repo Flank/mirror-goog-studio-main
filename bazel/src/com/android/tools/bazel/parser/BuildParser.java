@@ -351,7 +351,7 @@ public class BuildParser {
 
     private TokenizerToken consume(Kind kind) {
         if (token.kind != kind) {
-            System.err.println(token.asError());
+            throw new RuntimeException(token.asError());
         }
         return consume();
     }
