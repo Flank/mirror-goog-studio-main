@@ -126,6 +126,17 @@ public class AndroidArtifacts {
 
     private static final String TYPE_PREFAB_PACKAGE = "android-prefab";
 
+    private static final String TYPE_DESUGAR_LIB_PROJECT_KEEP_RULES =
+            "android-desugar-lib-project-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES =
+            "android-desugar-lib-subproject-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES =
+            "android-desugar-lib-external-libs-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES =
+            "android-desugar-lib-mixed-scope-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES =
+            "android-desugar-lib-external-file-keep-rules";
+
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
@@ -355,7 +366,13 @@ public class AndroidArtifacts {
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
         AAR_OR_JAR(TYPE_AAR_OR_JAR), // See ArtifactUtils for how this is used.
 
-        NAVIGATION_JSON(TYPE_NAVIGATION_JSON);
+        NAVIGATION_JSON(TYPE_NAVIGATION_JSON),
+
+        DESUGAR_LIB_PROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_PROJECT_KEEP_RULES),
+        DESUGAR_LIB_SUBPROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES),
+        DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES),
+        DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES(TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES),
+        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES);
 
         @NonNull private final String type;
 

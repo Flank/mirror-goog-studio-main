@@ -151,6 +151,41 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                 task.keepRules.from(variantScope.artifacts.getFinalProductAsFileCollection(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
+            val hasDynamicFeatures =
+                variantScope.type.isBaseModule && variantScope.globalScope.hasDynamicFeatures()
+            val nonMinified = variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+            if (hasDynamicFeatures && nonMinified) {
+                task.keepRules.from(
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
+                )
+                task.keepRules.from(
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
+                        AndroidArtifacts.ArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES)
+                )
+                task.keepRules.from(
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES)
+                )
+                task.keepRules.from(
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.REPOSITORY_MODULE,
+                        AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
+                )
+                task.keepRules.from(
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.FILE,
+                        AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES)
+                )
+            }
         }
     }
 }
