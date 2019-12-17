@@ -12,6 +12,7 @@ import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DataBindingOptions
@@ -52,6 +53,7 @@ open class TestExtension(
     false
 ), TestAndroidConfig,
     com.android.build.api.dsl.TestExtension<
+            AaptOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

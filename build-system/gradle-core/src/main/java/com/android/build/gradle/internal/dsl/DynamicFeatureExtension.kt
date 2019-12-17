@@ -46,6 +46,7 @@ internal open class DynamicFeatureExtension(
     dslScope, projectOptions, globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
+        AaptOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,

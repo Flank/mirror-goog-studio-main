@@ -52,6 +52,7 @@ open class BaseAppModuleExtension(
     extraModelInfo,
     true
 ), ApplicationExtension<
+        AaptOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,

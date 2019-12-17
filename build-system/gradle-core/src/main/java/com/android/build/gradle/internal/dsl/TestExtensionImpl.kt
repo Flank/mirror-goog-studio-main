@@ -50,6 +50,7 @@ class TestExtensionImpl(
         signingConfigs
     ),
     TestExtension<
+            AaptOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

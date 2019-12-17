@@ -74,6 +74,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         project.getProviders(),
                         new DslVariableFactory(syncIssueHandler),
                         project.getLayout(),
+                        projectOptions,
                         project::file);
 
         extension = project.getExtensions().create("android", TestOptions.class, dslScope);

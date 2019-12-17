@@ -54,6 +54,7 @@ class LibraryExtensionImpl(
         signingConfigs
     ),
     LibraryExtension<
+            AaptOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

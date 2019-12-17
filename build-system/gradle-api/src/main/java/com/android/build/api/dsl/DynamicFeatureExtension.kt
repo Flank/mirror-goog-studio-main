@@ -28,6 +28,7 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface DynamicFeatureExtension<
+        AaptOptionsT : AaptOptions,
         BuildTypeT : BuildType,
         CMakeOptionsT : CmakeOptions,
         CompileOptionsT : CompileOptions,
@@ -40,6 +41,7 @@ interface DynamicFeatureExtension<
         TestOptionsT: TestOptions<UnitTestOptionsT>,
         UnitTestOptionsT: UnitTestOptions> :
     CommonExtension<
+            AaptOptionsT,
             DynamicFeatureBuildFeatures,
             BuildTypeT,
             CMakeOptionsT,

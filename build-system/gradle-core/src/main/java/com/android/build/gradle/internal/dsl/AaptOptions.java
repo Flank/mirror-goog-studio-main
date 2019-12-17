@@ -27,7 +27,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 /** DSL object for configuring aapt options. */
-public class AaptOptions {
+public class AaptOptions implements com.android.build.api.dsl.AaptOptions {
 
     @Inject
     public AaptOptions(boolean namespaced) {

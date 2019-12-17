@@ -27,6 +27,7 @@ import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
+import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -45,6 +46,7 @@ abstract class CommonExtensionImpl<
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
     override val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
 ) : CommonExtension<
+        AaptOptions,
         BuildFeaturesT,
         BuildTypeT,
         CmakeOptions,
@@ -59,6 +61,16 @@ abstract class CommonExtensionImpl<
         TestOptions.UnitTestOptions,
         VariantT,
         VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
+
+    override val aaptOptions: AaptOptions =
+        dslScope.objectFactory.newInstance(
+            AaptOptions::class.java,
+            dslScope.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
+        )
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        action.invoke(aaptOptions)
+    }
 
     fun buildFeatures(action: Action<BuildFeaturesT>) {
         action.execute(buildFeatures)

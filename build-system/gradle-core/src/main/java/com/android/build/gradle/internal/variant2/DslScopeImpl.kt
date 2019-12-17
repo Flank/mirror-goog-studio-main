@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
@@ -36,6 +37,7 @@ class DslScopeImpl(
         override val providerFactory: ProviderFactory,
         override val variableFactory: DslVariableFactory,
         override val projectLayout: ProjectLayout,
+        override val projectOptions: ProjectOptions,
         private val fileResolver: (Any) -> File
 ) : DslScope {
     override fun file(file: Any): File = fileResolver.invoke(file)

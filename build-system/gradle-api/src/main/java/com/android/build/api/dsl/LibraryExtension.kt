@@ -29,6 +29,7 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface LibraryExtension<
+        AaptOptionsT : AaptOptions,
         BuildTypeT : BuildType,
         CMakeOptionsT : CmakeOptions,
         CompileOptionsT : CompileOptions,
@@ -42,6 +43,7 @@ interface LibraryExtension<
         TestOptionsT : TestOptions<UnitTestOptionsT>,
         UnitTestOptionsT : UnitTestOptions>
     : CommonExtension<
+        AaptOptionsT,
         LibraryBuildFeatures,
         BuildTypeT,
         CMakeOptionsT,

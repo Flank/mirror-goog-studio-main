@@ -31,6 +31,7 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 @Incubating
 interface CommonExtension<
+        AaptOptionsT: AaptOptions,
         BuildFeaturesT: BuildFeatures,
         BuildTypeT : BuildType,
         CMakeOptionsT: CmakeOptions,
@@ -46,6 +47,20 @@ interface CommonExtension<
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
+
+    /**
+     * Specifies options for the Android Asset Packaging Tool (AAPT).
+     *
+     * For more information about the properties you can configure in this block, see [AaptOptions].
+     */
+    val aaptOptions: AaptOptionsT
+
+    /**
+     * Specifies options for the Android Asset Packaging Tool (AAPT).
+     *
+     * For more information about the properties you can configure in this block, see [AaptOptions].
+     */
+    fun aaptOptions(action: AaptOptionsT.() -> Unit)
 
     /**
      * Specifies Java compiler options, such as the language level of the Java source code and

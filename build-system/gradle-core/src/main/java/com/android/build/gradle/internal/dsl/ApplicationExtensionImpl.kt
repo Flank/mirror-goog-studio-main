@@ -51,6 +51,7 @@ class ApplicationExtensionImpl(
         signingConfigs
     ),
     ApplicationExtension<
+            AaptOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

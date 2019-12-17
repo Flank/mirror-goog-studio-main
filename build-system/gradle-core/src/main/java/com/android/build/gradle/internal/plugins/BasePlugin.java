@@ -332,6 +332,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         project.getProviders(),
                         new DslVariableFactory(syncIssueHandler),
                         project.getLayout(),
+                        projectOptions,
                         project::file);
 
         @Nullable

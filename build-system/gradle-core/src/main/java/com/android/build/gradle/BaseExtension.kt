@@ -116,11 +116,6 @@ abstract class BaseExtension protected constructor(
     /** Secondary dependencies for the custom transform. */
     private val _transformDependencies: MutableList<List<Any>> = mutableListOf()
 
-    override val aaptOptions: AaptOptions =
-        dslScope.objectFactory.newInstance(
-            AaptOptions::class.java,
-            projectOptions.get(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT)
-        )
     override val lintOptions: LintOptions =
         dslScope.objectFactory.newInstance(LintOptions::class.java)
     override val dexOptions: DexOptions =
@@ -357,11 +352,6 @@ abstract class BaseExtension protected constructor(
         get() = sourceSetManager.sourceSetsContainer
 
 
-    /**
-     * Specifies options for the Android Asset Packaging Tool (AAPT).
-     *
-     * For more information about the properties you can configure in this block, see [AaptOptions].
-     */
     fun aaptOptions(action: Action<AaptOptions>) {
         checkWritability()
         action.execute(aaptOptions)
@@ -650,6 +640,8 @@ abstract class BaseExtension protected constructor(
     }
 
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
+    abstract override val aaptOptions: AaptOptions
+
     abstract override val buildTypes: NamedDomainObjectContainer<BuildType>
     abstract fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
 
