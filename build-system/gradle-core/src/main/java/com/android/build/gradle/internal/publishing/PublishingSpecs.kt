@@ -135,7 +135,7 @@ class PublishingSpecs {
                 // the JarTransform will convert it back to CLASSES
                 // FIXME: stop using TYPE_JAR for APK_CLASSES
                 api(APP_CLASSES, ArtifactType.JAR)
-                api(APP_CLASSES, ArtifactType.CLASSES)
+                api(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -163,14 +163,14 @@ class PublishingSpecs {
                 testSpec(VariantTypeImpl.ANDROID_TEST) {
                     // java output query is done via CLASSES instead of JAR, so provide
                     // the right backward mapping
-                    api(APP_CLASSES, ArtifactType.CLASSES)
+                    api(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 }
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // java output query is done via CLASSES instead of JAR, so provide
                     // the right backward mapping. Also add it to the runtime as it's
                     // needed to run the tests!
-                    output(ALL_CLASSES, ArtifactType.CLASSES)
+                    output(ALL_CLASSES, ArtifactType.CLASSES_JAR)
                     // JAVA_RES isn't published by the app, but we need it for the unit tests
                     output(JAVA_RES, ArtifactType.JAVA_RES)
                 }
@@ -183,7 +183,7 @@ class PublishingSpecs {
                 // the JarTransform will convert it back to CLASSES
                 // FIXME: stop using TYPE_JAR for APK_CLASSES
                 api(APP_CLASSES, ArtifactType.JAR)
-                api(APP_CLASSES, ArtifactType.CLASSES)
+                api(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -213,14 +213,14 @@ class PublishingSpecs {
                 testSpec(VariantTypeImpl.ANDROID_TEST) {
                     // java output query is done via CLASSES instead of JAR, so provide
                     // the right backward mapping
-                    api(APP_CLASSES, ArtifactType.CLASSES)
+                    api(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 }
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // java output query is done via CLASSES instead of JAR, so provide
                     // the right backward mapping. Also add it to the runtime as it's
                     // needed to run the tests!
-                    output(ALL_CLASSES, ArtifactType.CLASSES)
+                    output(ALL_CLASSES, ArtifactType.CLASSES_JAR)
                     // JAVA_RES isn't published by the app, but we need it for the unit tests
                     output(JAVA_RES, ArtifactType.JAVA_RES)
                 }
@@ -234,7 +234,7 @@ class PublishingSpecs {
                         ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
-                api(COMPILE_LIBRARY_CLASSES, ArtifactType.CLASSES)
+                api(COMPILE_LIBRARY_CLASSES, ArtifactType.CLASSES_JAR)
 
                 // manifest is published to both to compare and detect provided-only library
                 // dependencies.
@@ -248,7 +248,7 @@ class PublishingSpecs {
                  * [com.android.build.gradle.options.BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] */
                 output(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
 
-                runtime(RUNTIME_LIBRARY_CLASSES, ArtifactType.CLASSES)
+                runtime(RUNTIME_LIBRARY_CLASSES, ArtifactType.CLASSES_JAR)
                 runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
                 runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
                 runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
@@ -264,7 +264,7 @@ class PublishingSpecs {
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // unit test need ALL_CLASSES instead of RUNTIME_LIBRARY_CLASSES to get
                     // access to the R class. Also scope should be API+Runtime.
-                    output(ALL_CLASSES, ArtifactType.CLASSES)
+                    output(ALL_CLASSES, ArtifactType.CLASSES_JAR)
                 }
             }
 

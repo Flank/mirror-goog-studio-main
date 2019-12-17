@@ -122,13 +122,13 @@ class DependenciesGraphTest {
 
         val result = DependenciesGraph.create(
                 ImmutableSet.of(a),
-                artifacts = ImmutableMap.of(AndroidArtifacts.ArtifactType.CLASSES, artifacts)
+                artifacts = ImmutableMap.of(AndroidArtifacts.ArtifactType.CLASSES_JAR, artifacts)
         )
 
         assertThat(result.rootNodes).hasSize(1)
         assertThat(result.allNodes).hasSize(4)
         val root = result.rootNodes.first()
-        assertThat(root.getTransitiveFiles(AndroidArtifacts.ArtifactType.CLASSES))
+        assertThat(root.getTransitiveFiles(AndroidArtifacts.ArtifactType.CLASSES_JAR))
             .containsExactlyElementsIn(listOf(fileA, fileB, fileC, fileD))
     }
 

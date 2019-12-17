@@ -197,7 +197,7 @@ data class DexingArtifactConfiguration(
                     parameters.libConfiguration.set(libConfiguration)
                 }
             }
-            spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES.type)
+            spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES_JAR.type)
             if (needsShrinkDesugarLibrary) {
                 spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX_AND_KEEP_RULES.type)
             } else {

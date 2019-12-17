@@ -1034,7 +1034,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                             // particular variant spec
                             PublishingSpecs.OutputSpec taskOutputSpec =
                                     testedSpec.getSpec(
-                                            AndroidArtifacts.ArtifactType.CLASSES,
+                                            AndroidArtifacts.ArtifactType.CLASSES_JAR,
                                             AndroidArtifacts.PublishedConfigType.API_ELEMENTS);
                             // now get the output type
                             SingleArtifactType<? extends FileSystemLocation> testedOutputType =

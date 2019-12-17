@@ -19,7 +19,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -70,7 +70,7 @@ fun JavaCompile.configureProperties(scope: VariantScope) {
     val compileOptions = scope.globalScope.extension.compileOptions
 
     this.options.bootstrapClasspath = scope.bootClasspath
-    this.classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES)
+    this.classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR)
 
     this.sourceCompatibility = compileOptions.sourceCompatibility.toString()
     this.targetCompatibility = compileOptions.targetCompatibility.toString()

@@ -25,7 +25,7 @@ import static com.android.build.gradle.internal.dsl.BuildType.PostProcessingConf
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
@@ -1087,8 +1087,8 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getProvidedOnlyClasspath() {
-        ArtifactCollection compile = getArtifactCollection(COMPILE_CLASSPATH, ALL, CLASSES);
-        ArtifactCollection runtime = getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
+        ArtifactCollection compile = getArtifactCollection(COMPILE_CLASSPATH, ALL, CLASSES_JAR);
+        ArtifactCollection runtime = getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR);
 
         return ProvidedClasspath.getProvidedClasspath(compile, runtime);
     }

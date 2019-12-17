@@ -729,7 +729,7 @@ public class VariantManager implements VariantModel {
                 reg -> {
                     reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_JAR.getType());
                     reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
                     reg.parameters(
                             params -> {
@@ -751,7 +751,7 @@ public class VariantManager implements VariantModel {
                 reg -> {
                     reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
                     reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_JAR.getType());
                     reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
                     reg.parameters(
                             params -> {
@@ -800,7 +800,9 @@ public class VariantManager implements VariantModel {
         // Transform to go from external jars to CLASSES and JAVA_RES artifacts. This returns the
         // same exact file but with different types, since a jar file can contain both.
         for (String classesOrResources :
-                new String[] {ArtifactType.CLASSES.getType(), ArtifactType.JAVA_RES.getType()}) {
+                new String[] {
+                    ArtifactType.CLASSES_JAR.getType(), ArtifactType.JAVA_RES.getType()
+                }) {
             dependencies.registerTransform(
                     IdentityTransform.class,
                     spec -> {
