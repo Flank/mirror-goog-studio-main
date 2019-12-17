@@ -25,7 +25,6 @@ import com.android.build.VariantOutput;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.google.common.base.MoreObjects;
@@ -43,11 +42,10 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Inject
     public ApkVariantOutputImpl(
-            @NonNull ApkData apkData,
             @NonNull TaskContainer taskContainer,
             @NonNull DeprecationReporter deprecationReporter,
             @NonNull VariantOutputImpl variantOutput) {
-        super(apkData, taskContainer, deprecationReporter, variantOutput);
+        super(taskContainer, deprecationReporter, variantOutput);
     }
 
     @Nullable
@@ -115,7 +113,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public int getVersionCode() {
-        return apkData.getVersionCode();
+        return variantOutput.getVersionCode().get();
     }
 
     @Override

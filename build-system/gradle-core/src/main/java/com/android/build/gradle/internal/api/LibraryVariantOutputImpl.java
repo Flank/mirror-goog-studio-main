@@ -39,11 +39,10 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
 
     @Inject
     public LibraryVariantOutputImpl(
-            @NonNull ApkData apkData,
             @NonNull TaskContainer taskContainer,
             @NonNull DeprecationReporter deprecationReporter,
             @NonNull VariantOutputImpl variantOutput) {
-        super(apkData, taskContainer, deprecationReporter, variantOutput);
+        super(taskContainer, deprecationReporter, variantOutput);
     }
 
     @Override

@@ -60,7 +60,6 @@ public class VariantOutputFactory {
         BaseVariantOutput variantOutput =
                 objectFactory.newInstance(
                         targetClass,
-                        variantApi.getApkData(),
                         taskContainer,
                         deprecationReporter,
                         variantApi);

@@ -151,8 +151,8 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputType getType() {
-            return OutputType.MAIN;
+        public VariantOutput.OutputType getType() {
+            return VariantOutput.OutputType.MAIN;
         }
 
         @Nullable
@@ -217,8 +217,8 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputType getType() {
-            return OutputType.FULL_SPLIT;
+        public VariantOutput.OutputType getType() {
+            return VariantOutput.OutputType.FULL_SPLIT;
         }
 
         @Nullable
@@ -291,11 +291,11 @@ public class OutputFactory {
 
         private static String _getFilterName(ImmutableList<FilterData> filters) {
             StringBuilder sb = new StringBuilder();
-            String densityFilter = ApkData.getFilter(filters, FilterType.DENSITY);
+            String densityFilter = ApkData.getFilter(filters, VariantOutput.FilterType.DENSITY);
             if (densityFilter != null) {
                 sb.append(densityFilter);
             }
-            String abiFilter = getFilter(filters, FilterType.ABI);
+            String abiFilter = getFilter(filters, VariantOutput.FilterType.ABI);
             if (abiFilter != null) {
                 StringHelper.appendCamelCase(sb, abiFilter);
             }
@@ -304,8 +304,8 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputType getType() {
-            return OutputType.FULL_SPLIT;
+        public VariantOutput.OutputType getType() {
+            return VariantOutput.OutputType.FULL_SPLIT;
         }
 
         @NonNull
