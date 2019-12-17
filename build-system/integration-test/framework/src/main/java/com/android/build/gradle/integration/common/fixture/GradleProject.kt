@@ -22,7 +22,27 @@ import java.io.File
 /**
  * Contains the contents (source code and resources) of a Gradle project ([org.gradle.api.Project]).
  */
-abstract class GradleProject(val name: String? = null) : TestProject {
+abstract class GradleProject(
+
+    /**
+     * Logical path to this project (e.g., ":app"). If it is provided and doesn't start with ':', it
+     * will be normalized to start with ':'.
+     */
+    path: String? = null
+
+) : TestProject {
+
+    /**
+     * Logical path to this project (e.g., ":app"). If it is provided and doesn't start with ':', it
+     * will be normalized to start with ':'.
+     */
+    val path: String? = path?.let {
+        if (path.startsWith(':')) {
+            path
+        } else {
+            ":$path"
+        }
+    }
 
     /** Map from a relative path to the corresponding [TestSourceFile] instance.  */
     private val sourceFiles: MutableMap<String, TestSourceFile> = mutableMapOf()

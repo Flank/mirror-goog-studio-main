@@ -20,30 +20,44 @@ import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 
-/** An empty subproject.  */
-class MinimalSubProject private constructor(val plugin: String, val packageName: String?) :
-    GradleProject() {
+/** A subproject with minimal contents. */
+class MinimalSubProject private constructor(
+
+    /**
+     * Logical path to this project (e.g., ":app"). If it is provided and doesn't start with ':', it
+     * will be normalized to start with ':'.
+     */
+    path: String? = null,
+
+    val plugin: String,
+    val addCompileAndSdkVersionToBuildFile: Boolean = false,
+    val addVersionCodeToBuildFile: Boolean = false,
+    val addManifestFile: Boolean = false,
+    val packageName: String?
+) :
+    GradleProject(path) {
 
     init {
-        var content = "\napply plugin: '$plugin'\n"
-        if (plugin != "java-library") {
-            content += "\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n" +
-                    "\nandroid.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK\n"
-            val manifest = TestSourceFile(
-                "src/main/AndroidManifest.xml", """
+        var buildScript = "apply plugin: '$plugin'"
+        if (addCompileAndSdkVersionToBuildFile) {
+            buildScript += "\n\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}" +
+                    "\nandroid.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK"
+        }
+        if (addVersionCodeToBuildFile) {
+            buildScript += "\n\nandroid.defaultConfig.versionCode 1"
+        }
+        addFile(TestSourceFile("build.gradle", buildScript))
+
+        if (addManifestFile) {
+            checkNotNull(packageName) { "packageName must be provided when addManifestFile=true" }
+            val manifest = """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                          xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="${packageName!!}">
+                    package="$packageName">
                     <application />
                 </manifest>""".trimMargin()
-            )
-            if (plugin == "com.android.application") {
-                content += "android.defaultConfig.versionCode 1\n";
-            }
-            addFiles(manifest)
+            addFile(TestSourceFile("src/main/AndroidManifest.xml", manifest))
         }
-        val build = TestSourceFile("build.gradle", content)
-        addFiles(build)
     }
 
     override fun containsFullBuildScript(): Boolean {
@@ -67,28 +81,70 @@ class MinimalSubProject private constructor(val plugin: String, val packageName:
 
     companion object {
 
+        fun app(packageName: String): MinimalSubProject {
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.application",
+                addCompileAndSdkVersionToBuildFile = true,
+                addVersionCodeToBuildFile = true,
+                addManifestFile = true,
+                packageName = packageName
+            )
+        }
+
         fun lib(packageName: String): MinimalSubProject {
-            return MinimalSubProject("com.android.library", packageName)
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.library",
+                addCompileAndSdkVersionToBuildFile = true,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = true,
+                packageName = packageName
+            )
         }
 
         fun feature(packageName: String): MinimalSubProject {
-            return MinimalSubProject("com.android.feature", packageName)
-        }
-
-        fun app(packageName: String): MinimalSubProject {
-            return MinimalSubProject("com.android.application", packageName)
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.feature",
+                addCompileAndSdkVersionToBuildFile = true,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = true,
+                packageName = packageName
+            )
         }
 
         fun dynamicFeature(packageName: String): MinimalSubProject {
-            return MinimalSubProject("com.android.dynamic-feature", packageName)
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.dynamic-feature",
+                addCompileAndSdkVersionToBuildFile = true,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = true,
+                packageName = packageName
+            )
         }
 
         fun test(packageName: String): MinimalSubProject {
-            return MinimalSubProject("com.android.test", packageName)
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.test",
+                addCompileAndSdkVersionToBuildFile = true,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = true,
+                packageName = packageName
+            )
         }
 
         fun javaLibrary(): MinimalSubProject {
-            return MinimalSubProject("java-library", null)
+            return MinimalSubProject(
+                path = null,
+                plugin = "java-library",
+                addCompileAndSdkVersionToBuildFile = false,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = false,
+                packageName = null
+            )
         }
     }
 }

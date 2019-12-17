@@ -57,7 +57,7 @@ class ValidateTaskPropertiesTest {
             "'" + File(it.toURI()).absolutePath + "'"
         }
 
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             apply plugin: 'java-gradle-plugin'
 

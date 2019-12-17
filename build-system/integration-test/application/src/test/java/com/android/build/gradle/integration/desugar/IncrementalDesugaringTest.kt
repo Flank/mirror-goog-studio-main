@@ -18,6 +18,9 @@ package com.android.build.gradle.integration.desugar
 
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
+import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+import com.android.build.gradle.integration.common.utils.ChangeType.UNCHANGED
 import com.android.build.gradle.integration.common.utils.IncrementalTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
@@ -90,8 +93,7 @@ class IncrementalDesugaringTest(
         classUsingInterfaceWithDefaultMethodDexFile = PROJECT_DEX_ARCHIVE.getOutputDir(app.buildDir).resolve("debug/out/$classUsingInterfaceWithDefaultMethod.dex")
         mainActivityDexFile = PROJECT_DEX_ARCHIVE.getOutputDir(app.buildDir).resolve("debug/out/$mainActivityPath.dex")
 
-        TestFileUtils.appendToFile(
-            app.buildFile,
+        app.buildFile.appendText("\n" +
             """
             android.compileOptions {
                 sourceCompatibility JavaVersion.VERSION_1_8
@@ -100,8 +102,7 @@ class IncrementalDesugaringTest(
             """.trimIndent()
         )
 
-        TestFileUtils.appendToFile(
-            interfaceWithDefaultMethodJavaFile,
+        interfaceWithDefaultMethodJavaFile.writeText(
             """
             package com.example.myapplication;
 
@@ -116,8 +117,7 @@ class IncrementalDesugaringTest(
             """.trimIndent()
         )
 
-        TestFileUtils.appendToFile(
-            classUsingInterfaceWithDefaultMethodJavaFile,
+        classUsingInterfaceWithDefaultMethodJavaFile.writeText(
             """
             package com.example.myapplication;
 
@@ -161,24 +161,22 @@ class IncrementalDesugaringTest(
             }
             .runIncrementalBuild()
             .assertFileChanges(
-                filesWithChangedTimestampsAndContents = setOf(
-                    interfaceWithDefaultMethodClassFile,
-                    interfaceWithDefaultMethodDexFile,
-                    classUsingInterfaceWithDefaultMethodDexFile
-                ),
-                filesWithChangedTimestampsButNotContents = setOf(
-                    classUsingInterfaceWithDefaultMethodClassFile
-                ),
-                filesWithUnchangedTimestampsAndContents = setOf(
-                    mainActivityClassFile,
-                    mainActivityDexFile
+                mapOf(
+                    // Class files
+                    interfaceWithDefaultMethodClassFile to CHANGED,
+                    classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                    mainActivityClassFile to UNCHANGED,
+                    // Dex files
+                    interfaceWithDefaultMethodDexFile to CHANGED,
+                    classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
+                    mainActivityDexFile to UNCHANGED
                 )
             )
     }
 
     @Test
     fun `change interface with default method, with a method body change`() {
-       incrementalTestHelper
+        incrementalTestHelper
             .runFullBuild()
             .applyChange {
                 TestFileUtils.searchAndReplace(
@@ -189,17 +187,15 @@ class IncrementalDesugaringTest(
             }
             .runIncrementalBuild()
             .assertFileChanges(
-                filesWithChangedTimestampsAndContents = setOf(
-                    interfaceWithDefaultMethodClassFile,
-                    interfaceWithDefaultMethodDexFile
-                ),
-                filesWithChangedTimestampsButNotContents = setOf(
-                    classUsingInterfaceWithDefaultMethodClassFile,
-                    classUsingInterfaceWithDefaultMethodDexFile
-                ),
-                filesWithUnchangedTimestampsAndContents = setOf(
-                    mainActivityClassFile,
-                    mainActivityDexFile
+                mapOf(
+                    // Class files
+                    interfaceWithDefaultMethodClassFile to CHANGED,
+                    classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                    mainActivityClassFile to UNCHANGED,
+                    // Dex files
+                    interfaceWithDefaultMethodDexFile to CHANGED,
+                    classUsingInterfaceWithDefaultMethodDexFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                    mainActivityDexFile to UNCHANGED
                 )
             )
     }
@@ -217,17 +213,15 @@ class IncrementalDesugaringTest(
             }
             .runIncrementalBuild()
             .assertFileChanges(
-                filesWithChangedTimestampsAndContents = setOf(
-                ),
-                filesWithChangedTimestampsButNotContents = setOf(
-                    interfaceWithDefaultMethodClassFile,
-                    classUsingInterfaceWithDefaultMethodClassFile
-                ),
-                filesWithUnchangedTimestampsAndContents = setOf(
-                    interfaceWithDefaultMethodDexFile,
-                    classUsingInterfaceWithDefaultMethodDexFile,
-                    mainActivityClassFile,
-                    mainActivityDexFile
+                mapOf(
+                    // Class files
+                    interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                    classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                    mainActivityClassFile to UNCHANGED,
+                    // Dex files
+                    interfaceWithDefaultMethodDexFile to UNCHANGED,
+                    classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
+                    mainActivityDexFile to UNCHANGED
                 )
             )
     }
