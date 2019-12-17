@@ -32,6 +32,7 @@ import org.gradle.api.NamedDomainObjectContainer
 @Incubating
 interface CommonExtension<
         AaptOptionsT: AaptOptions,
+        AdbOptionsT : AdbOptions,
         BuildFeaturesT: BuildFeatures,
         BuildTypeT : BuildType,
         CMakeOptionsT: CmakeOptions,
@@ -61,6 +62,24 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
     fun aaptOptions(action: AaptOptionsT.() -> Unit)
+
+    /**
+     * Specifies options for the
+     * [Android Debug Bridge (ADB)](https://developer.android.com/studio/command-line/adb.html),
+     * such as APK installation options.
+     *
+     * For more information about the properties you can configure in this block, see [AdbOptions].
+     */
+    val adbOptions: AdbOptionsT
+
+    /**
+     * Specifies options for the
+     * [Android Debug Bridge (ADB)](https://developer.android.com/studio/command-line/adb.html),
+     * such as APK installation options.
+     *
+     * For more information about the properties you can configure in this block, see [AdbOptions].
+     */
+    fun adbOptions(action: AdbOptionsT.() -> Unit)
 
     /**
      * Specifies Java compiler options, such as the language level of the Java source code and

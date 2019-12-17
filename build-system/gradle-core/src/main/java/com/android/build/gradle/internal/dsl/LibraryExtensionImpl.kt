@@ -55,6 +55,7 @@ class LibraryExtensionImpl(
     ),
     LibraryExtension<
             AaptOptions,
+            AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

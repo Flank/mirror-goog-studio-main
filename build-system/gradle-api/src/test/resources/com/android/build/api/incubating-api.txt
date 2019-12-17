@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-7362d88f32307b43baed6e3881498efe8489507dfa13e76295e4626a70292e03
+3fa136322ae7ad7657224311489408a1aad11151272c80a993b8e780b5e3619e
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -53,6 +53,7 @@ com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.dsl.AaptOptions
+com.android.build.api.dsl.AdbOptions
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
@@ -83,6 +84,7 @@ com.android.build.api.dsl.BuildType.setDefault: void (boolean)
 com.android.build.api.dsl.CmakeOptions
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super AaptOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super AdbOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
 com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super CompileOptionsT, kotlin.Unit>)
@@ -91,6 +93,7 @@ com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (java.lang.Str
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (org.gradle.api.Action<DefaultConfigT>)
 com.android.build.api.dsl.CommonExtension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super ExternalNativeBuildT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.getAaptOptions: AaptOptionsT ()
+com.android.build.api.dsl.CommonExtension.getAdbOptions: AdbOptionsT ()
 com.android.build.api.dsl.CommonExtension.getBuildFeatures: BuildFeaturesT ()
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileOptions: CompileOptionsT ()

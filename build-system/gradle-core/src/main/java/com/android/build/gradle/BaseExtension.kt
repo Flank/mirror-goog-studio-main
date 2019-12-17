@@ -124,8 +124,6 @@ abstract class BaseExtension protected constructor(
         dslScope.objectFactory.newInstance(PackagingOptions::class.java)
     override val splits: Splits =
         dslScope.objectFactory.newInstance(Splits::class.java, dslScope.objectFactory)
-    override val adbOptions: AdbOptions =
-        dslScope.objectFactory.newInstance(AdbOptions::class.java)
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
@@ -641,6 +639,8 @@ abstract class BaseExtension protected constructor(
 
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
     abstract override val aaptOptions: AaptOptions
+
+    abstract override val adbOptions: AdbOptions
 
     abstract override val buildTypes: NamedDomainObjectContainer<BuildType>
     abstract fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)

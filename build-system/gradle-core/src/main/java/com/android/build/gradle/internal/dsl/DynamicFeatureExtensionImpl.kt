@@ -56,6 +56,7 @@ class DynamicFeatureExtensionImpl(
 
     DynamicFeatureExtension<
             AaptOptions,
+            AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

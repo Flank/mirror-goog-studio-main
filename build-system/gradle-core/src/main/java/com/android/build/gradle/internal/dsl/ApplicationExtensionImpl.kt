@@ -52,6 +52,7 @@ class ApplicationExtensionImpl(
     ),
     ApplicationExtension<
             AaptOptions,
+            AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

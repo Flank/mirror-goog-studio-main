@@ -47,6 +47,7 @@ abstract class CommonExtensionImpl<
     override val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
 ) : CommonExtension<
         AaptOptions,
+        AdbOptions,
         BuildFeaturesT,
         BuildTypeT,
         CmakeOptions,
@@ -70,6 +71,12 @@ abstract class CommonExtensionImpl<
 
     override fun aaptOptions(action: AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)
+    }
+
+    override val adbOptions: AdbOptions = dslScope.objectFactory.newInstance(AdbOptions::class.java)
+
+    override fun adbOptions(action: AdbOptions.() -> Unit) {
+        action.invoke(adbOptions)
     }
 
     fun buildFeatures(action: Action<BuildFeaturesT>) {

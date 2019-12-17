@@ -21,10 +21,9 @@ import java.util.Collection;
 import java.util.List;
 import javax.inject.Inject;
 
-/**
- * Options for the adb tool.
- */
-public class AdbOptions implements com.android.builder.model.AdbOptions {
+/** Options for the adb tool. */
+public class AdbOptions
+        implements com.android.builder.model.AdbOptions, com.android.build.api.dsl.AdbOptions {
 
     int timeOutInMs;
 

@@ -53,6 +53,7 @@ open class BaseAppModuleExtension(
     true
 ), ApplicationExtension<
         AaptOptions,
+        AdbOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,

@@ -47,6 +47,7 @@ internal open class DynamicFeatureExtension(
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         AaptOptions,
+        AdbOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,

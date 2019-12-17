@@ -51,6 +51,7 @@ class TestExtensionImpl(
     ),
     TestExtension<
             AaptOptions,
+            AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

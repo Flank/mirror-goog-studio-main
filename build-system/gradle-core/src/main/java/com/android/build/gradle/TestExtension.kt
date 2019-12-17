@@ -14,6 +14,7 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
+import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.CmakeOptions
@@ -54,6 +55,7 @@ open class TestExtension(
 ), TestAndroidConfig,
     com.android.build.api.dsl.TestExtension<
             AaptOptions,
+            AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
