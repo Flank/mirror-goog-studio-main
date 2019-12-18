@@ -16,7 +16,7 @@
 
 package com.android.tools.idea.wizard.template
 
-import java.io.File
+import java.net.URL
 
 /**
  * Stores information about a thumb which should be displayed in galleries such as New Activity Gallery.
@@ -29,10 +29,10 @@ import java.io.File
  *
  * Also, make inline class/typealias?
  */
-open class Thumb(val path: File) {
+open class Thumb(val path: URL) {
   /**
    * Represents absence of thumb (null object pattern).
    */
-  companion object NoThumb: Thumb(File(""))
+  companion object NoThumb: Thumb(URL("file://noThumb"))
 }
 
