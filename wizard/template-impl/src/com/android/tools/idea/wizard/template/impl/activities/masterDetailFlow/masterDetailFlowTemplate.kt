@@ -30,6 +30,7 @@ import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.stringParameter
 import masterDetailFlowRecipe
+import java.io.File
 
 val masterDetailFlowTemplate
   get() = template {
@@ -83,6 +84,8 @@ val masterDetailFlowTemplate
       PackageNameWidget(packageName),
       LanguageWidget()
     )
+
+    thumb { File("template_master_detail.png") }
 
     recipe = { data: TemplateData ->
       masterDetailFlowRecipe(data as ModuleTemplateData, objectKind.value, objectKindPlural.value, isLauncher.value, packageName.value)

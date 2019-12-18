@@ -37,6 +37,7 @@ import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import googleMapsActivityRecipe
+import java.io.File
 
 val googleMapsActivityTemplate
   get() = template {
@@ -94,6 +95,8 @@ val googleMapsActivityTemplate
       PackageNameWidget(packageName),
       LanguageWidget()
     )
+
+    thumb { File("template_map_activity.png") }
 
     recipe = { data: TemplateData ->
       googleMapsActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, isLauncher.value,
