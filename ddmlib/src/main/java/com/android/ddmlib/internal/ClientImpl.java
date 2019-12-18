@@ -843,4 +843,35 @@ public class ClientImpl extends JdwpAgent implements Client {
                 .trackClientToDropAndReopen(
                         this, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
     }
+
+    @Override
+    public void listViewRoots(HandleViewDebug.ViewDumpHandler replyHandler) throws IOException {
+        HandleViewDebug.listViewRoots(this, replyHandler);
+    }
+
+    @Override
+    public void captureView(
+            @NonNull String viewRoot,
+            @NonNull String view,
+            @NonNull HandleViewDebug.ViewDumpHandler handler)
+            throws IOException {
+        HandleViewDebug.captureView(this, viewRoot, view, handler);
+    }
+
+    @Override
+    public void dumpViewHierarchy(
+            @NonNull String viewRoot,
+            boolean skipChildren,
+            boolean includeProperties,
+            boolean useV2,
+            @NonNull HandleViewDebug.ViewDumpHandler handler)
+            throws IOException {
+        HandleViewDebug.dumpViewHierarchy(
+                this, viewRoot, skipChildren, includeProperties, useV2, handler);
+    }
+
+    @Override
+    public void dumpDisplayList(@NonNull String viewRoot, @NonNull String view) throws IOException {
+        HandleViewDebug.dumpDisplayList(this, viewRoot, view);
+    }
 }

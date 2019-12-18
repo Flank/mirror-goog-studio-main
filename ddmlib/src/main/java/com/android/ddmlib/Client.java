@@ -144,5 +144,23 @@ public interface Client {
      */
     void notifyVmMirrorExited();
 
+    void listViewRoots(HandleViewDebug.ViewDumpHandler replyHandler) throws IOException;
+
+    void captureView(
+            @NonNull String viewRoot,
+            @NonNull String view,
+            @NonNull HandleViewDebug.ViewDumpHandler handler)
+            throws IOException;
+
+    void dumpViewHierarchy(
+            @NonNull String viewRoot,
+            boolean skipChildren,
+            boolean includeProperties,
+            boolean useV2,
+            @NonNull HandleViewDebug.ViewDumpHandler handler)
+            throws IOException;
+
+    void dumpDisplayList(@NonNull String viewRoot, @NonNull String view) throws IOException;
+
 }
 
