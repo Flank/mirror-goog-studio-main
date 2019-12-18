@@ -221,7 +221,9 @@ class NativeModelBuilder(
                 }
             }
             try {
-                nativeJsonGenExecutor.invokeAll(buildSteps)
+                // Need to get each result even if we're not using the output because that's how we
+                // propagate exceptions.
+                nativeJsonGenExecutor.invokeAll(buildSteps).map { it.get() }
             } catch (e: InterruptedException) {
                 throw RuntimeException(
                     "Thread was interrupted while native build JSON generation was in progress.",
