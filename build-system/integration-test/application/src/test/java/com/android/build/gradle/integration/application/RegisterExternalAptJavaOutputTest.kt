@@ -34,7 +34,7 @@ class RegisterExternalAptJavaOutputTest {
      */
     @Test
     fun testAddingGenSourcesAfterJavaCompileConfigured() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
                 File genSrcDir = new File(projectDir, "externally_generated")
                 File testSrc = new File(genSrcDir, "test/Data.java")

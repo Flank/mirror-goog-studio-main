@@ -24,6 +24,7 @@ import com.android.utils.Pair;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -186,7 +187,7 @@ public class ApkPreInstaller {
                             null);
             // Parse result which should be in the form:
             // "Success: created install session [X]" where X is the session id.
-            String stringResponse = new String(rawResponse, "UTF-8");
+            String stringResponse = new String(rawResponse, StandardCharsets.UTF_8);
             if (!stringResponse.startsWith("Success: created install session [")) {
                 throw DeployerException.preinstallFailed(
                         "Unable to create session : " + stringResponse);

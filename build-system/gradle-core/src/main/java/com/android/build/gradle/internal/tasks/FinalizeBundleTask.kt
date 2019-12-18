@@ -17,15 +17,22 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
+import com.android.build.VariantOutput
+import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildElements
+import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -63,6 +70,15 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val finalBundleFile: RegularFileProperty
 
+    @get:OutputFile
+    abstract val bundleIdeModel: RegularFileProperty
+
+    @get:Input
+    abstract val applicationId: Property<String>
+
+    @get:Input
+    abstract val variantType: Property<String>
+
     override fun doTaskAction() {
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -70,7 +86,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 Params(
                     intermediaryBundleFile = intermediaryBundleFile.get().asFile,
                     finalBundleFile = finalBundleFile.get().asFile,
-                    signingConfig = signingConfig?.convertToParams()
+                    signingConfig = signingConfig?.convertToParams(),
+                    bundleIdeModel = bundleIdeModel.get().asFile,
+                    applicationId = applicationId.get(),
+                    variantType = variantType.get()
                 )
             )
         }
@@ -79,7 +98,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     private data class Params(
         val intermediaryBundleFile: File,
         val finalBundleFile: File,
-        val signingConfig: SigningConfigProviderParams?
+        val signingConfig: SigningConfigProviderParams?,
+        val bundleIdeModel: File,
+        val applicationId: String,
+        val variantType: String
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -112,6 +134,18 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             } ?: run {
                 FileUtils.copyFile(params.intermediaryBundleFile, params.finalBundleFile)
             }
+
+            BuildElements(
+                applicationId = params.applicationId,
+                variantType = params.variantType,
+                elements = listOf(
+                    BuildOutput(
+                        InternalArtifactType.BUNDLE,
+                        ApkData.of(VariantOutput.OutputType.MAIN, listOf(), -1),
+                        params.finalBundleFile
+                    )
+                )
+            ).saveToFile(params.bundleIdeModel)
         }
     }
 
@@ -149,6 +183,13 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     bundleName
                 )
             }
+
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.BUNDLE_IDE_MODEL,
+                taskProvider,
+                FinalizeBundleTask::bundleIdeModel,
+                ExistingBuildElements.METADATA_FILE_NAME
+            )
         }
 
         override fun configure(task: FinalizeBundleTask) {
@@ -159,9 +200,12 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
-            if (!variantScope.variantDslInfo.buildType.isDebuggable) {
+            if (!variantScope.variantData.publicVariantApi.isDebuggable) {
                 task.signingConfig = SigningConfigProvider.create(variantScope)
             }
+            task.applicationId.setDisallowChanges(
+                variantScope.variantData.publicVariantPropertiesApi.applicationId)
+            task.variantType.setDisallowChanges(variantScope.variantData.type.toString())
         }
 
     }

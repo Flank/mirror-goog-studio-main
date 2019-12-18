@@ -161,7 +161,7 @@ public class LibraryTaskManager extends TaskManager {
                 globalScope.getProjectBaseName());
 
         // Only verify resources if in Release and not namespaced.
-        if (!variantScope.getVariantDslInfo().getBuildType().isDebuggable()
+        if (!variantScope.getVariantData().getPublicVariantApi().isDebuggable()
                 && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             createVerifyLibraryResTask(variantScope);
         }

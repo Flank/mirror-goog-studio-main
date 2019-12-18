@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
-import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.useAaptDaemon
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.resources.CompileResourceRequest
@@ -50,7 +50,7 @@ class Aapt2CompileRunnable @Inject constructor(
     }
 
     class Params(
-        val aapt2ServiceKey: Aapt2ServiceKey,
+        val aapt2ServiceKey: Aapt2DaemonServiceKey,
         val requests: List<CompileResourceRequest>,
         val errorFormatMode: SyncOptions.ErrorFormatMode,
         val enableBlame: Boolean = false

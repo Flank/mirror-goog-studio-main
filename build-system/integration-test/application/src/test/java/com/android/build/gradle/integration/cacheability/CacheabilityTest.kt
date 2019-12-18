@@ -120,6 +120,7 @@ class CacheabilityTest {
     private fun setUpTestProject(projectName: String): GradleTestProject {
         return with(EmptyActivityProjectBuilder()) {
             this.projectName = projectName
+            this.withUnitTest = true
             build()
         }
     }

@@ -135,7 +135,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
                         scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.CLASSES
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR
                         )
                     )
                 }

@@ -58,7 +58,8 @@ bool Overlay::Open() {
     }
   } else {
     // If an overlay directory already exists, delete the id file to mark it as
-    // dirty.
+    // dirty. We cannot use DeleteFile() here, because the overlay isn't open
+    // yet.
     const std::string id_file = overlay_folder_ + kIdFile;
     if (unlink(id_file.c_str()) != 0) {
       ErrEvent("Could not remove id file to open overlay: "_s +
@@ -103,6 +104,22 @@ bool Overlay::WriteFile(const std::string& path,
 
   if (!deploy::WriteFile(overlay_path, content)) {
     ErrEvent("Could not write file at '" + overlay_path + "'");
+    return false;
+  }
+
+  return true;
+}
+
+bool Overlay::DeleteFile(const std::string& path) const {
+  if (!is_open_) {
+    ErrEvent("Overlay must be opened before it can be modified");
+    return false;
+  }
+
+  const std::string overlay_path = overlay_folder_ + path;
+  if (unlink(overlay_path.c_str()) != 0) {
+    ErrEvent("Could not remove file '" + overlay_path +
+             "': " + strerror(errno));
     return false;
   }
 

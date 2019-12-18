@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
 import com.android.builder.files.SerializableChange
@@ -100,7 +100,7 @@ class VerifyLibraryResourcesTaskTest {
             SerializableInputChanges(listOf(mergedDir), inputs),
             outputDir,
             Facade,
-            mock(Aapt2ServiceKey::class.java),
+            mock(Aapt2DaemonServiceKey::class.java),
             SyncOptions.ErrorFormatMode.HUMAN_READABLE,
             temporaryFolder.newFolder(),
             false

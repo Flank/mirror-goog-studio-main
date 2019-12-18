@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.common.utils
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
-import org.junit.Assert.fail
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.FileTime
@@ -52,6 +51,8 @@ class IncrementalTestHelper(
         val timestamps = mutableMapOf<File, FileTime>()
         val contents = mutableMapOf<File, ByteArray>()
         for (file in filesToTrackChanges) {
+            check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
+
             // Use Files.getLastModifiedTime instead of File.lastModified to prevent flakiness of
             // timestamps, according to the discussion at
             // https://android-review.googlesource.com/c/platform/frameworks/support/+/932356/13/lifecycle/integration-tests/gradletest/src/test/kotlin/androidx/lifecycle/IncrementalAnnotationProcessingTest.kt#110
@@ -85,14 +86,25 @@ class IncrementalTestHelper(
 
         // Record changed files
         filesWithChangedTimestamps = fileTimestamps.filter { (file, previousTimestamp) ->
+            check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
             Files.getLastModifiedTime(file.toPath()) != previousTimestamp
         }.keys
         filesWithChangedContents = fileContents.filter { (file, previousContents) ->
+            check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
             !file.readBytes().contentEquals(previousContents)
         }.keys
 
         stage = Stage.RAN_INCREMENTAL_BUILD
         return this
+    }
+
+    /** Asserts file changes. */
+    fun assertFileChanges(fileChanges: Map<File, ChangeType>): IncrementalTestHelper {
+        return assertFileChanges(
+            fileChanges.filterValues { it == ChangeType.CHANGED }.keys,
+            fileChanges.filterValues { it == ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS }.keys,
+            fileChanges.filterValues { it == ChangeType.UNCHANGED }.keys
+        )
     }
 
     /** Asserts file changes. */
@@ -170,4 +182,17 @@ private enum class Stage {
     APPLIED_CHANGE,
     RAN_INCREMENTAL_BUILD,
     ASSERTED_FILE_CHANGES
+}
+
+/** Type of a file change. */
+enum class ChangeType {
+
+    /** Changed timestamp and contents. */
+    CHANGED,
+
+    /** Changed timestamp but not contents. */
+    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+
+    /** Unchanged timestamp and contents. */
+    UNCHANGED
 }

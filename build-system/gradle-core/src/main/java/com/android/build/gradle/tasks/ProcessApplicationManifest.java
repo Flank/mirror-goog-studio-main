@@ -848,7 +848,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         if (variantScope.isTestOnly()) {
             features.add(Feature.TEST_ONLY);
         }
-        if (variantScope.getVariantDslInfo().getBuildType().isDebuggable()) {
+        if (variantScope.getVariantData().getPublicVariantApi().isDebuggable()) {
             features.add(Feature.DEBUGGABLE);
             if (isAdvancedProfilingOn) {
                 features.add(Feature.ADVANCED_PROFILING);

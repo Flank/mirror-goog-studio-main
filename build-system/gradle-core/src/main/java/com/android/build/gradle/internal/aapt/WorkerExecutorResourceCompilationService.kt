@@ -20,7 +20,7 @@ import com.android.SdkConstants.DOT_9PNG
 import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
@@ -34,7 +34,7 @@ class WorkerExecutorResourceCompilationService(
   projectName: String,
   owner: String,
   private val workerExecutor: WorkerExecutorFacade,
-  private val aapt2ServiceKey: Aapt2ServiceKey,
+  private val aapt2ServiceKey: Aapt2DaemonServiceKey,
   private val errorFormatMode: SyncOptions.ErrorFormatMode,
   private val useJvmResourceCompiler: Boolean
 ) : ResourceCompilationService {

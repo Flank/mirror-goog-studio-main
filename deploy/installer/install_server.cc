@@ -136,8 +136,7 @@ void InstallServer::HandleOverlayUpdate(
   }
 
   const std::string overlay_folder = current_dir + "/.overlay"_s;
-  if (!request.expected_overlay_id().empty() &&
-      !Overlay::Exists(overlay_folder, request.expected_overlay_id())) {
+  if (!DoesOverlayIdMatch(overlay_folder, request.expected_overlay_id())) {
     response->set_status(proto::OverlayUpdateResponse::ID_MISMATCH);
     return;
   }
@@ -149,7 +148,22 @@ void InstallServer::HandleOverlayUpdate(
     return;
   }
 
-  // TODO: Write overlay files here.
+  for (const std::string& file : request.deleted_files()) {
+    if (!overlay.DeleteFile(file)) {
+      response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+      response->set_error_message("Could not delete file: '" + file + "'");
+      return;
+    }
+  }
+
+  for (const proto::OverlayFile& file : request.added_files()) {
+    if (!overlay.WriteFile(file.path(), file.content())) {
+      response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+      response->set_error_message("Could not write file: '" + file.path() +
+                                  "'");
+      return;
+    }
+  }
 
   if (!overlay.Commit()) {
     response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
@@ -158,6 +172,17 @@ void InstallServer::HandleOverlayUpdate(
   }
 
   response->set_status(proto::OverlayUpdateResponse::OK);
+}
+
+bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
+                                       const std::string& expected_id) const {
+  // If the overlay folder is not present, expected id must be empty.
+  if (access(overlay_folder.c_str(), F_OK) != 0) {
+    return expected_id.empty();
+  }
+
+  // If the overlay folder is present, the correct id must be present.
+  return Overlay::Exists(overlay_folder, expected_id);
 }
 
 std::unique_ptr<InstallClient> StartServer(const Workspace& workspace,

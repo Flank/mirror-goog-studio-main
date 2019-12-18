@@ -198,7 +198,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
-                    AndroidArtifacts.ArtifactType.CLASSES
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
             variantScope.artifacts.setTaskInputToFinalProduct(
@@ -221,7 +221,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                     testedVariantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.CLASSES
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR
                     ).artifactFiles
                 )
             }

@@ -26,10 +26,7 @@ import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
@@ -95,7 +92,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
-                    AndroidArtifacts.ArtifactType.CLASSES))
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR))
 
             if (globalScope.extension.aaptOptions.namespaced
                 && globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]) {
@@ -111,7 +108,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             referencedClasses.from(variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
-                AndroidArtifacts.ArtifactType.CLASSES))
+                AndroidArtifacts.ArtifactType.CLASSES_JAR))
 
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
@@ -137,7 +134,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                     testedVariantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.CLASSES
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR
                     ).artifactFiles
                 )
             }

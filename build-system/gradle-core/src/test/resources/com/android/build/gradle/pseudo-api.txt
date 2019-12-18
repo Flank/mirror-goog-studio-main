@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-810aedcdd2810caf8657bf71834bfd2512425aca1d37b934eac7cdc40d1b7abf
+44c69492336d2c1fd767de5271b33b0838b5dee666887b6105193726d5b19d91
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -1015,8 +1015,10 @@ com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.Strin
 com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.NdkBuildOptions implements com.android.build.gradle.internal.model.CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuildOptions
 com.android.build.gradle.internal.dsl.NdkBuildOptions.<init>: com.android.build.gradle.internal.dsl.NdkBuildOptions (com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.NdkBuildOptions.buildStagingDirectory: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.getBuildStagingDirectory: java.io.File ()
 com.android.build.gradle.internal.dsl.NdkBuildOptions.getPath: java.io.File ()
+com.android.build.gradle.internal.dsl.NdkBuildOptions.path: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setBuildStagingDirectory: void (java.io.File)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setBuildStagingDirectory: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setPath: void (java.io.File)

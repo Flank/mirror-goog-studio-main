@@ -340,6 +340,8 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         }
     }
 
+    builder.add("--no-proguard-location-reference")
+
     return builder.build()
 }
 

@@ -40,7 +40,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final String myInstrumentedTestTaskName;
     @Nullable private final String myBundleTaskName;
+    @Nullable private final File myPostBundleTaskModelFile;
     @Nullable private final String myApkFromBundleTaskName;
+    @Nullable private final File myPostApkFromBundleTaskModelFile;
     @Nullable private final CodeShrinker myCodeShrinker;
     private final boolean mySigned;
 
@@ -58,7 +60,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myTestOptions = new TestOptionsStub();
         myInstrumentedTestTaskName = "instrumentedTestsTaskName";
         myBundleTaskName = "bundleTaskName";
+        myPostBundleTaskModelFile = new File("bundleTaskModelFile");
         myApkFromBundleTaskName = "apkFromBundleTaskNam";
+        myPostApkFromBundleTaskModelFile = new File("apkFromBundleModelFile");
         mySigned = true;
         myCodeShrinker = null;
     }
@@ -91,7 +95,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
             @Nullable TestOptions testOptions,
             @Nullable String instrumentedTestTaskName,
             @Nullable String bundleTaskName,
+            @Nullable File postBundleTaskModelFile,
             @Nullable String apkFromBundleTaskName,
+            @Nullable File postApkFromBundleTaskModelFile,
             @Nullable CodeShrinker codeShrinker,
             boolean signed) {
         super(
@@ -122,7 +128,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myTestOptions = testOptions;
         myInstrumentedTestTaskName = instrumentedTestTaskName;
         myBundleTaskName = bundleTaskName;
+        myPostBundleTaskModelFile = postBundleTaskModelFile;
         myApkFromBundleTaskName = apkFromBundleTaskName;
+        myPostApkFromBundleTaskModelFile = postApkFromBundleTaskModelFile;
         myCodeShrinker = codeShrinker;
         mySigned = signed;
     }
@@ -195,8 +203,22 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
 
     @Nullable
     @Override
+    public String getBundleTaskOutputListingFile() {
+        return myPostBundleTaskModelFile != null ? myPostBundleTaskModelFile.getAbsolutePath() : "";
+    }
+
+    @Nullable
+    @Override
     public String getApkFromBundleTaskName() {
         return myApkFromBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public String getApkFromBundleTaskOutputListingFile() {
+        return myPostApkFromBundleTaskModelFile != null
+                ? myPostApkFromBundleTaskModelFile.getAbsolutePath()
+                : "";
     }
 
     @Nullable
@@ -266,7 +288,12 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 && Objects.equals(
                         getInstrumentedTestTaskName(), artifact.getInstrumentedTestTaskName())
                 && Objects.equals(getBundleTaskName(), artifact.getBundleTaskName())
+                && Objects.equals(
+                        getBundleTaskOutputListingFile(), artifact.getBundleTaskOutputListingFile())
                 && Objects.equals(getApkFromBundleTaskName(), artifact.getApkFromBundleTaskName())
+                && Objects.equals(
+                        getApkFromBundleTaskOutputListingFile(),
+                        artifact.getApkFromBundleTaskOutputListingFile())
                 && Objects.equals(getNativeLibraries(), artifact.getNativeLibraries());
     }
 
@@ -300,7 +327,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 getTestOptions(),
                 getInstrumentedTestTaskName(),
                 getBundleTaskName(),
-                getApkFromBundleTaskName());
+                getBundleTaskOutputListingFile(),
+                getApkFromBundleTaskName(),
+                getApkFromBundleTaskOutputListingFile());
     }
 
     @Override
@@ -336,8 +365,14 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 + ", myBundleTaskName="
                 + myBundleTaskName
                 + "} "
+                + ", myPostBundleTasModelFile="
+                + myPostBundleTaskModelFile
+                + "} "
                 + ", myApkFromBundleTaskName"
                 + myApkFromBundleTaskName
+                + "} "
+                + ", myPostApkFromBundleTaskModelFile="
+                + myPostApkFromBundleTaskModelFile
                 + "} "
                 + super.toString();
     }

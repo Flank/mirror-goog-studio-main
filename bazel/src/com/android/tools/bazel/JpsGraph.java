@@ -43,8 +43,13 @@ class JpsGraph {
 
     private final LinkedHashMap<JpsModule, Set<JpsModule>> closures;
     private final List<List<JpsModule>> components;
+    private final BazelToolsLogger logger;
 
-    public JpsGraph(JpsProject project, ImmutableSet<JpsJavaDependencyScope> scope) {
+    public JpsGraph(
+            JpsProject project,
+            ImmutableSet<JpsJavaDependencyScope> scope,
+            BazelToolsLogger logger) {
+        this.logger = logger;
         closures = new LinkedHashMap<>();
         components = new ArrayList<>();
 
@@ -79,33 +84,42 @@ class JpsGraph {
         }
     }
 
-    private static Graph<JpsModule> createGraph(JpsProject project, Set<JpsJavaDependencyScope> scopes) {
-        return GraphGenerator.create(new GraphGenerator.SemiGraph<JpsModule>() {
-            @Override
-            public Collection<JpsModule> getNodes() {
-                return project.getModules();
-            }
-
-            @Override
-            public Iterator<JpsModule> getIn(JpsModule jpsModule) {
-                List<JpsDependencyElement> deps = jpsModule.getDependenciesList().getDependencies();
-                List<JpsModule> ins = new ArrayList<>();
-                for (JpsDependencyElement dep : deps) {
-                    JpsJavaDependencyExtension extension = JpsJavaExtensionService.getInstance()
-                            .getDependencyExtension(dep);
-                    if (dep instanceof JpsModuleDependency && extension != null &&
-                            scopes.contains(extension.getScope())) {
-                        JpsModuleDependency moduleDep = (JpsModuleDependency) dep;
-                        if (moduleDep.getModule() == null) {
-                            System.err.println("Invalid module reference: " + moduleDep.getModuleReference().getModuleName());
-                        } else {
-                            ins.add(moduleDep.getModule());
-                        }
+    private Graph<JpsModule> createGraph(JpsProject project, Set<JpsJavaDependencyScope> scopes) {
+        return GraphGenerator.create(
+                new GraphGenerator.SemiGraph<JpsModule>() {
+                    @Override
+                    public Collection<JpsModule> getNodes() {
+                        return project.getModules();
                     }
-                }
-                return ins.iterator();
-            }
-        });
+
+                    @Override
+                    public Iterator<JpsModule> getIn(JpsModule jpsModule) {
+                        List<JpsDependencyElement> deps =
+                                jpsModule.getDependenciesList().getDependencies();
+                        List<JpsModule> ins = new ArrayList<>();
+                        for (JpsDependencyElement dep : deps) {
+                            JpsJavaDependencyExtension extension =
+                                    JpsJavaExtensionService.getInstance()
+                                            .getDependencyExtension(dep);
+                            if (dep instanceof JpsModuleDependency
+                                    && extension != null
+                                    && scopes.contains(extension.getScope())) {
+                                JpsModuleDependency moduleDep = (JpsModuleDependency) dep;
+                                if (moduleDep.getModule() == null) {
+                                    if (!ImlToIr.ignoreWarnings(jpsModule)) {
+                                        logger.warning(
+                                                "Invalid module reference from %s to %s",
+                                                jpsModule.getName(),
+                                                moduleDep.getModuleReference().getModuleName());
+                                    }
+                                } else {
+                                    ins.add(moduleDep.getModule());
+                                }
+                            }
+                        }
+                        return ins.iterator();
+                    }
+                });
     }
 
     public Set<JpsModule> getModules() {

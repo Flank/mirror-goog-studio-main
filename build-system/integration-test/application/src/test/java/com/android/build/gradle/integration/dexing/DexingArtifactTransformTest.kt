@@ -55,7 +55,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testMultiDex() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.defaultConfig.multiDexEnabled = true
             android.defaultConfig.minSdkVersion = 21
@@ -76,7 +76,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testLegacyMultiDex() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.defaultConfig.multiDexEnabled = true
             android.defaultConfig.minSdkVersion = 19
@@ -95,7 +95,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testAndroidTest() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.defaultConfig.multiDexEnabled = true
             android.defaultConfig.minSdkVersion = 21
@@ -113,7 +113,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testExternalDeps() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.defaultConfig.minSdkVersion = 21
             dependencies {
@@ -138,7 +138,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testAddingExternalDeps() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.defaultConfig.minSdkVersion = 21
             android.defaultConfig.multiDexEnabled = true
@@ -166,7 +166,7 @@ class DexingArtifactTransformTest {
     @Test
     fun testProguardDoesSingleMerge() {
         project.testDir.resolve("proguard-rules.pro").writeText("-keep class **")
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.buildTypes.debug {
                 minifyEnabled true
@@ -193,7 +193,7 @@ class DexingArtifactTransformTest {
             project.testDir.resolve("generated-classes.jar").toPath(), setOf("test/A")
         )
 
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.applicationVariants.all { variant ->
                 def generated = project.files("generated-classes.jar")
@@ -208,7 +208,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testDesugaringWithMinSdk24() {
-        project.buildFile.appendText("""
+        project.buildFile.appendText("\n" + """
             android.defaultConfig.minSdkVersion 24
             android.compileOptions.targetCompatibility 1.8
             dependencies {

@@ -59,7 +59,7 @@ interface ExternalNativeBuild<CMakeOptionsT : CmakeOptions, NdkBuildOptionsT : N
      *
      * For more information about the properties you can configure in this block, see [NdkBuildOptions]
      */
-    fun ndkBuild(action: (NdkBuildOptionsT) -> Unit)
+    fun ndkBuild(action: NdkBuildOptionsT.() -> Unit)
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path
@@ -75,6 +75,6 @@ interface ExternalNativeBuild<CMakeOptionsT : CmakeOptions, NdkBuildOptionsT : N
      *
      * For more information about the properties you can configure in this block, see [CmakeOptions]
      */
-    fun cmake(action: (CMakeOptionsT) -> Unit)
+    fun cmake(action: CMakeOptionsT.() -> Unit)
 
 }

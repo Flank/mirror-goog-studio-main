@@ -55,7 +55,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @Nullable private final IdeTestOptions myTestOptions;
     @Nullable private final String myInstrumentedTestTaskName;
     @Nullable private final String myBundleTaskName;
+    @Nullable private final String myPostBundleTaskModelFile;
     @Nullable private final String myApkFromBundleTaskName;
+    @Nullable private final String myPostApkFromBundleTaskModelFile;
     @Nullable private final CodeShrinker myCodeShrinker;
 
     private final boolean mySigned;
@@ -78,7 +80,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myTestOptions = null;
         myInstrumentedTestTaskName = null;
         myBundleTaskName = null;
+        myPostBundleTaskModelFile = null;
         myApkFromBundleTaskName = null;
+        myPostApkFromBundleTaskModelFile = null;
         mySigned = false;
         myCodeShrinker = null;
 
@@ -120,9 +124,21 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myBundleTaskName =
                 IdeModel.copyNewProperty(
                         modelCache, artifact::getBundleTaskName, Function.identity(), null);
+        myPostBundleTaskModelFile =
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getBundleTaskOutputListingFile,
+                        Function.identity(),
+                        null);
         myApkFromBundleTaskName =
                 IdeModel.copyNewProperty(
                         modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null);
+        myPostApkFromBundleTaskModelFile =
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getApkFromBundleTaskOutputListingFile,
+                        Function.identity(),
+                        null);
         myCodeShrinker =
                 IdeModel.copyNewProperty(
                         modelCache, artifact::getCodeShrinker, Function.identity(), null);
@@ -224,8 +240,20 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Nullable
     @Override
+    public String getBundleTaskOutputListingFile() {
+        return myPostBundleTaskModelFile;
+    }
+
+    @Nullable
+    @Override
     public String getApkFromBundleTaskName() {
         return myApkFromBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public String getApkFromBundleTaskOutputListingFile() {
+        return myPostApkFromBundleTaskModelFile;
     }
 
     @Nullable
@@ -285,8 +313,12 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 && Objects.equals(myTestOptions, artifact.myTestOptions)
                 && Objects.equals(myInstrumentedTestTaskName, artifact.myInstrumentedTestTaskName)
                 && Objects.equals(myBundleTaskName, artifact.myBundleTaskName)
+                && Objects.equals(myPostBundleTaskModelFile, artifact.myPostBundleTaskModelFile)
                 && Objects.equals(myCodeShrinker, artifact.myCodeShrinker)
-                && Objects.equals(myApkFromBundleTaskName, artifact.myApkFromBundleTaskName);
+                && Objects.equals(myApkFromBundleTaskName, artifact.myApkFromBundleTaskName)
+                && Objects.equals(
+                        myPostApkFromBundleTaskModelFile,
+                        artifact.myPostApkFromBundleTaskModelFile);
     }
 
     @Override
@@ -318,8 +350,10 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 myTestOptions,
                 myInstrumentedTestTaskName,
                 myBundleTaskName,
+                myPostBundleTaskModelFile,
                 myCodeShrinker,
-                myApkFromBundleTaskName);
+                myApkFromBundleTaskName,
+                myPostApkFromBundleTaskModelFile);
     }
 
     @Override
@@ -357,10 +391,14 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + myInstrumentedTestTaskName
                 + ", myBundleTaskName="
                 + myBundleTaskName
+                + ", myPostBundleTaskModelFile="
+                + myPostBundleTaskModelFile
                 + ", myCodeShrinker="
                 + myCodeShrinker
                 + ", myApkFromBundleTaskName="
                 + myApkFromBundleTaskName
+                + ", myPostApkFromBundleTaskModelFile="
+                + myPostApkFromBundleTaskModelFile
                 + "}";
     }
 }

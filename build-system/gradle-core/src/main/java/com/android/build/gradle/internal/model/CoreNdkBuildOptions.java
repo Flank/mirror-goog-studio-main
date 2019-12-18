@@ -28,12 +28,17 @@ import java.io.File;
  */
 @Deprecated
 public interface CoreNdkBuildOptions extends NdkBuildOptions {
+    @Override
     @Nullable
     File getPath();
+
+    @Override
     void setPath(@NonNull File path);
 
+    @Override
     @Nullable
     File getBuildStagingDirectory();
 
+    @Override
     void setBuildStagingDirectory(@NonNull File buildStagingDirectory);
 }

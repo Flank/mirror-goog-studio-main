@@ -29,7 +29,7 @@ import org.junit.Test
 class EarlyTaskConfigurationTest {
 
     @get:Rule
-    var project = EmptyActivityProjectBuilder().build()
+    var project = EmptyActivityProjectBuilder().also { it.withUnitTest = true }.build()
 
     @Test // Regression test for bug 139821728
     fun `check that build succeeds when tasks are configured early`() {

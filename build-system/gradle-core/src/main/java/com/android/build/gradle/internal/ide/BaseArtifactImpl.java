@@ -28,17 +28,18 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
+import org.gradle.api.file.RegularFile;
 
 /** Implementation of BaseArtifact that is serializable. */
 @Immutable
 abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
 
-    public static final String NO_MODEL_FILE = "";
+    private static final String NO_MODEL_FILE = "";
 
     @NonNull private final Collection<File> generatedSourceFolders;
     @NonNull private final String name;
     @NonNull private final String assembleTaskName;
-    @NonNull private final String postAssembleTaskModelFile;
+    @NonNull private final String assembleTaskOutputListingFile;
     @NonNull private final String compileTaskName;
     @NonNull private final File classesFolder;
     @NonNull private final File javaResourcesFolder;
@@ -51,7 +52,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
     BaseArtifactImpl(
             @NonNull String name,
             @NonNull String assembleTaskName,
-            @NonNull String postAssembleTaskModelFile,
+            @Nullable RegularFile assembleTaskOutputListingFile,
             @NonNull String compileTaskName,
             @NonNull File classesFolder,
             @NonNull Set<File> additionalClassesFolders,
@@ -63,7 +64,10 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
             @NonNull Collection<File> generatedSourceFolders) {
         this.name = name;
         this.assembleTaskName = assembleTaskName;
-        this.postAssembleTaskModelFile = postAssembleTaskModelFile;
+        this.assembleTaskOutputListingFile =
+                assembleTaskOutputListingFile != null
+                        ? assembleTaskOutputListingFile.getAsFile().getAbsolutePath()
+                        : NO_MODEL_FILE;
         this.compileTaskName = compileTaskName;
         this.classesFolder = classesFolder;
         this.additionalClassesFolders = additionalClassesFolders;
@@ -95,8 +99,8 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
 
     @NonNull
     @Override
-    public String getPostAssembleTaskModelFile() {
-        return postAssembleTaskModelFile;
+    public String getAssembleTaskOutputListingFile() {
+        return assembleTaskOutputListingFile;
     }
 
     @NonNull
@@ -165,7 +169,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
         return Objects.equals(generatedSourceFolders, that.generatedSourceFolders)
                 && Objects.equals(name, that.name)
                 && Objects.equals(assembleTaskName, that.assembleTaskName)
-                && Objects.equals(postAssembleTaskModelFile, that.postAssembleTaskModelFile)
+                && Objects.equals(assembleTaskOutputListingFile, that.assembleTaskOutputListingFile)
                 && Objects.equals(compileTaskName, that.compileTaskName)
                 && Objects.equals(classesFolder, that.classesFolder)
                 && Objects.equals(additionalClassesFolders, that.additionalClassesFolders)
@@ -182,7 +186,7 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
                 generatedSourceFolders,
                 name,
                 assembleTaskName,
-                postAssembleTaskModelFile,
+                assembleTaskOutputListingFile,
                 compileTaskName,
                 classesFolder,
                 additionalClassesFolders,

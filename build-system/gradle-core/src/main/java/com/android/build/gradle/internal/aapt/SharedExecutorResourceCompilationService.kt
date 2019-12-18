@@ -19,8 +19,9 @@ package com.android.build.gradle.internal.aapt
 import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
+import com.android.build.gradle.internal.services.aapt2WorkersServiceRegistry
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.options.SyncOptions
@@ -37,13 +38,13 @@ class SharedExecutorResourceCompilationService(
   projectName: String,
   owner: String,
   aapt2WorkersBuildServiceKey: WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService>,
-  private val aapt2ServiceKey: Aapt2ServiceKey,
+  private val aapt2ServiceKey: Aapt2DaemonServiceKey,
   private val errorFormatMode: SyncOptions.ErrorFormatMode,
   private val useJvmResourceCompiler: Boolean
 ) : ResourceCompilationService {
 
   private val workerExecutor: WorkerExecutorFacade =
-    WorkerActionServiceRegistry.INSTANCE
+    aapt2WorkersServiceRegistry
       .getService(aapt2WorkersBuildServiceKey)
       .service
       .getSharedExecutorForAapt2(projectName, owner)

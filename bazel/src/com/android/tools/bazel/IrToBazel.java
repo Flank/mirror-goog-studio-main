@@ -29,11 +29,11 @@ import com.android.tools.bazel.model.Label;
 import com.android.tools.bazel.model.Package;
 import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
+import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -44,13 +44,14 @@ import java.util.Map;
 public class IrToBazel {
 
     private final boolean dryRun;
+    private final BazelToolsLogger logger;
 
-    public IrToBazel(boolean dryRun) {
+    public IrToBazel(BazelToolsLogger logger, boolean dryRun) {
         this.dryRun = dryRun;
+        this.logger = logger;
     }
 
-    public int convert(IrProject bazelProject, PrintWriter progress, Configuration config)
-            throws IOException {
+    public int convert(IrProject bazelProject, Configuration config) throws IOException {
 
         File projectDir = bazelProject.getBaseDir().toPath().resolve("tools/idea").toFile();
         Path workspace = bazelProject.getBaseDir().toPath();
@@ -166,7 +167,7 @@ public class IrToBazel {
                                     // TODO: Fix all these dependencies correctly
                                     String target;
                                     if (relJar.startsWith("prebuilts/tools/common/m2")) {
-                                        target = "jar";
+                                        target = pickTargetNameForMavenArtifact(file);
                                     } else {
                                         target = packageRelative.replaceAll("\\.jar$", "");
                                     }
@@ -178,7 +179,7 @@ public class IrToBazel {
                                         throw new IllegalStateException("Cannot add jar " + packageRelative, e);
                                     }
                                 } else {
-                                    System.err.println("Cannot find package for:" + relJar);
+                                    logger.warning("Cannot find package for %s", relJar);
                                 }
                             }
                         }
@@ -229,11 +230,11 @@ public class IrToBazel {
         rules.values().stream().filter(ImlModule::isExport).sorted(Comparator.comparing(BazelRule::getLabel))
                 .forEach(imlProject::addModule);
 
-        progress.println("Updating BUILD files...");
-        CountingListener listener = new CountingListener(progress, dryRun);
+        logger.info("Updating BUILD files...");
+        CountingListener listener = new CountingListener(logger, dryRun);
         bazel.generate(listener);
 
-        progress.println(String.format("%d BUILD file(s) updated.", listener.getUpdatedPackages()));
+        logger.info("%d BUILD file(s) updated.", listener.getUpdatedPackages());
         return listener.getUpdatedPackages();
     }
 
@@ -245,22 +246,69 @@ public class IrToBazel {
         return relJar.startsWith("bazel-bin");
     }
 
+    /**
+     * Computes name for the {@code java_import} target corresponding to {@code file}.
+     *
+     * <p>The input file needs to be inside a directory structure of a Maven repository. The file's
+     * extension and classifier are taken into account. For example:
+     *
+     * <ul>
+     *   <li>Target for {@code junit-4.12.jar} is {@code jar}
+     *   <li>Target for {@code trove4j-1.0.20160824.jar} is {@code jar}
+     *   <li>Target for {@code guice-4.2.1-no_aop.jar} is {@code no_aop.jar}
+     * </ul>
+     */
+    private static String pickTargetNameForMavenArtifact(File file) {
+        String fileName = file.getName();
+        File versionDir = file.getParentFile();
+        Verify.verifyNotNull(versionDir, "'%s' is not a valid maven artifact file name.", fileName);
+        String version = versionDir.getName();
+        int indexOfVersion = fileName.lastIndexOf(version);
+        Verify.verify(
+                indexOfVersion > 0, "'%s' is not a valid maven artifact file name.", fileName);
+
+        int indexOfExtension = fileName.lastIndexOf('.');
+        Verify.verify(
+                indexOfExtension > 0, "'%s' is not a valid maven artifact file name.", fileName);
+        String result = fileName.substring(indexOfExtension + 1);
+
+        int indexOfClassifier = indexOfVersion + version.length();
+        Verify.verify(
+                indexOfClassifier < fileName.length(),
+                "'%s' is not a valid maven artifact file name.",
+                fileName);
+        if (fileName.charAt(indexOfClassifier) == '-') {
+            String classifier = fileName.substring(indexOfClassifier + 1, indexOfExtension);
+            result = classifier + "." + result;
+        }
+
+        return result;
+    }
 
     private static class CountingListener implements Workspace.GenerationListener {
-        private final PrintWriter printWriter;
+        private final BazelToolsLogger logger;
         private final boolean dryRun;
         private int updatedPackages = 0;
 
-        private CountingListener(PrintWriter printWriter, boolean dryRun) {
-            this.printWriter = printWriter;
+        private CountingListener(BazelToolsLogger logger, boolean dryRun) {
+            this.logger = logger;
             this.dryRun = dryRun;
         }
 
         @Override
         public boolean packageUpdated(String packageName) {
             updatedPackages++;
-            printWriter.append("Updated ").append(packageName).append("/BUILD").println();
+            if (dryRun) {
+                logger.info("%s/BUILD out of date.", packageName);
+            } else {
+                logger.info("Updated %s/BUILD", packageName);
+            }
             return !dryRun;
+        }
+
+        @Override
+        public void error(String description) {
+            logger.error(description);
         }
 
         int getUpdatedPackages() {

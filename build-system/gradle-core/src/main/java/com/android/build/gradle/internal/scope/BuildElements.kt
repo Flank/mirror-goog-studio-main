@@ -120,8 +120,13 @@ open class BuildElements(
 
     @Throws(IOException::class)
     fun save(folder: File): BuildElements {
-        val persistedOutput = persist(folder.toPath())
-        FileWriter(ExistingBuildElements.getMetadataFile(folder)).use { writer ->
+        return saveToFile(ExistingBuildElements.getMetadataFile(folder))
+    }
+
+    @Throws(IOException::class)
+    fun saveToFile(file: File): BuildElements {
+        val persistedOutput = persist(file.parentFile.toPath())
+        FileWriter(file).use {writer ->
             writer.append(persistedOutput)
         }
         return this

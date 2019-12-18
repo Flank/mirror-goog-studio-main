@@ -59,8 +59,8 @@ fun createCxxVariantModel(
             } else {
                 join(intermediatesFolder, "obj")
             }
-        override val isDebuggableEnabled get() =
-            baseVariantData.variantDslInfo.buildType.isDebuggable
+        override val isDebuggableEnabled
+            get() = baseVariantData.publicVariantApi.isDebuggable
         override val validAbiList by lazy {
             CachingEnvironment(module.cxxFolder).use {
                 AbiConfigurator(

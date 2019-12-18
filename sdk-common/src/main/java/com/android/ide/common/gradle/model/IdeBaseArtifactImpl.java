@@ -93,7 +93,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myCompileTaskName = artifact.getCompileTaskName();
         myAssembleTaskName = artifact.getAssembleTaskName();
         myPostAssembleModelFile =
-                IdeModel.copyNewProperty(artifact::getPostAssembleTaskModelFile, "");
+                IdeModel.copyNewProperty(artifact::getAssembleTaskOutputListingFile, "");
         myClassesFolder = artifact.getClassesFolder();
         myJavaResourcesFolder = IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null);
         myDependencies = copy(artifact.getDependencies(), modelCache);
@@ -188,7 +188,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @NonNull
     @Override
-    public String getPostAssembleTaskModelFile() {
+    public String getAssembleTaskOutputListingFile() {
         return myPostAssembleModelFile;
     }
 

@@ -689,7 +689,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 .getScope()
                 .getJavaClasspath(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactType.CLASSES,
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         generatorKey);
     }
 
@@ -700,7 +700,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 .getScope()
                 .getJavaClasspathArtifacts(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactType.CLASSES,
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         generatorKey);
     }
 

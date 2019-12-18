@@ -262,20 +262,28 @@ import_with_license = rule(
 )
 
 # A java_import rule extended with pom and parent attributes for maven libraries.
-def maven_java_import(name, pom, classifiers = [], visibility = None, jars = [], **kwargs):
-    native.java_import(
-        name = name + "_import",
-        jars = jars,
-        **kwargs
-    )
+def maven_java_import(
+        name,
+        pom,
+        classifiers = [],
+        visibility = None,
+        jars = [],
+        classified_only = False,
+        **kwargs):
+    if not classified_only:
+        native.java_import(
+            name = name + "_import",
+            jars = jars,
+            **kwargs
+        )
 
-    import_with_license(
-        name = name,
-        visibility = visibility,
-        dep = name + "_import",
-        notice = "NOTICE",
-        tags = ["require_license"],
-    )
+        import_with_license(
+            name = name,
+            visibility = visibility,
+            dep = name + "_import",
+            notice = "NOTICE",
+            tags = ["require_license"],
+        )
 
     classified_libraries = []
     for classifier in classifiers:
@@ -289,9 +297,10 @@ def maven_java_import(name, pom, classifiers = [], visibility = None, jars = [],
 
     maven_pom(
         name = name + "_maven",
-        library = name,
+        library = None if classified_only else name,
         classifiers = classifiers,
-        classified_libraries = classified_libraries,
+        classified_libraries = classified_libraries if not classified_only else None,
+        classified_files = classified_libraries if classified_only else None,
         visibility = visibility,
         source = pom,
     )

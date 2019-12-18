@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.desugar
 
+import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
@@ -46,7 +47,7 @@ class L8DexDesugarTest {
 
     @Before
     fun setUp() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             android.compileOptions.coreLibraryDesugaringEnabled = true
             dependencies {
@@ -70,9 +71,8 @@ class L8DexDesugarTest {
     @Test
     fun testLegacyMultidexMainDexIsNotDesugarLib() {
         normalSetUp()
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
-
             android.defaultConfig.minSdkVersion = 19
         """.trimIndent()
         )
@@ -105,9 +105,8 @@ class L8DexDesugarTest {
      */
     @Test
     fun testLangDesugarPrerequisite() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
-
             android.defaultConfig.minSdkVersion = 21
         """.trimIndent()
         )
@@ -124,9 +123,8 @@ class L8DexDesugarTest {
                     "with D8 or R8."
         )
 
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
-
             android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
             android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
         """.trimIndent()
@@ -139,9 +137,8 @@ class L8DexDesugarTest {
      */
     @Test
     fun testMultidexEnabledPrerequisite() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
-
             android.defaultConfig.minSdkVersion = 19
             android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
             android.compileOptions.targetCompatibility = JavaVersion.VERSION_1_8
@@ -153,9 +150,8 @@ class L8DexDesugarTest {
             "In order to use core library desugaring, please enable multidex."
         )
 
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
-
             android.defaultConfig.multiDexEnabled = true
         """.trimIndent()
         )
@@ -183,9 +179,8 @@ class L8DexDesugarTest {
     }
 
     private fun normalSetUp() {
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
-
             android.defaultConfig.minSdkVersion = 21
             android.defaultConfig.multiDexEnabled = true
             android.compileOptions.sourceCompatibility = JavaVersion.VERSION_1_8
@@ -202,7 +197,8 @@ class L8DexDesugarTest {
         }
 
     companion object {
-        private const val DESUGAR_DEPENDENCY = "com.android.tools:desugar_jdk_libs:1.0.4"
+        private const val DESUGAR_DEPENDENCY
+                = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
         private const val MISSING_DEPS_ERROR = "coreLibraryDesugaring configuration contains no " +
                 "dependencies. If you intend to enable core library desugaring, please add " +
                 "dependencies to coreLibraryDesugaring configuration."

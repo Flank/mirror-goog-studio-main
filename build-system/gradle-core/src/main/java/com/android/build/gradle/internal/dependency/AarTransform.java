@@ -104,7 +104,7 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
         boolean autoNamespaceDependencies = getParameters().getAutoNamespaceDependencies().get();
         ArtifactType targetType = getParameters().getTargetType().get();
         switch (targetType) {
-            case CLASSES:
+            case CLASSES_JAR:
                 if (!AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
                         && !isShared(input)) {
                     AarTransformUtil.getJars(input).forEach(transformOutputs::file);

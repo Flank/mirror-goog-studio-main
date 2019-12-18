@@ -70,7 +70,8 @@ class AaptV2CommandBuilderTest {
             "-0",
             "apk",
             "--no-version-vectors",
-            "--static-lib"
+            "--static-lib",
+            "--no-proguard-location-reference"
         ).inOrder()
     }
 
@@ -116,7 +117,8 @@ class AaptV2CommandBuilderTest {
             "--no-compress-regex",
             "($fullPathRegex|$dotTestExtensionRegex|$dotEndRegex)",
             "--no-version-vectors",
-            "--static-lib"
+            "--static-lib",
+            "--no-proguard-location-reference"
         ).inOrder()
     }
 
@@ -156,7 +158,8 @@ class AaptV2CommandBuilderTest {
             "apk",
             "--no-compress",
             "--no-version-vectors",
-            "--static-lib"
+            "--static-lib",
+            "--no-proguard-location-reference"
         ).inOrder()
     }
 }

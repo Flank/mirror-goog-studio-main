@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.app
 
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
+import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.EmptyGradleProject
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -40,14 +41,14 @@ class EmptyActivityProjectBuilder {
      */
     var projectName: String = "My Application"
     var packageName: String = "com.example.myapplication"
-    var minApiLevel: String = "15"
+    var minSdkVersion: Int = DEFAULT_MIN_SDK_VERSION
     var useKotlin: Boolean = false
+    var useAndroidX: Boolean = true
 
     /*
      * The following are additional settings to further customize the project
      */
-    var useAndroidX: Boolean = true
-    var withUnitTest: Boolean = true
+    var withUnitTest: Boolean = false
     var useGradleBuildCache: Boolean = false
     var gradleBuildCacheDir: File? = null
 
@@ -67,9 +68,9 @@ class EmptyActivityProjectBuilder {
     fun build(): GradleTestProject {
         val subProjectsBuilder = MultiModuleTestProject.builder()
         val appSubProject =
-            createAppSubProject(packageName, minApiLevel, useKotlin, useAndroidX, withUnitTest)
+            createAppSubProject(packageName, minSdkVersion, useKotlin, useAndroidX, withUnitTest)
         for (subProject in listOf(appSubProject) + additionalSubProjects) {
-            subProjectsBuilder.subproject(subProject.name!!, subProject)
+            subProjectsBuilder.subproject(subProject.path!!, subProject)
         }
 
         val rootProjectBuilder = GradleTestProject.builder()
@@ -92,7 +93,7 @@ class EmptyActivityProjectBuilder {
 
     private fun createAppSubProject(
         packageName: String,
-        minApiLevel: String,
+        minSdkVersion: Int,
         useKotlin: Boolean,
         useAndroidX: Boolean,
         withUnitTest: Boolean
@@ -107,7 +108,7 @@ class EmptyActivityProjectBuilder {
                 plugin = "com.android.application"
                 this.useKotlin = useKotlin
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                minSdkVersion = minApiLevel
+                this.minSdkVersion = minSdkVersion.toString()
                 if (useAndroidX) {
                     addDependency(
                         dependency = "'androidx.appcompat:appcompat:$ANDROIDX_VERSION'"

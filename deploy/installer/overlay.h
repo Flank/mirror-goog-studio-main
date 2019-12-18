@@ -45,6 +45,12 @@ class Overlay {
   bool WriteFile(const std::string& file_path,
                  const std::string& content) const;
 
+  // Removes the file at the specified path from the overlay. Fails if the
+  // overlay is not open or the file cannot be deleted.
+  //
+  // The path specified should be relative to the overlay directory.
+  bool DeleteFile(const std::string& file_path) const;
+
   // Closes this overlay, preventing further modification and writing the new
   // id to disk. Fails if the overlay is already closed, or if the new id cannot
   // be written.

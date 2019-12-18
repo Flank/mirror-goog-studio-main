@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -87,7 +86,7 @@ public class ImlToIr {
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
     public IrProject convert(
-            Path workspace, String projectPath, String imlGraph, PrintWriter writer)
+            Path workspace, String projectPath, String imlGraph, BazelToolsLogger logger)
             throws IOException {
         projectPath = workspace.resolve(projectPath).toString();
         // Depending on class initialization order this property will be read, so it needs to be set.
@@ -99,7 +98,9 @@ public class ImlToIr {
 
         JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
         JpsProjectLoader.loadProject(project, pathVariables, projectPath);
-        writer.println("Loaded project " + project.getName() + " with " + project.getModules().size() + " modules.");
+        logger.info(
+                "Loaded project %s with %d modules.",
+                project.getName(), project.getModules().size());
 
         IrProject irProject = new IrProject(workspace.toFile());
 
@@ -107,14 +108,15 @@ public class ImlToIr {
                 .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
         List<File> excludedFiles = excludedFiles(excludes);
 
-        JpsGraph compileGraph = new JpsGraph(project, COMPILE_SCOPE);
-        JpsGraph testCompileGraph = new JpsGraph(project, TEST_COMPILE_SCOPE);
-        JpsGraph runtimeGraph = new JpsGraph(project, RUNTIME_COMPILE_SCOPE);
-        JpsGraph testCompileRuntimeGraph = new JpsGraph(project, RUNTIME_TEST_COMPILE_SCOPE);
+        JpsGraph compileGraph = new JpsGraph(project, COMPILE_SCOPE, logger);
+        JpsGraph testCompileGraph = new JpsGraph(project, TEST_COMPILE_SCOPE, logger);
+        JpsGraph runtimeGraph = new JpsGraph(project, RUNTIME_COMPILE_SCOPE, logger);
+        JpsGraph testCompileRuntimeGraph =
+                new JpsGraph(project, RUNTIME_TEST_COMPILE_SCOPE, logger);
 
         Dot dot = new Dot("iml_graph");
 
-        printCycleWarnings(writer, testCompileGraph);
+        printCycleWarnings(logger, testCompileGraph);
 
         // We have to create the IrModules first because even iterating in topological order,
         // we do so on a test+compile scope, but there are still runtime dependency cycles.
@@ -158,14 +160,11 @@ public class ImlToIr {
                     JpsLibrary library = libraryDependency.getLibrary();
 
                     if (library == null) {
-                        if (!shouldWarnOnModule(jpsModule)) {
-                            System.err.println(
-                                    String.format(
-                                            "Module %s: invalid item '%s' in the dependencies list",
-                                            jpsModule.getName(),
-                                            libraryDependency
-                                                    .getLibraryReference()
-                                                    .getLibraryName()));
+                        if (!ignoreWarnings(jpsModule)) {
+                            logger.warning(
+                                    "Module %s: invalid item '%s' in the dependencies list",
+                                    jpsModule.getName(),
+                                    libraryDependency.getLibraryReference().getLibraryName());
                         }
                         continue;  // Like IDEA, ignore dependencies on non-existent libraries.
                     }
@@ -182,7 +181,11 @@ public class ImlToIr {
                     // across systems. Choose alphabetical always:
                     Collections.sort(files);
                     for (File file : files) {
-                        if (!file.exists()) {
+                        // "KotlinPlugin" is the library that upstream IntelliJ uses that points
+                        // to files under idea/build that we never create. Instead, Android Studio
+                        // has its own library, called "kotlin-plugin" that points to files in
+                        // prebuilts. Here we ignore "KotinPlugin".
+                        if (!file.exists() && !"KotlinPlugin".equals(library.getName())) {
                             String libraryName = library.getName();
                             String dependencyDescription;
                             if (libraryName.equals("#")) {
@@ -192,7 +195,7 @@ public class ImlToIr {
                             } else {
                                 dependencyDescription = "Library " + libraryName;
                             }
-                            System.err.println(
+                            logger.warning(
                                     dependencyDescription
                                             + " points to non existing file: "
                                             + file);
@@ -210,7 +213,13 @@ public class ImlToIr {
                     JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
                     JpsModule dep = moduleDependency.getModule();
                     if (dep == null) {
-                        System.err.println("Invalid module dependency: " + moduleDependency.getModuleReference().getModuleName() + " from " + module.getName());
+                        if (!ignoreWarnings(module.getName())) {
+                            logger.warning(
+                                    "Invalid module dependency: "
+                                            + moduleDependency.getModuleReference().getModuleName()
+                                            + " from "
+                                            + module.getName());
+                        }
                     } else {
                         dot.addEdge(jpsModule.getName(), dep.getName(), scopeToColor(scope));
                         IrModule irDep = imlToIr.get(dep);
@@ -262,14 +271,19 @@ public class ImlToIr {
         return irProject;
     }
 
-    private static void printCycleWarnings(PrintWriter writer, JpsGraph graph) {
+    private static void printCycleWarnings(BazelToolsLogger logger, JpsGraph graph) {
         for (List<JpsModule> component : graph.getConnectedComponents()) {
             // If the component has more than one element, there is a cycle:
             if (component.size() > 1 && !isCycleAllowed(component)) {
-                writer.println("Found circular module dependency: " + component.size() + " modules");
+                StringBuilder message = new StringBuilder();
+                message.append("Found circular module dependency: ")
+                        .append(component.size())
+                        .append(" modules");
                 for (JpsModule module : component) {
-                    writer.println("        " + module.getName());
+                    message.append("        ").append(module.getName());
                 }
+
+                logger.warning(message.toString());
             }
         }
     }
@@ -279,19 +293,23 @@ public class ImlToIr {
      * cycles) or if it involves our code as well.
      */
     private static boolean isCycleAllowed(List<JpsModule> cycle) {
-        return cycle.stream().allMatch(ImlToIr::shouldWarnOnModule);
+        return cycle.stream().allMatch(ImlToIr::ignoreWarnings);
     }
 
     /**
      * Checks if warnings about the given module should be printed out.
      *
-     * We don't warn users about modules we don't maintain, i.e. platform modules.
+     * <p>We don't warn users about modules we don't maintain, i.e. platform modules.
      */
-    private static boolean shouldWarnOnModule(JpsModule module) {
-        String name = module.getName();
-        return name.startsWith("intellij.platform")
-                || name.startsWith("intellij.c")
-                || name.startsWith("intellij.java");
+    public static boolean ignoreWarnings(JpsModule module) {
+        return ignoreWarnings(module.getName());
+    }
+
+    private static boolean ignoreWarnings(String moduleName) {
+        return moduleName.startsWith("intellij.platform")
+                || moduleName.startsWith("intellij.idea")
+                || moduleName.startsWith("intellij.c")
+                || moduleName.startsWith("intellij.java");
     }
 
     private static String scopeToColor(IrModule.Scope scope) {

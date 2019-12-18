@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
@@ -441,6 +442,26 @@ class DynamicAppTest {
             Truth.assertThat(it.entries.map { it.toString() })
                     .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
         }
+
+        // check model
+        val rootBuildModelMap = project.model()
+            .fetchAndroidProjects()
+            .rootBuildModelMap
+
+        val appModel = rootBuildModelMap[":app"]
+        val debugVariantModule = appModel?.getVariantByName("debug")
+        val postApkFromBundleTaskModelFile =
+            debugVariantModule?.mainArtifact?.apkFromBundleTaskOutputListingFile
+        assertThat(postApkFromBundleTaskModelFile).isNotNull()
+        assertThat(File(postApkFromBundleTaskModelFile!!)).exists()
+        val apkFromBundleModel = ExistingBuildElements.fromFile(File(postApkFromBundleTaskModelFile))
+        assertThat(apkFromBundleModel.elements).hasSize(1)
+        val singleOutput = apkFromBundleModel.elements.first()
+        assertThat(singleOutput).isNotNull()
+        assertThat(singleOutput.outputPath).isNotNull()
+        assertThat(singleOutput.outputPath.toFile()).exists()
+        // 2 files, the apk and the output listing file.
+        assertThat(singleOutput.outputPath.toFile().listFiles()).hasLength(2)
 
         // -------------
         // build apks for API 18

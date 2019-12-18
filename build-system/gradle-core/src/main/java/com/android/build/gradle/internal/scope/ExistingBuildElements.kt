@@ -97,6 +97,14 @@ class ExistingBuildElements {
             return loadFrom(null, metadataFile)
         }
 
+        /**
+         * create a {@link BuildElement} containing all artifact types from a previous task
+         * execution metadata file.
+         * @param from the metadata file.
+         */
+        @JvmStatic
+        fun fromFile(from: File): BuildElements = loadFrom(null, from)
+
         private fun loadFrom(
             elementType: ArtifactType<Directory>?,
                 metadataFile: File?): BuildElements {

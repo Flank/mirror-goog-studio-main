@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 public class AdbInstaller implements Installer {
     public static final String INSTALLER_BINARY_NAME = "installer";
@@ -87,7 +88,8 @@ public class AdbInstaller implements Installer {
                 buildCmd(
                         ObjectArrays.concat(
                                 "dump", packageNames.toArray(new String[packageNames.size()])));
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
+        Deploy.InstallerResponse installerResponse =
+                invokeRemoteCommand(cmd, null, 6, TimeUnit.SECONDS);
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
         logger.verbose("installer dump: " + response.getStatus().toString());
         return response;
@@ -127,9 +129,17 @@ public class AdbInstaller implements Installer {
 
     private Deploy.InstallerResponse invokeRemoteCommand(
             String[] cmd, ByteArrayInputStream inputStream) throws IOException {
+        return invokeRemoteCommand(
+                cmd, inputStream, AdbClient.DEFAULT_TIMEOUT, AdbClient.DEFAULT_TIMEUNIT);
+    }
+
+    private Deploy.InstallerResponse invokeRemoteCommand(
+            String[] cmd, ByteArrayInputStream inputStream, long timeOut, TimeUnit timeUnit)
+            throws IOException {
         Trace.begin("./installer " + cmd[2]);
         long start = System.nanoTime();
-        Deploy.InstallerResponse response = invokeRemoteCommand(cmd, inputStream, OnFail.RETRY);
+        Deploy.InstallerResponse response =
+                invokeRemoteCommand(cmd, inputStream, OnFail.RETRY, timeOut, timeUnit);
         logEvents(response.getEventsList());
         long end = System.nanoTime();
 
@@ -181,8 +191,13 @@ public class AdbInstaller implements Installer {
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
     private Deploy.InstallerResponse invokeRemoteCommand(
-            String[] cmd, ByteArrayInputStream inputStream, OnFail onFail) throws IOException {
-        byte[] output = adb.shell(cmd, inputStream);
+            String[] cmd,
+            ByteArrayInputStream inputStream,
+            OnFail onFail,
+            long timeOut,
+            TimeUnit timeUnit)
+            throws IOException {
+        byte[] output = adb.shell(cmd, inputStream, timeOut, timeUnit);
         Deploy.InstallerResponse response = unwrap(output, Deploy.InstallerResponse.parser());
 
         // Handle the case where the executable is not present on the device. In this case, the
@@ -197,7 +212,7 @@ public class AdbInstaller implements Installer {
             if (inputStream != null) {
                 inputStream.reset();
             }
-            return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY);
+            return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY, timeOut, timeUnit);
         }
 
         // Parse response.
@@ -206,7 +221,7 @@ public class AdbInstaller implements Installer {
             if (inputStream != null) {
                 inputStream.reset();
             }
-            return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY);
+            return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY, timeOut, timeUnit);
         }
         return response;
     }

@@ -49,13 +49,13 @@ public interface BaseArtifact {
     String getAssembleTaskName();
 
     /**
-     * Returns the absolute path for the model file that will get updated after each build. The
+     * Returns the absolute path for the listing file that will get updated after each build. The
      * model file will contain deployment related information like applicationId, list of APKs.
      *
      * @return the path to a json file.
      */
     @NonNull
-    String getPostAssembleTaskModelFile();
+    String getAssembleTaskOutputListingFile();
 
     /**
      * Returns the folder containing the class files. This is the output of the java compilation.

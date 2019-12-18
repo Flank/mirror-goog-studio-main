@@ -134,5 +134,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="jps-build-script-dependencies-bootstrap" level="project" />
   </component>
 </module>

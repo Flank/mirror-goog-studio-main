@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexMergerTool
@@ -47,6 +48,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -104,8 +106,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
         private set
 
     @get:Input
-    var isDebuggable: Boolean = true
-        private set
+    abstract val debuggable: Property<Boolean>
 
     @get:Input
     var mergingThreshold: Int = 0
@@ -147,7 +148,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                     errorFormatMode,
                     dexMerger,
                     minSdkVersion,
-                    isDebuggable,
+                    debuggable.get(),
                     mergingThreshold,
                     mainDexListFile.orNull?.asFile,
                     dexFiles.files,
@@ -200,7 +201,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
             task.dexMerger = variantScope.dexMerger
             task.minSdkVersion = variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
-            task.isDebuggable = variantScope.variantDslInfo.buildType.isDebuggable
+            task.debuggable
+                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
             if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,

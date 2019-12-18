@@ -20,11 +20,12 @@ import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationService
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
-import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
+import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2WorkersBuildService
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -90,8 +91,11 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     @get:Internal
     abstract val aapt2WorkersBuildService: Property<Aapt2WorkersBuildService>
 
+    @get:Internal
+    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+
     override fun doTaskAction(inputChanges: InputChanges) {
-        val aapt2ServiceKey = registerAaptService(
+        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
             aapt2FromMaven, LoggerWrapper(logger)
         )
 
@@ -185,7 +189,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     private data class CompileLibraryResourcesParams(
         val projectName: String,
         val owner: String,
-        val aapt2ServiceKey: Aapt2ServiceKey,
+        val aapt2ServiceKey: Aapt2DaemonServiceKey,
         val aapt2WorkersBuildServiceKey: WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService>,
         val errorFormatMode: SyncOptions.ErrorFormatMode,
         val requests: List<CompileResourceRequest>,
@@ -251,6 +255,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             task.useJvmResourceCompiler =
               variantScope.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
+            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }
 }

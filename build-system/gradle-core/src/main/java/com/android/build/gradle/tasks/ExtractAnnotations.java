@@ -21,7 +21,7 @@ import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -353,10 +353,10 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             task.source(variantScope.getVariantData().getJavaSources());
             task.setEncoding(
                     variantScope.getGlobalScope().getExtension().getCompileOptions().getEncoding());
-            task.classpath = variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
+            task.classpath = variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
 
-            task.libraries = variantScope.getArtifactCollection(
-                    COMPILE_CLASSPATH, EXTERNAL, CLASSES);
+            task.libraries =
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES_JAR);
 
             GlobalScope globalScope = variantScope.getGlobalScope();
 

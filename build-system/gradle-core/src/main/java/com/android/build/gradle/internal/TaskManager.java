@@ -27,7 +27,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
@@ -647,7 +647,7 @@ public abstract class TaskManager {
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, EXTERNAL, CLASSES))
+                                        RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR))
                         .build());
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
@@ -670,7 +670,7 @@ public abstract class TaskManager {
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, PROJECT, CLASSES))
+                                        RUNTIME_CLASSPATH, PROJECT, CLASSES_JAR))
                         .build());
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
@@ -723,7 +723,7 @@ public abstract class TaskManager {
             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
             PublishingSpecs.OutputSpec taskOutputSpec =
                     testedSpec.getSpec(
-                            AndroidArtifacts.ArtifactType.CLASSES,
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR,
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
             // now get the output type
             SingleArtifactType<Directory> testedOutputType =
@@ -755,7 +755,7 @@ public abstract class TaskManager {
                             .addScope(Scope.TESTED_CODE)
                             .setArtifactCollection(
                                     testedVariantScope.getArtifactCollection(
-                                            RUNTIME_CLASSPATH, ALL, CLASSES))
+                                            RUNTIME_CLASSPATH, ALL, CLASSES_JAR))
                             .build());
         }
     }
@@ -791,7 +791,7 @@ public abstract class TaskManager {
     protected static boolean appliesCustomClassTransforms(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
         final VariantType type = scope.getType();
-        return scope.getVariantDslInfo().getBuildType().isDebuggable()
+        return scope.getVariantData().getPublicVariantApi().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()
                 && !getAdvancedProfilingTransforms(options).isEmpty();
@@ -1692,10 +1692,9 @@ public abstract class TaskManager {
     public void maybeCreateLintVitalTask(
             @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
         VariantScope variantScope = variantData.getScope();
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
         if (!isLintVariant(variantScope)
-                || variantDslInfo.getBuildType().isDebuggable()
+                || variantScope.getVariantData().getPublicVariantApi().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
@@ -2222,7 +2221,7 @@ public abstract class TaskManager {
         } else {
             boolean produceSeparateOutputs =
                     dexingType == DexingType.NATIVE_MULTIDEX
-                            && variantScope.getVariantDslInfo().getBuildType().isDebuggable();
+                            && variantScope.getVariantData().getPublicVariantApi().isDebuggable();
 
             taskFactory.register(
                     new DexMergingTask.CreationAction(

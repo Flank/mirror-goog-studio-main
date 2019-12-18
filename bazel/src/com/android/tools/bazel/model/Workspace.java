@@ -119,5 +119,6 @@ public class Workspace {
 
     public interface GenerationListener {
         boolean packageUpdated(String packageName);
+        void error(String description);
     }
 }

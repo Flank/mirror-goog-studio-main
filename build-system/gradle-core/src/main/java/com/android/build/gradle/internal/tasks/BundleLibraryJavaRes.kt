@@ -24,8 +24,10 @@ import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -67,8 +69,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         private set
 
     @get:Input
-    var isDebugBuild: Boolean = false
-        private set
+    abstract val debuggable: Property<Boolean>
 
     // The runnable implementing the processing is not able to deal with fine-grained file but
     // instead is expecting directories of files. Use the unfiltered collection (since the filtering
@@ -84,7 +85,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
                     output = output!!.get().asFile,
                     inputs = unfilteredResources.files,
                     jarCreatorType = jarCreatorType,
-                    compressionLevel = if (isDebugBuild) Deflater.BEST_SPEED else null
+                    compressionLevel = if (debuggable.get()) Deflater.BEST_SPEED else null
                 )
             )
         }
@@ -129,7 +130,8 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             }
 
             task.jarCreatorType = variantScope.jarCreatorType
-            task.isDebugBuild = variantScope.variantDslInfo.buildType.isDebuggable
+            task.debuggable
+                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
         }
     }
 }

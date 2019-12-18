@@ -17,6 +17,8 @@
 @file:JvmName("TestVersions")
 package com.android.build.gradle.integration.common.fixture
 
+const val DEFAULT_MIN_SDK_VERSION = 14
+
 const val ANDROIDX_VERSION = "1.0.0"
 const val ANDROIDX_CONSTRAINT_LAYOUT_VERSION = "1.1.3"
 
@@ -29,3 +31,5 @@ const val PLAY_SERVICES_VERSION = "15.0.1"
 
 const val SUPPORT_LIB_MIN_SDK = 14
 const val NDK_19_SUPPORT_LIB_MIN_SDK = 21
+
+const val DESUGAR_DEPENDENCY_VERSION = "1.0.4"

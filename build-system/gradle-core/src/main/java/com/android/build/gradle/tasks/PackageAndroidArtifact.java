@@ -199,7 +199,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     private Set<String> abiFilters;
 
-    private boolean debugBuild;
     private boolean jniDebugBuild;
 
     private SigningConfigProvider signingConfig;
@@ -256,13 +255,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     }
 
     @Input
-    public boolean getDebugBuild() {
-        return debugBuild;
-    }
-
-    public void setDebugBuild(boolean debugBuild) {
-        this.debugBuild = debugBuild;
-    }
+    public abstract Property<Boolean> getDebugBuild();
 
     @Nested
     public SigningConfigProvider getSigningConfig() {
@@ -548,7 +541,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             createdBy = task.getCreatedBy().get();
             minSdkVersion = task.getMinSdkVersion().get();
-            isDebuggableBuild = task.getDebugBuild();
+            isDebuggableBuild = task.getDebugBuild().get();
             isJniDebuggableBuild = task.getJniDebugBuild();
             targetApi = task.getTargetApi();
             packagerMode =
@@ -982,7 +975,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .set(variantScope.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(
                     variantDslInfo.getBuildType().isJniDebuggable());
-            packageAndroidArtifact.setDebugBuild(variantDslInfo.getBuildType().isDebuggable());
+            packageAndroidArtifact
+                    .getDebugBuild()
+                    .set(variantScope.getVariantData().getPublicVariantApi().isDebuggable());
+            packageAndroidArtifact.getDebugBuild().disallowChanges();
 
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
@@ -1056,7 +1052,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public FileCollection getDexFolders() {
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
-
             if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE)) {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX.INSTANCE)
@@ -1117,6 +1112,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         private FileCollection getDesugarLibDexIfExists() {
+            if (getVariantScope().getType().isDynamicFeature()) {
+                return getVariantScope().getGlobalScope().getProject().files();
+            }
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
                 return project.files(

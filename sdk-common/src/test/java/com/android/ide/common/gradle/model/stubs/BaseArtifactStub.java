@@ -32,7 +32,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
     @NonNull private final String myName;
     @NonNull private final String myCompileTaskName;
     @NonNull private final String myAssembleTaskName;
-    @NonNull private final File myPostAssembleTaskModelFile;
+    @NonNull private final File myAssembleTaskOutputListingFile;
     @NonNull private final File myClassesFolder;
     @NonNull private final File myJavaResourcesFolder;
     @NonNull private final Dependencies myDependencies;
@@ -66,7 +66,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
             @NonNull String name,
             @NonNull String compileTaskName,
             @NonNull String assembleTaskName,
-            @NonNull File postAssembleTaskModelFile,
+            @NonNull File assembleTaskOutputListingFile,
             @NonNull File classesFolder,
             @NonNull Set<File> classesFolders,
             @NonNull File javaResourcesFolder,
@@ -80,7 +80,7 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
         myName = name;
         myCompileTaskName = compileTaskName;
         myAssembleTaskName = assembleTaskName;
-        myPostAssembleTaskModelFile = postAssembleTaskModelFile;
+        myAssembleTaskOutputListingFile = assembleTaskOutputListingFile;
         myClassesFolder = classesFolder;
         myAdditionalClassesFolders = classesFolders;
         myJavaResourcesFolder = javaResourcesFolder;
@@ -173,8 +173,8 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
 
     @NonNull
     @Override
-    public String getPostAssembleTaskModelFile() {
-        return myPostAssembleTaskModelFile.getAbsolutePath();
+    public String getAssembleTaskOutputListingFile() {
+        return myAssembleTaskOutputListingFile.getAbsolutePath();
     }
 
     @Override
@@ -188,6 +188,9 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
                 + '\''
                 + ", myAssembleTaskName='"
                 + myAssembleTaskName
+                + '\''
+                + ", myPostAssembleTaskModelFile='"
+                + myAssembleTaskOutputListingFile
                 + '\''
                 + ", myClassesFolder="
                 + myClassesFolder

@@ -19,14 +19,13 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 
@@ -80,7 +79,7 @@ public class PatchGenerator {
 
         Trace.begin("building patch");
         try (FileChannel fileChannel =
-                new RandomAccessFile(new File(localApk.path), "r").getChannel()) {
+                FileChannel.open(Paths.get(localApk.path), StandardOpenOption.READ)) {
             for (ApkMap.Area dirtyArea : dirtyAreas) {
                 instructions.putInt((int) dirtyArea.start);
                 instructions.putInt((int) dirtyArea.size());

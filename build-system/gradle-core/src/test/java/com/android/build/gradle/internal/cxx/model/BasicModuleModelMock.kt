@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
@@ -24,7 +25,6 @@ import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIX
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
-import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
@@ -203,8 +203,8 @@ open class BasicModuleModelMock {
             Splits::class.java,
             throwUnmocked
         )
-        val buildType = mock(
-            BuildType::class.java,
+        val variantImpl = mock(
+            VariantImpl::class.java,
             throwUnmocked
         )
 
@@ -225,11 +225,11 @@ open class BasicModuleModelMock {
         doReturn(variantDslInfo).`when`(baseVariantData).variantDslInfo
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(variantDslInfo).ndkConfig
-        doReturn(buildType).`when`(variantDslInfo).buildType
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(true).`when`(buildType).isDebuggable
+        doReturn(variantImpl).`when`(baseVariantData).publicVariantApi
+        doReturn(true).`when`(variantImpl).isDebuggable
         doReturn(minSdkVersion).`when`(variantDslInfo).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder

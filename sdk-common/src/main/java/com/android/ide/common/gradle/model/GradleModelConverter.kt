@@ -38,7 +38,6 @@ import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
 import com.android.projectmodel.AndroidPathType
 import com.android.projectmodel.AndroidSubmodule
 import com.android.projectmodel.Artifact
-import com.android.projectmodel.SubmodulePath
 import com.android.projectmodel.Config
 import com.android.projectmodel.ConfigAssociation
 import com.android.projectmodel.ConfigPath
@@ -50,6 +49,7 @@ import com.android.projectmodel.NamespacingType
 import com.android.projectmodel.ProjectType
 import com.android.projectmodel.RecursiveResourceFolder
 import com.android.projectmodel.SourceSet
+import com.android.projectmodel.SubmodulePath
 import com.android.projectmodel.Variant
 import com.android.projectmodel.matchAllArtifacts
 import com.android.projectmodel.matchArtifactsWith
