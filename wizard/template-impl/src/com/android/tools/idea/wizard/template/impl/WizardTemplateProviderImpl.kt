@@ -47,7 +47,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
     masterDetailFlowTemplate, fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate,
-    navigationDrawerActivityTemplate, googleMapsActivityTemplate, blankFragmentTemplate, fullscreenFragmentTemplate,
+    navigationDrawerActivityTemplate, /*googleMapsActivityTemplate b/78621322,*/ blankFragmentTemplate, fullscreenFragmentTemplate,
     settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate, scrollFragmentTemplate,
     listFragmentTemplate, modalBottomSheetTemplate, googleMapsFragmentTemplate)
 }
