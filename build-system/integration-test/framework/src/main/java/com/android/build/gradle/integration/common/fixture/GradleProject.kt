@@ -70,6 +70,11 @@ abstract class GradleProject(
         return sourceFiles.values.toList()
     }
 
+    /** Adds a file at the given file path with the given contents. The file must not yet exist. */
+    fun addFile(relativePath: String, content: String) {
+        addFile(TestSourceFile(relativePath, content))
+    }
+
     /** Adds a source file. The file must not yet exist. */
     fun addFile(file: TestSourceFile) {
         check(!sourceFiles.containsKey(file.path)) { "${file.path} already exists" }
