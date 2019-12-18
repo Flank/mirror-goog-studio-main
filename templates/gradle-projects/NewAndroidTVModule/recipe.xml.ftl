@@ -3,6 +3,10 @@
 <recipe>
     <@kt.addKotlinToBaseProject />
 
+    <#if generateKotlin && useAndroidX>
+        <dependency mavenUrl="androidx.core:core-ktx:+" />
+    </#if>
+
     <dependency mavenUrl="com.android.support:leanback-v17:${buildApi}.+" />
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 
@@ -33,8 +37,4 @@
 
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-
-    <#if generateKotlin && useAndroidX>
-        <dependency mavenUrl="androidx.core:core-ktx:+" />
-    </#if>
 </recipe>

@@ -18,6 +18,7 @@ package com.android.tools.idea.wizard.template.impl
 
 import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
+import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.androidTVActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basicActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
@@ -48,7 +49,8 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
     masterDetailFlowTemplate, fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate,
-    navigationDrawerActivityTemplate, /*googleMapsActivityTemplate b/78621322,*/ bottomNavigationActivityTemplate, blankFragmentTemplate,
-    fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate,
-    scrollFragmentTemplate, listFragmentTemplate, modalBottomSheetTemplate, googleMapsFragmentTemplate)
+    navigationDrawerActivityTemplate, /*googleMapsActivityTemplate b/78621322,*/ bottomNavigationActivityTemplate, androidTVActivityTemplate,
+    blankFragmentTemplate, fullscreenFragmentTemplate,
+    settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate, scrollFragmentTemplate,
+    listFragmentTemplate, modalBottomSheetTemplate, googleMapsFragmentTemplate)
 }
