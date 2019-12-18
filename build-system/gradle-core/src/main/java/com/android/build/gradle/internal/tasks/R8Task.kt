@@ -198,6 +198,11 @@ abstract class R8Task: ProguardConfigurableTask() {
                         productProvider = R8Task::baseDexDir,
                         fileName = ""
                     )
+                    if (variantScope.needsShrinkDesugarLibrary) {
+                        variantScope.artifacts.getOperations()
+                            .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
+                            .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
+                    }
                 }
                 else -> {
                     variantScope.artifacts.getOperations().append(
