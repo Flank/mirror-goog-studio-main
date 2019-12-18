@@ -64,7 +64,6 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
@@ -248,13 +247,15 @@ public abstract class LintBaseTask extends DefaultTask {
     protected static void addModelArtifactsToInputs(
             @NonNull ConfigurableFileCollection inputs, @NonNull VariantScope variantScope) {
 
+        // These are delayed as we add the test variant to the tested variant's lint task,
+        // and the test variant won't be initialized yet.
         inputs.from(
-                (Callable<Collection<ArtifactCollection>>)
+                (Callable<Collection<FileCollection>>)
                         () ->
                                 new ArtifactCollections(variantScope, COMPILE_CLASSPATH)
                                         .getAllCollections());
         inputs.from(
-                (Callable<Collection<ArtifactCollection>>)
+                (Callable<Collection<FileCollection>>)
                         () ->
                                 new ArtifactCollections(variantScope, RUNTIME_CLASSPATH)
                                         .getAllCollections());
