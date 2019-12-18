@@ -82,7 +82,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
 
         @Throws(IOException::class)
         fun getWindows(c: Client, timeout: Long, unit: TimeUnit): List<ClientWindow> {
-            HandleViewDebug.listViewRoots(c, this)
+            c.listViewRoots(this)
             waitForResult(timeout, unit)
             val windows = Lists.newArrayList<ClientWindow>()
             for (root in myViewRoots) {
@@ -135,9 +135,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
             timeUnit: TimeUnit): ByteArray? {
 
             val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
-            HandleViewDebug.dumpViewHierarchy(
-                client, title, skipChildren, includeProperties, useV2, handler
-            )
+            client.dumpViewHierarchy(title, skipChildren, includeProperties, useV2, handler)
 
             return try {
                 handler.getData(timeout, timeUnit)
@@ -154,7 +152,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
             timeUnit: TimeUnit): ByteArray? {
 
             val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VUOP)
-            HandleViewDebug.captureView(client, title, node.toString(), handler)
+            client.captureView(title, node.toString(), handler)
             return try {
                 handler.getData(timeout, timeUnit)
             } catch(e: IOException) {
