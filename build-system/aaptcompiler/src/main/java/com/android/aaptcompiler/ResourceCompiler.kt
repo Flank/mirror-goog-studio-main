@@ -168,10 +168,9 @@ private fun compileTable(
     visibility = options.visibility)
   val tableExtractor = TableExtractor(table, pathData.source, pathData.config, extractorOptions)
 
-  var input: InputStream? = null
-  try {
-    input = pathData.file.inputStream()
-    if (!tableExtractor.extract(input)) {
+
+  pathData.file.inputStream().use {
+    if (!tableExtractor.extract(it)) {
       // TODO(b/139297538): diagnostics
       error("TODO")
     }
@@ -181,8 +180,6 @@ private fun compileTable(
     if (options.pseudolocalize && extractorOptions.translatable) {
       PseudolocaleGenerator().consume(table)
     }
-  } finally {
-    input?.close()
   }
 
   // Ensure we have the compilation package at least.
@@ -211,14 +208,16 @@ private fun compileFile(
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   // TODO(b/139297538): Diagnostics
   //logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
-  val resourceFile = ResourceFile()
-  resourceFile.name =
-    ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name)
-  resourceFile.configuration = pathData.config
-  resourceFile.source = pathData.source
+  pathData.file.inputStream().use {
+    val resourceFile = ResourceFile()
+    resourceFile.name =
+      ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name)
+    resourceFile.configuration = pathData.config
+    resourceFile.source = pathData.source
 
-  val container = Container(outputFile.outputStream(), 1)
-  container.addFileEntry(pathData.file.inputStream(), resourceFile)
+    val container = Container(outputFile.outputStream(), 1)
+    container.addFileEntry(it, resourceFile)
+  }
 }
 
 /**
