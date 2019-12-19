@@ -8,7 +8,7 @@ package(default_visibility = ["//visibility:public"])
 java_binary(
     name = "test-app_java",
     srcs = glob([
-        "src/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     create_executable = 0,
     deps = [
@@ -26,7 +26,7 @@ dex_library(
 
 cc_binary(
     name = "libmemorynativetest.so",
-    srcs = ["src/native/jni_memory.cpp"],
+    srcs = ["src/main/cpp/jni_memory.cpp"],
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
@@ -39,7 +39,7 @@ cc_binary(
 
 cc_binary(
     name = "libjni.so",
-    srcs = ["src/native/jni.cpp"],
+    srcs = ["src/main/cpp/jni.cpp"],
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
