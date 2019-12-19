@@ -57,7 +57,6 @@ public class KotlinTest extends AgentBasedClassRedefinerTestBase {
                 android.waitForInput("KotlinSimpleTarget JUST SWAPPED", RETURN_VALUE_TIMEOUT));
     }
 
-    @Ignore("b/145242388")
     @Test
     public void testBasicKotlinFailed() throws Exception {
         android.loadDex(DEX_LOCATION);
