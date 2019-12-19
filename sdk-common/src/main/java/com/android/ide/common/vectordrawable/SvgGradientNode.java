@@ -21,6 +21,7 @@ import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.vectordrawable.PathParser.ParseMode;
 import com.google.common.collect.ImmutableMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -413,7 +414,7 @@ class SvgGradientNode extends SvgNode {
 
     private void setBoundingBox() {
         Path2D svgPath = new Path2D.Double();
-        VdPath.Node[] nodes = PathParser.parsePath(mSvgLeafNode.getPathData());
+        VdPath.Node[] nodes = PathParser.parsePath(mSvgLeafNode.getPathData(), ParseMode.SVG);
         VdNodeRender.createPath(nodes, svgPath);
         boundingBox = svgPath.getBounds2D();
     }

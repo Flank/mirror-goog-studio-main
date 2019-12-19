@@ -21,6 +21,7 @@ import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.ide.common.vectordrawable.PathParser.ParseMode;
 import com.google.common.collect.ImmutableMap;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -468,7 +469,7 @@ class VdPath extends VdElement {
         }
 
         if (PATH_DESCRIPTION.equals(name)) {
-            mNodeList = PathParser.parsePath(value);
+            mNodeList = PathParser.parsePath(value, ParseMode.ANDROID);
         } else if (PATH_ID.equals(name)) {
             mName = value;
         } else if (PATH_FILL.equals(name)) {

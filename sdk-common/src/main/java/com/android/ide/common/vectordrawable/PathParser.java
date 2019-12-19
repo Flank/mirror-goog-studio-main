@@ -21,8 +21,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Utility functions for parsing path information.
- * The implementation details should be the same as the PathParser in Android framework.
+ * Utility functions for parsing path information. The implementation details should be the same as
+ * the PathParser in Android framework.
+ *
+ * <p>See https://www.w3.org/TR/SVG/paths.html#PathDataBNF for the pathData syntax.
  */
 public class PathParser {
     private static final float[] EMPTY_FLOAT_ARRAY = new float[0];
@@ -95,10 +97,11 @@ public class PathParser {
      * Parses the floats in the string this is an optimized version of parseFloat(s.split(",|\\s"));
      *
      * @param s the string containing a command and list of floats
+     * @param parseMode
      * @return array of floats
      */
     @NonNull
-    private static float[] getFloats(@NonNull String s) {
+    private static float[] getFloats(@NonNull String s, @NonNull ParseMode parseMode) {
         char command = s.charAt(0);
         if (command == 'z' || command == 'Z') {
             return EMPTY_FLOAT_ARRAY;
@@ -116,7 +119,14 @@ public class PathParser {
             // The startPosition should always be the first character of the current number, and
             // endPosition is the character after the current number.
             while (startPosition < totalLength) {
-                boolean flagMode = arcCommand && (count % 7 == 3 || count % 7 == 4);
+                // In ANDROID parse mode we treat flags as regular floats for compatibility with
+                // old vector drawables that may have pathData not conforming to
+                // https://www.w3.org/TR/SVG/paths.html#PathDataBNF. In such a case flags may be
+                // represented by "1.0" or "0.0" (b/146520216).
+                boolean flagMode =
+                        parseMode == ParseMode.SVG
+                                && arcCommand
+                                && (count % 7 == 3 || count % 7 == 4);
                 extract(s, startPosition, flagMode, result);
                 endPosition = result.mEndPosition;
 
@@ -155,7 +165,7 @@ public class PathParser {
     }
 
     @NonNull
-    public static VdPath.Node[] parsePath(@NonNull String value) {
+    public static VdPath.Node[] parsePath(@NonNull String value, @NonNull ParseMode mode) {
         value = value.trim();
         List<VdPath.Node> list = new ArrayList<>();
 
@@ -165,7 +175,7 @@ public class PathParser {
             end = nextStart(value, end);
             String s = value.substring(start, end);
             char currentCommand = s.charAt(0);
-            float[] val = getFloats(s);
+            float[] val = getFloats(s, mode);
 
             if (start == 0) {
                 // For the starting command, special handling: add M 0 0 if there is none.
@@ -183,5 +193,10 @@ public class PathParser {
             addNode(list, value.charAt(start), EMPTY_FLOAT_ARRAY);
         }
         return list.toArray(new VdPath.Node[0]);
+    }
+
+    public enum ParseMode {
+        SVG,
+        ANDROID
     }
 }
