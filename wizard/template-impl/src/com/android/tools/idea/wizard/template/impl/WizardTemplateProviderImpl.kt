@@ -25,6 +25,7 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.googleMapsActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.googleMapsWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.masterDetailFlowTemplate
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scrollActivityTemplate
@@ -51,7 +52,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
     masterDetailFlowTemplate, fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate,
     navigationDrawerActivityTemplate, /*googleMapsActivityTemplate b/78621322,*/ bottomNavigationActivityTemplate, androidTVActivityTemplate,
-    blankFragmentTemplate, fullscreenFragmentTemplate, blankWearActivityTemplate,
+    blankFragmentTemplate, fullscreenFragmentTemplate, blankWearActivityTemplate, googleMapsWearActivityTemplate,
     settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate, scrollFragmentTemplate,
     listFragmentTemplate, modalBottomSheetTemplate, googleMapsFragmentTemplate)
 }
