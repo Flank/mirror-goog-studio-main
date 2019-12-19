@@ -43,25 +43,86 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
-        android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalInt");
+        android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalPrimitives");
         Assert.assertTrue(
                 android.waitForInput(
-                        "NoSuchFieldException on StaticVarInit.AddStaticFinalInt.X",
+                        "NoSuchFieldException on StaticVarInit.AddStaticFinalPrimitives.X_INT",
                         RETURN_VALUE_TIMEOUT));
+
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
 
         Deploy.SwapRequest request =
                 createRequest(
-                        "app.StaticVarInit$AddStaticFinalInt",
-                        "app/StaticVarInit$AddStaticFinalInt.dex",
-                        false);
+                        "app.StaticVarInit$AddStaticFinalPrimitives",
+                        "app/StaticVarInit$AddStaticFinalPrimitives.dex",
+                        false,
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_BYTE")
+                                .setType("B")
+                                .setStaticVar(true)
+                                .setValue("100")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_INT")
+                                .setType("I")
+                                .setStaticVar(true)
+                                .setValue("99")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_CHAR")
+                                .setType("C")
+                                .setStaticVar(true)
+                                .setValue("!")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_LONG")
+                                .setType("J")
+                                .setStaticVar(true)
+                                .setValue("1000")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_SHORT")
+                                .setType("S")
+                                .setStaticVar(true)
+                                .setValue("7")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_FLOAT")
+                                .setType("F")
+                                .setStaticVar(true)
+                                .setValue("3.14")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_DOUBLE")
+                                .setType("D")
+                                .setStaticVar(true)
+                                .setValue("3e-100")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build(),
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_BOOLEAN")
+                                .setType("Z")
+                                .setStaticVar(true)
+                                .setValue("true")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build());
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
-        // TODO: Incorrect. Once we finish static variables initalization, this needs to be X = 99.
-        android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalInt");
-        Assert.assertTrue(android.waitForInput("StaticVarInit.X = 0", RETURN_VALUE_TIMEOUT));
+        android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalPrimitives");
+        Assert.assertTrue(
+                android.waitForInput(
+                        "StaticVarInit.X = 100 99 ! 1000 7 3.14 3.0E-100 true",
+                        RETURN_VALUE_TIMEOUT));
     }
 
     @Test
@@ -87,7 +148,6 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
         Assert.assertTrue(android.waitForInput("Background Thread Finished", RETURN_VALUE_TIMEOUT));
     }
 
-
     @Test
     public void testStaticVarFromVirtual() throws Exception {
         // Available only with test flag turned on.
@@ -99,11 +159,19 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStaticIntFromVirtual");
         Assert.assertTrue(android.waitForInput("getStaticIntFromVirtual = -89", RETURN_VALUE_TIMEOUT));
 
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
+        Deploy.ClassDef.FieldReInitState state =
+                Deploy.ClassDef.FieldReInitState.newBuilder()
+                        .setName("Y")
+                        .setType("I")
+                        .setStaticVar(true)
+                        .setValue("89")
+                        .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                        .build();
+
         Deploy.SwapRequest request =
-          createRequest(
-            "app.StaticVarInit",
-            "app/StaticVarInit.dex",
-            false);
+                createRequest("app.StaticVarInit", "app/StaticVarInit.dex", false, state);
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
@@ -112,6 +180,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStaticIntFromVirtual");
 
         // TODO: This needs to be = 89 once static initialization is completed.
-        Assert.assertTrue(android.waitForInput("getStaticIntFromVirtual = 0", RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput("getStaticIntFromVirtual = 89", RETURN_VALUE_TIMEOUT));
     }
 }

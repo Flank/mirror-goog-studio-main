@@ -31,6 +31,7 @@
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
 #include "tools/base/deploy/agent/native/thread_suspend.h"
+#include "tools/base/deploy/agent/native/variable_reinit.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
@@ -249,6 +250,8 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   jvmtiExtensionFunction const* extension =
       GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);
 
+  VariableReinitializer var_reinit(jvmti_, jni_);
+
   for (size_t i = 0; i < num_modified_classes; i++) {
     const proto::ClassDef& class_def = swap_request.modified_classes(i);
     const std::string code = class_def.dex();
@@ -259,6 +262,9 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     std::replace(name.begin(), name.end(), '.', '/');
 
     def[i].klass = FindClass(name);
+
+    var_reinit.GatherPreviousState(def[i].klass, class_def);
+
     if (def[i].klass == nullptr) {
       result.status = SwapResult::CLASS_NOT_FOUND;
       result.error_details = class_def.name();
@@ -317,6 +323,8 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
       }
       Log::I("Done Redefinition Extension");
     }
+
+    var_reinit.ReinitializeVariables();
 
     suspend_error = suspend.ResumeSuspendedThreads();
     if (!suspend_error.empty()) {

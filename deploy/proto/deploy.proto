@@ -58,11 +58,25 @@ message OverlaySwapRequest {
 }
 
 message ClassDef {
+  message FieldReInitState {
+    enum VariableState {
+      UNKNOWN = 0;
+      CONSTANT = 1;
+    }
+    string name = 1;
+    string type = 2;
+    bool staticVar = 3;
+    VariableState state = 4;
+    string value = 5;
+  }
+
   // JVM class name for the class that is to be swapped.
   string name = 1;
 
   // Dex code of the class to be swapped.
   bytes dex = 2;
+
+  repeated FieldReInitState fields = 3;
 }
 
 message JvmtiError {

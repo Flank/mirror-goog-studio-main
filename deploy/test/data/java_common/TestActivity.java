@@ -100,23 +100,76 @@ public class TestActivity extends Activity {
         System.out.println(staticVarInit.waitThread());
     }
 
-    public void getStaticFinalInt() {
-        int x = -1;
+    public void getStaticFinalPrimitives() {
+        byte b = -1;
+        int i = -1;
+        char c = '\0';
+        long l = -1l;
+        short s = -1;
+        float f = -1.0f;
+        double d = -1.0d;
+        boolean z = false;
 
         try {
-            x =
-                    StaticVarInit.AddStaticFinalInt.class
-                            .getDeclaredField("X")
-                            .getInt(StaticVarInit.AddStaticFinalInt.class);
+            i =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_INT")
+                            .getInt(StaticVarInit.AddStaticFinalPrimitives.class);
+            b =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_BYTE")
+                            .getByte(StaticVarInit.AddStaticFinalPrimitives.class);
+            c =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_CHAR")
+                            .getChar(StaticVarInit.AddStaticFinalPrimitives.class);
+            l =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_LONG")
+                            .getLong(StaticVarInit.AddStaticFinalPrimitives.class);
+            s =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_SHORT")
+                            .getShort(StaticVarInit.AddStaticFinalPrimitives.class);
+            f =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_FLOAT")
+                            .getFloat(StaticVarInit.AddStaticFinalPrimitives.class);
+            d =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_DOUBLE")
+                            .getDouble(StaticVarInit.AddStaticFinalPrimitives.class);
+            z =
+                    StaticVarInit.AddStaticFinalPrimitives.class
+                            .getDeclaredField("X_BOOLEAN")
+                            .getBoolean(StaticVarInit.AddStaticFinalPrimitives.class);
         } catch (IllegalAccessException e) {
-            System.out.println("IllegalAccessException on StaticVarInit.AddStaticFinalInt.X");
+            System.out.println(
+                    "IllegalAccessException on StaticVarInit.AddStaticFinalPrimitives.X_INT");
             return;
         } catch (NoSuchFieldException e) {
-            System.out.println("NoSuchFieldException on StaticVarInit.AddStaticFinalInt.X");
+            System.out.println(
+                    "NoSuchFieldException on StaticVarInit.AddStaticFinalPrimitives.X_INT");
             return;
         }
 
-        System.out.println("StaticVarInit.X = " + x);
+        System.out.println(
+                "StaticVarInit.X = "
+                        + b
+                        + " "
+                        + i
+                        + " "
+                        + c
+                        + " "
+                        + l
+                        + " "
+                        + s
+                        + " "
+                        + f
+                        + " "
+                        + d
+                        + " "
+                        + z);
     }
 
     public void getStaticIntFromVirtual() {
