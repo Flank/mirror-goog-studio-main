@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
 import com.android.annotations.NonNull;
-import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
+import com.android.ddmlib.ByteBufferUtil;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
-import com.android.ddmlib.internal.DeviceMonitor;
+import com.android.ddmlib.internal.DebugPortManager;
+import com.android.ddmlib.internal.DebugPortManager.IDebugPortProvider;
+import com.android.ddmlib.internal.DeviceImpl;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -38,7 +43,7 @@ public abstract class ChunkHandler extends JdwpInterceptor {
 
     public static final int DDMS_CMD = 0x01;
 
-    ChunkHandler() {}
+    public ChunkHandler() {}
 
     /**
      * Client is ready. The monitor thread calls this method on all handlers when the client is
@@ -47,13 +52,13 @@ public abstract class ChunkHandler extends JdwpInterceptor {
      * <p>The handler can use this opportunity to initialize client-side activity. Because there's a
      * fair chance we'll want to send a message to the client, this method can throw an IOException.
      */
-    abstract void clientReady(ClientImpl client) throws IOException;
+    public abstract void clientReady(ClientImpl client) throws IOException;
 
     /**
      * Client has gone away. Can be used to clean up any resources associated with this client
      * connection.
      */
-    abstract void clientDisconnected(ClientImpl client);
+    public abstract void clientDisconnected(ClientImpl client);
 
     /**
      * Handle an incoming chunk. The data, of chunk type "type", begins at the start of "data" and
@@ -65,7 +70,7 @@ public abstract class ChunkHandler extends JdwpInterceptor {
      *
      * <p>The handler may not modify the contents of "data".
      */
-    abstract void handleChunk(
+    public abstract void handleChunk(
             ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId);
 
     /**
@@ -97,17 +102,8 @@ public abstract class ChunkHandler extends JdwpInterceptor {
         Log.w("ddms", "         client " + client + ", handler " + this);
     }
 
-    /**
-     * Utility function to copy a String out of a ByteBuffer.
-     */
-    public static String getString(ByteBuffer buf, int len) {
-      return ByteBufferUtil.getString(buf, len);
-    }
-
-    /**
-     * Convert a 4-character string to a 32-bit type.
-     */
-    static int type(String typeName) {
+    /** Convert a 4-character string to a 32-bit type. */
+    public static int type(String typeName) {
         int val = 0;
 
         if (typeName.length() != 4) {
@@ -138,24 +134,21 @@ public abstract class ChunkHandler extends JdwpInterceptor {
     }
 
     /**
-     * Allocate a ByteBuffer with enough space to hold the JDWP packet
-     * header and one chunk header in addition to the demands of the
-     * chunk being created.
+     * Allocate a ByteBuffer with enough space to hold the JDWP packet header and one chunk header
+     * in addition to the demands of the chunk being created.
      *
-     * "maxChunkLen" indicates the size of the chunk contents only.
+     * <p>"maxChunkLen" indicates the size of the chunk contents only.
      */
-    static ByteBuffer allocBuffer(int maxChunkLen) {
-        ByteBuffer buf =
-            ByteBuffer.allocate(JdwpPacket.JDWP_HEADER_LEN + 8 +maxChunkLen);
+    @VisibleForTesting
+    public static ByteBuffer allocBuffer(int maxChunkLen) {
+        ByteBuffer buf = ByteBuffer.allocate(JdwpPacket.JDWP_HEADER_LEN + 8 + maxChunkLen);
         buf.order(CHUNK_ORDER);
         return buf;
     }
 
-    /**
-     * Return the slice of the JDWP packet buffer that holds just the
-     * chunk data.
-     */
-    static ByteBuffer getChunkDataBuf(ByteBuffer jdwpBuf) {
+    /** Return the slice of the JDWP packet buffer that holds just the chunk data. */
+    @VisibleForTesting
+    public static ByteBuffer getChunkDataBuf(ByteBuffer jdwpBuf) {
         ByteBuffer slice;
 
         assert jdwpBuf.position() == 0;
@@ -171,9 +164,10 @@ public abstract class ChunkHandler extends JdwpInterceptor {
     /**
      * Write the chunk header at the start of the chunk.
      *
-     * Pass in the byte buffer returned by JdwpPacket.getPayload().
+     * <p>Pass in the byte buffer returned by JdwpPacket.getPayload().
      */
-    static void finishChunkPacket(JdwpPacket packet, int type, int chunkLen) {
+    @VisibleForTesting
+    public static void finishChunkPacket(JdwpPacket packet, int type, int chunkLen) {
         ByteBuffer buf = packet.getPayload();
 
         buf.putInt(0x00, type);
@@ -193,27 +187,20 @@ public abstract class ChunkHandler extends JdwpInterceptor {
     protected static ClientImpl checkDebuggerPortForAppName(ClientImpl client, String appName) {
         IDebugPortProvider provider = DebugPortManager.getProvider();
         if (provider != null) {
-            IDevice device = client.getDevice();
+            DeviceImpl device = client.getDeviceImpl();
             int newPort = provider.getPort(device, appName);
 
             if (newPort != IDebugPortProvider.NO_STATIC_PORT
                     && newPort != client.getDebuggerListenPort()) {
-
-                AndroidDebugBridge bridge = AndroidDebugBridge.getBridge();
-                if (bridge != null) {
-                    DeviceMonitor deviceMonitor = bridge.getDeviceMonitor();
-                    if (deviceMonitor != null) {
-                        deviceMonitor.trackClientToDropAndReopen(client, newPort);
-                        client = null;
-                    }
-                }
+                device.getClientTracker().trackClientToDropAndReopen(client, newPort);
+                client = null;
             }
         }
 
         return client;
     }
 
-    void handlePacket(ClientImpl client, JdwpPacket packet) {
+    public void handlePacket(ClientImpl client, JdwpPacket packet) {
         ByteBuffer buf = packet.getPayload();
         int type = buf.getInt();
         int length = buf.getInt();

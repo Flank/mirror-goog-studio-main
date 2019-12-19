@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib.jdwp;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
-public abstract class JdwpInterceptor {
+/** Thrown if the contents of a packet are bad. */
+@SuppressWarnings("serial")
+class BadPacketException extends RuntimeException {
+    public BadPacketException() {
+        super();
+    }
 
-    @Nullable
-    public abstract JdwpPacket intercept(@NonNull JdwpAgent agent, @NonNull JdwpPacket packet);
+    public BadPacketException(String msg) {
+        super(msg);
+    }
 }

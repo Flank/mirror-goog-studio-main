@@ -46,10 +46,8 @@ public final class ThreadInfo implements IStackTraceInfo {
         //mIsDaemon = false;
     }
 
-    /**
-     * Set with the values we get from a THST chunk.
-     */
-    void updateThread(int status, int tid, int utime, int stime, boolean isDaemon) {
+    /** Set with the values we get from a THST chunk. */
+    public void updateThread(int status, int tid, int utime, int stime, boolean isDaemon) {
 
         mStatus = status;
         mTid = tid;
@@ -60,9 +58,10 @@ public final class ThreadInfo implements IStackTraceInfo {
 
     /**
      * Sets the stack call of the thread.
+     *
      * @param trace stackcall information.
      */
-    void setStackCall(StackTraceElement[] trace) {
+    public void setStackCall(StackTraceElement[] trace) {
         mTrace = trace;
         mTraceTime = System.currentTimeMillis();
     }
@@ -81,7 +80,7 @@ public final class ThreadInfo implements IStackTraceInfo {
         return mThreadName;
     }
 
-    void setThreadName(String name) {
+    public void setThreadName(String name) {
         mThreadName = name;
     }
 

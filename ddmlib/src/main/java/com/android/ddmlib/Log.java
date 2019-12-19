@@ -255,7 +255,7 @@ public final class Log {
         sLevel = logLevel;
     }
 
-    static boolean isAtLeast(@NonNull LogLevel logLevel) {
+    public static boolean isAtLeast(@NonNull LogLevel logLevel) {
         return logLevel.getPriority() >= sLevel.getPriority();
     }
 
@@ -280,13 +280,14 @@ public final class Log {
 
     /**
      * Show hex dump.
-     * <p>
-     * Local addition.  Output looks like:
-     * 1230- 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff  0123456789abcdef
-     * <p>
-     * Uses no string concatenation; creates one String object per line.
+     *
+     * <p>Local addition. Output looks like:
+     *
+     * <pre>1230- 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff  0123456789abcdef</pre>
+     *
+     * <p>Uses no string concatenation; creates one String object per line.
      */
-    static void hexDump(String tag, LogLevel level, byte[] data, int offset, int length) {
+    public static void hexDump(String tag, LogLevel level, byte[] data, int offset, int length) {
 
         int kHexOffset = 6;
         int kAscOffset = 55;

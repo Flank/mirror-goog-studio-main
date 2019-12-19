@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -18,6 +18,8 @@ package com.android.ddmlib;
 
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import java.io.IOException;
 import java.net.BindException;
@@ -162,10 +164,8 @@ public final class MonitorThread extends Thread {
         }
     }
 
-    /**
-     * Register "handler" as the handler for type "type".
-     */
-    synchronized void registerChunkHandler(int type, ChunkHandler handler) {
+    /** Register "handler" as the handler for type "type". */
+    public synchronized void registerChunkHandler(int type, ChunkHandler handler) {
         if (sInstance == null) {
             return;
         }

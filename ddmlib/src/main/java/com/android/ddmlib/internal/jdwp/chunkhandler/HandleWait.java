@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,30 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
-import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.ClientData;
+import com.android.ddmlib.ClientData.DebuggerStatus;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.nio.ByteBuffer;
 
 /**
- * Handle thread status updates.
+ * Handle the "wait" chunk (WAIT). These are sent up when the client is waiting for something, e.g.
+ * for a debugger to attach.
  */
-final class HandleTest extends ChunkHandler {
+public final class HandleWait extends ChunkHandler {
 
-    public static final int CHUNK_TEST = type("TEST");
+    public static final int CHUNK_WAIT = ChunkHandler.type("WAIT");
 
-    private static final HandleTest mInst = new HandleTest();
+    private static final HandleWait mInst = new HandleWait();
 
-    private HandleTest() {}
+    private HandleWait() {}
 
     /** Register for the packets we expect to get from the client. */
     public static void register(MonitorThread mt) {
-        mt.registerChunkHandler(CHUNK_TEST, mInst);
+        mt.registerChunkHandler(CHUNK_WAIT, mInst);
     }
 
     /** Client is ready. */
@@ -49,28 +53,32 @@ final class HandleTest extends ChunkHandler {
     public void handleChunk(
             ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
 
-        Log.d("ddm-test", "handling " + ChunkHandler.name(type));
+        Log.d("ddm-wait", "handling " + ChunkHandler.name(type));
 
-        if (type == CHUNK_TEST) {
-            handleTEST(client, data);
+        if (type == CHUNK_WAIT) {
+            assert !isReply;
+            handleWAIT(client, data);
         } else {
             handleUnknownChunk(client, type, data, isReply, msgId);
         }
     }
 
     /*
-     * Handle a thread creation message.
+     * Handle a reply to our WAIT message.
      */
-    private static void handleTEST(ClientImpl client, ByteBuffer data) {
-        /*
-         * Can't call data.array() on a read-only ByteBuffer, so we make
-         * a copy.
-         */
-        byte[] copy = new byte[data.limit()];
-        data.get(copy);
+    private static void handleWAIT(ClientImpl client, ByteBuffer data) {
+        byte reason;
 
-        Log.d("ddm-test", "Received:");
-        Log.hexDump("ddm-test", LogLevel.DEBUG, copy, 0, copy.length);
+        reason = data.get();
+
+        Log.d("ddm-wait", "WAIT: reason=" + reason);
+
+        ClientData cd = client.getClientData();
+        synchronized (cd) {
+            cd.setDebuggerConnectionStatus(DebuggerStatus.WAITING);
+        }
+
+        client.update(ClientImpl.CHANGE_DEBUGGER_STATUS);
     }
 }
 

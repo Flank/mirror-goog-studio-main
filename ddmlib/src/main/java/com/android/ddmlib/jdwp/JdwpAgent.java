@@ -17,7 +17,7 @@ package com.android.ddmlib.jdwp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ddmlib.JdwpPacket;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;

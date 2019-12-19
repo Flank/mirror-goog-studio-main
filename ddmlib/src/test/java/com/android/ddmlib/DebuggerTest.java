@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DeviceImpl;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpCommands;
 import com.android.ddmlib.jdwp.JdwpInterceptor;

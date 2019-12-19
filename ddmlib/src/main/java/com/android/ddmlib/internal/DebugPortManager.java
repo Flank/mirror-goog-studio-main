@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
+
+import com.android.ddmlib.Client;
+import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.IDevice;
 
 /**
  * Centralized point to provide a {@link IDebugPortProvider} to ddmlib.
@@ -62,9 +66,10 @@ public class DebugPortManager {
 
     /**
      * Returns the
+     *
      * @return
      */
-    static IDebugPortProvider getProvider() {
+    public static IDebugPortProvider getProvider() {
         return sProvider;
     }
 }

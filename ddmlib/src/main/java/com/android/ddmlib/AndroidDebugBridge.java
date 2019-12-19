@@ -23,6 +23,15 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DeviceMonitor;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleAppName;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHeap;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleNativeHeap;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleProfiling;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleTest;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleThread;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleViewDebug;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleWait;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -1049,13 +1058,6 @@ public class AndroidDebugBridge {
                 Log.e(DDMS, e);
             }
         }
-    }
-
-    /**
-     * Returns the {@link DeviceMonitor} object.
-     */
-    DeviceMonitor getDeviceMonitor() {
-        return mDeviceMonitor;
     }
 
     /**

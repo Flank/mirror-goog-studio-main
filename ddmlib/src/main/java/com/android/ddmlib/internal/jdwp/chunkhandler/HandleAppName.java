@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
+import com.android.ddmlib.ByteBufferUtil;
+import com.android.ddmlib.ClientData;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
-/**
- * Handle the "app name" chunk (APNM).
- */
-final class HandleAppName extends ChunkHandler {
+/** Handle the "app name" chunk (APNM). */
+public final class HandleAppName extends ChunkHandler {
 
     public static final int CHUNK_APNM = ChunkHandler.type("APNM");
 

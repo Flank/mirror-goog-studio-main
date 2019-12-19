@@ -79,6 +79,8 @@ public class JarContentsTest {
                 "com/android/ddmlib/testrunner/",
                 "com/android/ddmlib/utils/",
                 "com/android/ddmlib/internal/",
+                "com/android/ddmlib/internal/jdwp/",
+                "com/android/ddmlib/internal/jdwp/chunkhandler/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");

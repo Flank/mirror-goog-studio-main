@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.ByteBufferUtil;
+import com.android.ddmlib.Client;
+import com.android.ddmlib.DebugViewDumpHandler;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
-import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public final class HandleViewDebug extends ChunkHandler {
-    /** Enable/Disable tracing of OpenGL calls. */
-    public static final int CHUNK_VUGL = type("VUGL");
-
-    /** List <code>ViewRootImpl</code>'s of this process. */
-    public static final int CHUNK_VULW = type("VULW");
-
-    /** Operation on view root, first parameter in packet should be one of VURT_* constants */
-    public static final int CHUNK_VURT = type("VURT");
-
     /** Dump view hierarchy. */
     private static final int VURT_DUMP_HIERARCHY = 1;
 
@@ -43,12 +36,6 @@ public final class HandleViewDebug extends ChunkHandler {
 
     /** Dump View Theme. */
     private static final int VURT_DUMP_THEME = 3;
-
-    /**
-     * Generic View Operation, first parameter in the packet should be one of the
-     * VUOP_* constants below.
-     */
-    public static final int CHUNK_VUOP = type("VUOP");
 
     /** Capture View. */
     private static final int VUOP_CAPTURE_VIEW = 1;
@@ -69,18 +56,18 @@ public final class HandleViewDebug extends ChunkHandler {
 
     private static final HandleViewDebug sInstance = new HandleViewDebug();
 
-    private static final ViewDumpHandler sViewOpNullChunkHandler =
-            new NullChunkHandler(CHUNK_VUOP);
+    private static final DebugViewDumpHandler sViewOpNullChunkHandler =
+            new NullChunkHandler(DebugViewDumpHandler.CHUNK_VUOP);
 
     private HandleViewDebug() {}
 
     public static void register(MonitorThread mt) {
         // TODO: add chunk type for auto window updates
         // and register here
-        mt.registerChunkHandler(CHUNK_VUGL, sInstance);
-        mt.registerChunkHandler(CHUNK_VULW, sInstance);
-        mt.registerChunkHandler(CHUNK_VUOP, sInstance);
-        mt.registerChunkHandler(CHUNK_VURT, sInstance);
+        mt.registerChunkHandler(DebugViewDumpHandler.CHUNK_VUGL, sInstance);
+        mt.registerChunkHandler(DebugViewDumpHandler.CHUNK_VULW, sInstance);
+        mt.registerChunkHandler(DebugViewDumpHandler.CHUNK_VUOP, sInstance);
+        mt.registerChunkHandler(DebugViewDumpHandler.CHUNK_VURT, sInstance);
     }
 
     @Override
@@ -89,51 +76,13 @@ public final class HandleViewDebug extends ChunkHandler {
     @Override
     public void clientDisconnected(ClientImpl client) {}
 
-    public abstract static class ViewDumpHandler extends ChunkHandler {
-        private final CountDownLatch mLatch = new CountDownLatch(1);
-        private final int mChunkType;
-
-        public ViewDumpHandler(int chunkType) {
-            mChunkType = chunkType;
-        }
-
-        @Override
-        void clientReady(ClientImpl client) throws IOException {}
-
-        @Override
-        void clientDisconnected(ClientImpl client) {}
-
-        @Override
-        @VisibleForTesting
-        public void handleChunk(
-                ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
-            if (type != mChunkType) {
-                handleUnknownChunk(client, type, data, isReply, msgId);
-                return;
-            }
-
-            handleViewDebugResult(data);
-            mLatch.countDown();
-        }
-
-        protected abstract void handleViewDebugResult(ByteBuffer data);
-
-        protected void waitForResult(long timeout, TimeUnit unit) {
-            try {
-                mLatch.await(timeout, unit);
-            } catch (InterruptedException e) {
-                // pass
-            }
-        }
-    }
-
-    public static void listViewRoots(Client client, ViewDumpHandler replyHandler)
+    public static void listViewRoots(Client client, DebugViewDumpHandler replyHandler)
             throws IOException {
         ByteBuffer buf = allocBuffer(8);
         JdwpPacket packet = new JdwpPacket(buf);
         ByteBuffer chunkBuf = getChunkDataBuf(buf);
         chunkBuf.putInt(1);
-        finishChunkPacket(packet, CHUNK_VULW, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VULW, chunkBuf.position());
         ((ClientImpl) client).send(packet, replyHandler);
     }
 
@@ -143,7 +92,7 @@ public final class HandleViewDebug extends ChunkHandler {
             boolean skipChildren,
             boolean includeProperties,
             boolean useV2,
-            @NonNull ViewDumpHandler handler)
+            @NonNull DebugViewDumpHandler handler)
             throws IOException {
         ByteBuffer buf =
                 allocBuffer(
@@ -163,12 +112,14 @@ public final class HandleViewDebug extends ChunkHandler {
         chunkBuf.putInt(includeProperties ? 1 : 0);
         chunkBuf.putInt(useV2 ? 1 : 0);
 
-        finishChunkPacket(packet, CHUNK_VURT, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VURT, chunkBuf.position());
         ((ClientImpl) client).send(packet, handler);
     }
 
     public static void captureLayers(
-            @NonNull ClientImpl client, @NonNull String viewRoot, @NonNull ViewDumpHandler handler)
+            @NonNull ClientImpl client,
+            @NonNull String viewRoot,
+            @NonNull DebugViewDumpHandler handler)
             throws IOException {
         int bufLen = 8 + viewRoot.length() * 2;
 
@@ -180,7 +131,7 @@ public final class HandleViewDebug extends ChunkHandler {
         chunkBuf.putInt(viewRoot.length());
         ByteBufferUtil.putString(chunkBuf, viewRoot);
 
-        finishChunkPacket(packet, CHUNK_VURT, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VURT, chunkBuf.position());
         client.send(packet, handler);
     }
 
@@ -190,7 +141,7 @@ public final class HandleViewDebug extends ChunkHandler {
             @NonNull String viewRoot,
             @NonNull String view,
             @Nullable byte[] extra,
-            @Nullable ViewDumpHandler handler)
+            @Nullable DebugViewDumpHandler handler)
             throws IOException {
         int bufLen = 4 +                        // opcode
                 4 + viewRoot.length() * 2 +     // view root strlen + view root
@@ -215,7 +166,7 @@ public final class HandleViewDebug extends ChunkHandler {
             chunkBuf.put(extra);
         }
 
-        finishChunkPacket(packet, CHUNK_VUOP, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VUOP, chunkBuf.position());
         ((ClientImpl) client).send(packet, handler);
     }
 
@@ -223,7 +174,7 @@ public final class HandleViewDebug extends ChunkHandler {
             @NonNull ClientImpl client,
             @NonNull String viewRoot,
             @NonNull String view,
-            @NonNull ViewDumpHandler handler)
+            @NonNull DebugViewDumpHandler handler)
             throws IOException {
         sendViewOpPacket(client, VUOP_PROFILE_VIEW, viewRoot, view, null, handler);
     }
@@ -232,7 +183,7 @@ public final class HandleViewDebug extends ChunkHandler {
             @NonNull Client client,
             @NonNull String viewRoot,
             @NonNull String view,
-            @NonNull ViewDumpHandler handler)
+            @NonNull DebugViewDumpHandler handler)
             throws IOException {
         sendViewOpPacket(client, VUOP_CAPTURE_VIEW, viewRoot, view, null, handler);
     }
@@ -257,7 +208,9 @@ public final class HandleViewDebug extends ChunkHandler {
     }
 
     public static void dumpTheme(
-            @NonNull ClientImpl client, @NonNull String viewRoot, @NonNull ViewDumpHandler handler)
+            @NonNull ClientImpl client,
+            @NonNull String viewRoot,
+            @NonNull DebugViewDumpHandler handler)
             throws IOException {
         ByteBuffer buf =
                 allocBuffer(
@@ -271,12 +224,12 @@ public final class HandleViewDebug extends ChunkHandler {
         chunkBuf.putInt(viewRoot.length());
         ByteBufferUtil.putString(chunkBuf, viewRoot);
 
-        finishChunkPacket(packet, CHUNK_VURT, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VURT, chunkBuf.position());
         client.send(packet, handler);
     }
 
     /** A {@link ViewDumpHandler} to use when no response is expected. */
-    private static class NullChunkHandler extends ViewDumpHandler {
+    private static class NullChunkHandler extends DebugViewDumpHandler {
         public NullChunkHandler(int chunkType) {
             super(chunkType);
         }
@@ -377,7 +330,7 @@ public final class HandleViewDebug extends ChunkHandler {
 
         ByteBuffer chunkBuf = getChunkDataBuf(buf);
         chunkBuf.putInt(1);
-        finishChunkPacket(packet, CHUNK_VUGL, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VUGL, chunkBuf.position());
 
         client.send(packet, null);
     }
@@ -388,7 +341,7 @@ public final class HandleViewDebug extends ChunkHandler {
 
         ByteBuffer chunkBuf = getChunkDataBuf(buf);
         chunkBuf.putInt(0);
-        finishChunkPacket(packet, CHUNK_VUGL, chunkBuf.position());
+        finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VUGL, chunkBuf.position());
 
         client.send(packet, null);
     }

@@ -1,24 +1,25 @@
-/* //device/tools/ddms/libs/ddmlib/src/com/android/ddmlib/JdwpPacket.java
-**
-** Copyright 2007, The Android Open Source Project
-**
-** Licensed under the Apache License, Version 2.0 (the "License");
-** you may not use this file except in compliance with the License.
-** You may obtain a copy of the License at
-**
-**     http://www.apache.org/licenses/LICENSE-2.0
-**
-** Unless required by applicable law or agreed to in writing, software
-** distributed under the License is distributed on an "AS IS" BASIS,
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-** See the License for the specific language governing permissions and
-** limitations under the License.
-*/
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal.jdwp.chunkhandler;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.jdwp.JdwpCommands;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -51,26 +52,25 @@ public final class JdwpPacket {
 
     private static int sSerialId = 0x40000000;
 
-
     /** Create a new, empty packet, in "buf". */
-    JdwpPacket(@NonNull ByteBuffer buf) {
+    @VisibleForTesting
+    public JdwpPacket(@NonNull ByteBuffer buf) {
         mBuffer = buf;
     }
 
     /**
      * Finish a packet created with newPacket().
      *
-     * This always creates a command packet, with the next serial number
-     * in sequence.
+     * <p>This always creates a command packet, with the next serial number in sequence.
      *
-     * We have to take "payloadLength" as an argument because we can't
-     * see the position in the "slice" returned by getPayload().  We could
-     * fish it out of the chunk header, but it's legal for there to be
-     * more than one chunk in a JDWP packet.
+     * <p>We have to take "payloadLength" as an argument because we can't see the position in the
+     * "slice" returned by getPayload(). We could fish it out of the chunk header, but it's legal
+     * for there to be more than one chunk in a JDWP packet.
      *
-     * On exit, "position" points to the end of the data.
+     * <p>On exit, "position" points to the end of the data.
      */
-    void finishPacket(int cmdSet, int cmd, int payloadLength) {
+    @VisibleForTesting
+    public void finishPacket(int cmdSet, int cmd, int payloadLength) {
 
         ByteOrder oldOrder = mBuffer.order();
         mBuffer.order(ChunkHandler.CHUNK_ORDER);
@@ -181,10 +181,10 @@ public final class JdwpPacket {
     }
 
     /**
-     * "Move" the packet data out of the buffer we're sitting on and into
-     * buf at the current position.
+     * "Move" the packet data out of the buffer we're sitting on and into buf at the current
+     * position.
      */
-    void move(ByteBuffer buf) {
+    public void move(ByteBuffer buf) {
         int oldPosn = mBuffer.position();
 
         mBuffer.position(0);
