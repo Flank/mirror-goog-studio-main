@@ -4,7 +4,9 @@
 <@kt.addKotlinToBaseProject />
 
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
-
+    <#if generateKotlin && useAndroidX>
+        <dependency mavenUrl="androidx.core:core-ktx:+" />
+    </#if>
     <dependency mavenUrl="com.google.android.support:wearable:+" />
     <dependency mavenUrl="com.google.android.gms:play-services-wearable:+" />
     <dependency mavenUrl="com.android.support:percent:+" />
@@ -36,8 +38,4 @@
 
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-
-    <#if generateKotlin && useAndroidX>
-        <dependency mavenUrl="androidx.core:core-ktx:+" />
-    </#if>
 </recipe>
