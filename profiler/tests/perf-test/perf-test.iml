@@ -18,25 +18,9 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
+    <orderEntry type="library" scope="TEST" name="transport-proto" level="project" />
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
-    <orderEntry type="module-library" scope="TEST">
-      <library name="studio-grpc">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../bazel-genfiles/tools/base/bazel/studio-grpc.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="transport_java_proto">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../bazel-genfiles/tools/base/transport/proto/transport_java_proto.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="perf-logger" scope="TEST" />
   </component>
 </module>
