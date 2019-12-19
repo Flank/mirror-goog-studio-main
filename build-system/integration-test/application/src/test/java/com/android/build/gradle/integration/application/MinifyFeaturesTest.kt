@@ -34,6 +34,7 @@ import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
+import com.android.testutils.AssumeUtil
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Aab
 import com.android.testutils.truth.FileSubject.assertThat
@@ -796,6 +797,7 @@ class MinifyFeaturesTest(
     // targeted to specific R8 or Proguard versions.
     @Test
     fun appTestExtractedJarKeepRules() {
+        AssumeUtil.assumeNotWindows()  // b/146571219
 
         val executor = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
