@@ -13,109 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.api
 
-package com.android.build.gradle.internal.api;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.VariantBuilder;
-import com.android.builder.core.VariantType;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.ProductFlavor;
-import java.util.Collections;
-import java.util.List;
+import com.android.build.api.variant.VariantFilter
+import com.android.build.gradle.internal.core.VariantBuilder.Companion.computeName
+import com.android.builder.core.VariantType
+import com.android.builder.model.BuildType
+import com.android.builder.model.ProductFlavor
 
 /**
  * Exposes a read-only view of a variant as well as a flag that can be used to signal that the
  * variant should be ignored.
  */
-public class VariantFilter implements com.android.build.api.variant.VariantFilter {
+class VariantFilter(
+    private val readOnlyObjectProvider: ReadOnlyObjectProvider
+) : VariantFilter {
 
-    @NonNull
-    private final ReadOnlyObjectProvider readOnlyObjectProvider;
+    private lateinit var _defaultConfig: ProductFlavor
+    private lateinit var _buildType: BuildType
+    private var _flavors: List<ProductFlavor>? = null
+    private lateinit var _type: VariantType
+    private var _name: String? = null
 
-    private boolean ignore;
-
-    private ProductFlavor defaultConfig;
-    private BuildType buildType;
-    private List<? extends ProductFlavor> flavors;
-    private VariantType type;
-    private String name;
-
-    public VariantFilter(@NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        this.readOnlyObjectProvider = readOnlyObjectProvider;
+    fun reset(
+        defaultConfig: ProductFlavor,
+        buildType: BuildType,
+        type: VariantType,
+        flavors: List<ProductFlavor>?
+    ) {
+        ignore = false
+        _defaultConfig = defaultConfig
+        _buildType = buildType
+        _flavors = flavors
+        _type = type
+        _name = null
     }
 
-    public void reset(
-            @NonNull ProductFlavor defaultConfig,
-            @NonNull BuildType buildType,
-            @NonNull VariantType type,
-            @Nullable List<? extends ProductFlavor> flavors) {
-        ignore = false;
-        this.defaultConfig = defaultConfig;
-        this.buildType = buildType;
-        this.flavors = flavors;
-        this.type = type;
-        this.name = null;
-    }
+    override var ignore: Boolean = false
 
-    /**
-     * Whether to ignore this variant.
-     */
-    public boolean isIgnore() {
-        return ignore;
-    }
+    override val defaultConfig: ProductFlavor
+        get() = readOnlyObjectProvider.getDefaultConfig(_defaultConfig)
 
-    @Override
-    public void setIgnore(boolean ignore) {
-        this.ignore = ignore;
-    }
+    override val buildType: BuildType
+        get() = readOnlyObjectProvider.getBuildType(_buildType)
 
-    /**
-     * Returns a read-only ProductFlavor that represents the default config.
-     *
-     * <p>See {@link com.android.build.gradle.internal.dsl.ProductFlavor} for properties present
-     * on the returned object.
-     */
-    @Override
-    @NonNull
-    public ProductFlavor getDefaultConfig() {
-        return readOnlyObjectProvider.getDefaultConfig(defaultConfig);
-    }
-
-    /**
-     * Returns a read-only Build Type.
-     *
-     * <p>See {@link com.android.build.gradle.internal.dsl.BuildType} for properties present
-     * on the returned object.
-     */
-    @Override
-    @NonNull
-    public BuildType getBuildType() {
-        return readOnlyObjectProvider.getBuildType(buildType);
-    }
-
-    /**
-     * Returns the list of read-only flavors, or an empty list.
-     *
-     * <p>See {@link com.android.build.gradle.internal.dsl.ProductFlavor} for properties
-     * present on the returned objects.
-     */
-    @NonNull
-    @Override
-    public List<ProductFlavor> getFlavors() {
-        return flavors != null ?
-                new ImmutableFlavorList(flavors, readOnlyObjectProvider) :
-                Collections.<ProductFlavor>emptyList();
-    }
-
-    @NonNull
-    @Override
-    public String getName() {
-        if (name == null) {
-            name = VariantBuilder.computeName(type, flavors, buildType);
+    override val flavors: List<ProductFlavor>
+        get() {
+            val fList = _flavors ?: return emptyList()
+            return ImmutableFlavorList(fList, readOnlyObjectProvider)
         }
 
-        return name;
-    }
+    override val name: String
+        get() {
+            val currentName = _name
+            if (currentName == null) {
+                val newName = computeName(_type, _flavors, _buildType)
+                _name = newName
+                return newName
+            }
+            return currentName
+        }
 }

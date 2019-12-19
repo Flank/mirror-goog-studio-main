@@ -115,12 +115,12 @@ abstract class VariantBuilder protected constructor(
         @JvmOverloads
         fun computeName(
             variantType: VariantType,
-            flavors: List<com.android.builder.model.ProductFlavor>,
+            flavors: List<com.android.builder.model.ProductFlavor>?,
             buildType: com.android.builder.model.BuildType,
             flavorNameCallback: ((String) -> Unit)? = null
         ): String {
             // compute the flavor name
-            val flavorName = if (flavors.isEmpty()) {
+            val flavorName = if (flavors.isNullOrEmpty()) {
                 ""
             } else {
                 combineAsCamelCase(flavors, com.android.builder.model.ProductFlavor::getName)

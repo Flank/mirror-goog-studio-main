@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-0c39187b7f4ea6cb9cd21e2af69f181bc5356abc519473b2fa01c277418e58ca
+23263a8a42362afe8ffe985caf403b5d18910df248b3e025faa204f89fe87033
 -------------------------------------------------------------------------
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
@@ -104,5 +104,6 @@ com.android.build.api.variant.VariantFilter
 com.android.build.api.variant.VariantFilter.getBuildType: com.android.builder.model.BuildType ()
 com.android.build.api.variant.VariantFilter.getDefaultConfig: com.android.builder.model.ProductFlavor ()
 com.android.build.api.variant.VariantFilter.getFlavors: java.util.List<com.android.builder.model.ProductFlavor> ()
+com.android.build.api.variant.VariantFilter.getIgnore: boolean ()
 com.android.build.api.variant.VariantFilter.getName: java.lang.String ()
 com.android.build.api.variant.VariantFilter.setIgnore: void (boolean)

@@ -13,46 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.variant
 
-package com.android.build.api.variant;
-
-import com.android.annotations.NonNull;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.ProductFlavor;
-import java.util.List;
+import com.android.builder.model.BuildType
+import com.android.builder.model.ProductFlavor
 
 /**
  * Interface for variant control, allowing to query a variant for some base
  * data and allowing to disable some variants.
  */
-public interface VariantFilter {
+interface VariantFilter {
 
     /**
-     * Sets whether or not to ignore this particular variant. Default is false.
-     * @param ignore whether to ignore the variant
+     * Whether or not to ignore this particular variant. Default is false.
      */
-    void setIgnore(boolean ignore);
+    var ignore: Boolean
 
     /**
      * Returns the ProductFlavor that represents the default config.
      */
-    @NonNull
-    ProductFlavor getDefaultConfig();
+    val defaultConfig: ProductFlavor
 
     /**
      * Returns the Build Type.
      */
-    @NonNull
-    BuildType getBuildType();
+    val buildType: BuildType
 
     /**
      * Returns the list of flavors, or an empty list.
      */
-    @NonNull
-    List<ProductFlavor> getFlavors();
+    val flavors: List<ProductFlavor>
 
     /**
      * Returns the unique variant name.
      */
-    @NonNull String getName();
+    val name: String
 }

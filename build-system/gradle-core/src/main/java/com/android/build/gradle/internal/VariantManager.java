@@ -1337,7 +1337,7 @@ public class VariantManager implements VariantModel {
             } catch (Throwable t) {
                 throw new ExternalApiUsageException(t);
             }
-            ignore = variantFilter.isIgnore();
+            ignore = variantFilter.getIgnore();
         }
 
         BaseVariantData variantForAndroidTest = null;
