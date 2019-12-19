@@ -52,13 +52,15 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
         testVariants = Maps.newHashMap();
 
         // create default output
-        getOutputFactory()
-                .addMainOutput(
-                        globalScope.getProjectBaseName()
-                                + "-"
-                                + getVariantDslInfo().getBaseName()
-                                + "."
-                                + BuilderConstants.EXT_LIB_ARCHIVE);
+        getPublicVariantPropertiesApi()
+                .addVariantOutput(
+                        getOutputFactory()
+                                .addMainOutput(
+                                        globalScope.getProjectBaseName()
+                                                + "-"
+                                                + getVariantDslInfo().getBaseName()
+                                                + "."
+                                                + BuilderConstants.EXT_LIB_ARCHIVE));
     }
 
     @Override

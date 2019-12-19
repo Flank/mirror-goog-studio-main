@@ -198,6 +198,18 @@ public class Client extends JdwpAgent {
     }
 
     /**
+     * Debugger VM mirrors can exit behind DDMLib's back, leading to various race or perma-{@link
+     * Client} loss conditions. We need to notify DDMLib that the debugger currently attached is
+     * exiting and killing its VM mirror connection.
+     */
+    public void notifyVmMirrorExited() {
+        getDeviceImpl()
+                .getClientTracker()
+                .trackClientToDropAndReopen(
+                        this, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
+    }
+
+    /**
      * Return the Debugger object associated with this client.
      */
     public Debugger getDebugger() {

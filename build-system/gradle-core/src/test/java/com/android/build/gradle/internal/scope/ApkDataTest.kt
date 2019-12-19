@@ -86,14 +86,6 @@ class ApkDataTest {
     }
 
     @Test
-    fun testEnabledPrecedence() {
-        val apkData1 = constructApkData()
-        val apkData2 = constructApkData()
-        apkData1.disable()
-        assertThat(apkData1).isLessThan(apkData2)
-    }
-
-    @Test
     fun testSerialization() {
         val originalApkData = constructApkData()
         val variantOutputMock: VariantOutputImpl = Mockito.mock(VariantOutputImpl::class.java)

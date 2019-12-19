@@ -21,15 +21,43 @@ import com.android.build.api.variant.VariantOutput
 /**
  * Implementation of [List] of [VariantOutput] with added private services for AGP.
  */
-internal class VariantOutputList(val variantOutputs: List<VariantOutput>): List<VariantOutput> by variantOutputs {
+internal class VariantOutputList(
+    private val variantOutputs: List<VariantOutputImpl>): List<VariantOutputImpl> by variantOutputs {
+
+    /**
+     * Return a [List] of [VariantOutputImpl] for variant output which [VariantOutput.outputType]
+     * is the same as the passed parameter.
+     *
+     * @param outputType desired output type filter.
+     * @return a possibly empty [List] of [VariantOutputImpl]
+     */
+    fun getSplitsByType(outputType: VariantOutput.OutputType): List<VariantOutputImpl> =
+        variantOutputs.filter { it.outputType == outputType.toString() }
+
+
+    /**
+     * Returns the list of enabled [VariantOutput]
+     */
+    fun getEnabledVariantOutputs(): List<VariantOutputImpl> =
+        variantOutputs.filter { it.isEnabled.get() }
+
+    /**
+     * Finds the main split in the current variant context or throws a [RuntimeException] if there
+     * are none.
+     */
+    fun getMainSplit(): VariantOutputImpl =
+        getMainSplitOrNull()
+            ?: throw RuntimeException("Cannot determine main split information, file a bug.")
 
     /**
      * Finds the main split in the current variant context or null if there are no variant output.
      */
-    fun getMainSplit(): VariantOutput? =
+    fun getMainSplitOrNull(): VariantOutputImpl? =
         variantOutputs.find { variantOutput ->
             variantOutput.outputType == VariantOutput.OutputType.MAIN.name }
             ?: variantOutputs.find {
+                it.outputType == VariantOutput.OutputType.FULL_SPLIT.name && it.isUniversal }
+            ?: variantOutputs.find {
                 it.outputType == VariantOutput.OutputType.FULL_SPLIT.name
-            } ?: variantOutputs.getOrNull(0)
+            }
 }

@@ -18,6 +18,10 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
+import com.android.build.api.artifact.Operations
+import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -25,8 +29,10 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.ApplicationVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
+import com.android.utils.Pair
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
@@ -57,14 +63,17 @@ open class MainApkListPersistenceTest {
     var manifestFileFolder = TemporaryFolder()
 
     @Mock private lateinit var variantScope: VariantScope
+    @Mock private lateinit var variantData: ApplicationVariantData
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var config: VariantDslInfo
     @Mock private lateinit var artifacts: BuildArtifactsHolder
+    @Mock private lateinit var dslScope: DslScope
 
     private lateinit var outputFactory: OutputFactory
     internal lateinit var project: Project
     internal lateinit var task: MainApkListPersistence
     internal lateinit var testDir: File
+    internal lateinit var variantPropertiesImpl: VariantPropertiesImpl
 
     @Before
     @Throws(IOException::class)
@@ -80,6 +89,11 @@ open class MainApkListPersistenceTest {
         Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
         Mockito.`when`(config.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         Mockito.`when`(globalScope.projectOptions).thenReturn(ProjectOptions(ImmutableMap.of()))
+        Mockito.`when`(variantScope.variantData).thenReturn(variantData)
+        Mockito.`when`(variantScope.variantDslInfo).thenReturn(config)
+        Mockito.`when`(dslScope.objectFactory).thenReturn(project.objects)
+        Mockito.`when`(dslScope.providerFactory).thenReturn(project.providers)
+
 
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 
@@ -88,16 +102,26 @@ open class MainApkListPersistenceTest {
                 temporaryFolder.newFile(SdkConstants.FN_APK_LIST)))
         }.get()
         outputFactory = OutputFactory("foo", config)
+
+        variantPropertiesImpl= VariantPropertiesImpl(dslScope = dslScope,
+            variantScope = variantScope, operations = Mockito.mock(Operations::class.java),
+            configuration = Mockito.mock(VariantConfiguration::class.java))
+        Mockito.`when`(variantData.publicVariantPropertiesApi).thenReturn(variantPropertiesImpl)
+        Mockito.`when`(config.getVersionCode(true)).thenReturn(23)
+        Mockito.`when`(config.getVersionName(true)).thenReturn("foo")
     }
 
     @Test
     fun testFullSplitPersistenceNoDisabledState() {
-        outputFactory.addFullSplit(
-                ImmutableList.of(com.android.utils.Pair.of(VariantOutput.FilterType.ABI, "x86")))
-        outputFactory.addFullSplit(
-                ImmutableList.of(com.android.utils.Pair.of(VariantOutput.FilterType.ABI,
-                        "armeabi")))
-        Mockito.`when`(variantScope.outputScope).thenReturn(outputFactory.output)
+        variantPropertiesImpl.addVariantOutput(outputFactory.addFullSplit(
+            ImmutableList.of(Pair.of(VariantOutput.FilterType.ABI, "x86"))))
+        variantPropertiesImpl.addVariantOutput(
+            outputFactory.addFullSplit(
+                ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
+                    Pair.of(VariantOutput.FilterType.ABI, "armeabi")
+                )
+            )
+        )
 
         MainApkListPersistence.CreationAction(variantScope).configure(task)
 
@@ -110,7 +134,6 @@ open class MainApkListPersistenceTest {
         assertThat(apkList).hasSize(2)
         assertThat(apkList.asSequence()
                 .filter { apkData -> apkData.type == VariantOutput.OutputType.FULL_SPLIT}
-                .filter { apkData -> apkData.isEnabled }
                 .map { apkData -> apkData.filters.asSequence().map {
                     filterData -> filterData.identifier }.first() }
                 .toList())
@@ -119,12 +142,16 @@ open class MainApkListPersistenceTest {
 
     @Test
     fun testFullSplitPersistenceSomeDisabledState() {
-        outputFactory.addFullSplit(
-                ImmutableList.of(com.android.utils.Pair.of(VariantOutput.FilterType.ABI, "x86")))
-        outputFactory.addFullSplit(
-                ImmutableList.of(com.android.utils.Pair.of(VariantOutput.FilterType.ABI,
-                        "armeabi"))).disable()
-        Mockito.`when`(variantScope.outputScope).thenReturn(outputFactory.output)
+        variantPropertiesImpl.addVariantOutput(outputFactory.addFullSplit(
+                ImmutableList.of(Pair.of(VariantOutput.FilterType.ABI, "x86"))))
+        val variantOutput = variantPropertiesImpl.addVariantOutput(
+            outputFactory.addFullSplit(
+                ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
+                    Pair.of(VariantOutput.FilterType.ABI, "armeabi")
+                )
+            )
+        )
+        variantOutput.isEnabled.set(false)
 
         MainApkListPersistence.CreationAction(variantScope).configure(task)
         assertThat(task.outputFile.get().asFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
@@ -136,7 +163,6 @@ open class MainApkListPersistenceTest {
         assertThat(apkList).hasSize(1)
         assertThat(apkList.asSequence()
                 .filter { apkData -> apkData.type == VariantOutput.OutputType.FULL_SPLIT}
-                .filter { apkData -> apkData.isEnabled }
                 .map { apkData -> apkData.filters.asSequence().map {
                     filterData -> filterData.identifier }.first() }
                 .toList())

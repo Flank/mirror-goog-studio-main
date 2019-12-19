@@ -106,10 +106,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     @get:Input
     abstract val useConstantIds: Property<Boolean>
 
-    @get:Input
-    lateinit var multiOutputPolicy: MultiOutputPolicy
-        private set
-
     @Throws(IOException::class)
     override fun doFullTaskAction() {
         val manifest = chooseOutput(
@@ -138,37 +134,14 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     }
 
     private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
-        when (multiOutputPolicy) {
-            MultiOutputPolicy.SPLITS -> {
-                val main = manifestBuildElements
-                    .stream()
-                    .filter { output -> output.apkData.type == VariantOutput.OutputType.MAIN }
-                    .findFirst()
-                if (!main.isPresent) {
-                    throw RuntimeException("No main apk found")
-                }
-                return main.get()
-            }
-            MultiOutputPolicy.MULTI_APK -> {
-                val nonDensity = manifestBuildElements
-                    .stream()
-                    .filter { output ->
-                        output.apkData
-                            .getFilter(
-                                VariantOutput.FilterType
-                                    .DENSITY
-                            ) == null
-                    }
-                    .findFirst()
-                if (!nonDensity.isPresent) {
-                    throw RuntimeException("No non-density apk found")
-                }
-                return nonDensity.get()
-            }
-            else -> throw RuntimeException(
-                "Unexpected MultiOutputPolicy type: $multiOutputPolicy"
-            )
+        val nonDensity = manifestBuildElements
+            .stream()
+            .filter { output -> output.apkData.getFilter(VariantOutput.FilterType.DENSITY) == null }
+            .findFirst()
+        if (!nonDensity.isPresent) {
+            throw RuntimeException("No non-density apk found")
         }
+        return nonDensity.get()
     }
 
     data class GenerateLibRFileParams(
@@ -314,7 +287,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
-            task.outputScope = variantScope.outputScope
+            task.mainSplit = variantScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
 
             // This task can produce R classes with either constant IDs ("0") or sequential IDs
             // mimicking the way AAPT2 numbers IDs. If we're generating a compile time only R class
@@ -324,8 +297,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.useConstantIds.set(
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
-
-            task.multiOutputPolicy = variantScope.variantData.multiOutputPolicy
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
@@ -375,9 +346,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             testedScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
             )
-            task.outputScope = variantScope.outputScope
+            task.mainSplit = variantScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
             task.useConstantIds.setDisallowChanges(false)
-            task.multiOutputPolicy = variantScope.variantData.multiOutputPolicy
 
             testedScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,

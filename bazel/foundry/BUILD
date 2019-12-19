@@ -19,8 +19,8 @@ platform(
         docker_add_capabilities = "SYS_NICE",
         docker_network = "off",
         docker_use_urandom = True,
-        gce_machine_type = "n1-standard-4",
         os_family = "Linux",
+        pool = "default",
     ),
 )
 
@@ -32,8 +32,8 @@ platform(
     ],
     exec_properties = create_rbe_exec_properties_dict(
         container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows1803-as@sha256:e75260564cf7f4236867382a9d6340f25afb0afe8d65a9f65e0a748a92d1d5a3",
-        gce_machine_type = "n1-standard-4",
         os_family = "Windows",
+        pool = "default",
     ),
 )
 

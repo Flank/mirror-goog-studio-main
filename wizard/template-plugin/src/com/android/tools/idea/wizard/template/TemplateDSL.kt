@@ -61,7 +61,7 @@ class TemplateBuilder {
   /** A wrapper for collection of [Thumb]s with an optional [get]ter. Implementations usually use [Parameter.value] to choose [Thumb]. */
   fun thumb(block: () -> File) {
     val res = findResource(this.javaClass, block())
-    thumb = { Thumb(File(res.file)) }
+    thumb = { Thumb(res) }
   }
 
   internal fun build(): Template {

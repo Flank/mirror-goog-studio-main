@@ -2480,7 +2480,6 @@ public abstract class TaskManager {
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,
-                                variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
                                 packagesCustomClassDependencies(variantScope, projectOptions)),
                         null,

@@ -22,16 +22,18 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /** Factory for {@link ApkData} instances. Cannot be stored in any model related objects. */
@@ -41,14 +43,13 @@ public class OutputFactory {
 
     private final String projectBaseName;
     private final VariantDslInfo variantDslInfo;
-    private final OutputScope.Builder outputScopeBuilder;
-    private final Supplier<OutputScope> outputSupplier;
+    private final AtomicBoolean mainSplitAdded = new AtomicBoolean(false);
+    private final AtomicBoolean apkDataListFinalized = new AtomicBoolean(false);
+    private final List<ApkData> apkDataList = new ArrayList<>();
 
     public OutputFactory(String projectBaseName, VariantDslInfo variantDslInfo) {
         this.projectBaseName = projectBaseName;
         this.variantDslInfo = variantDslInfo;
-        this.outputScopeBuilder = new OutputScope.Builder();
-        this.outputSupplier = Suppliers.memoize(outputScopeBuilder::build);
     }
 
     private String getOutputFileName(String baseName) {
@@ -67,7 +68,7 @@ public class OutputFactory {
                         variantDslInfo.getBaseName(),
                         variantDslInfo.getFullName(),
                         defaultFilename);
-        outputScopeBuilder.addMainSplit(mainOutput);
+        checkMainSplitExistenceAndAdd(mainOutput);
         return mainOutput;
     }
 
@@ -83,7 +84,7 @@ public class OutputFactory {
                         baseName,
                         variantDslInfo.computeFullNameWithSplits(UNIVERSAL),
                         getOutputFileName(baseName));
-        outputScopeBuilder.addMainSplit(mainApk);
+        checkMainSplitExistenceAndAdd(mainApk);
         return mainApk;
     }
 
@@ -105,12 +106,37 @@ public class OutputFactory {
                         variantDslInfo.computeFullNameWithSplits(filterName),
                         getOutputFileName(baseName),
                         filtersList);
-        outputScopeBuilder.addSplit(apkData);
+        addApkDataToList(apkData);
         return apkData;
     }
 
-    public OutputScope getOutput() {
-        return outputSupplier.get();
+    private synchronized void addApkDataToList(ApkData apkData) {
+        if (apkDataListFinalized.get()) {
+            throw new RuntimeException("APK list already finalized.");
+        }
+        apkDataList.add(apkData);
+    }
+
+    private synchronized void checkMainSplitExistenceAndAdd(ApkData apkData) {
+        if (mainSplitAdded.get()) {
+            throw new RuntimeException(
+                    "Cannot add "
+                            + apkData
+                            + " in a scope that already"
+                            + " has "
+                            + apkDataList
+                                    .stream()
+                                    .filter(it -> it.getType() == VariantOutput.OutputType.MAIN)
+                                    .map(ApkData::toString)
+                                    .collect(Collectors.joining(",")));
+        }
+        mainSplitAdded.set(true);
+        addApkDataToList(apkData);
+    }
+
+    public synchronized List<ApkData> finalizeApkDataList() {
+        apkDataListFinalized.set(true);
+        return ImmutableList.sortedCopyOf(apkDataList);
     }
 
     private static final class Main extends ApkData {
@@ -211,6 +237,11 @@ public class OutputFactory {
         @Override
         public String getFullName() {
             return fullName;
+        }
+
+        @Override
+        public boolean isUniversal() {
+            return true;
         }
 
         @NonNull

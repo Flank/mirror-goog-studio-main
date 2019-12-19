@@ -61,7 +61,6 @@ class ProcessLibraryManifestTest {
                 "",
                 "fooRelease",
                 "",
-                true,
                 ""
             )
         )

@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
@@ -124,8 +123,6 @@ public abstract class BaseVariantData {
     @NonNull private final OutputFactory outputFactory;
     public VariantOutputFactory variantOutputFactory;
 
-    private final MultiOutputPolicy multiOutputPolicy;
-
     private final MutableTaskContainer taskContainer;
     public TextResource applicationIdTextResource;
     private final VariantConfiguration publicVariantConfiguration;
@@ -147,9 +144,6 @@ public abstract class BaseVariantData {
                 splits.getDensity().isEnable()
                         || splits.getAbi().isEnable()
                         || splits.getLanguage().isEnable();
-
-        // Since pure SPLITS are not supported, remove this before submitting.
-        multiOutputPolicy = MultiOutputPolicy.MULTI_APK;
 
         // warn the user if we are forced to ignore the generatePureSplits flag.
         if (splitsEnabled && globalScope.getExtension().getGeneratePureSplits()) {
@@ -246,18 +240,8 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public OutputScope getOutputScope() {
-        return outputFactory.getOutput();
-    }
-
-    @NonNull
     public OutputFactory getOutputFactory() {
         return outputFactory;
-    }
-
-    @NonNull
-    public MultiOutputPolicy getMultiOutputPolicy() {
-        return multiOutputPolicy;
     }
 
     @NonNull

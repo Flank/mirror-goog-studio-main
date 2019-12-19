@@ -21,10 +21,11 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
+import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -50,8 +51,10 @@ open class BaseAppModuleExtension(
 ), ApplicationExtension<
         BuildType,
         CmakeOptions,
+        CompileOptions,
         DefaultConfig,
         ExternalNativeBuild,
+        JacocoOptions,
         NdkBuildOptions,
         ProductFlavor,
         SigningConfig,

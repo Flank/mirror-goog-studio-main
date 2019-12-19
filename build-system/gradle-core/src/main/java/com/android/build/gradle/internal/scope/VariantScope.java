@@ -144,9 +144,6 @@ public interface VariantScope extends TransformVariantScope {
     BaseVariantData getTestedVariantData();
 
     @NonNull
-    File getSplitApkOutputFolder();
-
-    @NonNull
     FileCollection getJavaClasspath(
             @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull ArtifactType classesType);

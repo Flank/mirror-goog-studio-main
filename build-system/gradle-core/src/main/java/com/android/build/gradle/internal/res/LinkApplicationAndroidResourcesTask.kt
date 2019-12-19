@@ -150,10 +150,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Input
     abstract val resOffset: Property<Int>
 
-    @get:Input
-    lateinit var multiOutputPolicy: MultiOutputPolicy
-        private set
-
     private lateinit var type: VariantType
 
     @get:Input
@@ -340,27 +336,16 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
-        when (multiOutputPolicy) {
-            MultiOutputPolicy.MULTI_APK -> {
-                val nonDensity = manifestBuildElements
-                    .stream()
-                    .filter { output ->
-                        output.apkData
-                            .getFilter(
-                                VariantOutput.FilterType
-                                    .DENSITY
-                            ) == null
-                    }
-                    .findFirst()
-                if (!nonDensity.isPresent) {
-                    throw RuntimeException("No non-density apk found")
+            val nonDensity = manifestBuildElements
+                .stream()
+                .filter { output ->
+                    output.apkData.getFilter(VariantOutput.FilterType.DENSITY) == null
                 }
-                return nonDensity.get()
+                .findFirst()
+            if (!nonDensity.isPresent) {
+                throw RuntimeException("No non-density apk found")
             }
-            else -> throw RuntimeException(
-                "Unexpected MultiOutputPolicy type: $multiOutputPolicy"
-            )
-        }
+            return nonDensity.get()
     }
 
     abstract class BaseCreationAction(
@@ -453,11 +438,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             }
 
-            task.multiOutputPolicy = variantData.multiOutputPolicy
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_LIST, task.apkList)
 
-            task.outputScope = variantData.outputScope
+            task.mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplitOrNull()?.apkData
             task.originalApplicationId.set(project.provider { config.originalApplicationId })
             task.originalApplicationId.disallowChanges()
 
@@ -710,7 +694,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         featurePackagesBuilder.add(mainBuildOutput.outputFile)
                     } else {
                         throw IOException(
-                            "Cannot find PROCESSED_RES output for " + params.variantScopeMainSplit
+                            "Cannot find PROCESSED_RES output for " + params.apkData
                         )
                     }
                 }
@@ -763,7 +747,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setVariantType(params.variantType)
                         .setDebuggable(params.debuggable)
                         .setResourceConfigs(params.resourceConfigs)
-                        .setSplits(params.multiOutputPolicySplitList)
                         .setPreferredDensity(preferredDensity)
                         .setPackageId(params.packageId)
                         .setAllowReservedPackageId(
@@ -865,8 +848,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val rClassOutputJar: File? = null
     ) : Serializable {
         val resourceConfigs: Set<String> = splitList.resourceConfigs
-        val multiOutputPolicySplitList: Set<String> = splitList.getSplits(task.multiOutputPolicy)
-        val variantScopeMainSplit: ApkData = task.outputScope.mainSplit
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
         val originalApplicationId: String? = task.originalApplicationId.get()

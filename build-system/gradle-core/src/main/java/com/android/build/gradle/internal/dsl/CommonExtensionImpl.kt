@@ -23,7 +23,9 @@ import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.api.variant.impl.VariantScopeTransformers
+import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.coverage.JacocoOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -44,8 +46,10 @@ abstract class CommonExtensionImpl<
         BuildFeaturesT,
         BuildTypeT,
         CmakeOptions,
+        CompileOptions,
         DefaultConfigT,
         ExternalNativeBuild,
+        JacocoOptions,
         NdkBuildOptions,
         ProductFlavorT,
         SigningConfigT,
@@ -67,6 +71,12 @@ abstract class CommonExtensionImpl<
     protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>(
         VariantScopeTransformers.toVariantProperties
     )
+
+    override val compileOptions: CompileOptions = dslScope.objectFactory.newInstance(CompileOptions::class.java)
+
+    override fun compileOptions(action: CompileOptions.() -> Unit) {
+        action.invoke(compileOptions)
+    }
 
     override var compileSdkVersion: String? by dslScope.variableFactory.newProperty(null)
 
@@ -91,6 +101,12 @@ abstract class CommonExtensionImpl<
 
     override fun externalNativeBuild(action: (ExternalNativeBuild) -> Unit) {
         action.invoke(externalNativeBuild)
+    }
+
+    override val jacoco: JacocoOptions = dslScope.objectFactory.newInstance(JacocoOptions::class.java)
+
+    override fun jacoco(action: JacocoOptions.() -> Unit) {
+        action.invoke(jacoco)
     }
 
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {

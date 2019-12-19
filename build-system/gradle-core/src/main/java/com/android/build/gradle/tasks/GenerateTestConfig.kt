@@ -150,7 +150,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             resourceApk = scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
             mergedAssets = testedScope.artifacts.getFinalProduct(MERGED_ASSETS)
             mergedManifest = testedScope.artifacts.getFinalProduct(MERGED_MANIFESTS)
-            mainApkInfo = testedScope.outputScope.mainSplit
+            mainApkInfo = testedScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
             packageNameOfFinalRClassProvider = {
                 testedScope.variantDslInfo.originalApplicationId
             }

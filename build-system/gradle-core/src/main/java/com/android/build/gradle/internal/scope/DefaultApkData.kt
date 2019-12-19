@@ -20,16 +20,16 @@ import com.android.build.FilterData
 import com.android.build.VariantOutput
 
 data class DefaultApkData(
-        private val _type: VariantOutput.OutputType,
-        private val _filters: MutableCollection<FilterData>,
-        private val _versionCode: Int,
-        private val _versionName: String?,
-        private val _filterName: String?,
-        private val _outputFileName: String?,
-        private val _fullName: String = "",
-        private val _baseName: String,
-        private val _enabled: Boolean,
-        private val _dirName: String = "") : ApkData() {
+    private val _type: VariantOutput.OutputType,
+    private val _filters: MutableCollection<FilterData>,
+    private val _versionCode: Int,
+    private val _versionName: String?,
+    private val _filterName: String?,
+    private val _outputFileName: String?,
+    private val _fullName: String = "",
+    private val _baseName: String,
+    private val _dirName: String = ""
+) : ApkData() {
 
     override fun getFilter(filterType: VariantOutput.FilterType): FilterData? {
         for (filter in filters) {
@@ -42,7 +42,6 @@ data class DefaultApkData(
 
     override fun getVersionCode(): Int = _versionCode
     override fun getVersionName(): String? = _versionName
-    override fun isEnabled(): Boolean = _enabled
     override fun getOutputFileName(): String? = _outputFileName
     override fun requiresAapt(): Boolean = true
     override fun getFilterName(): String? = _filterName

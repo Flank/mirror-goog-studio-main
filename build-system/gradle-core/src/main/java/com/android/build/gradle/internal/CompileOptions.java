@@ -26,10 +26,8 @@ import java.util.Locale;
 import javax.inject.Inject;
 import org.gradle.api.JavaVersion;
 
-/**
- * Java compilation options.
- */
-public class CompileOptions {
+/** Java compilation options. */
+public class CompileOptions implements com.android.build.api.dsl.CompileOptions {
     private static final String VERSION_PREFIX = "VERSION_";
 
     @Nullable

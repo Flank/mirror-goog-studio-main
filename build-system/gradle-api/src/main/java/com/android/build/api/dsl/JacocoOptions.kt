@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant.impl
+package com.android.build.api.dsl
 
-import com.android.build.api.variant.VariantOutput
-import com.android.build.gradle.internal.scope.ApkData
-import org.gradle.api.provider.Property
+import org.gradle.api.Incubating
 
-class VariantOutputImpl(
-    override val versionCode: Property<Int>,
-    override val versionName: Property<String>,
-    override val isEnabled: Property<Boolean>,
-    val apkData: ApkData
-) : VariantOutput {
-
-    override val outputType: String
-        get() = apkData.outputType
-
-    override val isUniversal: Boolean
-        get() = apkData.isUniversal()
+/** DSL object for configuring JaCoCo settings. */
+@Incubating
+interface JacocoOptions {
+    /** The version of JaCoCo to use. */
+    var version: String
 }

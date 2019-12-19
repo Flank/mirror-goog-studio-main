@@ -112,7 +112,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     lateinit var incrementalFolder: File
         private set
 
-    @get:Input
+    @get:Nested
     lateinit var mainSplit: ApkData
         private set
 
@@ -133,7 +133,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
 
-        val manifestFile = ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, manifestFiles)
+        val manifestFile =
+            ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, manifestFiles)
                 .element(mainSplit)
                 ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
@@ -259,21 +260,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
             val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
-            // check the variant API property first (if there is one) in case the variant
-            // output version has been overridden, otherwise use the variant configuration
-            task.versionCode.set(
-                mainSplit?.versionCode ?: task.project.provider {
-                    variantDslInfo.versionCode
-                }
-            )
-            task.versionCode.disallowChanges()
-            task.versionName.setDisallowChanges(
-                mainSplit?.versionName ?: task.project.provider {
-                    variantDslInfo.versionName
-                }
-            )
+            task.versionCode.setDisallowChanges(mainSplit.versionCode)
+            task.versionName.setDisallowChanges(mainSplit.versionName)
 
-            task.mainSplit = variantData.outputScope.mainSplit
+            task.mainSplit = mainSplit.apkData
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,

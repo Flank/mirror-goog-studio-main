@@ -30,8 +30,10 @@ import org.gradle.api.Incubating
 interface ApplicationExtension<
         BuildTypeT : BuildType,
         CMakeOptionsT : CmakeOptions,
+        CompileOptionsT : CompileOptions,
         DefaultConfigT : DefaultConfig,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        JacocoOptionsT : JacocoOptions,
         NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
@@ -41,8 +43,10 @@ interface ApplicationExtension<
             ApplicationBuildFeatures,
             BuildTypeT,
             CMakeOptionsT,
+            CompileOptionsT,
             DefaultConfigT,
             ExternalNativeBuildT,
+            JacocoOptionsT,
             NdkBuildOptionsT,
             ProductFlavorT,
             SigningConfigT,
@@ -53,6 +57,5 @@ interface ApplicationExtension<
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)
-
 
 }

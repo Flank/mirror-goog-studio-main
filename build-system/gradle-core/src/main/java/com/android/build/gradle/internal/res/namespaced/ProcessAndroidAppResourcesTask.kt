@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
@@ -92,8 +91,6 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory abstract val rClassSource: DirectoryProperty
     @get:OutputFile abstract val resourceApUnderscoreDirectory: DirectoryProperty
-
-    @get:Internal lateinit var outputScope: OutputScope private set
 
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
@@ -189,7 +186,6 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
-            task.outputScope = variantScope.outputScope
             task.aaptIntermediateDir =
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-process-intermediate", variantScope.variantDslInfo.dirName)

@@ -58,8 +58,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
                                     Comparator.nullsLast(String::compareTo))
                             .thenComparing(
                                     ApkData::getVersionName,
-                                    Comparator.nullsLast(String::compareTo))
-                            .thenComparing(ApkData::isEnabled));
+                                    Comparator.nullsLast(String::compareTo)));
 
     // TODO : move it to a subclass, we cannot override versions for SPLIT
     private transient VariantOutputImpl variantOutput;
@@ -75,7 +74,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
             @NonNull OutputType outputType,
             @NonNull Collection<FilterData> filters,
             int versionCode) {
-        return of(outputType, filters, versionCode, null, null, null, "", "", true, "");
+        return of(outputType, filters, versionCode, null, null, null, "", "", "");
     }
 
     public static ApkData of(
@@ -87,7 +86,6 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
             @Nullable String outputFileName,
             @NonNull String fullName,
             @NonNull String baseName,
-            boolean enabled,
             @NonNull String dirName) {
         return new DefaultApkData(
                 outputType,
@@ -98,7 +96,6 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
                 outputFileName,
                 fullName,
                 baseName,
-                enabled,
                 dirName);
     }
 
@@ -157,6 +154,11 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     @NonNull
     @Input
     public abstract OutputType getType();
+
+    @Input
+    public boolean isUniversal() {
+        return false;
+    }
 
     /**
      * Returns a directory name relative to a variant specific location to save split specific
@@ -250,15 +252,6 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
             }
         }
         return null;
-    }
-
-    public void disable() {
-        enabled.set(false);
-    }
-
-    @Input
-    public boolean isEnabled() {
-        return enabled.get();
     }
 
     @Override

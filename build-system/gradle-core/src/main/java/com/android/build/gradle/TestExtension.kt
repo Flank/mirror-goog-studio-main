@@ -5,7 +5,9 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
+import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.BuildType
@@ -49,8 +51,10 @@ open class TestExtension(
     com.android.build.api.dsl.TestExtension<
             BuildType,
             CmakeOptions,
+            CompileOptions,
             DefaultConfig,
             ExternalNativeBuild,
+            JacocoOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

@@ -21,6 +21,8 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.api.variant.impl.VariantOutputImpl;
+import com.android.build.api.variant.impl.VariantOutputList;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -103,7 +105,14 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         OutputFactory outputFactory = variant.getOutputFactory();
         populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
 
-        restrictEnabledOutputs(variantDslInfo, variant.getOutputScope().getApkDatas());
+        outputFactory
+                .finalizeApkDataList()
+                .forEach(
+                        apkData ->
+                                variant.getPublicVariantPropertiesApi().addVariantOutput(apkData));
+
+        restrictEnabledOutputs(
+                variantDslInfo, variant.getPublicVariantPropertiesApi().getOutputs());
     }
 
     private void populateMultiApkOutputs(
@@ -185,7 +194,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
     }
 
-    private void restrictEnabledOutputs(VariantDslInfo variantDslInfo, List<ApkData> apkDataList) {
+    private void restrictEnabledOutputs(
+            VariantDslInfo variantDslInfo, VariantOutputList variantOutputs) {
 
         Set<String> supportedAbis = variantDslInfo.getSupportedAbis();
         ProjectOptions projectOptions = globalScope.getProjectOptions();
@@ -200,6 +210,12 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         String buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
         Density density = Density.getEnum(buildTargetDensity);
+
+        List<ApkData> apkDataList =
+                variantOutputs
+                        .stream()
+                        .map(VariantOutputImpl::getApkData)
+                        .collect(Collectors.toList());
 
         List<ApkData> apksToGenerate =
                 SplitOutputMatcher.computeBestOutput(
@@ -233,10 +249,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             return;
         }
 
-        apkDataList.forEach(
-                apkData -> {
-                    if (!apksToGenerate.contains(apkData)) {
-                        apkData.disable();
+        variantOutputs.forEach(
+                variantOutput -> {
+                    if (!apksToGenerate.contains(variantOutput.getApkData())) {
+                        variantOutput.isEnabled().set(false);
                     }
                 });
     }

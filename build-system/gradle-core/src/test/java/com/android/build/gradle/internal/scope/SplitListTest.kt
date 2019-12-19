@@ -56,7 +56,5 @@ class SplitListTest {
             ImmutableSet.of("en", "pt"),
             ImmutableSet.of("x86", "arm64-v8a"),
             ImmutableSet.of("resConfigFilter"))
-
-        assertThat(splitList.getSplits(MultiOutputPolicy.MULTI_APK)).isEmpty()
     }
 }

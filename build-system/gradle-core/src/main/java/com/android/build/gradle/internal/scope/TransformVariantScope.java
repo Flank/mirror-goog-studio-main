@@ -59,7 +59,4 @@ public interface TransformVariantScope {
      */
     @NonNull
     Collection<String> getDirectorySegments();
-
-    @NonNull
-    OutputScope getOutputScope();
 }

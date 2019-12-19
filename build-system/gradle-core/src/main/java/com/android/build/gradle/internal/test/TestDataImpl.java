@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.test;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -63,8 +62,10 @@ public class TestDataImpl extends AbstractTestDataImpl {
         this.testVariantData = testVariantData;
         this.testVariantDslInfo = testVariantData.getVariantDslInfo();
         if (testVariantData
-                        .getOutputScope()
-                        .getSplitsByType(VariantOutput.OutputType.FULL_SPLIT)
+                        .getPublicVariantPropertiesApi()
+                        .getOutputs()
+                        .getSplitsByType(
+                                com.android.build.api.variant.VariantOutput.OutputType.FULL_SPLIT)
                         .size()
                 > 1) {
             throw new RuntimeException("Multi-output in test variant not yet supported");
