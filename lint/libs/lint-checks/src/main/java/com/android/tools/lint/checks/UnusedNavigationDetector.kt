@@ -110,18 +110,12 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
             if (event == XmlPullParser.START_TAG) {
                 val tag = parser.name ?: continue
                 if (tag == SdkConstants.VIEW_FRAGMENT) {
-                    val cls: String? = parser.getAttributeValue(
-                        SdkConstants.ANDROID_URI,
-                        SdkConstants.ATTR_NAME
-                    )
-                    if (cls == SdkConstants.FQCN_NAV_HOST_FRAGMENT) {
-                        val navGraph: String? = parser.getAttributeValue(
-                            ResourceNamespace.TODO().xmlNamespaceUri,
-                            SdkConstants.ATTR_NAV_GRAPH
-                        ) ?: continue
-                        if (navGraph == target) {
-                            return true
-                        }
+                    val navGraph: String? = parser.getAttributeValue(
+                        ResourceNamespace.TODO().xmlNamespaceUri,
+                        SdkConstants.ATTR_NAV_GRAPH
+                    ) ?: continue
+                    if (navGraph == target) {
+                        return true
                     }
                 } else if (tag == SdkConstants.TAG_INCLUDE) {
                     val include: String? = parser.getAttributeValue(
