@@ -23,25 +23,7 @@ import org.gradle.api.provider.Property
  * Defines a variant output.
  */
 @Incubating
-interface VariantOutput {
-
-    /**
-     * Type of package file, either the main APK or a full split APK file containing resources for a
-     * particular split dimension.
-     */
-    @Incubating
-    enum class OutputType {
-        MAIN,
-        FULL_SPLIT
-    }
-
-    /** Split dimension type  */
-    @Incubating
-    enum class FilterType {
-        DENSITY,
-        ABI,
-        LANGUAGE
-    }
+interface VariantOutput: VariantOutputConfiguration {
 
     /**
      * Returns a modifiable [Property] representing the variant output version code.
@@ -66,14 +48,4 @@ interface VariantOutput {
      * @return a [Property] to enable or disable this output.
      */
     val isEnabled: Property<Boolean>
-
-    /**
-     * Returns true if this [VariantOutput] represents a Universal APK, false otherwise.
-     *
-     * @return a readonly boolean whether this output is a universal APK or not.
-     */
-    val isUniversal: Boolean
-
-    /** Returns the output type of the referenced APK. */
-    val outputType: String
 }

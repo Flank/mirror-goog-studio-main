@@ -16,15 +16,18 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.VariantOutput
+import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.gradle.internal.scope.ApkData
-import org.gradle.api.provider.Property
 
-data class VariantOutputImpl(
-    override val versionCode: Property<Int>,
-    override val versionName: Property<String>,
-    override val isEnabled: Property<Boolean>,
-    private val variantOutputConfiguration: VariantOutputConfiguration,
-    val apkData: ApkData /* remove once all tasks started using public API to load output.json */
-) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration
+data class VariantOutputConfigurationImpl(
+    private val isUniversal: Boolean,
+    override val filters: Collection<FilterConfiguration>
+) : VariantOutputConfiguration {
+
+    override val outputType: VariantOutputConfiguration.OutputType
+        get() {
+            if (isUniversal) return VariantOutputConfiguration.OutputType.UNIVERSAL
+            return if (filters.isEmpty()) VariantOutputConfiguration.OutputType.SINGLE
+            else VariantOutputConfiguration.OutputType.ONE_OF_MANY
+        }
+}

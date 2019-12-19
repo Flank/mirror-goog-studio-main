@@ -47,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import java.io.File
@@ -119,6 +120,7 @@ class CompatibleScreensManifestTest {
                     FakeGradleProperty(value = 0),
                     FakeGradleProperty(value =""),
                     FakeGradleProperty(value =true),
+                    Mockito.mock(com.android.build.api.variant.VariantOutput::class.java),
                     outputFactory.addMainApk())
             ))
         `when`(variantProperties.outputs).thenReturn(variantOutputList)

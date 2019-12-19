@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.scope.GradleAwareFilterData;
 import com.google.common.base.MoreObjects;
@@ -33,10 +32,6 @@ public final class FilterDataImpl implements GradleAwareFilterData, Serializable
 
     private final String filterType;
     private final String identifier;
-
-    public static OutputFile.FilterType getType(GradleAwareFilterData filter) {
-        return VariantOutput.FilterType.valueOf(filter.getFilterType());
-    }
 
     public FilterDataImpl(VariantOutput.FilterType filterType, String identifier) {
         this(filterType.name(), identifier);
