@@ -25,8 +25,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.fakeadbserver.FakeAdbServer;
@@ -1675,32 +1673,5 @@ public class DeployerRunnerTest {
                         .map(m -> m.getName() + (m.hasStatus() ? ":" + m.getStatus() : ""))
                         .toArray(String[]::new);
         assertArrayEquals(expected, actual);
-    }
-
-    private static class TestLogger implements ILogger {
-        List<String> errors = new ArrayList<>();
-        List<String> warnings = new ArrayList<>();
-        List<String> infos = new ArrayList<>();
-        List<String> verboses = new ArrayList<>();
-
-        @Override
-        public void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args) {
-            errors.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void warning(@NonNull String msgFormat, Object... args) {
-            warnings.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void info(@NonNull String msgFormat, Object... args) {
-            infos.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void verbose(@NonNull String msgFormat, Object... args) {
-            verboses.add(String.format(msgFormat, args));
-        }
     }
 }

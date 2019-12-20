@@ -22,6 +22,7 @@ import com.android.tools.idea.protobuf.MessageLite;
 import com.android.tools.idea.protobuf.Parser;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ObjectArrays;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -227,6 +228,10 @@ public class AdbInstaller implements Installer {
 
         // Parse response.
         if (response.getStatus() == Deploy.InstallerResponse.Status.ERROR_WRONG_VERSION) {
+            if (onFail == OnFail.DO_NO_RETRY) {
+                // This is the second time this error happens. Aborting.
+                throw new IOException("Unrecoverable installer WRONG_VERSION error. Aborting");
+            }
             prepare();
             if (inputStream != null) {
                 inputStream.reset();
@@ -285,7 +290,7 @@ public class AdbInstaller implements Installer {
     }
 
     private String[] buildCmd(String[] parameters) {
-        String[] base = {INSTALLER_PATH, "-version=" + Version.hash()};
+        String[] base = {INSTALLER_PATH, "-version=" + getVersion()};
         return ObjectArrays.concat(base, parameters, String.class);
     }
 
@@ -328,5 +333,10 @@ public class AdbInstaller implements Installer {
             throw new IllegalStateException(e);
         }
         return new ByteArrayInputStream(buffer);
+    }
+
+    @VisibleForTesting
+    public String getVersion() {
+        return Version.hash();
     }
 }
