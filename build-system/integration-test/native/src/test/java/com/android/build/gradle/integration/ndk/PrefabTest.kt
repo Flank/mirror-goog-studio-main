@@ -69,7 +69,8 @@ class PrefabTest(private val buildSystem: NativeBuildSystem) {
     }
 
     private fun verifyCMakeArgs(buildCommand: String, abiDir: File) {
-        val expectedArgument = "-DCMAKE_FIND_ROOT_PATH=$abiDir/prefab"
+        val findRootPath = abiDir.resolve("prefab")
+        val expectedArgument = "-DCMAKE_FIND_ROOT_PATH=$findRootPath"
         Truth.assertThat(buildCommand).contains(expectedArgument)
     }
 

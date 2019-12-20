@@ -268,8 +268,6 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    # TODO(danalbert): CMake doesn't find packages when called by Gradle.
-    tags = ["no_windows"],
     deps = DEPS,
 )
 
