@@ -17,6 +17,7 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
 
@@ -75,10 +76,8 @@ public interface NativeArtifact {
     @NonNull
     String getTargetName();
 
-    /**
-     * Returns the output file with debug symbols unstripped.
-     */
-    @NonNull
+    /** Returns the output file with debug symbols unstripped. */
+    @Nullable
     File getOutputFile();
 
     /**

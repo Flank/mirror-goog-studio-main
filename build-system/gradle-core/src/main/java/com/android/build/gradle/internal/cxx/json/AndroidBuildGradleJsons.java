@@ -217,7 +217,8 @@ public class AndroidBuildGradleJsons {
         }
 
         @Override
-        protected void visitLibraryOutput(@NonNull String output) {
+        protected void visitLibraryOutput(@Nullable String output) {
+            if (output == null) return;
             super.visitLibraryOutput(output);
             miniConfig.libraries.get(libraryName).output = new File(output);
         }

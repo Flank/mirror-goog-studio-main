@@ -16,8 +16,10 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,9 +34,10 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
     @NonNull private final Collection<File> myExportedHeaders;
     @NonNull private final String myAbi;
     @NonNull private final String myTargetName;
-    @NonNull private final File myOutputFile;
+    @Nullable private final File myOutputFile;
     @NonNull private final Collection<File> myRuntimeFiles;
 
+    @VisibleForTesting
     public NativeArtifactStub() {
         this(
                 "name",
@@ -58,7 +61,7 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
             @NonNull Collection<File> exportedHeaders,
             @NonNull String abi,
             @NonNull String targetName,
-            @NonNull File outputFile,
+            @Nullable File outputFile,
             @NonNull Collection<File> runtimeFiles) {
         myName = name;
         myToolChain = toolChain;
@@ -121,7 +124,7 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public File getOutputFile() {
         return myOutputFile;
     }

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.List;
@@ -102,7 +103,7 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     }
 
     @Override
-    protected void visitLibraryOutput(@NonNull String output) {
+    protected void visitLibraryOutput(@Nullable String output) {
         visitors.forEach(parser -> parser.visitLibraryOutput(output));
     }
 

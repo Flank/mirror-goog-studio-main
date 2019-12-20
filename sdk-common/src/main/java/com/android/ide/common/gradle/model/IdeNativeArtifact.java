@@ -32,7 +32,7 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
     @NonNull private final String myGroupName;
     @NonNull private final Collection<NativeFile> mySourceFiles;
     @NonNull private final Collection<File> myExportedHeaders;
-    @NonNull private final File myOutputFile;
+    @Nullable private final File myOutputFile;
     @Nullable private final String myAbi;
     @Nullable private final String myTargetName;
     private final int myHashCode;
@@ -123,7 +123,7 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public File getOutputFile() {
         return myOutputFile;
     }

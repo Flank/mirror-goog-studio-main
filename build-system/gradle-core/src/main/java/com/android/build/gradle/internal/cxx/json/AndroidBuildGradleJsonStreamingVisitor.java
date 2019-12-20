@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
 /** Abstract base class that defines the visitor called by AndroidBuildGradleJsonStreamingParser. */
 public abstract class AndroidBuildGradleJsonStreamingVisitor {
@@ -49,7 +50,7 @@ public abstract class AndroidBuildGradleJsonStreamingVisitor {
 
     protected void visitLibraryBuildType(@NonNull String buildType) {}
 
-    protected void visitLibraryOutput(@NonNull String output) {}
+    protected void visitLibraryOutput(@Nullable String output) {}
 
     protected void visitLibraryToolchain(@NonNull String toolchain) {}
 
