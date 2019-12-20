@@ -108,6 +108,7 @@ public class AdbInstallerTest {
         String[] expectedHistory = {
             "getprop",
             "/data/local/tmp/.studio/bin/installer -version=wrong_version_hash dump foo",
+            "rm -fr /data/local/tmp/.studio",
             "mkdir -p /data/local/tmp/.studio/bin",
             "chmod +x /data/local/tmp/.studio/bin/installer",
             "/data/local/tmp/.studio/bin/installer -version=wrong_version_hash dump foo"

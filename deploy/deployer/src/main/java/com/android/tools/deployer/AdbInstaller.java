@@ -278,6 +278,7 @@ public class AdbInstaller implements Installer {
     }
 
     private void cleanAndPushInstaller(File installerFile) throws IOException {
+        runShell(new String[] {"rm", "-fr", Deployer.BASE_DIRECTORY});
         runShell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY});
 
         // No need to check result here. If something wrong happens, an IOException is thrown.
