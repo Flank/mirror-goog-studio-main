@@ -17,6 +17,7 @@ package com.android.tools.deployer;
 
 import static com.android.tools.deployer.DeployerException.Error.CANNOT_SWAP_BEFORE_API_26;
 import static com.android.tools.deployer.DeployerException.Error.CANNOT_SWAP_RESOURCE;
+import static com.android.tools.deployer.DeployerException.Error.DUMP_FAILED;
 import static com.android.tools.deployer.DeployerException.Error.DUMP_UNKNOWN_PROCESS;
 import static com.android.tools.deployer.DeployerException.Error.NO_ERROR;
 import static org.junit.Assert.assertArrayEquals;
@@ -36,6 +37,7 @@ import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
+import com.android.tools.deployer.devices.shell.FailingMkdir;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.tracer.Trace;
 import com.android.utils.FileUtils;
@@ -1623,6 +1625,39 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
+        }
+    }
+
+    @Test
+    public void checkFailingMkDir() throws IOException {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File installersPath = DeployerTestUtils.prepareInstaller();
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+
+        // Set device to fail on any attempt to mkdir
+        device.getShell().addCommand(new FailingMkdir());
+        String[] args =
+                new String[] {
+                    "codeswap",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+
+        if (device.getApi() < 26) {
+            assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
+            assertMetrics(runner.getMetrics()); // No metrics
+        } else {
+            assertEquals(DUMP_FAILED.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin");
         }
     }
 
