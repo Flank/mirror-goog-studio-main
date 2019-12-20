@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <mutex>
 #include <vector>
 
 #include "tools/base/deploy/common/log.h"
@@ -35,7 +36,7 @@ inline int64_t gettid() noexcept {
   return tid;
 }
 
-bool enabled = true;
+std::mutex events_mutex;  // protects events
 std::vector<Event>* events = new std::vector<Event>();
 }  // namespace
 
@@ -50,8 +51,6 @@ void InitEventSystem() {
   Trace::Init();
   events->clear();
 }
-
-void DisableEventSystemForTests() { enabled = false; }
 
 static inline void AddEvent(Event::Type type, const std::string& text) {
   AddRawEvent({GetTime(), type, getpid(), gettid(), text});
@@ -83,12 +82,12 @@ void EndPhase() {
 }
 
 void AddRawEvent(const Event& event) {
-  if (enabled) {
-    events->emplace_back(event);
-  }
+  std::lock_guard<std::mutex> lock(events_mutex);
+  events->emplace_back(event);
 }
 
 std::unique_ptr<std::vector<Event>> ConsumeEvents() {
+  std::lock_guard<std::mutex> lock(events_mutex);
   std::unique_ptr<std::vector<Event>> ptr(events);
   events = new std::vector<Event>();
   return ptr;
