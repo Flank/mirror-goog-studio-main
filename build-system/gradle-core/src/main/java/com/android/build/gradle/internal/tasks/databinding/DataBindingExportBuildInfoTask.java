@@ -27,6 +27,7 @@ import java.io.File;
 import javax.inject.Inject;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
@@ -39,6 +40,7 @@ import org.gradle.api.tasks.TaskProvider;
  * that contained the build environment information needed for data binding, but it is now no longer
  * the case. We'll rename it later.
  */
+@CacheableTask
 public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask {
 
     private final Property<LayoutXmlProcessor> xmlProcessor;

@@ -18,8 +18,13 @@ package com.android.build.gradle.integration.databinding
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.truth.TaskStateList
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
@@ -42,23 +47,63 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             arrayOf(true),
             arrayOf(false)
         )
-
-        const val GRADLE_BUILD_CACHE = "gradle-build-cache"
-        const val DATA_BINDING_GEN_BASE_CLASSES_TASK = ":dataBindingGenBaseClassesDebug"
-        const val JAVA_COMPILE_TASK = ":compileDebugJavaWithJavac"
     }
+
+    /**
+     * The expected states of tasks when running a second build with the Gradle build cache
+     * enabled from an identical project at a different location.
+     */
+    private val expectedTaskStates: Map<String, TaskStateList.ExecutionState> = mapOf(
+        ":preBuild" to UP_TO_DATE,
+        ":preDebugBuild" to UP_TO_DATE,
+        ":compileDebugAidl" to SKIPPED,
+        ":compileDebugRenderscript" to SKIPPED,
+        ":generateDebugBuildConfig" to FROM_CACHE,
+        ":prepareLintJar" to DID_WORK,
+        ":prepareLintJarForPublish" to DID_WORK,
+        ":generateDebugSources" to SKIPPED,
+        ":dataBindingExportBuildInfoDebug" to FROM_CACHE,
+        ":dataBindingExportFeaturePackageIdsDebug" to FROM_CACHE,
+        ":dataBindingMergeDependencyArtifactsDebug" to FROM_CACHE,
+        ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
+        ":generateDebugResValues" to FROM_CACHE,
+        ":generateDebugResources" to UP_TO_DATE,
+        ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
+        ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
+        ":javaPreCompileDebug" to FROM_CACHE,
+        ":createDebugCompatibleScreenManifests" to DID_WORK,
+        ":extractDeepLinksDebug" to FROM_CACHE,
+        ":processDebugManifest" to DID_WORK,
+        ":processDebugResources" to DID_WORK,
+        ":compileDebugJavaWithJavac" to FROM_CACHE
+    ).plus(
+        if (withKotlin) {
+            mapOf(
+                ":clean" to DID_WORK,
+                // Kotlin tasks are not FROM_CACHE because they includes the project name in the
+                // cache key, and the two project names in this test are currently different.
+                ":kaptGenerateStubsDebugKotlin" to DID_WORK,
+                ":kaptDebugKotlin" to DID_WORK,
+                ":compileDebugKotlin" to DID_WORK
+            )
+        } else {
+            mapOf(
+                ":clean" to UP_TO_DATE
+            )
+        }
+    )
 
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("databinding")
-        .withKotlinGradlePlugin(true)
+        .withKotlinGradlePlugin(withKotlin)
         .withName("project")
         .create()
 
     @get:Rule
     val projectCopy = GradleTestProject.builder()
         .fromTestProject("databinding")
-        .withKotlinGradlePlugin(true)
+        .withKotlinGradlePlugin(withKotlin)
         .withName("projectCopy")
         .create()
 
@@ -82,15 +127,11 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
 
     @Test
     fun `test main resources located within root project directory, expect cacheable tasks`() {
-        val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE)
-
         CacheabilityTestHelper
             .forProjects(project, projectCopy)
-            .withBuildCacheDir(buildCacheDir)
-            .withTasks("clean", JAVA_COMPILE_TASK)
-            .hasFromCacheTasks(setOf(
-                DATA_BINDING_GEN_BASE_CLASSES_TASK,
-                JAVA_COMPILE_TASK), false)
+            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
+            .withTasks("clean", ":compileDebugJavaWithJavac")
+            .hasTaskStates(expectedTaskStates, exhaustive = true)
     }
 
     @Test
@@ -112,24 +153,19 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         }
 
-        val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE)
-
-        val didWork = mutableSetOf(DATA_BINDING_GEN_BASE_CLASSES_TASK)
-
-        val fromCache = mutableSetOf<String>()
-
-        // Data binding was processed by Kapt, so it doesn't make JavaCompile non-cacheable
-        if (withKotlin) {
-            fromCache.add(JAVA_COMPILE_TASK)
-        } else {
-            didWork.add(JAVA_COMPILE_TASK)
+        // Some tasks are no longer cacheable
+        val updatedExpectedTaskStates = expectedTaskStates.toMutableMap()
+        updatedExpectedTaskStates[":dataBindingGenBaseClassesDebug"] = DID_WORK
+        // JavaCompile is non-cacheable only when Kapt is not used, because when Kapt is used, data
+        // binding is processed by Kapt, so it doesn't affect JavaCompile.
+        if (!withKotlin) {
+            updatedExpectedTaskStates[":compileDebugJavaWithJavac"] = DID_WORK
         }
 
         CacheabilityTestHelper
             .forProjects(project, projectCopy)
-            .withBuildCacheDir(buildCacheDir)
-            .withTasks("clean", JAVA_COMPILE_TASK)
-            .hasFromCacheTasks(fromCache, false)
-            .hasDidWorkTasks(didWork, false)
+            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
+            .withTasks("clean", ":compileDebugJavaWithJavac")
+            .hasTaskStates(updatedExpectedTaskStates, exhaustive = true)
     }
 }
