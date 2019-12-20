@@ -56,7 +56,7 @@ maven_pom(
 
 coverage_java_test(
     name = "tools.tests",
-    srcs = glob(["src/test/java/**"]),
+    srcs = glob(["src/test/java/**/*.java"]),
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),

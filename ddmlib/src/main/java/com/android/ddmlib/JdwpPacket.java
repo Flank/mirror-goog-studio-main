@@ -201,7 +201,7 @@ public final class JdwpPacket {
     }
 
     /** Replace the payload of the package with a buffer. The current position is unchanged. */
-    public void setPayLoad(ByteBuffer buf) {
+    public void setPayload(ByteBuffer buf) {
         if (mLength - JDWP_HEADER_LEN != buf.remaining()) {
             throw new UnsupportedOperationException("Changing payload size not supported");
         }
