@@ -69,6 +69,10 @@ class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
         TODO("not yet implemented")
     }
 
+    override fun finalizeValueOnRead() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun value(p0: Provider<out T>): Property<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

@@ -105,7 +105,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.1-milestone-2"
+GRADLE_VERSION = "6.1-rc-1"
 
 filegroup(
     name = "gradle-distrib",

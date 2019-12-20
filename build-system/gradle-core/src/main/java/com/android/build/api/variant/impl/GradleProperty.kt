@@ -43,6 +43,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class GradleProperty<T>(
     private val property: Property<T>) : PropertyInternal<T>, ProviderInternal<T>, Property<T> {
 
+    override fun finalizeValueOnRead() {
+        property.finalizeValueOnRead()
+    }
+
     override fun getOrElse(p0: T): T {
         return property.getOrElse(p0)
     }
