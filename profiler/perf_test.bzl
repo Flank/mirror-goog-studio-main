@@ -9,14 +9,14 @@ def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags =
         cmd = select({
             "//tools/base/bazel:darwin": "cp ./$< ./$@",
             "//tools/base/bazel:windows": "cp ./$< ./$@",
-            "//conditions:default": "$(location //tools/base/profiler/tests/perf-test:profilers-transform-main) ./$< ./$@",
+            "//conditions:default": "$(location //tools/base/profiler/tests/profiler-transform-main:profilers-transform-main) ./$< ./$@",
         }),
         executable = 1,
         tools = select({
             "//tools/base/bazel:darwin": [],
             "//tools/base/bazel:windows": [],
             "//conditions:default": [
-                "//tools/base/profiler/tests/perf-test:profilers-transform-main",
+                "//tools/base/profiler/tests/profiler-transform-main:profilers-transform-main",
             ],
         }),
         tags = tags,

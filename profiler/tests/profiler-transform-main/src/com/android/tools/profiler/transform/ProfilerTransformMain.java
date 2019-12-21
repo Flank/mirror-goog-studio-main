@@ -26,6 +26,17 @@ import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
+/**
+ * Helper utility class which runs bytecode transformation logic on some target input jar, creating
+ * an output jar with the same file structure but possibly some profiler hooks added in. This is
+ * needed for apps targeting pre-O devices, where JVMTI isn't available.
+ *
+ * See also {@link ProfilerTransform} which handles all the core work, and is delegated to by this
+ * class.
+ *
+ * In production, this logic is performed by a Gradle transform step, but because our tests don't
+ * depend on Gradle, we provide this class instead.
+ */
 public class ProfilerTransformMain {
 
     public static void main(String[] args) {
@@ -47,7 +58,7 @@ public class ProfilerTransformMain {
             JarInputStream inputStream = new JarInputStream(new FileInputStream(inputJar));
             JarOutputStream outputStream =
                 new JarOutputStream(new FileOutputStream(outputJar), inputStream.getManifest());
-            String propertiesFile = "/tools/base/profiler/tests/perf-test/profiler.properties";
+            String propertiesFile = "/tools/base/profiler/tests/profiler-transform-main/profiler.properties";
             System.setProperty(
                     "android.profiler.properties",
                     TestResources.getFile(ProfilerTransformMain.class, propertiesFile)

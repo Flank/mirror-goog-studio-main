@@ -6,22 +6,6 @@ package(
     default_testonly = True,
 )
 
-# TODO: Have transform pull in dependency jar files, so we do not need to load multiple
-# jar dependencies at runtime.
-java_binary(
-    name = "profilers-transform-main",
-    srcs = [
-        "testSrcs/com/android/tools/profiler/transform/ProfilerTransformMain.java",
-    ],
-    main_class = "com.android.tools.profiler.transform.ProfilerTransformMain",
-    resources = ["profiler.properties"],
-    runtime_deps = ["//tools/base/profiler/transform"],
-    deps = [
-        "//tools/base/profiler/transform",
-        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
-    ],
-)
-
 dex_library(
     name = "profiler-service",
     jars = ["//tools/base/profiler/app:studio-profiler"],
