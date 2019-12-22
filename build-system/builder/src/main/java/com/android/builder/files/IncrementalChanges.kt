@@ -28,12 +28,45 @@ data class SerializableChange(
     val file: File,
     val fileStatus: FileStatus,
     val normalizedPath: String
-) : Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 data class SerializableInputChanges(
     val roots: List<File>,
     val changes: Collection<SerializableChange>
-) : Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
+
+class SerializableFileChanges(
+    private val fileChanges: List<SerializableChange>
+) : Serializable {
+
+    private val fileStatusMap by lazy {
+        fileChanges.groupBy { it.fileStatus }
+    }
+
+    val removedFiles by lazy {
+        fileStatusMap[FileStatus.REMOVED] ?: emptyList()
+    }
+
+    val modifiedFiles by lazy {
+        fileStatusMap[FileStatus.CHANGED] ?: emptyList()
+    }
+
+    val addedFiles by lazy {
+        fileStatusMap[FileStatus.NEW] ?: emptyList()
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 /**
  * Convert a set of serializable changes to incremental changes.
@@ -49,7 +82,7 @@ fun classpathToRelativeFileSet(
     changes: SerializableInputChanges,
     cache: KeyedFileCache,
     cacheUpdates: MutableSet<Runnable>
-) : Map<RelativeFile, FileStatus> {
+): Map<RelativeFile, FileStatus> {
     return Collections.unmodifiableMap(HashMap<RelativeFile, FileStatus>().apply {
         for (change in changes.changes) {
             if (change.normalizedPath.isEmpty()) {

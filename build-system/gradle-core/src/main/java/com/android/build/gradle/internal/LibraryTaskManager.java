@@ -265,7 +265,17 @@ public class LibraryTaskManager extends TaskManager {
                 new BundleLibraryClasses.CreationAction(
                         variantScope,
                         AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         excludeDataBindingClassesIfNecessary(variantScope)));
+
+        // Also create a directory containing the same classes for incremental dexing
+        taskFactory.register(
+                new BundleLibraryClasses.CreationAction(
+                        variantScope,
+                        AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
+                        AndroidArtifacts.ArtifactType.CLASSES_DIR,
+                        excludeDataBindingClassesIfNecessary(variantScope)));
+
         taskFactory.register(new BundleLibraryJavaRes.CreationAction(variantScope));
 
         taskFactory.register(new LibraryDexingTask.CreationAction(variantScope));
@@ -485,6 +495,7 @@ public class LibraryTaskManager extends TaskManager {
                 new BundleLibraryClasses.CreationAction(
                         scope,
                         AndroidArtifacts.PublishedConfigType.API_ELEMENTS,
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         excludeDataBindingClassesIfNecessary(scope)));
     }
 

@@ -21,6 +21,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableInputChanges
+import com.android.builder.files.SerializableFileChanges
 import com.android.ide.common.resources.FileStatus
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
@@ -60,19 +61,22 @@ private fun convert(changes: Iterable<FileChange>): Collection<SerializableChang
     return Collections.unmodifiableCollection(ArrayList<SerializableChange>().also { collection ->
         for (change in changes) {
             if (change.fileType == FileType.FILE) {
-                collection.add(toSerializable(change))
+                collection.add(change.toSerializable())
             }
         }
     })
 }
 
-private fun convert(changeType: ChangeType): FileStatus = when (changeType) {
+fun ChangeType.toSerializable(): FileStatus = when (this) {
     ChangeType.ADDED -> FileStatus.NEW
     ChangeType.MODIFIED -> FileStatus.CHANGED
     ChangeType.REMOVED -> FileStatus.REMOVED
 }
 
-private fun toSerializable(change: FileChange): SerializableChange {
-    return SerializableChange(change.file,
-        convert(change.changeType), change.normalizedPath)
+fun FileChange.toSerializable(): SerializableChange {
+    return SerializableChange(file, changeType.toSerializable(), normalizedPath)
+}
+
+fun Iterable<FileChange>.toSerializable(): SerializableFileChanges {
+    return SerializableFileChanges(this.map { it.toSerializable() })
 }

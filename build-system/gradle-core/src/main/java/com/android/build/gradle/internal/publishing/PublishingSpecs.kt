@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_DIR
@@ -71,7 +71,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
-import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
 import com.android.build.gradle.internal.scope.SingleArtifactType
@@ -246,7 +247,7 @@ class PublishingSpecs {
                         ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
-                api(COMPILE_LIBRARY_CLASSES, ArtifactType.CLASSES_JAR)
+                api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
 
                 // manifest is published to both to compare and detect provided-only library
                 // dependencies.
@@ -260,7 +261,8 @@ class PublishingSpecs {
                  * [com.android.build.gradle.options.BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] */
                 output(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
 
-                runtime(RUNTIME_LIBRARY_CLASSES, ArtifactType.CLASSES_JAR)
+                runtime(RUNTIME_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
+                runtime(RUNTIME_LIBRARY_CLASSES_DIR, ArtifactType.CLASSES_DIR)
                 runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
                 runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
                 runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)

@@ -32,6 +32,7 @@ import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
@@ -78,8 +79,11 @@ class DexingTransformTest {
 
         TestInputsGenerator.dirWithEmptyClasses(input.toPath(), listOf("test/A"))
         dexingTransform.transform(outputs)
-        assertThatDex(outputs.outputDirectory.resolve("classes.dex"))
-            .containsExactlyClassesIn(listOf("Ltest/A;"))
+
+        val dexFiles = FileUtils.getAllFiles(outputs.outputDirectory)
+        assertThat(dexFiles).containsExactly(outputs.outputDirectory.resolve("test").resolve("A.dex"))
+        val dexClasses = dexFiles.flatMap { Dex(it).classes.keys }
+        assertThat(dexClasses).containsExactly("Ltest/A;")
     }
 
     @Test
@@ -129,12 +133,14 @@ class DexingTransformTest {
         )
         val outputs = FakeTransformOutputs(tmp)
         dexingTransform.transform(outputs)
-        val dex = Dex(outputs.outputDirectory.resolve("classes.dex"))
-        assertThat(dex).containsClassesIn(classes.map { Type.getDescriptor(it) })
-        assertThat(dex.classes).hasSize(classes.size + 1)
-        val synthesizedLambdas = dex.classes.keys.filter { it.contains("\$\$Lambda\$") }
-        assertThat(synthesizedLambdas).hasSize(1)
 
+        val dexFiles = FileUtils.getAllFiles(outputs.outputDirectory)
+        assertThat(dexFiles).hasSize(classes.size)
+        val dexClasses = dexFiles.flatMap { Dex(it).classes.keys }
+        assertThat(dexClasses).hasSize(classes.size + 1)
+        assertThat(dexClasses).containsAtLeastElementsIn(classes.map { Type.getDescriptor(it) })
+        val synthesizedLambdas = dexClasses.filter { it.contains("\$\$Lambda\$") }
+        assertThat(synthesizedLambdas).hasSize(1)
     }
 
     @Test

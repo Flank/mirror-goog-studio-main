@@ -56,7 +56,7 @@ class LibraryApiJarPublishTest {
             """.trimMargin()
         )
 
-        val result = project.executor().expectFailure().run(":lib:bundleLibRuntimeDebug")
+        val result = project.executor().expectFailure().run(":lib:bundleLibRuntimeToJarDebug")
         assertThat(result.failureMessage).contains("Incorrect transform")
 
         // make sure we do not use transformed library for compilation

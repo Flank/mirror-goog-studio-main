@@ -118,7 +118,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
         override fun configure(task: LibraryDexingTask) {
             super.configure(task)
             scope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
+                InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR,
                 task.classes
             )
             val minSdkVersion =

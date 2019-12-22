@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
+import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform;
 import com.android.build.gradle.internal.dependency.DesugarLibConfiguration;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
@@ -136,6 +137,7 @@ import kotlin.Pair;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
@@ -825,6 +827,43 @@ public class VariantManager implements VariantModel {
                                         .attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
                             }
                         });
+
+        // When consuming classes from Android libraries, there are 2 transforms:
+        //     1. `android-classes-directory` -> `android-classes`
+        //     2. `android-classes-jar` -> `android-classes`
+        // Currently Gradle always takes transform flow #1, which is ideal for incremental dexing.
+        // (We don't know why Gradle does that, but IncrementalDesugaringTest should catch it if
+        // this behavior changes.)
+        if (projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2)) {
+            // Hide this transform behind a flag as we need to monitor the performance impact
+            dependencies.registerTransform(
+                    ClassesDirToClassesTransform.class,
+                    spec -> {
+                        spec.getFrom()
+                                .attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_DIR.getType());
+                        spec.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                    });
+        }
+        dependencies.registerTransform(
+                IdentityTransform.class,
+                spec -> {
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_JAR.getType());
+                    spec.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                });
+
+        // When consuming classes from Java libraries, there are 2 transforms:
+        //     1. `java-classes-directory` -> `android-classes`
+        //     2. `jar` -> `processed-jar` -> `android-classes-jar` -> `android-classes`
+        // Currently Gradle always takes transform flow #2, which is not ideal for incremental
+        // dexing.
+        // TODO(147137579): Configure Gradle to take transform flow #1.
+        dependencies.registerTransform(
+                IdentityTransform.class,
+                spec -> {
+                    spec.getFrom()
+                            .attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JVM_CLASS_DIRECTORY);
+                    spec.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                });
 
         AttributesSchema schema = dependencies.getAttributesSchema();
 

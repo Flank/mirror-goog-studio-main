@@ -24,6 +24,7 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
+import com.android.builder.dexing.isJarFile
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
@@ -99,7 +100,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     DexParameters(
                         minSdkVersion = parameters.minSdkVersion.get(),
                         debuggable = parameters.debuggable.get(),
-                        dexPerClass = false,
+                        dexPerClass = !isJarFile(inputFile),
                         withDesugaring = parameters.enableDesugaring.get(),
                         desugarBootclasspath = ClassFileProviderFactory(
                             parameters.bootClasspath.files.map(File::toPath)
@@ -197,7 +198,7 @@ data class DexingArtifactConfiguration(
                     parameters.libConfiguration.set(libConfiguration)
                 }
             }
-            spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES_JAR.type)
+            spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES.type)
             if (needsShrinkDesugarLibrary) {
                 spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX_AND_KEEP_RULES.type)
             } else {

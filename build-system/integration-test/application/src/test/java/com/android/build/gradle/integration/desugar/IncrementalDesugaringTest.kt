@@ -16,7 +16,13 @@
 
 package com.android.build.gradle.integration.desugar
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+
+import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.APP
+import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.ANDROID_LIB
+import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.ANDROID_LIB_WITH_POST_JAVAC_CLASSES
+import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.JAVA_LIB
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
@@ -26,9 +32,11 @@ import com.android.build.gradle.integration.common.utils.IncrementalTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROJECT_DEX_ARCHIVE
-import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.TestInputsGenerator
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -45,26 +53,23 @@ import java.io.File
  */
 @RunWith(FilterableParameterized::class)
 class IncrementalDesugaringTest(
-    private val changeScope: ChangeScope,
-    private val withIncrementalDesugaringV2: Boolean
+    private val scenario: Scenario,
+    private val withIncrementaDesugaringV2: Boolean
 ) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "changeScope_{0}_incrementalDesugaringV2_{1}")
+        @Parameterized.Parameters(name = "scenario_{0}_incrementalDesugaringV2_{1}")
         @JvmStatic
         fun parameters() = listOf(
-            // incrementalDesugaringV2 currently takes effect on app only
-            arrayOf(ChangeScope.APP, true),
-            arrayOf(ChangeScope.APP, false),
-            arrayOf(
-                ChangeScope.ANDROID_LIB,
-                BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2.defaultValue
-            ),
-            arrayOf(
-                ChangeScope.JAVA_LIB,
-                BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2.defaultValue
-            )
+            arrayOf(APP, true),
+            arrayOf(APP, false),
+            arrayOf(ANDROID_LIB, true),
+            arrayOf(ANDROID_LIB, false),
+            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true),
+            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, false),
+            arrayOf(JAVA_LIB, true),
+            arrayOf(JAVA_LIB, false)
         )
     }
 
@@ -78,87 +83,62 @@ class IncrementalDesugaringTest(
     // Java source files
     private lateinit var interfaceWithDefaultMethodJavaFile: File
     private lateinit var classUsingInterfaceWithDefaultMethodJavaFile: File
-    private lateinit var mainActivityJavaFile: File
+    private lateinit var dummyStandAloneJavaFile: File
 
     // Compiled class files
     private lateinit var interfaceWithDefaultMethodClassFile: File
     private lateinit var classUsingInterfaceWithDefaultMethodClassFile: File
-    private lateinit var mainActivityClassFile: File
+    private lateinit var dummyStandAloneClassFile: File
 
     // Published class files (from libraries), `null` for app
     private var interfaceWithDefaultMethodPublishedClassFile: File? = null
     private var classUsingInterfaceWithDefaultMethodPublishedClassFile: File? = null
+    private var dummyStandAlonePublishedClassFile: File? = null
 
     // Output dex files
     private lateinit var interfaceWithDefaultMethodDexFile: File
     private lateinit var classUsingInterfaceWithDefaultMethodDexFile: File
-    private lateinit var mainActivityDexFile: File
+    private lateinit var dummyStandAloneDexFile: File
 
     private lateinit var incrementalTestHelper: IncrementalTestHelper
 
     @Before
     fun setUp() {
         val app = project.getSubproject("app")
-        val androidLib = project.getSubproject("lib")
-        val javaLib = project.getSubproject("javalib")
 
         // The subproject (and its packageName) where we will apply a change.
         val subproject: GradleTestProject
         val packageName: String
-        when (changeScope) {
-            ChangeScope.APP -> {
+        when (scenario) {
+            APP -> {
                 subproject = app
                 packageName = "com.example.myapplication"
             }
-            ChangeScope.ANDROID_LIB -> {
-                subproject = androidLib
+            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
+                subproject = project.getSubproject("lib")
                 packageName = "com.example.lib"
 
             }
-            ChangeScope.JAVA_LIB -> {
-                subproject = javaLib
+            JAVA_LIB -> {
+                subproject = project.getSubproject("javalib")
                 packageName = "com.example.javalib"
             }
         }
         val packagePath = packageName.replace('.', '/')
 
-        val interfaceWithDefaultMethodPath = "$packagePath/InterfaceWithDefaultMethod"
-        val classUsingInterfaceWithDefaultMethodPath =
-            "$packagePath/ClassUsingInterfaceWithDefaultMethod"
-        val mainActivityPath = "com/example/myapplication/MainActivity"
-
-        interfaceWithDefaultMethodJavaFile =
-            File("${subproject.mainSrcDir}/$interfaceWithDefaultMethodPath.java")
-        classUsingInterfaceWithDefaultMethodJavaFile =
-            File("${subproject.mainSrcDir}/$classUsingInterfaceWithDefaultMethodPath.java")
-        mainActivityJavaFile = File("${app.mainSrcDir}/$mainActivityPath.java")
-
-        // Add dependencies from app to subprojects
-        when (changeScope) {
-            ChangeScope.APP -> { /* Nothing */
-            }
-            ChangeScope.ANDROID_LIB -> {
-                TestFileUtils.appendToFile(
-                    app.buildFile,
-                    """
-                    dependencies {
-                        implementation project(":lib")
-                    }
-                    """.trimIndent()
-                )
-            }
-            ChangeScope.JAVA_LIB -> {
-                TestFileUtils.appendToFile(
-                    app.buildFile,
-                    """
-                    dependencies {
-                        implementation project(":javalib")
-                    }
-                    """.trimIndent()
-                )
-            }
+        // Add a dependency from app to the subproject where we will we apply a change.
+        if (scenario != APP) {
+            TestFileUtils.appendToFile(
+                app.buildFile,
+                """
+                dependencies {
+                    implementation project(":${subproject.name}")
+                }
+                """.trimIndent()
+            )
         }
 
+        // Use Java 8 features to test desugaring
         TestFileUtils.appendToFile(
             app.buildFile,
             """
@@ -168,7 +148,7 @@ class IncrementalDesugaringTest(
             }
             """.trimIndent()
         )
-        if (changeScope == ChangeScope.ANDROID_LIB) {
+        if (scenario in setOf(ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES)) {
             TestFileUtils.appendToFile(
                 subproject.buildFile,
                 """
@@ -179,6 +159,35 @@ class IncrementalDesugaringTest(
                 """.trimIndent()
             )
         }
+
+        // Add post-javac classes (when applicable) to be published together with the subproject's
+        // classes.
+        if (scenario == ANDROID_LIB_WITH_POST_JAVAC_CLASSES) {
+            TestInputsGenerator.jarWithEmptyClasses(
+                subproject.testDir.resolve("post-javac-classes.jar").toPath(),
+                setOf("post/javac/classes/SampleClass")
+            )
+            TestFileUtils.appendToFile(
+                subproject.buildFile,
+                """
+                android.libraryVariants.all { variant ->
+                    variant.registerPostJavacGeneratedBytecode(project.files("post-javac-classes.jar"))
+                }
+                """.trimIndent()
+            )
+        }
+
+        val interfaceWithDefaultMethodPath = "$packagePath/InterfaceWithDefaultMethod"
+        val classUsingInterfaceWithDefaultMethodPath =
+            "$packagePath/ClassUsingInterfaceWithDefaultMethod"
+        val dummyStandAlonePath = "$packagePath/DummyStandAlone"
+
+        // Java source files
+        val javaFile: (String) -> File = { File("${subproject.mainSrcDir}/$it.java") }
+        interfaceWithDefaultMethodJavaFile = javaFile(interfaceWithDefaultMethodPath)
+        classUsingInterfaceWithDefaultMethodJavaFile =
+            javaFile(classUsingInterfaceWithDefaultMethodPath)
+        dummyStandAloneJavaFile = javaFile(dummyStandAlonePath)
 
         interfaceWithDefaultMethodJavaFile.parentFile.mkdirs()
         interfaceWithDefaultMethodJavaFile.writeText(
@@ -211,99 +220,129 @@ class IncrementalDesugaringTest(
             """.trimIndent()
         )
 
-        when (changeScope) {
-            ChangeScope.APP, ChangeScope.ANDROID_LIB -> {
-                interfaceWithDefaultMethodClassFile = JAVAC.getOutputDir(subproject.buildDir)
-                    .resolve("debug/classes/$interfaceWithDefaultMethodPath.class")
-                classUsingInterfaceWithDefaultMethodClassFile =
-                    JAVAC.getOutputDir(subproject.buildDir)
-                        .resolve("debug/classes/$classUsingInterfaceWithDefaultMethodPath.class")
-            }
-            ChangeScope.JAVA_LIB -> {
-                interfaceWithDefaultMethodClassFile =
-                    subproject.buildDir.resolve("classes/java/main/$interfaceWithDefaultMethodPath.class")
-                classUsingInterfaceWithDefaultMethodClassFile =
-                    subproject.buildDir.resolve("classes/java/main/$classUsingInterfaceWithDefaultMethodPath.class")
-            }
-        }
-        mainActivityClassFile =
-            JAVAC.getOutputDir(app.buildDir).resolve("debug/classes/$mainActivityPath.class")
+        dummyStandAloneJavaFile.parentFile.mkdirs()
+        dummyStandAloneJavaFile.writeText(
+            """
+            package $packageName;
 
-        when (changeScope) {
-            ChangeScope.APP -> {
-                interfaceWithDefaultMethodPublishedClassFile = null
-                classUsingInterfaceWithDefaultMethodPublishedClassFile = null
+            class DummyStandAlone {
             }
-            ChangeScope.ANDROID_LIB -> {
-                // Classes are currently published to a jar instead of a directory. (This will
-                // change when bug 132615827 is fixed.)
-                interfaceWithDefaultMethodPublishedClassFile =
-                    RUNTIME_LIBRARY_CLASSES.getOutputDir(subproject.buildDir)
-                        .resolve("debug/classes.jar")
-                classUsingInterfaceWithDefaultMethodPublishedClassFile =
-                    RUNTIME_LIBRARY_CLASSES.getOutputDir(subproject.buildDir)
-                        .resolve("debug/classes.jar")
-            }
-            ChangeScope.JAVA_LIB -> {
-                interfaceWithDefaultMethodPublishedClassFile = interfaceWithDefaultMethodClassFile
-                classUsingInterfaceWithDefaultMethodPublishedClassFile =
-                    classUsingInterfaceWithDefaultMethodClassFile
-            }
-        }
+            """.trimIndent()
+        )
 
-        when (changeScope) {
-            ChangeScope.APP -> {
-                interfaceWithDefaultMethodDexFile =
-                    PROJECT_DEX_ARCHIVE.getOutputDir(subproject.buildDir)
-                        .resolve("debug/out/$interfaceWithDefaultMethodPath.dex")
-                classUsingInterfaceWithDefaultMethodDexFile =
-                    PROJECT_DEX_ARCHIVE.getOutputDir(subproject.buildDir)
-                        .resolve("debug/out/$classUsingInterfaceWithDefaultMethodPath.dex")
+        // Compiled class files
+        val classFile: (String) -> File =
+            when (scenario) {
+                APP, ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
+                    { JAVAC.getOutputDir(subproject.buildDir).resolve("debug/classes/$it.class") }
+                }
+                JAVA_LIB -> {
+                    { subproject.buildDir.resolve("classes/java/main/$it.class") }
+                }
             }
-            ChangeScope.ANDROID_LIB -> {
-                val dexOutputDir = findDexTransformOutputDir(subproject.buildDir).resolve("classes")
-                // Since classes are currently published to a jar instead of a directory, the dex
-                // output is currently 1 dex file containing all the classes. (This will change when
-                // bug 132615827 is fixed.)
-                interfaceWithDefaultMethodDexFile = dexOutputDir.resolve("classes.dex")
-                classUsingInterfaceWithDefaultMethodDexFile = dexOutputDir.resolve("classes.dex")
+        interfaceWithDefaultMethodClassFile = classFile(interfaceWithDefaultMethodPath)
+        classUsingInterfaceWithDefaultMethodClassFile =
+            classFile(classUsingInterfaceWithDefaultMethodPath)
+        dummyStandAloneClassFile = classFile(dummyStandAlonePath)
+
+        // Published class files (from libraries), `null` for app
+        val publishedClassFile: (String) -> File? =
+            when (scenario) {
+                APP -> {
+                    { null }
+                }
+                ANDROID_LIB -> {
+                    {
+                        if (withIncrementaDesugaringV2) {
+                            RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
+                                .resolve("debug/$it.class")
+                        } else {
+                            RUNTIME_LIBRARY_CLASSES_JAR.getOutputDir(subproject.buildDir)
+                                .resolve("debug/classes.jar")
+                        }
+                    }
+                }
+                ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
+                    {
+                        if (withIncrementaDesugaringV2) {
+                            RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
+                                .resolve("debug/classes.jar")
+                        } else {
+                            RUNTIME_LIBRARY_CLASSES_JAR.getOutputDir(subproject.buildDir)
+                                .resolve("debug/classes.jar")
+                        }
+                    }
+                }
+                JAVA_LIB -> {
+                    { subproject.buildDir.resolve("classes/java/main/$it.class") }
+                }
             }
-            ChangeScope.JAVA_LIB -> {
-                val dexOutputDir =
-                    findDexTransformOutputDir(subproject.buildDir).resolve("jetified-javalib")
-                // Since classes are currently published to a jar instead of a directory, the dex
-                // output is currently 1 dex file containing all the classes. (This will change when
-                // bug 132615827 is fixed.)
-                interfaceWithDefaultMethodDexFile = dexOutputDir.resolve("classes.dex")
-                classUsingInterfaceWithDefaultMethodDexFile = dexOutputDir.resolve("classes.dex")
+        interfaceWithDefaultMethodPublishedClassFile =
+            publishedClassFile(interfaceWithDefaultMethodPath)
+        classUsingInterfaceWithDefaultMethodPublishedClassFile =
+            publishedClassFile(classUsingInterfaceWithDefaultMethodPath)
+        dummyStandAlonePublishedClassFile = publishedClassFile(dummyStandAlonePath)
+
+        // Output dex files
+        val dexFile: (String) -> File =
+            when (scenario) {
+                APP -> {
+                    {
+                        PROJECT_DEX_ARCHIVE.getOutputDir(subproject.buildDir)
+                            .resolve("debug/out/$it.dex")
+                    }
+                }
+                ANDROID_LIB -> {
+                    {
+                        if (withIncrementaDesugaringV2) {
+                            findDexTransformOutputDir(subproject.buildDir).resolve("debug/$it.dex")
+                        } else {
+                            findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
+                        }
+                    }
+                }
+                ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
+                    {
+                        findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
+                    }
+                }
+                JAVA_LIB -> {
+                    {
+                        findDexTransformOutputDir(subproject.buildDir).resolve("jetified-javalib/classes.dex")
+                    }
+                }
             }
-        }
-        mainActivityDexFile = PROJECT_DEX_ARCHIVE.getOutputDir(app.buildDir)
-            .resolve("debug/out/$mainActivityPath.dex")
+        interfaceWithDefaultMethodDexFile = dexFile(interfaceWithDefaultMethodPath)
+        classUsingInterfaceWithDefaultMethodDexFile =
+            dexFile(classUsingInterfaceWithDefaultMethodPath)
+        dummyStandAloneDexFile = dexFile(dummyStandAlonePath)
 
         incrementalTestHelper = IncrementalTestHelper(
-            executor = project.executor().with(
-                BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2,
-                withIncrementalDesugaringV2
-            ),
+            executor = getExecutor(),
             buildTask = ":app:mergeDexDebug",
             filesToTrackChanges = setOf(
                 interfaceWithDefaultMethodClassFile,
                 classUsingInterfaceWithDefaultMethodClassFile,
-                mainActivityClassFile,
+                dummyStandAloneClassFile,
                 interfaceWithDefaultMethodDexFile,
                 classUsingInterfaceWithDefaultMethodDexFile,
-                mainActivityDexFile
-            ) + (if (changeScope == ChangeScope.APP) {
+                dummyStandAloneDexFile
+            ) + (if (scenario in setOf(APP)) {
                 emptySet()
             } else {
                 setOf(
                     interfaceWithDefaultMethodPublishedClassFile!!,
-                    classUsingInterfaceWithDefaultMethodPublishedClassFile!!
+                    classUsingInterfaceWithDefaultMethodPublishedClassFile!!,
+                    dummyStandAlonePublishedClassFile!!
                 )
             })
         )
     }
+
+    private fun getExecutor(): GradleTaskExecutor = project.executor().with(
+        BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2,
+        withIncrementaDesugaringV2
+    )
 
     /**
      * Finds the output directory of the dexing transform using heuristics. We can't hard-code the
@@ -315,23 +354,15 @@ class IncrementalDesugaringTest(
      */
     private fun findDexTransformOutputDir(buildDir: File): File {
         // Run a full build so that dex outputs are generated, then we will try to locate them.
-        project.executor().with(
-            BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2,
-            withIncrementalDesugaringV2
-        ).run("clean", ":app:mergeDexDebug")
+        getExecutor().run("clean", ":app:mergeDexDebug")
 
-        val containsDexFiles: (File) -> Boolean = { file ->
-            file.listFiles()?.any {
-                it.extension.equals("dex", ignoreCase = true)
-            } ?: false
-        }
         val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
-            it.listFiles()?.let { files ->
-                files.size == 1 && containsDexFiles(files[0])
-            } ?: false
+            it.isDirectory && it.walk().any { file ->
+                file.extension.equals("dex", ignoreCase = true)
+            }
         }
 
-        check(dexOutputDirs.isNotEmpty()) { "Can't find dex files in `$buildDir`" }
+        check(dexOutputDirs.isNotEmpty()) { "Can't find dex files in `${buildDir.path}`" }
         check(dexOutputDirs.size == 1) {
             "Expected 1 dex output dir but found multiple ones: " +
                     dexOutputDirs.joinToString(", ", transform = { it.path })
@@ -352,52 +383,69 @@ class IncrementalDesugaringTest(
             }
             .runIncrementalBuild()
 
-        when (changeScope) {
-            ChangeScope.APP -> {
+        when (scenario) {
+            APP -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to UNCHANGED
                     )
                 )
             }
-            ChangeScope.ANDROID_LIB -> {
+            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
-                        classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
+                        classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
+                        dummyStandAlonePublishedClassFile!! to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                } else {
+                                    CHANGED
+                                }
                     )
                 )
             }
-            ChangeScope.JAVA_LIB -> {
+            JAVA_LIB -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to CHANGED
                     )
                 )
             }
@@ -417,52 +465,74 @@ class IncrementalDesugaringTest(
             }
             .runIncrementalBuild()
 
-        when (changeScope) {
-            ChangeScope.APP -> {
+        when (scenario) {
+            APP -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to UNCHANGED
                     )
                 )
             }
-            ChangeScope.ANDROID_LIB -> {
+            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
-                        classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
+                        classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
+                        dummyStandAlonePublishedClassFile!! to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        classUsingInterfaceWithDefaultMethodDexFile to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                } else {
+                                    CHANGED
+                                },
+                        dummyStandAloneDexFile to
+                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                } else {
+                                    CHANGED
+                                }
                     )
                 )
             }
-            ChangeScope.JAVA_LIB -> {
+            JAVA_LIB -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                        dummyStandAloneDexFile to CHANGED
                     )
                 )
             }
@@ -482,62 +552,75 @@ class IncrementalDesugaringTest(
             }
             .runIncrementalBuild()
 
-        when (changeScope) {
-            ChangeScope.APP -> {
+        when (scenario) {
+            APP -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to UNCHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to UNCHANGED
                     )
                 )
             }
-            ChangeScope.ANDROID_LIB -> {
+            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to UNCHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to UNCHANGED,
+                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to UNCHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to UNCHANGED
                     )
                 )
             }
-            ChangeScope.JAVA_LIB -> {
+            JAVA_LIB -> {
                 incrementalTestHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        mainActivityClassFile to UNCHANGED,
+                        dummyStandAloneClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to UNCHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
-                        mainActivityDexFile to UNCHANGED
+                        dummyStandAloneDexFile to UNCHANGED
                     )
                 )
             }
         }
     }
 
-    /** The subproject where we apply a change. */
-    enum class ChangeScope {
+    enum class Scenario {
+
+        /** Apply a change in the app subproject. */
         APP,
+
+        /** Apply a change in an Android library subproject. */
         ANDROID_LIB,
+
+        /**
+         * Apply a change in an Android library, where the library has additional post-Javac
+         * classes.
+         */
+        ANDROID_LIB_WITH_POST_JAVAC_CLASSES,
+
+        /** Apply a change in a Java library subproject. */
         JAVA_LIB
     }
 }

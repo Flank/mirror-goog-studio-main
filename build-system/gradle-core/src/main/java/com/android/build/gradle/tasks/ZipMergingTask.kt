@@ -109,7 +109,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             super.configure(task)
 
             val buildArtifacts = variantScope.artifacts
-            buildArtifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES, task.libraryInputFile)
+            buildArtifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR, task.libraryInputFile)
             buildArtifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
