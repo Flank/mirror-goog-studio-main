@@ -93,49 +93,6 @@ data class  Aapt2DaemonServiceKey(val file: File): WorkerActionServiceRegistry.S
     override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
 }
 
-/** Once Gradle supports build services in artifact transforms, this method can be removed. */
-@Deprecated("Please use [Aapt2DaemonBuildService] to register services instead of this method.")
-fun registerAaptService(
-    aapt2FromMaven: FileCollection,
-    logger: ILogger
-): Aapt2DaemonServiceKey {
-    val dir = aapt2FromMaven.singleFile
-    val key = Aapt2DaemonServiceKey(dir)
-    val aaptExecutablePath = dir.toPath().resolve(SdkConstants.FN_AAPT2)
-
-    if (!Files.exists(aaptExecutablePath)) {
-        throw InvalidUserDataException(
-            "Specified AAPT2 executable does not exist: $aaptExecutablePath. "
-                    + "Must supply one of aapt2 from maven or custom location."
-        )
-    }
-
-    aapt2DaemonServiceRegistry.registerService(key) {
-        val manager = Aapt2DaemonManager(
-            logger = logger,
-            daemonFactory = { displayId ->
-                Aapt2DaemonImpl(
-                    displayId = "#$displayId",
-                    aaptExecutable = aaptExecutablePath,
-                    daemonTimeouts = daemonTimeouts,
-                    logger = logger
-                )
-            },
-            expiryTime = daemonExpiryTimeSeconds,
-            expiryTimeUnit = TimeUnit.SECONDS,
-            listener = Aapt2DaemonManagerMaintainer()
-        )
-        object : WorkerActionServiceRegistry.RegisteredService<Aapt2DaemonManager> {
-            override val service = manager
-
-            override fun shutdown() {
-                manager.shutdown()
-            }
-        }
-    }
-    return key
-}
-
 /** Build service used to access AAPT2 daemons. */
 abstract class Aapt2DaemonBuildService : BuildService<BuildServiceParameters.None>,
     AutoCloseable {
@@ -144,6 +101,7 @@ abstract class Aapt2DaemonBuildService : BuildService<BuildServiceParameters.Non
     private val closer = Closer.create()
 
     @JvmOverloads
+    @Synchronized
     fun registerAaptService(
         aapt2FromMaven: FileCollection,
         logger: ILogger,

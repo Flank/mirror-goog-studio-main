@@ -88,6 +88,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -717,6 +718,8 @@ public class VariantManager implements VariantModel {
                                             .set(
                                                     SyncOptions.getErrorFormatMode(
                                                             globalScope.getProjectOptions()));
+                                    params.getAapt2DaemonBuildService()
+                                            .set(Aapt2Daemon.getAapt2DaemonBuildService(project));
                                 });
                     });
         }

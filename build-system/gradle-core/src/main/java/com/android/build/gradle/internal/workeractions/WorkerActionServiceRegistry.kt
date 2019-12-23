@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.workeractions
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.ServiceKey
 import java.io.Closeable
 import java.io.Serializable
-import java.util.concurrent.Executor
 
 /**
  * Static singleton manager of services "injected" in to worker actions.
@@ -37,14 +36,6 @@ class WorkerActionServiceRegistry {
     }
 
     private val services: MutableMap<ServiceKey<*>, RegisteredService<*>> = mutableMapOf()
-
-    /** Registers a service that can be retrieved by use of the service key */
-    @Synchronized
-    fun <T : Any> registerService(key: ServiceKey<T>, serviceFactory: () -> RegisteredService<T>) {
-        if (services[key] == null) {
-            services.put(key, serviceFactory.invoke())
-        }
-    }
 
     /**
      * Registers a service that can be retrieved by use of the service key. [Closeable] is returned
@@ -89,24 +80,5 @@ class WorkerActionServiceRegistry {
         throw IllegalStateException(
                 "Service $key not registered. Available services: " +
                         "[${services.keys.joinToString(separator = ", ")}].")
-    }
-
-    @Synchronized
-    private fun removeAllServices(): Collection<RegisteredService<*>> {
-        val toBeShutdown = ArrayList(services.values)
-        services.clear()
-        return toBeShutdown
-    }
-
-    /**
-     * Removes all registered services and shuts them down using the given executor.
-     *
-     * Will return before the services have been shut down.
-     */
-    fun shutdownAllRegisteredServices(executor: Executor) {
-        val toBeShutdown = removeAllServices()
-        toBeShutdown.forEach {
-            executor.execute { it.shutdown() }
-        }
     }
 }

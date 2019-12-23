@@ -103,7 +103,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -356,15 +355,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
                                 project.getPath(),
                                 null,
-                                () -> {
-                                    Main.clearInternTables();
-                                    // Because some registrations may happen w/o gradle build
-                                    // service (from artifact transforms), we need to explicitly
-                                    // invoked this method.
-                                    Aapt2Daemon.getAapt2DaemonServiceRegistry()
-                                            .shutdownAllRegisteredServices(
-                                                    ForkJoinPool.commonPool());
-                                });
+                                Main::clearInternTables);
                         DeprecationReporterImpl.Companion.clean();
                     }
                 });
