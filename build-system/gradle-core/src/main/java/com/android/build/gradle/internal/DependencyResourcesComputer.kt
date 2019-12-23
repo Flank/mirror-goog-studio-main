@@ -65,12 +65,6 @@ class DependencyResourcesComputer {
         libraries?.let {
             val libArtifacts = it.artifacts
 
-            // For values resources we impose stricter rules different from aapt so they need to go
-            // through the merging step.
-            val folderFilter = { folder: File ->
-                folder.name.startsWith(FD_RES_VALUES)
-            }
-
             // the order of the artifact is descending order, so we need to reverse it.
             for (artifact in libArtifacts) {
                 val resourceSet = ResourceSet(
@@ -82,7 +76,9 @@ class DependencyResourcesComputer {
                 resourceSet.addSource(artifact.file)
 
                 if (resourceArePrecompiled) {
-                    resourceSet.setFolderFilter(folderFilter)
+                    // For values resources we impose stricter rules different from aapt so they need to go
+                    // through the merging step.
+                    resourceSet.setAllowedFolderPrefix(FD_RES_VALUES)
                 }
 
                 // add to 0 always, since we need to reverse the order.

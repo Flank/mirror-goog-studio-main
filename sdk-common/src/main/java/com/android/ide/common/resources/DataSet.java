@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -82,7 +81,7 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
      */
     @NonNull private final ListMultimap<String, I> mItems = LinkedListMultimap.create();
 
-    @NonNull private Function<File, Boolean> mFolderFilter = file -> true;
+    @NonNull private String allowedFolderPrefix = "";
 
     /**
      * Map of source files to DataFiles. This is a multimap because the key is the source
@@ -451,7 +450,7 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
                         continue;
                     }
                 }
-                
+
                 F dataFile = createFileAndItemsFromXml(actualFile, fileNode);
 
                 if (dataFile != null) {
@@ -621,8 +620,8 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         mFileFilter = new PatternBasedFileFilter(aaptStylePattern);
     }
 
-    public void setFolderFilter(@NonNull Function<File, Boolean> folderFilter) {
-        mFolderFilter = folderFilter;
+    public void setAllowedFolderPrefix(@NonNull String allowedFolderPrefix) {
+        this.allowedFolderPrefix = allowedFolderPrefix;
     }
 
     /**
@@ -632,7 +631,8 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
      * @return true if the file should be ignored
      */
     public boolean isIgnored(@NonNull File file) {
-        return mFileFilter.isIgnored(file) || (file.isDirectory() && !mFolderFilter.apply(file));
+        return mFileFilter.isIgnored(file)
+                || (file.isDirectory() && !file.getName().startsWith(allowedFolderPrefix));
     }
 
     protected boolean getValidateEnabled() {
