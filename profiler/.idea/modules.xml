@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../annotations/android.sdktools.android-annotations.iml" filepath="$PROJECT_DIR$/../annotations/android.sdktools.android-annotations.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../common/android.sdktools.common.iml" filepath="$PROJECT_DIR$/../common/android.sdktools.common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../testutils/android.sdktools.testutils.iml" filepath="$PROJECT_DIR$/../testutils/android.sdktools.testutils.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" filepath="$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" />
