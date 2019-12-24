@@ -2476,7 +2476,6 @@ public abstract class TaskManager {
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,
-                                globalScope.getBuildCache(),
                                 packagesCustomClassDependencies(variantScope, projectOptions)),
                         null,
                         task -> {

@@ -68,7 +68,6 @@ import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
-import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
@@ -218,8 +217,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     public String getProjectBaseName() {
         return projectBaseName;
     }
-
-    protected com.android.builder.utils.FileCache fileCache;
 
     @Nullable protected Integer targetApi;
 
@@ -883,7 +880,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
         @NonNull protected final SingleArtifactType<Directory> inputResourceFilesType;
-        @Nullable private final com.android.builder.utils.FileCache fileCache;
         @NonNull private final ArtifactType<Directory> manifestType;
         private final boolean packageCustomClassDependencies;
 
@@ -892,14 +888,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
-                @Nullable FileCache fileCache,
                 boolean packageCustomClassDependencies) {
             super(variantScope);
             this.project = variantScope.getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
             this.manifestType = manifestType;
-            this.fileCache = fileCache;
             this.packageCustomClassDependencies = packageCustomClassDependencies;
         }
 
@@ -954,7 +948,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             // sort strings by natural order to make it stable across executions.
             packageAndroidArtifact.apkFileNames.sort(String::compareTo);
 
-            packageAndroidArtifact.fileCache = fileCache;
             packageAndroidArtifact.aaptOptionsNoCompress =
                     DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions())
                             .getNoCompress();
