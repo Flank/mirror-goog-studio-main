@@ -404,7 +404,8 @@ public class VariantManager {
                         dependencies,
                         globalScope.getBootClasspath(),
                         getDesugarLibConfig(globalScope.getProject()),
-                        SyncOptions.getErrorFormatMode(globalScope.getProjectOptions()));
+                        SyncOptions.getErrorFormatMode(globalScope.getProjectOptions()),
+                        projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2));
             }
         }
 

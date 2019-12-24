@@ -438,23 +438,20 @@ class DependencyConfigurator(
         // Currently Gradle always takes transform flow #1, which is ideal for incremental dexing.
         // (We don't know why Gradle does that, but IncrementalDesugaringTest should catch it if
         // this behavior changes.)
-        if (globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2)) {
-            // Hide this transform behind a flag as we need to monitor the performance impact
-            dependencies.registerTransform(
-                ClassesDirToClassesTransform::class.java,
-                Action { spec: TransformSpec<GenericTransformParameters?> ->
-                    spec.from
-                        .attribute(
-                            ArtifactAttributes.ARTIFACT_FORMAT,
-                            AndroidArtifacts.ArtifactType.CLASSES_DIR.type
-                        )
-                    spec.to.attribute(
+        dependencies.registerTransform(
+            ClassesDirToClassesTransform::class.java,
+            Action { spec: TransformSpec<GenericTransformParameters?> ->
+                spec.from
+                    .attribute(
                         ArtifactAttributes.ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.CLASSES.type
+                        AndroidArtifacts.ArtifactType.CLASSES_DIR.type
                     )
-                }
-            )
-        }
+                spec.to.attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    AndroidArtifacts.ArtifactType.CLASSES.type
+                )
+            }
+        )
         dependencies.registerTransform(
             IdentityTransform::class.java,
             Action { spec: TransformSpec<GenericTransformParameters?> ->

@@ -424,7 +424,7 @@ class IncrementalDesugaringTest(
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
                         dummyStandAloneDexFile to
                                 if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
-                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                    UNCHANGED
                                 } else {
                                     CHANGED
                                 }
@@ -511,7 +511,7 @@ class IncrementalDesugaringTest(
                                 },
                         dummyStandAloneDexFile to
                                 if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
-                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                    UNCHANGED
                                 } else {
                                     CHANGED
                                 }
