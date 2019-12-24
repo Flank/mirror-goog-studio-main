@@ -139,6 +139,8 @@ public class AndroidArtifacts {
             "android-desugar-lib-mixed-scope-keep-rules";
     private static final String TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES =
             "android-desugar-lib-external-file-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES =
+            "android-desugar-lib-external-artifact-transform-file-keep-rules";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -396,7 +398,9 @@ public class AndroidArtifacts {
         DESUGAR_LIB_SUBPROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES),
         DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES),
         DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES(TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES),
-        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES);
+        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES),
+        DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES(
+                TYPE_DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES);
 
         @NonNull private final String type;
 

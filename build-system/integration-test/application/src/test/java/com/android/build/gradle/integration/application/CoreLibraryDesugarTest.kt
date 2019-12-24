@@ -69,7 +69,10 @@ class CoreLibraryDesugarTest {
     )
 
     @get:Rule
-    val project = GradleTestProject.builder().withAdditionalMavenRepo(mavenRepo).fromTestApp(setUpTestProject()).create()
+    val project = GradleTestProject.builder()
+        .withAdditionalMavenRepo(mavenRepo)
+        .withGradleBuildCacheDirectory(File("local-build-cache"))
+        .fromTestApp(setUpTestProject()).create()
 
     @get:Rule
     var adb = Adb()
@@ -309,7 +312,7 @@ class CoreLibraryDesugarTest {
 
         project.executor()
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
             .run("clean", "app:assembleRelease")
 
         val out =
@@ -317,17 +320,26 @@ class CoreLibraryDesugarTest {
         val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
                 "    j\$.time.LocalTime MIDNIGHT;\n" +
                 "}\n"
-        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
-        val cacheFile = getKeepRulesCacheDir().listFiles()!!.first { it.isFile }
-        val cacheTimeStamp = cacheFile.lastModified()
+        assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
+    }
+
+    @Test
+    fun testExternalLibsKeepRulesGenerationWithTransformsForExtLibsOnly() {
+        assumeNotWindows() //b/145232747
+        addExternalDependency(app)
 
         project.executor()
+            .withArgument("--build-cache")
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
             .run("clean", "app:assembleRelease")
 
-        val outputFile = out.resolve("release/out/" + cacheFile.name)
-        assertTrue { outputFile.lastModified() == cacheTimeStamp }
+        val out =
+            InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES.getOutputDir(app.buildDir).resolve("release/out")
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
+                "    j\$.time.LocalTime MIDNIGHT;\n" +
+                "}\n"
+        assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
+        Truth.assertThat(out.list()).asList().containsExactly("core_lib_keep_rules_0.txt", "core_lib_keep_rules_1.txt")
     }
 
     @Test
@@ -526,18 +538,10 @@ class CoreLibraryDesugarTest {
         file.writeText(source)
     }
 
-    private fun getKeepRulesCacheDir(): File {
-        val cacheFolder = project.file(CACHE_DIR).listFiles().find { it.isDirectory }
-        val keepRulesCacheFolder
-                = cacheFolder!!.listFiles().find { File(it, "output").isDirectory }
-        return File(keepRulesCacheFolder, "output")
-    }
-
     companion object {
         private const val APP_MODULE = ":app"
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
-        private const val CACHE_DIR = "agp_cache_dir"
         private const val DESUGAR_DEPENDENCY
                 = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
     }

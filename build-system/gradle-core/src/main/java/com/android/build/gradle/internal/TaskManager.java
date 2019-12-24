@@ -2116,13 +2116,11 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                         && !minified
                         && supportsDesugaring
                         && !appliesCustomClassTransforms(componentProperties, projectOptions);
-        FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
 
         taskFactory.register(
                 new DexArchiveBuilderTask.CreationAction(
                         dexOptions,
                         enableDexingArtifactTransform,
-                        userLevelCache,
                         componentProperties));
 
         maybeCreateDexDesugarLibTask(componentProperties, enableDexingArtifactTransform);

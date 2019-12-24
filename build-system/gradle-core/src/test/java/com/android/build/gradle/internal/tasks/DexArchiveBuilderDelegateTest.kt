@@ -16,27 +16,18 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DexWorkAction
+import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
-import com.android.build.gradle.internal.transforms.testdata.Animal
-import com.android.build.gradle.internal.transforms.testdata.CarbonForm
-import com.android.build.gradle.internal.transforms.testdata.ClassWithDesugarApi
-import com.android.build.gradle.internal.transforms.testdata.Dog
-import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexerTool
-import com.android.builder.utils.FileCache
-import com.android.builder.utils.FileCacheTestUtils
 import com.android.testutils.TestClassesGenerator
-import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
-import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThat
@@ -66,13 +57,9 @@ import org.junit.runners.Parameterized
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileFilter
-import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -86,10 +73,6 @@ class DexArchiveBuilderDelegateTest(
     private val withIncrementalDexingV2: Boolean
 ) {
 
-    private lateinit var cacheDir: File
-    private lateinit var userCache: FileCache
-    private var expectedCacheEntryCount: Int = 0
-    private var expectedCacheMisses: Int = 0
     private lateinit var out: Path
 
     @JvmField
@@ -145,11 +128,6 @@ class DexArchiveBuilderDelegateTest(
 
     @Before
     fun setUp() {
-        expectedCacheEntryCount = 0
-        expectedCacheMisses = 0
-        cacheDir = FileUtils.join(tmpDir.root, "cache")
-        userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir)
-
         out = tmpDir.root.toPath().resolve("out")
         Files.createDirectories(out)
     }
@@ -170,26 +148,6 @@ class DexArchiveBuilderDelegateTest(
         assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1)
         val jarDexArchives = FileUtils.find(out.toFile(), Pattern.compile(".*\\.jar"))
         assertThat(jarDexArchives).hasSize(1)
-    }
-
-    @Test
-    fun testCacheUsedForExternalLibOnly() {
-        // Caching is currently not supported when withIncrementalDexingV2 == true
-        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
-
-        val projectJar = tmpDir.root.toPath().resolve("projectInput.jar")
-        jarWithEmptyClasses(projectJar, ImmutableList.of("$PACKAGE/A"))
-
-        val jarInput = tmpDir.root.toPath().resolve("input.jar")
-        jarWithEmptyClasses(jarInput, ImmutableList.of("$PACKAGE/B"))
-
-        getDelegate(
-            withCache = true,
-            projectClasses = setOf(projectJar.toFile()),
-            externalLibClasses = setOf(jarInput.toFile())
-        ).doProcess()
-
-        assertThat(cacheEntriesCount()).isEqualTo(1)
     }
 
     @Test
@@ -248,254 +206,6 @@ class DexArchiveBuilderDelegateTest(
     }
 
     @Test
-    fun testCacheKeyInputsChanges() {
-        // Caching is currently not supported when withIncrementalDexingV2 == true
-        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
-
-        val inputJar = tmpDir.root.toPath().resolve("input.jar")
-        jarWithEmptyClasses(inputJar, ImmutableList.of())
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            minSdkVersion = 19
-        ).doProcess()
-        assertThat(cacheEntriesCount()).isEqualTo(1)
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            minSdkVersion = 20
-        ).doProcess()
-        assertThat(cacheEntriesCount()).isEqualTo(2)
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            minSdkVersion = 19,
-            isDebuggable = false
-        ).doProcess()
-        assertThat(cacheEntriesCount()).isEqualTo(3)
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            minSdkVersion = 20,
-            isDebuggable = false
-        ).doProcess()
-        assertThat(cacheEntriesCount()).isEqualTo(4)
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            minSdkVersion = 19,
-            dexerTool = if (dexerTool == DexerTool.D8) DexerTool.DX else DexerTool.D8
-        ).doProcess()
-        assertThat(cacheEntriesCount()).isEqualTo(5)
-    }
-
-    @Test
-    fun testD8DesugaringCacheKeys() {
-        // Only for D8, Ignore DX
-        Assume.assumeTrue(dexerTool == DexerTool.D8)
-
-        // Caching is currently not supported when withIncrementalDexingV2 == true
-        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
-
-        val inputJar = tmpDir.root.toPath().resolve("input.jar")
-        val emptyLibDir = tmpDir.root.toPath().resolve("emptylibDir")
-        val emptyLibJar = tmpDir.root.toPath().resolve("emptylib.jar")
-        val carbonFormLibJar = tmpDir.root.toPath().resolve("carbonFormlib.jar")
-        val carbonFormLibJar2 = tmpDir.root.toPath().resolve("carbonFormlib2.jar")
-        val animalLibDir = tmpDir.root.toPath().resolve("animalLibDir")
-        val animalLibJar = tmpDir.root.toPath().resolve("animalLib.jar")
-        TestInputsGenerator.pathWithClasses(
-            carbonFormLibJar,
-            ImmutableList.of<Class<*>>(CarbonForm::class.java)
-        )
-        TestInputsGenerator.pathWithClasses(
-            carbonFormLibJar2, ImmutableList.of(CarbonForm::class.java, Toy::class.java)
-        )
-        TestInputsGenerator.pathWithClasses(
-            animalLibDir,
-            ImmutableList.of<Class<*>>(Animal::class.java)
-        )
-        TestInputsGenerator.pathWithClasses(
-            animalLibJar,
-            ImmutableList.of<Class<*>>(Animal::class.java)
-        )
-        TestInputsGenerator.pathWithClasses(inputJar, ImmutableList.of<Class<*>>(Dog::class.java))
-        TestInputsGenerator.pathWithClasses(emptyLibDir, ImmutableList.of())
-        TestInputsGenerator.pathWithClasses(emptyLibJar, ImmutableList.of())
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8
-        ).doProcess()
-        // Cache was empty so it's a miss and result was cached.
-        expectedCacheEntryCount++
-        expectedCacheMisses++
-        checkCache()
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            desugaringClasspath = setOf(animalLibDir.toFile(), carbonFormLibJar.toFile())
-        ).doProcess()
-        // The directory dependency should disable caching
-        checkCache()
-
-        // Rerun initial invocation with D8 desugaring
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8
-        ).doProcess()
-        // Exact same run as inintialInvocation: should be a hit
-        checkCache()
-
-        // With the dependencies as jar and an empty directory
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            desugaringClasspath = setOf(
-                animalLibJar.toFile(), carbonFormLibJar.toFile(), emptyLibDir.toFile()
-            )
-        ).doProcess()
-        // The dir without dependency doesn't prevent caching, presence of the dependencies
-        // changes the cache key
-        expectedCacheMisses++
-        expectedCacheEntryCount++
-        checkCache()
-
-        // Same as invocation02 without the empty directory
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            desugaringClasspath = setOf(animalLibJar.toFile(), carbonFormLibJar.toFile())
-        ).doProcess()
-        // Removing the empty directory doesn't change the cache key
-        checkCache()
-
-        // Same as invocation03 with empty jar
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            desugaringClasspath = setOf(
-                animalLibJar.toFile(), carbonFormLibJar.toFile(), emptyLibJar.toFile()
-            )
-        ).doProcess()
-        // Adding the empty jar doesn't change the cache key
-        checkCache()
-
-        // Same as invocation03 without Animal
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            desugaringClasspath = setOf(carbonFormLibJar.toFile())
-        ).doProcess()
-        // Without Animal we can not see the dependency to animalLibJarInput so it's a hit
-        // on "initial invocation with D8 desugaring"
-        checkCache()
-
-        // Same as invocation03 without CarbonForm
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            desugaringClasspath = setOf(animalLibJar.toFile())
-        ).doProcess()
-        // Even with incomplete hierarchy we should still be able to identify the dependency to the
-        // one available classpath entry.
-        expectedCacheMisses++
-        expectedCacheEntryCount++
-        checkCache()
-    }
-
-    @Test
-    fun testCachingExternalLibsForCoreLibraryDesugaring() {
-        Assume.assumeTrue(dexerTool == DexerTool.D8)
-        Assume.assumeFalse(withIncrementalDexingV2)
-
-        val inputJar = tmpDir.root.toPath().resolve("input.jar")
-        TestInputsGenerator.pathWithClasses(
-            inputJar,
-            ImmutableList.of<Class<*>>(ClassWithDesugarApi::class.java)
-        )
-        val externalLibsOutputKeepRules = tmpDir.newFolder("keep_rules")
-        // 1 round, no shrinking, cache misses as cache is empty
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            libConfiguration = desugarConfig
-        ).doProcess()
-        expectedCacheEntryCount++
-        expectedCacheMisses++
-        checkCache()
-
-        // 2 round, same as round 1, cache hits
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            libConfiguration = desugarConfig
-        ).doProcess()
-        checkCache()
-
-        // 3 round, shrining enabled, cache misses as there is no cache for keep rule files and we
-        // have to re-process the input
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            externalLibsOutputKeepRules =  externalLibsOutputKeepRules,
-            libConfiguration = desugarConfig
-        ).doProcess()
-        // expectedCacheEntryCount is increased by two: one is for dex outputs, the other one is
-        // for keep_rule outputs
-        expectedCacheEntryCount += 2
-        expectedCacheMisses += 2
-        checkCache()
-
-        // 4 round, same as round 1, cache hits
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            libConfiguration = desugarConfig
-        ).doProcess()
-        checkCache()
-
-        // 5 round, same as round 3, cache hits
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8,
-            externalLibsOutputKeepRules =  externalLibsOutputKeepRules,
-            libConfiguration = desugarConfig
-        ).doProcess()
-        checkCache()
-
-        // 6 round, there is no libConfiguration compared with round 1, cache misses
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(inputJar.toFile()),
-            java8Desugaring = VariantScope.Java8LangSupport.D8
-        ).doProcess()
-        expectedCacheEntryCount++
-        expectedCacheMisses++
-        checkCache()
-    }
-
-    @Test
     fun testIncrementalUnchangedDirInput() {
         val input = tmpDir.newFolder("classes").toPath()
         dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"))
@@ -507,48 +217,6 @@ class DexArchiveBuilderDelegateTest(
         ).doProcess()
 
         assertThat(FileUtils.getAllFiles(out.toFile())).isEmpty()
-    }
-
-    /** Regression test for b/65241720.  */
-    @Test
-    fun testIncrementalWithSharding() {
-        val input = tmpDir.root.toPath().resolve("classes.jar")
-        jarWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"))
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(input.toFile()),
-            externalLibsOutput = out.toFile()
-        ).doProcess()
-
-        assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*_\\d\\.jar")).size)
-            .isAtLeast(1)
-
-        // clean the output of the previous transform
-        FileUtils.cleanOutputDir(out.toFile())
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(input.toFile()),
-            externalLibsOutput = out.toFile()
-        ).doProcess()
-
-        assertThat(FileUtils.getAllFiles(out.toFile())).hasSize(1)
-        assertThat(out.toFile().listFiles()!!.size).isEqualTo(1)
-        val onlyDexOutput = out.toFile().listFiles()!![0]
-
-        // modify the file so it is not a build cache hit any more
-        Files.deleteIfExists(input)
-        jarWithEmptyClasses(input, ImmutableList.of("test/C"))
-
-        getDelegate(
-            withCache = true,
-            externalLibClasses = setOf(input.toFile()),
-            externalLibsOutput = out.toFile(),
-            externalLibChanges = setOf(FakeFileChange(input.toFile(), ChangeType.MODIFIED, FileType.FILE, ""))
-        ).doProcess()
-
-        assertThat(onlyDexOutput).doesNotExist()
     }
 
     /** Regression test for b/65241720.  */
@@ -701,19 +369,8 @@ class DexArchiveBuilderDelegateTest(
         return name.substring(name.lastIndexOf("_") + 1, name.lastIndexOf("."))
     }
 
-
-    private fun checkCache() {
-        val entriesCount = cacheEntriesCount()
-        assertThat(entriesCount).named("Cache entry count").isEqualTo(expectedCacheEntryCount)
-        // Misses occurs when filling the cache
-        assertThat(FileCacheTestUtils.getMisses(userCache))
-            .named("Cache misses")
-            .isEqualTo(expectedCacheMisses)
-    }
-
     private fun getDelegate(
         isIncremental: Boolean = false,
-        withCache: Boolean = false,
         isDebuggable: Boolean = true,
         minSdkVersion: Int = 1,
         dexerTool: DexerTool = this.dexerTool,
@@ -757,7 +414,6 @@ class DexArchiveBuilderDelegateTest(
             projectVariant = "myVariant",
             numberOfBuckets = numberOfBuckets,
             messageReceiver = NoOpMessageReceiver(),
-            userLevelCache = userCache.takeIf { withCache },
             workerExecutor = workerExecutor,
             dexParams = DexParameters(
                 minSdkVersion = minSdkVersion,
@@ -786,11 +442,6 @@ class DexArchiveBuilderDelegateTest(
             arrayOf(DexerTool.D8, false),
             arrayOf(DexerTool.D8, true)
         )
-        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.11.0")
-    }
-
-    private fun cacheEntriesCount(): Int {
-        return userCache.cacheDirectory.listFiles(FileFilter { it.isDirectory })!!.size
     }
 }
 

@@ -329,7 +329,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
         private val parameters: TestParameters,
         private val classpath: List<File> = listOf(),
         override val inputChanges: InputChanges = FakeInputChanges()
-    ) : BaseDexingTransform() {
+    ) : BaseDexingTransform<BaseDexingTransform.Parameters>() {
 
         override fun computeClasspathFiles() = classpath.map(File::toPath)
 

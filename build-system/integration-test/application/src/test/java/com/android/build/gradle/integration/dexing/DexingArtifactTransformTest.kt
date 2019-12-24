@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.dependency.DexingNoClasspathTransform
 import com.android.build.gradle.internal.dependency.DexingWithClasspathTransform
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
+import com.android.build.gradle.internal.tasks.DexingExternalLibArtifactTransform
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.TestInputsGenerator
@@ -222,6 +223,142 @@ class DexingArtifactTransformTest {
         project.buildResult.stdout.use { scanner ->
             ScannerSubject.assertThat(scanner).contains(DexingNoClasspathTransform::class.java.simpleName)
         }
+    }
+
+    @Test
+    fun testExtLibsDexingWithTransforms() {
+        project.buildFile.appendText("\n" +
+                """
+            android.defaultConfig.minSdkVersion = 21
+            dependencies {
+                implementation 'com.android.support:support-core-utils:$SUPPORT_LIB_VERSION'
+            }
+        """.trimIndent()
+        )
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .run("assembleDebug")
+        project.buildResult.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).contains(DexingExternalLibArtifactTransform::class.java.simpleName)
+        }
+        project.buildResult.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).doesNotContain(DexingNoClasspathTransform::class.java.simpleName)
+        }
+    }
+
+    @Test
+    fun testAllDexingTransformsDisabled() {
+        project.buildFile.appendText(
+            "\n" +
+                    """
+            android.defaultConfig.minSdkVersion = 21
+            dependencies {
+                implementation 'com.android.support:support-core-utils:$SUPPORT_LIB_VERSION'
+            }
+        """.trimIndent()
+        )
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
+            .run("assembleDebug")
+        project.buildResult.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner)
+                .doesNotContain(DexingExternalLibArtifactTransform::class.java.simpleName)
+        }
+
+        assertThat(
+            InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS.getOutputDir(
+                project.buildDir
+            ).resolve("debug/out").listFiles()
+        ).isEmpty()
+        assertThat(
+            InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE.getOutputDir(project.buildDir).resolve(
+                "debug/out"
+            ).listFiles()
+        ).isNotEmpty()
+    }
+
+    @Test
+    fun testEnablingAndDisablingExtLibDexingTransform() {
+        project.buildFile.appendText(
+            "\n" +
+                    """
+            android.defaultConfig.minSdkVersion = 21
+            dependencies {
+                implementation 'com.android.support:support-core-utils:$SUPPORT_LIB_VERSION'
+            }
+        """.trimIndent()
+        )
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .run("assembleDebug")
+        assertThat(
+            InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS.getOutputDir(
+                project.buildDir
+            ).resolve("debug/out").listFiles()
+        ).isNotEmpty()
+        assertThat(
+            InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE.getOutputDir(project.buildDir).resolve(
+                "debug/out"
+            ).listFiles()
+        ).isEmpty()
+
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
+            .run("assembleDebug")
+        assertThat(
+            InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS.getOutputDir(
+                project.buildDir
+            ).resolve("debug/out").listFiles()
+        ).isEmpty()
+        assertThat(
+            InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE.getOutputDir(project.buildDir).resolve(
+                "debug/out"
+            ).listFiles()
+        ).isNotEmpty()
+    }
+
+    @Test
+    fun testAddingExternalDepsWithExtLibsDexingTransform() {
+        project.buildFile.appendText(
+            "\n" +
+                    """
+            android.defaultConfig.minSdkVersion = 21
+            android.defaultConfig.multiDexEnabled = true
+            dependencies {
+                implementation 'com.android.support:support-core-utils:$SUPPORT_LIB_VERSION'
+            }
+        """.trimIndent()
+        )
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .run("assembleDebug")
+        val extLibsFile = InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS.getOutputDir(
+            project.buildDir
+        ).resolve("debug/out")
+        val extLibsTimestamp = extLibsFile.listFiles()!!.first().lastModified()
+        val projectFile = InternalArtifactType.PROJECT_DEX_ARCHIVE.getOutputDir(project.buildDir).resolve("debug/out")
+        val projectTimestamp = projectFile.listFiles()!!.first().lastModified()
+
+        project.buildFile.appendText(
+            """
+
+            dependencies {
+                implementation 'com.google.guava:guava:19.0'
+            }
+        """.trimIndent()
+        )
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .run("assembleDebug")
+
+        assertThat(extLibsFile.listFiles()!!.first().lastModified()).named("external lib dex timestamp in incremental build that added an external dependency")
+            .isGreaterThan(extLibsTimestamp)
+        assertThat(projectFile.listFiles()!!.first().lastModified()).named("project dex timestamp in incremental build that added an external dependency")
+            .isEqualTo(projectTimestamp)
+
+        project.getApk(GradleTestProject.ApkType.DEBUG).containsClass("Lcom/google/common/collect/ImmutableList;")
     }
 
     private fun executor() =
