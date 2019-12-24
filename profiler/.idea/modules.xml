@@ -7,7 +7,6 @@
       <module fileurl="file://$PROJECT_DIR$/../testutils/android.sdktools.testutils.iml" filepath="$PROJECT_DIR$/../testutils/android.sdktools.testutils.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" filepath="$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../perf-logger/perf-logger.iml" filepath="$PROJECT_DIR$/../perf-logger/perf-logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/tests/perf-test/perf-test.iml" filepath="$PROJECT_DIR$/tests/perf-test/perf-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/tests/test-app/perf-test-app.iml" filepath="$PROJECT_DIR$/tests/test-app/perf-test-app.iml" />
