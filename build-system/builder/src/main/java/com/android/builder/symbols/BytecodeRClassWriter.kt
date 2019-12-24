@@ -17,6 +17,8 @@
 package com.android.builder.symbols
 
 import com.android.SdkConstants
+import com.android.builder.packaging.JarCreator
+import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.canonicalizeValueResourceName
@@ -37,18 +39,19 @@ import org.objectweb.asm.Opcodes.RETURN
 import org.objectweb.asm.Type.INT_TYPE
 import org.objectweb.asm.commons.GeneratorAdapter
 import org.objectweb.asm.commons.Method
-import com.android.builder.packaging.JarCreator
-import com.android.builder.packaging.JarFlinger
 import java.io.IOException
 import java.nio.file.Path
 import java.util.EnumSet
+import java.util.zip.Deflater.NO_COMPRESSION
 
 @Throws(IOException::class)
 fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: Boolean = false) {
-    JarFlinger(outJar).use { outStream ->
+    JarFlinger(outJar).use { jarCreator ->
+        // NO_COMPRESSION because R.jar isn't packaged into final APK or AAR
+        jarCreator.setCompressionLevel(NO_COMPRESSION)
         val mergedTables = tables.groupBy { it.tablePackage }.map { SymbolTable.merge(it.value) }
         mergedTables.forEach { table ->
-            exportToCompiledJava(table, outStream, finalIds)
+            exportToCompiledJava(table, jarCreator, finalIds)
         }
     }
 }

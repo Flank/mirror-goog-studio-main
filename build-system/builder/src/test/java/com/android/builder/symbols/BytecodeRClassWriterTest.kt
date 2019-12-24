@@ -36,6 +36,7 @@ import java.lang.reflect.Field
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.zip.ZipFile
 import javax.tools.JavaFileObject
 import javax.tools.ToolProvider
 import kotlin.streams.toList
@@ -179,6 +180,15 @@ class BytecodeRClassWriterTest {
                     val actualFields = loadFields(actualClassLoader, javaName)
                     assertThat(actualFields).containsExactlyElementsIn(expectedFields)
                 }
+            }
+        }
+
+        // Check that generatedRJar's entries aren't compressed
+        ZipFile(generatedRJar).use { zip ->
+            val entries = zip.entries()
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                assertThat(entry.compressedSize).isAtLeast(entry.size)
             }
         }
     }
