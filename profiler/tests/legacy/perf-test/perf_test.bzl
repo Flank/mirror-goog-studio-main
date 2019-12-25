@@ -31,7 +31,7 @@ def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags =
         name = name,
         srcs = srcs,
         deps = deps + [
-            "//tools/base/profiler/tests/perf-test:profiler-service",
+            ":profiler-service",
             "//tools/base/transport/proto:transport_java_proto",
             "//tools/base/bazel:studio-grpc",
             "//tools/base/bazel:studio-proto",
@@ -59,7 +59,7 @@ def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags =
         jvm_flags = jvm_flags + [
             "-Dperfd.location=$(location //tools/base/transport:transport_main)",
             "-Dagent.location=/tools/base/profiler/native/agent",
-            "-Dprofiler.service.location=$(location //tools/base/profiler/tests/perf-test:profiler-service)",
+            "-Dprofiler.service.location=$(location :profiler-service)",
             "-Dperfa.dir.location=/tools/base/transport/native/agent",
             "-Dperfa.location=$(location //tools/base/transport/native/agent:libjvmtiagent.so)",
             "-Dperfa.jar.location=$(location //tools/base/profiler/app:perfa)",
