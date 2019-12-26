@@ -47,6 +47,14 @@ perf_test(
 )
 
 perf_test(
+    name = "EventTest",
+    size = "large",
+    srcs = ["testSrcs/com/android/tools/profiler/event/EventProfilerTest.java"],
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = ["//tools/idea/.idea/libraries:truth"],
+)
+
+perf_test(
     name = "PerformanceTest",
     size = "large",
     srcs = ["testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java"],

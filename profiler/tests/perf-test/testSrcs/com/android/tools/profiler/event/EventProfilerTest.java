@@ -14,41 +14,44 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler;
-
-import static com.google.common.truth.Truth.assertThat;
+package com.android.tools.profiler.event;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.regex.Pattern;
+import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.transport.TransportRule;
+import com.android.tools.transport.device.SdkLevel;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.regex.Pattern;
+
+import static com.google.common.truth.Truth.assertThat;
+
 @RunWith(Parameterized.class)
-public class EventProfilerTest {
+public final class EventProfilerTest {
+    @Parameterized.Parameters
+    public static Collection<SdkLevel> parameters() {
+        return Arrays.asList(SdkLevel.N, SdkLevel.O);
+    }
 
     private static final String ACTIVITY_CLASS = "com.activity.event.EventActivity";
 
-    @Parameterized.Parameters
-    public static Collection<Integer> data() {
-        return Arrays.asList(24, 26);
-    }
+    @Rule public final TransportRule myTransportRule;
 
     private FakeAndroidDriver myAndroidDriver;
 
-    @Rule public final PerfDriver myPerfDriver;
-
-    public EventProfilerTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
+    public EventProfilerTest(SdkLevel sdkLevel) {
+        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig());
     }
 
     @Before
-    public void setup() throws Exception {
-        myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
+    public void setup() {
+        myAndroidDriver = myTransportRule.getAndroidDriver();
     }
 
     @Test

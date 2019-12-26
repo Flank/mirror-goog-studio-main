@@ -39,21 +39,6 @@ java_library(
 )
 
 perf_test(
-    name = "EventTest",
-    size = "large",
-    srcs = [
-        "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
-    ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
-    deps = [
-        ":test_lib",
-        "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
-        "//tools/idea/.idea/libraries:truth",
-    ],
-)
-
-perf_test(
     name = "EnergyTest",
     size = "large",
     srcs = [
