@@ -66,7 +66,10 @@ public class MemoryActivity extends PerfdTestActivity {
         long end = System.nanoTime();
         System.out.println("MemoryActivity.allocate");
         System.out.println("allocation_count=" + entities.size());
-        System.out.println("allocation_timing=" + TimeUnit.NANOSECONDS.toMillis(end - start));
+        // Append newline manually instead of using println() to avoid the occasional situation where stdout is flushed
+        // with some other string, causing the number parsing in LiveAllocationTest to fail.
+        System.out.print(
+                "allocation_timing=" + TimeUnit.NANOSECONDS.toMillis(end - start) + "\r\n");
     }
 
     public void free() {
