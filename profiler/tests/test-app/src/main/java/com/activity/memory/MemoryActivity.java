@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.activity;
+package com.activity.memory;
+
+import com.activity.TransportTestActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class MemoryActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class MemoryActivity extends TransportTestActivity {
     static class MemTestEntity {
         private byte[] values;
 

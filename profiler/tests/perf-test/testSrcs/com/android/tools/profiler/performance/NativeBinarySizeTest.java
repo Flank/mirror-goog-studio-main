@@ -20,15 +20,18 @@ import com.android.testutils.TestUtils;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.WindowDeviationAnalyzer;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.util.*;
 import org.junit.Test;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Measures the sizes of the profiler libraries we generate and generates the data files for
  * uploading to the Studio perf tracking dashboards.
  */
-public class NativeBinarySizeTest {
+public final class NativeBinarySizeTest {
     // Project name for studio profilers' dashboards
     private static final String PROFILER_PROJECT_NAME = "Android Studio Profilers";
 

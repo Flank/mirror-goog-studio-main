@@ -16,12 +16,8 @@
 
 package com.android.tools.profiler.memory;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.MemoryPerfDriver;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Memory;
 import com.android.tools.profiler.proto.Memory.AllocatedClass;
 import com.android.tools.profiler.proto.Memory.AllocationEvent;
@@ -30,18 +26,36 @@ import com.android.tools.profiler.proto.Memory.BatchAllocationEvents;
 import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRateEvent;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
-import java.util.HashSet;
-import java.util.List;
+import com.android.tools.transport.TestUtils;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class MemoryTest {
-    private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
+import java.util.HashSet;
+import java.util.List;
+
+import static com.google.common.truth.Truth.assertThat;
+
+public final class MemoryTest {
+    private static final String ACTIVITY_CLASS = "com.activity.memory.MemoryActivity";
     private static final int RETRY_INTERVAL_MILLIS = 50;
     private static final int SAMPLING_RATE_FULL = 1;
 
     // We currently only test O+ test scenarios.
-    @Rule public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
+    @Rule public final MemoryRule myMemoryRule = new MemoryRule(ACTIVITY_CLASS, SdkLevel.O);
+
+    private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
+    private Common.Session mySession;
+
+    @Before
+    public void setUp() {
+        myAndroidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
+        myGrpc = myMemoryRule.getTransportRule().getGrpc();
+        mySession = myMemoryRule.getTransportRule().getSession();
+    }
 
     private int findClassTag(List<BatchAllocationContexts> samples, String className) {
         for (BatchAllocationContexts sample : samples) {
@@ -56,13 +70,12 @@ public class MemoryTest {
 
     @Test
     public void countAllocationsAndDeallocation() throws Exception {
-        MemoryStubWrapper stubWrapper =
-                new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
-        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
+        MemoryStubWrapper stubWrapper = MemoryStubWrapper.create(myGrpc);
+        FakeAndroidDriver androidDriver = myAndroidDriver;
 
         // Start memory tracking.
         TrackAllocationsResponse trackResponse =
-                stubWrapper.startAllocationTracking(myPerfDriver.getSession());
+                stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus().getStatus())
                 .isEqualTo(Memory.TrackStatus.Status.SUCCESS);
         // Ensure the initialization process is finished.
@@ -74,7 +87,7 @@ public class MemoryTest {
                         () -> {
                             MemoryData data =
                                     stubWrapper.getJvmtiData(
-                                            myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+                                            mySession, 0, Long.MAX_VALUE);
                             return findClassTag(
                                     data.getBatchAllocationContextsList(), "MemTestEntity");
                         },
@@ -84,8 +97,8 @@ public class MemoryTest {
 
         long startTime = 0;
         final int allocationCount = 10;
-        HashSet<Integer> allocTags = new HashSet<Integer>();
-        HashSet<Integer> deallocTags = new HashSet<Integer>();
+        HashSet<Integer> allocTags = new HashSet<>();
+        HashSet<Integer> deallocTags = new HashSet<>();
 
         // Create several instances of MemTestEntity and when done free and collect them.
         androidDriver.setProperty("allocation.count", Integer.toString(allocationCount));
@@ -101,7 +114,7 @@ public class MemoryTest {
         while (deallocTags.size() < allocationCount) {
             androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
             MemoryData jvmtiData =
-                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
+                    stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             long endTime = jvmtiData.getEndTimestamp();
             System.out.printf(
                     "getJvmtiData called. endTime=%d, alloc samples=%d\n",
@@ -139,9 +152,8 @@ public class MemoryTest {
 
     @Test
     public void updateAllocationSamplingRate() throws Exception {
-        MemoryStubWrapper stubWrapper =
-                new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
-        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
+        MemoryStubWrapper stubWrapper = MemoryStubWrapper.create(myGrpc);
+        FakeAndroidDriver androidDriver = myAndroidDriver;
         final int samplingNumInterval = 2;
         final int allocationCount = 10;
         HashSet<Integer> allocTags = new HashSet<>();
@@ -149,7 +161,7 @@ public class MemoryTest {
 
         // Start memory tracking.
         TrackAllocationsResponse trackResponse =
-                stubWrapper.startAllocationTracking(myPerfDriver.getSession());
+                stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus().getStatus())
                 .isEqualTo(Memory.TrackStatus.Status.SUCCESS);
         // Ensure the initialization process is finished.
@@ -161,7 +173,7 @@ public class MemoryTest {
                         () -> {
                             MemoryData data =
                                     stubWrapper.getJvmtiData(
-                                            myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+                                            mySession, 0, Long.MAX_VALUE);
                             return findClassTag(
                                     data.getBatchAllocationContextsList(), "MemTestEntity");
                         },
@@ -173,7 +185,7 @@ public class MemoryTest {
                         () -> {
                             MemoryData data =
                                     stubWrapper.getJvmtiData(
-                                            myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+                                            mySession, 0, Long.MAX_VALUE);
                             return findClassTag(
                                     data.getBatchAllocationContextsList(), "MemNoiseEntity");
                         },
@@ -186,7 +198,7 @@ public class MemoryTest {
                 TestUtils.waitForAndReturn(
                         () ->
                                 stubWrapper.getJvmtiData(
-                                        myPerfDriver.getSession(), 0, Long.MAX_VALUE),
+                                        mySession, 0, Long.MAX_VALUE),
                         value -> value.getAllocSamplingRateEventsCount() != 0,
                         RETRY_INTERVAL_MILLIS);
         assertThat(jvmtiData.getAllocSamplingRateEventsCount()).isEqualTo(1);
@@ -197,7 +209,7 @@ public class MemoryTest {
                 .isEqualTo(SAMPLING_RATE_FULL);
 
         // Set sampling rate.
-        stubWrapper.setSamplingRate(myPerfDriver.getSession(), samplingNumInterval);
+        stubWrapper.setSamplingRate(mySession, samplingNumInterval);
         // printf from the agent signalling that the sample rate has been updated.
         assertThat(androidDriver.waitForInput("Setting sampling rate")).isTrue();
 
@@ -212,7 +224,7 @@ public class MemoryTest {
         long startTime = 0;
         while (allocTags.size() == 0 || noiseAllocTags.size() == 0) {
             jvmtiData =
-                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
+                    stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             System.out.println(
                     "getJvmtiData called. alloc samples="
                             + jvmtiData.getBatchAllocationEventsCount());
@@ -241,7 +253,7 @@ public class MemoryTest {
         assertThat(allocTags.size()).isAtMost(allocationCount);
 
         // Verify all AllocationSamplingRateEvents also came with JVMTI data.
-        jvmtiData = stubWrapper.getJvmtiData(myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+        jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
         assertThat(jvmtiData.getAllocSamplingRateEventsCount()).isEqualTo(2);
         samplingRateEvent = jvmtiData.getAllocSamplingRateEvents(1);
         assertThat(samplingRateEvent.getTimestamp()).isGreaterThan(lastSamplingRateEventTimestamp);
@@ -251,7 +263,7 @@ public class MemoryTest {
 
         // Record allocation count
         MemoryData memoryData =
-                stubWrapper.getMemoryData(myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+                stubWrapper.getMemoryData(mySession, 0, Long.MAX_VALUE);
         int allocStatsCount = memoryData.getAllocStatsSamplesCount();
         assertThat(allocStatsCount).isGreaterThan(0);
         int allocCount =
@@ -261,7 +273,7 @@ public class MemoryTest {
                         .getJavaAllocationCount();
 
         // Set sampling rate back to full.
-        stubWrapper.setSamplingRate(myPerfDriver.getSession(), SAMPLING_RATE_FULL);
+        stubWrapper.setSamplingRate(mySession, SAMPLING_RATE_FULL);
         // printf from the agent signalling that the sample rate has been updated.
         assertThat(androidDriver.waitForInput("Setting sampling rate")).isTrue();
 
@@ -274,7 +286,7 @@ public class MemoryTest {
         // Verify allocation data are no longer sampled and we get what's already on the heap.
         while (allocTags.size() < allocationCount * 2) {
             jvmtiData =
-                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
+                    stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             System.out.println(
                     "getJvmtiData called. alloc samples="
                             + jvmtiData.getBatchAllocationEventsCount());
@@ -297,7 +309,7 @@ public class MemoryTest {
         assertThat(allocTags.size()).isEqualTo(allocationCount * 2);
 
         // Verify all AllocationSamplingRateEvents also came with JVMTI data.
-        jvmtiData = stubWrapper.getJvmtiData(myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+        jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
         assertThat(jvmtiData.getAllocSamplingRateEventsCount()).isEqualTo(3);
         samplingRateEvent = jvmtiData.getAllocSamplingRateEvents(2);
         assertThat(samplingRateEvent.getTimestamp()).isGreaterThan(lastSamplingRateEventTimestamp);
@@ -307,7 +319,7 @@ public class MemoryTest {
         // Verify alloc count did not reset after switching back to full.
         memoryData =
                 stubWrapper.getMemoryData(
-                        myPerfDriver.getSession(), memoryData.getEndTimestamp(), Long.MAX_VALUE);
+                        mySession, memoryData.getEndTimestamp(), Long.MAX_VALUE);
         allocStatsCount = memoryData.getAllocStatsSamplesCount();
         assertThat(allocStatsCount).isGreaterThan(0);
         assertThat(

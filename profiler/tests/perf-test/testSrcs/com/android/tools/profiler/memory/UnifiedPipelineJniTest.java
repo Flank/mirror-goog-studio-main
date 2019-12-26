@@ -16,39 +16,49 @@
 
 package com.android.tools.profiler.memory;
 
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.findClassTag;
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.startAllocationTracking;
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.GrpcUtils;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TransportStubWrapper;
+import com.android.tools.profiler.ProfilerConfig;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Memory;
 import com.android.tools.profiler.proto.Memory.AllocationEvent;
 import com.android.tools.profiler.proto.Memory.JNIGlobalReferenceEvent;
-import java.util.HashSet;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class UnifiedPipelineJniTest {
-    private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
+import java.util.HashSet;
+
+import static com.android.tools.profiler.memory.MemoryTestUtils.findClassTag;
+import static com.android.tools.profiler.memory.MemoryTestUtils.startAllocationTracking;
+import static com.google.common.truth.Truth.assertThat;
+
+public final class UnifiedPipelineJniTest {
+    private static final String ACTIVITY_CLASS = "com.activity.memory.NativeCodeActivity";
 
     // We currently only test O+ test scenarios.
-    @Rule
-    public PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
-    private GrpcUtils myGrpc;
-    private TransportStubWrapper myTransportWrapper;
+    @Rule public final MemoryRule myMemoryRule;
+
     private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
+
+    public UnifiedPipelineJniTest() {
+        ProfilerConfig ruleConfig = new ProfilerConfig() {
+            @Override
+            public boolean usesUnifiedPipeline() {
+                return true;
+            }
+        };
+        myMemoryRule = new MemoryRule(ACTIVITY_CLASS, SdkLevel.O, ruleConfig);
+    }
 
     @Before
-    public void setup() {
-        myGrpc = myPerfDriver.getGrpc();
-        myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
+    public void setUp() {
+        myAndroidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
+        myGrpc = myMemoryRule.getTransportRule().getGrpc();
     }
 
     private void validateMemoryMap(Memory.MemoryMap map, Memory.NativeBacktrace backtrace) {
@@ -68,17 +78,19 @@ public class UnifiedPipelineJniTest {
 
     @Ignore("b/141868630")
     @Test
-    public void countCreatedAndDeleteRefEvents() throws Exception {
+    public void countCreatedAndDeleteRefEvents() {
+        TransportAsyncStubWrapper transportStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         // Find JNITestEntity class tag
         int[] testEntityIdFinal = new int[1];
-        myTransportWrapper.getEvents(
+        transportStubWrapper.getEvents(
                 event -> {
                     int id = findClassTag(event.getMemoryAllocContexts().getContexts(), "JNITestEntity");
                     testEntityIdFinal[0] = id;
                     return id != 0;
                 },
                 event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_CONTEXTS,
-                (unused) -> startAllocationTracking(myPerfDriver));
+                () -> startAllocationTracking(myMemoryRule));
         int testEntityId = testEntityIdFinal[0];
         assertThat(testEntityId).isNotEqualTo(0);
 
@@ -88,7 +100,7 @@ public class UnifiedPipelineJniTest {
         Memory.MemoryMap[] lastMemoryMap = new Memory.MemoryMap[1];
         HashSet<Long> refs = new HashSet<>();
         HashSet<Integer> tags = new HashSet<>();
-        myTransportWrapper.getEvents(
+        transportStubWrapper.getEvents(
                 event -> {
                     if (event.getKind() == Common.Event.Kind.MEMORY_ALLOC_EVENTS) {
                         for (AllocationEvent evt :
@@ -145,11 +157,10 @@ public class UnifiedPipelineJniTest {
 
                     return allRefsAccounted[0];
                 },
-                event ->
-                        event.getKind() == Common.Event.Kind.MEMORY_ALLOC_EVENTS
+                event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_EVENTS
                                 || event.getKind() == Common.Event.Kind.MEMORY_JNI_REF_EVENTS
                                 || event.getKind() == Common.Event.Kind.MEMORY_ALLOC_CONTEXTS,
-                (unused) -> {
+                () -> {
                     myAndroidDriver.setProperty("jni.refcount", Integer.toString(refCount));
                     myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "createRefs");
                     assertThat(myAndroidDriver.waitForInput("createRefs")).isTrue();

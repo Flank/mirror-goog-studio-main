@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.activity;
+package com.activity.memory;
+
+import com.activity.TransportTestActivity;
 
 import java.util.*;
 
-public class NativeCodeActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class NativeCodeActivity extends TransportTestActivity {
     public NativeCodeActivity() {
         super("NativeCodeActivity");
         System.loadLibrary("memorynativetest");

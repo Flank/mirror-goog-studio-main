@@ -17,14 +17,12 @@
 package com.android.tools.profiler.memory;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.GrpcUtils;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TransportStubWrapper;
-import com.android.tools.profiler.proto.Commands;
-import com.android.tools.profiler.proto.Common;
-import com.android.tools.profiler.proto.Memory;
+import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.proto.*;
 import com.android.tools.profiler.proto.Memory.AllocationEvent;
-import com.android.tools.profiler.proto.Transport;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,49 +30,61 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.concurrent.CountDownLatch;
 
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.findClassTag;
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.startAllocationTracking;
+import static com.android.tools.profiler.memory.MemoryTestUtils.findClassTag;
+import static com.android.tools.profiler.memory.MemoryTestUtils.startAllocationTracking;
 import static com.google.common.truth.Truth.assertThat;
 
-public class UnifiedPipelineMemoryTest {
-    private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
+public final class UnifiedPipelineMemoryTest {
+    private static final String ACTIVITY_CLASS = "com.activity.memory.MemoryActivity";
     private static final int SAMPLING_RATE_FULL = 1;
 
     // We currently only test O+ test scenarios.
-    @Rule
-    public PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
-    private GrpcUtils myGrpc;
-    private TransportStubWrapper myTransportWrapper;
+    @Rule public final MemoryRule myMemoryRule;
+
     private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
+    private Common.Session mySession;
+
+    public UnifiedPipelineMemoryTest() {
+        ProfilerConfig ruleConfig = new ProfilerConfig() {
+            @Override
+            public boolean usesUnifiedPipeline() {
+                return true;
+            }
+        };
+        myMemoryRule = new MemoryRule(ACTIVITY_CLASS, SdkLevel.O, ruleConfig);
+    }
 
     @Before
-    public void setup() {
-        myGrpc = myPerfDriver.getGrpc();
-        myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
+    public void setUp() {
+        myAndroidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
+        myGrpc = myMemoryRule.getTransportRule().getGrpc();
+        mySession = myMemoryRule.getTransportRule().getSession();
     }
 
     @Test
-    public void countAllocationsAndDeallocation() throws Exception {
+    public void countAllocationsAndDeallocation() {
+        TransportAsyncStubWrapper transportWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         // Find MemTestEntity class tag
         int[] memTestEntityIdFinal = new int[1];
-        myTransportWrapper.getEvents(
+        transportWrapper.getEvents(
                 event -> {
                     int id = findClassTag(event.getMemoryAllocContexts().getContexts(), "MemTestEntity");
                     memTestEntityIdFinal[0] = id;
                     return id != 0;
                 },
                 event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_CONTEXTS,
-                (unused) -> startAllocationTracking(myPerfDriver));
+                () -> startAllocationTracking(myMemoryRule));
         int memTestEntityId = memTestEntityIdFinal[0];
         assertThat(memTestEntityId).isNotEqualTo(0);
 
         final int allocationCount = 10;
-        HashSet<Integer> allocTags = new HashSet<Integer>();
-        HashSet<Integer> deallocTags = new HashSet<Integer>();
+        HashSet<Integer> allocTags = new HashSet<>();
+        HashSet<Integer> deallocTags = new HashSet<>();
 
         CountDownLatch gcLatch = new CountDownLatch(1);
-        myTransportWrapper.getEvents(
+        transportWrapper.getEvents(
                 event -> {
                     for (AllocationEvent evt :
                             event.getMemoryAllocEvents().getEvents().getEventsList()) {
@@ -97,7 +107,7 @@ public class UnifiedPipelineMemoryTest {
                     return deallocTags.size() >= allocationCount;
                 },
                 event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_EVENTS,
-                (unused) -> {
+                () -> {
                     // Create several instances of MemTestEntity and when done free and collect them.
                     myAndroidDriver.setProperty(
                             "allocation.count", Integer.toString(allocationCount));
@@ -128,13 +138,14 @@ public class UnifiedPipelineMemoryTest {
     }
 
     @Test
-    public void updateAllocationSamplingRate() throws Exception {
-        myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
+    public void updateAllocationSamplingRate() {
+        TransportAsyncStubWrapper transportWrapper = TransportAsyncStubWrapper.create(myGrpc);
+        TransportServiceGrpc.TransportServiceBlockingStub transportStub = TransportServiceGrpc.newBlockingStub(myGrpc.getChannel());
 
         // Find MemTestEntity (index == 0) and MemNoiseEntity (index == 1) class tags
         int[] memTestEntityIdFinal = new int[2];
         boolean[] hasInitialSamplingRate = new boolean[1];
-        myTransportWrapper.getEvents(
+        transportWrapper.getEvents(
                 event -> {
                     if (event.getKind() == Common.Event.Kind.MEMORY_ALLOC_CONTEXTS) {
                         if (memTestEntityIdFinal[0] == 0) {
@@ -161,7 +172,7 @@ public class UnifiedPipelineMemoryTest {
                 event ->
                         (event.getKind() == Common.Event.Kind.MEMORY_ALLOC_CONTEXTS
                                 || event.getKind() == Common.Event.Kind.MEMORY_ALLOC_SAMPLING),
-                (unused) -> startAllocationTracking(myPerfDriver));
+                () -> startAllocationTracking(myMemoryRule));
         int memTestEntityId = memTestEntityIdFinal[0];
         int memNoiseEntityId = memTestEntityIdFinal[1];
         assertThat(memTestEntityId).isNotEqualTo(0);
@@ -173,15 +184,15 @@ public class UnifiedPipelineMemoryTest {
         HashSet<Integer> noiseAllocTags = new HashSet<>();
 
         // Set sampling rate and verify we receive an event for it.
-        myTransportWrapper.getEvents(
+        transportWrapper.getEvents(
                 event -> event.getMemoryAllocSampling().getSamplingNumInterval() == samplingNumInterval,
                 event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_SAMPLING,
-                (unused) -> {
-                    myGrpc.getTransportStub().execute(
+                () -> {
+                    transportStub.execute(
                             Transport.ExecuteRequest.newBuilder()
                                     .setCommand(Commands.Command.newBuilder()
                                             .setType(Commands.Command.CommandType.MEMORY_ALLOC_SAMPLING)
-                                            .setPid(myPerfDriver.getSession().getPid())
+                                            .setPid(mySession.getPid())
                                             .setMemoryAllocSampling(
                                                     Memory.MemoryAllocSamplingData
                                                             .newBuilder()
@@ -192,7 +203,7 @@ public class UnifiedPipelineMemoryTest {
                 });
 
         // Verify allocation data are now sampled.
-        myTransportWrapper.getEvents(
+        transportWrapper.getEvents(
                 // Continue until we see MemNoiseEntity since those are allocated after MemTestEntity
                 event -> {
                     for (AllocationEvent evt :
@@ -209,7 +220,7 @@ public class UnifiedPipelineMemoryTest {
                     return !noiseAllocTags.isEmpty();
                 },
                 event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_EVENTS,
-                (unused) -> {
+                () -> {
                     // Create several instances of MemTestEntity.
                     myAndroidDriver.setProperty(
                             "allocation.count", Integer.toString(allocationCount));
@@ -228,7 +239,7 @@ public class UnifiedPipelineMemoryTest {
         assertThat(allocTags.size()).isAtMost(allocationCount);
 
         // Verify allocation data are now fully recorded.
-        myTransportWrapper.getEvents(
+        transportWrapper.getEvents(
                 event -> {
                     for (AllocationEvent evt :
                             event.getMemoryAllocEvents().getEvents().getEventsList()) {
@@ -244,13 +255,13 @@ public class UnifiedPipelineMemoryTest {
                     return allocTags.size() == allocationCount * 2;
                 },
                 event -> event.getKind() == Common.Event.Kind.MEMORY_ALLOC_EVENTS,
-                (unused) -> {
+                () -> {
                     // Set sampling rate back to full.
-                    myGrpc.getTransportStub().execute(
+                    transportStub.execute(
                             Transport.ExecuteRequest.newBuilder()
                                     .setCommand(Commands.Command.newBuilder()
                                             .setType(Commands.Command.CommandType.MEMORY_ALLOC_SAMPLING)
-                                            .setPid(myPerfDriver.getSession().getPid())
+                                            .setPid(mySession.getPid())
                                             .setMemoryAllocSampling(
                                                     Memory.MemoryAllocSamplingData
                                                             .newBuilder()

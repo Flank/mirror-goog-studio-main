@@ -21,7 +21,9 @@ import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import com.android.tools.perflogger.Metric.MetricSample;
 import com.android.tools.perflogger.WindowDeviationAnalyzer;
-import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.memory.MemoryRule;
+import com.android.tools.transport.device.SdkLevel;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,11 +36,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
-import static com.android.tools.profiler.memory.UnifiedPipelineMemoryTestUtils.startAllocationTracking;
+import static com.android.tools.profiler.memory.MemoryTestUtils.startAllocationTracking;
 import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(Parameterized.class)
-public class LiveAllocationTest {
+public final class LiveAllocationTest {
 
     /**
      * Parameters: {AllocationCount, AllocationSize, IsTracking, SamplingRate}.
@@ -46,7 +48,7 @@ public class LiveAllocationTest {
      * <p>When IsTracking is false, SamplingRate is ignored.
      */
     @Parameters
-    public static Collection<Object[]> data() {
+    public static Collection<Object[]> parameters() {
         return Arrays.asList(
                 new Object[][]{
                         {1000000, 10, false, 0}, {1000000, 10, true, 1},
@@ -57,16 +59,14 @@ public class LiveAllocationTest {
     }
 
     private static final int NUM_SAMPLES = 10;
-    private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
+    private static final String ACTIVITY_CLASS = "com.activity.memory.MemoryActivity";
     private static final String PROFILER_PROJECT_NAME = "Android Studio Profilers";
     private static final String LIVE_ALLOCATION_BENCHMARK_NAME =
             "Profiler Live Allocation Timing (ms)";
     private static final Pattern ALLOCATION_TIMING_PATTERN =
             Pattern.compile("(.*)allocation_timing=(?<result>.*)");
 
-    // We currently only test O+ test scenarios.
-    @Rule
-    public final PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
+    @Rule public final MemoryRule myMemoryRule;
 
     private long myAllocationCount;
     private long myAllocationSize;
@@ -75,18 +75,31 @@ public class LiveAllocationTest {
 
     public LiveAllocationTest(
             long allocationCount, long allocationSize, boolean isTracking, int samplingRate) {
+
+        // We currently only test O+ test scenarios.
+        myMemoryRule = new MemoryRule(ACTIVITY_CLASS, SdkLevel.O, new ProfilerConfig() {
+            @Override
+            public boolean usesUnifiedPipeline() {
+                return true;
+            }
+
+            @Override
+            public int getLiveAllocSampleRate() {
+                return samplingRate;
+            }
+        });
+
         myAllocationCount = allocationCount;
         myAllocationSize = allocationSize;
         myIsTracking = isTracking;
         mySamplingRate = samplingRate;
-        myPerfDriver.setLiveAllocSamplingRate(samplingRate);
     }
 
     @Test
     public void testAllocationTiming() {
-        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
+        FakeAndroidDriver androidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
         if (myIsTracking) {
-            startAllocationTracking(myPerfDriver);
+            startAllocationTracking(myMemoryRule);
         }
 
         Benchmark benchmark =
