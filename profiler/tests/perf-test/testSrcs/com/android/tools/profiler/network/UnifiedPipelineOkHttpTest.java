@@ -16,71 +16,79 @@
 
 package com.android.tools.profiler.network;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import com.android.tools.profiler.GrpcUtils;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TransportStubWrapper;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
+import com.android.tools.profiler.ProfilerConfig;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
-import com.android.tools.profiler.proto.Transport.BytesRequest;
-import com.android.tools.profiler.proto.Transport.BytesResponse;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.android.tools.transport.TransportRule;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
+import com.android.tools.transport.grpc.TransportStubWrapper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.google.common.truth.Truth.assertThat;
+
 @RunWith(Parameterized.class)
 public class UnifiedPipelineOkHttpTest {
     @Parameterized.Parameters
-    public static Collection<Integer> data() {
-        // TODO the agent currently does not know about the unified pipeline flag pre-O, so the
-        // http data are not made available via the new GRPC calls. We need to pass in the flag
-        // via Gradle at compile-time.
-        return Arrays.asList(26);
+    public static Collection<SdkLevel> parameters() {
+        // Unified pipeline only available O+
+        return Arrays.asList(SdkLevel.O);
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
     private static final String EXPECTED_RESPONSE_CODE = "response-status-code = 200";
 
-    @Rule public final PerfDriver myPerfDriver;
+    @Rule public final TransportRule myTransportRule;
 
-    private GrpcUtils myGrpc;
-    private TransportStubWrapper myTransportWrapper;
+    private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
 
-    public UnifiedPipelineOkHttpTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel, true);
+    public UnifiedPipelineOkHttpTest(SdkLevel sdkLevel) {
+        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig() {
+            @Override
+            public boolean usesUnifiedPipeline() {
+                return true;
+            }
+        });
     }
 
     @Before
     public void setup() {
-        myGrpc = myPerfDriver.getGrpc();
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
+        myAndroidDriver = myTransportRule.getAndroidDriver();
+        myGrpc = myTransportRule.getGrpc();
     }
 
     @Test
-    public void testOkHttp3Get() throws Exception {
+    public void testOkHttp3Get() {
         final String okHttp3Get = "OKHTTP3GET";
+
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         5,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp3Get");
-                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(okHttp3Get))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3Get");
+                            assertThat(myAndroidDriver.waitForInput(okHttp3Get)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
+
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
@@ -106,34 +114,27 @@ public class UnifiedPipelineOkHttpTest {
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseCompleteData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            BytesResponse bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(responseCompleteData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8()).contains(okHttp3Get);
+
+            assertThat(transportStubWrapper.toBytes(responseCompleteData.getPayloadId())).contains(okHttp3Get);
         }
     }
 
     @Test
-    public void testOkHttp3Post() throws Exception {
+    public void testOkHttp3Post() {
         final String okHttp3Post = "OKHTTP3POST";
+
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         6,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp3Post");
-                            assertThat(
-                                            myPerfDriver
-                                                    .getFakeAndroidDriver()
-                                                    .waitForInput(okHttp3Post))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3Post");
+                            assertThat(myAndroidDriver.waitForInput(okHttp3Post)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
@@ -152,32 +153,27 @@ public class UnifiedPipelineOkHttpTest {
                     requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
             assertThat(requestData.getPayloadId())
                     .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
-            BytesResponse bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(requestData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8())
-                    .isEqualTo("OkHttp3 request body");
+            assertThat(transportStubWrapper.toBytes(requestData.getPayloadId())).isEqualTo("OkHttp3 request body");
         }
     }
 
     @Test
-    public void testOkHttp2Get() throws Exception {
+    public void testOkHttp2Get() {
         final String okHttp2Get = "OKHTTP2GET";
+
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         5,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2Get");
-                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(okHttp2Get))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2Get");
+                            assertThat(myAndroidDriver.waitForInput(okHttp2Get)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
@@ -205,34 +201,27 @@ public class UnifiedPipelineOkHttpTest {
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseCompleteData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            BytesResponse bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(responseCompleteData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8()).contains(okHttp2Get);
+            assertThat(transportStubWrapper.toBytes(responseCompleteData.getPayloadId())).contains(okHttp2Get);
         }
     }
 
     @Test
-    public void testOkHttp2Post() throws Exception {
+    public void testOkHttp2Post() {
         final String okHttp2Post = "OKHTTP2POST";
+
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         6,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2Post");
-                            assertThat(
-                                            myPerfDriver
-                                                    .getFakeAndroidDriver()
-                                                    .waitForInput(okHttp2Post))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2Post");
+                            assertThat(myAndroidDriver.waitForInput(okHttp2Post)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
@@ -251,37 +240,29 @@ public class UnifiedPipelineOkHttpTest {
                     requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
             assertThat(requestData.getPayloadId())
                     .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
-            BytesResponse bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(requestData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8())
+            assertThat(transportStubWrapper.toBytes(requestData.getPayloadId()))
                     .isEqualTo("OkHttp2 request body");
         }
     }
 
     @Test
-    public void testOkHttp2AndOkHttp3Get() throws Exception {
+    public void testOkHttp2AndOkHttp3Get() {
         String okhttp2AndOkHttp3Get = "OKHTTP2ANDOKHTTP3GET";
+
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         10,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get");
-                            assertThat(
-                                            myPerfDriver
-                                                    .getFakeAndroidDriver()
-                                                    .waitForInput(okhttp2AndOkHttp3Get))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get");
+                            assertThat(myAndroidDriver.waitForInput(okhttp2AndOkHttp3Get)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(2);
+
         String urlQuery = "?method=" + okhttp2AndOkHttp3Get;
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
@@ -297,23 +278,20 @@ public class UnifiedPipelineOkHttpTest {
     }
 
     @Test
-    public void testOkHttp2GetAbortedByError() throws Exception {
+    public void testOkHttp2GetAbortedByError() {
         String okHttp2Error = "OKHTTP2ERROR";
+
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         8,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
-                            assertThat(
-                                            myPerfDriver
-                                                    .getFakeAndroidDriver()
-                                                    .waitForInput(okHttp2Error))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
+                            assertThat(myAndroidDriver.waitForInput(okHttp2Error)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(2);
 
@@ -347,23 +325,20 @@ public class UnifiedPipelineOkHttpTest {
     }
 
     @Test
-    public void testOkHttp3GetAbortedByError() throws Exception {
+    public void testOkHttp3GetAbortedByError() {
         String okHttp3Error = "OKHTTP3ERROR";
+
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         8,
                         event ->
                                 event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp3GetAbortedByError");
-                            assertThat(
-                                            myPerfDriver
-                                                    .getFakeAndroidDriver()
-                                                    .waitForInput(okHttp3Error))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3GetAbortedByError");
+                            assertThat(myAndroidDriver.waitForInput(okHttp3Error)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(2);
 

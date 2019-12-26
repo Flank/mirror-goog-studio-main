@@ -64,24 +64,6 @@ coverage_java_test(
 )
 
 perf_test(
-    name = "HttpTest",
-    size = "large",
-    srcs = [
-        "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
-        "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
-        "testSrcs/com/android/tools/profiler/network/UnifiedPipelineHttpUrlTest.java",
-        "testSrcs/com/android/tools/profiler/network/UnifiedPipelineOkHttpTest.java",
-    ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
-    deps = [
-        ":test_lib",
-        "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
-        "//tools/idea/.idea/libraries:truth",
-    ],
-)
-
-perf_test(
     name = "MemoryTest",
     size = "medium",
     srcs = [

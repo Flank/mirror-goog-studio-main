@@ -25,9 +25,14 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.Predicate
 
 /**
  * A wrapping class that provides useful utility methods on top of [TransportServiceGrpc.TransportServiceStub]
+ *
+ * This wrapper is useful for testing against transport APIs that stream, where you have to wait
+ * for multiple events to arrive. You may also want to see [TransportStubWrapper] if you are
+ * testing blocking APIs.
  */
 class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
     companion object {
@@ -52,16 +57,16 @@ class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
      * See also: [Grpc.createTransportAsyncStub]
      */
     fun getEvents(
-            shouldStop: (Common.Event) -> Boolean,
-            accept: (Common.Event) -> Boolean,
-            onStarted: () -> Unit): Map<Long, MutableList<Common.Event>> {
+            shouldStop: Predicate<Common.Event>,
+            accept: Predicate<Common.Event>,
+            onStarted: Runnable): Map<Long, MutableList<Common.Event>> {
         val events: MutableMap<Long, MutableList<Common.Event>> = LinkedHashMap()
         val stopLatch = CountDownLatch(1)
         val observer: StreamObserver<Common.Event> = object : StreamObserver<Common.Event> {
             override fun onNext(event: Common.Event) {
-                if (accept(event)) {
+                if (accept.test(event)) {
                     events.computeIfAbsent(event.groupId) { ArrayList() }.add(event)
-                    if (shouldStop(event)) {
+                    if (shouldStop.test(event)) {
                         stopLatch.countDown()
                     }
                 }
@@ -74,7 +79,7 @@ class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
         val context = Context.current().withCancellation()
         context.run {
             transportStub.getEvents(Transport.GetEventsRequest.getDefaultInstance(), observer)
-            onStarted()
+            onStarted.run()
         }
 
         // Wait for the events to come through.
@@ -96,12 +101,12 @@ class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
      */
     fun getEvents(
             expectedEventCount: Int,
-            accept: (Common.Event) -> Boolean,
-            onStarted: () -> Unit): Map<Long, MutableList<Common.Event>> {
+            accept: Predicate<Common.Event>,
+            onStarted: Runnable): Map<Long, MutableList<Common.Event>> {
         val matchedEventCount = AtomicInteger(0)
         return getEvents(
-                { evt ->
-                    if (accept(evt)) {
+                Predicate { evt ->
+                    if (accept.test(evt)) {
                         matchedEventCount.incrementAndGet()
                     }
                     matchedEventCount.get() >= expectedEventCount
