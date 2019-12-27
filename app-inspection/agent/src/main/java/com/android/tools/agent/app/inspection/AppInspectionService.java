@@ -146,7 +146,7 @@ public class AppInspectionService {
                     inspectorId,
                     "Inspector "
                             + inspectorId
-                            + " crashed during sendCommand due to "
+                            + " crashed during sendCommand due to: "
                             + t.getMessage());
             doDispose(inspectorId);
         }

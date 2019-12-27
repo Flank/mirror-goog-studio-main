@@ -14,34 +14,35 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler.app.inspection;
+package com.android.tools.app.inspection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.app.inspection.AppInspection;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
-import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.Commands;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Transport.ExecuteRequest;
 import com.android.tools.profiler.proto.Transport.GetEventsRequest;
+import com.android.tools.profiler.proto.TransportServiceGrpc;
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
+import com.android.tools.transport.TransportRule;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class ServiceLayer implements Runnable {
-    // all asynchronous operations are expected to be subseconds. so we choose a relatively small
+final class ServiceLayer implements Runnable {
+    // All asynchronous operations are expected to be subseconds. so we choose a relatively small
     // but still generous timeout. If a callback didn't occur during the timeout, we fail the test.
-    static final long TIMEOUT_SECONDS = 30;
+    static final long TIMEOUT_SECONDS = 10;
 
-    static ServiceLayer create(PerfDriver driver) {
-        TransportServiceBlockingStub transportStub = driver.getGrpc().getTransportStub();
+    static ServiceLayer create(TransportRule transportRule) {
+        TransportServiceBlockingStub transportStub = TransportServiceGrpc.newBlockingStub(transportRule.getGrpc().getChannel());
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        int pid = driver.getSession().getPid();
+        int pid = transportRule.getPid();
         ServiceLayer layer = new ServiceLayer(transportStub, executor, pid);
         executor.submit(layer);
         return layer;
@@ -69,7 +70,7 @@ class ServiceLayer implements Runnable {
     }
 
     AppInspectionEvent consumeCollectedEvent() throws Exception {
-        Common.Event event = events.poll(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Common.Event event = events.take();
         assertThat(event).isNotNull();
         assertThat(event.getPid()).isEqualTo(pid);
         assertThat(event.hasAppInspectionEvent()).isTrue();
@@ -83,7 +84,7 @@ class ServiceLayer implements Runnable {
             AppInspectionCommand appInspectionCommand) throws Exception {
         CompletableFuture<Common.Event> local =
                 commandIdToFuture.get(sendCommand(appInspectionCommand));
-        Common.Event response = local.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Common.Event response = local.get();
         assertThat(response).isNotNull();
         assertThat(response.hasAppInspectionResponse()).isTrue();
         assertThat(response.getPid()).isEqualTo(pid);

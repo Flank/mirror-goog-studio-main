@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler.app.inspection;
+package com.android.tools.app.inspection;
 
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.ERROR;
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
-import static com.android.tools.profiler.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
+import static com.android.tools.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.android.tools.app.inspection.AppInspection;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
@@ -32,32 +30,46 @@ import com.android.tools.app.inspection.AppInspection.RawCommand;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
-import com.android.tools.profiler.PerfDriver;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+
+import com.android.tools.profiler.proto.Common;
+import com.android.tools.transport.TransportRule;
+import com.android.tools.transport.device.SdkLevel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
-public class AppInspectionTest {
-    private static final String ACTIVITY_CLASS = "com.activity.MyActivity";
+public final class AppInspectionTest {
+    private static final String ACTIVITY_CLASS = "com.activity.SimpleActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
     private static final String EXPECTED_INSPECTOR_DISPOSED =
             EXPECTED_INSPECTOR_PREFIX + "DISPOSED";
 
-    @Rule public final PerfDriver perfDriver = new PerfDriver(ACTIVITY_CLASS, 26, true);
+    @Rule public final TransportRule transportRule;
+    @Rule public final Timeout timeout = new Timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
     private ServiceLayer serviceLayer;
     private FakeAndroidDriver androidDriver;
 
+    public AppInspectionTest() {
+        TransportRule.Config ruleConfig = new TransportRule.Config() {
+            @Override
+            public void initDaemonConfig(Common.CommonConfig.Builder daemonConfig) {
+                daemonConfig.setProfilerUnifiedPipeline(true);
+            }
+        };
+        transportRule = new TransportRule(ACTIVITY_CLASS, SdkLevel.O, ruleConfig);
+    }
+
     @Before
     public void setUp() {
-        androidDriver = perfDriver.getFakeAndroidDriver();
-        serviceLayer = ServiceLayer.create(perfDriver);
+        androidDriver = transportRule.getAndroidDriver();
+        serviceLayer = ServiceLayer.create(transportRule);
     }
 
     @After
@@ -157,7 +169,7 @@ public class AppInspectionTest {
                 inspectorId,
                 "Inspector "
                         + inspectorId
-                        + " crashed during sendCommand due to This is an inspector exception.");
+                        + " crashed during sendCommand due to: This is an inspector exception.");
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
@@ -218,16 +230,16 @@ public class AppInspectionTest {
         assertThat(response.getRawResponse().getContent().toByteArray()).isEqualTo(responseContent);
     }
 
-    private static String injectInspectorDex() throws IOException {
-        File inspectorDex = new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
-        assertThat(inspectorDex.exists()).isTrue();
-        String onDevicePath = "test_inspector.jar";
-        Files.copy(inspectorDex.toPath(), new File(onDevicePath).toPath(), REPLACE_EXISTING);
-        return onDevicePath;
+    private static String injectInspectorDex() {
+        File onHostinspector = new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
+        assertThat(onHostinspector.exists()).isTrue();
+        File onDeviceInspector = new File(onHostinspector.getName());
+        // Should have already been copied over by the underlying transport test framework
+        assertThat(onDeviceInspector.exists()).isTrue();
+        return onDeviceInspector.getAbsolutePath();
     }
 
     private static void assertInput(FakeAndroidDriver androidDriver, String expected) {
-        assertThat(androidDriver.waitForInput(expected, TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS)))
-                .isTrue();
+        assertThat(androidDriver.waitForInput(expected)).isTrue();
     }
 }
