@@ -20,8 +20,10 @@ import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
@@ -147,6 +149,49 @@ public class WarningTest extends AbstractCheckTest {
             prev2 = prev;
             prev = warning;
         }
+
+        // Regression test for https://issuetracker.google.com/146824833
+        Warning warning1 = warnings.get(0);
+        Warning warning2 =
+                new Warning(warning1.issue, warning1.message, warning1.severity, warning1.project);
+        warning2.line = warning1.line;
+        warning2.offset = warning1.offset;
+        warning2.endOffset = warning1.endOffset;
+        warning2.fileContents = warning1.fileContents;
+        warning2.file = warning1.file;
+        // Make position on same line but shifted one char to the right; should not equal!
+        warning2.location =
+                Location.create(
+                        warning1.location.getFile(),
+                        new DefaultPosition(
+                                warning1.location.getStart().getLine(),
+                                warning1.location.getStart().getColumn() + 1,
+                                warning1.location.getStart().getOffset() + 1),
+                        new DefaultPosition(
+                                warning1.location.getEnd().getLine(),
+                                warning1.location.getEnd().getColumn() + 1,
+                                warning1.location.getEnd().getOffset() + 1));
+        assertTrue(warning2.compareTo(warning1) > 0);
+        assertTrue(warning1.compareTo(warning2) < 0);
+
+        Location location1 = warning1.location;
+        Location secondary1 =
+                Location.create(location1.getFile(), location1.getStart(), location1.getEnd());
+        Location secondary2 =
+                Location.create(location1.getFile(), location1.getStart(), location1.getEnd());
+        warning1.location.setSecondary(secondary1);
+        warning2.location.setSecondary(secondary2);
+        assertTrue(warning2.compareTo(warning1) > 0);
+        assertTrue(warning1.compareTo(warning2) < 0);
+
+        secondary2 =
+                Location.create(
+                        new File(location1.getFile().getParentFile(), "_before"),
+                        location1.getStart(),
+                        location1.getEnd());
+        warning2.location.setSecondary(secondary2);
+        assertTrue(warning2.compareTo(warning1) > 0);
+        assertTrue(warning1.compareTo(warning2) < 0);
     }
 
     @Override

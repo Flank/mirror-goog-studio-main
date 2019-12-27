@@ -123,20 +123,6 @@ public class Warning implements Comparable<Warning> {
             return 1;
         }
 
-        Location secondary1 = location != null ? location.getSecondary() : null;
-        File secondaryFile1 = secondary1 != null ? secondary1.getFile() : null;
-        Location secondary2 = other.location != null ? other.location.getSecondary() : null;
-        File secondaryFile2 = secondary2 != null ? secondary2.getFile() : null;
-        if (secondaryFile1 != null) {
-            if (secondaryFile2 != null) {
-                return secondaryFile1.compareTo(secondaryFile2);
-            } else {
-                return -1;
-            }
-        } else if (secondaryFile2 != null) {
-            return 1;
-        }
-
         // This handles the case where you have a huge XML document without hewlines,
         // such that all the errors end up on the same line.
         if (location != null
@@ -147,6 +133,24 @@ public class Warning implements Comparable<Warning> {
             if (delta != 0) {
                 return delta;
             }
+        }
+
+        Location secondary1 = location != null ? location.getSecondary() : null;
+        File secondaryFile1 = secondary1 != null ? secondary1.getFile() : null;
+        Location secondary2 = other.location != null ? other.location.getSecondary() : null;
+        File secondaryFile2 = secondary2 != null ? secondary2.getFile() : null;
+        if (secondaryFile1 != null) {
+            if (secondaryFile2 != null) {
+                delta = secondaryFile1.compareTo(secondaryFile2);
+                //noinspection RedundantIfStatement
+                if (delta != 0) {
+                    return delta;
+                }
+            } else {
+                return -1;
+            }
+        } else if (secondaryFile2 != null) {
+            return 1;
         }
 
         return 0;
