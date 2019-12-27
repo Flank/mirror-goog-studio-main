@@ -24,11 +24,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Looper;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 
-public class LocationActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class LocationActivity extends TransportTestActivity {
 
     private class DefaultLocationListener implements LocationListener {
         @Override

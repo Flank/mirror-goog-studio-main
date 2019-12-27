@@ -38,24 +38,6 @@ java_library(
     ],
 )
 
-perf_test(
-    name = "EnergyTest",
-    size = "large",
-    srcs = [
-        "testSrcs/com/android/tools/profiler/energy/AlarmTest.java",
-        "testSrcs/com/android/tools/profiler/energy/JobTest.java",
-        "testSrcs/com/android/tools/profiler/energy/LocationTest.java",
-        "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
-    ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
-    deps = [
-        ":test_lib",
-        "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
-        "//tools/idea/.idea/libraries:truth",
-    ],
-)
-
 # testAppInspectorSrcs is compiled into dex, that is injected by AppInspectionTest onto "device"
 # This dex is similar to libraries inspectors code.
 java_library(

@@ -45,6 +45,7 @@ open class ProfilerConfig : TransportRule.Config() {
 
     final override fun initDaemonConfig(daemonConfig: Common.CommonConfig.Builder) {
         daemonConfig.profilerUnifiedPipeline = usesUnifiedPipeline()
+        daemonConfig.energyProfilerEnabled = true
     }
 
     final override fun initAgentConfig(agentConfig: AgentConfig.Builder) {

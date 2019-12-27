@@ -22,9 +22,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 
-public class AlarmActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class AlarmActivity extends TransportTestActivity {
     public AlarmActivity() {
         super("Alarm Activity");
     }

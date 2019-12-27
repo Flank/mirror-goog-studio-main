@@ -17,9 +17,10 @@
 package com.activity.energy;
 
 import android.os.PowerManager;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 
-public class WakeLockActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class WakeLockActivity extends TransportTestActivity {
     public WakeLockActivity() {
         super("WakeLock Activity");
     }
