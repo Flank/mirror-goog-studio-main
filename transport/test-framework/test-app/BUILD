@@ -1,28 +1,18 @@
-load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "dex_library")
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+load("//tools/base/transport/test-framework:transport_test.bzl", "transport_app")
 
-package(default_visibility = ["//visibility:public"])
-
-# Build a deploy jar. The contents of this jar will be dexed before being
-# pushed onto a fake device.
-#
-# Note: Because android-mock is set to never link, compile dependencies use
-# android-mock but the built jar does not include it.
-#
-# TODO: Refactor these rules so that external projects can define their own
-# test apps which depend on this one. Move this to a .bzl file?
-java_binary(
-    name = "test-app_undexed",
+transport_app(
+    name = "test-app",
     srcs = glob(["src/main/java/**/*.java"]),
-    create_executable = 0,
-    deps = ["//tools/base/fakeandroid:android-mock"],
 )
 
-# This target app should be specified as a target for the test_transport
-# rule (in test-framework/transport_test.bzl)
-dex_library(
-    name = "test-app",
-    jars = [":test-app_undexed_deploy.jar"],
+# Expose test-app as a library, so other projects can extend it with their
+# own activities.
+java_library(
+    name = "libtest-app",
+    srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
+    deps = ["//tools/base/fakeandroid:android-mock"],
 )
 
 # This native library is required as a dependency for all transport tests.

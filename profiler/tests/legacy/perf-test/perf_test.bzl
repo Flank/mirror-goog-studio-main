@@ -1,6 +1,20 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/fakeandroid:fakeandroid.bzl", "fake_android_test")
 
+# Note to code reviewers: All changes in here can be ignored as these are
+# temporary patches to get legacy tests running. This file will be deleted
+# within a few followup CLs.
+
+# Convert a list of targets to locations separated by ':'
+def _targets_to_paths(targets):
+    paths = ""
+    for target in targets:
+        if paths != "":
+            paths += ":"
+
+        paths += "$(location " + target + ")"
+    return paths
+
 def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags = [], size = "small"):
     native.genrule(
         name = name + "_transform-app_java",
@@ -26,6 +40,13 @@ def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags =
         name = name + "_transform-app",
         jars = [":" + name + "_transform-app_java"],
     )
+
+    perf_app_runtime_deps = [
+        "//tools/base/transport/native/agent:libjvmtiagent.so",
+        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/native/agent:libsupportjni.so",
+        "//tools/base/profiler/app:perfa",
+    ]
 
     fake_android_test(
         name = name,
@@ -57,6 +78,7 @@ def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags =
         tags = tags,
         size = size,
         jvm_flags = jvm_flags + [
+            "-Dapp.libs=" + _targets_to_paths(perf_app_runtime_deps),
             "-Dperfd.location=$(location //tools/base/transport:transport_main)",
             "-Dagent.location=/tools/base/profiler/native/agent",
             "-Dprofiler.service.location=$(location :profiler-service)",
@@ -78,6 +100,7 @@ def perf_test(name, srcs, test_app, deps = [], jvm_flags = [], data = [], tags =
                 "//tools/base/profiler/app:perfa_java",
                 "//tools/base/profiler/app:perfa_okhttp",
                 "//tools/base/transport/native/agent:libjvmtiagent.so",
+                "//tools/base/profiler/native/agent:libsupportjni.so",
             ],
         }),
     )

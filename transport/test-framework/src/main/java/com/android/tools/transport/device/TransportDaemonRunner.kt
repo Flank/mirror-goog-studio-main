@@ -29,7 +29,7 @@ private val SERVER_LISTENING = Pattern.compile("(.*)(Server listening on.*port:)
  */
 class TransportDaemonRunner(
         configFilePath: String,
-        vararg processArgs: String?)
+        vararg processArgs: String)
     : ProcessRunner(DAEMON_PATH, "--config_file=$configFilePath", *processArgs) {
 
     var port = 0

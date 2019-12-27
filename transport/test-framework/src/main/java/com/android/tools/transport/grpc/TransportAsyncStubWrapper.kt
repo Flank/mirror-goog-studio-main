@@ -29,7 +29,18 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * A wrapping class that provides useful utility methods on top of [TransportServiceGrpc.TransportServiceStub]
  */
-class TransportServiceStubWrapper(private val transportStub: TransportServiceStub) {
+class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
+    companion object {
+        /**
+         * Convenience method for creating a wrapper when you don't need to create the underlying
+         * stub yourself.
+         */
+        @JvmStatic
+        fun create(grpc: Grpc): TransportAsyncStubWrapper {
+            return TransportAsyncStubWrapper(TransportServiceGrpc.newStub(grpc.channel))
+        }
+    }
+
     /**
      * A simpler API for fetching transport events via callbacks.
      *

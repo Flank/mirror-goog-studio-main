@@ -22,7 +22,18 @@ import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlo
 /**
  * A wrapping class that provides useful utility methods on top of [TransportServiceGrpc.TransportServiceBlockingStub]
  */
-class TransportServiceBlockingStubWrapper(private val transportStub: TransportServiceBlockingStub) {
+class TransportStubWrapper(val transportStub: TransportServiceBlockingStub) {
+    companion object {
+        /**
+         * Convenience method for creating a wrapper when you don't need to create the underlying
+         * stub yourself.
+         */
+        @JvmStatic
+        fun create(grpc: Grpc): TransportStubWrapper {
+            return TransportStubWrapper(TransportServiceGrpc.newBlockingStub(grpc.channel))
+        }
+    }
+
     /**
      * Convenience method for fetching a transport stub's contents by ID and converting it into a UTF8
      * string.

@@ -1,17 +1,20 @@
 package com.android.tools.fakeandroid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Assert;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.junit.Assert;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FakeAndroidDriver extends ProcessRunner {
 
@@ -22,20 +25,20 @@ public class FakeAndroidDriver extends ProcessRunner {
 
     public FakeAndroidDriver(String address, int debuggerPort, String extraArtFlag, String[] env) {
         List<String> args = new ArrayList<>();
-        String[] array = new String[] {};
+
         args.add("bash");
         args.add(ART_PATH);
         args.add("--64");
         args.add("--verbose");
-        args.add(
-                "-Djava.library.path="
-                        + ProcessRunner.getProcessPath("agent.location")
-                        + ":"
-                        + ProcessRunner.getProcessPath("perfa.dir.location")
-                        + ":"
-                        + ProcessRunner.getProcessPath("art.lib64.location")
-                        + ":"
-                        + getNativeLibLocation());
+        {
+            StringBuilder libraryPaths = new StringBuilder();
+            libraryPaths.append(ProcessRunner.getProcessPath("art.lib64.location"));
+            for (String path : resolvePropertyPaths("app.libs")) {
+                libraryPaths.append(':');
+                libraryPaths.append(path);
+            }
+            args.add("-Djava.library.path=" + libraryPaths.toString());
+        }
         args.add("-cp");
         args.add(ProcessRunner.getProcessPath("perfa.dex.location"));
         args.add(
@@ -97,7 +100,7 @@ public class FakeAndroidDriver extends ProcessRunner {
         args.add("com.android.tools.applauncher.FakeAndroid");
 
         this.myAddress = address;
-        myProcessArgs = args.toArray(new String[args.size()]);
+        myProcessArgs = args.toArray(new String[0]);
         myProcessEnv = env;
     }
 
@@ -155,9 +158,22 @@ public class FakeAndroidDriver extends ProcessRunner {
         waitForInput(String.format("%s=%s", propertyKey, propertyValue));
     }
 
-    private static String getNativeLibLocation() {
-        String libLocation = ProcessRunner.getProcessPath("native.lib.location");
-        return new java.io.File(libLocation).getParent();
+    /**
+     * Given a property which evaluates to zero or more relative paths to files (separated by ':'),
+     * return the their absolute paths in a list.
+     */
+    private static List<String> resolvePropertyPaths(String propertyKey) {
+        String relativePaths = System.getProperty(propertyKey);
+        if (relativePaths == null) {
+            return Collections.emptyList();
+        }
+
+        List<String> absolutePaths = new ArrayList<>();
+        for (String path : relativePaths.split(":")) {
+            File file = new File(ProcessRunner.getProcessPathRoot() + path);
+            absolutePaths.add(file.getParent());
+        }
+        return absolutePaths;
     }
 
     private void sendRequest(String request, String value) {

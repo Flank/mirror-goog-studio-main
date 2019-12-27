@@ -16,6 +16,8 @@
 
 package com.android.tools.transport
 
+const val LOCAL_HOST = "127.0.0.1"
+
 /**
  * System properties which should be configured for the test framework to work correctly.
  *
@@ -30,11 +32,12 @@ object SystemProperties {
     val TRANSPORT_DAEMON_LOCATION = "transport.daemon.location"
 
     /**
-     * The path to the transport JVMTI agent.
+     * A list of zero or more paths pointing to library dependencies (both native .so and .jar
+     * libraries are expected here).
      *
-     * Ex: `path/to/libjvmtiagent.so`
+     * If there are multiple paths, they should be separated by the ':' character.
      */
-    val TRANSPORT_AGENT_LOCATION = "transport.agent.location"
+    val APP_LIBS = "app.libs"
 
     /**
      * A list of one or more paths to dexed Jars which will be loaded onto a device *if* it

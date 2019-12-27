@@ -64,22 +64,6 @@ coverage_java_test(
 )
 
 perf_test(
-    name = "BasicTest",
-    size = "small",
-    srcs = [
-        "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
-    ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
-    deps = [
-        ":test_lib",
-        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
-        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
-        "//tools/idea/.idea/libraries:truth",
-    ],
-)
-
-perf_test(
     name = "HttpTest",
     size = "large",
     srcs = [
