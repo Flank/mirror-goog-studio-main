@@ -40,6 +40,11 @@ swap_test(
 )
 
 swap_test(
+    name = "VirtualTest",
+    srcs = ["java/com/android/tools/deployer/VirtualTest.java"],
+)
+
+swap_test(
     name = "JdiBasedClassRedefinerTest",
     srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
 )
