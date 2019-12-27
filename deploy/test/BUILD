@@ -84,7 +84,10 @@ dex_library(
 
 java_binary(
     name = "original_java",
-    srcs = glob(["data/java/*.java"]),
+    srcs = glob([
+        "data/java/*.java",
+        "data/java_common/*.java",
+    ]),
     create_executable = 0,
     deps = [
         ":original_kotlin",
@@ -110,7 +113,10 @@ dex_library(
 
 java_binary(
     name = "swapped_java",
-    srcs = glob(["data/java_swap/*.java"]),
+    srcs = glob([
+        "data/java_swap/*.java",
+        "data/java_common/*.java",
+    ]),
     create_executable = 0,
     deps = [
         ":swapped_kotlin",
