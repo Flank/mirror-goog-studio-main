@@ -3,20 +3,48 @@ load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 package(default_visibility = ["//visibility:public"])
 
-java_library(
-    name = "studio-profiler",
+filegroup(
+    name = "supportlib-srcs",
+    srcs = glob(["supportlib/src/main/**/*.java"]),
+    visibility = ["//visibility:private"],
+)
+
+filegroup(
+    name = "echo-sample-srcs",
+    srcs = glob(["echo-sample/src/main/**/*.java"]),
+    visibility = ["//visibility:private"],
+)
+
+# Since Energy profiler doesn't support compile-time instrumentation, don't include the src
+# to avoid adding its dependencies.
+filegroup(
+    name = "common-srcs-excluding-energy",
     srcs = glob(
-        include = [
-            "supportlib/src/main/**/*.java",
-            "common/src/main/**/*.java",
-            # Need to include this here as platforms/latest_jar is not visible outside this package.
-            "echo-sample/src/main/**/*.java",
-            "app-inspection/src/main/**/*.java",
-        ],
-        # Since Energy profiler doesn't support compile-time instrumentation, don't include the src
-        # to avoid adding its dependencies.
+        include = ["common/src/main/**/*.java"],
         exclude = ["common/src/main/java/com/android/tools/profiler/support/energy/**/*.java"],
     ),
+    visibility = ["//visibility:private"],
+)
+
+filegroup(
+    name = "common-srcs",
+    srcs = glob(["common/src/main/**/*.java"]),
+    visibility = ["//visibility:private"],
+)
+
+filegroup(
+    name = "perfa-srcs",
+    srcs = glob(["perfa/src/main/**/*.java"]),
+    visibility = ["//visibility:private"],
+)
+
+java_library(
+    name = "studio-profiler",
+    srcs = [
+        ":common-srcs-excluding-energy",
+        ":echo-sample-srcs",
+        ":supportlib-srcs",
+    ],
     resource_jars = select({
         "//tools/base/bazel:windows": [],
         "//conditions:default": ["//tools/base/profiler/native/agent:supportjni"],
@@ -30,13 +58,12 @@ java_library(
 
 java_library(
     name = "perfa_java_core",
-    srcs = glob([
-        "perfa/src/main/**/*.java",
-        "common/src/main/**/*.java",
-        # Need to include this here as platforms/latest_jar is not visible outside this package.
-        "echo-sample/src/main/**/*.java",
-        "app-inspection/src/main/**/*.java",
-    ]),
+    srcs = [
+        ":common-srcs",
+        ":echo-sample-srcs",
+        ":perfa-srcs",
+        "//tools/base/app-inspection/agent:srcs",
+    ],
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
