@@ -35,6 +35,12 @@ public class MoreTruth {
         return ZipFileSubject.assertThat(zip);
     }
 
+    /**
+     * DO NOT USE this method as zip files will not be closed on Windows.
+     *
+     * <p>Use this instead: Zip(zipFile).use { ZipFileSubject.assertThat(it)... }
+     */
+    @Deprecated
     @NonNull
     public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
         return ZipFileSubject.assertThatZip(file);
