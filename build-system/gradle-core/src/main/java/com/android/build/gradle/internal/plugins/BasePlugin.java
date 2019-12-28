@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ClasspathVerifier;
+import com.android.build.gradle.internal.DependencyConfigurator;
 import com.android.build.gradle.internal.DependencyResolutionChecks;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -71,6 +72,10 @@ import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.internal.variant.VariantInputModel;
+import com.android.build.gradle.internal.variant.VariantInputModelImpl;
+import com.android.build.gradle.internal.variant.VariantModel;
+import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -124,6 +129,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     private BaseExtension extension;
 
     private VariantManager variantManager;
+    private VariantInputModelImpl variantInputModel;
 
     protected TaskManager taskManager;
 
@@ -197,6 +203,11 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     @VisibleForTesting
     public VariantManager getVariantManager() {
         return variantManager;
+    }
+
+    @VisibleForTesting
+    public VariantInputModel getVariantInputModel() {
+        return variantInputModel;
     }
 
     public BaseExtension getExtension() {
@@ -441,6 +452,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         registry,
                         threadRecorder);
 
+        variantInputModel =
+                new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
         variantManager =
                 new VariantManager(
                         globalScope,
@@ -448,14 +461,21 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         projectOptions,
                         extension,
                         variantFactory,
+                        variantInputModel,
                         taskManager,
                         sourceSetManager,
                         threadRecorder);
 
-        registerModels(registry, globalScope, variantManager, extension, extraModelInfo);
+        registerModels(
+                registry,
+                globalScope,
+                variantInputModel,
+                variantManager,
+                extension,
+                extraModelInfo);
 
         // map the whenObjectAdded callbacks on the containers.
-        signingConfigContainer.whenObjectAdded(variantManager::addSigningConfig);
+        signingConfigContainer.whenObjectAdded(variantInputModel::addSigningConfig);
 
         buildTypeContainer.whenObjectAdded(
                 buildType -> {
@@ -467,10 +487,10 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         // initialize it without the signingConfig for dynamic-features.
                         buildType.init();
                     }
-                    variantManager.addBuildType(buildType);
+                    variantInputModel.addBuildType(buildType);
                 });
 
-        productFlavorContainer.whenObjectAdded(variantManager::addProductFlavor);
+        productFlavorContainer.whenObjectAdded(variantInputModel::addProductFlavor);
 
         // map whenObjectRemoved on the containers to throw an exception.
         signingConfigContainer.whenObjectRemoved(
@@ -488,11 +508,19 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     protected void registerModels(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
+            @NonNull VariantInputModel variantInputModel,
             @NonNull VariantManager variantManager,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         // Register a builder for the custom tooling model
-        registerModelBuilder(registry, globalScope, variantManager, extension, extraModelInfo);
+        VariantModel variantModel =
+                new VariantModelImpl(
+                        variantManager.getVariantInputModel(),
+                        extension::getTestBuildType,
+                        variantManager,
+                        extraModelInfo.getSyncIssueHandler());
+
+        registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
         // Register a builder for the native tooling model
         NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantManager);
@@ -503,13 +531,13 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
-            @NonNull VariantManager variantManager,
+            @NonNull VariantModel variantModel,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
                 new ModelBuilder<>(
                         globalScope,
-                        variantManager,
+                        variantModel,
                         taskManager,
                         extension,
                         extraModelInfo,
@@ -630,6 +658,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
         List<VariantScope> variantScopes = variantManager.createVariantsAndTasks();
+
+        new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
+                .configureDependencies();
 
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(

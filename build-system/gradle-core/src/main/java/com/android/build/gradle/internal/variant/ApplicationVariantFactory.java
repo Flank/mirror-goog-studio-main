@@ -279,7 +279,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     }
 
     @Override
-    public void validateModel(@NonNull VariantModel model) {
+    public void validateModel(@NonNull VariantInputModel model) {
         super.validateModel(model);
 
         validateVersionCodes(model);
@@ -340,7 +340,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         buildTypes.create(RELEASE);
     }
 
-    private void validateVersionCodes(@NonNull VariantModel model) {
+    private void validateVersionCodes(@NonNull VariantInputModel model) {
 
         EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 

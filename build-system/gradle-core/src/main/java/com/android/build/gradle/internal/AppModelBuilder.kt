@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.google.common.collect.ImmutableList
@@ -34,14 +35,14 @@ import org.gradle.api.Project
  */
 class AppModelBuilder(
     globalScope: GlobalScope,
-    private val variantManager: VariantManager,
+    private val variantModel: VariantModel,
     taskManager: TaskManager,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
     projectType: Int
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
-    variantManager,
+    variantModel,
     taskManager,
     config,
     extraModelInfo,
@@ -68,7 +69,7 @@ class AppModelBuilder(
     private fun buildMinimalisticModel(): Any {
         val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
 
-        for (variantScope in variantManager.variantScopes) {
+        for (variantScope in variantModel.variants) {
             val artifacts = variantScope.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.BUNDLE)) {

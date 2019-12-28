@@ -73,11 +73,9 @@ public class LibraryVariantFactory extends BaseVariantFactory {
         return true;
     }
 
-    /***
-     * Prevent customization of applicationId or applicationIdSuffix.
-     */
+    /** * Prevent customization of applicationId or applicationIdSuffix. */
     @Override
-    public void validateModel(@NonNull VariantModel model) {
+    public void validateModel(@NonNull VariantInputModel model) {
         super.validateModel(model);
 
         EvalIssueReporter issueReporter = globalScope.getErrorHandler();

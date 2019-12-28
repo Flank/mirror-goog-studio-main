@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-0ef935958122a597deda1b6d45120eace605bd8c3a98760113a9bc33d55250d3
+b255a1500dab456d34719a327f975d381530bce4a74442b0d34f8d71668f8041
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -691,6 +691,7 @@ com.android.build.gradle.internal.dsl.BuildType.externalNativeBuild: com.android
 com.android.build.gradle.internal.dsl.BuildType.getExternalNativeBuildOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions ()
 com.android.build.gradle.internal.dsl.BuildType.getExternalNativeBuildOptions: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions ()
 com.android.build.gradle.internal.dsl.BuildType.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.gradle.internal.dsl.BuildType.getIsDefaultProp: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.gradle.internal.dsl.BuildType.getJavaCompileOptions: com.android.build.gradle.api.JavaCompileOptions ()
 com.android.build.gradle.internal.dsl.BuildType.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.BuildType.getNdkConfig: com.android.build.gradle.internal.dsl.CoreNdkOptions ()
@@ -1107,6 +1108,7 @@ com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFiles: voi
 com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ProductFlavor
 com.android.build.gradle.internal.dsl.ProductFlavor.<init>: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.ProductFlavor.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.gradle.internal.dsl.ProductFlavor.getIsDefaultProp: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.gradle.internal.dsl.ProductFlavor.setDefault: void (boolean)

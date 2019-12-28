@@ -7,10 +7,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues;
-import com.android.build.gradle.internal.fixtures.FakeLogger;
-import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
-import com.android.build.gradle.internal.fixtures.ProjectFactory;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.builder.model.CodeShrinker;
 import com.android.testutils.internal.CopyOfTester;
@@ -22,14 +18,7 @@ import org.junit.Test;
 
 public class PostProcessingBlockTest {
 
-    private DslScope dslScope =
-            FakeDslScope.createFakeDslScope(
-                    new NoOpIssueReporter(),
-                    new NoOpDeprecationReporter(),
-                    ProjectFactory.getProject().getObjects(),
-                    new FakeLogger(),
-                    new FakeBuildFeatureValues(),
-                    new FakeProviderFactory());
+    private DslScope dslScope = FakeDslScope.createFakeDslScope();
 
     /**
      * This test ensures that initWith method (an object copy) is performed correctly via checking

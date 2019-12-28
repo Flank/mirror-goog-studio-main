@@ -16,32 +16,32 @@
 
 package com.android.build.gradle
 
-import com.android.build.gradle.internal.api.VariantFilter
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.errors.SyncIssueHandler
-import com.android.build.gradle.internal.fixture.TestConstants
-import com.android.build.gradle.internal.fixture.TestProjects
-import com.android.build.gradle.internal.ide.SyncIssueImpl
-import com.android.build.gradle.internal.plugins.AppPlugin
-import com.android.build.gradle.internal.plugins.LibraryPlugin
-import com.android.builder.errors.EvalIssueException
+import com.android.build.api.variant.VariantFilter
+import com.android.build.gradle.internal.VariantManager
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.TestVariantInputModel
+import com.android.build.gradle.internal.variant.VariantCombinator
+import com.android.build.gradle.internal.variant.VariantModelImpl
+import com.android.build.gradle.internal.variant.androidWithDefaults
+import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.builder.core.VariantTypeImpl
+import com.android.builder.model.BuildType
+import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SyncIssue
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
+import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
-import groovy.lang.Closure
-import groovy.util.Eval
-import org.gradle.api.Action
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.util.ConfigureUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import kotlin.test.assertFailsWith
+import org.mockito.Mockito
 
 /** Tests for the default variant DSL settings */
 class DefaultVariantTest {
+
+    private val dslScope: DslScope = createFakeDslScope()
 
     @get:Rule
     val projectDirectory = TemporaryFolder()
@@ -50,393 +50,452 @@ class DefaultVariantTest {
 
     @Test
     fun `test defaults to debug`() {
-        assertThat(
-            computeDefaultVariant(
-                """
+        check(
+            given = androidWithDefaults(dslScope) {
                 buildTypes {
-                    a
-                    z
+                    create("a")
+                    create("z")
                 }
-                """
-            )
-        ).isEqualTo("debug")
+            },
+            expected = "debug"
+        )
     }
 
     @Test
     fun `test removed all variants returns null`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                variantFilter { variant -> variant.ignore = true }
-                """
-            )
-        ).isNull()
+        check(
+            given = androidWithDefaults(dslScope) {
+            },
+            variantFilter = { variant ->
+                variant.ignore = true
+            },
+            expected = null
+        )
     }
 
     @Test
     fun `test debug removed defaults to first alphabetically`() {
-        assertThat(
-            computeDefaultVariant(
-                """
+        check(
+            given = androidWithDefaults(dslScope) {
                 buildTypes {
-                    a
-                    z
+                    create("a")
+                    create("z")
                 }
-                variantFilter { variant ->
-                    if (variant.buildType.name == 'debug') {
-                        variant.ignore = true
-                    }
+            },
+            variantFilter = { variant ->
+                if (variant.buildType.name == "debug") {
+                    variant.ignore = true
                 }
-                """
-            )
-        ).isEqualTo("a")
+            },
+            expected = "a"
+        )
     }
 
     @Test
     fun `test default variant build type explicit`() {
-        assertThat(
-            computeDefaultVariant(
-                """
+        check(
+            given = androidWithDefaults(dslScope) {
                 buildTypes {
-                    dev { isDefault = true }
+                    create("dev") {
+                        isDefault = true
+                    }
                 }
-                """
-            )
-        ).isEqualTo("dev")
+            },
+            expected = "dev"
+        )
     }
 
     @Test
     fun `test alphabetical flavor choice`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions 'dim'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1
-                    f2
-                    f3
-                }"""
-            )
-        ).isEqualTo("f1Debug")
+                    create("f1") {
+                        setDimension("dim")
+                    }
+                    create("f2") {
+                        setDimension("dim")
+                    }
+                    create("f3") {
+                        setDimension("dim")
+                    }
+                }
+            },
+            expected = "f1Debug"
+        )
     }
 
     @Test
     fun `test explicit default flavor with single dimensions`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions 'dim'
+        check(
+            given = androidWithDefaults(dslScope) {
                 buildTypes {
-                    a
-                    z { isDefault = true }
+                    create("a")
+                    create("z") {
+                        isDefault = true
+                    }
                 }
-                productFlavors {
-                    f1
-                    f2 { isDefault = true }
-                    f3
-                }"""
-            )
-        ).isEqualTo("f2Z")
-    }
 
-    @Test
-    fun `test explicit default flavor with single dimensions kotlin`() {
-        assertThat(
-            computeDefaultVariant {
-                flavorDimensions("dim")
-                buildTypes.create("a")
-                buildTypes.create("z").isDefault = true
-                productFlavors.create("f1")
-                productFlavors.create("f2").isDefault = true
-                productFlavors.create("f3")
-            }
-        ).isEqualTo("f2Z")
+                productFlavors {
+                    create("f1") {
+                        setDimension("dim")
+                    }
+                    create("f2") {
+                        setDimension("dim")
+                        isDefault = true
+                    }
+                    create("f3") {
+                        setDimension("dim")
+                    }
+                }
+            },
+            expected = "f2Z"
+        )
     }
 
     @Test
     fun `test alphabetical default flavor with multiple dimensions`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions '1', '2'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { dimension = '1' }
-                    f2 { dimension = '1'}
-                    f3 { dimension = '2'}
-                    f4 { dimension = '2' }
-                }"""
-            )
-        ).isEqualTo("f1F3Debug")
+                    create("f1") {
+                        setDimension("1")
+                    }
+                    create("f2") {
+                        setDimension("1")
+                    }
+                    create("f3") {
+                        setDimension("2")
+                    }
+                    create("f4") {
+                        setDimension("2")
+                    }
+                }
+            },
+            expected = "f1F3Debug"
+        )
     }
 
     @Test
     fun `test explicit default flavor with multiple dimensions`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions '1', '2'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { dimension = '1' }
-                    f2 { dimension = '1'; isDefault = true}
-                    f3 { dimension = '2'}
-                    f4 { dimension = '2' }
-                }"""
-            )
-        ).isEqualTo("f2F3Debug")
+                    create("f1") {
+                        setDimension("1")
+                    }
+                    create("f2") {
+                        setDimension("1")
+                        isDefault = true
+                    }
+                    create("f3") {
+                        setDimension("2")
+                    }
+                    create("f4") {
+                        setDimension("2")
+                    }
+                }
+            },
+            expected = "f2F3Debug"
+        )
     }
-
 
     @Test
     fun `test removal default flavor with multiple dimensions`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions 'number', 'letter'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { dimension = 'number' }
-                    f2 { dimension = 'number' }
-                    fa { dimension = 'letter' }
-                    fb { dimension = 'letter' }
-                }
-                variantFilter { variant ->
-                    if (variant.name == 'f1FaDebug') {
-                        variant.ignore = true
+                    create("f1") {
+                        setDimension("number")
+                    }
+                    create("f2") {
+                        setDimension("number")
+                    }
+                    create("fa") {
+                        setDimension("letter")
+                    }
+                    create("fb") {
+                        setDimension("letter")
                     }
                 }
-                """
-            )
-        ).isEqualTo("f1FbDebug")
+            },
+            variantFilter = { variant ->
+                if (variant.name == "f1FaDebug") {
+                    variant.ignore = true
+                }
+            },
+            expected = "f1FbDebug"
+        )
     }
 
     @Test
     fun `test removal default flavor with multiple dimensions and explicit choice`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions 'number', 'letter'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { dimension = 'number' }
-                    f2 { dimension = 'number'; isDefault = true }
-                    fa { dimension = 'letter' }
-                    fb { dimension = 'letter' }
-                }
-                variantFilter { variant ->
-                    if (variant.name == 'f2FaDebug') {
-                        variant.ignore = true
+                    create("f1") {
+                        setDimension("number")
+                    }
+                    create("f2") {
+                        setDimension("number")
+                        isDefault = true
+                    }
+                    create("fa") {
+                        setDimension("letter")
+                    }
+                    create("fb") {
+                        setDimension("letter")
                     }
                 }
-                """
-            )
-        ).isEqualTo("f2FbDebug")
+            },
+            variantFilter = { variant ->
+                if (variant.name == "f2FaDebug") {
+                    variant.ignore = true
+                }
+            },
+            expected = "f2FbDebug"
+        )
     }
 
     @Test
     fun `test matching heuristic with filtering picks variant with most matching`() {
-        assertThat(
-            computeDefaultVariant(
-                """
-                flavorDimensions 'number', 'letter', 'something'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { dimension = 'number' }
-                    f2 { dimension = 'number'; isDefault = true }
-                    fa { dimension = 'letter' }
-                    fb { dimension = 'letter'; isDefault = true  }
-                    fx { dimension = 'something' }
-                    fy { dimension = 'something'; isDefault = true }
-                }
-                variantFilter { variant ->
-                    variant.ignore =
-                            (variant.name == 'f2FbFxDebug') ||
-                            (variant.name == 'f2FbFyDebug') ||
-                            (variant.name == 'f2FaFyDebug') ||
-                            (variant.buildType.name == 'release')
-                }
-                """
-            )
-        ).isEqualTo("f1FbFyDebug")
-        // Left to right comparison this would be f2FaFxDebug, (as f1 is first)
-        // but f1FbFyDebug matches two of the user's settings, so the heuristic should prefer that.
-    }
-
-    @Test
-    fun `test late change`() {
-        assertThat(computeDefaultVariant("")).isEqualTo("debug")
-
-        // Simulate the user trying to modify the setting too late, for example
-        // in afterEvaluate or during execution.
-        assertThat(assertFailsWith<IllegalStateException> {
-            Eval.me(
-                "project",
-                project,
-                """
-                project.android {
-                    buildTypes {
-                        release { isDefault = true }
+                    create("f1") {
+                        setDimension("number")
+                    }
+                    create("f2") {
+                        setDimension("number")
+                        isDefault = true
+                    }
+                    create("fa") {
+                        setDimension("letter")
+                    }
+                    create("fb") {
+                        setDimension("letter")
+                        isDefault = true
+                    }
+                    create("fx") {
+                        setDimension("something")
+                    }
+                    create("fy") {
+                        setDimension("something")
+                        isDefault = true
                     }
                 }
-                """
-            )
-        }).hasMessageThat().contains("is final and cannot be changed any further")
+            },
+            variantFilter = { variant ->
+                variant.ignore =
+                    (variant.name == "f2FbFxDebug") ||
+                            (variant.name == "f2FbFyDebug") ||
+                            (variant.name == "f2FaFyDebug") ||
+                            (variant.buildType.name == "release")
+            },
+            // Left to right comparison this would be f2FaFxDebug, (as f1 is first)
+            // but f1FbFyDebug matches two of the user's settings, so the heuristic should prefer that.
+            expected = "f1FbFyDebug"
+        )
     }
-
 
     @Test
     fun `test ambiguous build type`() {
-        val result = computeDefaultVariantWithSyncIssues(
-            """
+        check(
+            given = androidWithDefaults(dslScope) {
                 buildTypes {
-                    a { isDefault = true }
-                    z { isDefault = true }
+                    create("a") {
+                        isDefault = true
+                    }
+                    create("z") {
+                        isDefault = true
+                    }
                 }
-                """
+            },
+            expected = "a",
+            issueCheck = { issues ->
+                assertThat(issues).hasSize(1)
+                assertThat(issues.first().type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_BUILD_TYPE_DEFAULT)
+                assertThat(issues.first().severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
+                assertThat(issues.first().message).isEqualTo(
+                    "Ambiguous default build type: 'a', 'z'.\n" +
+                            "Please only set `isDefault = true` " +
+                            "for one build type."
+                )
+            }
         )
-        assertThat(result.defaultVariant).isEqualTo("a")
-        assertThat(result.syncIssues).hasSize(1)
-        assertThat(result.syncIssues.first().type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_BUILD_TYPE_DEFAULT)
-        assertThat(result.syncIssues.first().severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
-        assertThat(result.syncIssues.first().message).isEqualTo(
-            "Ambiguous default build type: 'a', 'z'.\n" +
-                    "Please only set `isDefault = true` " +
-                    "for one build type.")
     }
-
 
     @Test
     fun `test ambiguous product flavor`() {
-        val result = computeDefaultVariantWithSyncIssues(
-            """
-                flavorDimensions '1'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { isDefault = true}
-                    f2 { isDefault = true}
-                    f3
-                }"""
+                    create("f1") {
+                        setDimension("1")
+                        isDefault = true
+                    }
+                    create("f2") {
+                        setDimension("1")
+                        isDefault = true
+                    }
+                    create("f3") {
+                        setDimension("1")
+                    }
+                }
+            },
+            expected = "f1Debug",
+            issueCheck = { issues ->
+                assertThat(issues).hasSize(1)
+                assertThat(issues.first().type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT)
+                assertThat(issues.first().severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
+                assertThat(issues.first().message).isEqualTo(
+                    "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.\n" +
+                            "Please only set `isDefault = true` " +
+                            "for one product flavor in each flavor dimension."
+                )
+            }
         )
-        assertThat(result.defaultVariant).isEqualTo("f1Debug")
-        assertThat(result.syncIssues).hasSize(1)
-        assertThat(result.syncIssues.first().type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT)
-        assertThat(result.syncIssues.first().severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
-        assertThat(result.syncIssues.first().message).isEqualTo(
-            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.\n" +
-                    "Please only set `isDefault = true` " +
-                    "for one product flavor in each flavor dimension.")
     }
 
     @Test
     fun `test multi dimension ambiguous product flavor`() {
-        val result = computeDefaultVariantWithSyncIssues(
-            """
-                flavorDimensions '1', '2'
+        check(
+            given = androidWithDefaults(dslScope) {
                 productFlavors {
-                    f1 { dimension='1'; isDefault = true}
-                    f2 { dimension='1'; isDefault = true}
-                    f3 { dimension='1' }
-                    f4 { dimension='2'; isDefault = true}
-                    f5 { dimension='2'; isDefault = true}
-                }"""
+                    create("f1") {
+                        setDimension("1")
+                        isDefault = true
+                    }
+                    create("f2") {
+                        setDimension("1")
+                        isDefault = true
+                    }
+                    create("f3") {
+                        setDimension("1")
+                    }
+                    create("f4") {
+                        setDimension("2")
+                        isDefault = true
+                    }
+                    create("f5") {
+                        setDimension("2")
+                        isDefault = true
+                    }
+                }
+            },
+            expected = "f1F4Debug",
+            issueCheck = { issues ->
+                assertThat(issues).hasSize(2)
+                for (syncIssue in issues) {
+                    assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT)
+                    assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
+                }
+                assertThat(issues.map { it.data }).containsExactly("1", "2")
+                assertThat(issues.map { it.message }).containsExactly(
+                    "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.\n" +
+                            "Please only set `isDefault = true` " +
+                            "for one product flavor in each flavor dimension.",
+                    "Ambiguous default product flavors for flavor dimension '2': 'f4', 'f5'.\n" +
+                            "Please only set `isDefault = true` " +
+                            "for one product flavor in each flavor dimension."
+                )
+            }
         )
-        assertThat(result.defaultVariant).isEqualTo("f1F4Debug")
-        assertThat(result.syncIssues).hasSize(2)
-        for (syncIssue in result.syncIssues) {
-            assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT)
-            assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
-        }
-        assertThat(result.syncIssues.map { it.data }).containsExactly("1", "2")
-        assertThat(result.syncIssues.map { it.message }).containsExactly(
-            "Ambiguous default product flavors for flavor dimension '1': 'f1', 'f2'.\n" +
-                    "Please only set `isDefault = true` " +
-                    "for one product flavor in each flavor dimension.",
-            "Ambiguous default product flavors for flavor dimension '2': 'f4', 'f5'.\n" +
-                    "Please only set `isDefault = true` " +
-                    "for one product flavor in each flavor dimension.")
     }
 
     @Test
     fun `default respects tested build type`() {
-        assertThat(
-            computeDefaultVariant(
-                dsl = """
-                    buildTypes {
-                        a
-                    }
-                    testBuildType = 'a'
-                    """
-            )
-        ).isEqualTo("a")
+        check(
+            given = androidWithDefaults(dslScope) {
+                buildTypes {
+                    create("a")
+                }
+            },
+            testBuildType = "a",
+            expected = "a"
+        )
     }
 
-    private class Result(val defaultVariant: String?, val syncIssues: Set<SyncIssue>)
-
-    private fun computeDefaultVariant(dsl: String, pluginType: TestProjects.Plugin = TestProjects.Plugin.APP): String? {
-        return computeDefaultVariant(pluginType) { evalAndroidBlockGroovy(this, dsl) }
-    }
-
-    private fun computeDefaultVariant(
-        pluginType: TestProjects.Plugin = TestProjects.Plugin.APP,
-        dsl: BaseExtension.() -> Unit
-    ): String? {
-        val result = computeDefaultVariantWithSyncIssues(pluginType, dsl)
-        assertThat(result.syncIssues).isEmpty()
-        return result.defaultVariant
-    }
-
-    private fun computeDefaultVariantWithSyncIssues(
-        dsl: String,
-        pluginType: TestProjects.Plugin = TestProjects.Plugin.APP
-    ): Result {
-        return computeDefaultVariantWithSyncIssues(pluginType) { evalAndroidBlockGroovy(this, dsl) }
-    }
-
-    private fun computeDefaultVariantWithSyncIssues(
-        pluginType: TestProjects.Plugin = TestProjects.Plugin.APP,
-        dsl: BaseExtension.() -> Unit
-    ): Result {
-        project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
-            .withPlugin(pluginType)
-            .build()
-        project.extensions.getByType(TestedExtension::class.java).apply {
-            setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
+    private fun check(
+        given: TestVariantInputModel,
+        variantFilter: ((VariantFilter) -> Unit)? = null,
+        testBuildType: String = "debug",
+        expected: String?,
+        issueCheck: (List<SyncIssue>) -> Unit = {
+            Truth.assertThat(it).named("SyncIssues").isEmpty()
         }
-        dsl.invoke(project.extensions.getByType(BaseExtension::class.java))
-        val plugin = when (pluginType) {
-            TestProjects.Plugin.APP -> project.plugins.getPlugin(AppPlugin::class.java)
-            TestProjects.Plugin.LIBRARY -> project.plugins.getPlugin(LibraryPlugin::class.java)
-        }
+    ) {
+        val variantType = VariantTypeImpl.BASE_APK
 
-        plugin.variantManager.computeVariants()
+        // gather the variant lists from the input model.
+        val variantComputer = VariantCombinator(
+            given, dslScope.issueReporter, variantType, given.implicitFlavorDimensions
+        )
 
-        val syncIssuesHandler = FakeSyncIssueHandler()
-        val defaultVariant =
-            plugin.variantManager.getDefaultVariant(syncIssuesHandler)
-        return Result(defaultVariant, ImmutableSet.copyOf(syncIssuesHandler.syncIssues))
-    }
+        // convert to mock VariantScope
+        val variantScopes = mutableListOf<VariantScope>()
 
-    private fun evalAndroidBlockGroovy(androidExtension: BaseExtension, dsl: String) {
-        val closure = Eval.me("{ -> $dsl}") as Closure<*>
-        ConfigureUtil.configure(closure, androidExtension)
-    }
+        for (variant in variantComputer.computeVariants()) {
+            val flavors = variant.flavors.map { flavorName ->
+                given.productFlavors[flavorName]!!.productFlavor
+            }
 
-    class FakeSyncIssueHandler: SyncIssueHandler() {
-        override val syncIssues: ImmutableList<SyncIssue>
-            get() = ImmutableList.copyOf(_syncIssues)
+            // run the filter
+            var ignore = false
+            if (variantFilter != null) {
+                val variantInfo = VariantFilterImpl(
+                    variant.name,
+                    given.defaultConfig.productFlavor,
+                    given.buildTypes[variant.buildType]!!.buildType,
+                    flavors
+                )
 
-        private val _syncIssues = mutableListOf<SyncIssue>()
+                variantFilter(variantInfo)
 
-        override fun hasSyncIssue(type: Type): Boolean {
-            return _syncIssues.any { issue -> issue.type == type.type }
+                ignore = variantInfo.ignore
+            }
+
+            // if not ignored, get the VariantScope
+            // FIXME this should be simpler when we remove VariantData|Scope to use newer objects only.
+            if (!ignore) {
+                val variantScope = Mockito.mock(VariantScope::class.java)
+                variantScopes.add(variantScope)
+
+                Mockito.`when`(variantScope.fullVariantName).thenReturn(variant.name)
+                Mockito.`when`(variantScope.type).thenReturn(variantType)
+
+                val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
+                Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
+                Mockito.`when`(variantDslInfo.buildType).thenReturn(variant.buildType)
+                Mockito.`when`(variantDslInfo.productFlavors).thenReturn(flavors)
+            }
         }
 
-        override fun lockHandler() {
-            throw UnsupportedOperationException("lockHandler not implemented.")
+        val variantManager = Mockito.mock(VariantManager::class.java).also {
+            Mockito.`when`(it.variantScopes).thenReturn(variantScopes)
         }
 
-        override fun reportIssue(
-            type: Type,
-            severity: Severity,
-            exception: EvalIssueException
-        ) {
-            val issue = SyncIssueImpl(type, severity, exception)
-            _syncIssues.add(issue)
-        }
+        // finally get the computed default variant
+        val actual = VariantModelImpl(
+            given,
+            { testBuildType },
+            variantManager,
+            dslScope.issueReporter
+        ).defaultVariant
+
+        // and validate it
+        assertThat(actual).named("Name of the default Variant").isEqualTo(expected)
+
+        // also check for errors
+        issueCheck(dslScope.issueReporter.syncIssues)
+    }
+
+    private class VariantFilterImpl(
+        override val name: String,
+        override val defaultConfig: ProductFlavor,
+        override val buildType: BuildType,
+        override val flavors: List<ProductFlavor>
+    ) : VariantFilter {
+        override var ignore: Boolean = false
     }
 }

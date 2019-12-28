@@ -50,12 +50,12 @@ public abstract class BaseVariantFactory implements VariantFactory {
     }
 
     @Override
-    public void validateModel(@NonNull VariantModel model) {
+    public void validateModel(@NonNull VariantInputModel model) {
         validateBuildConfig(model);
         validateResValues(model);
     }
 
-    void validateBuildConfig(@NonNull VariantModel model) {
+    void validateBuildConfig(@NonNull VariantInputModel model) {
         if (!globalScope.getBuildFeatures().getBuildConfig()) {
             EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 
@@ -87,7 +87,7 @@ public abstract class BaseVariantFactory implements VariantFactory {
         }
     }
 
-    void validateResValues(@NonNull VariantModel model) {
+    void validateResValues(@NonNull VariantInputModel model) {
         if (!globalScope.getBuildFeatures().getResValues()) {
             EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 

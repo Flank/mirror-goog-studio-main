@@ -23,6 +23,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
+import com.android.build.gradle.internal.DependencyConfigurator;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -762,7 +763,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         AttributesSchema schema =
                 variantScope.getGlobalScope().getProject().getDependencies().getAttributesSchema();
 
-        VariantManager.addFlavorStrategy(
+        DependencyConfigurator.addFlavorStrategy(
                 schema, dimension, ImmutableMap.of(requestedValue, alternatedValues));
     }
 

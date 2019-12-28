@@ -241,6 +241,13 @@ public class BuildType extends AbstractBuildType
         return isDefault;
     }
 
+    // Temp HACK. we need a way to access the Property<Boolean> from Kotlin
+    // DO NOT USE
+    @Deprecated
+    public Property<Boolean> getIsDefaultProp() {
+        return isDefault;
+    }
+
     @Override
     public boolean isDefault() {
         return this.isDefault.get();

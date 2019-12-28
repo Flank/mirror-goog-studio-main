@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -60,6 +59,8 @@ import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
+import com.android.build.gradle.internal.variant.VariantInputModel;
+import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
@@ -141,7 +142,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
-    @NonNull private final VariantManager variantManager;
+    @NonNull private final VariantModel variantModel;
     @NonNull private final TaskManager taskManager;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
@@ -155,7 +156,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     public ModelBuilder(
             @NonNull GlobalScope globalScope,
-            @NonNull VariantManager variantManager,
+            @NonNull VariantModel variantModel,
             @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
@@ -163,7 +164,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         this.globalScope = globalScope;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
-        this.variantManager = variantManager;
+        this.variantModel = variantModel;
         this.taskManager = taskManager;
         this.projectType = projectType;
     }
@@ -250,7 +251,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         // gather the testingVariants per testedVariant
         Multimap<VariantScope, VariantScope> sortedVariants = ArrayListMultimap.create();
-        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+        for (VariantScope variantScope : variantModel.getVariants()) {
             boolean isTestComponent = variantScope.getVariantData().getType().isTestComponent();
 
             if (isTestComponent && variantScope.getTestedVariantData() != null) {
@@ -258,7 +259,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             }
         }
 
-        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+        for (VariantScope variantScope : variantModel.getVariants()) {
             boolean isTestComponent = variantScope.getType().isTestComponent();
 
             if (!isTestComponent) {
@@ -369,31 +370,32 @@ public class ModelBuilder<Extension extends BaseExtension>
                         ? extension.getFlavorDimensionList()
                         : Lists.newArrayList();
 
-        ProductFlavorContainer defaultConfig = ProductFlavorContainerImpl
-                .createProductFlavorContainer(
-                        variantManager.getDefaultConfig(),
+        final VariantInputModel variantInputs = variantModel.getInputs();
+
+        ProductFlavorContainer defaultConfig =
+                ProductFlavorContainerImpl.createProductFlavorContainer(
+                        variantInputs.getDefaultConfig(),
                         extraModelInfo.getExtraFlavorSourceProviders(
-                                variantManager.getDefaultConfig().getProductFlavor().getName()));
+                                variantInputs.getDefaultConfig().getProductFlavor().getName()));
 
         Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
         Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
         Collection<Variant> variants = Lists.newArrayList();
         Collection<String> variantNames = Lists.newArrayList();
 
-        for (BuildTypeData btData : variantManager.getBuildTypes().values()) {
+        for (BuildTypeData btData : variantInputs.getBuildTypes().values()) {
             buildTypes.add(BuildTypeContainerImpl.create(
                     btData,
                     extraModelInfo.getExtraBuildTypeSourceProviders(btData.getBuildType().getName())));
         }
-        for (ProductFlavorData pfData : variantManager.getProductFlavors().values()) {
+        for (ProductFlavorData pfData : variantInputs.getProductFlavors().values()) {
             productFlavors.add(ProductFlavorContainerImpl.createProductFlavorContainer(
                     pfData,
                     extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
         }
 
-        String defaultVariant =
-                variantManager.getDefaultVariant(extraModelInfo.getSyncIssueHandler());
-        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+        String defaultVariant = variantModel.getDefaultVariant();
+        for (VariantScope variantScope : variantModel.getVariants()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variantNames.add(variantScope.getFullVariantName());
                 if (shouldBuildVariant) {
@@ -539,7 +541,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+        for (VariantScope variantScope : variantModel.getVariants()) {
             if (!variantScope.getVariantData().getType().isTestComponent()
                     && variantScope.getFullVariantName().equals(variantName)) {
                 VariantImpl variant = createVariant(variantScope.getVariantData());

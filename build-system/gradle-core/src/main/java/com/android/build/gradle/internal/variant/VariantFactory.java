@@ -84,10 +84,11 @@ public interface VariantFactory {
 
     /**
      * Fail if the model is configured incorrectly.
+     *
      * @param model the non-null model to validate, as implemented by the VariantManager.
      * @throws org.gradle.api.GradleException when the model does not validate.
      */
-    void validateModel(@NonNull VariantModel model);
+    void validateModel(@NonNull VariantInputModel model);
 
     void preVariantWork(Project project);
 

@@ -41,6 +41,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
+import com.android.build.gradle.internal.variant.VariantModel;
+import com.android.build.gradle.internal.variant.VariantModelImpl;
+import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
@@ -112,10 +116,18 @@ public class ModelBuilderTest {
 
         apkLocation = temporaryFolder.newFolder("apk");
 
-        modelBuilder =
-                new ModelBuilder(
-                        globalScope,
+        // Register a builder for the custom tooling model
+        VariantModel variantModel =
+                new VariantModelImpl(
+                        new VariantInputModelBuilder(FakeDslScope.createFakeDslScope()).toModel(),
+                        extension::getTestBuildType,
                         variantManager,
+                        extraModelInfo.getSyncIssueHandler());
+
+        modelBuilder =
+                new ModelBuilder<>(
+                        globalScope,
+                        variantModel,
                         taskManager,
                         extension,
                         extraModelInfo,

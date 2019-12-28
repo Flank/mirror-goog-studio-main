@@ -19,23 +19,15 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.dependency.DexingOutputSplitTransformKt.registerDexingOutputSplitTransform;
 import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
 import static com.android.build.gradle.internal.dependency.L8DexDesugarLibTransformKt.getDesugarLibConfigurations;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_AAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
 import static com.android.build.gradle.internal.utils.DesugarLibUtils.getDesugarLibConfig;
-import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.gradle.BaseExtension;
@@ -49,60 +41,35 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
-import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
-import com.android.build.gradle.internal.dependency.AarToClassTransform;
-import com.android.build.gradle.internal.dependency.AarTransform;
-import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
-import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
-import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform;
 import com.android.build.gradle.internal.dependency.DesugarLibConfiguration;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
-import com.android.build.gradle.internal.dependency.ExtractAarTransform;
-import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform;
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform;
-import com.android.build.gradle.internal.dependency.IdentityTransform;
-import com.android.build.gradle.internal.dependency.JetifyTransform;
-import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
-import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
-import com.android.build.gradle.internal.dependency.MockableJarTransform;
-import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule;
-import com.android.build.gradle.internal.dependency.PlatformAttrTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
-import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantCombinator;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.internal.variant.VariantModel;
+import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
-import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.AbstractProductFlavor.DimensionRequest;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
@@ -110,48 +77,31 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
-import com.android.utils.StringHelper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import kotlin.Pair;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.attributes.AttributeMatchingStrategy;
-import org.gradle.api.attributes.AttributesSchema;
-import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 
-/**
- * Class to create, manage variants.
- */
-public class VariantManager implements VariantModel {
+/** Class to create, manage variants. */
+public class VariantManager {
 
     private static final String MULTIDEX_VERSION = "1.0.2";
 
@@ -171,15 +121,12 @@ public class VariantManager implements VariantModel {
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory variantFactory;
+    @NonNull private final VariantInputModel variantInputModel;
     @NonNull private final TaskManager taskManager;
     @NonNull private final SourceSetManager sourceSetManager;
     @NonNull private final Recorder recorder;
-    @NonNull private final ProductFlavorData<DefaultConfig> defaultConfigData;
-    @NonNull private final Map<String, BuildTypeData> buildTypes;
     @NonNull private final VariantFilter variantFilter;
     @NonNull private final List<VariantScope> variantScopes;
-    @NonNull private final Map<String, ProductFlavorData<ProductFlavor>> productFlavors;
-    @NonNull private final Map<String, SigningConfig> signingConfigs;
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
     @Nullable private final SigningConfig signingOverride;
@@ -195,6 +142,7 @@ public class VariantManager implements VariantModel {
             @NonNull ProjectOptions projectOptions,
             @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
+            @NonNull VariantInputModel variantInputModel,
             @NonNull TaskManager taskManager,
             @NonNull SourceSetManager sourceSetManager,
             @NonNull Recorder recorder) {
@@ -203,38 +151,19 @@ public class VariantManager implements VariantModel {
         this.project = project;
         this.projectOptions = projectOptions;
         this.variantFactory = variantFactory;
+        this.variantInputModel = variantInputModel;
         this.taskManager = taskManager;
         this.sourceSetManager = sourceSetManager;
         this.recorder = recorder;
         this.signingOverride = createSigningOverride();
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
-        this.buildTypes = Maps.newHashMap();
         this.variantScopes = Lists.newArrayList();
-        this.productFlavors = Maps.newHashMap();
-        this.signingConfigs = Maps.newHashMap();
         this.manifestParserMap = Maps.newHashMap();
+    }
 
-        DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet)
-                        extension.getSourceSets().getByName(BuilderConstants.MAIN);
-
-        DefaultAndroidSourceSet androidTestSourceSet = null;
-        DefaultAndroidSourceSet unitTestSourceSet = null;
-        if (variantFactory.hasTestScope()) {
-            androidTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            extension.getSourceSets().getByName(VariantType.ANDROID_TEST_PREFIX);
-            unitTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            extension.getSourceSets().getByName(VariantType.UNIT_TEST_PREFIX);
-        }
-
-        this.defaultConfigData =
-                new ProductFlavorData<>(
-                        extension.getDefaultConfig(),
-                        mainSourceSet,
-                        androidTestSourceSet,
-                        unitTestSourceSet);
+    @NonNull
+    public VariantInputModel getVariantInputModel() {
+        return variantInputModel;
     }
 
     /**
@@ -248,111 +177,6 @@ public class VariantManager implements VariantModel {
         variantScopes.add(variantData.getScope());
     }
 
-    @NonNull
-    @Override
-    public ProductFlavorData<DefaultConfig> getDefaultConfig() {
-        return defaultConfigData;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, BuildTypeData> getBuildTypes() {
-        return buildTypes;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, ProductFlavorData<ProductFlavor>> getProductFlavors() {
-        return productFlavors;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, SigningConfig> getSigningConfigs() {
-        return signingConfigs;
-    }
-
-    public void addSigningConfig(@NonNull SigningConfig signingConfig) {
-        signingConfigs.put(signingConfig.getName(), signingConfig);
-    }
-
-    /**
-     * Adds new BuildType, creating a BuildTypeData, and the associated source set, and adding it to
-     * the map.
-     *
-     * @param buildType the build type.
-     */
-    public void addBuildType(@NonNull BuildType buildType) {
-        String name = buildType.getName();
-        checkName(name, "BuildType");
-
-        if (productFlavors.containsKey(name)) {
-            throw new RuntimeException("BuildType names cannot collide with ProductFlavor names");
-        }
-
-        DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet) sourceSetManager.setUpSourceSet(name);
-
-        DefaultAndroidSourceSet androidTestSourceSet = null;
-        DefaultAndroidSourceSet unitTestSourceSet = null;
-        if (variantFactory.hasTestScope()) {
-            if (buildType.getName().equals(extension.getTestBuildType())) {
-                androidTestSourceSet =
-                        (DefaultAndroidSourceSet)
-                                sourceSetManager.setUpTestSourceSet(
-                                        computeSourceSetName(buildType.getName(), ANDROID_TEST));
-            }
-
-            unitTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            sourceSetManager.setUpTestSourceSet(
-                                    computeSourceSetName(buildType.getName(), UNIT_TEST));
-        }
-
-        BuildTypeData buildTypeData =
-                new BuildTypeData(
-                        buildType, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
-
-        buildTypes.put(name, buildTypeData);
-    }
-
-    /**
-     * Adds a new ProductFlavor, creating a ProductFlavorData and associated source sets, and adding
-     * it to the map.
-     *
-     * @param productFlavor the product flavor
-     */
-    public void addProductFlavor(@NonNull ProductFlavor productFlavor) {
-        String name = productFlavor.getName();
-        checkName(name, "ProductFlavor");
-
-        if (buildTypes.containsKey(name)) {
-            throw new RuntimeException("ProductFlavor names cannot collide with BuildType names");
-        }
-
-        DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet) sourceSetManager.setUpSourceSet(productFlavor.getName());
-
-        DefaultAndroidSourceSet androidTestSourceSet = null;
-        DefaultAndroidSourceSet unitTestSourceSet = null;
-        if (variantFactory.hasTestScope()) {
-            androidTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            sourceSetManager.setUpTestSourceSet(
-                                    computeSourceSetName(productFlavor.getName(), ANDROID_TEST));
-            unitTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            sourceSetManager.setUpTestSourceSet(
-                                    computeSourceSetName(productFlavor.getName(), UNIT_TEST));
-        }
-
-        ProductFlavorData<ProductFlavor> productFlavorData =
-                new ProductFlavorData<>(
-                        productFlavor, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
-
-        productFlavors.put(productFlavor.getName(), productFlavorData);
-    }
-
     /** Returns a list of all created {@link VariantScope}s. */
     @NonNull
     public List<VariantScope> getVariantScopes() {
@@ -361,7 +185,7 @@ public class VariantManager implements VariantModel {
 
     /** Creates the variants and their tasks. */
     public List<VariantScope> createVariantsAndTasks() {
-        variantFactory.validateModel(this);
+        variantFactory.validateModel(variantInputModel);
         variantFactory.preVariantWork(project);
 
         if (variantScopes.isEmpty()) {
@@ -369,7 +193,7 @@ public class VariantManager implements VariantModel {
         }
 
         // Create top level test tasks.
-        taskManager.createTopLevelTestTasks(!productFlavors.isEmpty());
+        taskManager.createTopLevelTestTasks(!variantInputModel.getProductFlavors().isEmpty());
 
         for (final VariantScope variantScope : variantScopes) {
             createTasksForVariant(variantScope);
@@ -415,7 +239,8 @@ public class VariantManager implements VariantModel {
             }
 
             // 2. the build type.
-            final BuildTypeData buildTypeData = buildTypes.get(variantDslInfo.getBuildType());
+            final BuildTypeData buildTypeData =
+                    variantInputModel.getBuildTypes().get(variantDslInfo.getBuildType());
             DefaultAndroidSourceSet buildTypeConfigurationProvider =
                     buildTypeData.getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {
@@ -431,13 +256,15 @@ public class VariantManager implements VariantModel {
             // 4. the flavors.
             for (ProductFlavor productFlavor : testProductFlavors) {
                 testVariantSourceSets.add(
-                        this.productFlavors
+                        variantInputModel
+                                .getProductFlavors()
                                 .get(productFlavor.getName())
                                 .getTestSourceSet(variantType));
             }
 
             // now add the default config
-            testVariantSourceSets.add(defaultConfigData.getTestSourceSet(variantType));
+            testVariantSourceSets.add(
+                    variantInputModel.getDefaultConfig().getTestSourceSet(variantType));
 
             // If the variant being tested is a library variant, VariantDependencies must be
             // computed after the tasks for the tested variant is created.  Therefore, the
@@ -562,319 +389,6 @@ public class VariantManager implements VariantModel {
 
     }
 
-    public void configureDependencies() {
-        final DependencyHandler dependencies = project.getDependencies();
-
-        // USE_ANDROID_X indicates that the developers want to be in the AndroidX world, whereas
-        // ENABLE_JETIFIER indicates that they want to have automatic tool support for converting
-        // not-yet-migrated dependencies. Developers may want to use AndroidX but disable Jetifier
-        // for purposes such as debugging. However, disabling AndroidX and enabling Jetifier is not
-        // allowed.
-        if (!globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
-                && globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
-            throw new IllegalStateException(
-                    "AndroidX must be enabled when Jetifier is enabled. To resolve, set "
-                            + BooleanOption.USE_ANDROID_X.getPropertyName()
-                            + "=true in your gradle.properties file.");
-        }
-
-        // If Jetifier is enabled, replace old support libraries with AndroidX.
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
-            AndroidXDependencySubstitution.replaceOldSupportLibraries(project);
-        }
-
-        /*
-         * Register transforms.
-         */
-        // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
-        // used
-        // Arguments passed to an ArtifactTransform must not be null
-        final boolean jetifierSkipIfPossible =
-                globalScope.getProjectOptions().get(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE);
-        final String jetifierBlackList =
-                Strings.nullToEmpty(
-                        globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
-            dependencies.registerTransform(
-                    JetifyTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getParameters().getSkipIfPossible().set(jetifierSkipIfPossible);
-                        spec.getParameters().getBlackListOption().set(jetifierBlackList);
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
-                    });
-            dependencies.registerTransform(
-                    JetifyTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getParameters().getSkipIfPossible().set(jetifierSkipIfPossible);
-                        spec.getParameters().getBlackListOption().set(jetifierBlackList);
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                    });
-        } else {
-            dependencies.registerTransform(
-                    IdentityTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
-                    });
-            dependencies.registerTransform(
-                    IdentityTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                    });
-        }
-
-        dependencies.registerTransform(
-                ExtractAarTransform.class,
-                spec -> {
-                    spec.getParameters().getProjectName().set(project.getName());
-
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
-                    spec.getTo().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                });
-
-        dependencies.registerTransform(
-                MockableJarTransform.class,
-                spec -> {
-                    // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
-                    spec.getParameters().getProjectName().set(project.getName());
-                    spec.getParameters().getReturnDefaultValues().set(true);
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    spec.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
-                    spec.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
-                    spec.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
-                });
-        dependencies.registerTransform(
-                MockableJarTransform.class,
-                spec -> {
-                    // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
-                    spec.getParameters().getProjectName().set(project.getName());
-                    spec.getParameters().getReturnDefaultValues().set(false);
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    spec.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
-                    spec.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
-                    spec.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
-                });
-
-        // transform to extract attr info from android.jar
-        dependencies.registerTransform(
-                PlatformAttrTransform.class,
-                spec -> {
-                    spec.getParameters().getProjectName().set(project.getName());
-
-                    // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    spec.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_PLATFORM_ATTR);
-                });
-
-        boolean sharedLibSupport =
-                globalScope
-                        .getProjectOptions()
-                        .get(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES);
-        boolean autoNamespaceDependencies =
-                globalScope.getExtension().getAaptOptions().getNamespaced()
-                        && globalScope
-                                .getProjectOptions()
-                                .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES);
-        for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
-            dependencies.registerTransform(
-                    AarTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getParameters().getTargetType().set(transformTarget);
-                        spec.getParameters().getSharedLibSupport().set(sharedLibSupport);
-                        spec.getParameters()
-                                .getAutoNamespaceDependencies()
-                                .set(autoNamespaceDependencies);
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
-                    });
-        }
-
-        if (globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES)) {
-            dependencies.registerTransform(
-                    AarResourcesCompilerTransform.class,
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                        reg.getTo()
-                                .attribute(
-                                        ARTIFACT_FORMAT,
-                                        ArtifactType.COMPILED_DEPENDENCIES_RESOURCES.getType());
-
-                        reg.parameters(
-                                params -> {
-                                    Pair<FileCollection, String> aapt2FromMavenAndVersion =
-                                            Aapt2MavenUtils.getAapt2FromMavenAndVersion(
-                                                    globalScope);
-                                    params.getAapt2FromMaven()
-                                            .from(aapt2FromMavenAndVersion.getFirst());
-                                    params.getAapt2Version()
-                                            .set(aapt2FromMavenAndVersion.getSecond());
-                                    params.getErrorFormatMode()
-                                            .set(
-                                                    SyncOptions.getErrorFormatMode(
-                                                            globalScope.getProjectOptions()));
-                                    params.getAapt2DaemonBuildService()
-                                            .set(Aapt2Daemon.getAapt2DaemonBuildService(project));
-                                });
-                    });
-        }
-
-        // API Jar: Produce a single API jar that can also contain the library R class from the AAR
-        Usage apiUsage = project.getObjects().named(Usage.class, Usage.JAVA_API);
-        dependencies.registerTransform(
-                AarToClassTransform.class,
-                reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
-                    reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_JAR.getType());
-                    reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
-                    reg.parameters(
-                            params -> {
-                                params.getForCompileUse().set(true);
-                                params.getAutoNamespaceDependencies()
-                                        .set(autoNamespaceDependencies);
-                                params.getGenerateRClassJar()
-                                        .set(
-                                                projectOptions.get(
-                                                        BooleanOption
-                                                                .COMPILE_CLASSPATH_LIBRARY_R_CLASSES));
-                            });
-                });
-
-        // Produce a single runtime jar from the AAR.
-        Usage runtimeUsage = project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME);
-        dependencies.registerTransform(
-                AarToClassTransform.class,
-                reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
-                    reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_JAR.getType());
-                    reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
-                    reg.parameters(
-                            params -> {
-                                params.getForCompileUse().set(false);
-                                params.getAutoNamespaceDependencies()
-                                        .set(autoNamespaceDependencies);
-                                params.getGenerateRClassJar().set(false);
-                            });
-                });
-
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
-            dependencies.registerTransform(
-                    ExtractProGuardRulesTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                        spec.getTo()
-                                .attribute(ARTIFACT_FORMAT, UNFILTERED_PROGUARD_RULES.getType());
-                    });
-        }
-
-        dependencies.registerTransform(
-                LibrarySymbolTableTransform.class,
-                spec -> {
-                    spec.getParameters().getProjectName().set(project.getName());
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                    spec.getTo()
-                            .attribute(
-                                    ARTIFACT_FORMAT,
-                                    ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME.getType());
-                });
-
-        if (autoNamespaceDependencies) {
-            dependencies.registerTransform(
-                    LibraryDefinedSymbolTableTransform.class,
-                    spec -> {
-                        spec.getParameters().getProjectName().set(project.getName());
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                        spec.getTo()
-                                .attribute(
-                                        ARTIFACT_FORMAT,
-                                        ArtifactType.DEFINED_ONLY_SYMBOL_LIST.getType());
-                    });
-        }
-
-        // Transform to go from external jars to CLASSES and JAVA_RES artifacts. This returns the
-        // same exact file but with different types, since a jar file can contain both.
-        for (String classesOrResources :
-                new String[] {
-                    ArtifactType.CLASSES_JAR.getType(), ArtifactType.JAVA_RES.getType()
-                }) {
-            dependencies.registerTransform(
-                    IdentityTransform.class,
-                    spec -> {
-                        spec.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, classesOrResources);
-                    });
-        }
-
-        // The Kotlin Kapt plugin should query for PROCESSED_JAR, but it is currently querying for
-        // JAR, so we need to have the workaround below to make it get PROCESSED_JAR. See
-        // http://issuetracker.google.com/111009645.
-        project.getConfigurations()
-                .all(
-                        configuration -> {
-                            if (configuration.getName().startsWith("kapt")) {
-                                configuration
-                                        .getAttributes()
-                                        .attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                            }
-                        });
-
-        // When consuming classes from Android libraries, there are 2 transforms:
-        //     1. `android-classes-directory` -> `android-classes`
-        //     2. `android-classes-jar` -> `android-classes`
-        // Currently Gradle always takes transform flow #1, which is ideal for incremental dexing.
-        // (We don't know why Gradle does that, but IncrementalDesugaringTest should catch it if
-        // this behavior changes.)
-        if (projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2)) {
-            // Hide this transform behind a flag as we need to monitor the performance impact
-            dependencies.registerTransform(
-                    ClassesDirToClassesTransform.class,
-                    spec -> {
-                        spec.getFrom()
-                                .attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_DIR.getType());
-                        spec.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
-                    });
-        }
-        dependencies.registerTransform(
-                IdentityTransform.class,
-                spec -> {
-                    spec.getFrom().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES_JAR.getType());
-                    spec.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
-                });
-
-        // When consuming classes from Java libraries, there are 2 transforms:
-        //     1. `java-classes-directory` -> `android-classes`
-        //     2. `jar` -> `processed-jar` -> `android-classes-jar` -> `android-classes`
-        // Currently Gradle always takes transform flow #2, which is not ideal for incremental
-        // dexing.
-        // TODO(147137579): Configure Gradle to take transform flow #1.
-        dependencies.registerTransform(
-                IdentityTransform.class,
-                spec -> {
-                    spec.getFrom()
-                            .attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JVM_CLASS_DIRECTORY);
-                    spec.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
-                });
-
-        AttributesSchema schema = dependencies.getAttributesSchema();
-
-        // custom strategy for build-type and product-flavor.
-        setBuildTypeStrategy(schema);
-
-        setupFlavorStrategy(schema);
-
-        setupModelStrategy(schema);
-    }
-
     /** Configure artifact transforms that require variant-specific attribute information. */
     private void configureVariantArtifactTransforms(
             @NonNull Collection<VariantScope> variantScopes) {
@@ -929,132 +443,6 @@ public class VariantManager implements VariantModel {
         registerDexingOutputSplitTransform(dependencies);
     }
 
-    private static <F, T> List<T> convert(
-            @NonNull Collection<F> values,
-            @NonNull Function<F, ?> function,
-            @NonNull Class<T> convertedType) {
-        return values.stream()
-                .map(function)
-                .filter(convertedType::isInstance)
-                .map(convertedType::cast)
-                .collect(Collectors.toList());
-    }
-
-    private void setBuildTypeStrategy(@NonNull AttributesSchema schema) {
-        // this is ugly but because the getter returns a very base class we have no choices.
-        // In the case of the experimental plugin, we don't support matching.
-        List<BuildType> dslBuildTypes =
-                convert(buildTypes.values(), BuildTypeData::getBuildType, BuildType.class);
-
-        if (dslBuildTypes.isEmpty()) {
-            return;
-        }
-
-        Map<String, List<String>> alternateMap = Maps.newHashMap();
-
-        for (BuildType buildType : dslBuildTypes) {
-            if (!buildType.getMatchingFallbacks().isEmpty()) {
-                alternateMap.put(buildType.getName(), buildType.getMatchingFallbacks());
-            }
-        }
-
-        if (!alternateMap.isEmpty()) {
-            AttributeMatchingStrategy<BuildTypeAttr> buildTypeStrategy =
-                    schema.attribute(BuildTypeAttr.getATTRIBUTE());
-
-            buildTypeStrategy
-                    .getCompatibilityRules()
-                    .add(
-                            AlternateCompatibilityRule.BuildTypeRule.class,
-                            config -> config.setParams(alternateMap));
-            buildTypeStrategy
-                    .getDisambiguationRules()
-                    .add(
-                            AlternateDisambiguationRule.BuildTypeRule.class,
-                            config -> config.setParams(alternateMap));
-        }
-    }
-
-    private void setupFlavorStrategy(AttributesSchema schema) {
-        // this is ugly but because the getter returns a very base class we have no choices.
-        // In the case of the experimental plugin, we don't support matching.
-        List<com.android.build.gradle.internal.dsl.ProductFlavor> flavors =
-                convert(
-                        productFlavors.values(),
-                        ProductFlavorData::getProductFlavor,
-                        com.android.build.gradle.internal.dsl.ProductFlavor.class);
-
-        // first loop through all the flavors and collect for each dimension, and each value, its
-        // fallbacks
-
-        // map of (dimension > (requested > fallbacks))
-        Map<String, Map<String, List<String>>> alternateMap = Maps.newHashMap();
-        for (com.android.build.gradle.internal.dsl.ProductFlavor flavor : flavors) {
-            if (!flavor.getMatchingFallbacks().isEmpty()) {
-                String name = flavor.getName();
-                String dimension = flavor.getDimension();
-
-                Map<String, List<String>> dimensionMap =
-                        alternateMap.computeIfAbsent(dimension, s -> Maps.newHashMap());
-
-                dimensionMap.put(name, flavor.getMatchingFallbacks());
-            }
-
-            handleMissingDimensions(alternateMap, flavor);
-        }
-
-        // also handle missing dimensions on the default config.
-        if (defaultConfigData.getProductFlavor() instanceof BaseFlavor) {
-            handleMissingDimensions(
-                    alternateMap, (BaseFlavor) defaultConfigData.getProductFlavor());
-        }
-
-        // now that we know we have all the fallbacks for each dimensions, we can create the
-        // rule instances.
-        for (Map.Entry<String, Map<String, List<String>>> entry : alternateMap.entrySet()) {
-            addFlavorStrategy(schema, entry.getKey(), entry.getValue());
-        }
-    }
-
-    public static void addFlavorStrategy(
-            @NonNull AttributesSchema schema,
-            @NonNull String dimension,
-            @NonNull Map<String, List<String>> alternateMap) {
-        Attribute<ProductFlavorAttr> attr = Attribute.of(dimension, ProductFlavorAttr.class);
-        AttributeMatchingStrategy<ProductFlavorAttr> flavorStrategy = schema.attribute(attr);
-
-        flavorStrategy
-                .getCompatibilityRules()
-                .add(
-                        AlternateCompatibilityRule.ProductFlavorRule.class,
-                        config -> config.setParams(alternateMap));
-        flavorStrategy
-                .getDisambiguationRules()
-                .add(
-                        AlternateDisambiguationRule.ProductFlavorRule.class,
-                        config -> config.setParams(alternateMap));
-    }
-
-    private static void setupModelStrategy(@NonNull AttributesSchema attributesSchema) {
-        ModelArtifactCompatibilityRule.Companion.setUp(attributesSchema);
-    }
-
-    private static void handleMissingDimensions(
-            @NonNull Map<String, Map<String, List<String>>> alternateMap,
-            @NonNull BaseFlavor flavor) {
-        Map<String, DimensionRequest> missingStrategies = flavor.getMissingDimensionStrategies();
-        if (!missingStrategies.isEmpty()) {
-            for (Map.Entry<String, DimensionRequest> entry : missingStrategies.entrySet()) {
-                String dimension = entry.getKey();
-
-                Map<String, List<String>> dimensionMap =
-                        alternateMap.computeIfAbsent(dimension, s -> Maps.newHashMap());
-
-                dimensionMap.put(entry.getValue().getRequested(), entry.getValue().getFallbacks());
-            }
-        }
-    }
-
     /**
      * Returns a modified name.
      *
@@ -1076,14 +464,12 @@ public class VariantManager implements VariantModel {
 
         VariantCombinator computer =
                 new VariantCombinator(
-                        this,
+                        variantInputModel,
                         globalScope.getErrorHandler(),
                         variantFactory.getVariantType(),
                         flavorDimensionList);
 
         List<VariantConfiguration> variants = computer.computeVariants();
-
-        configureDependencies();
 
         // get some info related to testing
         BuildTypeData testBuildTypeData = getTestBuildTypeData();
@@ -1102,7 +488,8 @@ public class VariantManager implements VariantModel {
         if (extension instanceof TestedAndroidConfig) {
             TestedAndroidConfig testedExtension = (TestedAndroidConfig) extension;
 
-            testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
+            testBuildTypeData =
+                    variantInputModel.getBuildTypes().get(testedExtension.getTestBuildType());
             if (testBuildTypeData == null) {
                 throw new RuntimeException(
                         String.format(
@@ -1118,13 +505,17 @@ public class VariantManager implements VariantModel {
             @NonNull List<? extends ProductFlavor> productFlavorList,
             @NonNull VariantType variantType) {
 
-        BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
-        DefaultAndroidSourceSet defaultConfigSourceProvider = defaultConfigData.getSourceSet();
+        BuildTypeData buildTypeData = variantInputModel.getBuildTypes().get(buildType.getName());
+        final Map<String, ProductFlavorData<ProductFlavor>> productFlavors =
+                variantInputModel.getProductFlavors();
+
+        final ProductFlavorData<DefaultConfig> defaultConfig = variantInputModel.getDefaultConfig();
+        DefaultAndroidSourceSet defaultConfigSourceProvider = defaultConfig.getSourceSet();
 
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
                         variantType,
-                        defaultConfigData.getProductFlavor(),
+                        defaultConfig.getProductFlavor(),
                         defaultConfigSourceProvider,
                         buildTypeData.getBuildType(),
                         buildTypeData.getSourceSet(),
@@ -1185,7 +576,7 @@ public class VariantManager implements VariantModel {
         }
 
         // 5. The defaultConfig
-        variantSourceSets.add(defaultConfigData.getSourceSet());
+        variantSourceSets.add(variantInputModel.getDefaultConfig().getSourceSet());
 
         // Done. Create the variant and get its internal storage object.
         BaseVariantData variantData =
@@ -1244,7 +635,8 @@ public class VariantManager implements VariantModel {
             DefaultAndroidSourceSet variantSourceSet =
                     (DefaultAndroidSourceSet)
                             sourceSetManager.setUpSourceSet(
-                                    computeSourceSetName(variantBuilder.getName(), variantType),
+                                    VariantBuilder.computeSourceSetName(
+                                            variantBuilder.getName(), variantType),
                                     variantType.isTestComponent());
             variantBuilder.setVariantSourceProvider(variantSourceSet);
         }
@@ -1253,52 +645,33 @@ public class VariantManager implements VariantModel {
             DefaultAndroidSourceSet multiFlavorSourceSet =
                     (DefaultAndroidSourceSet)
                             sourceSetManager.setUpSourceSet(
-                                    computeSourceSetName(
+                                    VariantBuilder.computeSourceSetName(
                                             variantBuilder.getFlavorName(), variantType),
                                     variantType.isTestComponent());
             variantBuilder.setMultiFlavorSourceProvider(multiFlavorSourceSet);
         }
     }
 
-    /**
-     * Turns a string into a valid source set name for the given {@link VariantType}, e.g.
-     * "fooBarUnitTest" becomes "testFooBar".
-     */
-    @NonNull
-    private static String computeSourceSetName(
-            @NonNull String name,
-            @NonNull VariantType variantType) {
-        if (name.endsWith(variantType.getSuffix())) {
-            name = name.substring(0, name.length() - variantType.getSuffix().length());
-        }
-
-        if (!variantType.getPrefix().isEmpty()) {
-            name = StringHelper.appendCapitalized(variantType.getPrefix(), name);
-        }
-
-        return name;
-    }
-
-    /**
-     * Create a TestVariantData for the specified testedVariantData.
-     */
+    /** Create a TestVariantData for the specified testedVariantData. */
     public TestVariantData createTestVariantData(
-            BaseVariantData testedVariantData,
-            VariantType type) {
+            BaseVariantData testedVariantData, VariantType type) {
         BuildTypeData buildTypeData =
-                buildTypes.get(testedVariantData.getVariantDslInfo().getBuildType());
+                variantInputModel
+                        .getBuildTypes()
+                        .get(testedVariantData.getVariantDslInfo().getBuildType());
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
         // to return @Nullable and the constructor is @NonNull on this parameter,
         // but it's never the case on defaultConfigData
         // The constructor does a runtime check on the instances so we should be safe.
-        final DefaultAndroidSourceSet testSourceSet = defaultConfigData.getTestSourceSet(type);
+        final DefaultAndroidSourceSet testSourceSet =
+                variantInputModel.getDefaultConfig().getTestSourceSet(type);
         @SuppressWarnings("ConstantConditions")
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
                         type,
-                        defaultConfigData.getProductFlavor(),
+                        variantInputModel.getDefaultConfig().getProductFlavor(),
                         testSourceSet,
                         buildTypeData.getBuildType(),
                         buildTypeData.getTestSourceSet(type),
@@ -1320,6 +693,8 @@ public class VariantManager implements VariantModel {
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
+        final Map<String, ProductFlavorData<ProductFlavor>> productFlavors =
+                variantInputModel.getProductFlavors();
         for (ProductFlavor productFlavor : productFlavorList) {
             ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getName());
 
@@ -1350,13 +725,16 @@ public class VariantManager implements VariantModel {
             @Nullable BuildTypeData testBuildTypeData) {
         VariantType variantType = variantFactory.getVariantType();
 
+        // run the new variant callback first.
+
         // first run the filter API
         Action<com.android.build.api.variant.VariantFilter> variantFilterAction =
                 extension.getVariantFilter();
 
-        DefaultConfig defaultConfig = defaultConfigData.getProductFlavor();
+        DefaultConfig defaultConfig = variantInputModel.getDefaultConfig().getProductFlavor();
 
-        BuildTypeData buildTypeData = buildTypes.get(variantConfiguration.getBuildType());
+        BuildTypeData buildTypeData =
+                variantInputModel.getBuildTypes().get(variantConfiguration.getBuildType());
         BuildType buildType = buildTypeData.getBuildType();
 
         // get the list of ProductFlavor from the list of flavor name
@@ -1364,7 +742,7 @@ public class VariantManager implements VariantModel {
                 variantConfiguration
                         .getFlavors()
                         .stream()
-                        .map(it -> productFlavors.get(it).getProductFlavor())
+                        .map(it -> variantInputModel.getProductFlavors().get(it).getProductFlavor())
                         .collect(Collectors.toList());
 
         boolean ignore = false;
@@ -1469,23 +847,6 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    private static void checkName(@NonNull String name, @NonNull String displayName) {
-        checkPrefix(name, displayName, VariantType.ANDROID_TEST_PREFIX);
-        checkPrefix(name, displayName, VariantType.UNIT_TEST_PREFIX);
-
-        if (LINT.equals(name)) {
-            throw new RuntimeException(String.format(
-                    "%1$s names cannot be %2$s", displayName, LINT));
-        }
-    }
-
-    private static void checkPrefix(String name, String displayName, String prefix) {
-        if (name.startsWith(prefix)) {
-            throw new RuntimeException(String.format(
-                    "%1$s names cannot start with '%2$s'", displayName, prefix));
-        }
-    }
-
     private SigningConfig createSigningOverride() {
         SigningOptions signingOptions = SigningOptions.readSigningOptions(projectOptions);
         if (signingOptions != null) {
@@ -1534,288 +895,4 @@ public class VariantManager implements VariantModel {
     public void setHasCreatedTasks(boolean hasCreatedTasks) {
         this.hasCreatedTasks = hasCreatedTasks;
     }
-
-    /**
-     * Calculates the default variant to put in the model.
-     *
-     * <p>Given user preferences, this attempts to respect them in the presence of the variant
-     * filter.
-     *
-     * <p>This prioritizes by, in descending order of preference:
-     *
-     * <ol>
-     *   <li>The build author's explicit build type settings
-     *   <li>The build author's explicit product flavor settings, matching the highest number of
-     *       chosen defaults
-     *   <li>The fallback default build type, which is the tested build type, if applicable,
-     *       otherwise 'debug'
-     *   <li>The alphabetically sorted default product flavors, left to right
-     * </ol>
-     *
-     * @param syncIssueHandler any arising user configuration issues will be reported here.
-     * @return the name of a variant that exists under the presence of the variant filter. Only
-     *     returns null if all variants are removed.
-     */
-    @Nullable
-    public String getDefaultVariant(@NonNull SyncIssueHandler syncIssueHandler) {
-        // Finalize the DSL we are about to read.
-        finalizeDefaultVariantDsl();
-
-        // Exit early if all variants were filtered out, this is not a valid project
-        if (variantScopes.isEmpty()) {
-            return null;
-        }
-
-        // Otherwise get the 'best' build type, respecting the user's preferences first.
-
-        @Nullable
-        String chosenBuildType = getBuildAuthorSpecifiedDefaultBuildType(syncIssueHandler);
-        Map<String, String> chosenFlavors = getBuildAuthorSpecifiedDefaultFlavors(syncIssueHandler);
-
-        String fallbackDefaultBuildType = getFallbackDefaultBuildType();
-
-        Comparator<VariantScope> preferredDefaultVariantScopeComparator =
-                new BuildAuthorSpecifiedDefaultBuildTypeComparator(chosenBuildType)
-                        .thenComparing(
-                                new BuildAuthorSpecifiedDefaultsFlavorComparator(chosenFlavors))
-                        .thenComparing(new DefaultBuildTypeComparator(fallbackDefaultBuildType))
-                        .thenComparing(new DefaultFlavorComparator());
-
-        // Ignore test, base feature and feature variants.
-        // * Test variants have corresponding production variants
-        // * Hybrid feature variants have corresponding library variants.
-        Optional<VariantScope> defaultVariantScope =
-                variantScopes
-                        .stream()
-                        .filter(it -> !it.getType().isTestComponent())
-                        .min(preferredDefaultVariantScopeComparator);
-        return defaultVariantScope.map(TransformVariantScope::getFullVariantName).orElse(null);
-    }
-
-    @NonNull
-    private String getFallbackDefaultBuildType() {
-        @Nullable String testBuildType = extension.getTestBuildType();
-        if (testBuildType != null) {
-            return testBuildType;
-        }
-        return "debug";
-    }
-
-    /**
-     * Compares variants prioritizing those that match the given default build type.
-     *
-     * <p>The best match is the <em>minimum</em> element.
-     *
-     * <p>Note: this comparator imposes orderings that are inconsistent with equals, as variants
-     * that do not match the default will compare the same.
-     */
-    private static class BuildAuthorSpecifiedDefaultBuildTypeComparator
-            implements Comparator<VariantScope> {
-        @Nullable private final String chosen;
-
-        private BuildAuthorSpecifiedDefaultBuildTypeComparator(@Nullable String chosen) {
-            this.chosen = chosen;
-        }
-
-        @Override
-        public int compare(@NonNull VariantScope v1, @NonNull VariantScope v2) {
-            if (chosen == null) {
-                return 0;
-            }
-            int b1Score = v1.getVariantDslInfo().getBuildType().equals(chosen) ? 1 : 0;
-            int b2Score = v2.getVariantDslInfo().getBuildType().equals(chosen) ? 1 : 0;
-            return b2Score - b1Score;
-        }
-    }
-
-    /**
-     * Compares variants prioritizing those that match the given default flavors over those that do
-     * not.
-     *
-     * <p>The best match is the <em>minimum</em> element.
-     *
-     * <p>Note: this comparator imposes orderings that are inconsistent with equals, as variants
-     * that do not match the default will compare the same.
-     */
-    private static class BuildAuthorSpecifiedDefaultsFlavorComparator
-            implements Comparator<VariantScope> {
-
-        @NonNull private final Map<String, String> defaultFlavors;
-
-        BuildAuthorSpecifiedDefaultsFlavorComparator(@NonNull Map<String, String> defaultFlavors) {
-            this.defaultFlavors = defaultFlavors;
-        }
-
-        @Override
-        public int compare(VariantScope v1, VariantScope v2) {
-            int f1Score = 0;
-            int f2Score = 0;
-
-            for (ProductFlavor flavor : v1.getVariantDslInfo().getProductFlavors()) {
-                if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
-                    f1Score++;
-                }
-            }
-            for (ProductFlavor flavor : v2.getVariantDslInfo().getProductFlavors()) {
-                if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
-                    f2Score++;
-                }
-            }
-            return f2Score - f1Score;
-        }
-    }
-
-    /**
-     * Compares variants on build types.
-     *
-     * <p>Prefers 'debug', then falls back to the first alphabetically.
-     *
-     * <p>The best match is the <em>minimum</em> element.
-     */
-    private static class DefaultBuildTypeComparator implements Comparator<VariantScope> {
-        @NonNull private final String preferredBuildType;
-
-        private DefaultBuildTypeComparator(@NonNull String preferredBuildType) {
-            this.preferredBuildType = preferredBuildType;
-        }
-
-        @Override
-        public int compare(VariantScope v1, VariantScope v2) {
-            String b1 = v1.getVariantDslInfo().getBuildType();
-            String b2 = v2.getVariantDslInfo().getBuildType();
-            if (b1.equals(b2)) {
-                return 0;
-            } else if (b1.equals(preferredBuildType)) {
-                return -1;
-            } else if (b2.equals(preferredBuildType)) {
-                return 1;
-            } else {
-                return b1.compareTo(b2);
-            }
-        }
-    }
-
-    /**
-     * Compares variants prioritizing product flavors alphabetically, left-to-right.
-     *
-     * <p>The best match is the <em>minimum</em> element.
-     */
-    private static class DefaultFlavorComparator implements Comparator<VariantScope> {
-        @Override
-        public int compare(VariantScope v1, VariantScope v2) {
-            // Compare flavors left-to right.
-            for (int i = 0; i < v1.getVariantDslInfo().getProductFlavors().size(); i++) {
-                String f1 = v1.getVariantDslInfo().getProductFlavors().get(i).getName();
-                String f2 = v2.getVariantDslInfo().getProductFlavors().get(i).getName();
-                int diff = f1.compareTo(f2);
-                if (diff != 0) {
-                    return diff;
-                }
-            }
-            return 0;
-        }
-    }
-
-    /** Prevent any subsequent modifications to the default variant DSL properties. */
-    private void finalizeDefaultVariantDsl() {
-        for (BuildTypeData buildTypeData : buildTypes.values()) {
-            buildTypeData.getBuildType().getIsDefault().finalizeValue();
-        }
-        for (ProductFlavorData<? extends BaseFlavor> productFlavorData : productFlavors.values()) {
-            ((com.android.build.gradle.internal.dsl.ProductFlavor)
-                            productFlavorData.getProductFlavor())
-                    .getIsDefault()
-                    .finalizeValue();
-        }
-    }
-
-    /**
-     * Computes explicit build-author default build type.
-     *
-     * @param syncIssueHandler any configuration issues will be added here, e.g. if multiple build
-     *     types are marked as default.
-     * @return user specified default build type, null if none set.
-     */
-    @Nullable
-    private String getBuildAuthorSpecifiedDefaultBuildType(
-            @NonNull SyncIssueHandler syncIssueHandler) {
-        // First look for the user setting
-        List<String> buildTypesMarkedAsDefault = new ArrayList<>(1);
-        for (BuildTypeData buildType : buildTypes.values()) {
-            if (buildType.getBuildType().getIsDefault().get()) {
-                buildTypesMarkedAsDefault.add(buildType.getBuildType().getName());
-            }
-        }
-        Collections.sort(buildTypesMarkedAsDefault);
-
-        if (buildTypesMarkedAsDefault.size() > 1) {
-            syncIssueHandler.reportWarning(
-                    EvalIssueReporter.Type.AMBIGUOUS_BUILD_TYPE_DEFAULT,
-                    "Ambiguous default build type: '"
-                            + Joiner.on("', '").join(buildTypesMarkedAsDefault)
-                            + "'.\n"
-                            + "Please only set `isDefault = true` for one build type.",
-                    Joiner.on(',').join(buildTypesMarkedAsDefault));
-        }
-
-        if (buildTypesMarkedAsDefault.isEmpty()) {
-            return null;
-        }
-        // This picks the first alphabetically that was tagged, to make it stable,
-        // even if the user accidentally tags two build types as default.
-        return buildTypesMarkedAsDefault.get(0);
-    }
-
-    /**
-     * Computes explicit user set default product flavors for each dimension.
-     *
-     * @param syncIssueHandler any configuration issues will be added here, e.g. if multiple flavors
-     *     in one dimension are marked as default.
-     * @return map from flavor dimension to the user-specified default flavor for that dimension,
-     *     with entries missing for flavors without user-specified defaults.
-     */
-    @NonNull
-    private Map<String, String> getBuildAuthorSpecifiedDefaultFlavors(
-            @NonNull SyncIssueHandler syncIssueHandler) {
-        // Using ArrayListMultiMap to preserve sorting of flavor names.
-        ArrayListMultimap<String, String> userDefaults = ArrayListMultimap.create();
-
-        for (ProductFlavorData<? extends BaseFlavor> flavor : productFlavors.values()) {
-            com.android.build.gradle.internal.dsl.ProductFlavor productFlavor =
-                    (com.android.build.gradle.internal.dsl.ProductFlavor) flavor.getProductFlavor();
-            String dimension = productFlavor.getDimension();
-            if (productFlavor.getIsDefault().get()) {
-                userDefaults.put(dimension, productFlavor.getName());
-            }
-        }
-
-        ImmutableMap.Builder<String, String> defaults = ImmutableMap.builder();
-        // For each user preference, validate it and override the alphabetical default.
-        for (String dimension : userDefaults.keySet()) {
-            List<String> userDefault = userDefaults.get(dimension);
-            Collections.sort(userDefault);
-            if (!userDefault.isEmpty()) {
-                // This picks the first alphabetically that was tagged, to make it stable,
-                // even if the user accidentally tags two flavors in the same dimension as default.
-                defaults.put(dimension, userDefault.get(0));
-            }
-            if (userDefault.size() > 1) {
-                // Report the ambiguous default setting.
-                syncIssueHandler.reportWarning(
-                        EvalIssueReporter.Type.AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT,
-                        "Ambiguous default product flavors for flavor dimension '"
-                                + dimension
-                                + "': '"
-                                + Joiner.on("', '").join(userDefault)
-                                + "'.\n"
-                                + "Please only set `isDefault = true` "
-                                + "for one product flavor "
-                                + "in each flavor dimension.",
-                        dimension);
-            }
-        }
-
-        return defaults.build();
-    }
-
 }

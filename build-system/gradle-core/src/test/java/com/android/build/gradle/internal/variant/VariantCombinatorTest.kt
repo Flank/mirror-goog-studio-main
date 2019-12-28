@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.variant
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.impl.VariantConfigurationImpl
 import com.android.build.gradle.DefaultVariantTest
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueHandler
 import com.android.build.gradle.internal.utils.IssueSubject
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.SyncIssue
@@ -364,12 +365,12 @@ class VariantCombinatorTest {
     }
 
     private fun check(
-        given: VariantModel,
+        given: VariantInputModel,
         flavorList: List<String>? = null,
         expected: List<VariantConfiguration>,
         issueCheck: (List<SyncIssue>) -> Unit = { Truth.assertThat(it).named("SyncIssues").isEmpty() }
     ) {
-        val errorReporter = DefaultVariantTest.FakeSyncIssueHandler()
+        val errorReporter = FakeSyncIssueHandler()
         // compute the flavor list if needed
         val expectedFlavorList = flavorList ?: given.productFlavors.values.asSequence().mapNotNull { it.productFlavor.dimension }.toSet().toList()
 

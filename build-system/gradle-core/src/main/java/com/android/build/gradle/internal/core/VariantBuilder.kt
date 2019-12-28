@@ -20,8 +20,8 @@ import com.android.build.gradle.internal.core.VariantBuilder.Companion.getBuilde
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
@@ -29,7 +29,6 @@ import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
-import java.lang.RuntimeException
 import java.util.function.BooleanSupplier
 
 /** Builder for [VariantDslInfo].
@@ -138,6 +137,25 @@ abstract class VariantBuilder protected constructor(
                 sb.append(variantType.suffix)
             }
             return sb.toString()
+        }
+
+        /**
+         * Turns a string into a valid source set name for the given [VariantType], e.g.
+         * "fooBarUnitTest" becomes "testFooBar".
+         */
+        @JvmStatic
+        fun computeSourceSetName(
+            baseName: String,
+            variantType: VariantType
+        ): String {
+            var name = baseName
+            if (name.endsWith(variantType.suffix)) {
+                name = name.substring(0, name.length - variantType.suffix.length)
+            }
+            if (!variantType.prefix.isEmpty()) {
+                name = variantType.prefix.appendCapitalized(name)
+            }
+            return name
         }
 
     }
