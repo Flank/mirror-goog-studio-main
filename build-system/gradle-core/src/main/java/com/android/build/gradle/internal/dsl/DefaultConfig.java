@@ -22,15 +22,13 @@ import com.android.resources.Density;
 import com.google.common.collect.Sets;
 import java.util.Set;
 import javax.inject.Inject;
-import org.gradle.api.Project;
 
 /** DSL object for the defaultConfig object. */
 @SuppressWarnings({"WeakerAccess", "unused"}) // Exposed in the DSL.
 public class DefaultConfig extends BaseFlavor implements com.android.build.api.dsl.DefaultConfig {
     @Inject
-    public DefaultConfig(
-            @NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
-        super(name, project, dslScope);
+    public DefaultConfig(@NonNull String name, @NonNull DslScope dslScope) {
+        super(name, dslScope);
         setDefaultConfigValues();
     }
 

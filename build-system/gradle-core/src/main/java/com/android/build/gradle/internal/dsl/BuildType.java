@@ -36,7 +36,6 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Incubating;
-import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Internal;
@@ -71,7 +70,6 @@ public class BuildType extends AbstractBuildType
         OLD_DSL,
     }
 
-    @NonNull private final Project project;
     @NonNull private DslScope dslScope;
     @NonNull private final NdkOptions ndkConfig;
     @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
@@ -90,9 +88,8 @@ public class BuildType extends AbstractBuildType
     private final Property<Boolean> isDefault;
 
     @Inject
-    public BuildType(@NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
+    public BuildType(@NonNull String name, @NonNull DslScope dslScope) {
         super(name);
-        this.project = project;
         this.dslScope = dslScope;
 
         ObjectFactory objectFactory = dslScope.getObjectFactory();
@@ -105,7 +102,7 @@ public class BuildType extends AbstractBuildType
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
-        postProcessingBlock = objectFactory.newInstance(PostProcessingBlock.class, project);
+        postProcessingBlock = objectFactory.newInstance(PostProcessingBlock.class, dslScope);
         isDefault = objectFactory.property(Boolean.class).convention(false);
     }
 
@@ -361,7 +358,7 @@ public class BuildType extends AbstractBuildType
     @NonNull
     public BuildType proguardFile(@NonNull Object proguardFile) {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFile");
-        getProguardFiles().add(project.file(proguardFile));
+        getProguardFiles().add(dslScope.file(proguardFile));
         return this;
     }
 
@@ -412,7 +409,7 @@ public class BuildType extends AbstractBuildType
     @NonNull
     public BuildType testProguardFile(@NonNull Object proguardFile) {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile");
-        getTestProguardFiles().add(project.file(proguardFile));
+        getTestProguardFiles().add(dslScope.file(proguardFile));
         return this;
     }
 
@@ -458,7 +455,7 @@ public class BuildType extends AbstractBuildType
     public BuildType consumerProguardFile(@NonNull Object proguardFile) {
         checkPostProcessingConfiguration(
                 PostProcessingConfiguration.OLD_DSL, "consumerProguardFile");
-        getConsumerProguardFiles().add(project.file(proguardFile));
+        getConsumerProguardFiles().add(dslScope.file(proguardFile));
         return this;
     }
 

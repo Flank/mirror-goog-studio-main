@@ -23,7 +23,6 @@ import com.android.builder.model.BaseConfig;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.inject.Inject;
-import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 
 /**
@@ -60,9 +59,8 @@ import org.gradle.api.provider.Property;
 public class ProductFlavor extends BaseFlavor implements com.android.build.api.dsl.ProductFlavor {
 
     @Inject
-    public ProductFlavor(
-            @NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
-        super(name, project, dslScope);
+    public ProductFlavor(@NonNull String name, @NonNull DslScope dslScope) {
+        super(name, dslScope);
         isDefault = dslScope.getObjectFactory().property(Boolean.class).convention(false);
     }
 

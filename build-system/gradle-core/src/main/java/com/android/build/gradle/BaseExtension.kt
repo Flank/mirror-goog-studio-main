@@ -18,7 +18,6 @@ package com.android.build.gradle
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.TestExtension
@@ -36,7 +35,6 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.AdbOptions
-import com.android.build.gradle.internal.dsl.BuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ComposeOptions
 import com.android.build.gradle.internal.dsl.ComposeOptionsImpl
@@ -50,8 +48,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
-import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
@@ -644,7 +640,7 @@ abstract class BaseExtension protected constructor(
                     EvalIssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
                 )
         }
-        return ProguardFiles.getDefaultProguardFile(name, project)
+        return ProguardFiles.getDefaultProguardFile(name, project.layout)
     }
 
     // ---------------

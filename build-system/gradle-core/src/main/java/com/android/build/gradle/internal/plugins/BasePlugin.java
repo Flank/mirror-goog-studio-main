@@ -311,6 +311,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
                         new DslVariableFactory(syncIssueHandler),
+                        project.getLayout(),
                         project::file);
 
         @Nullable
@@ -377,15 +378,12 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private void configureExtension() {
         ObjectFactory objectFactory = project.getObjects();
+
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
-                project.container(
-                        BuildType.class,
-                        new BuildTypeFactory(objectFactory, project, globalScope.getDslScope()));
+                project.container(BuildType.class, new BuildTypeFactory(globalScope.getDslScope()));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
-                        ProductFlavor.class,
-                        new ProductFlavorFactory(
-                                objectFactory, project, globalScope.getDslScope()));
+                        ProductFlavor.class, new ProductFlavorFactory(globalScope.getDslScope()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,
@@ -409,7 +407,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 objectFactory.newInstance(
                         DefaultConfig.class,
                         BuilderConstants.MAIN,
-                        project,
                         globalScope.getDslScope());
 
         extension =

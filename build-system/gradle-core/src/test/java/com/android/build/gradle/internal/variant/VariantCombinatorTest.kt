@@ -29,9 +29,9 @@ class VariantCombinatorTest {
     @Test
     fun `test default config`() {
         check(
-            given = variantModel {
+            given = android {
                 buildTypes {
-                    create("debug", isDebuggable = true)
+                    create("debug").isDebuggable = true
                     create("release")
                 }
             },
@@ -55,17 +55,19 @@ class VariantCombinatorTest {
     @Test
     fun `test basic flavors`() {
         check(
-            given = variantModel {
+            given = android {
                 buildTypes {
-                    create("debug", isDebuggable = true)
+                    create("debug").isDebuggable = true
                     create("release")
                 }
                 productFlavors {
                     create("flavor1") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                     create("flavor2") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                 }
             },
@@ -99,23 +101,27 @@ class VariantCombinatorTest {
     @Test
     fun `test multiple dimensions flavors`() {
         check(
-            given = variantModel {
+            given = android {
                 buildTypes {
-                    create("debug", isDebuggable = true)
+                    create("debug").isDebuggable = true
                     create("release")
                 }
                 productFlavors {
                     create("flavor1") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                     create("flavor2") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                     create("flavorA") {
-                        dimension = "two"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("two")
                     }
                     create("flavorB") {
-                        dimension = "two"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("two")
                     }
                 }
             },
@@ -172,7 +178,7 @@ class VariantCombinatorTest {
     @Test
     fun `test no build type or flavors`() {
         check(
-            given = variantModel { },
+            given = android { },
             expected = listOf(
                 VariantConfigurationImpl(
                     variantName = "main",
@@ -187,13 +193,15 @@ class VariantCombinatorTest {
     @Test
     fun `test basic flavors - no build types`() {
         check(
-            given = variantModel {
+            given = android {
                 productFlavors {
                     create("flavor1") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                     create("flavor2") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                 }
             },
@@ -215,9 +223,9 @@ class VariantCombinatorTest {
     @Test
     fun `test missing dimension in flavors`() {
         check(
-            given = variantModel {
+            given = android {
                 buildTypes {
-                    create("debug", isDebuggable = true)
+                    create("debug").isDebuggable = true
                     create("release")
                 }
                 productFlavors {
@@ -260,9 +268,9 @@ class VariantCombinatorTest {
     @Test
     fun `test missing dimension list with no dimension in flavors`() {
         check(
-            given = variantModel {
+            given = android {
                 buildTypes {
-                    create("debug", isDebuggable = true)
+                    create("debug").isDebuggable = true
                     create("release")
                 }
                 productFlavors {
@@ -312,17 +320,19 @@ class VariantCombinatorTest {
     @Test
     fun `test missing dimension list`() {
         check(
-            given = variantModel {
+            given = android {
                 buildTypes {
-                    create("debug", isDebuggable = true)
+                    create("debug").isDebuggable = true
                     create("release")
                 }
                 productFlavors {
                     create("flavor1") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                     create("flavor2") {
-                        dimension = "one"
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
                     }
                 }
             },

@@ -31,14 +31,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Action;
-import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 
 /** Base DSL object used to configure product flavors. */
 @SuppressWarnings("deprecation")
 public abstract class BaseFlavor extends AbstractProductFlavor implements CoreProductFlavor {
 
-    @NonNull protected final Project project;
     @NonNull private DslScope dslScope;
 
     @NonNull private final NdkOptions ndkConfig;
@@ -49,9 +47,8 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
 
     @NonNull private final ShaderOptions shaderOptions;
 
-    public BaseFlavor(@NonNull String name, @NonNull Project project, @NonNull DslScope dslScope) {
+    public BaseFlavor(@NonNull String name, @NonNull DslScope dslScope) {
         super(name, dslScope.getObjectFactory().newInstance(VectorDrawablesOptions.class));
-        this.project = project;
         this.dslScope = dslScope;
         ObjectFactory objectFactory = dslScope.getObjectFactory();
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
@@ -319,7 +316,7 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
      * getDefaultProguardFile(String filename)</code> to return the full path of each file.
      */
     public void proguardFile(@NonNull Object proguardFile) {
-        getProguardFiles().add(project.file(proguardFile));
+        getProguardFiles().add(dslScope.file(proguardFile));
     }
 
     /**
@@ -369,7 +366,7 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
      * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
     public void testProguardFile(@NonNull Object proguardFile) {
-        getTestProguardFiles().add(project.file(proguardFile));
+        getTestProguardFiles().add(dslScope.file(proguardFile));
     }
 
     /**
@@ -404,7 +401,7 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
      * <p>This is only valid for Library project. This is ignored in Application project.
      */
     public void consumerProguardFile(@NonNull Object proguardFile) {
-        getConsumerProguardFiles().add(project.file(proguardFile));
+        getConsumerProguardFiles().add(dslScope.file(proguardFile));
     }
 
     /**

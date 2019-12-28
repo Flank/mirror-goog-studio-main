@@ -139,7 +139,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             val defaultFiles = immutableMapBuilder<File, String> {
                 for (knownFileName in ProguardFiles.KNOWN_FILE_NAMES) {
-                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, project),
+                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, project.layout),
                         knownFileName)
                 }
             }

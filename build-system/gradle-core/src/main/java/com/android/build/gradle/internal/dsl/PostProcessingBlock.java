@@ -26,6 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.ProguardFilesProvider;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.builder.model.CodeShrinker;
 import com.android.utils.HelpfulEnumConverter;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,7 +38,6 @@ import java.util.Collection;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.Incubating;
-import org.gradle.api.Project;
 
 /**
  * DSL object for configuring postProcessing: removing dead code, obfuscating etc.
@@ -56,7 +56,7 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     private static final HelpfulEnumConverter<CodeShrinker> SHRINKER_CONVERTER =
             new HelpfulEnumConverter<>(CodeShrinker.class);
 
-    @NonNull private final Project project;
+    @NonNull private final DslScope dslScope;
 
     private boolean removeUnusedCode = true;
     private boolean removeUnusedResources;
@@ -70,17 +70,18 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     @Nullable private CodeShrinker codeShrinker;
 
     @Inject
-    public PostProcessingBlock(@NonNull Project project) {
+    public PostProcessingBlock(@NonNull DslScope dslScope) {
         this(
-                project,
+                dslScope,
                 ImmutableList.of(
                         ProguardFiles.getDefaultProguardFile(
-                                ProguardFiles.ProguardFile.NO_ACTIONS.fileName, project)));
+                                ProguardFiles.ProguardFile.NO_ACTIONS.fileName,
+                                dslScope.getProjectLayout())));
     }
 
     @VisibleForTesting
-    PostProcessingBlock(@NonNull Project project, List<File> proguardFiles) {
-        this.project = project;
+    PostProcessingBlock(@NonNull DslScope dslScope, List<File> proguardFiles) {
+        this.dslScope = dslScope;
         this.proguardFiles = Lists.newArrayList(proguardFiles);
         this.testProguardFiles = new ArrayList<>();
         this.consumerProguardFiles = new ArrayList<>();
@@ -132,12 +133,12 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     public void setProguardFiles(List<Object> proguardFiles) {
         this.proguardFiles = new ArrayList<>();
         for (Object file : proguardFiles) {
-            this.proguardFiles.add(project.file(file));
+            this.proguardFiles.add(dslScope.file(file));
         }
     }
 
     public void proguardFile(Object file) {
-        this.proguardFiles.add(project.file(file));
+        this.proguardFiles.add(dslScope.file(file));
     }
 
     public void proguardFiles(Object... files) {
@@ -149,12 +150,12 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     public void setTestProguardFiles(List<Object> testProguardFiles) {
         this.testProguardFiles = new ArrayList<>();
         for (Object file : testProguardFiles) {
-            this.testProguardFiles.add(project.file(file));
+            this.testProguardFiles.add(dslScope.file(file));
         }
     }
 
     public void testProguardFile(Object file) {
-        this.testProguardFiles.add(project.file(file));
+        this.testProguardFiles.add(dslScope.file(file));
     }
 
     public void testProguardFiles(Object... files) {
@@ -166,12 +167,12 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     public void setConsumerProguardFiles(List<Object> consumerProguardFiles) {
         this.consumerProguardFiles = new ArrayList<>();
         for (Object file : consumerProguardFiles) {
-            this.consumerProguardFiles.add(project.file(file));
+            this.consumerProguardFiles.add(dslScope.file(file));
         }
     }
 
     public void consumerProguardFile(Object file) {
-        this.consumerProguardFiles.add(project.file(file));
+        this.consumerProguardFiles.add(dslScope.file(file));
     }
 
     public void consumerProguardFiles(Object... files) {

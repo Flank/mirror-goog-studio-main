@@ -961,7 +961,7 @@ open class VariantDslInfoImpl internal constructor(
                 listOf(
                     ProguardFiles.getDefaultProguardFile(
                         ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName,
-                        project
+                        project.layout
                     )
                 )
 

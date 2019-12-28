@@ -21,7 +21,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.TaskAction;
 
@@ -31,12 +33,15 @@ import org.gradle.api.tasks.TaskAction;
 public class ExtractProguardFiles extends DefaultTask {
 
     private final ImmutableList<File> generatedFiles;
+    private final ProjectLayout projectLayout;
 
-    public ExtractProguardFiles() {
+    @Inject
+    public ExtractProguardFiles(ProjectLayout projectLayout) {
+        this.projectLayout = projectLayout;
         ImmutableList.Builder<File> outputs = ImmutableList.builder();
 
         for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
-            outputs.add(ProguardFiles.getDefaultProguardFile(name, getProject()));
+            outputs.add(ProguardFiles.getDefaultProguardFile(name, projectLayout));
         }
 
         this.generatedFiles = outputs.build();
@@ -50,7 +55,7 @@ public class ExtractProguardFiles extends DefaultTask {
     @TaskAction
     public void run() throws IOException {
         for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
-            File defaultProguardFile = ProguardFiles.getDefaultProguardFile(name, getProject());
+            File defaultProguardFile = ProguardFiles.getDefaultProguardFile(name, projectLayout);
             if (!defaultProguardFile.isFile()) {
                 ProguardFiles.createProguardFile(name, defaultProguardFile);
             }

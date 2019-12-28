@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
@@ -51,6 +52,8 @@ interface DslScope {
     val providerFactory: ProviderFactory
 
     val variableFactory: DslVariableFactory
+
+    val projectLayout: ProjectLayout
 
     fun file(file: Any): File
 }

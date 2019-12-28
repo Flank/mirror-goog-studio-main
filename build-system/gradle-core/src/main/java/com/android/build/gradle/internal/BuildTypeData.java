@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 public class BuildTypeData extends VariantDimensionData {
     @NonNull private final BuildType buildType;
 
-    BuildTypeData(
+    public BuildTypeData(
             @NonNull BuildType buildType,
             @NonNull DefaultAndroidSourceSet sourceSet,
             @Nullable DefaultAndroidSourceSet androidTestSourceSet,

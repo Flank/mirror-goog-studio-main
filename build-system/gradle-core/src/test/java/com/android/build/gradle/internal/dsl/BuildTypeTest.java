@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.plugins.AppPlugin;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.internal.CopyOfTester;
 import com.google.common.collect.ImmutableMap;
@@ -44,8 +42,6 @@ public class BuildTypeTest {
 
     private Project project;
 
-    private EvalIssueReporter issueReporter;
-    private DeprecationReporter deprecationReporter;
     private DslScope dslScope =
             FakeDslScope.createFakeDslScope(
                     new NoOpIssueReporter(),
@@ -54,7 +50,6 @@ public class BuildTypeTest {
                     new FakeLogger(),
                     new FakeBuildFeatureValues(),
                     new FakeProviderFactory());
-
 
     @Before
     public void setUp() throws Exception {
@@ -87,9 +82,9 @@ public class BuildTypeTest {
     public void testInitWith() {
         CopyOfTester.assertAllGettersCalled(
                 BuildType.class,
-                new BuildType("original", project, dslScope),
+                new BuildType("original", dslScope),
                 original -> {
-                    BuildType copy = new BuildType(original.getName(), project, dslScope);
+                    BuildType copy = new BuildType(original.getName(), dslScope);
                     copy.initWith(original);
 
                     // Manually call getters that don't need to be copied.

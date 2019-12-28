@@ -45,8 +45,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
     private val name: String,
     project: Project,
     private val publishPackage: Boolean
-)
-        : AndroidSourceSet, SourceProvider {
+) : AndroidSourceSet, SourceProvider {
 
     private val javaSource: AndroidSourceDirectorySet
     private val javaResources: AndroidSourceDirectorySet

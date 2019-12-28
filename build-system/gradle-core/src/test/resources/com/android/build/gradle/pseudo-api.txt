@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-acf24c090ac81f6cc914100ff813bbc1f56ad394f2bb0ee920d26016b61e6b62
+0ef935958122a597deda1b6d45120eace605bd8c3a98760113a9bc33d55250d3
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -235,7 +235,7 @@ com.android.build.gradle.ProguardFiles$ProguardFile.valueOf: com.android.build.g
 com.android.build.gradle.ProguardFiles$ProguardFile.values: com.android.build.gradle.ProguardFiles$ProguardFile[] ()
 com.android.build.gradle.ProguardFiles.<init>: com.android.build.gradle.ProguardFiles ()
 com.android.build.gradle.ProguardFiles.createProguardFile: void (java.lang.String, java.io.File) throws java.io.IOException
-com.android.build.gradle.ProguardFiles.getDefaultProguardFile: java.io.File (java.lang.String, org.gradle.api.Project)
+com.android.build.gradle.ProguardFiles.getDefaultProguardFile: java.io.File (java.lang.String, org.gradle.api.file.ProjectLayout)
 com.android.build.gradle.PseudoApiUpdater
 com.android.build.gradle.PseudoApiUpdater.<init>: com.android.build.gradle.PseudoApiUpdater ()
 com.android.build.gradle.PseudoApiUpdater.main: void (java.lang.String[]) throws java.io.IOException
@@ -632,7 +632,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setDynamicFeatures:
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor
-com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.gradle.internal.dsl.BaseFlavor.consumerProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BaseFlavor.consumerProguardFiles: void (java.lang.Object[])
@@ -682,7 +682,7 @@ com.android.build.gradle.internal.dsl.BuildType extends com.android.builder.core
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration extends java.lang.Enum
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.valueOf: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration (java.lang.String)
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.values: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration[] ()
-com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle.internal.dsl.BuildType (java.lang.String, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle.internal.dsl.BuildType (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.BuildType.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.gradle.internal.dsl.BuildType.consumerProguardFile: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.consumerProguardFiles: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object[])
@@ -731,7 +731,7 @@ com.android.build.gradle.internal.dsl.BuildType.shaders: void (org.gradle.api.Ac
 com.android.build.gradle.internal.dsl.BuildType.testProguardFile: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.testProguardFiles: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object[])
 com.android.build.gradle.internal.dsl.BuildTypeFactory implements org.gradle.api.NamedDomainObjectFactory
-com.android.build.gradle.internal.dsl.BuildTypeFactory.<init>: com.android.build.gradle.internal.dsl.BuildTypeFactory (org.gradle.api.model.ObjectFactory, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.BuildTypeFactory.<init>: com.android.build.gradle.internal.dsl.BuildTypeFactory (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.BuildTypeFactory.create: com.android.build.gradle.internal.dsl.BuildType (java.lang.String)
 com.android.build.gradle.internal.dsl.BuildTypeFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.BundleOptions
@@ -827,7 +827,7 @@ com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabled: void (boole
 com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabledForTests: void (boolean)
 com.android.build.gradle.internal.dsl.DataBindingOptions.setVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DefaultConfig extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.DefaultConfig
-com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gradle.internal.dsl.DefaultConfig (java.lang.String, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gradle.internal.dsl.DefaultConfig (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions
 com.android.build.gradle.internal.dsl.DensitySplitOptions.<init>: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.compatibleScreens: void (java.lang.String[])
@@ -1081,7 +1081,7 @@ com.android.build.gradle.internal.dsl.PackagingOptions.setExcludes: void (java.u
 com.android.build.gradle.internal.dsl.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock implements com.android.build.gradle.internal.ProguardFilesProvider
-com.android.build.gradle.internal.dsl.PostProcessingBlock.<init>: com.android.build.gradle.internal.dsl.PostProcessingBlock (org.gradle.api.Project)
+com.android.build.gradle.internal.dsl.PostProcessingBlock.<init>: com.android.build.gradle.internal.dsl.PostProcessingBlock (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.consumerProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.consumerProguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.PostProcessingBlock.getCodeShrinker: java.lang.String ()
@@ -1105,7 +1105,7 @@ com.android.build.gradle.internal.dsl.PostProcessingBlock.setTestProguardFiles: 
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ProductFlavor
-com.android.build.gradle.internal.dsl.ProductFlavor.<init>: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.ProductFlavor.<init>: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.ProductFlavor.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.isDefault: boolean ()
@@ -1115,7 +1115,7 @@ com.android.build.gradle.internal.dsl.ProductFlavor.setMatchingFallbacks: void (
 com.android.build.gradle.internal.dsl.ProductFlavor.setMatchingFallbacks: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.ProductFlavor.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ProductFlavorFactory implements org.gradle.api.NamedDomainObjectFactory
-com.android.build.gradle.internal.dsl.ProductFlavorFactory.<init>: com.android.build.gradle.internal.dsl.ProductFlavorFactory (org.gradle.api.model.ObjectFactory, org.gradle.api.Project, com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.ProductFlavorFactory.<init>: com.android.build.gradle.internal.dsl.ProductFlavorFactory (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.ProductFlavorFactory.create: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String)
 com.android.build.gradle.internal.dsl.ProductFlavorFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.ShaderOptions implements com.android.build.gradle.internal.dsl.CoreShaderOptions

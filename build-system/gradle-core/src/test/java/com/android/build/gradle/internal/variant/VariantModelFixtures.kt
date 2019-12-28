@@ -18,13 +18,14 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.variant2.createFakeDslScope
-import org.gradle.api.Project
+import com.android.builder.core.BuilderConstants
 import org.mockito.Mockito
 
 /**
@@ -34,57 +35,49 @@ import org.mockito.Mockito
  * that understand the DSL without all the Gradle infrastructure.
  */
 
-fun variantModel(action: VariantModelBuilder.() -> Unit) : VariantModel {
+fun android(action: VariantModelBuilder.() -> Unit) : VariantModel {
     val modelBuilder = VariantModelBuilder()
     action(modelBuilder)
     return modelBuilder.toModel()
 }
 
 class VariantModelBuilder {
-    private val buildTypeBuilder = BuildTypeBuilder()
-    private val flavorBuilder = ProductFlavorBuilder()
+    private val dslScope: DslScope = createFakeDslScope()
+    val buildTypes: Container<BuildType> = Container { name -> BuildType(name, dslScope) }
+    val productFlavors: Container<ProductFlavor> = Container { name -> ProductFlavor(name, dslScope) }
 
-    fun buildTypes(action: BuildTypeBuilder.() -> Unit) {
-        action(buildTypeBuilder)
+    fun buildTypes(action: Container<BuildType>.() -> Unit) {
+        action(buildTypes)
     }
 
-    fun productFlavors(action: ProductFlavorBuilder.() -> Unit) {
-        action(flavorBuilder)
+    fun productFlavors(action: Container<ProductFlavor>.() -> Unit) {
+        action(productFlavors)
     }
 
     fun toModel() : VariantModel {
-        val project = Mockito.mock(Project::class.java)
-        val dslScope: DslScope = createFakeDslScope()
+        val buildTypes = buildTypes.values.map {
+            val mainSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
+            val androidTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
+            val unitTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
 
-        val buildTypes = buildTypeBuilder.types.map {
-            val btData = Mockito.mock(BuildTypeData::class.java)
-            val bt = Mockito.mock(BuildType::class.java)
-
-            Mockito.`when`(bt.name).thenReturn(it.name)
-            Mockito.`when`(bt.isDebuggable).thenReturn(it.isDebuggable)
-            Mockito.`when`(btData.buildType).thenReturn(bt)
-
-            btData
+            BuildTypeData(it, mainSourceSet, androidTestSourceSet, unitTestSourceSet)
         }.associateBy { it.buildType.name }
 
-        val flavors = flavorBuilder.flavors.map {
-            @Suppress("UNCHECKED_CAST")
-            val pfData =
-                Mockito.mock(ProductFlavorData::class.java) as ProductFlavorData<ProductFlavor>
-            val pf = ProductFlavor(it.second, project, dslScope)
-            val dimension = it.first
-            if (dimension != null) {
-                pf.setDimension(dimension)
-            }
+        val flavors = productFlavors.values.map {
+            val mainSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
+            val androidTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
+            val unitTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
 
-            Mockito.`when`(pfData.productFlavor).thenReturn(pf)
-
-            pfData
+            ProductFlavorData(it, mainSourceSet, androidTestSourceSet, unitTestSourceSet)
         }.associateBy { it.productFlavor.name }
 
-        @Suppress("UNCHECKED_CAST")
-        val defaultConfig: ProductFlavorData<DefaultConfig> =
-            Mockito.mock(ProductFlavorData::class.java) as ProductFlavorData<DefaultConfig>
+        // the default Config
+        val defaultConfig = ProductFlavorData(
+            DefaultConfig(BuilderConstants.MAIN, dslScope),
+            Mockito.mock(DefaultAndroidSourceSet::class.java),
+            Mockito.mock(DefaultAndroidSourceSet::class.java),
+            Mockito.mock(DefaultAndroidSourceSet::class.java)
+        )
 
         return FakeVariantModel(
             defaultConfig,
@@ -95,28 +88,16 @@ class VariantModelBuilder {
     }
 }
 
-class BuildTypeBuilder {
-    val types = mutableListOf<BuildTypeInfo>()
-    fun create(name: String, isDebuggable: Boolean = false) {
-        types.add(BuildTypeInfo(name, isDebuggable))
-    }
+class Container<T>(
+    private val factory: (String) -> T
+) {
+
+    val values: MutableList<T> = mutableListOf()
+
+    fun create(name: String) : T = factory(name).also { values.add(it) }
+    fun create(name: String, action: T.() -> Unit) = create(name).also { action(it) }
 }
 
-data class BuildTypeInfo(val name: String, val isDebuggable: Boolean)
-
-class ProductFlavorBuilder {
-    val flavors = mutableListOf<Pair<String?, String>>()
-    fun create(name: String, action: FlavorContentBuilder.() -> Unit) {
-        val content = FlavorContentBuilder()
-        action(content)
-
-        flavors.add(Pair(content.dimension, name))
-    }
-}
-
-class FlavorContentBuilder {
-    var dimension: String? = null
-}
 
 class FakeVariantModel(
     override val defaultConfig: ProductFlavorData<DefaultConfig>,
