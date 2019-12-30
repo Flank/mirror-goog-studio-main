@@ -245,7 +245,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                         && !variantType.isAar)
 
             task.bootClasspath.from(variantScope.globalScope.fullBootClasspath)
-            task.minSdkVersion.set(variantScope.minSdkVersion.featureLevel)
+            task.minSdkVersion
+                .set(variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
             task.debuggable
                 .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
             task.disableTreeShaking.set(disableTreeShaking)

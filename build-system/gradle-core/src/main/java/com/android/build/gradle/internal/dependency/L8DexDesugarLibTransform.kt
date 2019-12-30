@@ -103,7 +103,7 @@ fun getDesugarLibConfigurations(scopes: Collection<VariantScope>): Set<DesugarLi
 private fun getDesugarLibConfiguration(scope: VariantScope): DesugarLibConfiguration {
     val libConfiguration = getDesugarLibConfig(scope.globalScope.project)
     val bootClasspath = scope.bootClasspath.filter { it.name == SdkConstants.FN_FRAMEWORK_LIBRARY }
-    val minSdkVersion = scope.variantDslInfo.minSdkVersion.apiLevel
+    val minSdkVersion = scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel
 
     return DesugarLibConfiguration(libConfiguration, bootClasspath, minSdkVersion)
 }
