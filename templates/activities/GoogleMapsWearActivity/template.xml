@@ -2,7 +2,7 @@
 <template
     format="5"
     revision="6"
-    name="Google Maps Activity"
+    name="Google Maps Wear Activity"
     constraints="androidx"
     minApi="23"
     minBuildApi="25"
