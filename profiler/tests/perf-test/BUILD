@@ -1,5 +1,5 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
-load(":perf_test.bzl", "perf_test")
+load("//tools/base/profiler:perf_test.bzl", "perf_test")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 package(
@@ -69,12 +69,12 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -88,11 +88,11 @@ perf_test(
         "testSrcs/com/android/tools/profiler/network/UnifiedPipelineHttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/UnifiedPipelineOkHttpTest.java",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -107,12 +107,12 @@ perf_test(
         "testSrcs/com/android/tools/profiler/memory/UnifiedPipelineMemoryTest.java",
         "testSrcs/com/android/tools/profiler/memory/UnifiedPipelineMemoryTestUtils.java",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
-        "//tools/base/profiler/tests/legacy/test-app:libmemorynativetest.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libmemorynativetest.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -123,11 +123,11 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -141,11 +141,11 @@ perf_test(
         "testSrcs/com/android/tools/profiler/energy/LocationTest.java",
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -156,12 +156,12 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//tools/base/fakeandroid",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -173,7 +173,7 @@ java_library(
     srcs = glob([
         "testAppInspectorSrcs/**/*.java",
     ]),
-    resource_strip_prefix = "tools/base/profiler/tests/legacy/perf-test/testAppInspectorSrcs/",
+    resource_strip_prefix = "tools/base/profiler/tests/perf-test/testAppInspectorSrcs/",
     resources = glob(["testAppInspectorSrcs/META-INF/**"]),
     deps = [
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
@@ -192,16 +192,16 @@ perf_test(
         "testSrcs/com/android/tools/profiler/app/inspection/AppInspectionTest.java",
     ],
     data = [
-        ":test_inspector_dex",
+        "//tools/base/profiler/tests/perf-test:test_inspector_dex",
     ],
     jvm_flags = [
-        "-Dtest.inspector.dex.location=$(location :test_inspector_dex)",
+        "-Dtest.inspector.dex.location=$(location //tools/base/profiler/tests/perf-test:test_inspector_dex)",
     ],
-    test_app = "//tools/base/profiler/tests/legacy/test-app:test-app",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
         "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/legacy/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
