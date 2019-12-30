@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -104,12 +105,15 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.minSdkVersion.set(
                 variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
 
+            val attributes = getDexingArtifactConfiguration(variantScope).getAttributes()
+
             val subProjectKeepRules =
                 if (enableDexingArtifactTransform) {
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.KEEP_RULES
+                        AndroidArtifacts.ArtifactType.KEEP_RULES,
+                        attributes
                     ).artifactFiles
                 } else {
                     variantScope.artifacts.getFinalProductAsFileCollection(
@@ -126,7 +130,8 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         artifactScope,
-                        AndroidArtifacts.ArtifactType.KEEP_RULES
+                        AndroidArtifacts.ArtifactType.KEEP_RULES,
+                        attributes
                     ).artifactFiles
                 } else {
                     variantScope.artifacts.getFinalProductAsFileCollection(
