@@ -86,6 +86,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -191,6 +192,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Incremental
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getAssets();
+
+    @InputFile
+    @Nullable
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract RegularFileProperty getDependencyDataFile();
 
     @Input
     public abstract Property<String> getCreatedBy();
@@ -473,6 +480,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @Nullable protected final Integer targetApi;
         @NonNull protected final IncrementalPackagerBuilder.BuildType packagerMode;
         @NonNull protected final ApkCreatorType apkCreatorType;
+        @Nullable protected File dependencyDataFile;
 
         SplitterParams(
                 @NonNull ApkData apkInfo,
@@ -531,6 +539,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             isDebuggableBuild = task.getDebugBuild().get();
             isJniDebuggableBuild = task.getJniDebugBuild();
             targetApi = task.getTargetApi();
+            dependencyDataFile =
+                    task.getDependencyDataFile().map(RegularFile::getAsFile).getOrElse(null);
             packagerMode =
                     changes.isIncremental()
                             ? IncrementalPackagerBuilder.BuildType.INCREMENTAL
@@ -630,13 +640,19 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         ManifestAttributeSupplier manifest =
                 new DefaultManifestParser(manifestForSplit.getOutputFile(), () -> true, true, null);
 
+        byte[] dependencyData =
+                params.dependencyDataFile != null
+                        ? Files.readAllBytes(params.dependencyDataFile.toPath())
+                        : null;
+
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder(params.apkFormat, params.packagerMode)
                         .withOutputFile(outputFile)
                         .withSigning(
                                 params.signingConfig.resolve(),
                                 params.minSdkVersion,
-                                params.targetApi)
+                                params.targetApi,
+                                dependencyData)
                         .withCreatedBy(params.createdBy)
                         // TODO: allow extra metadata to be saved in the split scope to avoid
                         // reparsing
@@ -1004,6 +1020,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.apkCreatorType = variantScope.getApkCreatorType();
 
             packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
+
+            if (variantScope.getType().isBaseModule() && variantScope.getGlobalScope()
+                .getProjectOptions()
+                .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
+                variantScope
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(
+                        InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
+                        packageAndroidArtifact.getDependencyDataFile());
+            }
+
             finalConfigure(packageAndroidArtifact);
         }
 

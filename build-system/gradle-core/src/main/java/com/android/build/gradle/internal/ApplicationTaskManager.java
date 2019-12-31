@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.tasks.ParseIntegrityConfigTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask;
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask;
+import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -430,6 +431,10 @@ public class ApplicationTaskManager extends TaskManager {
         }
 
         if (scope.getType().isBaseModule()) {
+            if (scope.getGlobalScope().getProjectOptions()
+                .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
+                taskFactory.register(new SdkDependencyDataGeneratorTask.CreationAction(scope));
+            }
             taskFactory.register(new ParseIntegrityConfigTask.CreationAction(scope));
             taskFactory.register(new PackageBundleTask.CreationAction(scope));
             taskFactory.register(new FinalizeBundleTask.CreationAction(scope));

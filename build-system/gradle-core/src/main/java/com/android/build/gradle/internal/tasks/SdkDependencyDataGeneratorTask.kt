@@ -1,0 +1,108 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal.tasks
+
+import com.android.build.gradle.internal.KeymaestroHybridEncrypter
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.tools.build.libraries.metadata.AppDependencies
+import org.gradle.api.tasks.OutputFile
+import java.io.FileOutputStream
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
+import java.nio.file.Files;
+import java.util.zip.DeflaterOutputStream
+import kotlin.random.Random
+
+/**
+ * Task that generates SDK dependency block value for APKs.
+ *
+ * SDK dependency block is a block in APK signature v2 block that stores SDK dependency information
+ * of the APK.
+ */
+abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
+
+  private val publicKey: ByteArray? = null
+
+  @get:InputFile
+  @get:PathSensitive(PathSensitivity.NONE)
+  abstract val dependencies: RegularFileProperty
+
+  @get:OutputFile
+  abstract val sdkDependencyData: RegularFileProperty
+
+  public override fun doTaskAction() {
+    FileOutputStream(sdkDependencyData.get().asFile).use {
+      it.write(encrypt(compress(addSalt(Files.readAllBytes(dependencies.get().asFile.toPath())))))
+    }
+  }
+
+  private fun addSalt(data: ByteArray): ByteArray {
+    val salt = ByteArray(128)
+    Random.Default.nextBytes(salt)
+    return data + salt
+  }
+
+  private fun compress(data: ByteArray): ByteArray {
+    val outputStream = ByteArrayOutputStream();
+    DeflaterOutputStream(outputStream).use {
+      it.write(data);
+    }
+    return outputStream.toByteArray()
+  }
+
+  private fun encrypt(data: ByteArray): ByteArray {
+    // TODO(b/147092261): Remove this when public key is specified.
+    if (publicKey == null) {
+      return data;
+    }
+    val encrypter = KeymaestroHybridEncrypter(publicKey)
+    return encrypter.encrypt(data);
+  }
+
+  class CreationAction(
+    variantScope: VariantScope
+  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask>(variantScope) {
+    override val name: String = variantScope.getTaskName("sdk", "DependencyData")
+    override val type: Class<SdkDependencyDataGeneratorTask> = SdkDependencyDataGeneratorTask::class.java
+
+    override fun handleProvider(taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>) {
+      super.handleProvider(taskProvider)
+      variantScope
+        .artifacts
+        .producesFile(
+          InternalArtifactType.SDK_DEPENDENCY_DATA,
+          taskProvider,
+          SdkDependencyDataGeneratorTask::sdkDependencyData,
+          fileName = "sdkDependencyData.pb"
+        )
+    }
+
+    override fun configure(task: SdkDependencyDataGeneratorTask) {
+      super.configure(task)
+      variantScope.artifacts.setTaskInputToFinalProduct(
+        InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
+    }
+  }
+}
