@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
@@ -28,6 +27,7 @@ import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageNameWidget
+import com.android.tools.idea.wizard.template.TemplateConstraint
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
@@ -50,7 +50,7 @@ val googleAdMobAdsFragmentTemplate
   get() = template {
     revision = 1
     name = "Google AdMob Ads Fragment"
-    requireAndroidX = true
+    constraints = listOf(TemplateConstraint.AndroidX)
     minApi = 14
     minBuildApi = 14
     description = "Creates an fragment with AdMob Ad fragment."
@@ -85,7 +85,6 @@ val googleAdMobAdsFragmentTemplate
       default = "com.mycompany.myapp "
       constraints = listOf(PACKAGE)
     }
-
 
     widgets(
       TextFieldWidget(fragmentClass),

@@ -15,7 +15,6 @@
  */
 package com.android.tools.idea.wizard.template
 
-import com.google.common.io.Resources
 import java.io.File
 
 internal data class TemplateImpl(
@@ -24,13 +23,13 @@ internal data class TemplateImpl(
   override val description: String,
   override val minSdk: Int,
   override val minCompileSdk: Int,
-  override val requireAndroidX: Boolean,
   override val category: Category,
   override val formFactor: FormFactor,
   override val widgets: Collection<Widget<*>>,
   private val _thumb: () -> Thumb,
   override val recipe: Recipe,
-  override val uiContexts: Collection<WizardUiContext>
+  override val uiContexts: Collection<WizardUiContext>,
+  override val constraints: Collection<TemplateConstraint>
 ) : Template {
   override fun thumb(): Thumb = _thumb()
 }
@@ -45,7 +44,6 @@ class TemplateBuilder {
   var description: String? = null
   var minApi: Int = 1
   var minBuildApi: Int = 1
-  var requireAndroidX: Boolean = false
   var category: Category? = null
   var formFactor: FormFactor? = null
   @Suppress("RedundantCompanionReference")
@@ -53,6 +51,7 @@ class TemplateBuilder {
   var recipe: Recipe? = null
   var screens: Collection<WizardUiContext> = listOf()
   var widgets = listOf<Widget<*>>()
+  var constraints = listOf<TemplateConstraint>()
 
   fun widgets(vararg widgets: Widget<*>) {
     this.widgets = widgets.toList()
@@ -78,13 +77,13 @@ class TemplateBuilder {
       description!!,
       minApi,
       minBuildApi,
-      requireAndroidX,
       category!!,
       formFactor!!,
       widgets,
       thumb,
       recipe!!,
-      screens
+      screens,
+      constraints
     )
   }
 }
