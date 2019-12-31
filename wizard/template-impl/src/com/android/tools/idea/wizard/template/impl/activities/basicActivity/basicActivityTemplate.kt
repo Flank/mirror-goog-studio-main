@@ -45,7 +45,7 @@ val basicActivityTemplate get() = template {
 
   category = Category.Activity
   formFactor = FormFactor.Mobile
-  screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+  screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
   lateinit var activityClass: StringParameter
   val layoutName: StringParameter = stringParameter {
