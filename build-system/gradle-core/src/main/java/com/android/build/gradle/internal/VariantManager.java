@@ -1383,6 +1383,8 @@ public class VariantManager implements VariantModel {
                             .setVariantType(variantData.getType().getAnalyticsVariantType())
                             .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
                             .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
+                            .setCoreLibraryDesugaringEnabled(
+                                    variantScope.isCoreLibraryDesugaringEnabled())
                             .setTestExecution(
                                     AnalyticsUtil.toProto(
                                             globalScope
