@@ -53,7 +53,7 @@ val googleAdMobAdsFragmentTemplate
     constraints = listOf(TemplateConstraint.AndroidX)
     minApi = 14
     minBuildApi = 14
-    description = "Creates an fragment with AdMob Ad fragment."
+    description = "Creates an fragment with AdMob Ad fragment"
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile
@@ -62,14 +62,14 @@ val googleAdMobAdsFragmentTemplate
     val fragmentClass = stringParameter {
       name = "Fragment Name"
       default = "AdMobFragment"
-      help = "The name of the AdMob fragment class to create "
+      help = "The name of the AdMob fragment class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val layoutName = stringParameter {
       name = "Layout Name"
       default = "fragment_admob"
-      help = "The name of the layout to create for the fragment "
+      help = "The name of the layout to create for the fragment"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { fragmentToLayout(fragmentClass.value) }
     }
@@ -77,12 +77,12 @@ val googleAdMobAdsFragmentTemplate
     val adFormat = enumParameter<AdFormat> {
       name = "Ad Format"
       default = AdFormat.Interstitial
-      help = "Select Interstitial Ad or Banner Ad."
+      help = "Select Interstitial Ad or Banner Ad"
     }
 
     val packageName = stringParameter {
       name = "Package name"
-      default = "com.mycompany.myapp "
+      default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
     }
 
