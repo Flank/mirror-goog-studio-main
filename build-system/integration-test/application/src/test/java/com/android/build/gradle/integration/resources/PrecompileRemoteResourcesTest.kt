@@ -261,7 +261,7 @@ class PrecompileRemoteResourcesTest {
             assertThat(it.get("res/layout/layout_random_name.xml")!!.read()).isEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
-            assertThat(it.get("res/drawable-v26/button.xml")!!.read()).isNotEqualTo(
+            assertThat(it.get("res/drawable-anydpi-v26/button.xml")!!.read()).isNotEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
             assertThat(it.get("res/drawable-v26/ic_launcher_background.xml")!!.read()).isNotEqualTo(
@@ -300,7 +300,7 @@ class PrecompileRemoteResourcesTest {
                     File(File("drawable-v26"), "ic_launcher_background.xml")
                 ),
                 Aapt2RenamingConventions.compilationRename(
-                    File(File("drawable-v26"), "button.xml")
+                    File(File("drawable-anydpi-v26"), "button.xml")
                 )
             )
         )

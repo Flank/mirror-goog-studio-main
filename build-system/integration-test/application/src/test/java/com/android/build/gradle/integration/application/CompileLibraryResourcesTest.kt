@@ -150,7 +150,7 @@ class CompileLibraryResourcesTest {
                     File(File("layout"), "layout_random_name.xml")
                 ),
                 Aapt2RenamingConventions.compilationRename(
-                    File(File("drawable-v26"), "button.xml")
+                    File(File("drawable-anydpi-v26"), "button.xml")
                 ),
                 Aapt2RenamingConventions.compilationRename(
                     File(File("drawable-v26"), "ic_launcher_background.xml")
@@ -170,7 +170,7 @@ class CompileLibraryResourcesTest {
         assertThatApk(apk).containsResource("raw/me.raw")
         assertThatApk(apk).containsResource("layout/layout_random_name.xml")
         assertThatApk(apk).containsResource("drawable-v26/ic_launcher_background.xml")
-        assertThatApk(apk).containsResource("drawable-v26/button.xml")
+        assertThatApk(apk).containsResource("drawable-anydpi-v26/button.xml")
         assertThatApk(apk).containsResource("mipmap-anydpi-v26/ic_launcher.xml")
     }
 
@@ -252,7 +252,7 @@ class CompileLibraryResourcesTest {
                     File(File("layout"), "layout_random_name.xml")
                 ),
                 Aapt2RenamingConventions.compilationRename(
-                    File(File("drawable-v26"), "button.xml")
+                    File(File("drawable-anydpi-v26"), "button.xml")
                 ),
                 Aapt2RenamingConventions.compilationRename(
                     File(File("raw"), "me.raw")
@@ -285,10 +285,11 @@ class CompileLibraryResourcesTest {
             assertThat(it.get("res/layout/layout_random_name.xml")!!.read()).isEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
-            assertThat(it.get("res/drawable-v26/button.xml")!!.read()).isNotEqualTo(
+            assertThat(it.get("res/drawable-anydpi-v26/button.xml")!!.read()).isNotEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
-            assertThat(it.get("res/drawable-v26/ic_launcher_background.xml")!!.read()).isNotEqualTo(
+            assertThat(it.get("res/drawable-v26/ic_launcher_background.xml")!!.read())
+                    .isNotEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
         }

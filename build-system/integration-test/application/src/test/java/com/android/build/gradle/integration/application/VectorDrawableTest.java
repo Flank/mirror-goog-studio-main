@@ -67,7 +67,7 @@ public class VectorDrawableTest {
         assertThat(apk).containsResource("drawable-anydpi-v24/gradient.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-hdpi-v22/gradient.png");
-        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-anydpi-v22/no_need.xml");
         assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-xhdpi-v22/gradient.png");
         assertThat(apk).containsResource("drawable/icon.png");
@@ -461,7 +461,7 @@ public class VectorDrawableTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-anydpi-v22/no_need.xml");
         assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
@@ -485,7 +485,7 @@ public class VectorDrawableTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-anydpi-v22/no_need.xml");
         assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
@@ -502,7 +502,7 @@ public class VectorDrawableTest {
         apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-anydpi-v22/no_need.xml");
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
