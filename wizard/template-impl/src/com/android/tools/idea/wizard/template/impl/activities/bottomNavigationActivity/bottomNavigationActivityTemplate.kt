@@ -80,6 +80,7 @@ val bottomNavigationActivityTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     widgets(

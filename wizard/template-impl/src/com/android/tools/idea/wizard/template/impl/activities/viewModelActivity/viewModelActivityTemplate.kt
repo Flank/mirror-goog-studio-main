@@ -99,6 +99,7 @@ val viewModelActivityTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     val fragmentPackage = stringParameter {

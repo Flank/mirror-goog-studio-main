@@ -82,6 +82,7 @@ val navigationDrawerActivityTemplate = template {
     name = "Package name"
     default = "com.mycompany.myapp"
     constraints = listOf(Constraint.PACKAGE)
+    suggest = { packageName }
   }
 
   val appBarLayoutName = stringParameter {

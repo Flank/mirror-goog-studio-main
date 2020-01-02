@@ -84,6 +84,7 @@ val emptyActivityTemplate get() = template {
     visible = { !isNewModule }
     constraints = listOf(PACKAGE)
     default = "com.mycompany.myapp"
+    suggest = { packageName }
   }
 
   widgets(
