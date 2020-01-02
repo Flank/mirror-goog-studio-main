@@ -34,10 +34,13 @@ internal data class TemplateImpl(
   override fun thumb(): Thumb = _thumb()
 }
 
-// TODO(qumeric): split into moduleTemplate and projectTemplate to facilitate using recipe without casting
+@DslMarker
+annotation class TemplateDSL
+
 fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().apply(block).build()
 
 // TODO(qumeric): use Kotlin DSL annotations to limit visibility scope
+@TemplateDSL
 class TemplateBuilder {
   var revision: Int? = null
   var name: String? = null
@@ -57,9 +60,12 @@ class TemplateBuilder {
     this.widgets = widgets.toList()
   }
 
+  @TemplateDSL
+  class ThumbBuilder
+
   /** A wrapper for collection of [Thumb]s with an optional [get]ter. Implementations usually use [Parameter.value] to choose [Thumb]. */
-  fun thumb(block: () -> File) {
-    val res = findResource(this.javaClass, block())
+  fun thumb(block: ThumbBuilder.() -> File) {
+    val res = findResource(this.javaClass, ThumbBuilder().block())
     thumb = { Thumb(res) }
   }
 

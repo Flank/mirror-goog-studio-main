@@ -54,7 +54,6 @@ val basicActivityTemplate get() = template {
     suggest = { activityToLayout(activityClass.value) }
     default = "activity_main"
     help = "The name of the layout to create for the activity"
-    formFactor = FormFactor.Mobile
   }
 
   activityClass = stringParameter {
@@ -133,13 +132,14 @@ val basicActivityTemplate get() = template {
     TextFieldWidget(secondFragmentLayoutName),
     PackageNameWidget(packageName),
     LanguageWidget()
-    )
+  )
 
   thumb {
     File("template_basic_activity.png")
   }
 
   recipe = { data: TemplateData ->
+    formFactor = FormFactor.Wear
     generateBasicActivity(
       data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value, packageName.value,
       menuName.value, activityTitle.value, isLauncher.value, firstFragmentLayoutName.value, secondFragmentLayoutName.value)
