@@ -46,6 +46,35 @@ public class ViewBuilder<V extends View, L extends ViewGroup.LayoutParams> {
     }
 
     @NonNull
+    public ViewBuilder<V, L> withDrawId(long drawId) {
+        when(myView.getUniqueDrawingId()).thenReturn(drawId);
+        return this;
+    }
+
+    @NonNull
+    public ViewBuilder<V, L> withId(int id) {
+        when(myView.getId()).thenReturn(id);
+        return this;
+    }
+
+    @NonNull
+    public ViewBuilder<V, L> withBounds(int x, int y, int width, int height) {
+        when(myView.getLeft()).thenReturn(x);
+        when(myView.getTop()).thenReturn(y);
+        when(myView.getWidth()).thenReturn(width);
+        when(myView.getHeight()).thenReturn(height);
+        when(myView.getRight()).thenReturn(x + width);
+        when(myView.getBottom()).thenReturn(y + height);
+        return this;
+    }
+
+    @NonNull
+    public ViewBuilder<V, L> withLayoutId(int layoutId) {
+        when(myView.getSourceLayoutResId()).thenReturn(layoutId);
+        return this;
+    }
+
+    @NonNull
     public ViewBuilder<V, L> withResolutionStack(int... stack) {
         when(myView.getAttributeResolutionStack(anyInt())).thenReturn(stack);
         return this;

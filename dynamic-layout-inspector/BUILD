@@ -174,7 +174,10 @@ cc_library(
 
 cc_library(
     name = "native_property_testing",
-    srcs = ["src/test/native/testing/properties_test_java_jni.cc"],
+    srcs = [
+        "src/test/native/testing/component_tree_test_java_jni.cc",
+        "src/test/native/testing/properties_test_java_jni.cc",
+    ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
         "-Itools/base/transport/native",
