@@ -22,6 +22,6 @@ import org.gradle.api.Incubating
  * DSL object for configuring databinding options.
  */
 @Incubating
-interface DataBindingOptions {
+interface DataBinding {
     // TODO(b/140406102)
 }

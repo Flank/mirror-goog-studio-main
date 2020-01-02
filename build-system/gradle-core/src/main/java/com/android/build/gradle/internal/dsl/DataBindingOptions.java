@@ -27,7 +27,7 @@ import javax.inject.Inject;
 /** DSL object for configuring databinding options. */
 public class DataBindingOptions
         implements com.android.builder.model.DataBindingOptions,
-                com.android.build.api.dsl.DataBindingOptions {
+                com.android.build.api.dsl.DataBinding {
     @NonNull private final Supplier<BuildFeatures> featuresProvider;
     @NonNull private final DslScope dslScope;
     private String version;
