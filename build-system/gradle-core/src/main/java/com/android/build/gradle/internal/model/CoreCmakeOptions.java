@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.dsl.CmakeOptions;
+import com.android.build.api.dsl.Cmake;
 import java.io.File;
 /**
  * Options for managing CMake external native builds.
@@ -26,7 +26,7 @@ import java.io.File;
  * @deprecated Use {@link com.android.build.api.dsl.NdkBuildOptions}
  */
 @Deprecated
-public interface CoreCmakeOptions extends CmakeOptions {
+public interface CoreCmakeOptions extends Cmake {
     @Nullable
     File getPath();
     void setPath(@NonNull File path);

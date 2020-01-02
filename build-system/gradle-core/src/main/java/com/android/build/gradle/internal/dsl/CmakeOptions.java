@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.model.CoreCmakeOptions;
 import java.io.File;
 import javax.inject.Inject;
 
-/** See {@link com.android.build.api.dsl.CmakeOptions} */
-public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl.CmakeOptions {
+/** See {@link com.android.build.api.dsl.Cmake} */
+public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl.Cmake {
     @NonNull private final DslScope dslScope;
 
     @Nullable

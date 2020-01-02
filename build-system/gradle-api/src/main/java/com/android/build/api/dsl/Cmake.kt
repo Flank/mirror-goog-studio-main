@@ -30,6 +30,6 @@ import org.gradle.api.Incubating
  * If you want to instead build your native libraries using ndk-build, see [NdkBuildOptions]
  */
 @Incubating
-interface CmakeOptions {
+interface Cmake {
     // TODO(b/140406102)
 }

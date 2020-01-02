@@ -28,7 +28,7 @@ import java.io.File
  * support for external native builds, read
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html)
  *
- * If you want to instead build your native libraries using CMake, see [CmakeOptions]
+ * If you want to instead build your native libraries using CMake, see [Cmake]
  */
 @Incubating
 interface NdkBuildOptions {

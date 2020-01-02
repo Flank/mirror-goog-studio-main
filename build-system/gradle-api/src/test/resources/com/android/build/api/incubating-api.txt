@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-df53070650e949fef71b278cba2932aca2abcc6b39e753d56d22bad0da944098
+70bdcc12c3d5254eaa3071cea1102363a28d80a838f5bc6e9d57774ebde16246
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -81,7 +81,7 @@ com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
-com.android.build.api.dsl.CmakeOptions
+com.android.build.api.dsl.Cmake
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super AaptOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super AdbOptionsT, kotlin.Unit>)
@@ -126,8 +126,8 @@ com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ExternalNativeBuild
-com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeOptionsT, kotlin.Unit>)
-com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeOptionsT ()
+com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeT, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeT ()
 com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: NdkBuildOptionsT ()
 com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super NdkBuildOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.JacocoOptions

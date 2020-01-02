@@ -18,7 +18,6 @@ package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
-import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
@@ -32,11 +31,11 @@ interface LibraryExtension<
         AaptOptionsT : AaptOptions,
         AdbOptionsT : AdbOptions,
         BuildTypeT : BuildType,
-        CMakeOptionsT : CmakeOptions,
+        CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : DefaultConfig,
-        ExternalNativeBuildT : ExternalNativeBuild<CMakeOptionsT, NdkBuildOptionsT>,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildOptionsT>,
         JacocoOptionsT : JacocoOptions,
         NdkBuildOptionsT : NdkBuildOptions,
         ProductFlavorT : ProductFlavor,
@@ -48,7 +47,7 @@ interface LibraryExtension<
         AdbOptionsT,
         LibraryBuildFeatures,
         BuildTypeT,
-        CMakeOptionsT,
+        CMakeT,
         CompileOptionsT,
         DataBindingT,
         DefaultConfigT,

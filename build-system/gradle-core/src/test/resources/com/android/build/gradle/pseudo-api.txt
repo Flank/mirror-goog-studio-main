@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d565eec00a2f0655cce28f2f8037ebda2dfe48cf6ca8bf81ab5eca69199f453d
+fadaa340a8305c1a1d7a54d8893386471b3dd20a7d49d9836413ad1bb5716980
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -802,7 +802,7 @@ com.android.build.gradle.internal.dsl.BundleOptionsTexture
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.<init>: com.android.build.gradle.internal.dsl.BundleOptionsTexture ()
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.getEnableSplit: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.setEnableSplit: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.CmakeOptions implements com.android.build.gradle.internal.model.CoreCmakeOptions, com.android.build.api.dsl.CmakeOptions
+com.android.build.gradle.internal.dsl.CmakeOptions implements com.android.build.gradle.internal.model.CoreCmakeOptions, com.android.build.api.dsl.Cmake
 com.android.build.gradle.internal.dsl.CmakeOptions.<init>: com.android.build.gradle.internal.dsl.CmakeOptions (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.CmakeOptions.getBuildStagingDirectory: java.io.File ()
 com.android.build.gradle.internal.dsl.CmakeOptions.getPath: java.io.File ()
@@ -944,7 +944,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeBuild implements com.android
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuild (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: com.android.build.gradle.internal.dsl.CmakeOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.CmakeOptions>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.CmakeOptions, kotlin.Unit>)
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.CmakeOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.dsl.CmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.model.CoreCmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuildOptions ()
