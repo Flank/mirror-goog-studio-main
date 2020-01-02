@@ -425,6 +425,52 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).isEqualTo(null)
     }
 
+    @Test
+    fun testNonMinifyAndroidTestAppApk() {
+        project.executor().run(":app:assembleDebugAndroidTest")
+        val apk = app.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
+        DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass, apk.allDexes))
+            .isNotEqualTo(null)
+    }
+
+    @Test
+    fun testMinifyAndroidTestAppApk() {
+        TestFileUtils.addMethod(
+            FileUtils.join(app.mainSrcDir,"com/example/helloworld/HelloWorld.java"),
+            """
+                public static java.time.LocalTime getTime() {
+                    return java.time.LocalTime.now();
+                }
+            """.trimIndent())
+
+        TestFileUtils.addMethod(
+            FileUtils.join(app.testDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            """
+                @Test
+                public void test() {
+                    Assert.assertEquals("first", HelloWorld.getTime().toString());
+                }
+            """.trimIndent()
+        )
+
+        app.buildFile.appendText("""
+
+            android.buildTypes.debug.minifyEnabled = true
+        """.trimIndent())
+        project.executor().run(":app:assembleDebugAndroidTest")
+        val apk = app.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
+        DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass3, apk.allDexes))
+            .isNotEqualTo(null)
+    }
+
+    @Test
+    fun testNonMinifyAndroidTestLibraryApk() {
+        project.executor().run(":library:assembleDebugAndroidTest")
+        val apk = library.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
+        DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass, apk.allDexes))
+            .isNotEqualTo(null)
+    }
+
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
         project.buildFile.appendText("""
