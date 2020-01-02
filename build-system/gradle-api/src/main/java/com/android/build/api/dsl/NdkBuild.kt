@@ -31,7 +31,7 @@ import java.io.File
  * If you want to instead build your native libraries using CMake, see [Cmake]
  */
 @Incubating
-interface NdkBuildOptions {
+interface NdkBuild {
 
     /**
      * Specifies the relative path to your <code>Android.mk</code> build script.

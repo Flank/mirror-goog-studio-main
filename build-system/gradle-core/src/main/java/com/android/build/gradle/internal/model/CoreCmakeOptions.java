@@ -23,7 +23,7 @@ import java.io.File;
 /**
  * Options for managing CMake external native builds.
  *
- * @deprecated Use {@link com.android.build.api.dsl.NdkBuildOptions}
+ * @deprecated Use {@link com.android.build.api.dsl.NdkBuild}
  */
 @Deprecated
 public interface CoreCmakeOptions extends Cmake {

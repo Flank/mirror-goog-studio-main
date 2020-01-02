@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-fadaa340a8305c1a1d7a54d8893386471b3dd20a7d49d9836413ad1bb5716980
+34b24583f398e609168835fb62c79411d33bb2fab90ad7b7f0430e726e404175
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -947,7 +947,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: void (kotlin.jv
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.dsl.CmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.model.CoreCmakeOptions ()
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuildOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuild ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.gradle.internal.dsl.NdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.gradle.internal.model.CoreNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.ndkBuild: com.android.build.gradle.internal.dsl.NdkBuildOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.NdkBuildOptions>)
@@ -1088,7 +1088,7 @@ com.android.build.gradle.internal.dsl.LintOptions.textOutput: void (java.io.File
 com.android.build.gradle.internal.dsl.LintOptions.textOutput: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.NdkBuildOptions implements com.android.build.gradle.internal.model.CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuildOptions
+com.android.build.gradle.internal.dsl.NdkBuildOptions implements com.android.build.gradle.internal.model.CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild
 com.android.build.gradle.internal.dsl.NdkBuildOptions.<init>: com.android.build.gradle.internal.dsl.NdkBuildOptions (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.buildStagingDirectory: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.getBuildStagingDirectory: java.io.File ()

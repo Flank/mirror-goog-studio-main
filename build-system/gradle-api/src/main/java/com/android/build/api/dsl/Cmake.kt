@@ -27,7 +27,7 @@ import org.gradle.api.Incubating
  * external native builds, read
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html)
  *
- * If you want to instead build your native libraries using ndk-build, see [NdkBuildOptions]
+ * If you want to instead build your native libraries using ndk-build, see [NdkBuild]
  */
 @Incubating
 interface Cmake {

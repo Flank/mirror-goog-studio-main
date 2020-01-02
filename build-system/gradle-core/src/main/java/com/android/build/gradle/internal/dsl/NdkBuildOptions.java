@@ -23,9 +23,8 @@ import com.android.build.gradle.internal.model.CoreNdkBuildOptions;
 import java.io.File;
 import javax.inject.Inject;
 
-/** See {@link com.android.build.api.dsl.NdkBuildOptions} */
-public class NdkBuildOptions
-        implements CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuildOptions {
+/** See {@link com.android.build.api.dsl.NdkBuild} */
+public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild {
     @NonNull private final DslScope dslScope;
 
     @Nullable

@@ -42,24 +42,24 @@ import org.gradle.api.Incubating
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html)
  */
 @Incubating
-interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildOptionsT : NdkBuildOptions> {
+interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildT : NdkBuild> {
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path
      * to your `Android.mk` build script and build output directory.
      *
      * For more information about the properties you can configure in this block, see
-     * [NdkBuildOptions]
+     * [NdkBuild]
      */
-    val ndkBuild: NdkBuildOptionsT
+    val ndkBuild: NdkBuildT
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path
      * to your `Android.mk` build script and build output directory.
      *
-     * For more information about the properties you can configure in this block, see [NdkBuildOptions]
+     * For more information about the properties you can configure in this block, see [NdkBuild]
      */
-    fun ndkBuild(action: NdkBuildOptionsT.() -> Unit)
+    fun ndkBuild(action: NdkBuildT.() -> Unit)
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path

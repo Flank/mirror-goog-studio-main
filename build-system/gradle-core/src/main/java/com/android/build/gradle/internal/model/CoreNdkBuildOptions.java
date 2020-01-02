@@ -18,16 +18,16 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.dsl.NdkBuildOptions;
+import com.android.build.api.dsl.NdkBuild;
 import java.io.File;
 
 /**
  * Options for managing ndk-build external native builds.
  *
- * @deprecated Use {@link com.android.build.api.dsl.NdkBuildOptions}
+ * @deprecated Use {@link com.android.build.api.dsl.NdkBuild}
  */
 @Deprecated
-public interface CoreNdkBuildOptions extends NdkBuildOptions {
+public interface CoreNdkBuildOptions extends NdkBuild {
     @Override
     @Nullable
     File getPath();

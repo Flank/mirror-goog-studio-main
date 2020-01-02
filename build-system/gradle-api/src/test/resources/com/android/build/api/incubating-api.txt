@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-70bdcc12c3d5254eaa3071cea1102363a28d80a838f5bc6e9d57774ebde16246
+81e8f1f84c9a450a9a12bbf96aaa0ac98bb9b7fed23552a0e37a8c186c738e5b
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -128,20 +128,20 @@ com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.a
 com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeT, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeT ()
-com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: NdkBuildOptionsT ()
-com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super NdkBuildOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: NdkBuildT ()
+com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super NdkBuildT, kotlin.Unit>)
 com.android.build.api.dsl.JacocoOptions
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
-com.android.build.api.dsl.NdkBuildOptions
-com.android.build.api.dsl.NdkBuildOptions.buildStagingDirectory: void (java.lang.Object)
-com.android.build.api.dsl.NdkBuildOptions.getBuildStagingDirectory: java.io.File ()
-com.android.build.api.dsl.NdkBuildOptions.getPath: java.io.File ()
-com.android.build.api.dsl.NdkBuildOptions.path: void (java.lang.Object)
-com.android.build.api.dsl.NdkBuildOptions.setBuildStagingDirectory: void (java.io.File)
-com.android.build.api.dsl.NdkBuildOptions.setPath: void (java.io.File)
+com.android.build.api.dsl.NdkBuild
+com.android.build.api.dsl.NdkBuild.buildStagingDirectory: void (java.lang.Object)
+com.android.build.api.dsl.NdkBuild.getBuildStagingDirectory: java.io.File ()
+com.android.build.api.dsl.NdkBuild.getPath: java.io.File ()
+com.android.build.api.dsl.NdkBuild.path: void (java.lang.Object)
+com.android.build.api.dsl.NdkBuild.setBuildStagingDirectory: void (java.io.File)
+com.android.build.api.dsl.NdkBuild.setPath: void (java.io.File)
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
