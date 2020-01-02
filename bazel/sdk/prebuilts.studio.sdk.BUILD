@@ -173,7 +173,7 @@ java_import(
     visibility = [
         "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/profiler/app:__pkg__",
-        "//tools/base/profiler/app/dynamic-layout-inspector:__pkg__",
+        "//tools/base/dynamic-layout-inspector:__pkg__",
         "//tools/base/experimental/live-sql-inspector:__pkg__",
     ],
 )
@@ -185,7 +185,7 @@ java_import(
     jars = sdk_path(["platforms/android-29/android.jar"]),
     testonly = 1,
     visibility = [
-        "//tools/base/profiler/app/dynamic-layout-inspector:__pkg__",
+        "//tools/base/dynamic-layout-inspector:__pkg__",
     ],
 )
 
