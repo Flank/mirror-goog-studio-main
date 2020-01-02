@@ -22,7 +22,7 @@ class DateFormatDetectorTest : AbstractCheckTest() {
         return DateFormatDetector()
     }
 
-    fun test() {
+    fun testSpecifyingLocale() {
         val expected = """
             src/test/pkg/LocaleTest.java:32: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]
                     new SimpleDateFormat(); // WRONG
@@ -80,5 +80,81 @@ class DateFormatDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).run().expect(expected)
+    }
+
+    fun testEraYear() {
+        lint().files(
+            manifest().minSdk(19),
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.annotation.SuppressLint
+                import android.icu.text.SimpleDateFormat
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+                import java.time.format.DateTimeFormatter
+                import java.util.*
+
+                @SuppressLint("SimpleDateFormat")
+                @RequiresApi(Build.VERSION_CODES.O)
+                class DateFormatTest {
+                    private val PROFILE_FILE_NAME: DateTimeFormatter =
+                        DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US) // ERROR
+
+                    fun testOk() {
+                        val s1 = DateTimeFormatter.ofPattern("'Year'dd-MM-yy") // OK
+                        val s2 = DateTimeFormatter.ofPattern("'''Y'dd-MM-yy") // OK
+                        val s3 = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss") // OK
+                        val s4 = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss") // OK
+                        val s5 = SimpleDateFormat("HH:mm, MMM dd, yyyy") // OK
+                        val s6 = java.text.SimpleDateFormat("HH:mm, MMM dd, yyyy") // OK
+                        val s7 = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()) // OK
+                    }
+
+                    fun testProblems(something: String) {
+                        val s1 =  DateTimeFormatter.ofPattern("MMMM d, YYYY") // ERROR
+                        val s2 =  SimpleDateFormat("MMMM d, YYYY") // ERROR
+                        val s3 = DateTimeFormatter.ofPattern(""${'"'}dd-MM-YYYY""${'"'}) // ERROR
+                        val s4 = DateTimeFormatter.ofPattern("'${"$"}something'dd-MM-YYYY") // ERROR
+                        val s5 = DateTimeFormatter.ofPattern("'\u1234'dd-MM-YYYY") // ERROR
+                        val constant = "dd-MM-YYYY"
+                        val s6 = DateTimeFormatter.ofPattern(constant) // ERROR
+                        val s7 = DateTimeFormatter.ofPattern(""${'"'}dd-YY-MM""${'"'}) // ERROR
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/DateFormatTest.kt:16: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US) // ERROR
+                                                           ~~~~
+            src/test/pkg/DateFormatTest.kt:29: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s1 =  DateTimeFormatter.ofPattern("MMMM d, YYYY") // ERROR
+                                                                   ~~~~
+            src/test/pkg/DateFormatTest.kt:30: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s2 =  SimpleDateFormat("MMMM d, YYYY") // ERROR
+                                                        ~~~~
+            src/test/pkg/DateFormatTest.kt:31: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s3 = DateTimeFormatter.ofPattern(""${'"'}dd-MM-YYYY""${'"'}) // ERROR
+                                                                  ~~~~
+            src/test/pkg/DateFormatTest.kt:32: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s4 = DateTimeFormatter.ofPattern("'${"$"}something'dd-MM-YYYY") // ERROR
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/DateFormatTest.kt:33: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s5 = DateTimeFormatter.ofPattern("'\u1234'dd-MM-YYYY") // ERROR
+                                                         ~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/DateFormatTest.kt:35: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s6 = DateTimeFormatter.ofPattern(constant) // ERROR
+                                                         ~~~~~~~~
+            src/test/pkg/DateFormatTest.kt:36: Warning: DateFormat character 'Y' in YY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
+                    val s7 = DateTimeFormatter.ofPattern(""${'"'}dd-YY-MM""${'"'}) // ERROR
+                                                               ~~
+            0 errors, 8 warnings
+            """
+        )
     }
 }

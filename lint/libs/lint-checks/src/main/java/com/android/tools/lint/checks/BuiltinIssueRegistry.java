@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 368;
+    public static final int INITIAL_CAPACITY = 369;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -113,6 +113,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CutPasteDetector.ISSUE);
         issues.add(DataBindingDetector.ESCAPE_XML);
         issues.add(DateFormatDetector.DATE_FORMAT);
+        issues.add(DateFormatDetector.WEEK_YEAR);
         issues.add(DeletedProviderDetector.ISSUE);
         issues.add(DeprecationDetector.ISSUE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
@@ -440,7 +441,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 127;
+                initialSize += 130;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {

@@ -15,7 +15,9 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -25,12 +27,14 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULiteralExpression
 
 /** Checks for errors related to Date Formats */
 class DateFormatDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
     override fun getApplicableConstructorTypes(): List<String>? {
-        return listOf(SIMPLE_DATE_FORMAT_CLS)
+        return listOf(JAVA_SIMPLE_DATE_FORMAT_CLS, ICU_SIMPLE_DATE_FORMAT_CLS)
     }
 
     override fun visitConstructor(
@@ -45,6 +49,67 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                     "`new SimpleDateFormat(String template, Locale locale)` with for " +
                     "example `Locale.US` for ASCII dates."
             context.report(DATE_FORMAT, node, location, message)
+        }
+
+        if (context.isEnabled(WEEK_YEAR)) {
+            checkDateFormat(context, node)
+        }
+    }
+
+    override fun getApplicableMethodNames(): List<String>? {
+        return listOf("ofPattern")
+    }
+
+    override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+        if (context.evaluator.isMemberInClass(method, CLS_DATE_TIME_FORMATTER) &&
+            context.isEnabled(WEEK_YEAR)
+        ) {
+            checkDateFormat(context, node)
+        }
+    }
+
+    private fun checkDateFormat(context: JavaContext, call: UCallExpression) {
+        for (argument in call.valueArguments) {
+            val type = argument.getExpressionType() ?: continue
+            if (type.canonicalText == TYPE_STRING) {
+                checkDateFormat(context, argument)
+                break
+            }
+        }
+    }
+
+    private fun checkDateFormat(context: JavaContext, argument: UExpression) {
+        val value =
+            if (argument is ULiteralExpression) {
+                argument.value
+            } else {
+                ConstantEvaluator().allowUnknowns().evaluate(argument) ?: return
+            }
+        val format = value.toString()
+        if (!format.contains("Y")) {
+            return
+        }
+        var escaped = false
+        for ((index, c) in format.withIndex()) {
+            if (c == '\'') {
+                escaped = !escaped
+            } else if (c == 'Y' && !escaped) {
+                var location = context.getLocation(argument)
+                var end = index + 1
+                while (end < format.length && format[end] == c) {
+                    end++
+                }
+                val digits = format.substring(index, end)
+                if (argument is ULiteralExpression) {
+                    location = context.getRangeLocation(argument, index, end - index)
+                }
+
+                context.report(
+                    WEEK_YEAR, argument, location,
+                    "DateFormat character 'Y' in $digits is the week-era-year; did you mean 'y' ?"
+                )
+                return
+            }
         }
     }
 
@@ -82,8 +147,31 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                 implementation = IMPLEMENTATION
             )
 
+        /** Accidentally(?) using week year instead of era year */
+        @JvmField
+        val WEEK_YEAR = Issue.create(
+            id = "WeekBasedYear",
+            briefDescription = "Week Based Year",
+            explanation = """
+                The `DateTimeFormatter` pattern `YYYY` returns the *week* based year, not \
+                the era-based year. This means that 12/29/2019 will format to 2019, but \
+                12/30/2019 will format to 2020!
+
+                If you expected this to format as 2019, you should use the pattern `yyyy` \
+                instead.
+                """,
+            moreInfo = "https://stackoverflow.com/questions/46847245/using-datetimeformatter-on-january-first-cause-an-invalid-year-value",
+            category = Category.I18N,
+            priority = 6,
+            severity = Severity.WARNING,
+            enabledByDefault = false, // get feedback from the field first
+            implementation = IMPLEMENTATION
+        )
+
         const val LOCALE_CLS = "java.util.Locale"
-        private const val SIMPLE_DATE_FORMAT_CLS = "java.text.SimpleDateFormat"
+        private const val CLS_DATE_TIME_FORMATTER = "java.time.format.DateTimeFormatter"
+        private const val JAVA_SIMPLE_DATE_FORMAT_CLS = "java.text.SimpleDateFormat"
+        private const val ICU_SIMPLE_DATE_FORMAT_CLS = "android.icu.text.SimpleDateFormat"
 
         private fun specifiesLocale(method: PsiMethod): Boolean {
             val parameterList = method.parameterList
