@@ -20,7 +20,7 @@ import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.renderIf
 
 fun androidManifestXml(
-  isNewProject: Boolean,
+  isNewModule: Boolean,
   hasNoActionBar: Boolean,
   packageName: String,
   activityClass: String,
@@ -33,7 +33,7 @@ fun androidManifestXml(
   requireTheme: Boolean = false,
   hasApplicationTheme: Boolean = false
 ): String {
-  val appName = if (isNewProject) "app_name" else "title_" + activityToLayout(activityClass)
+  val appName = if (isNewModule) "app_name" else "title_" + activityToLayout(activityClass)
 
   val generateActivityTitleBlock = renderIf(generateActivityTitle) { "android:label = \"@string/$appName\"" }
 
@@ -49,7 +49,7 @@ fun androidManifestXml(
     <activity android:name ="${packageName}.${activityClass}"
     $generateActivityTitleBlock
     $hasActionBarBlock>
-    ${commonActivityBody(isLauncher, isLibraryProject)}
+    ${commonActivityBody(isLauncher || isNewModule, isLibraryProject)}
     </activity>
     </application>
     </manifest>
