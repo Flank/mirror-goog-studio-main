@@ -20,14 +20,14 @@ package com.android.build.gradle.internal.variant2
 
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.errors.SyncIssueHandler
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
-import com.android.build.gradle.internal.fixtures.FakeSyncIssueHandler
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
@@ -37,7 +37,7 @@ import java.io.File
 
 @JvmOverloads
 fun createFakeDslScope(
-    issueReporter: SyncIssueHandler = FakeSyncIssueHandler(),
+    issueReporter: SyncIssueReporter = FakeSyncIssueReporter(),
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
     objectFactory: ObjectFactory = FakeObjectFactory.factory,
     logger: Logger = FakeLogger(),

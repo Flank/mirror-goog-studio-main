@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.variant2
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -28,7 +28,7 @@ import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
 class DslScopeImpl(
-        override val issueReporter: SyncIssueHandler,
+        override val issueReporter: IssueReporter,
         override val deprecationReporter: DeprecationReporter,
         override val objectFactory: ObjectFactory,
         override val logger: Logger,

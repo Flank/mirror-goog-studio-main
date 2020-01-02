@@ -54,7 +54,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
@@ -124,7 +124,7 @@ abstract class BaseExtension protected constructor(
     override val lintOptions: LintOptions =
         objectFactory.newInstance(LintOptions::class.java)
     override val dexOptions: DexOptions =
-        objectFactory.newInstance(DexOptions::class.java, extraModelInfo.deprecationReporter)
+        objectFactory.newInstance(DexOptions::class.java, globalScope.dslScope.deprecationReporter)
     override val packagingOptions: PackagingOptions =
         objectFactory.newInstance(PackagingOptions::class.java)
     override val splits: Splits =
@@ -634,10 +634,10 @@ abstract class BaseExtension protected constructor(
 
     fun getDefaultProguardFile(name: String): File {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
-            extraModelInfo
-                .syncIssueHandler
+            globalScope.dslScope
+                .issueReporter
                 .reportError(
-                    EvalIssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
+                    IssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
                 )
         }
         return ProguardFiles.getDefaultProguardFile(name, project.layout)

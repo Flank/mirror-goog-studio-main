@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
@@ -47,7 +47,7 @@ abstract class VariantBuilder protected constructor(
     protected val signingConfigOverride: SigningConfig?,
     protected val manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     protected val projectOptions: ProjectOptions,
-    protected val issueReporter: EvalIssueReporter,
+    protected val issueReporter: IssueReporter,
     protected val isInExecutionPhase: BooleanSupplier
 ) {
 
@@ -65,7 +65,7 @@ abstract class VariantBuilder protected constructor(
             signingConfigOverride: SigningConfig? = null,
             manifestAttributeSupplier: ManifestAttributeSupplier? = null,
             projectOptions: ProjectOptions,
-            issueReporter: EvalIssueReporter,
+            issueReporter: IssueReporter,
             isInExecutionPhase: BooleanSupplier
 
         ): VariantBuilder {
@@ -236,7 +236,7 @@ private class VariantConfigurationBuilder(
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     projectOptions: ProjectOptions,
-    issueReporter: EvalIssueReporter,
+    issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
     variantType,
@@ -289,7 +289,7 @@ private class TestModuleConfigurationBuilder(
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     projectOptions: ProjectOptions,
-    issueReporter: EvalIssueReporter,
+    issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
     variantType,

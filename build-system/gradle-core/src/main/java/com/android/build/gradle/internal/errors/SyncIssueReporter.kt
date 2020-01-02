@@ -16,18 +16,18 @@
 
 package com.android.build.gradle.internal.errors
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.google.common.collect.ImmutableList
 
 /**
+ * Error reporter to be used during configuration only.
+ *
+ * This should not be used during tasks execution. Prefer [DefaultIssueReporter] inside tasks.
  */
-abstract class SyncIssueHandler : EvalIssueReporter() {
+abstract class SyncIssueReporter : IssueReporter() {
 
     abstract val syncIssues: ImmutableList<SyncIssue>
-
-    /** Whether there are sync issues */
-    abstract fun hasSyncIssue(type: Type): Boolean
 
     /**
      * Lock this issue handler and if any issue is reported after this is called, the handler

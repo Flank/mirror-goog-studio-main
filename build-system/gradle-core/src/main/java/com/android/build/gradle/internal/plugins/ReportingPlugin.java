@@ -20,16 +20,18 @@ import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 
-import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.DslVariableFactory;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.utils.FileUtils;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -54,17 +56,23 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         project.evaluationDependsOnChildren();
 
         ProjectOptions projectOptions = new ProjectOptions(project);
-        ExtraModelInfo extraModelInfo =  new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
+
+        SyncIssueReporterImpl syncIssueHandler =
+                new SyncIssueReporterImpl(
+                        SyncOptions.getModelQueryMode(projectOptions), project.getLogger());
+
+        DeprecationReporterImpl deprecationReporter =
+                new DeprecationReporterImpl(syncIssueHandler, projectOptions, project.getPath());
 
         DslScope dslScope =
                 new DslScopeImpl(
-                        extraModelInfo.getSyncIssueHandler(),
-                        extraModelInfo.getDeprecationReporter(),
+                        syncIssueHandler,
+                        deprecationReporter,
                         project.getObjects(),
                         project.getLogger(),
                         new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
-                        new DslVariableFactory(extraModelInfo.getSyncIssueHandler()),
+                        new DslVariableFactory(syncIssueHandler),
                         project.getLayout(),
                         project::file);
 

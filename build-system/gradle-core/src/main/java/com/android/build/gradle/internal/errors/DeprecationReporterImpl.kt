@@ -21,13 +21,12 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.options.Version
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Type
+import com.android.builder.errors.IssueReporter
+import com.android.builder.errors.IssueReporter.Type
 import java.io.File
 
 class DeprecationReporterImpl(
-        private val issueReporter: EvalIssueReporter,
+        private val issueReporter: IssueReporter,
         private val projectOptions: ProjectOptions,
         private val projectPath: String) : DeprecationReporter {
 

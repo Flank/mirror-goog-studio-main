@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
@@ -62,7 +62,7 @@ class DynamicAppSigningConfigTest {
 
         assertThat(container).rootBuild().project(":feature1")
             .hasSingleIssue(
-                EvalIssueReporter.Severity.WARNING.severity,
+                IssueReporter.Severity.WARNING.severity,
                 SyncIssue.TYPE_SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
                 null,
                 "Signing configuration should not be declared in build types of dynamic-feature. Dynamic-features use the signing configuration declared in the application module."

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,21 @@
 package com.android.builder.errors
 
 /**
- * Fake implementation of {@link EvalIssueReporter} to be used in tests to capture reported warnings
- * and errors.
+ * Implementation of [IssueReporter] that simply records the errors and warnings.
  */
-class FakeEvalIssueReporter(
-    private val throwOnError : Boolean = false) : EvalIssueReporter() {
+class FakeIssueReporter(
+    private val throwOnError : Boolean = false
+) : IssueReporter() {
 
     val messages = mutableListOf<String>()
     val errors = mutableListOf<String>()
     val warnings = mutableListOf<String>()
+    private val issueTypes = mutableSetOf<Type>()
 
     override fun reportIssue(type: Type,
             severity: Severity,
             exception: EvalIssueException) {
+        issueTypes.add(type)
         messages.add(exception.message)
         when(severity) {
             Severity.ERROR -> errors.add(exception.message)
@@ -39,4 +41,6 @@ class FakeEvalIssueReporter(
             throw exception
         }
     }
+
+    override fun hasIssue(type: Type): Boolean = issueTypes.contains(type)
 }

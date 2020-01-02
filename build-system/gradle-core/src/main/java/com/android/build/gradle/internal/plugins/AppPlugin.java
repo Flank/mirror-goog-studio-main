@@ -67,6 +67,7 @@ public class AppPlugin extends AbstractAppPlugin {
                         taskManager,
                         (BaseAppModuleExtension) extension,
                         extraModelInfo,
+                        syncIssueHandler,
                         getProjectType()));
     }
 

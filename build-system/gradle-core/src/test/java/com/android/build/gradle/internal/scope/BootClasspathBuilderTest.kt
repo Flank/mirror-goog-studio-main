@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.builder.errors.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.sdklib.AndroidVersion
 import com.android.testutils.MockitoKt.any
 import com.google.common.truth.Truth.assertThat
@@ -47,7 +47,7 @@ class BootClasspathBuilderTest {
     @Mock
     val project: Project? = null
 
-    private val issueReporter = FakeEvalIssueReporter()
+    private val issueReporter = FakeSyncIssueReporter()
 
     @Before
     fun setupProject() {

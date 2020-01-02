@@ -17,11 +17,10 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.artifact.PublicArtifactType
-import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.core.ThrowingIssueReporter
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant2.createFakeDslScope
@@ -38,6 +37,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
+
 /**
  * Tests for [BaseAppModuleExtension]
  */
@@ -67,10 +67,13 @@ class BaseAppModuleExtensionTest {
             signingConfigs = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
         )
 
+        val globalScope = Mockito.mock(GlobalScope::class.java)
+        Mockito.`when`(globalScope.dslScope).thenReturn(createFakeDslScope())
+
         appExtension = BaseAppModuleExtension(
             project,
             Mockito.mock(ProjectOptions::class.java),
-            Mockito.mock(GlobalScope::class.java),
+            globalScope,
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,
             Mockito.mock(SourceSetManager::class.java),
             Mockito.mock(ExtraModelInfo::class.java),

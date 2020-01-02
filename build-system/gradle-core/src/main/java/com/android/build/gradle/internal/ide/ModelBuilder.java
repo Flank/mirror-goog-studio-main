@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
@@ -68,8 +69,8 @@ import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidGradlePluginProjectFlags;
@@ -144,6 +145,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantModel variantModel;
     @NonNull private final TaskManager taskManager;
+    @NonNull private final SyncIssueReporter syncIssueReporter;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
@@ -160,12 +162,14 @@ public class ModelBuilder<Extension extends BaseExtension>
             @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull SyncIssueReporter syncIssueReporter,
             int projectType) {
         this.globalScope = globalScope;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantModel = variantModel;
         this.taskManager = taskManager;
+        this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
     }
 
@@ -305,9 +309,8 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private Object buildProjectSyncIssuesModel() {
-        extraModelInfo.getSyncIssueHandler().lockHandler();
-        return new DefaultProjectSyncIssues(
-                ImmutableSet.copyOf(extraModelInfo.getSyncIssueHandler().getSyncIssues()));
+        syncIssueReporter.lockHandler();
+        return new DefaultProjectSyncIssues(ImmutableSet.copyOf(syncIssueReporter.getSyncIssues()));
     }
 
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
@@ -515,14 +518,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 }
                 eventReader.close();
             } catch (XMLStreamException | IOException e) {
-                extraModelInfo
-                        .getSyncIssueHandler()
-                        .reportError(
-                                Type.GENERIC,
-                                "Failed to parse XML in "
-                                        + manifest.getPath()
-                                        + "\n"
-                                        + e.getMessage());
+                syncIssueReporter.reportError(
+                        Type.GENERIC,
+                        "Failed to parse XML in " + manifest.getPath() + "\n" + e.getMessage());
             }
         }
         return false;
@@ -601,19 +599,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                             manifest,
                             () -> true,
                             variantDslInfo.getVariantType().getRequiresManifest(),
-                            extraModelInfo.getSyncIssueHandler());
+                            syncIssueReporter);
             try {
                 validateMinSdkVersion(attributeSupplier);
                 validateTargetSdkVersion(attributeSupplier);
             } catch (Throwable e) {
-                extraModelInfo
-                        .getSyncIssueHandler()
-                        .reportError(
-                                Type.GENERIC,
-                                "Failed to parse XML in "
-                                        + manifest.getPath()
-                                        + "\n"
-                                        + e.getMessage());
+                syncIssueReporter.reportError(
+                        Type.GENERIC,
+                        "Failed to parse XML in " + manifest.getPath() + "\n" + e.getMessage());
             }
         }
 
@@ -687,10 +680,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                     project,
                     isDynamicFeature,
                     consumerProguardFiles,
-                    errorMessage ->
-                            extraModelInfo
-                                    .getSyncIssueHandler()
-                                    .reportError(Type.GENERIC, errorMessage));
+                    errorMessage -> syncIssueReporter.reportError(Type.GENERIC, errorMessage));
         }
     }
 
@@ -728,7 +718,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         + variantScope.getFullVariantName()
                                         + "/testTarget",
                                 apkArtifacts.getFailures())
-                        .registerIssues(extraModelInfo.getSyncIssueHandler());
+                        .registerIssues(syncIssueReporter);
             }
         }
 
@@ -744,7 +734,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 getDependencies(
                         scope,
                         buildMapping,
-                        extraModelInfo,
                         modelLevel,
                         modelWithFullDependency);
 
@@ -788,20 +777,18 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     /** Gather the dependency graph for the specified <code>variantScope</code>. */
     @NonNull
-    public static Pair<Dependencies, DependencyGraphs> getDependencies(
+    private Pair<Dependencies, DependencyGraphs> getDependencies(
             @NonNull VariantScope variantScope,
             @NonNull ImmutableMap<String, String> buildMapping,
-            @NonNull ExtraModelInfo extraModelInfo,
             int modelLevel,
             boolean modelWithFullDependency) {
         Pair<Dependencies, DependencyGraphs> result;
 
         // If there is a missing flavor dimension then we don't even try to resolve dependencies
         // as it may fail due to improperly setup configuration attributes.
-        if (extraModelInfo.getSyncIssueHandler().hasSyncIssue(Type.UNNAMED_FLAVOR_DIMENSION)) {
+        if (syncIssueReporter.hasIssue(Type.UNNAMED_FLAVOR_DIMENSION)) {
             result = Pair.of(DependenciesImpl.EMPTY, EmptyDependencyGraphs.EMPTY);
         } else {
-            final Project project = variantScope.getGlobalScope().getProject();
             DependencyGraphBuilder graphBuilder = DependencyGraphBuilderKt.getDependencyGraphBuilder();
             // can't use ProjectOptions as this is likely to change from the initialization of
             // ProjectOptions due to how lint dynamically add/remove this property.
@@ -814,14 +801,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         variantScope,
                                         modelWithFullDependency,
                                         buildMapping,
-                                        extraModelInfo.getSyncIssueHandler()));
+                                        syncIssueReporter));
             } else {
                 result =
                         Pair.of(
                                 graphBuilder.createDependencies(
-                                        variantScope,
-                                        buildMapping,
-                                        extraModelInfo.getSyncIssueHandler()),
+                                        variantScope, buildMapping, syncIssueReporter),
                                 EmptyDependencyGraphs.EMPTY);
             }
         }
@@ -857,7 +842,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 getDependencies(
                         scope,
                         buildMapping,
-                        extraModelInfo,
                         modelLevel,
                         modelWithFullDependency);
 
@@ -887,10 +871,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
             DeviceProviderInstrumentTestTask.checkForNonApks(
                     additionalRuntimeApks,
-                    message ->
-                            extraModelInfo
-                                    .getSyncIssueHandler()
-                                    .reportError(Type.GENERIC, message));
+                    message -> syncIssueReporter.reportError(Type.GENERIC, message));
 
             TestOptions testOptionsDsl = scope.getGlobalScope().getExtension().getTestOptions();
             testOptions =
@@ -908,7 +889,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         } catch (RuntimeException e) {
             // don't crash. just throw a sync error.
             applicationId = "";
-            extraModelInfo.getSyncIssueHandler().reportError(Type.GENERIC, e);
+            syncIssueReporter.reportError(Type.GENERIC, e);
         }
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
 
@@ -963,26 +944,22 @@ public class ModelBuilder<Extension extends BaseExtension>
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
         if (supplier.getMinSdkVersion() != null) {
             // report an error since min sdk version should not be in the manifest.
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportError(
-                            EvalIssueReporter.Type.MIN_SDK_VERSION_IN_MANIFEST,
-                            "The minSdk version should not be declared in the android"
-                                    + " manifest file. You can move the version from the manifest"
-                                    + " to the defaultConfig in the build.gradle file.");
+            syncIssueReporter.reportError(
+                    IssueReporter.Type.MIN_SDK_VERSION_IN_MANIFEST,
+                    "The minSdk version should not be declared in the android"
+                            + " manifest file. You can move the version from the manifest"
+                            + " to the defaultConfig in the build.gradle file.");
         }
     }
 
     private void validateTargetSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
         if (supplier.getTargetSdkVersion() != null) {
             // report a warning since target sdk version should not be in the manifest.
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportWarning(
-                            EvalIssueReporter.Type.TARGET_SDK_VERSION_IN_MANIFEST,
-                            "The targetSdk version should not be declared in the android"
-                                    + " manifest file. You can move the version from the manifest"
-                                    + " to the defaultConfig in the build.gradle file.");
+            syncIssueReporter.reportWarning(
+                    IssueReporter.Type.TARGET_SDK_VERSION_IN_MANIFEST,
+                    "The targetSdk version should not be declared in the android"
+                            + " manifest file. You can move the version from the manifest"
+                            + " to the defaultConfig in the build.gradle file.");
         }
     }
 

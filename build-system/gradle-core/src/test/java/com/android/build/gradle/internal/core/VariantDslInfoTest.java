@@ -23,13 +23,12 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.FakeEvalIssueReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableMap;
@@ -43,9 +42,9 @@ public class VariantDslInfoTest {
     private DefaultConfig defaultConfig;
     private ProductFlavor flavorConfig;
     private BuildType buildType;
-    private EvalIssueReporter issueReporter;
+    private FakeSyncIssueReporter issueReporter = new FakeSyncIssueReporter();
 
-    private DslScope dslScope = FakeDslScope.createFakeDslScope();
+    private DslScope dslScope = FakeDslScope.createFakeDslScope(issueReporter);
 
     @Before
     public void setUp() throws Exception {
@@ -55,7 +54,6 @@ public class VariantDslInfoTest {
         flavorConfig = new ProductFlavor("flavor", dslScope);
         flavorConfig.setDimension("dimension1");
         buildType = new BuildType("debug", dslScope);
-        issueReporter = new FakeEvalIssueReporter();
     }
 
     @Test

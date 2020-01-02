@@ -28,8 +28,8 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
-import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl;
+import com.android.build.gradle.internal.errors.SyncIssueReporter;
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
@@ -44,11 +44,12 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
+import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -94,7 +95,7 @@ public class ModelBuilderTest {
 
     ModelBuilder modelBuilder;
     File apkLocation;
-    SyncIssueHandler syncIssueHandler;
+    SyncIssueReporter syncIssueReporter;
 
     @Before
     public void setUp() throws IOException {
@@ -110,9 +111,11 @@ public class ModelBuilderTest {
         when(gradle.getParent()).thenReturn(null);
         when(gradle.getIncludedBuilds()).thenReturn(ImmutableList.of());
 
-        syncIssueHandler =
-                new SyncIssueHandlerImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
-        when(extraModelInfo.getSyncIssueHandler()).thenReturn(syncIssueHandler);
+        syncIssueReporter =
+                new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
+
+        DslScopeImpl dslScope = FakeDslScope.createFakeDslScope(syncIssueReporter);
+        when(globalScope.getDslScope()).thenReturn(dslScope);
 
         apkLocation = temporaryFolder.newFolder("apk");
 
@@ -122,7 +125,7 @@ public class ModelBuilderTest {
                         new VariantInputModelBuilder(FakeDslScope.createFakeDslScope()).toModel(),
                         extension::getTestBuildType,
                         variantManager,
-                        extraModelInfo.getSyncIssueHandler());
+                        syncIssueReporter);
 
         modelBuilder =
                 new ModelBuilder<>(
@@ -131,6 +134,7 @@ public class ModelBuilderTest {
                         taskManager,
                         extension,
                         extraModelInfo,
+                        syncIssueReporter,
                         AndroidProjectTypes.PROJECT_TYPE_APP);
     }
 
@@ -423,7 +427,7 @@ public class ModelBuilderTest {
         // This should lock down the issue handler.
         modelBuilder.buildAll("com.android.builder.model.ProjectSyncIssues", project);
         // And then trying to report anything after fetching the sync issues model should throw.
-        syncIssueHandler.reportWarning(EvalIssueReporter.Type.GENERIC, "Should Fail");
+        syncIssueReporter.reportWarning(IssueReporter.Type.GENERIC, "Should Fail");
     }
 
     private static BaseVariantData createVariantData(

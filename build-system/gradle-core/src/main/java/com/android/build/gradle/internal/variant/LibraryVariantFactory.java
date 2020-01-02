@@ -33,8 +33,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import org.gradle.api.NamedDomainObjectContainer;
 
@@ -78,7 +78,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
     public void validateModel(@NonNull VariantInputModel model) {
         super.validateModel(model);
 
-        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
 
         if (model.getDefaultConfig().getProductFlavor().getApplicationId() != null) {
             String applicationId = model.getDefaultConfig().getProductFlavor().getApplicationId();

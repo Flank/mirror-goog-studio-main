@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableMap
@@ -29,7 +29,7 @@ class VariantModelImpl(
     override val inputs: VariantInputModel,
     private val testBuilderTypeProvider: () -> String?,
     private val variantManager: VariantManager,
-    private val issueHandler: EvalIssueReporter) : VariantModel {
+    private val issueHandler: IssueReporter) : VariantModel {
 
     override val variants: List<VariantScope>
         get() = variantManager.variantScopes
@@ -121,7 +121,7 @@ class VariantModelImpl(
 
         if (buildTypesMarkedAsDefault.size > 1) {
             issueHandler.reportWarning(
-                EvalIssueReporter.Type.AMBIGUOUS_BUILD_TYPE_DEFAULT,
+                IssueReporter.Type.AMBIGUOUS_BUILD_TYPE_DEFAULT,
                 "Ambiguous default build type: '"
                         + Joiner.on("', '").join(buildTypesMarkedAsDefault)
                         + "'.\n"
@@ -177,7 +177,7 @@ class VariantModelImpl(
             // Report the ambiguous default setting.
             if (userDefault.size > 1) {
                     issueHandler.reportWarning(
-                                EvalIssueReporter.Type.AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT,
+                                IssueReporter.Type.AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT,
 """Ambiguous default product flavors for flavor dimension '$dimension': '${Joiner.on("', '").join(userDefault)}'.
 Please only set `isDefault = true` for one product flavor in each flavor dimension.""",
                                 dimension

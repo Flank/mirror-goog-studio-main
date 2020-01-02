@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import kotlin.properties.Delegates
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -27,7 +27,7 @@ import kotlin.reflect.KProperty
  * The properties can be locked in afterEvaluate to prevent attempts to change values that will
  * not work.
  */
-class DslVariableFactory internal constructor(private val evalIssueReporter: EvalIssueReporter) {
+class DslVariableFactory internal constructor(private val issueReporter: IssueReporter) {
 
     /** Once the DSL is locked, it can only be read. */
     var locked = false
@@ -40,8 +40,8 @@ class DslVariableFactory internal constructor(private val evalIssueReporter: Eva
 
     private fun <T> veto(property: KProperty<*>, oldValue: T, newValue: T): Boolean {
         if (locked) {
-            evalIssueReporter.reportError(
-                EvalIssueReporter.Type.EDIT_LOCKED_DSL_VALUE,
+            issueReporter.reportError(
+                IssueReporter.Type.EDIT_LOCKED_DSL_VALUE,
                 "It is too late to set property '${property.name}' to '$newValue'. " +
                         "(It has value '$oldValue')\n" +
                         "The DSL is now locked as the variants have been created.\n" +

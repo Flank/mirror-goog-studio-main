@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.AbstractProductFlavor
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.internal.CopyOfTester
 import com.google.common.collect.ImmutableList
@@ -35,7 +36,7 @@ class MergedFlavorTest {
     private lateinit var defaultFlavor2: AbstractProductFlavor
     private lateinit var custom: AbstractProductFlavor
     private lateinit var custom2: AbstractProductFlavor
-    private lateinit var issueReporter: EvalIssueReporter
+    private lateinit var issueReporter: IssueReporter
 
     @Before
     fun setUp() {
@@ -75,7 +76,7 @@ class MergedFlavorTest {
         custom2.versionNameSuffix = "custom2"
         custom2.applicationId = "com.custom2.app"
 
-        issueReporter = ThrowingIssueReporter()
+        issueReporter = FakeSyncIssueReporter(throwOnError = true)
     }
 
     @Test
@@ -225,7 +226,17 @@ class MergedFlavorTest {
             flavor.versionCode = 123
             fail("Setting versionCode should result in RuntimeException from issueReporter")
         } catch (e : RuntimeException) {
-            assertThat(e.message).isEqualTo("fake")
+            assertThat(e.message).isEqualTo(
+                """versionCode cannot be set on a mergedFlavor directly.
+                |versionCodeOverride can instead be set for variant outputs using the following syntax:
+                |android {
+                |    applicationVariants.all { variant ->
+                |        variant.outputs.each { output ->
+                |            output.versionCodeOverride = 123
+                |        }
+                |    }
+                |}
+            """.trimMargin())
         }
     }
 
@@ -236,7 +247,17 @@ class MergedFlavorTest {
             flavor.versionName = "foo"
             fail("Setting versionName should result in RuntimeException from issueReporter")
         } catch (e : RuntimeException) {
-            assertThat(e.message).isEqualTo("fake")
+            assertThat(e.message).isEqualTo(
+                """versionName cannot be set on a mergedFlavor directly.
+                |versionNameOverride can instead be set for variant outputs using the following syntax:
+                |android {
+                |    applicationVariants.all { variant ->
+                |        variant.outputs.each { output ->
+                |            output.versionNameOverride = "foo"
+                |        }
+                |    }
+                |}
+            """.trimMargin())
         }
     }
 }

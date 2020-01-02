@@ -79,7 +79,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -123,7 +123,9 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         transformManager.addTransform(taskFactory, scope, t);
 
-        SyncIssue syncIssue = errorReporter.getSyncIssue();
+        final ImmutableList<SyncIssue> syncIssues = issueReporter.getSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        SyncIssue syncIssue = Iterables.getOnlyElement(syncIssues);
         assertThat(syncIssue).isNotNull();
         assertThat(syncIssue.getMessage())
                 .isEqualTo(
@@ -170,7 +172,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -215,7 +217,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new streams
         List<TransformStream> streams = transformManager.getStreams();
@@ -281,7 +283,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new streams
         List<TransformStream> streams = transformManager.getStreams();
@@ -390,7 +392,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new streams
         List<TransformStream> streams = transformManager.getStreams();
@@ -457,7 +459,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -503,7 +505,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // check the class stream was not consumed.
         assertThat(transformManager.getStreams()).containsExactly(projectClass);
@@ -545,7 +547,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -595,7 +597,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -651,7 +653,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -702,7 +704,7 @@ public class TransformManagerTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // get the new stream
         List<TransformStream> streams = transformManager.getStreams();
@@ -760,7 +762,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         assertThat(task.isPresent()).isFalse();
 
-        SyncIssue syncIssue = errorReporter.getSyncIssue();
+        final ImmutableList<SyncIssue> syncIssues = issueReporter.getSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        SyncIssue syncIssue = Iterables.getOnlyElement(syncIssues);
         assertThat(syncIssue).isNotNull();
         assertThat(syncIssue.getMessage()).isEqualTo(
                 "Custom content types "
@@ -784,7 +788,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         assertThat(task.isPresent()).isFalse();
 
-        SyncIssue syncIssue = errorReporter.getSyncIssue();
+        final ImmutableList<SyncIssue> syncIssues = issueReporter.getSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        SyncIssue syncIssue = Iterables.getOnlyElement(syncIssues);
         assertThat(syncIssue).isNotNull();
         assertThat(syncIssue.getMessage()).isEqualTo(
                 "Custom content types "
@@ -807,7 +813,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         assertThat(task.isPresent()).isFalse();
 
-        SyncIssue syncIssue = errorReporter.getSyncIssue();
+        final ImmutableList<SyncIssue> syncIssues = issueReporter.getSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        SyncIssue syncIssue = Iterables.getOnlyElement(syncIssues);
         assertThat(syncIssue).isNotNull();
         assertThat(syncIssue.getMessage())
                 .isEqualTo("PROVIDED_ONLY scope cannot be consumed by Transform 'transform name'");
@@ -828,7 +836,9 @@ public class TransformManagerTest extends TaskTestUtils {
 
         assertThat(task.isPresent()).isFalse();
 
-        SyncIssue syncIssue = errorReporter.getSyncIssue();
+        final ImmutableList<SyncIssue> syncIssues = issueReporter.getSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        SyncIssue syncIssue = Iterables.getOnlyElement(syncIssues);
         assertThat(syncIssue).isNotNull();
         assertThat(syncIssue.getMessage())
                 .isEqualTo("TESTED_CODE scope cannot be consumed by Transform 'transform name'");

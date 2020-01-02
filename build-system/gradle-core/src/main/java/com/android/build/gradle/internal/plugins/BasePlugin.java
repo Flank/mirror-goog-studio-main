@@ -55,7 +55,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
+import com.android.build.gradle.internal.errors.MessageReceiverImpl;
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
@@ -85,8 +86,8 @@ import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -117,6 +118,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.invocation.Gradle;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
@@ -138,6 +140,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     protected ProjectOptions projectOptions;
 
     GlobalScope globalScope;
+    protected SyncIssueReporterImpl syncIssueHandler;
 
     private DataBindingBuilder dataBindingBuilder;
 
@@ -285,10 +288,16 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     private void configureProject() {
         final Gradle gradle = project.getGradle();
         ObjectFactory objectFactory = project.getObjects();
+        final Logger logger = project.getLogger();
+        final String projectPath = project.getPath();
 
-        extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
+        syncIssueHandler =
+                new SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger);
 
-        final SyncIssueHandler syncIssueHandler = extraModelInfo.getSyncIssueHandler();
+        DeprecationReporterImpl deprecationReporter =
+                new DeprecationReporterImpl(syncIssueHandler, projectOptions, projectPath);
+
+        extraModelInfo = new ExtraModelInfo();
 
         SdkComponents sdkComponents =
                 SdkComponents.Companion.createSdkComponents(
@@ -303,9 +312,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
-        projectOptions
-                .getAllOptions()
-                .forEach(extraModelInfo.getDeprecationReporter()::reportOptionIssuesIfAny);
+        projectOptions.getAllOptions().forEach(deprecationReporter::reportOptionIssuesIfAny);
 
         // Enforce minimum versions of certain plugins
         GradlePluginUtils.enforceMinimumVersionsOfPlugins(project, syncIssueHandler);
@@ -316,7 +323,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         DslScopeImpl dslScope =
                 new DslScopeImpl(
                         syncIssueHandler,
-                        extraModelInfo.getDeprecationReporter(),
+                        deprecationReporter,
                         objectFactory,
                         project.getLogger(),
                         new BuildFeatureValuesImpl(projectOptions),
@@ -328,6 +335,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
 
+        MessageReceiverImpl messageReceiver =
+                new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
+
         globalScope =
                 new GlobalScope(
                         project,
@@ -337,7 +347,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         sdkComponents,
                         registry,
                         buildCache,
-                        extraModelInfo.getMessageReceiver(),
+                        messageReceiver,
                         componentFactory);
 
         project.getTasks()
@@ -365,7 +375,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         ConstraintHandler.clearCache();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
-                                project.getPath(),
+                                projectPath,
                                 null,
                                 Main::clearInternTables);
                         DeprecationReporterImpl.Companion.clean();
@@ -515,10 +525,10 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         // Register a builder for the custom tooling model
         VariantModel variantModel =
                 new VariantModelImpl(
-                        variantManager.getVariantInputModel(),
+                        variantInputModel,
                         extension::getTestBuildType,
                         variantManager,
-                        extraModelInfo.getSyncIssueHandler());
+                        globalScope.getDslScope().getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
@@ -541,6 +551,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         taskManager,
                         extension,
                         extraModelInfo,
+                        syncIssueHandler,
                         getProjectType()));
     }
 
@@ -591,8 +602,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 extension.setCompileSdkVersion(newCompileSdkVersion);
             }
 
-            extraModelInfo
-                    .getSyncIssueHandler()
+            globalScope
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportError(
                             Type.COMPILE_SDK_VERSION_NOT_SET,
                             "compileSdkVersion is not specified. Please add it to build.gradle");
@@ -621,9 +633,10 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                             + "    apply plugin: 'me.tatarka.retrolambda'\n"
                             + "To learn more, go to https://d.android.com/r/"
                             + "tools/java-8-support-message.html\n";
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
+            globalScope
+                    .getDslScope()
+                    .getIssueReporter()
+                    .reportWarning(IssueReporter.Type.GENERIC, warningMsg);
         }
 
         // don't do anything if the project was not initialized.
@@ -745,8 +758,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         // The Play Store doesn't allow Pure splits
         if (generatePureSplits) {
-            extraModelInfo
-                    .getSyncIssueHandler()
+            globalScope
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportWarning(
                             Type.GENERIC,
                             "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false. For more information, go to "
@@ -754,8 +768,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
 
         if (!generatePureSplits && splits.getLanguage().isEnable()) {
-            extraModelInfo
-                    .getSyncIssueHandler()
+            globalScope
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportWarning(
                             Type.GENERIC,
                             "Per-language APKs are supported only when building Android Instant Apps. For more information, go to "

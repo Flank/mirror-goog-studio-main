@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
@@ -54,15 +53,12 @@ abstract class BundleAar : Zip(), VariantAwareTask {
     lateinit var projectPath: String
         private set
 
-    private lateinit var reporter: EvalIssueReporter
-
     @get:Input
     val hasLocalAarDeps: Boolean
         get() {
             val hasLocalAarDependencies = localAarDeps.files.isNotEmpty()
             if (hasLocalAarDependencies) {
-                reporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
+                throw RuntimeException(
                     "Direct local .aar file dependencies are not supported when building an AAR. " +
                             "The resulting AAR would be broken because the classes and Android " +
                             "resources from any local .aar file dependencies would not be " +
@@ -199,7 +195,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 }
             )
             task.projectPath = variantScope.globalScope.project.path
-            task.reporter = variantScope.globalScope.errorHandler
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->

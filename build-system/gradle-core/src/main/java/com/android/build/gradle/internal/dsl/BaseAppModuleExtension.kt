@@ -91,7 +91,7 @@ open class BaseAppModuleExtension(
         project.objects.newInstance(
             BundleOptions::class.java,
             project.objects,
-            extraModelInfo.deprecationReporter
+            globalScope.dslScope.deprecationReporter
         )
 
     fun bundle(action: Action<BundleOptions>) {

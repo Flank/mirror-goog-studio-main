@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.builder.core.LibraryRequest
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.OptionalLibrary
 import com.google.common.base.Verify
@@ -49,7 +49,7 @@ object BootClasspathBuilder {
      */
     fun computeClasspath(
         project: Project,
-        issueReporter: EvalIssueReporter,
+        issueReporter: IssueReporter,
         targetBootClasspath: Provider<List<File>>,
         targetAndroidVersion: Provider<AndroidVersion>,
         additionalLibraries: Provider<List<OptionalLibrary>>,
@@ -101,7 +101,7 @@ object BootClasspathBuilder {
         optionalLibraries: List<OptionalLibrary>,
         addAllOptionalLibraries: Boolean,
         libraryRequestsArg: List<LibraryRequest>,
-        issueReporter: EvalIssueReporter
+        issueReporter: IssueReporter
     ): List<File> {
 
         // iterate through additional libraries first, in case they contain
@@ -153,7 +153,7 @@ object BootClasspathBuilder {
         // look for not found requested libraries.
         for (library in libraryRequests) {
             issueReporter.reportError(
-                EvalIssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
+                IssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
                 "Unable to find optional library: $library",
                 library)
         }

@@ -35,8 +35,8 @@ import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
@@ -101,7 +101,7 @@ public class TransformManager extends FilterableStreamCollection {
 
     @NonNull
     private final Project project;
-    @NonNull private final EvalIssueReporter issueReporter;
+    @NonNull private final IssueReporter issueReporter;
     @NonNull private final Logger logger;
     @NonNull
     private final Recorder recorder;
@@ -123,7 +123,7 @@ public class TransformManager extends FilterableStreamCollection {
 
     public TransformManager(
             @NonNull Project project,
-            @NonNull EvalIssueReporter issueReporter,
+            @NonNull IssueReporter issueReporter,
             @NonNull Recorder recorder) {
         this.project = project;
         this.issueReporter = issueReporter;

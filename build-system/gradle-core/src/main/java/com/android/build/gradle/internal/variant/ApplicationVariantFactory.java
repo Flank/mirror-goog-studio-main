@@ -43,8 +43,8 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.resources.Density;
@@ -185,9 +185,9 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         }
 
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
-        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
         issueReporter.reportError(
-                EvalIssueReporter.Type.GENERIC,
+                IssueReporter.Type.GENERIC,
                 String.format(
                         "Conflicting configuration : '%1$s' in ndk abiFilters "
                                 + "cannot be present when splits abi filters are set : %2$s",
@@ -232,9 +232,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList());
             globalScope
-                    .getErrorHandler()
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportWarning(
-                            EvalIssueReporter.Type.GENERIC,
+                            IssueReporter.Type.GENERIC,
                             String.format(
                                     "Cannot build selected target ABI: %1$s, "
                                             + (splits.isEmpty()
@@ -290,7 +291,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         // below is for dynamic-features only.
 
-        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
@@ -341,8 +342,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     }
 
     private void validateVersionCodes(@NonNull VariantInputModel model) {
-
-        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
 
         Integer versionCode = model.getDefaultConfig().getProductFlavor().getVersionCode();
         if (versionCode != null && versionCode < 1) {

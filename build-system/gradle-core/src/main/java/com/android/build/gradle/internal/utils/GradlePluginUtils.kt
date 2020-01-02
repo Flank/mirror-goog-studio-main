@@ -19,8 +19,7 @@
 package com.android.build.gradle.internal.utils
 
 import com.google.common.annotations.VisibleForTesting
-import com.android.builder.errors.EvalIssueException
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.ide.common.repository.GradleVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.result.DependencyResult
@@ -78,7 +77,7 @@ internal data class DependencyInfo(
 /**
  * Enforces minimum versions of certain plugins.
  */
-fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: EvalIssueReporter) {
+fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: IssueReporter) {
     // We're going to check all projects at the end of the configuration phase, so make sure to do
     // this check only once by marking a custom property of the root project. The access doesn't
     // need to be thread-safe as configuration is single-threaded.
@@ -106,7 +105,7 @@ fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: EvalIssueRe
 private fun enforceMinimumVersionOfPlugin(
     project: Project,
     pluginInfo: DependencyInfo,
-    issueReporter: EvalIssueReporter
+    issueReporter: IssueReporter
 ) {
     // Traverse the dependency graph to collect violating plugins
     val buildScriptClasspath = project.buildscript.configurations.getByName(CLASSPATH_CONFIGURATION)
@@ -124,7 +123,7 @@ private fun enforceMinimumVersionOfPlugin(
     // Report violating plugins
     if (pathsToViolatingPlugins.isNotEmpty()) {
         issueReporter.reportError(
-            EvalIssueReporter.Type.THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD,
+            IssueReporter.Type.THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD,
             "The Android Gradle plugin supports only ${pluginInfo.displayName} Gradle plugin" +
                     " version ${pluginInfo.minimumVersion} and higher.\n" +
                     "The following dependencies do not satisfy the required version:\n" +

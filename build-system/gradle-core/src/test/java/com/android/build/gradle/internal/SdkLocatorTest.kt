@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
-import com.android.builder.errors.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.google.common.base.Charsets
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -39,7 +39,7 @@ class SdkLocatorTest {
     private lateinit var validSdkDirectory: File
     private lateinit var anotherValidSdkDirectory: File
     private lateinit var missingSdkDirectory: File
-    private lateinit var evalIssueReporter: FakeEvalIssueReporter
+    private lateinit var issueReporter: FakeSyncIssueReporter
 
     @Before
     fun setUp() {
@@ -47,7 +47,7 @@ class SdkLocatorTest {
         validSdkDirectory = testFolder.newFolder("AndroidSDK")
         anotherValidSdkDirectory = testFolder.newFolder("AnotherSDKDir")
         missingSdkDirectory = testFolder.root.resolve("MissingSDK")
-        evalIssueReporter = FakeEvalIssueReporter()
+        issueReporter = FakeSyncIssueReporter()
     }
 
     @After
@@ -59,9 +59,9 @@ class SdkLocatorTest {
     @Test
     fun noPropertiesSet() {
         val sourceSet = getLocationSourceSet()
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -69,8 +69,8 @@ class SdkLocatorTest {
     @Test
     fun sdkTestDirectory() {
         val sourceSet = getLocationSourceSet(testSdkDir = validSdkDirectory)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.TEST)
     }
@@ -78,9 +78,9 @@ class SdkLocatorTest {
     @Test
     fun sdkTestDirectory_missing() {
         val sourceSet = getLocationSourceSet(testSdkDir = missingSdkDirectory)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -88,8 +88,8 @@ class SdkLocatorTest {
     @Test
     fun localPropertiesSdkDir() {
         val sourceSet = getLocationSourceSet(localSdkDir = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -97,8 +97,8 @@ class SdkLocatorTest {
     @Test
     fun localPropertiesSdkDir_relative() {
         val sourceSet = getLocationSourceSet(localSdkDir = validSdkDirectory.relativeTo(projectRootDir).path)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -106,9 +106,9 @@ class SdkLocatorTest {
     @Test
     fun localPropertiesSdkDir_missing() {
         val sourceSet = getLocationSourceSet(localSdkDir = missingSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -116,8 +116,8 @@ class SdkLocatorTest {
     @Test
     fun localPropertiesAndroidDir() {
         val sourceSet = getLocationSourceSet(localAndroidDir = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.PLATFORM)
     }
@@ -125,8 +125,8 @@ class SdkLocatorTest {
     @Test
     fun localPropertiesAndroidDir_relative() {
         val sourceSet = getLocationSourceSet(localAndroidDir = validSdkDirectory.relativeTo(projectRootDir).path)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.PLATFORM)
     }
@@ -134,9 +134,9 @@ class SdkLocatorTest {
     @Test
     fun localPropertiesAndroidDir_missing() {
         val sourceSet = getLocationSourceSet(localAndroidDir = missingSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -144,8 +144,8 @@ class SdkLocatorTest {
     @Test
     fun envVariablesAndroidHome() {
         val sourceSet = getLocationSourceSet(envAndroidHome = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -153,8 +153,8 @@ class SdkLocatorTest {
     @Test
     fun envVariablesAndroidHome_relative() {
         val sourceSet = getLocationSourceSet(envAndroidHome = validSdkDirectory.relativeTo(projectRootDir).path)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -162,9 +162,9 @@ class SdkLocatorTest {
     @Test
     fun envVariablesAndroidHome_missing() {
         val sourceSet = getLocationSourceSet(envAndroidHome = missingSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -172,8 +172,8 @@ class SdkLocatorTest {
     @Test
     fun envVariablesSdkRoot() {
         val sourceSet = getLocationSourceSet(envSdkRoot = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -181,8 +181,8 @@ class SdkLocatorTest {
     @Test
     fun envVariablesSdkRoot_relative() {
         val sourceSet = getLocationSourceSet(envSdkRoot = validSdkDirectory.relativeTo(projectRootDir).path)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -190,9 +190,9 @@ class SdkLocatorTest {
     @Test
     fun envVariablesSdkRoot_missing() {
         val sourceSet = getLocationSourceSet(envSdkRoot = missingSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -200,8 +200,8 @@ class SdkLocatorTest {
     @Test
     fun systemPropertiesAndroidHome() {
         val sourceSet = getLocationSourceSet(systemAndroidHome = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -209,8 +209,8 @@ class SdkLocatorTest {
     @Test
     fun systemPropertiesAndroidHome_relative() {
         val sourceSet = getLocationSourceSet(systemAndroidHome = validSdkDirectory.relativeTo(projectRootDir).path)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -218,9 +218,9 @@ class SdkLocatorTest {
     @Test
     fun systemPropertiesAndroidHome_missing() {
         val sourceSet = getLocationSourceSet(systemAndroidHome = missingSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).contains("SDK location not found")
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).contains("SDK location not found")
         assertThat(sdkLocation.directory).isNull()
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.MISSING)
     }
@@ -230,8 +230,8 @@ class SdkLocatorTest {
         val sourceSet = getLocationSourceSet(
             localSdkDir = validSdkDirectory.absolutePath,
             localAndroidDir = anotherValidSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -241,8 +241,8 @@ class SdkLocatorTest {
         val sourceSet = getLocationSourceSet(
             localSdkDir = missingSdkDirectory.absolutePath,
             localAndroidDir = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.PLATFORM)
     }
@@ -252,8 +252,8 @@ class SdkLocatorTest {
         val sourceSet = getLocationSourceSet(
             envAndroidHome = validSdkDirectory.absolutePath,
             envSdkRoot = anotherValidSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -263,8 +263,8 @@ class SdkLocatorTest {
         val sourceSet = getLocationSourceSet(
             envAndroidHome = missingSdkDirectory.absolutePath,
             envSdkRoot = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
@@ -272,20 +272,20 @@ class SdkLocatorTest {
     @Test
     fun cachingBySourceSet() {
         val sourceSet = getLocationSourceSet(localSdkDir = validSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
 
         validSdkDirectory.delete()
-        val cachedSdkLocation = SdkLocator.getSdkLocation(sourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val cachedSdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(cachedSdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(cachedSdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
 
         val newSourceSet = getLocationSourceSet(localSdkDir = anotherValidSdkDirectory.absolutePath)
-        val anotherSdkLocation = SdkLocator.getSdkLocation(newSourceSet, evalIssueReporter)
-        assertThat(evalIssueReporter.messages).isEmpty()
+        val anotherSdkLocation = SdkLocator.getSdkLocation(newSourceSet, issueReporter)
+        assertThat(issueReporter.messages).isEmpty()
         assertThat(anotherSdkLocation.directory).isEqualTo(anotherValidSdkDirectory)
         assertThat(anotherSdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }

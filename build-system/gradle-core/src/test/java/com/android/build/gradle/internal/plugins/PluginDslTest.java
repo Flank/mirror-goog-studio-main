@@ -25,6 +25,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -684,8 +685,9 @@ public class PluginDslTest {
         assertThat(plugin.globalScope.getSdkComponents().getBuildToolsRevisionProvider().get())
                 .isEqualTo(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.
-        Collection<SyncIssue> syncIssues =
-                plugin.extraModelInfo.getSyncIssueHandler().getSyncIssues();
+        final SyncIssueReporter issueReporter =
+                (SyncIssueReporter) plugin.globalScope.getDslScope().getIssueReporter();
+        Collection<SyncIssue> syncIssues = issueReporter.getSyncIssues();
         assertThat(syncIssues).hasSize(1);
         SyncIssue issue = Iterables.getOnlyElement(syncIssues);
         assertThat(issue.getType()).isEqualTo(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);

@@ -190,7 +190,7 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -2295,7 +2295,8 @@ public abstract class TaskManager {
         if (isTestCoverageEnabled) {
             if (variantScope.getDexer() == DexerTool.DX) {
                 globalScope
-                        .getErrorHandler()
+                        .getDslScope()
+                        .getIssueReporter()
                         .reportWarning(
                                 Type.GENERIC,
                                 String.format(
@@ -3125,7 +3126,8 @@ public abstract class TaskManager {
                                         + ":"
                                         + dependency.getVersion();
                         globalScope
-                                .getErrorHandler()
+                                .getDslScope()
+                                .getIssueReporter()
                                 .reportError(
                                         Type.GENERIC,
                                         "Data Binding annotation processor version needs to match the"

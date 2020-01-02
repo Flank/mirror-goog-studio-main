@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.impl.VariantConfigurationImpl
-import com.android.build.gradle.internal.errors.SyncIssueHandler
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import com.google.common.collect.ImmutableList
@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList
  */
 class VariantCombinator(
     private val variantInputModel : VariantInputModel,
-    private val errorReporter: EvalIssueReporter,
+    private val errorReporter: IssueReporter,
     private val variantType: VariantType,
     private val flavorDimensionList: List<String>
 ) {
@@ -152,7 +152,7 @@ class VariantCombinator(
         if (flavorDimensionList.isEmpty()) {
             errorReporter
                 .reportError(
-                    EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
+                    IssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
                     "All flavors must now belong to a named flavor dimension."
                             + " Learn more at "
                             + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html"
@@ -233,7 +233,7 @@ class VariantCombinator(
  * @param flavorDimensionList the list of flavor dimension
  * @param flavorMap the map of (dimension, list of flavors)
  * @param comboList the list that receives the final (filled-up) [FlavorCombination] objects.
- * @param errorReporter a [SyncIssueHandler] to report errors.
+ * @param errorReporter a [SyncIssueReporter] to report errors.
  * @param currentFlavorCombo the current accumulator containing pairs of (dimension, value) for already visited dimensions
  * @param dimensionIndex the index of the dimension this calls must handle
  */
@@ -241,7 +241,7 @@ private fun createProductFlavorCombinations(
     flavorDimensionList: List<String>,
     flavorMap: Map<String, List<String>>,
     comboList: ImmutableList.Builder<FlavorCombination>,
-    errorReporter: EvalIssueReporter,
+    errorReporter: IssueReporter,
     currentFlavorCombo: FlavorCombination = FlavorCombination(),
     dimensionIndex: Int = 0
 )  {
@@ -261,7 +261,7 @@ private fun createProductFlavorCombinations(
     // indices.
     return if (flavorList == null || flavorList.isEmpty()) {
         errorReporter.reportError(
-            EvalIssueReporter.Type.GENERIC,
+            IssueReporter.Type.GENERIC,
             "No flavor is associated with flavor dimension '$dimension'."
         )
     } else {

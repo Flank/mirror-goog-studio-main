@@ -67,7 +67,8 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -219,6 +220,8 @@ public class LibraryTaskManager extends TaskManager {
         List<Transform> customTransforms = extension.getTransforms();
         List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
 
+        final IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+
         for (int i = 0, count = customTransforms.size(); i < count; i++) {
             Transform transform = customTransforms.get(i);
 
@@ -229,13 +232,11 @@ public class LibraryTaskManager extends TaskManager {
                     Sets.difference(transform.getScopes(), TransformManager.PROJECT_ONLY);
             if (!difference.isEmpty()) {
                 String scopes = difference.toString();
-                globalScope
-                        .getErrorHandler()
-                        .reportError(
-                                Type.GENERIC,
-                                String.format(
-                                        "Transforms with scopes '%s' cannot be applied to library projects.",
-                                        scopes));
+                issueReporter.reportError(
+                        Type.GENERIC,
+                        String.format(
+                                "Transforms with scopes '%s' cannot be applied to library projects.",
+                                scopes));
             }
 
             List<Object> deps = customTransformsDependencies.get(i);

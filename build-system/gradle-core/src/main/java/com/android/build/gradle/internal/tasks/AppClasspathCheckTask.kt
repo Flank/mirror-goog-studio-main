@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.builder.errors.EvalIssueReporter
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.CacheableTask
+import java.lang.RuntimeException
 
 /**
  * Pre build task that performs comparison of runtime and compile classpath for application. If
@@ -29,8 +29,6 @@ import org.gradle.api.tasks.CacheableTask
  */
 @CacheableTask
 abstract class AppClasspathCheckTask : ClasspathComparisonTask() {
-
-    private lateinit var reporter: EvalIssueReporter
 
     override fun onDifferentVersionsFound(
         group: String,
@@ -64,7 +62,7 @@ dependencies {
 }
 """
 
-        reporter.reportError(EvalIssueReporter.Type.GENERIC, message)
+        throw RuntimeException(message)
     }
 
     class CreationAction(private val variantScope: VariantScope) :
@@ -86,7 +84,6 @@ dependencies {
                 name,
                 variantScope.variantDslInfo.dirName
             )
-            task.reporter = variantScope.globalScope.errorHandler
         }
     }
 }

@@ -30,7 +30,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -259,11 +258,6 @@ public class GlobalScope implements TransformGlobalScope {
                 .artifactView(config -> config.attributes(attributes))
                 .getArtifacts()
                 .getArtifactFiles();
-    }
-
-    @NonNull
-    public SyncIssueHandler getErrorHandler() {
-        return (SyncIssueHandler) dslScope.getIssueReporter();
     }
 
     @NonNull

@@ -26,12 +26,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.NoOpRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -76,9 +78,9 @@ public class TaskTestUtils {
     protected TaskFactory taskFactory;
     protected VariantScope scope;
     protected TransformManager transformManager;
-    protected FakeConfigurableErrorReporter errorReporter;
+    protected FakeSyncIssueReporter issueReporter;
 
-    protected Supplier<RuntimeException> mTransformTaskFailed;
+    protected Supplier<RuntimeException> syncIssueToException;
     protected Project project;
 
     @Before
@@ -87,12 +89,17 @@ public class TaskTestUtils {
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         scope = getScope();
-        errorReporter = new FakeConfigurableErrorReporter();
-        transformManager = new TransformManager(project, errorReporter, new NoOpRecorder());
+        issueReporter = new FakeSyncIssueReporter();
+        transformManager = new TransformManager(project, issueReporter, new NoOpRecorder());
         taskFactory = new TaskFactoryImpl(project.getTasks());
-        mTransformTaskFailed = () -> new RuntimeException(
-                String.format("Transform task creation failed.  Sync issue:\n %s",
-                        errorReporter.getSyncIssue().toString()));
+        syncIssueToException =
+                () -> {
+                    SyncIssue syncIssue = Iterables.getOnlyElement(issueReporter.getSyncIssues());
+                    return new RuntimeException(
+                            String.format(
+                                    "Transform task creation failed.  Sync issue:\n %s",
+                                    syncIssue.toString()));
+                };
     }
 
     protected StreamTester streamTester() {

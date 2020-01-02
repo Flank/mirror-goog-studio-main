@@ -38,7 +38,7 @@ import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantAttributesProvider
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
@@ -86,7 +86,7 @@ open class VariantDslInfoImpl internal constructor(
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     private val testedVariantImpl: VariantDslInfoImpl? = null,
     private val projectOptions: ProjectOptions,
-    private val issueReporter: EvalIssueReporter,
+    private val issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ): VariantDslInfo {
 
@@ -801,7 +801,7 @@ open class VariantDslInfoImpl internal constructor(
             ) {
                 issueReporter
                     .reportWarning(
-                        EvalIssueReporter.Type.GENERIC,
+                        IssueReporter.Type.GENERIC,
                         "Native multidex is always used for dynamic features. Please "
                                 + "remove 'multiDexEnabled true|false' from your "
                                 + "build.gradle file."

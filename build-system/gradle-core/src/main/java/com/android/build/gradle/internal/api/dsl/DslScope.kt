@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.api.dsl
 
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -33,7 +33,7 @@ import java.io.File
  */
 interface DslScope {
 
-    val issueReporter: SyncIssueHandler
+    val issueReporter: IssueReporter
 
     val deprecationReporter: DeprecationReporter
 

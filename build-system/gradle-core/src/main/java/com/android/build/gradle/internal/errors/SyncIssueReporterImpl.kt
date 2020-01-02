@@ -27,10 +27,10 @@ import com.google.common.collect.Maps
 import org.gradle.api.logging.Logger
 import javax.annotation.concurrent.GuardedBy
 
-class SyncIssueHandlerImpl(
+class SyncIssueReporterImpl(
         private val mode: EvaluationMode,
         private val logger: Logger)
-    : SyncIssueHandler() {
+    : SyncIssueReporter() {
 
     @GuardedBy("this")
     private val _syncIssues = Maps.newHashMap<SyncIssueKey, SyncIssue>()
@@ -43,7 +43,7 @@ class SyncIssueHandlerImpl(
         get() = ImmutableList.copyOf(_syncIssues.values)
 
     @Synchronized
-    override fun hasSyncIssue(type: Type): Boolean {
+    override fun hasIssue(type: Type): Boolean {
         return _syncIssues.values.any { issue -> issue.type == type.type }
     }
 

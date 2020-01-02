@@ -19,13 +19,15 @@ package com.android.builder.errors
 import com.android.builder.model.SyncIssue
 
 /**
- * Reporter for issues during evaluation.
+ * Base class for error reporting.
  *
+ * This allows returning configuration/evaluation error to an IDE, by running in a lenient
+ * mode and only records but does not throw exception.
+ * [IssueReporter.hasIssue] allows checking if a given issue has already been recorded.
  *
- * This handles dealing with errors differently if the project is being run from the command line
- * or from the IDE, in particular during Sync when we don't want to throw any exception
+ * When using inside a build step, use [DefaultIssueReporter] which will always throw on error.
  */
-abstract class EvalIssueReporter {
+abstract class IssueReporter {
 
     enum class Severity constructor(val severity: Int) {
         WARNING(SyncIssue.SEVERITY_WARNING),
@@ -154,4 +156,10 @@ abstract class EvalIssueReporter {
             Severity.WARNING,
             EvalIssueException(cause))
     }
+
+    /**
+     * Whether an issue of the given type has been recorded.
+     */
+    abstract fun hasIssue(type: Type): Boolean
+
 }

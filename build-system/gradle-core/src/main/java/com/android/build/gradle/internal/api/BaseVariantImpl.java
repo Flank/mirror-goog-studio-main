@@ -42,7 +42,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
@@ -192,9 +192,10 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 getVariantData()
                         .getScope()
                         .getGlobalScope()
-                        .getErrorHandler()
+                        .getDslScope()
+                        .getIssueReporter()
                         .reportError(
-                                EvalIssueReporter.Type.GENERIC,
+                                IssueReporter.Type.GENERIC,
                                 "Unknown SourceKind value: " + folderType);
         }
 
@@ -233,7 +234,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                     .getDslScope()
                     .getIssueReporter()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC,
+                            IssueReporter.Type.GENERIC,
                             "variant.getApplicationId() is not supported by dynamic-feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
         }
 
@@ -304,16 +305,15 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
         if (!globalScope.getBuildFeatures().getAidl()) {
             globalScope
-                    .getErrorHandler()
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC,
+                            IssueReporter.Type.GENERIC,
                             "aidl support is disabled via buildFeatures.");
             return null;
         }
 
-        variantData
-                .getScope()
-                .getGlobalScope()
+        globalScope
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -327,13 +327,14 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
-        if (!getVariantData().getScope().getGlobalScope().getBuildFeatures().getAidl()) {
-            getVariantData()
-                    .getScope()
-                    .getGlobalScope()
-                    .getErrorHandler()
+        final GlobalScope globalScope = getVariantData().getScope().getGlobalScope();
+
+        if (!globalScope.getBuildFeatures().getAidl()) {
+            globalScope
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC,
+                            IssueReporter.Type.GENERIC,
                             "aidl support is disabled via buildFeatures.");
             return null;
         }
@@ -350,9 +351,10 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
         if (!globalScope.getBuildFeatures().getRenderScript()) {
             globalScope
-                    .getErrorHandler()
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC,
+                            IssueReporter.Type.GENERIC,
                             "renderscript support is disabled via buildFeatures.");
             return null;
         }
@@ -371,13 +373,13 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
-        if (!getVariantData().getScope().getGlobalScope().getBuildFeatures().getRenderScript()) {
-            getVariantData()
-                    .getScope()
-                    .getGlobalScope()
-                    .getErrorHandler()
+        final GlobalScope globalScope = getVariantData().getScope().getGlobalScope();
+        if (!globalScope.getBuildFeatures().getRenderScript()) {
+            globalScope
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC,
+                            IssueReporter.Type.GENERIC,
                             "renderscript support is disabled via buildFeatures.");
             return null;
         }

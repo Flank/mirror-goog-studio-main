@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import java.io.File
@@ -138,8 +138,8 @@ object SdkLocator {
     private var cachedSdkLocation: SdkLocation? = null
 
     @JvmStatic
-    fun getSdkDirectory(projectRootDir: File, evalIssueReporter: EvalIssueReporter): File {
-        val sdkLocation = getSdkLocation(SdkLocationSourceSet(projectRootDir), evalIssueReporter)
+    fun getSdkDirectory(projectRootDir: File, issueReporter: IssueReporter): File {
+        val sdkLocation = getSdkLocation(SdkLocationSourceSet(projectRootDir), issueReporter)
         return if (sdkLocation.type == SdkType.MISSING) {
             // This error should have been reported earlier when SdkLocation was created, so we can
             // just return a dummy file here as it won't be used anyway.
@@ -154,7 +154,7 @@ object SdkLocator {
     @Synchronized
     fun getSdkLocation(
         sourceSet: SdkLocationSourceSet,
-        evalIssueReporter: EvalIssueReporter
+        issueReporter: IssueReporter
     ): SdkLocation {
         cachedSdkLocationKey?.let {
             if (it == sourceSet) {
@@ -181,7 +181,7 @@ object SdkLocator {
                 "SDK location not found. Define location with an ANDROID_SDK_ROOT environment" +
                         " variable or by setting the sdk.dir path in your project's local" +
                         " properties file at '$filePath'."
-            evalIssueReporter.reportError(EvalIssueReporter.Type.SDK_NOT_SET, message, filePath)
+            issueReporter.reportError(IssueReporter.Type.SDK_NOT_SET, message, filePath)
 
             return it
         }

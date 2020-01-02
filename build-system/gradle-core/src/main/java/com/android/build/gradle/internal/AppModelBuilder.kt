@@ -18,6 +18,7 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
 import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
 import com.android.build.gradle.internal.ide.ModelBuilder
@@ -39,6 +40,7 @@ class AppModelBuilder(
     taskManager: TaskManager,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
+    syncIssueReporter: SyncIssueReporter,
     projectType: Int
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
@@ -46,6 +48,7 @@ class AppModelBuilder(
     taskManager,
     config,
     extraModelInfo,
+    syncIssueReporter,
     projectType
 ) {
     override fun isBaseSplit(): Boolean {

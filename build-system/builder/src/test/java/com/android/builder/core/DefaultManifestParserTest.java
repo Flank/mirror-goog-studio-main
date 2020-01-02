@@ -19,7 +19,7 @@ package com.android.builder.core;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-import com.android.builder.errors.FakeEvalIssueReporter;
+import com.android.builder.errors.FakeIssueReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.testutils.TestResources;
 import java.io.File;
@@ -32,13 +32,13 @@ public class DefaultManifestParserTest {
 
     private DefaultManifestParser defaultManifestParser;
 
-    private FakeEvalIssueReporter issueReporter;
+    private FakeIssueReporter issueReporter;
     File manifestFile;
 
     @Before
     public void before() {
         manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml");
-        issueReporter = new FakeEvalIssueReporter();
+        issueReporter = new FakeIssueReporter();
         defaultManifestParser =
                 new DefaultManifestParser(manifestFile, canParseManifest, false, issueReporter);
     }

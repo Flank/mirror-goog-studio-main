@@ -19,7 +19,7 @@ package com.android.builder.errors
 import com.android.builder.model.SyncIssue
 import org.junit.Test
 
-class EvalIssueReporterTest {
+class IssueReporterTest {
 
     @Test
     fun `check that sync issues have valid type names and type values`() {
@@ -35,9 +35,9 @@ class EvalIssueReporterTest {
         }
 
         // Then, check that each sync issue has a valid type name and type value.
-        for ((index, syncIssueField) in EvalIssueReporter.Type::class.java.fields.withIndex()) {
+        for ((index, syncIssueField) in IssueReporter.Type::class.java.fields.withIndex()) {
             val syncIssue =
-                syncIssueField.get(EvalIssueReporter.Type::class.java) as EvalIssueReporter.Type
+                syncIssueField.get(IssueReporter.Type::class.java) as IssueReporter.Type
 
             val expectedTypeName = "TYPE_${syncIssue.name}"
             // The expected type value shifts at index 29 due to bug 138278313.

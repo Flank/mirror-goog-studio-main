@@ -160,7 +160,7 @@ public abstract class BaseVariantData {
                         globalScope,
                         new TransformManager(
                                 globalScope.getProject(),
-                                globalScope.getErrorHandler(),
+                                globalScope.getDslScope().getIssueReporter(),
                                 recorder),
                         this);
 

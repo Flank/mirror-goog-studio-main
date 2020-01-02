@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.level2.DependencyGraphs
 import com.google.common.collect.ImmutableMap
@@ -29,7 +29,7 @@ interface DependencyGraphBuilder {
     fun createDependencies(
         variantScope: VariantScope,
         buildMapping: ImmutableMap<String, String>,
-        syncIssueHandler: SyncIssueHandler
+        issueReporter: IssueReporter
     ): DependenciesImpl
 
     /**
@@ -41,7 +41,7 @@ interface DependencyGraphBuilder {
         variantScope: VariantScope,
         withFullDependency: Boolean,
         buildMapping: ImmutableMap<String, String>,
-        syncIssueHandler: SyncIssueHandler
+        issueReporter: IssueReporter
     ): DependencyGraphs
 }
 

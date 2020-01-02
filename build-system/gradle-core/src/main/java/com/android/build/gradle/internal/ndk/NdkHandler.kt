@@ -21,7 +21,7 @@ import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.build.gradle.internal.SdkLocator
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.findNdkPath
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.sdk.InstallFailedException
 import com.android.builder.sdk.LicenceNotAcceptedException
 import com.android.builder.sdk.SdkLibData
@@ -82,7 +82,7 @@ sealed class NdkInstallStatus {
  * Handles NDK related information.
  */
 class NdkHandler(
-    private val evalIssueReporter: EvalIssueReporter,
+    private val issueReporter: IssueReporter,
     private val enableSideBySideNdk: Boolean,
     private val ndkVersionFromDsl: String?,
     private val compileSdkVersion: String,
@@ -97,9 +97,9 @@ class NdkHandler(
 
     private fun findNdk(): File? {
         return if (enableSideBySideNdk) {
-            findNdkPath(evalIssueReporter, ndkVersionFromDsl, projectDir)
+            findNdkPath(issueReporter, ndkVersionFromDsl, projectDir)
         } else {
-            findNdkDirectory(projectDir, evalIssueReporter)
+            findNdkDirectory(projectDir, issueReporter)
         }
     }
 
@@ -227,14 +227,14 @@ class NdkHandler(
             }
         }
 
-        private fun findNdkDirectory(projectDir: File, evalIssueReporter: EvalIssueReporter): File? {
+        private fun findNdkDirectory(projectDir: File, issueReporter: IssueReporter): File? {
             val localProperties = File(projectDir, FN_LOCAL_PROPERTIES)
             var properties = Properties()
             if (localProperties.isFile) {
                 properties = readProperties(localProperties)
             }
 
-            return findNdkDirectory(properties, projectDir, evalIssueReporter)
+            return findNdkDirectory(properties, projectDir, issueReporter)
         }
 
         /**
@@ -250,7 +250,7 @@ class NdkHandler(
         private fun findNdkDirectory(
             properties: Properties,
             projectDir: File,
-            evalIssueReporter: EvalIssueReporter
+            issueReporter: IssueReporter
         ): File? {
             val ndkDirProp = properties.getProperty("ndk.dir")
             if (ndkDirProp != null) {
@@ -262,7 +262,7 @@ class NdkHandler(
                 return File(ndkEnvVar)
             }
 
-            val sdkFolder = SdkLocator.getSdkDirectory(projectDir, evalIssueReporter)
+            val sdkFolder = SdkLocator.getSdkDirectory(projectDir, issueReporter)
             // Worth checking if the NDK came bundled with the SDK
             val ndkBundle = File(sdkFolder, SdkConstants.FD_NDK)
             if (ndkBundle.isDirectory) {

@@ -73,7 +73,7 @@ import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -159,11 +159,6 @@ public class VariantManager {
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
         this.variantScopes = Lists.newArrayList();
         this.manifestParserMap = Maps.newHashMap();
-    }
-
-    @NonNull
-    public VariantInputModel getVariantInputModel() {
-        return variantInputModel;
     }
 
     /**
@@ -272,7 +267,7 @@ public class VariantManager {
             VariantDependencies.Builder builder =
                     VariantDependencies.builder(
                                     project,
-                                    variantScope.getGlobalScope().getErrorHandler(),
+                                    variantScope.getGlobalScope().getDslScope().getIssueReporter(),
                                     variantDslInfo)
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantDslInfo))
@@ -465,7 +460,7 @@ public class VariantManager {
         VariantCombinator computer =
                 new VariantCombinator(
                         variantInputModel,
-                        globalScope.getErrorHandler(),
+                        globalScope.getDslScope().getIssueReporter(),
                         variantFactory.getVariantType(),
                         flavorDimensionList);
 
@@ -524,7 +519,7 @@ public class VariantManager {
                                 defaultConfigSourceProvider.getManifestFile(),
                                 variantType.getRequiresManifest()),
                         globalScope.getProjectOptions(),
-                        globalScope.getErrorHandler(),
+                        globalScope.getDslScope().getIssueReporter(),
                         this::canParseManifest);
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -587,7 +582,7 @@ public class VariantManager {
         VariantDependencies.Builder builder =
                 VariantDependencies.builder(
                                 project,
-                                variantScope.getGlobalScope().getErrorHandler(),
+                                variantScope.getGlobalScope().getDslScope().getIssueReporter(),
                                 variantDslInfo)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))
                         .addSourceSets(variantSourceSets);
@@ -681,7 +676,7 @@ public class VariantManager {
                                         testSourceSet.getManifestFile(), type.getRequiresManifest())
                                 : null,
                         globalScope.getProjectOptions(),
-                        globalScope.getErrorHandler(),
+                        globalScope.getDslScope().getIssueReporter(),
                         this::canParseManifest);
 
         VariantDslInfoImpl testedVariantDslInfo =
@@ -776,7 +771,7 @@ public class VariantManager {
                         .getDslScope()
                         .getIssueReporter()
                         .reportWarning(
-                                EvalIssueReporter.Type.GENERIC,
+                                IssueReporter.Type.GENERIC,
                                 String.format(
                                         Locale.US,
                                         "minSdkVersion (%d) is greater than targetSdkVersion"
@@ -885,7 +880,7 @@ public class VariantManager {
                                 f,
                                 this::canParseManifest,
                                 isManifestFileRequired,
-                                globalScope.getErrorHandler()));
+                                globalScope.getDslScope().getIssueReporter()));
     }
 
     private boolean canParseManifest() {
