@@ -17,7 +17,7 @@
 package com.android.build.gradle.options
 
 import com.android.builder.model.AndroidProject
-import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 
 enum class IntegerOption(
     override val propertyName: String,
@@ -75,7 +75,7 @@ enum class IntegerOption(
     THREAD_POOL_SIZE(
         "android.threadPoolSize",
         ApiStage.Removed(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "The android.threadPoolSize property has no effect"
         )
     ),

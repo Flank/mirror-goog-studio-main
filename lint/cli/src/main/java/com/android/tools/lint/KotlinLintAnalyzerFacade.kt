@@ -172,6 +172,8 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
             javaSourceRoots
         )
 
+        compilerConfiguration.put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
+
         // Add support for Kotlin script files (.kts) if not already there.
         if (ScriptDefinitionProvider.getInstance(project) == null) {
             compilerConfiguration.add(
@@ -253,7 +255,7 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
             rootsIndex,
             packagePartProviders,
             SingleJavaFileRootsIndex(singleJavaFileRoots),
-            compilerConfiguration.getBoolean(JVMConfigurationKeys.USE_FAST_CLASS_FILES_READING)
+            usePsiClassFilesReading = true
         )
 
         performanceManager?.notifyCompilerInitialized()
@@ -294,12 +296,13 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
     }
 
     private fun findJarRoot(file: File): VirtualFile? {
-        val fileSystem = LintCoreApplicationEnvironment.get().jarFileSystem
+        val fileSystem = UastEnvironment.applicationEnvironment?.jarFileSystem
+            ?: return null
         return fileSystem.findFileByPath(file.path + URLUtil.JAR_SEPARATOR)
     }
 
     private fun findLocalFile(path: String): VirtualFile? =
-        LintCoreApplicationEnvironment.get().localFileSystem.findFileByPath(path)
+        UastEnvironment.applicationEnvironment?.localFileSystem?.findFileByPath(path)
 
     private fun findLocalFile(root: JvmContentRoot): VirtualFile? {
         val file = findLocalFile(root.file.absolutePath)

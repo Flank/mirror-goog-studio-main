@@ -2665,7 +2665,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.1-milestone-2";
+    public static final String GRADLE_MINIMUM_VERSION = "6.1-rc-1";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";
@@ -2838,4 +2838,6 @@ public final class SdkConstants {
 
     /** Folder where configuration files for R8 and other tools are located in jar files */
     public static final String TOOLS_CONFIGURATION_FOLDER = "meta-inf/" + COM_ANDROID_TOOLS_FOLDER;
+
+    public static final String FD_PREFAB_PACKAGE = "prefab";
 }

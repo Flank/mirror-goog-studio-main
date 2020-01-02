@@ -92,7 +92,6 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
                 ISSUE, node, context.getNameLocation(node),
                 "Avoid using org.gradle.api.Project.exec as it is incompatible with Gradle instant execution."
             )
-
         }
     }
 }

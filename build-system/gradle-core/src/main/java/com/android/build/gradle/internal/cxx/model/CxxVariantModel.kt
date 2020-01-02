@@ -82,6 +82,20 @@ interface CxxVariantModel {
      * The module that this variant is part of
      */
     val module: CxxModuleModel
+
+    /**
+     * Paths to the unprocessed prefab package directories extracted from the AAR.
+     *
+     * For example: jsoncpp/build/.transforms/$SHA/jsoncpp/prefab
+     */
+    val prefabPackageDirectoryList: List<File>
+
+    /**
+     * Path to the prefab output to be passed to the native build system.
+     *
+     * For example: app/.cxx/cmake/debug/prefab
+     */
+    val prefabDirectory: File
 }
 
 /**

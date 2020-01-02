@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Test
@@ -43,7 +44,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "build command",
                 previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isFalse()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly()
@@ -57,7 +69,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "current build command",
                 previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -75,7 +98,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "current build command",
                 previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -95,7 +129,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "current build command",
                 previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -115,7 +160,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "current build command",
                 previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -131,7 +187,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "build command",
                 previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -147,7 +214,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "build command",
                 previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -163,7 +241,18 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "build command",
                 previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
         assertThat(state.rebuildReasons).containsExactly(
@@ -179,13 +268,131 @@ class JsonGenerationInvalidationStateTest {
                 commandFile = commandFile,
                 currentBuildCommand = "build command",
                 previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile))
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isTrue()
         assertThat(state.rebuildReasons).containsExactly(
                 "- a dependent build file changed",
                 "  - ${dependentBuildFile.absolutePath}"
         )
+    }
+
+    @Test
+    fun `enabling prefab invalidates`() {
+        createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
+        val state = JsonGenerationInvalidationState(
+                forceRegeneration = false,
+                expectedJson = expectedJson,
+                commandFile = commandFile,
+                currentBuildCommand = "build command",
+                previousBuildCommand = "build command",
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = true,
+                        prefabPath = File("/path/to/prefab.jar"),
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                )
+        )
+        assertThat(state.rebuild).isTrue()
+        assertThat(state.softRegeneration).isFalse()
+        assertThat(state.rebuildReasons).containsExactly("- prefab configuration has changed")
+    }
+
+    @Test
+    fun `disabling prefab invalidates`() {
+        createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
+        val state = JsonGenerationInvalidationState(
+                forceRegeneration = false,
+                expectedJson = expectedJson,
+                commandFile = commandFile,
+                currentBuildCommand = "build command",
+                previousBuildCommand = "build command",
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = false,
+                        prefabPath = null,
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = true,
+                        prefabPath = File("/path/to/prefab.jar"),
+                        packages = emptyList()
+                )
+        )
+        assertThat(state.rebuild).isTrue()
+        assertThat(state.softRegeneration).isFalse()
+        assertThat(state.rebuildReasons).containsExactly("- prefab configuration has changed")
+    }
+
+    @Test
+    fun `changing prefab path invalidates`() {
+        createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
+        val state = JsonGenerationInvalidationState(
+                forceRegeneration = false,
+                expectedJson = expectedJson,
+                commandFile = commandFile,
+                currentBuildCommand = "build command",
+                previousBuildCommand = "build command",
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = true,
+                        prefabPath = File("/new/path/to/prefab.jar"),
+                        packages = emptyList()
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = true,
+                        prefabPath = File("/path/to/prefab.jar"),
+                        packages = emptyList()
+                )
+        )
+        assertThat(state.rebuild).isTrue()
+        assertThat(state.softRegeneration).isFalse()
+        assertThat(state.rebuildReasons).containsExactly("- prefab configuration has changed")
+    }
+
+    @Test
+    fun `changing prefab packages invalidates`() {
+        createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
+        val state = JsonGenerationInvalidationState(
+                forceRegeneration = false,
+                expectedJson = expectedJson,
+                commandFile = commandFile,
+                currentBuildCommand = "build command",
+                previousBuildCommand = "build command",
+                dependentBuildFiles = listOf(dependentBuildFile),
+                currentPrefabConfiguration = PrefabConfigurationState(
+                        enabled = true,
+                        prefabPath = File("/path/to/prefab.jar"),
+                        packages = listOf(
+                                File("/path/to/package/foo"),
+                                File("/path/to/package/bar")
+                        )
+                ),
+                previousPrefabConfiguration = PrefabConfigurationState(
+                        enabled = true,
+                        prefabPath = File("/path/to/prefab.jar"),
+                        packages = listOf(File("/path/to/package/foo"))
+                )
+        )
+        assertThat(state.rebuild).isTrue()
+        assertThat(state.softRegeneration).isFalse()
+        assertThat(state.rebuildReasons).containsExactly("- prefab configuration has changed")
     }
 
     /*
@@ -210,7 +417,7 @@ class JsonGenerationInvalidationStateTest {
     Ensure that files have last modified timestamp in strictly ascending order.
      */
     private fun createInTimestampOrder(vararg files: File) {
-        var lastTimestamp = 0L;
+        var lastTimestamp = 0L
         for(file in files) {
             file.createNewFile()
             assertThat(file.exists()).isTrue()

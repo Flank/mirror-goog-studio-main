@@ -107,6 +107,7 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USwitchClauseExpression;
 import org.jetbrains.uast.USwitchExpression;
 import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.java.JavaUAnnotation;
 import org.jetbrains.uast.java.JavaUTypeCastExpression;
@@ -965,8 +966,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                             if (!found) {
                                 // Look for local alias
                                 UExpression initializer =
-                                        mContext.getUastContext()
-                                                .getInitializerBody(((PsiField) resolved));
+                                        UastFacade.INSTANCE.getInitializerBody(
+                                                ((PsiField) resolved));
                                 if (initializer instanceof UReferenceExpression) {
                                     resolved = ((UReferenceExpression) initializer).resolve();
                                     if (resolved instanceof PsiField) {

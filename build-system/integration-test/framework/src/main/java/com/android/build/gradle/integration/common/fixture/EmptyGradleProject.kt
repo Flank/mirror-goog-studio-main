@@ -17,7 +17,15 @@
 package com.android.build.gradle.integration.common.fixture
 
 /** An empty Gradle project.  */
-class EmptyGradleProject(name: String) : GradleProject(name) {
+class EmptyGradleProject(
+
+    /**
+     * Logical path to this project (e.g., ":app"). If it is provided and doesn't start with ':', it
+     * will be normalized to start with ':'.
+     */
+    path: String
+
+) : GradleProject(path) {
 
     override fun containsFullBuildScript() = false
 

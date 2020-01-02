@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 
 /**
  * [Option] that has been replaced by something else (e.g., another option or the DSL).
@@ -27,13 +27,13 @@ import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
 enum class ReplacedOption(
     override val propertyName: String,
     private val replacedVersion: Version,
-    private val messageIfUsed: String
+    private val additionalMessage: String
 ) : Option<String> {
 
     @Suppress("unused")
     INCREMENTAL_JAVA_COMPILE(
         "android.incrementalJavaCompile",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "The android.incrementalJavaCompile property has been replaced by a DSL property. "
                 + "Please add the following to your build.gradle instead:\n"
                 + "android {\n"
@@ -44,35 +44,35 @@ enum class ReplacedOption(
     @Suppress("unused")
     THREAD_POOL_SIZE_OLD(
         "com.android.build.threadPoolSize",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "This property has been replaced by ${IntegerOption.THREAD_POOL_SIZE.propertyName}"
     ),
 
     @Suppress("unused")
     VERSION_CHECK_OVERRIDE_PROPERTY_OLD(
         "com.android.build.gradle.overrideVersionCheck",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "This property has been replaced by ${BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.propertyName}"
     ),
 
     @Suppress("unused")
     OVERRIDE_PATH_CHECK_PROPERTY_OLD(
         "com.android.build.gradle.overridePathCheck",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "This property has been replaced by ${BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY.propertyName}"
     ),
 
     @Suppress("unused")
     AAPT_NAMESPACING(
         "android.aaptNamespacing",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "This property has been replaced by android.aaptOptions.namespaced (DSL)"
     ),
 
     @Suppress("unused")
     EXCLUDE_R_AND_MANIFEST_DOT_JAVA_FROM_GENERATED_SOURCES(
         "android.excludeRAndManifestDotJavaFromGeneratedSources",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "Subsumed by ${BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION.propertyName}"
     ),
 
@@ -81,21 +81,21 @@ enum class ReplacedOption(
     @Suppress("unused")
     DEPRECATED_NDK_COMPILE_LEASE(
         "android.deprecatedNdkCompileLease",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "NdkCompile is no longer supported"
     ),
 
     @Suppress("unused")
     USE_NON_FINAL_RES_IDS_IN_TESTS(
         "android.androidTest.nonFinalResIds",
-        VERSION_BEFORE_4_0_0,
+        VERSION_BEFORE_4_0,
         "This property has been replaced by ${BooleanOption.USE_NON_FINAL_RES_IDS.propertyName}"
     ),
 
     ;
 
     override val status: Option.Status
-        get() = Option.Status.Removed(messageIfUsed)
+        get() = Option.Status.Removed(replacedVersion, additionalMessage)
 
     override fun parse(value: Any): String {
         return value.toString()

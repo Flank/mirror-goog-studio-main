@@ -94,6 +94,18 @@ class BasicInstantExecutionTest {
             .run("assemble")
     }
 
+    /** Regression test for b/146659187. */
+    @Test
+    fun testWithJniMerging() {
+        project.getSubproject("app").file("src/main/jniLibs/subDir/empty.so").also {
+            it.parentFile.mkdirs()
+            it.createNewFile()
+        }
+        executor().run(":app:mergeDebugJniLibFolders")
+        executor().run("clean")
+        executor().run(":app:mergeDebugJniLibFolders")
+    }
+
     private fun executor(): GradleTaskExecutor =
         project.executor().withLoggingLevel(LoggingLevel.LIFECYCLE).withArgument("-Dorg.gradle.unsafe.instant-execution=true")
 }

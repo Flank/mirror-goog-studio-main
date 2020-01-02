@@ -1,0 +1,4 @@
+include 'app'
+include 'curl'
+include 'jsoncpp'
+include 'openssl'

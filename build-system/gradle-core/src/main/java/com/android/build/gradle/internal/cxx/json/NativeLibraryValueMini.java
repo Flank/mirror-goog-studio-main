@@ -16,19 +16,23 @@
 
 package com.android.build.gradle.internal.cxx.json;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.Lists;
 import java.io.File;
+import java.util.List;
 
 /**
  * Subset of normal NativeBuildConfigValue that does not include potentially large structures like
  * files.
  *
- * <p>Note: This class is populated via {@link AndroidBuildGradleJsonStreamingVisitor} If you add
- * fields here you also need to update that class to read the fields.
+ * <p>Note: This class is populated via {@link AndroidBuildGradleJsons::MiniConfigBuildingVisitor}.
+ * If you add fields here you also need to update that class to read the fields.
  */
 public class NativeLibraryValueMini {
     @Nullable public String artifactName;
     @Nullable public String buildCommand;
     @Nullable public String abi;
     @Nullable public File output;
+    @NonNull public List<File> runtimeFiles = Lists.newArrayList();
 }

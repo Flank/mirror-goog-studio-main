@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
+import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantProperties
@@ -63,10 +64,18 @@ internal open class VariantPropertiesImpl(
                 versionName ?: variantDslInfo.manifestVersionNameSupplier.get()
             }
         )
+        val variantOutputConfiguration = VariantOutputConfigurationImpl(
+            apkData.isUniversal,
+            apkData.filters.map { filterData ->
+                FilterConfiguration(FilterConfiguration.FilterType.valueOf(filterData.filterType),
+                    filterData.identifier)
+            }
+        )
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
             initializeProperty(Boolean::class.java, "$name::isEnabled").value(true),
+            variantOutputConfiguration,
             apkData
         ).also {
             apkData.variantOutput = it

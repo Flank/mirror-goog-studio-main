@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils
 import java.io.File
 
@@ -29,7 +30,9 @@ class JsonGenerationInvalidationState(
     private val commandFile: File,
     currentBuildCommand: String,
     previousBuildCommand: String,
-    private val dependentBuildFiles: List<File>) {
+    private val dependentBuildFiles: List<File>,
+    currentPrefabConfiguration: PrefabConfigurationState,
+    previousPrefabConfiguration: PrefabConfigurationState) {
     private val rebuildDueToMissingJson = !expectedJson.exists()
     private val rebuildDueToMissingPreviousCommand = !commandFile.exists()
     private val rebuildDueToChangeInCommandFile = previousBuildCommand != currentBuildCommand
@@ -43,6 +46,8 @@ class JsonGenerationInvalidationState(
             }
         }
     private val rebuildDueToDependentBuildFileChanged = !dependentBuildFilesChanged.isEmpty()
+    private val rebuildDueToPrefabConfigurationChange =
+        currentPrefabConfiguration != previousPrefabConfiguration
     val softRegeneration = rebuildDueToDependentBuildFileChanged
             && !forceRegeneration
             && !rebuildDueToMissingJson
@@ -53,6 +58,7 @@ class JsonGenerationInvalidationState(
             || rebuildDueToMissingPreviousCommand
             || rebuildDueToChangeInCommandFile
             || rebuildDueToDependentBuildFileChanged
+            || rebuildDueToPrefabConfigurationChange
     val rebuildReasons: List<String>
         get()  {
             val messages = mutableListOf<String>()
@@ -81,6 +87,11 @@ class JsonGenerationInvalidationState(
                     messages += "  - ${dependentBuildFile.absolutePath}"
                 }
             }
+
+            if (rebuildDueToPrefabConfigurationChange) {
+                messages += "- prefab configuration has changed"
+            }
+
             return messages
         }
 }

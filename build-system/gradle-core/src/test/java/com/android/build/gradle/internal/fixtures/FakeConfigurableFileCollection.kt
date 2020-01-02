@@ -26,6 +26,9 @@ import java.io.File
  */
 class FakeConfigurableFileCollection(vararg files : Any?)
     : FakeFileCollection(*files), ConfigurableFileCollection {
+    override fun finalizeValueOnRead() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private var _builtBy = mutableSetOf<Any?>()
 

@@ -768,7 +768,7 @@ class JavaEvaluator {
      * @return true if the annotation is inherited rather than being declared directly on this owner
      */
     open fun isInherited(annotation: UAnnotation, owner: UAnnotated): Boolean {
-        return owner.annotations.contains(annotation)
+        return owner.uAnnotations.contains(annotation)
     }
 
     abstract fun getPackage(node: PsiElement): PsiPackage?

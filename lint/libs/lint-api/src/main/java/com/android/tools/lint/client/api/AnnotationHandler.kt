@@ -617,7 +617,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         call: UCallExpression,
         containingClass: PsiClass?
     ) {
-        if (method != null && !methodAnnotations.isEmpty()) {
+        if (method != null && methodAnnotations.isNotEmpty()) {
             checkAnnotations(
                 context,
                 call,

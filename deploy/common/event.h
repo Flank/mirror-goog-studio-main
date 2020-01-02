@@ -47,9 +47,6 @@ void EndPhase();
 void AddRawEvent(const Event& event);
 std::unique_ptr<std::vector<Event>> ConsumeEvents();
 
-// Used by multi-threaded tests to prevent races with the event system.
-void DisableEventSystemForTests();
-
 // Automatically emit begin/end events (via RAII). Also emit to ftrace.
 class Phase {
  public:

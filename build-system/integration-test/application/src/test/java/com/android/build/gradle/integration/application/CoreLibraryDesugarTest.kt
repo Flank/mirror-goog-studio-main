@@ -365,6 +365,16 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
+    fun testNoAmbiguousTransformsForKeepRulesArtifact() {
+        app.buildFile.appendText("""
+
+            android.buildTypes.debug.minifyEnabled = true
+        """.trimIndent())
+
+        project.executor().run("app:assembleRelease")
+    }
+
+    @Test
     fun testWithDifferentMinSdkPerFlavor() {
         app.buildFile.appendText("""
 

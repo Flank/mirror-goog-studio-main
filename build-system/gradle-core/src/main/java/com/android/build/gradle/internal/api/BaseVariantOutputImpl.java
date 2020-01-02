@@ -51,11 +51,10 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @NonNull protected final VariantOutputImpl variantOutput;
 
     protected BaseVariantOutputImpl(
-            @NonNull ApkData apkData,
             @NonNull TaskContainer taskContainer,
             @NonNull DeprecationReporter deprecationReporter,
             @NonNull VariantOutputImpl variantOutput) {
-        this.apkData = apkData;
+        this.apkData = variantOutput.getApkData();
         this.taskContainer = taskContainer;
         this.deprecationReporter = deprecationReporter;
         this.variantOutput = variantOutput;
@@ -64,7 +63,9 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @NonNull
     @Override
     public OutputFile getMainOutputFile() {
-        return getApkData().getMainOutputFile();
+        throw new UnsupportedOperationException(
+                "getMainOutputFile is no longer supported.  Use getOutputFileName if you need to "
+                        + "determine the file name of the output.");
     }
 
     @NonNull
@@ -75,7 +76,9 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @NonNull
     @Override
     public File getOutputFile() {
-        return getApkData().getMainOutputFile().getOutputFile();
+        throw new UnsupportedOperationException(
+                "getOutputFile is no longer supported.  Use getOutputFileName if you need to "
+                        + "determine the file name of the output.");
     }
 
     @NonNull

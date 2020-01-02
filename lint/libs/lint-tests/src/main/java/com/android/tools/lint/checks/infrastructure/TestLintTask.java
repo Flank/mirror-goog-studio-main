@@ -1075,6 +1075,6 @@ public class TestLintTask {
                 @NonNull Severity severity,
                 @NonNull Location location,
                 @NonNull String message,
-                @NonNull LintFix fixData);
+                @Nullable LintFix fixData);
     }
 }

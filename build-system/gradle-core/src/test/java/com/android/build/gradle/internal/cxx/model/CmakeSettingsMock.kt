@@ -32,7 +32,7 @@ const val NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "no-varia
  */
 class CmakeSettingsMock : BasicModuleModelMock() {
     val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
-    val variant by lazy { createCxxVariantModel(module, baseVariantData) }
+    val variant by lazy { createCxxVariantModel(module, variantScope) }
     val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, baseVariantData) }
     val coreExternalNativeCmakeOptions = Mockito.mock(
         CoreExternalNativeCmakeOptions::class.java,

@@ -79,13 +79,11 @@ final class HandleAppName extends ChunkHandler {
         appName = ByteBufferUtil.getString(data, appNameLen);
 
         // Newer devices send user id in the APNM packet.
-        int userId = -1;
-        boolean validUserId = false;
+        Integer userId = null;
         if (data.hasRemaining()) {
             int dataRemaining = data.remaining();
             try {
                 userId = data.getInt();
-                validUserId = true;
             } catch (BufferUnderflowException e) {
                 Log.e("ddm-appname", "Insufficient data in APNM chunk to retrieve user id.");
                 Log.e("ddm-appname", "Actual chunk length: " + dataRemaining);
@@ -94,7 +92,7 @@ final class HandleAppName extends ChunkHandler {
         }
 
         // Newer devices (newer than user id support) send the package names associated with the app.
-        String packageName = null;
+        String packageName = Device.UNKNOWN_PACKAGE;
         if (data.hasRemaining()) {
             int dataRemaining = data.remaining();
             int packageNameLength = 0;
@@ -113,20 +111,12 @@ final class HandleAppName extends ChunkHandler {
 
         Log.d("ddm-appname", "APNM: app='" + appName + "'");
 
+        ClientData.Names names = new ClientData.Names(appName, userId, packageName);
+
         ClientData cd = client.getClientData();
-        synchronized (cd) {
-            cd.setClientDescription(appName);
+        cd.setNames(names);
 
-            if (validUserId) {
-                cd.setUserId(userId);
-            }
-
-            if (packageName != null) {
-                cd.setPackageName(packageName);
-            }
-        }
-
-        client = checkDebuggerPortForAppName(client, appName);
+        client = checkDebuggerPortForAppName(client, names.mProcessName);
 
         if (client != null) {
             client.update(Client.CHANGE_NAME);

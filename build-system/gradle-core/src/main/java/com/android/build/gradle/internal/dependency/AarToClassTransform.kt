@@ -40,6 +40,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.nio.file.Path
+import java.util.zip.Deflater.NO_COMPRESSION
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -106,6 +107,8 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
                 JarMerger.CLASSES_ONLY
             }
             JarMerger(outputJar, ignoreFilter).use { outputApiJar ->
+                // NO_COMPRESSION because the resulting jar isn't packaged into final APK or AAR
+                outputApiJar.setCompressionLevel(NO_COMPRESSION)
                 if (forCompileUse) {
                     if (generateRClassJar) {
                         generateRClassJarFromRTxt(outputApiJar, inputAar)

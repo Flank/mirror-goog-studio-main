@@ -135,6 +135,11 @@ The currently targeted Android platform code name.
 - example: K
 - environment: android-ndk-platform-${ndk.systemVersion}
 
+## ${ndk.prefabPath}
+The CMAKE_FIND_ROOT_PATH to be used by Prefab for the current configuration.
+- example: $PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64/prefab
+- environment: android-gradle
+
 ## ${ndk.projectDir}
 Folder of the gradle root project build.gradle.
 - example: $PROJECTS/MyProject/Source/Android

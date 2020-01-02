@@ -203,7 +203,7 @@ public class ResourceUsageAnalyzer {
     static final String NO_MATCH = "-nomatch-";
 
     /* A source of resource classes to track, can be either a folder or a jar */
-    private final File mResourceSource;
+    private final File mResourceClasseseSource;
     private final File mProguardMapping;
     /** These can be class or dex files. */
     private final Iterable<File> mClasses;
@@ -244,7 +244,7 @@ public class ResourceUsageAnalyzer {
             @NonNull Iterable<File> resources,
             @Nullable File reportFile,
             @NonNull ApkFormat format) {
-        mResourceSource = rClasses;
+        mResourceClasseseSource = rClasses;
         mProguardMapping = mapping;
         mClasses = classes;
         mMergedManifest = manifest;
@@ -300,7 +300,7 @@ public class ResourceUsageAnalyzer {
     }
 
     public void analyze() throws IOException, ParserConfigurationException, SAXException {
-        gatherResourceValues(mResourceSource);
+        gatherResourceValues(mResourceClasseseSource);
         recordMapping(mProguardMapping);
 
         for (File jarOrDir : mClasses) {

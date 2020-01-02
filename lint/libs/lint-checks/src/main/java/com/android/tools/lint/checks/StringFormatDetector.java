@@ -91,6 +91,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -1186,7 +1187,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     PsiElement resolved = ((UReferenceExpression) lastArg).resolve();
                     if (resolved instanceof PsiVariable) {
                         UExpression initializer =
-                                context.getUastContext().getInitializerBody((PsiVariable) resolved);
+                                UastFacade.INSTANCE.getInitializerBody((PsiVariable) resolved);
                         if (initializer != null
                                 && (UastExpressionUtils.isNewArray(initializer)
                                         || UastExpressionUtils.isArrayInitializer(initializer))) {

@@ -193,6 +193,12 @@ enum class Macro(
         environment = GRADLE,
         tag = "fullConfigurationHash",
         example = "1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519"),
+    NDK_PREFAB_PATH(
+        description = "The CMAKE_FIND_ROOT_PATH to be used by Prefab for the current configuration.",
+        environment = GRADLE,
+        tag = "prefabPath",
+        example = "\$PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64/prefab"
+    ),
     ENV_THIS_FILE(
         description = "Path to this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,

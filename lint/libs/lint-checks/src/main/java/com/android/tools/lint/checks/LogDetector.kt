@@ -27,8 +27,10 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -43,9 +45,7 @@ import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.evaluateString
-import org.jetbrains.uast.getContainingClass
 import org.jetbrains.uast.tryResolveNamed
-import java.util.Arrays
 import java.util.Locale
 
 /**
@@ -115,7 +115,7 @@ class LogDetector : Detector(), SourceCodeScanner {
     }
 
     override fun getApplicableMethodNames(): List<String>? =
-        Arrays.asList(
+        listOf(
             "d",
             "e",
             "i",
@@ -329,7 +329,7 @@ class LogDetector : Detector(), SourceCodeScanner {
         val isLoggableLevel = isLoggableArguments[1]
         val resolved = isLoggableLevel.tryResolveNamed() ?: return
         if (resolved is PsiVariable) {
-            val containingClass = resolved.getContainingClass()
+            val containingClass = PsiTreeUtil.getParentOfType(resolved, PsiClass::class.java)
             if (containingClass == null ||
                 "android.util.Log" != containingClass.qualifiedName ||
                 resolved.getName() == null ||

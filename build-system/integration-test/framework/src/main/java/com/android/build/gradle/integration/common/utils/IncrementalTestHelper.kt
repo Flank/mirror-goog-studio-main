@@ -147,7 +147,7 @@ class IncrementalTestHelper(
             .subtract(actualFilesWithChangedTimestampsAndContents).let {
                 assert(it.isEmpty()) {
                     "The following files are expected to have changed timestamps and contents," +
-                            " but either their timestamps or contents have not changed:\n" +
+                            " but their contents have not changed:\n" +
                             it.joinToString("\n")
                 }
             }
@@ -165,7 +165,7 @@ class IncrementalTestHelper(
             .subtract(actualFilesWithUnchangedTimestampsAndContents).let {
                 assert(it.isEmpty()) {
                     "The following files are expected to have unchanged timestamps and contents," +
-                            " but either their timestamps or contents have changed::\n" +
+                            " but their timestamps have changed:\n" +
                             it.joinToString("\n")
                 }
             }

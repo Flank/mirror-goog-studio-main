@@ -19,28 +19,20 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import org.gradle.api.NamedDomainObjectFactory;
-import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 
 /** Factory to create BuildType object using an {@link ObjectFactory} to add the DSL methods. */
 public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
 
-    @NonNull private final ObjectFactory objectFactory;
-    @NonNull private final Project project;
     @NonNull private DslScope dslScope;
 
-    public BuildTypeFactory(
-            @NonNull ObjectFactory objectFactory,
-            @NonNull Project project,
-            @NonNull DslScope dslScope) {
-        this.objectFactory = objectFactory;
-        this.project = project;
+    public BuildTypeFactory(@NonNull DslScope dslScope) {
         this.dslScope = dslScope;
     }
 
     @NonNull
     @Override
     public BuildType create(@NonNull String name) {
-        return objectFactory.newInstance(BuildType.class, name, project, dslScope);
+        return dslScope.getObjectFactory().newInstance(BuildType.class, name, dslScope);
     }
 }

@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -35,10 +35,9 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("unused") // invoked via jni
 public class LayoutInspectorService {
     private final Properties properties = new Properties();
-    private final ComponentTree componentTree = new ComponentTree();
     private final Object lock = new Object();
     private DetectRootViewChange detectRootChange = null;
-    private AutoCloseable captureClosable = null;
+    private Map<View, AutoCloseable> captureClosables = new HashMap<>();
 
     private static LayoutInspectorService sInstance;
 
@@ -56,16 +55,17 @@ public class LayoutInspectorService {
     /** This method is called when a layout inspector command is recieved by the agent. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStartLayoutInspectorCommand() {
-        View root = getRootView();
-        if (root != null) {
-            startLayoutInspector(root);
+        List<View> roots = getRootViews();
+        if (roots != null) {
+            for (View root : roots) {
+                startLayoutInspector(root);
+            }
         }
         detectRootChange = new DetectRootViewChange(this);
-        detectRootChange.start(root);
+        detectRootChange.start(roots);
     }
 
     public void startLayoutInspector(View root) {
-
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         final Callable<OutputStream> callable =
                 new Callable<OutputStream>() {
@@ -88,14 +88,14 @@ public class LayoutInspectorService {
                                         command.run();
                                         byte[] arr = os.toByteArray();
                                         os.reset();
-                                        captureAndSendComponentTree(arr);
+                                        captureAndSendComponentTree(arr, root);
                                     }
                                 });
                     }
                 };
 
         // Stop a running capture:
-        stopCapturing();
+        stopCapturing(root);
 
         root.post(
                 new Runnable() {
@@ -106,13 +106,13 @@ public class LayoutInspectorService {
                                 // Sometimes the window has become detached before we get in here, so check one
                                 // more time before trying to start capture.
                                 if (root.isAttachedToWindow()) {
-                                    captureClosable =
+                                    captureClosables.put(
+                                            root,
                                             SkiaQWorkaround.startRenderingCommandsCapture(
-                                                    root, executor, callable);
+                                                    root, executor, callable));
                                 }
                                 // TODO: The above should be
                                 // ViewDebug.startRenderingCommandsCapture(...) once it's fixed.
-
                             }
                             root.invalidate();
                         } catch (Throwable e) {
@@ -132,28 +132,48 @@ public class LayoutInspectorService {
 
     private void stopCapturing() {
         synchronized (lock) {
-            if (captureClosable != null) {
+            for (AutoCloseable closeable : captureClosables.values()) {
                 try {
-                    captureClosable.close();
+                    closeable.close();
                 } catch (Exception ex) {
                     sendErrorMessage(ex);
                 }
-                captureClosable = null;
+            }
+            captureClosables.clear();
+        }
+    }
+
+    public void stopCapturing(View root) {
+        synchronized (lock) {
+            if (captureClosables.containsKey(root)) {
+                try {
+                    captureClosables.remove(root).close();
+                } catch (Exception ex) {
+                    sendErrorMessage(ex);
+                }
             }
         }
     }
 
-    public View getRootView() {
+    public List<View> getRootViews() {
         try {
             Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
             Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
             List<View> views = (List<View>) getViewsMethod.invoke(null);
+            List<View> result = new ArrayList<>();
             for (View view : views) {
                 if (view.getVisibility() == View.VISIBLE && view.isAttachedToWindow()) {
-                    return view;
+                    result.add(view);
                 }
             }
-            return null;
+            result.sort(
+                    new Comparator<View>() {
+                        @Override
+                        public int compare(View a, View b) {
+                            return Float.compare(a.getZ(), b.getZ());
+                        }
+                    });
+            return result;
         } catch (Throwable e) {
             e.printStackTrace();
             sendErrorMessage(e);
@@ -168,27 +188,31 @@ public class LayoutInspectorService {
     private native long freeSendRequest(long request);
 
     /** Initializes the request as a ComponentTree and returns an event handle */
-    private native long initComponentTree(long request);
+    private native long initComponentTree(long request, long[] allIds);
 
-    /** Sends a component tree to Ansroid Studio. */
+    /** Sends a component tree to Android Studio. */
     private native long sendComponentTree(long request, byte[] image, int len, int id);
 
     /** This method is called when a new image has been snapped. */
-    private void captureAndSendComponentTree(byte[] image) {
+    private void captureAndSendComponentTree(byte[] image, View root) {
         long request = 0;
         try {
-            // TODO: Store the root view such that we don't have to find it here:
-            View root = getRootView();
             request = allocateSendRequest();
-            long event = initComponentTree(request);
-            if (root != null) {
-                componentTree.writeTree(event, root);
+            int index = 0;
+            List<View> rootViews = getRootViews();
+            long[] rootViewIds = new long[rootViews.size()];
+            for (int i = 0; i < rootViews.size(); i++) {
+                rootViewIds[i] = rootViews.get(i).getUniqueDrawingId();
             }
-            int id = (int) System.currentTimeMillis();
-            sendComponentTree(request, image, image.length, id);
+            long event = initComponentTree(request, rootViewIds);
+            if (root != null) {
+                new ComponentTree().writeTree(event, root);
+            }
+            int messageId = (int) System.currentTimeMillis();
+            sendComponentTree(request, image, image.length, messageId);
         } catch (LayoutModifiedException e) {
             // The layout changed while we were traversing, start over.
-            captureAndSendComponentTree(image);
+            captureAndSendComponentTree(image, root);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         } finally {
@@ -200,7 +224,7 @@ public class LayoutInspectorService {
     private native void sendProperties(long event, long viewId);
 
     /**
-     * This method is called when a layout inspector command is recieved by the agent.
+     * This method is called when a layout inspector command is received by the agent.
      *
      * @param viewId the uniqueDrawingId on the view which is the same id used in the skia image
      * @param event a handle to an PropertyEvent protobuf to pass back in native calls
@@ -208,13 +232,15 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onGetPropertiesInspectorCommand(long viewId, long event) {
         try {
-            View root = getRootView();
-            View view = findViewById(root, viewId);
-            if (view == null) {
-                return;
+            List<View> roots = getRootViews();
+            for (View root : roots) {
+                View view = findViewById(root, viewId);
+                if (view != null) {
+                    properties.writeProperties(view, event);
+                    sendProperties(event, viewId);
+                    return;
+                }
             }
-            properties.writeProperties(view, event);
-            sendProperties(event, viewId);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         }
@@ -230,12 +256,13 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onEditPropertyInspectorCommand(long viewId, int attributeId, int value) {
         try {
-            View root = getRootView();
-            View view = findViewById(root, viewId);
-            if (view == null) {
-                return;
+            for (View root : getRootViews()) {
+                View view = findViewById(root, viewId);
+                if (view != null) {
+                    applyPropertyEdit(view, attributeId, value);
+                    return;
+                }
             }
-            applyPropertyEdit(view, attributeId, value);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         }

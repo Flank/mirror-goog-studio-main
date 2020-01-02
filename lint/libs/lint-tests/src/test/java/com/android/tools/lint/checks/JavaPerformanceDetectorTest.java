@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.JavaPerformanceDetector.USE_VALUE_OF;
+
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -610,6 +612,31 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expectInlinedMessages(true);
+    }
+
+    public void testKotlin2() {
+        lint().files(
+                        kotlin(
+                                        "package test.pkg\n"
+                                                + "\n"
+                                                + "fun test(libs: List<String>) {\n"
+                                                + "    @Suppress(\"PLATFORM_CLASS_MAPPED_TO_KOTLIN\") \n"
+                                                + "    val libraryToIndexMap = HashMap<String, Integer>()\n"
+                                                + "\n"
+                                                + "    libs.asSequence().forEachIndexed { index,lib ->\n"
+                                                + "        libraryToIndexMap.put(lib, Integer(index))\n"
+                                                + "        \n"
+                                                + "    }\n"
+                                                + "}")
+                                .indented())
+                .issues(USE_VALUE_OF)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/test.kt:8: Warning: Use Integer.valueOf(index) instead [UseValueOf]\n"
+                                + "        libraryToIndexMap.put(lib, Integer(index))\n"
+                                + "                                   ~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
     }
 
     public void testIsInitialized() {

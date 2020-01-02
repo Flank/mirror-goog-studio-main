@@ -32,8 +32,6 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
-val dependencyUrl = "http://d.android.com/r/tools/update-dependency-configurations.html"
-
 class SourceSetManager(
         project: Project,
         private val publishPackage: Boolean,
@@ -84,7 +82,6 @@ class SourceSetManager(
                                 else "$implementationName' and '$apiName",
                                 compileName,
                                 dslScope.deprecationReporter,
-                                dependencyUrl,
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         val packageConfigDescription: String
@@ -106,7 +103,6 @@ class SourceSetManager(
                                 runtimeOnlyName,
                                 apkName,
                                 dslScope.deprecationReporter,
-                                dependencyUrl,
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         val providedName = sourceSet.providedConfigurationName
@@ -119,7 +115,6 @@ class SourceSetManager(
                                 compileOnlyName,
                                 providedName,
                                 dslScope.deprecationReporter,
-                                dependencyUrl,
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         // then the new configurations.
@@ -132,7 +127,6 @@ class SourceSetManager(
                                     implementationName,
                                     apiName,
                                     dslScope.deprecationReporter,
-                                    dependencyUrl,
                                     DeprecationReporter.DeprecationTarget.CONFIG_NAME))
         }
 
@@ -218,7 +212,6 @@ class RenamedConfigurationAction(
     private val replacement: String,
     private val oldName: String,
     private val deprecationReporter: DeprecationReporter,
-    private val url: String? = null,
     private val deprecationTarget: DeprecationReporter.DeprecationTarget = DeprecationReporter.DeprecationTarget.CONFIG_NAME) : Action<Dependency> {
     private var warningPrintedAlready = false
 
@@ -226,7 +219,7 @@ class RenamedConfigurationAction(
         if (!warningPrintedAlready) {
             warningPrintedAlready = true
             deprecationReporter.reportRenamedConfiguration(
-                replacement, oldName, deprecationTarget, url)
+                replacement, oldName, deprecationTarget)
         }
     }
 }

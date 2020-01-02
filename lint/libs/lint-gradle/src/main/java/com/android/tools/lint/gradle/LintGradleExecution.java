@@ -30,11 +30,13 @@ import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeAndroidProjectImpl;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
+import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
+import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.XmlReporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -52,6 +54,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +105,8 @@ public class LintGradleExecution {
             // Not applying the Android Gradle plugin
             lintNonAndroid();
         }
+
+        UastEnvironment.ensureDisposed();
     }
 
     @Nullable
@@ -174,9 +179,8 @@ public class LintGradleExecution {
 
         if (warnings != null
                 && client != null
-                &&
                 // See if there's at least one text reporter
-                client.getFlags()
+                && client.getFlags()
                         .getReporters()
                         .stream()
                         .noneMatch(reporter -> reporter instanceof TextReporter)) {
@@ -215,7 +219,8 @@ public class LintGradleExecution {
             @NonNull VariantInputs variantInputs,
             boolean report,
             boolean isAndroid,
-            boolean allowFix) {
+            boolean allowFix,
+            boolean dispose) {
         IssueRegistry registry = createIssueRegistry(isAndroid);
         LintCliFlags flags = new LintCliFlags();
         LintGradleClient client =
@@ -307,6 +312,10 @@ public class LintGradleExecution {
             throw new GradleException("Invalid arguments.", e);
         }
 
+        if (dispose) {
+            client.disposeProjects(Collections.emptyList());
+        }
+
         if (report && client.haveErrors() && flags.isSetExitCode()) {
             abort(client, warnings.getFirst(), isAndroid);
         }
@@ -389,7 +398,7 @@ public class LintGradleExecution {
     public void lintSingleVariant(@NonNull Variant variant) {
         VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
         if (variantInputs != null) {
-            runLint(variant, variantInputs, true, true, true);
+            runLint(variant, variantInputs, true, true, true, true);
         }
     }
 
@@ -400,7 +409,7 @@ public class LintGradleExecution {
     public void lintNonAndroid() {
         VariantInputs variantInputs = descriptor.getVariantInputs("");
         if (variantInputs != null) {
-            runLint(null, variantInputs, true, false, true);
+            runLint(null, variantInputs, true, false, true, true);
         }
     }
 
@@ -423,7 +432,7 @@ public class LintGradleExecution {
             final VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
             if (variantInputs != null) {
                 Pair<List<Warning>, LintBaseline> pair =
-                        runLint(variant, variantInputs, false, true, first);
+                        runLint(variant, variantInputs, false, true, first, false);
                 first = false;
                 List<Warning> warnings = pair.getFirst();
                 warningMap.put(variant, warnings);
@@ -520,7 +529,7 @@ public class LintGradleExecution {
                             client, flags.isFatalOnly() ? VARIANT_FATAL : VARIANT_ALL);
                     reporter.write(stats, mergedWarnings);
                     System.err.println("Created baseline file " + baselineFile);
-                    if (LintGradleClient.continueAfterBaseLineCreated()) {
+                    if (LintCliClient.Companion.continueAfterBaseLineCreated()) {
                         return;
                     }
                     System.err.println("(Also breaking build in case this was not intentional.)");

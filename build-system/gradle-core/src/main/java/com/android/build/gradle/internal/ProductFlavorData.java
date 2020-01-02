@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.dsl.BaseFlavor;
 public class ProductFlavorData<T extends BaseFlavor> extends VariantDimensionData {
     @NonNull private final T productFlavor;
 
-    ProductFlavorData(
+    public ProductFlavorData(
             @NonNull T productFlavor,
             @NonNull DefaultAndroidSourceSet sourceSet,
             @Nullable DefaultAndroidSourceSet androidTestSourceSet,

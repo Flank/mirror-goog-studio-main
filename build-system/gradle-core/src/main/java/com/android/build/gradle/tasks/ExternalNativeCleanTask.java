@@ -143,7 +143,7 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
 
         public CreationAction(@NonNull CxxModuleModel module, @NonNull VariantScope scope) {
             super(scope);
-            this.variant = createCxxVariantModel(module, scope.getVariantData());
+            this.variant = createCxxVariantModel(module, scope);
             // Attempt to clean every possible ABI even those that aren't currently built.
             // This covers cases where user has changed abiFilters or platform. We don't want
             // to leave stale results hanging around.
@@ -156,6 +156,7 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
                                         scope.getGlobalScope(),
                                         scope.getVariantData())));
             }
+
         }
 
         @NonNull

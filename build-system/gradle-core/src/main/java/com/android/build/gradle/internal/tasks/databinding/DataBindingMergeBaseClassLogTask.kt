@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -34,6 +35,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
+@CacheableTask
 abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
 
     @get:OutputDirectory

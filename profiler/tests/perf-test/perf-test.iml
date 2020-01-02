@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/testSrcs" isTestSource="true" />
@@ -8,35 +8,13 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
-    <orderEntry type="module" module-name="transform" scope="TEST" />
-    <orderEntry type="module-library" scope="TEST">
-      <library name="truth-0.42">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42/truth-0.42.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="library" scope="TEST" name="Guava" level="project" />
+    <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
+    <orderEntry type="library" scope="TEST" name="transport-proto" level="project" />
+    <orderEntry type="library" scope="TEST" name="studio-proto" level="project" />
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
-    <orderEntry type="module-library" scope="TEST">
-      <library name="studio-grpc">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../bazel-genfiles/tools/base/bazel/studio-grpc.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="transport_java_proto">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../bazel-genfiles/tools/base/transport/proto/transport_java_proto.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="perf-logger" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
   </component>
 </module>

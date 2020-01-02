@@ -87,7 +87,8 @@ class MemoryLeakTest {
                 }
 
                 dependencies {
-                    implementation 'androidx.appcompat:appcompat:1.0.2'
+                    // Higher version to accidentally pick up recent 1.1 version from local cache
+                    implementation 'androidx.appcompat:appcompat:5.0.2'
                 }
             """.trimIndent()),
 
@@ -184,7 +185,7 @@ class MemoryLeakTest {
 
         assertTrue(
             "Detected Lint memory leak; LintCoreProjectEnvironment is reachable",
-            countLiveInstancesOf(LintCoreProjectEnvironment::class.java.name) == 0)
+            countLiveInstancesOf(UastEnvironment.ProjectEnvironment::class.java.name) == 0)
 
         assertTrue(
             "Detected Lint memory leak; PsiWhiteSpaceImpl is reachable",

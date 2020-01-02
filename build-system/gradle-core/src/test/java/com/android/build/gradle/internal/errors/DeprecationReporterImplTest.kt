@@ -27,11 +27,8 @@ import org.junit.Test
 class DeprecationReporterImplTest {
 
     private val issueReporter = FakeEvalIssueReporter()
-    private val reporter = DeprecationReporterImpl(
-        issueReporter, ProjectOptions(
-            ImmutableMap.of()
-        ), ""
-    )
+    private val reporter =
+        DeprecationReporterImpl(issueReporter, ProjectOptions(ImmutableMap.of()), "")
 
     @After
     fun after() {
@@ -39,26 +36,105 @@ class DeprecationReporterImplTest {
     }
 
     @Test
-    fun `test single output for deprecated options`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE, "true")
-        reporter.reportOptionIssuesIfAny(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE, "true")
+    fun `test experimental options, actual value == default value`() {
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
 
-        Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option '${BooleanOption.JETIFIER_SKIP_IF_POSSIBLE.propertyName}' is deprecated and should not be used anymore.\n" +
-                    "It will be removed in a future release.")
+        Truth.assertThat(issueReporter.errors).isEmpty()
+        Truth.assertThat(issueReporter.warnings).isEmpty()
     }
 
     @Test
-    fun `test single output for experimental options`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, "foo")
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, "foo")
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, "bar")
+    fun `test experimental options, actual value != default value`() {
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
 
+        Truth.assertThat(issueReporter.errors).isEmpty()
         Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option setting 'android.buildOnlyTargetAbi=foo' is experimental and unsupported.\n" +
-                    "The current default is 'true'.\n",
-            "The option setting 'android.buildOnlyTargetAbi=bar' is experimental and unsupported.\n" +
-                    "The current default is 'true'.\n")
+            "The option setting 'android.buildOnlyTargetAbi=false' is experimental.\n" +
+                    "The current default is 'true'."
+        )
+    }
 
+    @Test
+    fun `test deprecated options, actual value == default value`() {
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, true)
+
+        Truth.assertThat(issueReporter.errors).isEmpty()
+        Truth.assertThat(issueReporter.warnings).isEmpty()
+    }
+
+    @Test
+    fun `test deprecated options, actual value != default value`() {
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, false)
+
+        Truth.assertThat(issueReporter.errors).isEmpty()
+        Truth.assertThat(issueReporter.warnings).containsExactly(
+            "The option setting 'android.enableD8=false' is deprecated.\n" +
+                    "The current default is 'true'.\n" +
+                    "It will be removed in a future version of the Android Gradle plugin.\n" +
+                    "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
+        )
+    }
+
+    @Test
+    fun `test removed options, actual value == default value`() {
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false)
+
+        Truth.assertThat(issueReporter.errors).isEmpty()
+        Truth.assertThat(issueReporter.warnings).containsExactly(
+            "The option 'android.enableAapt2jni' is deprecated.\n" +
+                    "The current default is 'false'.\n" +
+                    "It has been removed from the current version of the Android Gradle plugin.\n" +
+                    "AAPT2 JNI has been removed."
+        )
+    }
+
+    @Test
+    fun `test removed options, actual value != default value`() {
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
+
+        Truth.assertThat(issueReporter.errors).containsExactly(
+            "The option 'android.enableAapt2jni' is deprecated.\n" +
+                    "The current default is 'false'.\n" +
+                    "It has been removed from the current version of the Android Gradle plugin.\n" +
+                    "AAPT2 JNI has been removed."
+        )
+        Truth.assertThat(issueReporter.warnings).isEmpty()
+    }
+
+    @Test
+    fun `test errors and warnings are reported only once`() {
+        // Experimental options
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
+
+        // Deprecated options
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, false)
+
+        // Removed options
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false)
+
+        Truth.assertThat(issueReporter.errors).containsExactly(
+            "The option 'android.enableAapt2jni' is deprecated.\n" +
+                    "The current default is 'false'.\n" +
+                    "It has been removed from the current version of the Android Gradle plugin.\n" +
+                    "AAPT2 JNI has been removed."
+        )
+        Truth.assertThat(issueReporter.warnings).containsExactly(
+            "The option setting 'android.buildOnlyTargetAbi=false' is experimental.\n" +
+                    "The current default is 'true'.",
+            "The option setting 'android.enableD8=false' is deprecated.\n" +
+                    "The current default is 'true'.\n" +
+                    "It will be removed in a future version of the Android Gradle plugin.\n" +
+                    "For more details, see https://d.android.com/r/studio-ui/d8-overview.html",
+            "The option 'android.enableAapt2jni' is deprecated.\n" +
+                    "The current default is 'false'.\n" +
+                    "It has been removed from the current version of the Android Gradle plugin.\n" +
+                    "AAPT2 JNI has been removed."
+        )
     }
 }

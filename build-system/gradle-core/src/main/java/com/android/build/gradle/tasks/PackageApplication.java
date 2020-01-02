@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
-import com.android.builder.utils.FileCache;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
@@ -92,14 +91,12 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
-                @Nullable FileCache fileCache,
                 boolean packageCustomClassDependencies) {
             super(
                     packagingScope,
                     inputResourceFilesType,
                     manifests,
                     manifestType,
-                    fileCache,
                     packageCustomClassDependencies);
             this.outputDirectory = outputDirectory;
         }

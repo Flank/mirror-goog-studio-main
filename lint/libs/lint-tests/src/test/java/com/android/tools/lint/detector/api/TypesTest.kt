@@ -22,7 +22,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.asRecursiveLogString
-import org.jetbrains.uast.visitor.UastVisitor
+import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.io.File
 
 // Misc tests to verify type handling in the Kotlin UAST initialization.
@@ -67,23 +67,22 @@ class TypesTest : TestCase() {
                     "        UField (name = property1) [@org.jetbrains.annotations.NotNull private final var property1: java.lang.String = \"Default Value\"]\n" +
                     "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"] : PsiType:String\n" +
-                    "        UAnnotationMethod (name = method) [public fun method() : java.lang.String {...}]\n" +
+                    "        UMethod (name = method) [public fun method() : java.lang.String {...}]\n" +
                     "            UBlockExpression [{...}]\n" +
                     "                UReturnExpression [return \"Hello World\"]\n" +
                     "                    ULiteralExpression (value = \"Hello World\") [\"Hello World\"] : PsiType:String\n" +
-                    "        UAnnotationMethod (name = otherMethod) [public final fun otherMethod(@org.jetbrains.annotations.NotNull ok: boolean, @org.jetbrains.annotations.NotNull times: int) : void {...}]\n" +
+                    "        UMethod (name = otherMethod) [public final fun otherMethod(@org.jetbrains.annotations.NotNull ok: boolean, @org.jetbrains.annotations.NotNull times: int) : void {...}]\n" +
                     "            UParameter (name = ok) [@org.jetbrains.annotations.NotNull var ok: boolean]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "            UParameter (name = times) [@org.jetbrains.annotations.NotNull var times: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "            UBlockExpression [{...}] : PsiType:void\n" +
-                    "        UAnnotationMethod (name = getProperty2) [public final fun getProperty2() : java.lang.String = UastEmptyExpression]\n" +
-                    "        UAnnotationMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable p: java.lang.String) : void = UastEmptyExpression]\n" +
+                    "        UMethod (name = getProperty2) [public final fun getProperty2() : java.lang.String = UastEmptyExpression]\n" +
+                    "        UMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable p: java.lang.String) : void = UastEmptyExpression]\n" +
                     "            UParameter (name = p) [@org.jetbrains.annotations.Nullable var p: java.lang.String]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
-                    "        UAnnotationMethod (name = getProperty1) [public final fun getProperty1() : java.lang.String = UastEmptyExpression]\n" +
-                    "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"] : PsiType:String\n" +
-                    "        UAnnotationMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @org.jetbrains.annotations.NotNull arg2: int) {...}]\n" +
+                    "        UMethod (name = getProperty1) [public final fun getProperty1() : java.lang.String = UastEmptyExpression]\n" +
+                    "        UMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @org.jetbrains.annotations.NotNull arg2: int) {...}]\n" +
                     "            UParameter (name = property1) [@org.jetbrains.annotations.NotNull var property1: java.lang.String = \"Default Value\"]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "                ULiteralExpression (value = \"Default Value\") [\"Default Value\"] : PsiType:String\n" +
@@ -94,11 +93,11 @@ class TypesTest : TestCase() {
                     "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
                     "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent) [<init>]\n" +
                     "    UClass (name = Parent) [public class Parent {...}]\n" +
-                    "        UAnnotationMethod (name = method) [public fun method() : java.lang.String {...}]\n" +
+                    "        UMethod (name = method) [public fun method() : java.lang.String {...}]\n" +
                     "            UBlockExpression [{...}]\n" +
                     "                UReturnExpression [return null]\n" +
                     "                    ULiteralExpression (value = null) [null] : PsiType:Void\n" +
-                    "        UAnnotationMethod (name = method2) [public fun method2(@org.jetbrains.annotations.NotNull value: boolean, @org.jetbrains.annotations.Nullable value: java.lang.Boolean) : java.lang.String {...}]\n" +
+                    "        UMethod (name = method2) [public fun method2(@org.jetbrains.annotations.NotNull value: boolean, @org.jetbrains.annotations.Nullable value: java.lang.Boolean) : java.lang.String {...}]\n" +
                     "            UParameter (name = value) [@org.jetbrains.annotations.NotNull var value: boolean]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "            UParameter (name = value) [@org.jetbrains.annotations.Nullable var value: java.lang.Boolean]\n" +
@@ -106,7 +105,7 @@ class TypesTest : TestCase() {
                     "            UBlockExpression [{...}]\n" +
                     "                UReturnExpression [return null]\n" +
                     "                    ULiteralExpression (value = null) [null] : PsiType:Void\n" +
-                    "        UAnnotationMethod (name = method3) [public fun method3(@org.jetbrains.annotations.Nullable value: java.lang.Integer, @org.jetbrains.annotations.NotNull value2: int) : int {...}]\n" +
+                    "        UMethod (name = method3) [public fun method3(@org.jetbrains.annotations.Nullable value: java.lang.Integer, @org.jetbrains.annotations.NotNull value2: int) : int {...}]\n" +
                     "            UParameter (name = value) [@org.jetbrains.annotations.Nullable var value: java.lang.Integer]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
                     "            UParameter (name = value2) [@org.jetbrains.annotations.NotNull var value2: int]\n" +
@@ -114,7 +113,7 @@ class TypesTest : TestCase() {
                     "            UBlockExpression [{...}]\n" +
                     "                UReturnExpression [return null]\n" +
                     "                    ULiteralExpression (value = null) [null] : PsiType:Void\n" +
-                    "        UAnnotationMethod (name = Parent) [public fun Parent() = UastEmptyExpression]\n",
+                    "        UMethod (name = Parent) [public fun Parent() = UastEmptyExpression]\n",
             file?.asLogTypes()
         )
 
@@ -135,23 +134,22 @@ class TypesTest : TestCase() {
                     UField (name = property1)
                         UAnnotation (fqName = org.jetbrains.annotations.NotNull)
                         ULiteralExpression (value = "Default Value")
-                    UAnnotationMethod (name = method)
+                    UMethod (name = method)
                         UBlockExpression
                             UReturnExpression
                                 ULiteralExpression (value = "Hello World")
-                    UAnnotationMethod (name = otherMethod)
+                    UMethod (name = otherMethod)
                         UParameter (name = ok)
                             UAnnotation (fqName = org.jetbrains.annotations.NotNull)
                         UParameter (name = times)
                             UAnnotation (fqName = org.jetbrains.annotations.NotNull)
                         UBlockExpression
-                    UAnnotationMethod (name = getProperty2)
-                    UAnnotationMethod (name = setProperty2)
+                    UMethod (name = getProperty2)
+                    UMethod (name = setProperty2)
                         UParameter (name = p)
                             UAnnotation (fqName = org.jetbrains.annotations.Nullable)
-                    UAnnotationMethod (name = getProperty1)
-                        ULiteralExpression (value = "Default Value")
-                    UAnnotationMethod (name = Kotlin)
+                    UMethod (name = getProperty1)
+                    UMethod (name = Kotlin)
                         UParameter (name = property1)
                             UAnnotation (fqName = org.jetbrains.annotations.NotNull)
                             ULiteralExpression (value = "Default Value")
@@ -162,11 +160,11 @@ class TypesTest : TestCase() {
                                 UIdentifier (Identifier (Parent))
                                 USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent)
                 UClass (name = Parent)
-                    UAnnotationMethod (name = method)
+                    UMethod (name = method)
                         UBlockExpression
                             UReturnExpression
                                 ULiteralExpression (value = null)
-                    UAnnotationMethod (name = method2)
+                    UMethod (name = method2)
                         UParameter (name = value)
                             UAnnotation (fqName = org.jetbrains.annotations.NotNull)
                         UParameter (name = value)
@@ -174,7 +172,7 @@ class TypesTest : TestCase() {
                         UBlockExpression
                             UReturnExpression
                                 ULiteralExpression (value = null)
-                    UAnnotationMethod (name = method3)
+                    UMethod (name = method3)
                         UParameter (name = value)
                             UAnnotation (fqName = org.jetbrains.annotations.Nullable)
                         UParameter (name = value2)
@@ -182,7 +180,7 @@ class TypesTest : TestCase() {
                         UBlockExpression
                             UReturnExpression
                                 ULiteralExpression (value = null)
-                    UAnnotationMethod (name = Parent)
+                    UMethod (name = Parent)
 
             """.trimIndent(),
             file?.asRecursiveLogString()?.replace("\r", "")
@@ -204,7 +202,7 @@ class TypesTest : TestCase() {
             "" +
                     "UFile (package = test.pkg) [package test.pkg...]\n" +
                     "    UClass (name = TestKt) [public final class TestKt {...}]\n" +
-                    "        UAnnotationMethod (name = calc) [public static final fun calc(@org.jetbrains.annotations.NotNull @java.lang.Override x: int, @org.jetbrains.annotations.Nullable y: java.lang.Integer, @org.jetbrains.annotations.Nullable z: java.lang.String) : int {...}]\n" +
+                    "        UMethod (name = calc) [public static final fun calc(@org.jetbrains.annotations.NotNull @java.lang.Override x: int, @org.jetbrains.annotations.Nullable y: java.lang.Integer, @org.jetbrains.annotations.Nullable z: java.lang.String) : int {...}]\n" +
                     "            UParameter (name = x) [@org.jetbrains.annotations.NotNull @java.lang.Override var x: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "                UAnnotation (fqName = java.lang.Override) [@java.lang.Override]\n" +
@@ -286,16 +284,16 @@ class TypesTest : TestCase() {
                     "    UClass (name = Parent) [public class Parent {...}]\n" +
                     "        UField (name = number) [@org.jetbrains.annotations.NotNull private final var number: int]\n" +
                     "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                    "        UAnnotationMethod (name = test) [public final fun test() : int {...}]\n" +
+                    "        UMethod (name = test) [public final fun test() : int {...}]\n" +
                     "            UBlockExpression [{...}]\n" +
                     "                UReturnExpression [return 6]\n" +
                     "                    ULiteralExpression (value = 6) [6] : PsiType:int\n" +
-                    "        UAnnotationMethod (name = getNumber) [public final fun getNumber() : int = UastEmptyExpression]\n" +
-                    "        UAnnotationMethod (name = Parent) [public fun Parent(@org.jetbrains.annotations.NotNull number: int) = UastEmptyExpression]\n" +
+                    "        UMethod (name = getNumber) [public final fun getNumber() : int = UastEmptyExpression]\n" +
+                    "        UMethod (name = Parent) [public fun Parent(@org.jetbrains.annotations.NotNull number: int) = UastEmptyExpression]\n" +
                     "            UParameter (name = number) [@org.jetbrains.annotations.NotNull var number: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "    UClass (name = Five) [public final class Five : Parent {...}]\n" +
-                    "        UAnnotationMethod (name = Five) [public fun Five() {...}]\n" +
+                    "        UMethod (name = Five) [public fun Five() {...}]\n" +
                     "            UBlockExpression [{...}]\n" +
                     "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(5)]\n" +
                     "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
@@ -372,8 +370,8 @@ class TypesTest : TestCase() {
                     "            ULiteralExpression (value = 3) [3] : PsiType:int\n" +
                     "        UField (name = resId) [@org.jetbrains.annotations.NotNull private final var resId: int]\n" +
                     "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                    "        UAnnotationMethod (name = getResId) [public final fun getResId() : int = UastEmptyExpression]\n" +
-                    "        UAnnotationMethod (name = KotlinEnum) [private fun KotlinEnum(@org.jetbrains.annotations.NotNull resId: int) = UastEmptyExpression]\n" +
+                    "        UMethod (name = getResId) [public final fun getResId() : int = UastEmptyExpression]\n" +
+                    "        UMethod (name = KotlinEnum) [private fun KotlinEnum(@org.jetbrains.annotations.NotNull resId: int) = UastEmptyExpression]\n" +
                     "            UParameter (name = resId) [@org.jetbrains.annotations.NotNull var resId: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n",
             file?.asLogTypes()
@@ -387,7 +385,7 @@ fun UFile.asLogTypes() = TypesLogger().apply {
     this@asLogTypes.accept(this)
 }.toString()
 
-class TypesLogger : UastVisitor {
+class TypesLogger : AbstractUastVisitor() {
 
     val builder = StringBuilder()
 

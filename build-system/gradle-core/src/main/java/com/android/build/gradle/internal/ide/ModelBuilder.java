@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -661,7 +660,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         return new VariantImpl(
                 variantName,
                 variantDslInfo.getBaseName(),
-                variantDslInfo.getBuildType().getName(),
+                variantDslInfo.getBuildType(),
                 getProductFlavorNames(variantData),
                 new ProductFlavorImpl(variantDslInfo.getMergedFlavor()),
                 mainArtifact,
@@ -999,15 +998,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                         ImmutableList.of(InternalArtifactType.APK.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
-                ApkData mainApkInfo =
-                        ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
                                         InternalArtifactType.AAR.INSTANCE,
-                                        mainApkInfo.getType(),
-                                        mainApkInfo.getFilters(),
-                                        mainApkInfo.getVersionCode(),
+                                        VariantOutput.OutputType.MAIN,
+                                        ImmutableList.of(),
+                                        0,
                                         variantScope
                                                 .getArtifacts()
                                                 .getFinalProduct(InternalArtifactType.AAR.INSTANCE)
@@ -1082,15 +1079,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                         ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS.INSTANCE),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
             case LIBRARY:
-                ApkData mainApkInfo =
-                        ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
                                         InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                                        mainApkInfo.getType(),
-                                        mainApkInfo.getFilters(),
-                                        mainApkInfo.getVersionCode(),
+                                        VariantOutput.OutputType.MAIN,
+                                        ImmutableList.of(),
+                                        0,
                                         new File(
                                                 variantData.getScope().getManifestOutputDirectory(),
                                                 SdkConstants.ANDROID_MANIFEST_XML))));

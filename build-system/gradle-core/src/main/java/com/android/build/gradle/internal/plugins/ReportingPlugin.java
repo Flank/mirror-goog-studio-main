@@ -31,9 +31,7 @@ import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.utils.FileUtils;
-import javax.inject.Inject;
 import org.gradle.api.Project;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.TaskCollection;
 
@@ -45,13 +43,9 @@ import org.gradle.api.tasks.TaskCollection;
  */
 class ReportingPlugin implements org.gradle.api.Plugin<Project> {
 
-    private final ObjectFactory objectFactory;
     private TestOptions extension;
 
-    @Inject
-    public ReportingPlugin(ObjectFactory objectFactory) {
-        this.objectFactory = objectFactory;
-    }
+    public ReportingPlugin() {}
 
     @Override
     public void apply(final Project project) {
@@ -71,6 +65,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
                         new DslVariableFactory(extraModelInfo.getSyncIssueHandler()),
+                        project.getLayout(),
                         project::file);
 
         extension = project.getExtensions().create("android", TestOptions.class, dslScope);

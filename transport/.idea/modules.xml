@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" filepath="$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test-framework/test-app/transport-test-app.iml" filepath="$PROJECT_DIR$/test-framework/test-app/transport-test-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test-framework/transport-test-framework.iml" filepath="$PROJECT_DIR$/test-framework/transport-test-framework.iml" />
+    </modules>
+  </component>
+</project>

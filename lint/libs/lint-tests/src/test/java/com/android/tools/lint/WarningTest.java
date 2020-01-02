@@ -110,7 +110,7 @@ public class WarningTest extends AbstractCheckTest {
                                         lintRequest);
                         configureDriver(driver);
                         driver.analyze();
-                        warningsHolder.set(warnings);
+                        warningsHolder.set(getWarnings());
                         return null;
                     }
                 };

@@ -33,7 +33,7 @@ class BuiltInCmakeSettingsJsonKtTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variant)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
@@ -49,7 +49,7 @@ class BuiltInCmakeSettingsJsonKtTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variant)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
@@ -65,7 +65,7 @@ class BuiltInCmakeSettingsJsonKtTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.baseVariantData)
+                it.variantScope)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
@@ -85,7 +85,7 @@ class BuiltInCmakeSettingsJsonKtTest {
     @Test
     fun `Traditional CMakeSettings does not throw when evaluated`() {
         BasicCmakeMock().apply {
-            getCmakeServerDefaultEnvironment().toJsonString()
+            abi.getCmakeServerDefaultEnvironment().toJsonString()
         }
     }
 }

@@ -18,6 +18,8 @@ package com.android.tools.agent.layoutinspector;
 
 import android.os.AsyncTask;
 import android.view.View;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,15 +30,15 @@ import java.util.concurrent.TimeUnit;
 class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
     private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
     private final LayoutInspectorService myService;
-    private View myRoot;
+    private List<View> myRoots;
     private boolean myQuit;
 
     public DetectRootViewChange(LayoutInspectorService service) {
         myService = service;
     }
 
-    public void start(View root) {
-        myRoot = root;
+    public void start(List<View> roots) {
+        myRoots = roots;
         myQuit = false;
         execute();
     }
@@ -50,10 +52,19 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
         while (!myQuit) {
             try {
                 Thread.sleep(ONE_SECOND);
-                View newRoot = myService.getRootView();
-                if (newRoot != null && newRoot != myRoot) {
-                    myService.startLayoutInspector(newRoot);
-                    myRoot = newRoot;
+                List<View> newRoots = myService.getRootViews();
+                if (newRoots != null && !newRoots.equals(myRoots)) {
+                    List<View> newlyAdded = new ArrayList<>(newRoots);
+                    newlyAdded.removeAll(myRoots);
+                    myRoots.removeAll(newRoots);
+                    for (View removed : myRoots) {
+                        myService.stopCapturing(removed);
+                    }
+                    for (View added : newlyAdded) {
+                        myService.startLayoutInspector(added);
+                    }
+
+                    myRoots = newRoots;
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();

@@ -466,7 +466,7 @@ class LintDriver
 
         jarFiles.addAll(client.findGlobalRuleJars())
 
-        if (!jarFiles.isEmpty()) {
+        if (jarFiles.isNotEmpty()) {
             val extraRegistries = JarFileIssueRegistry.get(
                 client, jarFiles,
                 currentProject ?: projects.firstOrNull()
@@ -627,8 +627,7 @@ class LintDriver
     }
 
     /** Development diagnostics only, run with assertions on  */
-    private // Turn off warnings for the intentional assertion side effect below
-    fun validateScopeList() {
+    private fun validateScopeList() {
         if (assertionsEnabled()) {
             val resourceFileDetectors = scopeDetectors[Scope.RESOURCE_FILE]
             if (resourceFileDetectors != null) {
@@ -1000,7 +999,46 @@ class LintDriver
                     }
                 }
             }
+        }
 
+        // Prepare Java/Kotlin compilation. We're not processing these files yet, but
+        // we need to prepare to load various symbol tables such that class lookup
+        // works from resource detectors
+        var uastSourceList: UastSourceList? = null
+        if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.ALL_JAVA_FILES)) {
+            val checks = union(
+                scopeDetectors[Scope.JAVA_FILE],
+                scopeDetectors[Scope.ALL_JAVA_FILES]
+            )
+
+            if (checks != null && checks.isNotEmpty()) {
+                val files = project.subset
+                uastSourceList = if (files != null) {
+                    findUastSources(project, main, checks, files)
+                } else {
+                    findUastSources(project, main, checks)
+                }
+                prepareUast(uastSourceList)
+            }
+        }
+
+        // Still need to set up class path when running outside of the IDE
+        // to prepare for class lookup from resource detectors
+        if (uastSourceList == null && !LintClient.isStudio) {
+            val files = project.subset
+            val uastRequest = if (files != null) {
+                findUastSources(project, main, emptyList(), files)
+            } else {
+                findUastSources(project, main, emptyList())
+            }
+            prepareUast(uastRequest)
+        }
+
+        if (isCanceled) {
+            return
+        }
+
+        if (project.isAndroidProject) {
             // Process both Scope.RESOURCE_FILE and Scope.ALL_RESOURCE_FILES detectors together
             // in a single pass through the resource directories.
             if (scope.contains(Scope.ALL_RESOURCE_FILES) ||
@@ -1014,7 +1052,7 @@ class LintDriver
                     scopeDetectors[Scope.RESOURCE_FILE],
                     scopeDetectors[Scope.ALL_RESOURCE_FILES]
                 ) ?: emptyList()
-                var haveXmlChecks = !checks.isEmpty()
+                var haveXmlChecks = checks.isNotEmpty()
                 val xmlDetectors: MutableList<XmlScanner>
                 if (haveXmlChecks) {
                     xmlDetectors = ArrayList(checks.size)
@@ -1023,13 +1061,13 @@ class LintDriver
                             xmlDetectors.add(detector)
                         }
                     }
-                    haveXmlChecks = !xmlDetectors.isEmpty()
+                    haveXmlChecks = xmlDetectors.isNotEmpty()
                 } else {
                     xmlDetectors = mutableListOf()
                 }
                 if (haveXmlChecks ||
-                    dirChecks != null && !dirChecks.isEmpty() ||
-                    binaryChecks != null && !binaryChecks.isEmpty()
+                    dirChecks != null && dirChecks.isNotEmpty() ||
+                    binaryChecks != null && binaryChecks.isNotEmpty()
                 ) {
                     val files = project.subset
                     if (files != null) {
@@ -1039,7 +1077,7 @@ class LintDriver
                         )
                     } else {
                         val resourceFolders = project.resourceFolders
-                        if (!resourceFolders.isEmpty()) {
+                        if (resourceFolders.isNotEmpty()) {
                             for (res in resourceFolders) {
                                 checkResFolder(
                                     project, main, res, xmlDetectors, dirChecks,
@@ -1049,7 +1087,7 @@ class LintDriver
                         }
                         if (checkGeneratedSources) {
                             val generatedResourceFolders = project.generatedResourceFolders
-                            if (!generatedResourceFolders.isEmpty()) {
+                            if (generatedResourceFolders.isNotEmpty()) {
                                 for (res in generatedResourceFolders) {
                                     checkResFolder(
                                         project, main, res, xmlDetectors, dirChecks,
@@ -1067,28 +1105,9 @@ class LintDriver
             }
         }
 
-        if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.ALL_JAVA_FILES)) {
-            val checks = union(
-                scopeDetectors[Scope.JAVA_FILE],
-                scopeDetectors[Scope.ALL_JAVA_FILES]
-            )
-            if (checks != null && !checks.isEmpty()) {
-                val files = project.subset
-                if (files != null) {
-                    checkIndividualJavaFiles(project, main, checks, files)
-                } else {
-                    val sourceFolders = project.javaSourceFolders
-                    val testFolders = if (!ignoreTestSources)
-                        project.testSourceFolders
-                    else
-                        emptyList<File>()
-
-                    val generatedFolders = if (checkGeneratedSources)
-                        project.generatedSourceFolders
-                    else emptyList<File>()
-                    checkJava(project, main, sourceFolders, testFolders, generatedFolders, checks)
-                }
-            }
+        // Java & Kotlin
+        if (uastSourceList != null) {
+            visitUast(project, main, uastSourceList)
         }
 
         if (isCanceled) {
@@ -1349,7 +1368,7 @@ class LintDriver
     ) {
         val classFiles = ArrayList<File>(files.size)
         val classFolders = project.javaClassFolders
-        if (!classFolders.isEmpty()) {
+        if (classFolders.isNotEmpty()) {
             for (file in files) {
                 val path = file.path
                 if (file.isFile && path.endsWith(DOT_CLASS)) {
@@ -1362,7 +1381,7 @@ class LintDriver
             client, classFiles, classFolders,
             true
         )
-        if (!entries.isEmpty()) {
+        if (entries.isNotEmpty()) {
             entries.sort()
             runClassDetectors(Scope.CLASS_FILE, entries, project, main)
         }
@@ -1384,7 +1403,7 @@ class LintDriver
     ) {
         if (this.scope.contains(scope)) {
             val classDetectors = scopeDetectors[scope]
-            if (classDetectors != null && !classDetectors.isEmpty() && !entries.isEmpty()) {
+            if (classDetectors != null && classDetectors.isNotEmpty() && entries.isNotEmpty()) {
                 val visitor = AsmVisitor(client, classDetectors)
 
                 var sourceContents: CharSequence? = null
@@ -1580,22 +1599,27 @@ class LintDriver
         return null
     }
 
-    private fun checkJava(
+    private fun findUastSources(
         project: Project,
         main: Project?,
-        sourceFolders: List<File>,
-        testSourceFolders: List<File>,
-        generatedSources: List<File>,
         checks: List<Detector>
-    ) {
-        assert(!checks.isEmpty())
+    ): UastSourceList {
+        val sourceFolders = project.javaSourceFolders
+        val testFolders = if (!ignoreTestSources)
+            project.testSourceFolders
+        else
+            emptyList<File>()
+
+        val generatedFolders = if (checkGeneratedSources)
+            project.generatedSourceFolders
+        else emptyList<File>()
 
         // Gather all Java source files in a single pass; more efficient.
         val sources = ArrayList<File>(100)
         for (folder in sourceFolders) {
             gatherJavaFiles(folder, sources)
         }
-        for (folder in generatedSources) {
+        for (folder in generatedFolders) {
             gatherJavaFiles(folder, sources)
         }
 
@@ -1611,7 +1635,7 @@ class LintDriver
             testContexts = emptyList()
         } else {
             sources.clear()
-            for (folder in testSourceFolders) {
+            for (folder in testFolders) {
                 gatherJavaFiles(folder, sources)
             }
             testContexts = ArrayList(sources.size)
@@ -1624,19 +1648,14 @@ class LintDriver
             }
         }
 
-        // Visit all contexts
-        if (!contexts.isEmpty() || !testContexts.isEmpty()) {
-            visitJavaFiles(checks, project, main, contexts, testContexts)
-        }
+        return findUastSources(checks, contexts, testContexts)
     }
 
-    private fun visitJavaFiles(
+    private fun findUastSources(
         checks: List<Detector>,
-        project: Project,
-        main: Project?,
         contexts: List<JavaContext>,
         testContexts: List<JavaContext>
-    ) {
+    ): UastSourceList {
         val allContexts: List<JavaContext>
         if (testContexts.isEmpty()) {
             allContexts = contexts
@@ -1646,39 +1665,54 @@ class LintDriver
             allContexts.addAll(testContexts)
         }
 
+        val parser = client.getUastParser(currentProject)
+
         // Force all test sources into the normal source check (where all checks apply) ?
-        if (checkTestSources) {
-            visitJavaFiles(checks, project, main, allContexts, allContexts, emptyList())
+        return if (checkTestSources) {
+            UastSourceList(parser, checks, allContexts, allContexts, emptyList())
         } else {
-            visitJavaFiles(checks, project, main, allContexts, contexts, testContexts)
+            UastSourceList(parser, checks, allContexts, contexts, testContexts)
         }
     }
 
-    private fun visitJavaFiles(
-        checks: List<Detector>,
+    private fun prepareUast(
+        sourceList: UastSourceList
+    ) {
+        val parser = sourceList.parser
+        val srcContexts = sourceList.srcContexts
+        val testContexts = sourceList.testContexts
+        val allContexts = sourceList.allContexts
+
+        for (context in allContexts) {
+            context.uastParser = parser
+        }
+        parserErrors = !parser.prepare(srcContexts, testContexts)
+    }
+
+    /** The lists of production and test files for Kotlin and Java to parse and process */
+    private class UastSourceList(
+        val parser: UastParser,
+        val checks: List<Detector>,
+        val allContexts: List<JavaContext>,
+        val srcContexts: List<JavaContext>,
+        val testContexts: List<JavaContext>
+    )
+
+    private fun visitUast(
         project: Project,
         main: Project?,
-        allContexts: List<JavaContext>,
-        srcContexts: List<JavaContext>,
-        testContexts: List<JavaContext>
+        sourceList: UastSourceList
     ) {
-        // Temporary: we still have some builtin checks that aren't migrated to
-        // PSI. Until that's complete, remove them from the list here
-        val uastScanners = ArrayList<Detector>(checks.size)
-        for (detector in checks) {
-            if (detector is SourceCodeScanner) {
-                uastScanners.add(detector)
-            }
-        }
+        val parser = sourceList.parser
+        val uastScanners = sourceList.checks
+        val allContexts = sourceList.allContexts
+        val srcContexts = sourceList.srcContexts
+        val testContexts = sourceList.testContexts
 
-        if (!uastScanners.isEmpty()) {
-            val parser = client.getUastParser(currentProject)
-            for (context in allContexts) {
-                context.uastParser = parser
-            }
+        assert(uastScanners.isNotEmpty())
+
+        if (uastScanners.isNotEmpty()) {
             val uElementVisitor = UElementVisitor(parser, uastScanners)
-
-            parserErrors = !uElementVisitor.prepare(srcContexts, testContexts)
 
             for (context in srcContexts) {
                 fireEvent(EventType.SCANNING_FILE, context)
@@ -1699,9 +1733,9 @@ class LintDriver
             uElementVisitor.visitGroups(projectContext, allContexts)
             uElementVisitor.dispose()
 
-            if (!testContexts.isEmpty()) {
+            if (testContexts.isNotEmpty()) {
                 val testScanners = filterTestScanners(uastScanners)
-                if (!testScanners.isEmpty()) {
+                if (testScanners.isNotEmpty()) {
                     val uTestVisitor = UElementVisitor(parser, testScanners)
 
                     for (context in testContexts) {
@@ -1742,13 +1776,12 @@ class LintDriver
         return testScanners
     }
 
-    private fun checkIndividualJavaFiles(
+    private fun findUastSources(
         project: Project,
         main: Project?,
         checks: List<Detector>,
         files: List<File>
-    ) {
-
+    ): UastSourceList {
         val contexts = ArrayList<JavaContext>(files.size)
         val testContexts = ArrayList<JavaContext>(files.size)
         val testFolders = project.testSourceFolders
@@ -1775,15 +1808,11 @@ class LintDriver
             }
         }
 
-        if (contexts.isEmpty() && testContexts.isEmpty()) {
-            return
-        }
-
         // We're not sure if these individual files are tests or non-tests; treat them
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        visitJavaFiles(checks, project, main, contexts, testContexts)
+        return findUastSources(checks, contexts, testContexts)
     }
 
     private var currentFolderType: ResourceFolderType? = null
@@ -1883,7 +1912,7 @@ class LintDriver
 
         // Process the resource folder
 
-        if (dirChecks != null && !dirChecks.isEmpty()) {
+        if (dirChecks != null && dirChecks.isNotEmpty()) {
             val context = ResourceContext(this, project, main, dir, type, "")
             val folderName = dir.name
             fireEvent(EventType.SCANNING_FILE, context)
@@ -3335,7 +3364,7 @@ class LintDriver
          */
         @JvmStatic
         fun isSuppressed(issue: Issue, annotated: UAnnotated): Boolean {
-            val annotations = annotated.annotations
+            val annotations = annotated.uAnnotations
             if (annotations.isEmpty()) {
                 return false
             }
@@ -3399,7 +3428,7 @@ class LintDriver
             annotated: UAnnotated,
             names: Set<String>
         ): Boolean {
-            val annotations = annotated.annotations
+            val annotations = annotated.uAnnotations
             if (annotations.isEmpty()) {
                 return false
             }

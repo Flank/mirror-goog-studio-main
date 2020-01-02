@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableList
 data class VariantInfoImpl(
     val _isTest: Boolean,
     val _variantName: String,
-    val _buildTypeName: String,
+    val _buildTypeName: String?,
     val _flavorNames: ImmutableList<String>,
     val _isDebuggable: Boolean
 ) : VariantInfo {
@@ -33,14 +33,14 @@ data class VariantInfoImpl(
             this(
                 _isTest = variantScope.variantDslInfo.variantType.isForTesting,
                 _variantName = variantScope.fullVariantName,
-                _buildTypeName = variantScope.variantDslInfo.buildType.name,
+                _buildTypeName = variantScope.variantDslInfo.buildType,
                 _flavorNames = variantScope.variantDslInfo.productFlavors.map { it.name }.toImmutableList(),
-                _isDebuggable = variantScope.variantDslInfo.buildType.isDebuggable
+                _isDebuggable = variantScope.variantDslInfo.isDebuggable
             )
 
     override fun isTest(): Boolean = _isTest
     override fun getFullVariantName(): String = _variantName
-    override fun getBuildTypeName(): String = _buildTypeName
+    override fun getBuildTypeName(): String = _buildTypeName ?: ""
     override fun getFlavorNames(): ImmutableList<String> = _flavorNames
     override fun isDebuggable(): Boolean = _isDebuggable
 

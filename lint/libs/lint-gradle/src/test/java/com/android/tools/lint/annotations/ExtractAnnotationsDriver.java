@@ -23,8 +23,7 @@ import static java.io.File.pathSeparatorChar;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.KotlinLintAnalyzerFacade;
-import com.android.tools.lint.LintCoreApplicationEnvironment;
-import com.android.tools.lint.LintCoreProjectEnvironment;
+import com.android.tools.lint.UastEnvironment;
 import com.android.utils.SdkUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -245,10 +244,9 @@ public class ExtractAnnotationsDriver {
                 new Extractor(database, rmTypeDefs, verbose, !skipClassRetention, true);
         extractor.setListIgnored(listFiltered);
 
-        LintCoreApplicationEnvironment appEnv = LintCoreApplicationEnvironment.get();
         Disposable parentDisposable = Disposer.newDisposable();
-        LintCoreProjectEnvironment projectEnvironment =
-                LintCoreProjectEnvironment.create(parentDisposable, appEnv);
+        UastEnvironment environment = UastEnvironment.create(parentDisposable);
+        UastEnvironment.ProjectEnvironment projectEnvironment = environment.getProjectEnvironment();
 
         List<File> sourceRoots = findSourceRoots(sources);
         List<File> joined = Lists.newArrayList(sourceRoots);
@@ -257,7 +255,6 @@ public class ExtractAnnotationsDriver {
         projectEnvironment.registerPaths(joined);
 
         MockProject project = projectEnvironment.getProject();
-        List<File> paths = projectEnvironment.getPaths();
 
         List<File> allSourceFiles = Extractor.gatherSources(sources);
         List<? extends PsiFile> units = Extractor.createUnitsForFiles(project, allSourceFiles);
@@ -269,13 +266,11 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        new KotlinLintAnalyzerFacade().analyze(ktFiles, paths, project);
+        new KotlinLintAnalyzerFacade().analyze(ktFiles, joined, project);
         extractor.extractFromProjectSource(units);
 
-        if (mergePaths != null) {
-            for (File jar : mergePaths) {
-                extractor.mergeExisting(jar);
-            }
+        for (File jar : mergePaths) {
+            extractor.mergeExisting(jar);
         }
 
         extractor.export(output, proguard);
@@ -294,8 +289,8 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        Disposer.dispose(LintCoreApplicationEnvironment.get().getParentDisposable());
-        LintCoreApplicationEnvironment.clearAccessorCache();
+        Disposer.dispose(parentDisposable);
+        UastEnvironment.ensureDisposed();
     }
 
     private static final String SEP_JAVA_SEP = File.separator + "java" + File.separator;

@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.Location.SearchDirection;
 import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import java.io.File;
 import junit.framework.TestCase;
 
@@ -189,5 +190,6 @@ public class LocationTest extends TestCase {
                 new Location.DefaultLocationHandle(pair.getFirst(), 0, 10);
         Location location = handle.resolve();
         assertEquals(10, location.getEnd().getOffset());
+        Disposer.dispose(pair.getSecond());
     }
 }

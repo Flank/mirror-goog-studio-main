@@ -49,7 +49,7 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
         "-I$(GENDIR)/external/perfetto_repo",
     ],
@@ -57,9 +57,9 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
-        "//tools/base/transport/daemon",
+        "//tools/base/transport/native/daemon",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
         "@perfetto_repo//:cc_proto",
     ],
 )
@@ -82,7 +82,7 @@ cc_test(
     copts = [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/tests",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
         "-I$(GENDIR)/external/perfetto_repo",
     ],
@@ -99,9 +99,9 @@ cc_test(
         "//external:gmock_main",
         "//tools/base/profiler/native/perfd",
         "//tools/base/profiler/native/test:testutils",
-        "//tools/base/transport/daemon",
+        "//tools/base/transport/native/daemon",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
         "@perfetto_repo//:cc_proto",
     ],
 )

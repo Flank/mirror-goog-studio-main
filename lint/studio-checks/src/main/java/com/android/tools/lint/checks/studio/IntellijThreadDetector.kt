@@ -69,6 +69,9 @@ val THREADING_ANNOTATIONS = setOf(SLOW, UI_THREAD, ANY_THREAD, WORKER_THREAD)
 class IntellijThreadDetector : Detector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = THREADING_ANNOTATIONS.toList()
 
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
+        type == METHOD_CALL || type == METHOD_CALL_CLASS || type == METHOD_CALL_PARAMETER
+
     /**
      * Handles a given UAST node relevant to our annotations.
      *

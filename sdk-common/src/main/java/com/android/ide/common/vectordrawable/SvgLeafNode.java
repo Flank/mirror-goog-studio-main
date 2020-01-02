@@ -22,6 +22,7 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.vectordrawable.PathParser.ParseMode;
 import com.android.utils.XmlUtils;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
@@ -175,7 +176,7 @@ class SvgLeafNode extends SvgNode {
             // Nothing to draw and transform, early return.
             return;
         }
-        VdPath.Node[] nodes = PathParser.parsePath(mPathData);
+        VdPath.Node[] nodes = PathParser.parsePath(mPathData, ParseMode.SVG);
         AffineTransform finalTransform = new AffineTransform(rootTransform);
         finalTransform.concatenate(mStackedTransform);
         boolean needsConvertRelativeMoveAfterClose = VdPath.Node.hasRelMoveAfterClose(nodes);

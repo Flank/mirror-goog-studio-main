@@ -104,7 +104,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         writer.write("\n</issues>\n")
         writer.close()
 
-        if (!client.getFlags().isQuiet && (stats.errorCount > 0 || stats.warningCount > 0)) {
+        if (!client.flags.isQuiet && (stats.errorCount > 0 || stats.warningCount > 0)) {
             val url = SdkUtils.fileToUrlString(output.absoluteFile)
             println(String.format("Wrote XML report to %1\$s", url))
         }

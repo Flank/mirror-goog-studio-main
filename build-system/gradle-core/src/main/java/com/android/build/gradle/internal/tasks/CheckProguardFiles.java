@@ -41,12 +41,13 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
 
         Map<File, ProguardFile> oldFiles = new HashMap<>();
         oldFiles.put(
-                ProguardFiles.getDefaultProguardFile(ProguardFile.OPTIMIZE.fileName, getProject())
+                ProguardFiles.getDefaultProguardFile(
+                                ProguardFile.OPTIMIZE.fileName, getProject().getLayout())
                         .getAbsoluteFile(),
                 ProguardFile.OPTIMIZE);
         oldFiles.put(
                 ProguardFiles.getDefaultProguardFile(
-                                ProguardFile.DONT_OPTIMIZE.fileName, getProject())
+                                ProguardFile.DONT_OPTIMIZE.fileName, getProject().getLayout())
                         .getAbsoluteFile(),
                 ProguardFile.DONT_OPTIMIZE);
 

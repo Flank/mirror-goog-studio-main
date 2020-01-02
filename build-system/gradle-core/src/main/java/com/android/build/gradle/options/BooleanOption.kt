@@ -18,16 +18,15 @@ package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.model.AndroidProject
-import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0_0
-import com.android.build.gradle.options.Version.VERSION_3_5_0
-import com.android.build.gradle.options.Version.VERSION_3_6_0
-import com.android.build.gradle.options.Version.VERSION_4_0_0
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
+import com.android.build.gradle.options.Version.VERSION_3_5
+import com.android.build.gradle.options.Version.VERSION_3_6
+import com.android.build.gradle.options.Version.VERSION_4_0
 
 enum class BooleanOption(
     override val propertyName: String,
     override val defaultValue: Boolean,
-    val stage: Stage,
-    override val additionalInfo: String = ""
+    val stage: Stage
 ) : Option<Boolean> {
 
     /* ----------
@@ -83,6 +82,8 @@ enum class BooleanOption(
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, FeatureStage.Supported),
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.Supported),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
+
+    ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
 
     /* ---------------------
      * EXPERIMENTAL FEATURES
@@ -159,7 +160,7 @@ enum class BooleanOption(
     ENABLE_D8("android.enableD8", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.LEGACY_DEXER)),
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
-    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.IN_A_FUTURE_RELEASE)),
+    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.FUTURE_VERSION)),
 
     /* -----------------
      * ENFORCED FEATURES
@@ -170,7 +171,7 @@ enum class BooleanOption(
         "android.enableImprovedDependenciesResolution",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "The android.enableImprovedDependenciesResolution property does not have any effect. "
                     + "Dependency resolution is only performed during task execution phase."
         )
@@ -181,7 +182,7 @@ enum class BooleanOption(
         "android.enableNewResourceProcessing",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "New resource processing is now always enabled."
         )
     ),
@@ -191,7 +192,7 @@ enum class BooleanOption(
         "android.disable.res.merge",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "Resources from dependencies are never merged in libraries."
         )
     ),
@@ -200,7 +201,7 @@ enum class BooleanOption(
     ENABLE_DAEMON_MODE_AAPT2(
         "android.enableAapt2DaemonMode",
         true,
-        FeatureStage.Enforced(VERSION_BEFORE_4_0_0, "AAPT2 daemon mode is now always enabled.")
+        FeatureStage.Enforced(VERSION_BEFORE_4_0, "AAPT2 daemon mode is now always enabled.")
     ),
 
     @Suppress("unused")
@@ -208,7 +209,7 @@ enum class BooleanOption(
         "android.enableIncrementalDesugaring",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "This property has no effect, incremental desugaring is always enabled."
         )
     ),
@@ -218,7 +219,7 @@ enum class BooleanOption(
         "android.enableCoreLambdaStubs",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "This property has no effect, core-lambda-stubs.jar is always in the bootclasspath."
         )
     ),
@@ -228,7 +229,7 @@ enum class BooleanOption(
         "android.useDexArchive",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "This property has no effect, incremental dexing is always used."
         )
     ),
@@ -238,7 +239,7 @@ enum class BooleanOption(
         "android.enableAapt2",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "This property has no effect, AAPT2 is now always used."
         )
     ),
@@ -248,7 +249,7 @@ enum class BooleanOption(
         "android.useAapt2FromMaven",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "This property has no effect and AAPT2 from maven.google.com is now always used. "
                     + "If you wish to use a local executable of AAPT2 please use the "
                     + "'android.aapt2FromMavenOverride' option."
@@ -260,7 +261,7 @@ enum class BooleanOption(
         "android.enableD8MainDexList",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "This property has no effect, D8 is always used to compute the main dex list."
         )
     ),
@@ -269,14 +270,14 @@ enum class BooleanOption(
     ENABLE_DATA_BINDING_V2(
         "android.databinding.enableV2",
         true,
-        FeatureStage.Enforced(VERSION_BEFORE_4_0_0, "Databinding v1 is removed.")
+        FeatureStage.Enforced(VERSION_BEFORE_4_0, "Databinding v1 is removed.")
     ),
 
     ENABLE_SEPARATE_R_CLASS_COMPILATION(
         "android.enableSeparateRClassCompilation",
         true,
         FeatureStage.Enforced(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "Separate R class compilation has been enabled and can no longer be disabled."
         )
     ),
@@ -289,14 +290,14 @@ enum class BooleanOption(
     ENABLE_IN_PROCESS_AAPT2(
         "android.enableAapt2jni",
         false,
-        FeatureStage.Removed(VERSION_BEFORE_4_0_0, "AAPT2 JNI has been removed.")
+        FeatureStage.Removed(VERSION_BEFORE_4_0, "AAPT2 JNI has been removed.")
     ),
 
     @Suppress("unused")
     ENABLE_DEPRECATED_NDK(
         "android.useDeprecatedNdk",
         false,
-        FeatureStage.Removed(VERSION_BEFORE_4_0_0, "NdkCompile is no longer supported")
+        FeatureStage.Removed(VERSION_BEFORE_4_0, "NdkCompile is no longer supported")
     ),
 
     @Suppress("unused")
@@ -304,7 +305,7 @@ enum class BooleanOption(
         "android.injectSdkMavenRepos",
         false,
         FeatureStage.Removed(
-            VERSION_3_5_0,
+            VERSION_3_5,
             "The ability to inject the Android SDK maven repos is removed in AGP 3.5"
         )
     ),
@@ -314,7 +315,7 @@ enum class BooleanOption(
         "android.enableUnitTestBinaryResources",
         false,
         FeatureStage.Removed(
-            VERSION_BEFORE_4_0_0,
+            VERSION_BEFORE_4_0,
             "The raw resource for unit test functionality is removed."
         )
     ),
@@ -324,7 +325,7 @@ enum class BooleanOption(
         "android.enableExperimentalFeatureDatabinding",
         false,
         FeatureStage.Removed(
-            VERSION_4_0_0,
+            VERSION_4_0,
             "This property has no effect. The features plugin was removed in AGP 4.0.")
     ),
 
@@ -332,7 +333,7 @@ enum class BooleanOption(
     ENABLE_SEPARATE_APK_RESOURCES(
         "android.enableSeparateApkRes",
         false,
-        FeatureStage.Removed(VERSION_BEFORE_4_0_0, "Instant run is replaced by apply changes.")
+        FeatureStage.Removed(VERSION_BEFORE_4_0, "Instant run is replaced by apply changes.")
     ),
 
     @Suppress("unused")
@@ -340,7 +341,7 @@ enum class BooleanOption(
         "android.keepTimestampsInApk",
         false,
         FeatureStage.Removed(
-            VERSION_3_6_0,
+            VERSION_3_6,
             "The ability to keep timestamps in the APK is removed in AGP 3.6"
         )
     ),
@@ -349,7 +350,7 @@ enum class BooleanOption(
     ENABLE_SEPARATE_ANNOTATION_PROCESSING(
         "android.enableSeparateAnnotationProcessing",
         false,
-        FeatureStage.Removed(VERSION_4_0_0, "This feature was removed in AGP 4.0")
+        FeatureStage.Removed(VERSION_4_0, "This feature was removed in AGP 4.0")
     ),
 
     ; // end of enums

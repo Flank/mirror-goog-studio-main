@@ -2,10 +2,10 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 
 cc_binary(
     name = "transport_main",
-    srcs = ["transport.cc"],
+    srcs = ["native/main/transport.cc"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-Itools/base/echo-sample",
         "-I$(GENDIR)/tools/base/transport",
     ],
@@ -17,7 +17,7 @@ cc_binary(
     deps = [
         "//tools/base/echo-sample:echo",
         "//tools/base/profiler/native/perfd",
-        "//tools/base/transport/daemon",
+        "//tools/base/transport/native/daemon",
         "//tools/base/transport/proto:cc_proto",
         "@gflags_repo//:gflags_nothreads",
     ],

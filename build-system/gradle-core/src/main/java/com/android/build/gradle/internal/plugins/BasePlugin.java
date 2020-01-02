@@ -103,7 +103,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -312,6 +311,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
                         new DslVariableFactory(syncIssueHandler),
+                        project.getLayout(),
                         project::file);
 
         @Nullable
@@ -356,15 +356,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
                                 project.getPath(),
                                 null,
-                                () -> {
-                                    Main.clearInternTables();
-                                    // Because some registrations may happen w/o gradle build
-                                    // service (from artifact transforms), we need to explicitly
-                                    // invoked this method.
-                                    Aapt2Daemon.getAapt2DaemonServiceRegistry()
-                                            .shutdownAllRegisteredServices(
-                                                    ForkJoinPool.commonPool());
-                                });
+                                Main::clearInternTables);
                         DeprecationReporterImpl.Companion.clean();
                     }
                 });
@@ -386,15 +378,12 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private void configureExtension() {
         ObjectFactory objectFactory = project.getObjects();
+
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
-                project.container(
-                        BuildType.class,
-                        new BuildTypeFactory(objectFactory, project, globalScope.getDslScope()));
+                project.container(BuildType.class, new BuildTypeFactory(globalScope.getDslScope()));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
-                        ProductFlavor.class,
-                        new ProductFlavorFactory(
-                                objectFactory, project, globalScope.getDslScope()));
+                        ProductFlavor.class, new ProductFlavorFactory(globalScope.getDslScope()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,
@@ -418,7 +407,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 objectFactory.newInstance(
                         DefaultConfig.class,
                         BuilderConstants.MAIN,
-                        project,
                         globalScope.getDslScope());
 
         extension =

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,12 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.model.ObjectFactory
-import org.gradle.testfixtures.ProjectBuilder
 
-/**
- * a fake [ObjectFactory] to use in tests.
- *
- */
-class FakeObjectFactory  {
+class FakeObjectFactory {
     companion object {
         @JvmStatic
-        fun getFactory() : ObjectFactory {
-            return ProjectBuilder.builder().build().objects
+        val factory: ObjectFactory by lazy {
+            ProjectFactory.project.objects
         }
     }
 }

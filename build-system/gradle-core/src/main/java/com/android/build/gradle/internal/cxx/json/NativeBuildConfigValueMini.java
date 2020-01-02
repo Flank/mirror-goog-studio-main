@@ -28,8 +28,8 @@ import java.util.Map;
  * Subset of normal NativeBuildConfigValue that does not include potentially large structures like
  * files.
  *
- * <p>Note: This class is populated via {@link AndroidBuildGradleJsonStreamingVisitor} If you add
- * fields here you also need to update that class to read the fields.
+ * <p>Note: This class is populated via {@link AndroidBuildGradleJsons::MiniConfigBuildingVisitor}.
+ * If you add fields here you also need to update that class to read the fields.
  */
 public class NativeBuildConfigValueMini {
     @NonNull public List<File> buildFiles = Lists.newArrayList();

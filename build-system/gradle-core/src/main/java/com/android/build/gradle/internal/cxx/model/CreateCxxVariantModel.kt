@@ -20,16 +20,19 @@ import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
-import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
+import java.io.File
 
 /**
  * Construct a [CxxVariantModel], careful to be lazy with module-level fields.
  */
 fun createCxxVariantModel(
     module: CxxModuleModel,
-    baseVariantData: BaseVariantData) : CxxVariantModel {
+    variantScope: VariantScope) : CxxVariantModel {
+    val baseVariantData = variantScope.variantData
     return object : CxxVariantModel {
         private val buildSystem by lazy {
             createNativeBuildSystemVariantConfig(
@@ -76,6 +79,16 @@ fun createCxxVariantModel(
                 ).validAbis.toList()
             }
         }
+
+        override val prefabPackageDirectoryList: List<File> by lazy {
+            variantScope.getArtifactCollection(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
+            ).artifactFiles.toList()
+        }
+
+        override val prefabDirectory: File = jsonFolder.resolve("prefab")
     }
 }
 

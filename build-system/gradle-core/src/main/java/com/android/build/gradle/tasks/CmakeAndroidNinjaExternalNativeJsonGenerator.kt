@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
@@ -39,6 +40,10 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     abis: List<CxxAbiModel>,
     stats: GradleBuildVariant.Builder
 ) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
+
+    override fun checkPrefabConfig() {
+        errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")
+    }
 
     override fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: Function<Action<in ExecSpec>, ExecResult>): String {
         // buildCommandArgs is set in CMake server json generation

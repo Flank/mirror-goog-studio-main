@@ -21,7 +21,9 @@ import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 import com.intellij.codeInsight.CustomExceptionHandler;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.extensions.Extensions;
+import com.intellij.openapi.util.Disposer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -51,9 +53,11 @@ public class LintCliClientTest extends AbstractCheckTest {
     }
 
     public void testMissingExtensionPoints() {
-        LintCoreApplicationEnvironment.get();
         // Regression test for 37817771
+        Disposable parentDisposable = Disposer.newDisposable();
+        UastEnvironment.create(parentDisposable);
         Extensions.getExtensions(CustomExceptionHandler.KEY);
+        Disposer.dispose(parentDisposable);
     }
 
     /** Test to ensure that LintCliClient throws an exception when it encounters a relative path. */
@@ -87,7 +91,7 @@ public class LintCliClientTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         "Relative Path found: bin/classes.jar. All paths should be absolute.",
-                        IllegalStateException.class);
+                        IllegalArgumentException.class);
 
         projectDir.delete();
         binFile.delete();

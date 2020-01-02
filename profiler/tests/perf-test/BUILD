@@ -6,22 +6,6 @@ package(
     default_testonly = True,
 )
 
-# TODO: Have transform pull in dependency jar files, so we do not need to load multiple
-# jar dependencies at runtime.
-java_binary(
-    name = "profilers-transform-main",
-    srcs = [
-        "testSrcs/com/android/tools/profiler/transform/ProfilerTransformMain.java",
-    ],
-    main_class = "com.android.tools.profiler.transform.ProfilerTransformMain",
-    resources = ["profiler.properties"],
-    runtime_deps = ["//tools/base/profiler/transform"],
-    deps = [
-        "//tools/base/profiler/transform",
-        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
-    ],
-)
-
 dex_library(
     name = "profiler-service",
     jars = ["//tools/base/profiler/app:studio-profiler"],
@@ -61,10 +45,10 @@ coverage_java_test(
         "//tools/base/transport:android/arm64-v8a/transport",
         "//tools/base/transport:android/armeabi-v7a/transport",
         "//tools/base/transport:android/x86/transport",
-        "//tools/base/transport/agent:android/arm64-v8a/libjvmtiagent.so",
-        "//tools/base/transport/agent:android/armeabi-v7a/libjvmtiagent.so",
-        "//tools/base/transport/agent:android/x86/libjvmtiagent.so",
-        "//tools/base/transport/agent:android/x86_64/libjvmtiagent.so",
+        "//tools/base/transport/native/agent:android/arm64-v8a/libjvmtiagent.so",
+        "//tools/base/transport/native/agent:android/armeabi-v7a/libjvmtiagent.so",
+        "//tools/base/transport/native/agent:android/x86/libjvmtiagent.so",
+        "//tools/base/transport/native/agent:android/x86_64/libjvmtiagent.so",
     ],
     jvm_flags = ["-Dtest.suite.jar=NativeBinarySizeTest.jar"],
     tags = [

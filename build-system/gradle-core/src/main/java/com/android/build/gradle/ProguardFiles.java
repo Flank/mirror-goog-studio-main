@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gradle.api.Project;
+import org.gradle.api.file.ProjectLayout;
 
 /**
  * Deals with the default ProGuard files for Gradle.
@@ -72,21 +72,23 @@ public class ProguardFiles {
      * <p><b>Note:</b> If the file is already there it just returns it.
      *
      * <p>There are 2 default rules files
+     *
      * <ul>
-     *     <li>proguard-android.txt
-     *     <li>proguard-android-optimize.txt
+     *   <li>proguard-android.txt
+     *   <li>proguard-android-optimize.txt
      * </ul>
      *
      * @param name the name of the default ProGuard file.
-     * @param project used to determine the output location.
+     * @param projectLayout used to determine the output location.
      */
-    public static File getDefaultProguardFile(@NonNull String name, @NonNull Project project) {
+    public static File getDefaultProguardFile(
+            @NonNull String name, @NonNull ProjectLayout projectLayout) {
         if (!KNOWN_FILE_NAMES.contains(name)) {
             throw new IllegalArgumentException(UNKNOWN_FILENAME_MESSAGE);
         }
 
         return FileUtils.join(
-                project.getBuildDir(),
+                projectLayout.getBuildDirectory().get().getAsFile(),
                 AndroidProject.FD_INTERMEDIATES,
                 "proguard-files",
                 name + "-" + Version.ANDROID_GRADLE_PLUGIN_VERSION);

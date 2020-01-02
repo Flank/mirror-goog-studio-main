@@ -18,13 +18,13 @@ cc_library(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/perfd",
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     deps = [
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
+        "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
-        "//tools/base/transport/utils",
     ],
 )

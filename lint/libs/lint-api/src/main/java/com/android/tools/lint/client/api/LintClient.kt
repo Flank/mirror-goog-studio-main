@@ -1187,7 +1187,13 @@ abstract class LintClient {
                         // don't need to have hardcoded paths (b/66166521)
                         val lintPaths = arrayOf(
                             Paths.get("intermediates", "lint"),
-                            Paths.get("intermediates", "lint_jar", "global")
+                            Paths.get("intermediates", "lint_jar", "global"),
+                            Paths.get(
+                                "intermediates",
+                                "lint_jar",
+                                "global",
+                                "prepareLintJar"
+                            )
                         )
                         for (lintPath in lintPaths) {
                             val lintFolder = File(it, lintPath.toString())
@@ -1257,6 +1263,14 @@ abstract class LintClient {
                     "intermediates",
                     "lint_publish_jar",
                     "global",
+                    SdkConstants.FN_LINT_JAR
+                ),
+                Paths.get(
+                    buildDir,
+                    "intermediates",
+                    "lint_publish_jar",
+                    "global",
+                    "prepareLintJarForPublish",
                     SdkConstants.FN_LINT_JAR
                 )
             )

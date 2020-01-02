@@ -61,6 +61,7 @@ import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUAnnotation
@@ -438,7 +439,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // Check field initializers provided it's not a class field, in which case
             // we'd be reading out literal values which we don't want to do)
             if (value is PsiField && rangeAnnotation == null) {
-                val initializer = context.uastContext.getInitializerBody(value)
+                val initializer = UastFacade.getInitializerBody(value)
                 if (initializer != null) {
                     checkTypeDefConstant(
                         context, annotation, initializer, errorNode,

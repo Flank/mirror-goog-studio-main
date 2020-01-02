@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
   if (parameters.version != nullptr &&
       strcmp(parameters.version, GetVersion().c_str())) {
     std::string message = "Version mismatch. Requested:"_s +
-                          parameters.version + "but have " + GetVersion();
+                          parameters.version + " but have " + GetVersion();
     return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace,
                 message);
   }

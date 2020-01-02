@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.testutils.TestInputsGenerator.jarWithClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyEntries
 import com.android.testutils.apk.Zip
@@ -93,4 +94,39 @@ class AarToClassTransformTest {
             assertThat(exception).hasMessageThat().contains("com/example/MyClass.class")
         }
     }
+
+    @Test
+    fun testOutputJarIsNotCompressed() {
+        val aar = temporaryFolder.newFile("example.aar")
+
+        ZipOutputStream(aar.outputStream().buffered()).use { zos ->
+            zos.putNextEntry(ZipEntry("classes.jar"))
+            zos.write(jarWithClasses(listOf(CompressibleClass::class.java)))
+        }
+
+        val outputJar = temporaryFolder.newFolder().toPath().resolve("output.jar")
+
+        ZipFile(aar).use { inputAar ->
+            AarToClassTransform.mergeJars(
+                outputJar = outputJar,
+                inputAar = inputAar,
+                forCompileUse = true,
+                generateRClassJar = false
+            )
+        }
+
+        ZipFile(outputJar.toFile()).use { zip ->
+            val entries = zip.entries()
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                assertThat(entry.compressedSize).isAtLeast(entry.size)
+            }
+        }
+    }
+}
+
+private class CompressibleClass() {
+    val foo = "foo"
+    val bar = "bar"
+    fun fooBar() = foo + bar
 }

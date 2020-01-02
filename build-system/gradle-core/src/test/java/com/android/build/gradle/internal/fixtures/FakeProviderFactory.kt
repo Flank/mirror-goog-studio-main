@@ -16,12 +16,49 @@
 
 package com.android.build.gradle.internal.fixtures
 
+import org.gradle.api.Action
+import org.gradle.api.file.FileContents
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.provider.ValueSource
+import org.gradle.api.provider.ValueSourceParameters
+import org.gradle.api.provider.ValueSourceSpec
 import java.util.concurrent.Callable
 
 class FakeProviderFactory : ProviderFactory {
     override fun <T : Any?> provider(p0: Callable<out T>): Provider<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun environmentVariable(p0: String): Provider<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun environmentVariable(p0: Provider<String>): Provider<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun systemProperty(p0: String): Provider<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun systemProperty(p0: Provider<String>): Provider<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <T : Any?, P : ValueSourceParameters?> of(
+        p0: Class<out ValueSource<T, P>>,
+        p1: Action<in ValueSourceSpec<P>>
+    ): Provider<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun fileContents(p0: RegularFile): FileContents {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun fileContents(p0: Provider<RegularFile>): FileContents {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

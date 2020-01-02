@@ -22,6 +22,7 @@ import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Scope
 import junit.framework.TestCase
+import junit.framework.TestCase.assertTrue
 import java.util.EnumSet
 import java.util.HashSet
 
@@ -30,7 +31,7 @@ class BuiltinIssueRegistryTest : TestCase() {
         val registry = TestIssueRegistry()
         val issues = registry.issues
         val issueCount = issues.size
-        TestCase.assertTrue(
+        assertTrue(
             Integer.toString(issueCount), BuiltinIssueRegistry.INITIAL_CAPACITY >= issueCount
         )
     }
@@ -58,7 +59,7 @@ class BuiltinIssueRegistryTest : TestCase() {
         val categories = HashSet<Category>()
         for (issue in TestIssueRegistry().issues) {
             val id = issue.id
-            TestCase.assertTrue("Duplicate id $id", !ids.contains(id))
+            assertTrue("Duplicate id $id", !ids.contains(id))
             ids.add(id)
             categories.add(issue.category)
         }
@@ -68,7 +69,7 @@ class BuiltinIssueRegistryTest : TestCase() {
         // with category names too
         for ((_, id) in categories) {
             if (ids.contains(id)) {
-                TestCase.assertTrue("Category id clashes with issue id $id", !ids.contains(id))
+                assertTrue("Category id clashes with issue id $id", !ids.contains(id))
             }
         }
 
@@ -76,7 +77,7 @@ class BuiltinIssueRegistryTest : TestCase() {
         ids.clear()
         for ((_, id) in categories) {
             if (ids.contains(id)) {
-                TestCase.assertTrue("Duplicate category name $id", !ids.contains(id))
+                assertTrue("Duplicate category name $id", !ids.contains(id))
             }
         }
     }

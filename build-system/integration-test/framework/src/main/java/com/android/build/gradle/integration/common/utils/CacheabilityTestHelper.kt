@@ -86,54 +86,72 @@ class CacheabilityTestHelper private constructor(
     }
 
     /**
+     * Checks if the states of the given tasks are as expected.
+     *
+     * @param expectedTaskStates the expected task states
+     * @param exhaustive whether the list of actual tasks should contain ONLY the expected tasks
+     */
+    fun hasTaskStates(
+        expectedTaskStates: Map<String, TaskStateList.ExecutionState>,
+        exhaustive: Boolean = false
+    ): CacheabilityTestHelper {
+        hasUpToDateTasks(expectedTaskStates.filterValues { it == UP_TO_DATE }.keys, exhaustive)
+        hasFromCacheTasks(expectedTaskStates.filterValues { it == FROM_CACHE }.keys, exhaustive)
+        hasDidWorkTasks(expectedTaskStates.filterValues { it == DID_WORK }.keys, exhaustive)
+        hasSkippedTasks(expectedTaskStates.filterValues { it == SKIPPED }.keys, exhaustive)
+        hasFailedTasks(expectedTaskStates.filterValues { it == FAILED }.keys, exhaustive)
+        return this
+    }
+
+    /**
      * Checks if a number of tasks are in UpToDate
      * @param tasks The list of tasks expected to be up to date
-     * @param exclusive Whether the list of up to date tasks should contain ONLY the specified tasks
+     * @param exhaustive Whether the list of up to date tasks should contain ONLY the specified tasks
      */
-    fun hasUpToDateTasks(tasks: Set<String>, exclusive: Boolean = false): CacheabilityTestHelper =
-        hasTasks(UP_TO_DATE, tasks, "UpToDate Tasks", exclusive)
+    fun hasUpToDateTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(UP_TO_DATE, tasks, "UpToDate Tasks", exhaustive)
 
     /**
      * Checks if a number of tasks are in FromCache
      * @param tasks The list of tasks expected to be from cache
-     * @param exclusive Whether the list of from cache tasks should contain ONLY the specified tasks
+     * @param exhaustive Whether the list of from cache tasks should contain ONLY the specified tasks
      */
-    fun hasFromCacheTasks(tasks: Set<String>, exclusive: Boolean = false): CacheabilityTestHelper =
-        hasTasks(FROM_CACHE, tasks, "FromCache Tasks", exclusive)
+    fun hasFromCacheTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(FROM_CACHE, tasks, "FromCache Tasks", exhaustive)
 
     /**
      * Checks if a number of tasks are in DidWork
      * @param tasks The list of tasks expected to have done work
-     * @param exclusive Whether the list of did work tasks should contain ONLY the specified tasks
+     * @param exhaustive Whether the list of did work tasks should contain ONLY the specified tasks
      */
-    fun hasDidWorkTasks(tasks: Set<String>, exclusive: Boolean = false): CacheabilityTestHelper =
-        hasTasks(DID_WORK, tasks, "DidWork Tasks", exclusive)
+    fun hasDidWorkTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(DID_WORK, tasks, "DidWork Tasks", exhaustive)
 
     /**
      * Checks if a number of tasks are in Skipped
      * @param tasks The list of tasks expected to have been skipped
-     * @param exclusive Whether the list of skipped tasks should contain ONLY the specified tasks
+     * @param exhaustive Whether the list of skipped tasks should contain ONLY the specified tasks
      */
-    fun hasSkippedTasks(tasks: Set<String>, exclusive: Boolean = false): CacheabilityTestHelper =
-        hasTasks(SKIPPED, tasks, "Skipped Tasks", exclusive)
+    fun hasSkippedTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(SKIPPED, tasks, "Skipped Tasks", exhaustive)
 
     /**
      * Checks if a number of tasks are in Failed
      * @param tasks The list of tasks expected to have failed
-     * @param exclusive Whether the list of failed tasks should contain ONLY the specified tasks
+     * @param exhaustive Whether the list of failed tasks should contain ONLY the specified tasks
      */
-    fun hasFailedTasks(tasks: Set<String>, exclusive: Boolean = false): CacheabilityTestHelper =
-        hasTasks(FAILED, tasks, "Failed Tasks", exclusive)
+    fun hasFailedTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(FAILED, tasks, "Failed Tasks", exhaustive)
 
     private fun hasTasks(
         state: TaskStateList.ExecutionState,
         tasks: Set<String>,
         name: String?,
-        exclusive: Boolean): CacheabilityTestHelper {
+        exhaustive: Boolean): CacheabilityTestHelper {
 
         assert(didExecute)
 
-        if (exclusive) {
+        if (exhaustive) {
             if (name == null) {
                 assertThat(taskResults.getValue(state))
                     .containsExactlyElementsIn(tasks)

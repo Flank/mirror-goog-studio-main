@@ -149,7 +149,12 @@ class NativeModelBuilder(
         generators
             .filter { generator -> generator.variantName == variantName }
             .onEach { generator ->
-                generator.buildForOneAbiName(ideRefreshExternalNativeModel, abiName, globalScope.project::exec)
+                generator.buildForOneAbiName(
+                    ideRefreshExternalNativeModel,
+                    abiName,
+                    globalScope.project::exec,
+                    globalScope.project::javaexec
+                )
                 buildInexpensiveNativeAndroidProjectInformation(builder, generator)
                 ++built
                 try {
@@ -217,11 +222,19 @@ class NativeModelBuilder(
                     // This will generate any out-of-date or non-existent JSONs.
                     // When refreshExternalNativeModel() is true it will also
                     // force update all JSONs.
-                    buildSteps.addAll(generator.parallelBuild(ideRefreshExternalNativeModel, globalScope.project::exec))
+                    buildSteps.addAll(
+                        generator.parallelBuild(
+                            ideRefreshExternalNativeModel,
+                            globalScope.project::exec,
+                            globalScope.project::javaexec
+                        )
+                    )
                 }
             }
             try {
-                nativeJsonGenExecutor.invokeAll(buildSteps)
+                // Need to get each result even if we're not using the output because that's how we
+                // propagate exceptions.
+                nativeJsonGenExecutor.invokeAll(buildSteps).map { it.get() }
             } catch (e: InterruptedException) {
                 throw RuntimeException(
                     "Thread was interrupted while native build JSON generation was in progress.",
@@ -231,7 +244,11 @@ class NativeModelBuilder(
 
         } else {
             for (generator in generators) {
-                generator.build(ideRefreshExternalNativeModel, globalScope.project::exec)
+                generator.build(
+                    ideRefreshExternalNativeModel,
+                    globalScope.project::exec,
+                    globalScope.project::javaexec
+                )
             }
         }
     }

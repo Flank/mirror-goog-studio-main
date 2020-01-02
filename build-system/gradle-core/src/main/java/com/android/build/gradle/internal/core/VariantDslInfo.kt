@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
-import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -52,7 +51,10 @@ interface VariantDslInfo {
 
     val variantType: VariantType
 
-    val buildType: BuildType
+    /**
+     * The name of the build type
+     */
+    val buildType: String?
 
     /** The list of product flavors. Items earlier in the list override later items.  */
     val productFlavors: List<ProductFlavor>
@@ -263,6 +265,7 @@ interface VariantDslInfo {
 
     val isWearAppUnbundled: Boolean?
 
+    @Suppress("DEPRECATION")
     val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
 
     val resourceConfigurations: ImmutableSet<String>
@@ -396,9 +399,28 @@ interface VariantDslInfo {
 
     val javaCompileOptions: JavaCompileOptions
 
-    fun createOldPostProcessingOptions(project: Project) : PostProcessingOptions
+    fun createPostProcessingOptions(project: Project) : PostProcessingOptions
 
     val defaultGlslcArgs: List<String>
 
     val scopedGlslcArgs: Map<String, List<String>>
+
+    val isDebuggable: Boolean
+
+    val isEmbedMicroApp: Boolean
+
+    val isPseudoLocalesEnabled: Boolean
+
+    val isCrunchPngs: Boolean?
+
+    @Deprecated("Can be removed once the AaptOptions crunch method is removed.")
+    val isCrunchPngsDefault: Boolean
+
+    val isMinifyEnabled: Boolean
+
+    val isRenderscriptDebuggable: Boolean
+
+    val renderscriptOptimLevel: Int
+
+    val isJniDebuggable: Boolean
 }

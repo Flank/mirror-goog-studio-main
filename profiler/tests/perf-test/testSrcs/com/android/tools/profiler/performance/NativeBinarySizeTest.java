@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler;
+package com.android.tools.profiler.performance;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.perflogger.Benchmark;

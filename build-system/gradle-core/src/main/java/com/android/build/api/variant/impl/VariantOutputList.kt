@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.VariantOutput
+import com.android.build.api.variant.VariantOutputConfiguration
 
 /**
  * Implementation of [List] of [VariantOutput] with added private services for AGP.
@@ -31,8 +32,8 @@ internal class VariantOutputList(
      * @param outputType desired output type filter.
      * @return a possibly empty [List] of [VariantOutputImpl]
      */
-    fun getSplitsByType(outputType: VariantOutput.OutputType): List<VariantOutputImpl> =
-        variantOutputs.filter { it.outputType == outputType.toString() }
+    fun getSplitsByType(outputType: VariantOutputConfiguration.OutputType): List<VariantOutputImpl> =
+        variantOutputs.filter { it.outputType == outputType }
 
 
     /**
@@ -54,10 +55,10 @@ internal class VariantOutputList(
      */
     fun getMainSplitOrNull(): VariantOutputImpl? =
         variantOutputs.find { variantOutput ->
-            variantOutput.outputType == VariantOutput.OutputType.MAIN.name }
+            variantOutput.outputType == VariantOutputConfiguration.OutputType.SINGLE }
             ?: variantOutputs.find {
-                it.outputType == VariantOutput.OutputType.FULL_SPLIT.name && it.isUniversal }
+                it.outputType == VariantOutputConfiguration.OutputType.UNIVERSAL }
             ?: variantOutputs.find {
-                it.outputType == VariantOutput.OutputType.FULL_SPLIT.name
+                it.outputType == VariantOutputConfiguration.OutputType.ONE_OF_MANY
             }
 }

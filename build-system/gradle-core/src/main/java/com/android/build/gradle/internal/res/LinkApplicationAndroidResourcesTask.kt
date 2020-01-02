@@ -72,6 +72,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -215,11 +216,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:Input
     abstract val applicationId: Property<String>
-
-    @get:InputFiles
-    @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val apkList: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -399,7 +395,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val variantScope = variantScope
             val variantData = variantScope.variantData
             val projectOptions = variantScope.globalScope.projectOptions
-            val config = variantData.variantDslInfo
+            val variantDslInfo = variantData.variantDslInfo
 
             preconditionsCheck(variantData)
 
@@ -438,11 +434,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             }
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.APK_LIST, task.apkList)
-
             task.mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplitOrNull()?.apkData
-            task.originalApplicationId.set(project.provider { config.originalApplicationId })
+            task.originalApplicationId.set(project.provider { variantDslInfo.originalApplicationId })
             task.originalApplicationId.disallowChanges()
 
             val aaptFriendlyManifestsFilePresent = variantScope
@@ -454,7 +447,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 variantScope.manifestArtifactType
             variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
-            task.setType(config.variantType)
+            task.setType(variantDslInfo.variantType)
             task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 

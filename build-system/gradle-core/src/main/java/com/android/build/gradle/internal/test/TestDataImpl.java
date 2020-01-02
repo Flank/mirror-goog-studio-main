@@ -65,7 +65,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
                         .getPublicVariantPropertiesApi()
                         .getOutputs()
                         .getSplitsByType(
-                                com.android.build.api.variant.VariantOutput.OutputType.FULL_SPLIT)
+                                com.android.build.api.variant.VariantOutput.OutputType.ONE_OF_MANY)
                         .size()
                 > 1) {
             throw new RuntimeException("Multi-output in test variant not yet supported");

@@ -166,9 +166,7 @@ class FilteredVariantOperationTest {
         Mockito.`when`(variantData.publicVariantApi).thenReturn(publicVariantApi)
         Mockito.`when`(publicVariantApi.name).thenReturn(name)
         if (buildTypeName != null) {
-            val buildType = Mockito.mock(BuildType::class.java)
-            Mockito.`when`(variantDslInfo.buildType).thenReturn(buildType)
-            Mockito.`when`(buildType.name).thenReturn(buildTypeName)
+            Mockito.`when`(variantDslInfo.buildType).thenReturn(buildTypeName)
         }
         val productFlavor = Mockito.mock(ProductFlavor::class.java)
         Mockito.`when`(productFlavor.dimension).thenReturn("dim1")

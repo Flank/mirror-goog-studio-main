@@ -10,7 +10,7 @@ cc_library(
         "statsd_subscriber.h",
     ] + glob(["*/*.h"]),
     copts = [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
         "-I$(GENDIR)/tools/base/transport",
         "-std=c++11",
@@ -18,8 +18,8 @@ cc_library(
     tags = ["no_windows"],
     deps = [
         "//tools/base/profiler/native/perfd/statsd/proto:statsd_proto",
-        "//tools/base/transport/daemon",
-        "//tools/base/transport/utils",
+        "//tools/base/transport/native/daemon",
+        "//tools/base/transport/native/utils",
     ],
 )
 
@@ -29,7 +29,7 @@ cc_test(
         "statsd_subscriber_test.cc",
     ],
     copts = [
-        "-Itools/base/transport",
+        "-Itools/base/transport/native",
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
         "-I$(GENDIR)/tools/base/transport",

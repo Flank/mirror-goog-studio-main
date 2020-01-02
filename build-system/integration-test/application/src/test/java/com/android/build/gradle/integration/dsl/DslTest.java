@@ -128,7 +128,6 @@ public class DslTest {
                         + "  public static final boolean DEBUG = Boolean.parseBoolean(\"true\");\n"
                         + "  public static final String APPLICATION_ID = \"com.example.helloworld\";\n"
                         + "  public static final String BUILD_TYPE = \"debug\";\n"
-                        + "  public static final String FLAVOR = \"\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
                         + "  // Fields from default config.\n"

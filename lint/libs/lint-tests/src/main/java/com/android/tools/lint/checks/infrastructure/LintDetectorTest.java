@@ -40,11 +40,11 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
-import com.android.tools.lint.LintCoreApplicationEnvironment;
 import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
+import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -86,6 +86,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.awt.image.BufferedImage;
@@ -152,6 +153,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 break;
             }
         }
+
+        UastEnvironment.ensureDisposed();
+        Disposer.assertIsEmpty(true);
     }
 
     protected abstract Detector getDetector();
@@ -282,7 +286,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             deleteFile(f);
         }
 
-        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
+        UastEnvironment.ensureDisposed();
 
         return result;
     }
@@ -705,12 +709,15 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     public class TestLintClient extends LintCliClient {
         public TestLintClient() {
             super(new LintCliFlags(), CLIENT_UNIT_TESTS);
+            LintCliFlags flags = getFlags();
             TextReporter reporter = new TextReporter(this, flags, writer, false);
             reporter.setForwardSlashPaths(true); // stable tests
             flags.getReporters().add(reporter);
         }
 
+        @SuppressWarnings("resource")
         protected final StringWriter writer = new StringWriter();
+
         protected File incrementalCheck;
 
         /**
@@ -900,7 +907,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             // Make sure errors are unique!
             Warning prev = null;
-            for (Warning warning : warnings) {
+            for (Warning warning : getWarnings()) {
                 assertNotSame(warning, prev);
                 assert prev == null || !warning.equals(prev) : warning;
                 prev = warning;
@@ -1168,6 +1175,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             // Check compare contract
             Warning prev = null;
+            List<Warning> warnings = getWarnings();
             for (Warning warning : warnings) {
                 if (prev != null) {
                     boolean equals = warning.equals(prev);
@@ -1198,8 +1206,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 prev = warning;
             }
 
-            LintStats stats = LintStats.Companion.create(errorCount, warningCount);
-            for (Reporter reporter : flags.getReporters()) {
+            LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
+            for (Reporter reporter : getFlags().getReporters()) {
                 reporter.write(stats, warnings);
             }
 

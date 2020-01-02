@@ -88,6 +88,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -412,8 +413,7 @@ public class VariantManager implements VariantModel {
             }
 
             // 2. the build type.
-            final BuildTypeData buildTypeData =
-                    buildTypes.get(variantDslInfo.getBuildType().getName());
+            final BuildTypeData buildTypeData = buildTypes.get(variantDslInfo.getBuildType());
             DefaultAndroidSourceSet buildTypeConfigurationProvider =
                     buildTypeData.getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {
@@ -718,6 +718,8 @@ public class VariantManager implements VariantModel {
                                             .set(
                                                     SyncOptions.getErrorFormatMode(
                                                             globalScope.getProjectOptions()));
+                                    params.getAapt2DaemonBuildService()
+                                            .set(Aapt2Daemon.getAapt2DaemonBuildService(project));
                                 });
                     });
         }
@@ -1244,8 +1246,8 @@ public class VariantManager implements VariantModel {
     public TestVariantData createTestVariantData(
             BaseVariantData testedVariantData,
             VariantType type) {
-        BuildType buildType = testedVariantData.getVariantDslInfo().getBuildType();
-        BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
+        BuildTypeData buildTypeData =
+                buildTypes.get(testedVariantData.getVariantDslInfo().getBuildType());
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
@@ -1337,7 +1339,7 @@ public class VariantManager implements VariantModel {
             } catch (Throwable t) {
                 throw new ExternalApiUsageException(t);
             }
-            ignore = variantFilter.isIgnore();
+            ignore = variantFilter.getIgnore();
         }
 
         BaseVariantData variantForAndroidTest = null;
@@ -1579,8 +1581,8 @@ public class VariantManager implements VariantModel {
             if (chosen == null) {
                 return 0;
             }
-            int b1Score = v1.getVariantDslInfo().getBuildType().getName().equals(chosen) ? 1 : 0;
-            int b2Score = v2.getVariantDslInfo().getBuildType().getName().equals(chosen) ? 1 : 0;
+            int b1Score = v1.getVariantDslInfo().getBuildType().equals(chosen) ? 1 : 0;
+            int b2Score = v2.getVariantDslInfo().getBuildType().equals(chosen) ? 1 : 0;
             return b2Score - b1Score;
         }
     }
@@ -1638,8 +1640,8 @@ public class VariantManager implements VariantModel {
 
         @Override
         public int compare(VariantScope v1, VariantScope v2) {
-            String b1 = v1.getVariantDslInfo().getBuildType().getName();
-            String b2 = v2.getVariantDslInfo().getBuildType().getName();
+            String b1 = v1.getVariantDslInfo().getBuildType();
+            String b2 = v2.getVariantDslInfo().getBuildType();
             if (b1.equals(b2)) {
                 return 0;
             } else if (b1.equals(preferredBuildType)) {

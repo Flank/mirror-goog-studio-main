@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-312346b8096f84aac1d130e6b6737d91b0290a07e08ffd368bdb5492486ea3b2
+2cab15285245a81fcb1625f07796f8a918a6a4db3e23dc041e4bbc21f47ae564
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -149,6 +149,20 @@ com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: void (k
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, org.gradle.api.Action<T>)
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.FilterConfiguration
+com.android.build.api.variant.FilterConfiguration$FilterType extends java.lang.Enum
+com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.android.build.api.variant.FilterConfiguration$FilterType (java.lang.String)
+com.android.build.api.variant.FilterConfiguration$FilterType.values: com.android.build.api.variant.FilterConfiguration$FilterType[] ()
+com.android.build.api.variant.FilterConfiguration.<init>: com.android.build.api.variant.FilterConfiguration (com.android.build.api.variant.FilterConfiguration$FilterType, java.lang.String)
+com.android.build.api.variant.FilterConfiguration.component1: com.android.build.api.variant.FilterConfiguration$FilterType ()
+com.android.build.api.variant.FilterConfiguration.component2: java.lang.String ()
+com.android.build.api.variant.FilterConfiguration.copy$default: com.android.build.api.variant.FilterConfiguration (com.android.build.api.variant.FilterConfiguration, com.android.build.api.variant.FilterConfiguration$FilterType, java.lang.String, int, java.lang.Object)
+com.android.build.api.variant.FilterConfiguration.copy: com.android.build.api.variant.FilterConfiguration (com.android.build.api.variant.FilterConfiguration$FilterType, java.lang.String)
+com.android.build.api.variant.FilterConfiguration.equals: boolean (java.lang.Object)
+com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.build.api.variant.FilterConfiguration$FilterType ()
+com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
+com.android.build.api.variant.FilterConfiguration.hashCode: int ()
+com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.FlavoredVariantFilterBuilder
 com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: void (java.lang.String, org.gradle.api.Action<T>)
 com.android.build.api.variant.GenericVariantFilterBuilder implements com.android.build.api.variant.TypedVariantFilterBuilder
@@ -181,18 +195,16 @@ com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.coll
 com.android.build.api.variant.VariantInfo.getFullVariantName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo.isTest: boolean ()
-com.android.build.api.variant.VariantOutput
-com.android.build.api.variant.VariantOutput$FilterType extends java.lang.Enum
-com.android.build.api.variant.VariantOutput$FilterType.valueOf: com.android.build.api.variant.VariantOutput$FilterType (java.lang.String)
-com.android.build.api.variant.VariantOutput$FilterType.values: com.android.build.api.variant.VariantOutput$FilterType[] ()
-com.android.build.api.variant.VariantOutput$OutputType extends java.lang.Enum
-com.android.build.api.variant.VariantOutput$OutputType.valueOf: com.android.build.api.variant.VariantOutput$OutputType (java.lang.String)
-com.android.build.api.variant.VariantOutput$OutputType.values: com.android.build.api.variant.VariantOutput$OutputType[] ()
-com.android.build.api.variant.VariantOutput.getOutputType: java.lang.String ()
+com.android.build.api.variant.VariantOutput implements com.android.build.api.variant.VariantOutputConfiguration
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.VariantOutput.getVersionName: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.VariantOutput.isEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.VariantOutput.isUniversal: boolean ()
+com.android.build.api.variant.VariantOutputConfiguration
+com.android.build.api.variant.VariantOutputConfiguration$OutputType extends java.lang.Enum
+com.android.build.api.variant.VariantOutputConfiguration$OutputType.valueOf: com.android.build.api.variant.VariantOutputConfiguration$OutputType (java.lang.String)
+com.android.build.api.variant.VariantOutputConfiguration$OutputType.values: com.android.build.api.variant.VariantOutputConfiguration$OutputType[] ()
+com.android.build.api.variant.VariantOutputConfiguration.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
+com.android.build.api.variant.VariantOutputConfiguration.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
 com.android.build.api.variant.VariantProperties implements com.android.build.api.variant.VariantConfiguration, com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.VariantProperties.getOperations: com.android.build.api.artifact.Operations ()

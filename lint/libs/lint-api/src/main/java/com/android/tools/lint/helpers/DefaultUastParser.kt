@@ -26,7 +26,6 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.intellij.lang.Language
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.StandardFileSystems
@@ -41,29 +40,26 @@ import com.intellij.psi.impl.light.LightElement
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
-import org.jetbrains.uast.UastContext
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getIoFile
 import org.jetbrains.uast.psi.UElementWithLocation
 import java.io.File
+import kotlin.math.ceil
+import kotlin.math.log10
+import kotlin.math.pow
 
 open class DefaultUastParser(
     // Fully qualified names here:
     // class traffics in Project from both lint and openapi so be explicit
     project: com.android.tools.lint.detector.api.Project?,
-    p: com.intellij.openapi.project.Project
+    val ideaProject: com.intellij.openapi.project.Project
 ) : UastParser() {
-    private val uContext: UastContext?
     private val javaEvaluator: JavaEvaluator
 
     init {
         @Suppress("LeakingThis")
-        javaEvaluator = createEvaluator(project, p)
-        uContext = if (!p.isDisposed) {
-            ServiceManager.getService(p, UastContext::class.java)
-        } else {
-            null
-        }
+        javaEvaluator = createEvaluator(project, ideaProject)
     }
 
     protected open fun createEvaluator(
@@ -111,9 +107,6 @@ open class DefaultUastParser(
             return context.uastFile
         }
 
-        val uast = uastContext ?: return null
-
-        val ideaProject = uast.project
         if (ideaProject.isDisposed) {
             return null
         }
@@ -141,6 +134,7 @@ open class DefaultUastParser(
                         context.project.getRelativePath(file) +
                         ": Kotlin not configured correctly"
             )
+            return null
         }
 
         if (psiFile is PsiPlainTextFile) { // plain text: file too large to process with PSI
@@ -148,10 +142,7 @@ open class DefaultUastParser(
                 warnedAboutLargeFiles = true
                 val max = FileUtilRt.getUserFileSizeLimit()
                 val size = file.length() / 1024
-                val sizeRoundedUp = Math.pow(
-                    2.0,
-                    Math.ceil(Math.log10(size.toDouble()) / Math.log10(2.0) + 0.2)
-                ).toInt()
+                val sizeRoundedUp = 2.0.pow(ceil(log10(size.toDouble()) / log10(2.0) + 0.2)).toInt()
                 context.report(
                     issue = IssueRegistry.LINT_ERROR,
                     location = Location.create(file),
@@ -164,13 +155,8 @@ open class DefaultUastParser(
             return null
         }
 
-        return uast.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?: return null
+        return UastFacade.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?: return null
     }
-
-    /**
-     * Returns a UastContext which can provide UAST representations for source files
-     */
-    override val uastContext = uContext
 
     /**
      * Returns a [Location] for the given element

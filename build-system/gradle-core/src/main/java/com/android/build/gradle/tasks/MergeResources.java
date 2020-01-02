@@ -880,7 +880,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                     variantScope
                             .getVariantData()
                             .getVariantDslInfo()
-                            .getBuildType()
                             .isPseudoLocalesEnabled();
             task.flags = flags;
 

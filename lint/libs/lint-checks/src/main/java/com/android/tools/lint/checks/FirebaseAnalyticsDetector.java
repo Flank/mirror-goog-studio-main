@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -219,7 +220,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                 if (resolvedMethod != null) {
                     UReferenceExpression returnReference =
                             ReturnReferenceExpressionFinder.find(
-                                    mContext.getUastContext().getMethod(resolvedMethod));
+                                    Lint.getUMethod(resolvedMethod));
                     if (returnReference != null) {
                         addParams(find(mContext, returnReference));
                     }
@@ -230,7 +231,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         @Override
-        public boolean visitCallExpression(UCallExpression expression) {
+        public boolean visitCallExpression(@NonNull UCallExpression expression) {
             checkMethodCall(expression);
             return super.visitCallExpression(expression);
         }
@@ -281,7 +282,6 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
     }
 
     /** Given a method, find the last `return` expression that returns a reference. */
-    @SuppressWarnings("UnsafeReturnStatementVisitor")
     private static class ReturnReferenceExpressionFinder extends AbstractUastVisitor {
 
         private UReferenceExpression mReturnReference = null;
@@ -297,7 +297,10 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         @Nullable
-        static UReferenceExpression find(UMethod method) {
+        static UReferenceExpression find(@Nullable UMethod method) {
+            if (method == null) {
+                return null;
+            }
             ReturnReferenceExpressionFinder finder = new ReturnReferenceExpressionFinder();
             method.accept(finder);
             return finder.mReturnReference;

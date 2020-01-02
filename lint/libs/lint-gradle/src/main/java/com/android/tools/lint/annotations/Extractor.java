@@ -58,7 +58,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.xml.XmlEscapers;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -121,8 +120,8 @@ import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UParameter;
 import org.jetbrains.uast.UReferenceExpression;
-import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastEmptyExpression;
+import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastVisibility;
 import org.jetbrains.uast.java.JavaUAnnotation;
 import org.jetbrains.uast.java.expressions.JavaUAnnotationCallExpression;
@@ -320,12 +319,10 @@ public class Extractor {
         }
 
         Project project = units.get(0).getProject();
-        UastContext uastContext = ServiceManager.getService(project, UastContext.class);
-
         AnnotationVisitor visitor = new AnnotationVisitor(false, true);
 
         for (PsiFile unit : units) {
-            UElement uFile = uastContext.convertElementWithParent(unit, UFile.class);
+            UElement uFile = UastFacade.INSTANCE.convertElementWithParent(unit, UFile.class);
             if (uFile == null) {
                 System.out.println("Warning: Could not convert " + unit.getName() + " with UAST");
                 continue;

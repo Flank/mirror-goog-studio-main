@@ -1089,4 +1089,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
     public void testSmallVectorWithTint() throws Exception {
         checkVectorConversion("test_small_image_with_tint", FileType.XML, false, null, 16);
     }
+
+    public void testLegacyArcFlags() throws Exception {
+        checkVectorConversion("test_legacy_arc_flags", FileType.XML, false, null, 16);
+    }
 }

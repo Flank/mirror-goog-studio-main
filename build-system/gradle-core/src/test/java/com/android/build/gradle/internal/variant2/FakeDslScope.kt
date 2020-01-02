@@ -24,10 +24,12 @@ import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.FakeEvalIssueReporter
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
@@ -37,11 +39,12 @@ import java.io.File
 fun createFakeDslScope(
     issueReporter: EvalIssueReporter = FakeEvalIssueReporter(),
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
-    objectFactory: ObjectFactory = FakeObjectFactory.getFactory(),
+    objectFactory: ObjectFactory = FakeObjectFactory.factory,
     logger: Logger = FakeLogger(),
     buildFeatures: BuildFeatureValues = FakeBuildFeatureValues(),
     providerFactory: ProviderFactory = FakeProviderFactory(),
     dslVariableFactory: DslVariableFactory = DslVariableFactory(issueReporter),
+    projectLayout: ProjectLayout = ProjectFactory.project.layout,
     fileResolver: (Any) -> File = { File(it.toString()) }
 ): DslScopeImpl = DslScopeImpl(
     issueReporter,
@@ -51,5 +54,6 @@ fun createFakeDslScope(
     buildFeatures,
     providerFactory,
     dslVariableFactory,
+    projectLayout,
     fileResolver
 )

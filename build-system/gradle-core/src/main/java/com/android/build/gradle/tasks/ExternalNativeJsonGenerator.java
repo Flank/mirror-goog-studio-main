@@ -29,6 +29,8 @@ import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getBuild
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getBuildOutputFile;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonGenerationLoggingRecordFile;
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getPrefabConfigFile;
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.shouldGeneratePrefabPackages;
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.services.CxxBuildModelListenerServiceKt.executeListenersOnceBeforeJsonGeneration;
 import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
@@ -37,6 +39,7 @@ import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyS
 import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.getBuildCommandArguments;
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.rewriteCxxAbiModelWithCMakeSettings;
+import static com.android.build.gradle.tasks.GeneratePrefabPackagesKt.generatePrefabPackages;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -55,6 +58,7 @@ import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModelKt;
+import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -76,6 +80,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -96,6 +101,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.process.ExecResult;
 import org.gradle.process.ExecSpec;
+import org.gradle.process.JavaExecSpec;
 
 /**
  * Base class for generation of native JSON.
@@ -126,7 +132,6 @@ public abstract class ExternalNativeJsonGenerator {
         return (CURRENT_PLATFORM == PLATFORM_WINDOWS);
     }
 
-
     @NonNull
     private List<File> getDependentBuildFiles(@NonNull File json) throws IOException {
         List<File> result = Lists.newArrayList();
@@ -137,20 +142,30 @@ public abstract class ExternalNativeJsonGenerator {
         // Now check whether the JSON is out-of-date with respect to the build files it declares.
         NativeBuildConfigValueMini config =
                 AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, stats);
-        return config.buildFiles;
+
+        // If anything in the prefab package changes, re-run. Note that this also depends on the
+        // directories, so added/removed files will also trigger a re-run.
+        for (File pkgDir : variant.getPrefabPackageDirectoryList()) {
+            Files.walk(pkgDir.toPath()).forEach(it -> result.add(it.toFile()));
+        }
+        result.addAll(config.buildFiles);
+        return result;
     }
 
-    public void build(@NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
+    public void build(
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation)
             throws IOException, ProcessException {
-        buildAndPropagateException(false, execOperation);
+        buildAndPropagateException(false, execOperation, javaExecOperation);
     }
 
     public void build(
             boolean forceJsonGeneration,
-            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation) {
         try {
             infoln("building json with force flag %s", forceJsonGeneration);
-            buildAndPropagateException(forceJsonGeneration, execOperation);
+            buildAndPropagateException(forceJsonGeneration, execOperation, javaExecOperation);
         } catch (@NonNull IOException | GradleException e) {
             errorln("exception while building Json $%s", e.getMessage());
         } catch (ProcessException e) {
@@ -162,13 +177,17 @@ public abstract class ExternalNativeJsonGenerator {
 
     public List<Callable<Void>> parallelBuild(
             boolean forceJsonGeneration,
-            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation) {
         List<Callable<Void>> buildSteps = new ArrayList<>(abis.size());
+        // This is a lazily initialized value that can only be computed from a Gradle managed
+        // thread. Compute now so that we don't in the worker threads that we'll be running as.
+        variant.getPrefabPackageDirectoryList();
         for (CxxAbiModel abi : abis) {
             buildSteps.add(
                     () ->
                             buildForOneConfigurationConvertExceptions(
-                                    forceJsonGeneration, abi, execOperation));
+                                    forceJsonGeneration, abi, execOperation, javaExecOperation));
         }
         return buildSteps;
     }
@@ -177,12 +196,14 @@ public abstract class ExternalNativeJsonGenerator {
     private Void buildForOneConfigurationConvertExceptions(
             boolean forceJsonGeneration,
             CxxAbiModel abi,
-            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation) {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         evalIssueReporter(abi.getVariant().getModule()))) {
             try {
-                buildForOneConfiguration(forceJsonGeneration, abi, execOperation);
+                buildForOneConfiguration(
+                        forceJsonGeneration, abi, execOperation, javaExecOperation);
             } catch (@NonNull IOException | GradleException e) {
                 errorln("exception while building Json %s", e.getMessage());
             } catch (ProcessException e) {
@@ -202,14 +223,29 @@ public abstract class ExternalNativeJsonGenerator {
         return new String(Files.readAllBytes(commandFile.toPath()), Charsets.UTF_8);
     }
 
+    @NonNull
+    private static PrefabConfigurationState getPreviousPrefabConfigurationState(
+            @NonNull File prefabStateFile) throws IOException {
+        if (!prefabStateFile.exists()) {
+            return new PrefabConfigurationState(false, null, Collections.emptyList());
+        }
+
+        return PrefabConfigurationState.fromJson(
+                new String(Files.readAllBytes(prefabStateFile.toPath()), Charsets.UTF_8));
+    }
+
+    protected void checkPrefabConfig() {}
+
     private void buildAndPropagateException(
             boolean forceJsonGeneration,
-            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation)
             throws IOException, ProcessException {
         Exception firstException = null;
         for (CxxAbiModel abi : abis) {
             try {
-                buildForOneConfiguration(forceJsonGeneration, abi, execOperation);
+                buildForOneConfiguration(
+                        forceJsonGeneration, abi, execOperation, javaExecOperation);
             } catch (@NonNull GradleException | IOException | ProcessException e) {
                 if (firstException == null) {
                     firstException = e;
@@ -233,14 +269,16 @@ public abstract class ExternalNativeJsonGenerator {
     public void buildForOneAbiName(
             boolean forceJsonGeneration,
             String abiName,
-            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation) {
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation) {
         int built = 0;
         for (CxxAbiModel abi : abis) {
             if (!abi.getAbi().getTag().equals(abiName)) {
                 continue;
             }
             built++;
-            buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi, execOperation);
+            buildForOneConfigurationConvertExceptions(
+                    forceJsonGeneration, abi, execOperation, javaExecOperation);
         }
         assert (built == 1);
     }
@@ -248,7 +286,8 @@ public abstract class ExternalNativeJsonGenerator {
     private void buildForOneConfiguration(
             boolean forceJsonGeneration,
             CxxAbiModel abi,
-            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation)
+            @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
+            @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation)
             throws GradleException, IOException, ProcessException {
         try (PassThroughPrefixingLoggingEnvironment recorder =
                 new PassThroughPrefixingLoggingEnvironment(
@@ -280,6 +319,15 @@ public abstract class ExternalNativeJsonGenerator {
                                 + getBuildCommandArguments(abi)
                                 + "\n";
 
+                PrefabConfigurationState prefabState =
+                        new PrefabConfigurationState(
+                                abi.getVariant().getModule().getProject().isPrefabEnabled(),
+                                abi.getVariant().getModule().getProject().getPrefabClassPath(),
+                                variant.getPrefabPackageDirectoryList());
+
+                PrefabConfigurationState previousPrefabState =
+                        getPreviousPrefabConfigurationState(getPrefabConfigFile(abi));
+
                 JsonGenerationInvalidationState invalidationState =
                         new JsonGenerationInvalidationState(
                                 forceJsonGeneration,
@@ -287,12 +335,24 @@ public abstract class ExternalNativeJsonGenerator {
                                 getBuildCommandFile(abi),
                                 currentBuildCommand,
                                 getPreviousBuildCommand(getBuildCommandFile(abi)),
-                                getDependentBuildFiles(getJsonFile(abi)));
+                                getDependentBuildFiles(getJsonFile(abi)),
+                                prefabState,
+                                previousPrefabState);
 
                 if (invalidationState.getRebuild()) {
                     infoln("rebuilding JSON %s due to:", getJsonFile(abi));
                     for (String reason : invalidationState.getRebuildReasons()) {
                         infoln(reason);
+                    }
+
+                    if (shouldGeneratePrefabPackages(abi)) {
+                        checkPrefabConfig();
+                        generatePrefabPackages(
+                                getNativeBuildSystem(),
+                                variant.getModule(),
+                                abi,
+                                variant.getPrefabPackageDirectoryList(),
+                                javaExecOperation);
                     }
 
                     // Related to https://issuetracker.google.com/69408798
@@ -355,6 +415,11 @@ public abstract class ExternalNativeJsonGenerator {
                     Files.write(
                             getBuildCommandFile(abi).toPath(),
                             currentBuildCommand.getBytes(Charsets.UTF_8));
+
+                    // Persist the prefab configuration as well.
+                    Files.write(
+                            getPrefabConfigFile(abi).toPath(),
+                            prefabState.toJsonString().getBytes(Charsets.UTF_8));
 
                     // Record the outcome. JSON was built.
                     variantStats.setOutcome(GenerationOutcome.SUCCESS_BUILT);
@@ -475,7 +540,7 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     private static ExternalNativeJsonGenerator createImpl(
             @NonNull CxxModuleModel module, @NonNull VariantScope scope) {
-        CxxVariantModel variant = createCxxVariantModel(module, scope.getVariantData());
+        CxxVariantModel variant = createCxxVariantModel(module, scope);
         List<CxxAbiModel> abis = Lists.newArrayList();
 
         CxxBuildModel cxxBuildModel =

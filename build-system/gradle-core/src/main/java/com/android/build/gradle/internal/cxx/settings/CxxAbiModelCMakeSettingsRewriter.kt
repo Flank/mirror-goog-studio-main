@@ -262,6 +262,14 @@ fun CxxAbiModel.getCmakeCommandLineArguments() : List<CommandLineArgument> {
     result += "-D$CMAKE_TOOLCHAIN_FILE=${resolveMacroValue(NDK_CMAKE_TOOLCHAIN)}".toCmakeArgument()
     result += "-D$CMAKE_CXX_FLAGS=${resolveMacroValue(NDK_CPP_FLAGS)}".toCmakeArgument()
     result += "-D$CMAKE_C_FLAGS=${resolveMacroValue(NDK_C_FLAGS)}".toCmakeArgument()
+
+    // This can be passed a few different ways:
+    // https://cmake.org/cmake/help/latest/command/find_package.html#search-procedure
+    //
+    // <PACKAGE_NAME>_ROOT would probably be best, but it's not supported until 3.12, and we support
+    // CMake 3.6.
+    result += "-D$CMAKE_FIND_ROOT_PATH=${resolveMacroValue(NDK_PREFAB_PATH)}".toCmakeArgument()
+
     return result.removeSubsumedArguments().removeBlankProperties()
 }
 

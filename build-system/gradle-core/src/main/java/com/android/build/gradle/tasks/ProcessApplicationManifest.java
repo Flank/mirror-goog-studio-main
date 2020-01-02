@@ -81,7 +81,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -92,6 +91,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -169,8 +169,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                         ? Collections.emptyList()
                         : Lists.newArrayList(navigationJsons);
         // FIX ME : multi threading.
-        for (ApkData apkData : ExistingBuildElements.loadApkList(getApkList().get().getAsFile())) {
-
+        for (ApkData apkData : getApkDataList().get()) {
             compatibleScreenManifestForSplit = compatibleScreenManifests.element(apkData);
             File manifestOutputFile =
                     new File(
@@ -338,7 +337,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         return manifestPlaceholders;
     }
 
-    private List<ManifestProvider> computeProviders(
+    private static List<ManifestProvider> computeProviders(
             @NonNull Set<ResolvedArtifactResult> artifacts) {
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
         for (ResolvedArtifactResult artifact : artifacts) {
@@ -561,9 +560,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     public abstract DirectoryProperty getAutoNamespacedManifests();
 
-    @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract RegularFileProperty getApkList();
+    @Nested
+    public abstract ListProperty<ApkData> getApkDataList();
+
 
     public static class CreationAction
             extends VariantTaskCreationAction<ProcessApplicationManifest> {
@@ -691,7 +690,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // optional manifest files too.
             if (variantScope.getTaskContainer().getMicroApkTask() != null
-                    && variantDslInfo.getBuildType().isEmbedMicroApp()) {
+                    && variantDslInfo.isEmbedMicroApp()) {
                 task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
@@ -736,8 +735,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                                     variantScope, isAdvancedProfilingOn)));
             task.getOptionalFeatures().disallowChanges();
 
-            artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APK_LIST.INSTANCE, task.getApkList());
+            variantScope
+                    .getVariantData()
+                    .getPublicVariantPropertiesApi()
+                    .getOutputs()
+                    .getEnabledVariantOutputs()
+                    .forEach(
+                            variantOutput -> task.getApkDataList().add(variantOutput.getApkData()));
+            task.getApkDataList().disallowChanges();
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
@@ -781,7 +786,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
-            task.buildTypeName = variantDslInfo.getBuildType().getName();
+            task.buildTypeName = variantDslInfo.getBuildType();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

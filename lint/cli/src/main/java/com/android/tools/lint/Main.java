@@ -32,6 +32,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
@@ -218,6 +219,7 @@ public class Main {
                     @Override
                     public Configuration getConfiguration(
                             @NonNull final Project project, @Nullable LintDriver driver) {
+                        DefaultConfiguration overrideConfiguration = getOverrideConfiguration();
                         if (overrideConfiguration != null) {
                             return overrideConfiguration;
                         }
@@ -327,7 +329,7 @@ public class Main {
                     /** Creates a lint request */
                     @Override
                     @NonNull
-                    protected LintRequest createLintRequest(@NonNull List<File> files) {
+                    protected LintRequest createLintRequest(@NonNull List<? extends File> files) {
                         LintRequest request = super.createLintRequest(files);
                         File descriptor = flags.getProjectDescriptorOverride();
                         if (descriptor != null) {

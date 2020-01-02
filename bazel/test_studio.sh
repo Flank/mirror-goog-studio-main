@@ -58,15 +58,6 @@ if [[ -d "${DIST_DIR}" ]]; then
 
   cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
-
-  mkdir "${DIST_DIR}"/bazel-testlogs
-  (cd "${testlogs_dir}" && zip -R "${DIST_DIR}"/bazel-testlogs/xml_files.zip "*.xml")
-
-  # Additional logging to debug b/140193822
-  (cd tools/base && git log --oneline -5 && git diff --stat) > "${DIST_DIR}"/b140193822-tools-base.txt
-  (cd tools/adt/idea && git log --oneline -5 && git diff --stat) > "${DIST_DIR}"/b140193822-tools-adt-idea.txt
-
-  # SDK tools
   cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip "${DIST_DIR}"
 
 fi

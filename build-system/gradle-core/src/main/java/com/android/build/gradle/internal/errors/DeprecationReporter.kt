@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.options.Option
+import com.android.build.gradle.options.Version
 
 /**
  * Reporter for issues during evaluation.
@@ -28,33 +29,79 @@ import com.android.build.gradle.options.Option
 interface DeprecationReporter {
 
     /** Enum for deprecated element removal target.  */
-    enum class DeprecationTarget  constructor(val removalTime: String) {
-        IN_A_FUTURE_RELEASE("in a future release"),
+    enum class DeprecationTarget constructor(
+
+        // Mark these properties as private to prevent external usages from constructing
+        // inconsistent messages from these values. They should use methods like
+        // getDeprecationTargetMessage() instead.
+        private val removalTarget: Version,
+
+        /**
+         * Additional message to be shown below the pre-formatted error/warning message.
+         *
+         * Note that this additional message should be constructed such that it fits well in the
+         * overall message:
+         *
+         *     "This feature will be removed in version X.Y of the Android Gradle plugin.\n
+         *     $additionalMessage"
+         *
+         * For example, avoid writing additional messages that say "This feature is planned for
+         * removal", as it will be duplicated.
+         */
+        private val additionalMessage: String? = null
+    ) {
+
+        FUTURE_VERSION(Version.FUTURE_VERSION),
+
+        VERSION_5_0(Version.VERSION_5_0),
+
         // deprecation of compile in favor of api/implementation
-        CONFIG_NAME("soon"),
+        CONFIG_NAME(
+            Version.FUTURE_VERSION,
+            "For more information, see http://d.android.com/r/tools/update-dependency-configurations.html."
+        ),
+
         // deprecation due to the move to the new DSL.
-        OLD_DSL("soon"),
+        OLD_DSL(Version.FUTURE_VERSION),
+
         // Obsolete Dex Options
-        DEX_OPTIONS("soon"),
+        DEX_OPTIONS(Version.FUTURE_VERSION),
+
         // When legacy dexer will be removed and fully replaced by D8.
         LEGACY_DEXER(
-            "in the future AGP versions. For more details, see " +
-                    "https://d.android.com/r/studio-ui/d8-overview.html"),
+            Version.FUTURE_VERSION,
+            "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
+        ),
+
         // Deprecation of disabling Desugar
-        DESUGAR_TOOL("soon"),
+        DESUGAR_TOOL(Version.FUTURE_VERSION),
+
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
+        TASK_ACCESS_VIA_VARIANT(Version.FUTURE_VERSION, "Estimated removal time: end of 2019."),
+
         DSL_USE_PROGUARD(
-            "soon. Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
+            Version.FUTURE_VERSION,
+            "Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
         ),
-        ENABLE_R8("in a future version of the Android Gradle plugin, and will no longer " +
-                "allow you to disable R8"),
-        USE_PROPERTIES("in a future version of the Android Gradle Plugin, Gradle " +
-                "Properties must be used to change Variant information."),
-        INCLUDE_COMPILE_CLASSPATH("soon. It does not do anything and AGP no longer " +
-                "includes annotation processors added on your project's compile classpath"
+
+        ENABLE_R8(Version.FUTURE_VERSION, "You will no longer be able to disable R8"),
+
+        USE_PROPERTIES(
+            Version.FUTURE_VERSION,
+            "Gradle Properties must be used to change Variant information."
         ),
-        VERSION_5_0("in version 5.0")
+
+        INCLUDE_COMPILE_CLASSPATH(
+            Version.FUTURE_VERSION,
+            "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
+        ),
+
+        ;
+
+        fun getDeprecationTargetMessage(): String {
+            return removalTarget.getDeprecationTargetMessage() +
+                    (additionalMessage?.let { "\n$it" } ?: "")
+        }
     }
 
     /**
@@ -69,21 +116,6 @@ interface DeprecationReporter {
     fun reportDeprecatedUsage(
             newDslElement: String,
             oldDslElement: String,
-            deprecationTarget: DeprecationTarget)
-
-    /**
-     * Reports a deprecation usage in the DSL/API.
-     *
-     * @param newDslElement the DSL element to use instead, with the name of the class owning it
-     * @param oldDslElement the name of the deprecated element, with the name of the class
-     * owning it.
-     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
-     * timing is added to the message.
-     */
-    fun reportDeprecatedUsage(
-            newDslElement: String,
-            oldDslElement: String,
-            url: String,
             deprecationTarget: DeprecationTarget)
 
     /**
@@ -109,7 +141,6 @@ interface DeprecationReporter {
      * class.
      * @param oldValue value of the DSL element which has been deprecated.
      * @param newValue optional new value replacing the deprecated value.
-     * @param url optional url for more context.
      * @param deprecationTarget when the deprecated element is going to be removed. A line about the
      * timing is added to the message.
      */
@@ -117,7 +148,6 @@ interface DeprecationReporter {
             dslElement: String,
             oldValue: String,
             newValue: String?,
-            url: String?,
             deprecationTarget: DeprecationTarget)
 
     /**
@@ -130,20 +160,6 @@ interface DeprecationReporter {
      */
     fun reportObsoleteUsage(
             oldDslElement: String,
-            deprecationTarget: DeprecationTarget)
-
-    /**
-     * Reports a deprecation usage in the DSL/API.
-     *
-     * @param oldDslElement the name of the deprecated element, with the name of the class
-     * owning it.
-     * @param url optional url for more context.
-     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
-     * timing is added to the message.
-     */
-    fun reportObsoleteUsage(
-            oldDslElement: String,
-            url: String,
             deprecationTarget: DeprecationTarget)
 
     /**
@@ -153,14 +169,12 @@ interface DeprecationReporter {
      * instead
      * @param oldConfiguration the name of the deprecated [org.gradle.api.artifacts.Configuration]
      * @param deprecationTarget when the deprecated element is going to be removed. A line about the
-     * @param url optional url for more context.
      * timing is added to the message.
      */
     fun reportRenamedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
-            deprecationTarget: DeprecationTarget,
-            url: String? = null)
+            deprecationTarget: DeprecationTarget)
 
     /**
      * Reports a deprecated Configuration, that gets replaced by an optional DSL element

@@ -205,7 +205,7 @@ public class BazelLintWrapper {
                     + "Do not add anything new to the baseline file; suppress new issues with "
                     + "@SuppressWarnings in Java or @Suppress in Kotlin.\n\n"
                     + ""
-                    + "If you want to regenerate the file, run `blaze test %1$s` and find the new file in %2$s. "
+                    + "If you want to regenerate the file, run `bazel test %1$s` and find the new file in %2$s. "
                     + "You can also find the regenerated file in your presubmit results for the %1$s target, "
                     + "under the Artifacts tab, in Archives/undeclared_outputs.zip";
 

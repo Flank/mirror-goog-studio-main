@@ -32,7 +32,7 @@ namespace deploy {
 
 class InstallServerTest : public ::testing::Test {
  public:
-  InstallServerTest() { DisableEventSystemForTests(); }
+  InstallServerTest() = default;
 
   void TearDown() override { ASSERT_EQ(0, system("rm -rf .overlay")); }
 };

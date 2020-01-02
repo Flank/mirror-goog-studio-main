@@ -33,10 +33,8 @@ import com.android.builder.errors.FakeEvalIssueReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableMap;
-import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Test cases for {@link VariantDslInfo}. */
@@ -47,17 +45,16 @@ public class VariantDslInfoTest {
     private BuildType buildType;
     private EvalIssueReporter issueReporter;
 
-    @Mock Project project;
     private DslScope dslScope = FakeDslScope.createFakeDslScope();
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        defaultConfig = new DefaultConfig("main", project, dslScope);
-        flavorConfig = new ProductFlavor("flavor", project, dslScope);
+        defaultConfig = new DefaultConfig("main", dslScope);
+        flavorConfig = new ProductFlavor("flavor", dslScope);
         flavorConfig.setDimension("dimension1");
-        buildType = new BuildType("debug", project, dslScope);
+        buildType = new BuildType("debug", dslScope);
         issueReporter = new FakeEvalIssueReporter();
     }
 

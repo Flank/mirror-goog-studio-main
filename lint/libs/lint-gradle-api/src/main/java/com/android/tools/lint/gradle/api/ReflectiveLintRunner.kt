@@ -97,13 +97,13 @@ class ReflectiveLintRunner {
             }
 
             // There can be multiple Lint tasks running in parallel, and we would like them
-            // to share the same LintCoreApplicationEnvironment (in order to share caches).
-            // Thus we do not dispose the LintCoreApplicationEnvironment until the entire
+            // to share the same UastEnvironment (in order to share caches).
+            // Thus we do not dispose the UastEnvironment until the entire
             // Gradle invocation finishes.
             if (!buildCompletionListenerRegistered) {
                 buildCompletionListenerRegistered = true
                 gradle.addListener(BuildCompletionListener {
-                    val cls = l.loadClass("com.android.tools.lint.LintCoreApplicationEnvironment")
+                    val cls = l.loadClass("com.android.tools.lint.UastEnvironment")
                     val disposeMethod = cls.getDeclaredMethod("disposeApplicationEnvironment")
                     disposeMethod.invoke(null)
                     buildCompletionListenerRegistered = false

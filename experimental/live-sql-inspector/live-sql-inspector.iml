@@ -7,33 +7,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library name="app-inspection">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT/inspection-1.0.0-20191024.120903-1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="live_sql_java_proto">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/experimental/live-sql-inspector/live_sql_java_proto.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="live_sql_java_proto">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/bazel/studio-proto.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="studio-proto" level="project" />
+    <orderEntry type="library" name="app-inspection" level="project" />
+    <orderEntry type="library" name="live-sql-proto" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>

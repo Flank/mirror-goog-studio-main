@@ -64,7 +64,7 @@ import javax.xml.parsers.ParserConfigurationException
 @CacheableTask
 abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
-    private lateinit var buildTypeName: String
+    private var buildTypeName: String? = null
 
     private lateinit var aaptOptions: AaptOptions
 
@@ -214,7 +214,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
 
-            task.buildTypeName = variantData.variantDslInfo.buildType.name
+            task.buildTypeName = variantData.variantDslInfo.buildType
 
             task.variantTypeName.setDisallowChanges(variantData.type.name)
 
@@ -353,7 +353,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         )
         val mergedManifest: BuildOutput? = mergedManifests.element(apkInfo)
         val mappingFile: File? = task.mappingFileSrc.orNull?.asFile
-        val buildTypeName: String = task.buildTypeName
+        val buildTypeName: String? = task.buildTypeName
         val rSourceVariant: File = if (task.enableRTxtResourceShrinking.get()){
             task.rTxtFile.get().asFile
         } else {

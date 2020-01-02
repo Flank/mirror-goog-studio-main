@@ -84,7 +84,7 @@ public class JdwpProtocol {
                                 @NonNull JdwpAgent agent, @NonNull JdwpPacket packet) {
                             CapabilitiesNewReply reply = new CapabilitiesNewReply();
                             reply.parse(packet.getPayload(), JdwpProtocol.this);
-                            packet.setPayLoad(reply.getConverted());
+                            packet.setPayload(reply.getConverted());
                             return packet;
                         }
                     });

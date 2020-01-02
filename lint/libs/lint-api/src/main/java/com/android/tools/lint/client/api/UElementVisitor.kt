@@ -39,7 +39,6 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiLambdaExpression
 import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
@@ -91,6 +90,7 @@ import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
+import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -308,9 +308,6 @@ internal class UElementVisitor constructor(
         }
     }
 
-    fun prepare(contexts: List<JavaContext>, testContexts: List<JavaContext>): Boolean =
-        parser.prepare(contexts, testContexts)
-
     fun visitGroups(
         projectContext: Context,
         allContexts: List<JavaContext>
@@ -419,17 +416,11 @@ internal class UElementVisitor constructor(
         AbstractUastVisitor() {
 
         override fun visitLambdaExpression(node: ULambdaExpression): Boolean {
-            // Have to go to PSI here; not available on ULambdaExpression yet
-            // https://github.com/JetBrains/uast/issues/16
-            //    ULambdaExpression#getFunctionalInterfaceType
-            val psi = node.psi
-            if (psi is PsiLambdaExpression) {
-                val type = psi.functionalInterfaceType
-                if (type is PsiClassType) {
-                    val resolved = type.resolve()
-                    if (resolved != null) {
-                        checkClass(node, null, resolved)
-                    }
+            val type = node.functionalInterfaceType
+            if (type is PsiClassType) {
+                val resolved = type.resolve()
+                if (resolved != null) {
+                    checkClass(node, null, resolved)
                 }
             }
 
@@ -1002,6 +993,16 @@ internal class UElementVisitor constructor(
             }
             return super.visitWhileExpression(node)
         }
+
+        override fun visitYieldExpression(node: UYieldExpression): Boolean {
+            val list = nodePsiTypeDetectors[UYieldExpression::class.java]
+            if (list != null) {
+                for (v in list) {
+                    v.visitor.visitYieldExpression(node)
+                }
+            }
+            return super.visitYieldExpression(node)
+        }
     }
 
     /** Performs common AST searches for method calls and R-type-field references.
@@ -1070,7 +1071,7 @@ internal class UElementVisitor constructor(
 
         private fun visitMethodCallExpression(node: UCallExpression) {
             if (mVisitMethods) {
-                val methodName = node.methodName
+                val methodName = node.methodName ?: node.methodIdentifier?.name
                 if (methodName != null) {
                     val list = methodDetectors[methodName]
                     if (list != null) {

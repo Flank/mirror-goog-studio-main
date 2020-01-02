@@ -75,4 +75,14 @@ interface CxxProjectModel {
      * If null, it means user has not requested generation of build attribution file.
      */
     val chromeTraceJsonFolder: File?
+
+    /**
+     * Feature flag enabling prefab for the project.
+     */
+    val isPrefabEnabled: Boolean
+
+    /**
+     * Path to the Prefab jar to use.
+     */
+    val prefabClassPath: File?
 }

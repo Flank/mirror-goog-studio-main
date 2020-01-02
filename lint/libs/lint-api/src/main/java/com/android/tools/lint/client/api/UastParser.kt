@@ -25,7 +25,6 @@ import com.intellij.psi.PsiFile
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
-import org.jetbrains.uast.UastContext
 import java.io.File
 
 /**
@@ -46,11 +45,6 @@ abstract class UastParser {
      * @return an evaluator
      */
     abstract val evaluator: JavaEvaluator
-
-    /**
-     * Returns a UastContext which can provide UAST representations for source files
-     */
-    abstract val uastContext: UastContext?
 
     /**
      * Prepare to parse the given contexts. This method will be called before
