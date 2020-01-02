@@ -31,58 +31,43 @@ import org.gradle.api.Named
 import org.mockito.Mockito
 
 /**
- * Entry point for creating [VariantInputModel] instance during tests, backed by real build types
- * and product flavors, instantiated and configured via Kotlin DSL
+ * Basic DSL entry point for simulating a [VariantInputModel]
  *
- * This creates a basic input model with an internally initialized [DslScope].
+ * This may later be replaced by the real DSL extension if they can be run without a full
+ * project/plugin
  */
-fun android(action: VariantInputModelBuilder.() -> Unit) : TestVariantInputModel {
-    val modelBuilder = VariantInputModelBuilder()
-    action(modelBuilder)
-    return modelBuilder.toModel()
+interface VariantInputModelDsl {
+    fun buildTypes(action: Container<BuildType>.() -> Unit)
+    fun productFlavors(action: Container<ProductFlavor>.() -> Unit)
 }
 
 /**
- * Entry point for creating [VariantInputModel] instance during tests, backed by real build types
- * and product flavors, instantiated and configured via Kotlin DSL
+ * Fake DSL Container to simulate [VariantInputModel]
  *
- * This creates a basic input model with a a provided [DslScope].
+ * This may later be replaced by the real DSL extension if they can be run without a full
+ * project/plugin
  */
-fun android(dslScope: DslScope, action: VariantInputModelBuilder.() -> Unit) : TestVariantInputModel {
-    val modelBuilder = VariantInputModelBuilder(dslScope)
-    action(modelBuilder)
-    return modelBuilder.toModel()
+interface Container<T: Named> {
+    fun create(name: String): T
+    fun create(name: String, action: T.() -> Unit): T
 }
 
 /**
- * Entry point for creating [VariantInputModel] instance during tests, backed by real build types
- * and product flavors, instantiated and configured via Kotlin DSL
+ * DSL-type builder to create instances of [VariantInputModel].
  *
- * This creates an input model, already initialited with the default build types (debug and release)
- * with a provided [DslScope]
+ * After running the DSL, use [toModel]
  */
-fun androidWithDefaults(
-    dslScope: DslScope,
-    action: VariantInputModelBuilder.() -> Unit
-) : TestVariantInputModel {
-    val modelBuilder = VariantInputModelBuilder(dslScope).also { it.createDefaults() }
-    modelBuilder.buildTypes {
-        create("debug")
-        create("release")
-    }
-    action(modelBuilder)
-    return modelBuilder.toModel()
-}
+class VariantInputModelBuilder(
+    private val dslScope: DslScope = createFakeDslScope()
+): VariantInputModelDsl {
+    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslScope) }
+    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslScope) }
 
-class VariantInputModelBuilder(private val dslScope: DslScope = createFakeDslScope()) {
-    val buildTypes: Container<BuildType> = Container { name -> BuildType(name, dslScope) }
-    val productFlavors: Container<ProductFlavor> = Container { name -> ProductFlavor(name, dslScope) }
-
-    fun buildTypes(action: Container<BuildType>.() -> Unit) {
+    override fun buildTypes(action: Container<BuildType>.() -> Unit) {
         action(buildTypes)
     }
 
-    fun productFlavors(action: Container<ProductFlavor>.() -> Unit) {
+    override fun productFlavors(action: Container<ProductFlavor>.() -> Unit) {
         action(productFlavors)
     }
 
@@ -132,19 +117,23 @@ class VariantInputModelBuilder(private val dslScope: DslScope = createFakeDslSco
     }
 
     fun createDefaults() {
-
-
+        buildTypes {
+            create("debug") {
+                isDebuggable = true
+            }
+            create("release")
+        }
     }
 }
 
-class Container<T: Named>(
+class ContainerImpl<T: Named>(
     private val factory: (String) -> T
-) {
+): Container<T> {
 
     val values: MutableList<T> = mutableListOf()
 
-    fun create(name: String) : T = maybeCreate(name)
-    fun create(name: String, action: T.() -> Unit) = maybeCreate(name).also { action(it) }
+    override fun create(name: String) : T = maybeCreate(name)
+    override fun create(name: String, action: T.() -> Unit) = maybeCreate(name).also { action(it) }
 
     private fun maybeCreate(name: String): T {
         val result = values.find { it.name == name }

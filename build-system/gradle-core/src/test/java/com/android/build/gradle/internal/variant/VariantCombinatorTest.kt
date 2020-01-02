@@ -18,25 +18,26 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.impl.VariantConfigurationImpl
-import com.android.build.gradle.DefaultVariantTest
-import com.android.build.gradle.internal.fixtures.FakeSyncIssueHandler
 import com.android.build.gradle.internal.utils.IssueSubject
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Test
 
-class VariantCombinatorTest {
+class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfiguration>>() {
     @Test
     fun `test default config`() {
-        check(
-            given = android {
+        given {
+            android {
                 buildTypes {
                     create("debug").isDebuggable = true
                     create("release")
                 }
-            },
-            expected = listOf(
+            }
+        }
+
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "debug",
                     buildType = "debug",
@@ -50,13 +51,13 @@ class VariantCombinatorTest {
                     isDebuggable = false
                 )
             )
-        )
+        }
     }
 
     @Test
     fun `test basic flavors`() {
-        check(
-            given = android {
+        given {
+            android {
                 buildTypes {
                     create("debug").isDebuggable = true
                     create("release")
@@ -71,8 +72,11 @@ class VariantCombinatorTest {
                         setDimension("one")
                     }
                 }
-            },
-            expected = listOf(
+            }
+        }
+
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
@@ -96,13 +100,13 @@ class VariantCombinatorTest {
                     flavors = listOf("flavor2")
                 )
             )
-        )
+        }
     }
 
     @Test
     fun `test multiple dimensions flavors`() {
-        check(
-            given = android {
+        given {
+            android {
                 buildTypes {
                     create("debug").isDebuggable = true
                     create("release")
@@ -125,9 +129,15 @@ class VariantCombinatorTest {
                         setDimension("two")
                     }
                 }
-            },
-            flavorList = listOf("one", "two"),
-            expected = listOf(
+            }
+        }
+
+        withFlavorList {
+            listOf("one", "two")
+        }
+
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorADebug",
                     buildType = "debug",
@@ -173,14 +183,18 @@ class VariantCombinatorTest {
                     flavors = listOf("flavor2", "flavorB")
                 )
             )
-        )
+        }
     }
 
     @Test
     fun `test no build type or flavors`() {
-        check(
-            given = android { },
-            expected = listOf(
+        given {
+            android {
+            }
+        }
+
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "main",
                     buildType = null,
@@ -188,13 +202,13 @@ class VariantCombinatorTest {
                     isDebuggable = false
                 )
             )
-        )
+        }
     }
 
     @Test
     fun `test basic flavors - no build types`() {
-        check(
-            given = android {
+        given {
+            android {
                 productFlavors {
                     create("flavor1") {
                         // FIXME once we clear up the ProductFlavor inheritance
@@ -205,8 +219,11 @@ class VariantCombinatorTest {
                         setDimension("one")
                     }
                 }
-            },
-            expected = listOf(
+            }
+        }
+
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "flavor1",
                     buildType = null,
@@ -218,13 +235,13 @@ class VariantCombinatorTest {
                     flavors = listOf("flavor2")
                 )
             )
-        )
+        }
     }
 
     @Test
     fun `test missing dimension in flavors`() {
-        check(
-            given = android {
+        given {
+            android {
                 buildTypes {
                     create("debug").isDebuggable = true
                     create("release")
@@ -237,9 +254,13 @@ class VariantCombinatorTest {
                         // no dimension set
                     }
                 }
-            },
-            flavorList = listOf("one"),
-            expected = listOf(
+            }
+        }
+
+        withFlavorList { listOf("one") }
+
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
@@ -263,13 +284,13 @@ class VariantCombinatorTest {
                     flavors = listOf("flavor2")
                 )
             )
-        )
+        }
     }
 
     @Test
     fun `test missing dimension list with no dimension in flavors`() {
-        check(
-            given = android {
+        given {
+            android {
                 buildTypes {
                     create("debug").isDebuggable = true
                     create("release")
@@ -282,62 +303,19 @@ class VariantCombinatorTest {
                         // no dimension set
                     }
                 }
-            },
-            expected = listOf(
-                VariantConfigurationImpl(
-                    variantName = "flavor1Debug",
-                    buildType = "debug",
-                    flavors = listOf("flavor1"),
-                    isDebuggable = true
-                ),
-                VariantConfigurationImpl(
-                    variantName = "flavor2Debug",
-                    buildType = "debug",
-                    flavors = listOf("flavor2"),
-                    isDebuggable = true
-                ),
-                VariantConfigurationImpl(
-                    variantName = "flavor1Release",
-                    buildType = "release",
-                    flavors = listOf("flavor1")
-                ),
-                VariantConfigurationImpl(
-                    variantName = "flavor2Release",
-                    buildType = "release",
-                    flavors = listOf("flavor2")
-                )
-            ),
-            issueCheck = { issues: List<SyncIssue> ->
-                Truth.assertThat(issues).named("issues").hasSize(1)
-                val issue = issues.single()
-                IssueSubject.assertThat(issue).hasType(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)
-                IssueSubject.assertThat(issue)
-                    .hasMessage("All flavors must now belong to a named flavor dimension. Learn more at https://d.android.com/r/tools/flavorDimensions-missing-error-message.html")
             }
+        }
 
-        )
-    }
+        withIssueChecker { issues: List<SyncIssue> ->
+            Truth.assertThat(issues).named("issues").hasSize(1)
+            val issue = issues.single()
+            IssueSubject.assertThat(issue).hasType(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)
+            IssueSubject.assertThat(issue)
+                .hasMessage("All flavors must now belong to a named flavor dimension. Learn more at https://d.android.com/r/tools/flavorDimensions-missing-error-message.html")
+        }
 
-    @Test
-    fun `test missing dimension list`() {
-        check(
-            given = android {
-                buildTypes {
-                    create("debug").isDebuggable = true
-                    create("release")
-                }
-                productFlavors {
-                    create("flavor1") {
-                        // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
-                    }
-                    create("flavor2") {
-                        // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
-                    }
-                }
-            },
-            expected = listOf(
+        expect {
+            listOf(
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
@@ -361,29 +339,80 @@ class VariantCombinatorTest {
                     flavors = listOf("flavor2")
                 )
             )
-        )
+        }
     }
 
-    private fun check(
-        given: VariantInputModel,
-        flavorList: List<String>? = null,
-        expected: List<VariantConfiguration>,
-        issueCheck: (List<SyncIssue>) -> Unit = { Truth.assertThat(it).named("SyncIssues").isEmpty() }
-    ) {
-        val errorReporter = FakeSyncIssueHandler()
+    @Test
+    fun `test missing dimension list`() {
+        given {
+            android {
+                buildTypes {
+                    create("debug").isDebuggable = true
+                    create("release")
+                }
+                productFlavors {
+                    create("flavor1") {
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
+                    }
+                    create("flavor2") {
+                        // FIXME once we clear up the ProductFlavor inheritance
+                        setDimension("one")
+                    }
+                }
+            }
+        }
+
+        expect {
+            listOf(
+                VariantConfigurationImpl(
+                    variantName = "flavor1Debug",
+                    buildType = "debug",
+                    flavors = listOf("flavor1"),
+                    isDebuggable = true
+                ),
+                VariantConfigurationImpl(
+                    variantName = "flavor2Debug",
+                    buildType = "debug",
+                    flavors = listOf("flavor2"),
+                    isDebuggable = true
+                ),
+                VariantConfigurationImpl(
+                    variantName = "flavor1Release",
+                    buildType = "release",
+                    flavors = listOf("flavor1")
+                ),
+                VariantConfigurationImpl(
+                    variantName = "flavor2Release",
+                    buildType = "release",
+                    flavors = listOf("flavor2")
+                )
+            )
+        }
+    }
+
+    private var flavorList: List<String>? = null
+
+    private fun withFlavorList(action: () -> List<String>) {
+        flavorList = action()
+    }
+
+    override fun defaultWhen(given: TestVariantInputModel): List<VariantConfiguration>? {
         // compute the flavor list if needed
         val expectedFlavorList = flavorList ?: given.productFlavors.values.asSequence().mapNotNull { it.productFlavor.dimension }.toSet().toList()
 
         val variantComputer = VariantCombinator(
-            given, errorReporter, VariantTypeImpl.BASE_APK, expectedFlavorList
+            given, dslScope.issueReporter, VariantTypeImpl.BASE_APK, expectedFlavorList
         )
 
-        val actual = variantComputer.computeVariants()
+        return variantComputer.computeVariants()
+    }
 
+    override fun compareResult(
+        expected: List<VariantConfiguration>?,
+        actual: List<VariantConfiguration>?
+    ) {
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
-
-        // also check for errors
-        issueCheck(errorReporter.syncIssues)
     }
 }
 
