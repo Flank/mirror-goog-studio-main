@@ -16,6 +16,7 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
@@ -83,7 +84,7 @@ open class LibraryExtension(
             SigningConfig,
             TestOptions,
             TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant, LibraryVariantProperties> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         project.objects.domainObjectSet(LibraryVariant::class.java)

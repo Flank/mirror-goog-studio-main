@@ -19,10 +19,11 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantProperties
+import com.android.build.gradle.internal.core.VariantDslInfo
 import org.gradle.api.Action
 import java.lang.Boolean.TRUE
 
-open class VariantImpl<T: VariantProperties>(variantConfiguration: VariantConfiguration):
+abstract class VariantImpl<T: VariantProperties>(variantConfiguration: VariantConfiguration):
     Variant<T>, VariantConfiguration by variantConfiguration {
 
     private val actions = DelayedActionExecutor<T>()

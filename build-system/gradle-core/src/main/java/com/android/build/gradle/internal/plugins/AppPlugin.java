@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.ProjectOptions;
 import javax.inject.Inject;
@@ -134,5 +135,11 @@ public class AppPlugin extends AbstractAppPlugin {
                         newDslElement, configName, target);
             }
         }
+    }
+
+    @NonNull
+    @Override
+    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new ApplicationVariantFactory(globalScope);
     }
 }

@@ -16,10 +16,55 @@
  */
 package com.android.build.api.variant.impl
 import com.android.build.api.variant.ActionableVariantObject
+import com.android.build.api.variant.BuildTypedVariantFilterBuilder
+import com.android.build.api.variant.FlavoredVariantFilterBuilder
 import com.android.build.api.variant.TypedVariantFilterBuilder
+import com.android.build.api.variant.VariantConfiguration
+import org.gradle.api.Action
+import java.util.regex.Pattern
 
-internal class TypedVariantFilterBuilderImpl<T: ActionableVariantObject, U: T>(
-    private val operations: VariantOperations<in T>,
-    private val type: Class<U>)
-    : TypedVariantFilterBuilder<U> by GenericVariantFilterBuilderImpl<U>(operations, type) {
+internal class TypedVariantFilterBuilderImpl<T, U>(
+    operations: VariantOperations<T>,
+    type: Class<U>)
+    : TypedVariantFilterBuilder<U> where T: ActionableVariantObject, T: VariantConfiguration, U: T  {
+
+    // due to the type bounds, this does not work as a implementation by delegate...
+    @Suppress("UNCHECKED_CAST")
+    private val builder = GenericVariantFilterBuilderImpl(operations as VariantOperations<U>, type)
+
+    override fun withBuildType(buildType: String): BuildTypedVariantFilterBuilder<U> {
+        return builder.withBuildType(buildType)
+    }
+
+    override fun withBuildType(buildType: String, action: Action<U>) {
+        builder.withBuildType(buildType, action)
+    }
+
+    override fun withBuildType(buildType: String, action: U.() -> Unit) {
+        builder.withBuildType(buildType, action)
+    }
+
+    override fun withFlavor(flavorToDimension: Pair<String, String>): FlavoredVariantFilterBuilder<U> {
+        return builder.withFlavor(flavorToDimension)
+    }
+
+    override fun withFlavor(flavorToDimension: Pair<String, String>, action: Action<U>) {
+        builder.withFlavor(flavorToDimension, action)
+    }
+
+    override fun withFlavor(flavorToDimension: Pair<String, String>, action: U.() -> Unit) {
+        builder.withFlavor(flavorToDimension, action)
+    }
+
+    override fun withName(pattern: Pattern, action: Action<U>) {
+        builder.withName(pattern, action)
+    }
+
+    override fun withName(name: String, action: Action<U>) {
+        builder.withName(name, action)
+    }
+
+    override fun withName(name: String, action: U.() -> Unit) {
+        builder.withName(name, action)
+    }
 }

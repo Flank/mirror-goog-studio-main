@@ -157,7 +157,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
         return new ImmutableFlavorList(
-                getVariantData().getVariantDslInfo().getProductFlavors(), readOnlyObjectProvider);
+                getVariantData().getVariantDslInfo().getProductFlavorList(),
+                readOnlyObjectProvider);
     }
 
     @Override

@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList
 data class VariantConfigurationImpl(
     val variantName: String,
     override val buildType: String? = null,
-    override val flavors: List<String> = ImmutableList.of(),
+    override val productFlavors: List<Pair<String, String>> = ImmutableList.of(),
     override val isDebuggable: Boolean = false
 ) : VariantConfiguration {
     override fun getName(): String {

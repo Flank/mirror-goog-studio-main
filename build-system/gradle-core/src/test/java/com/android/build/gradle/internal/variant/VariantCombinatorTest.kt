@@ -41,13 +41,13 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "debug",
                     buildType = "debug",
-                    flavors = emptyList(),
+                    productFlavors = emptyList(),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "release",
                     buildType = "release",
-                    flavors = emptyList(),
+                    productFlavors = emptyList(),
                     isDebuggable = false
                 )
             )
@@ -80,24 +80,24 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1"),
+                    productFlavors = listOf("one" to "flavor1"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2"),
+                    productFlavors = listOf("one" to "flavor2"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
                     buildType = "release",
-                    flavors = listOf("flavor1")
+                    productFlavors = listOf("one" to "flavor1")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Release",
                     buildType = "release",
-                    flavors = listOf("flavor2")
+                    productFlavors = listOf("one" to "flavor2")
                 )
             )
         }
@@ -141,46 +141,46 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorADebug",
                     buildType = "debug",
-                    flavors = listOf("flavor1", "flavorA"),
+                    productFlavors = listOf("one" to "flavor1", "two" to "flavorA"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorBDebug",
                     buildType = "debug",
-                    flavors = listOf("flavor1", "flavorB"),
+                    productFlavors = listOf("one" to "flavor1", "two" to "flavorB"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2FlavorADebug",
                     buildType = "debug",
-                    flavors = listOf("flavor2", "flavorA"),
+                    productFlavors = listOf("one" to "flavor2", "two" to "flavorA"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2FlavorBDebug",
                     buildType = "debug",
-                    flavors = listOf("flavor2", "flavorB"),
+                    productFlavors = listOf("one" to "flavor2", "two" to "flavorB"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorARelease",
                     buildType = "release",
-                    flavors = listOf("flavor1", "flavorA")
+                    productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1FlavorBRelease",
                     buildType = "release",
-                    flavors = listOf("flavor1", "flavorB")
+                    productFlavors = listOf("one" to "flavor1", "two" to "flavorB")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2FlavorARelease",
                     buildType = "release",
-                    flavors = listOf("flavor2", "flavorA")
+                    productFlavors = listOf("one" to "flavor2", "two" to "flavorA")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2FlavorBRelease",
                     buildType = "release",
-                    flavors = listOf("flavor2", "flavorB")
+                    productFlavors = listOf("one" to "flavor2", "two" to "flavorB")
                 )
             )
         }
@@ -198,7 +198,7 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "main",
                     buildType = null,
-                    flavors = emptyList(),
+                    productFlavors = emptyList(),
                     isDebuggable = false
                 )
             )
@@ -227,12 +227,12 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "flavor1",
                     buildType = null,
-                    flavors = listOf("flavor1")
+                    productFlavors = listOf("one" to "flavor1")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2",
                     buildType = null,
-                    flavors = listOf("flavor2")
+                    productFlavors = listOf("one" to "flavor2")
                 )
             )
         }
@@ -264,24 +264,24 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1"),
+                    productFlavors = listOf("one" to "flavor1"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2"),
+                    productFlavors = listOf("one" to "flavor2"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
                     buildType = "release",
-                    flavors = listOf("flavor1")
+                    productFlavors = listOf("one" to "flavor1")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Release",
                     buildType = "release",
-                    flavors = listOf("flavor2")
+                    productFlavors = listOf("one" to "flavor2")
                 )
             )
         }
@@ -319,24 +319,24 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1"),
+                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor1"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2"),
+                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor2"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
                     buildType = "release",
-                    flavors = listOf("flavor1")
+                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor1")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Release",
                     buildType = "release",
-                    flavors = listOf("flavor2")
+                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor2")
                 )
             )
         }
@@ -368,24 +368,24 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
                 VariantConfigurationImpl(
                     variantName = "flavor1Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor1"),
+                    productFlavors = listOf("one" to "flavor1"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Debug",
                     buildType = "debug",
-                    flavors = listOf("flavor2"),
+                    productFlavors = listOf("one" to "flavor2"),
                     isDebuggable = true
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor1Release",
                     buildType = "release",
-                    flavors = listOf("flavor1")
+                    productFlavors = listOf("one" to "flavor1")
                 ),
                 VariantConfigurationImpl(
                     variantName = "flavor2Release",
                     buildType = "release",
-                    flavors = listOf("flavor2")
+                    productFlavors = listOf("one" to "flavor2")
                 )
             )
         }
@@ -410,7 +410,8 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantConfigura
 
     override fun compareResult(
         expected: List<VariantConfiguration>?,
-        actual: List<VariantConfiguration>?
+        actual: List<VariantConfiguration>?,
+        given: TestVariantInputModel
     ) {
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
     }

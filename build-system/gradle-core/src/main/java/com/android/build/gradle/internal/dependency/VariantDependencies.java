@@ -633,7 +633,7 @@ public class VariantDependencies {
         @NonNull
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
                 @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
-            List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavors();
+            List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavorList();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
             // during a sync, it's possible that the flavors don't have dimension names because

@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.provider.Property
 
-internal open class VariantPropertiesImpl(
+open class VariantPropertiesImpl(
     val dslScope: DslScope,
     val variantScope: VariantScope,
     override val operations: Operations,

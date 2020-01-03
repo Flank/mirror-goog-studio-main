@@ -145,8 +145,10 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
 
     @NonNull private final GlobalScope globalScope;
-    @NonNull private final BaseVariantData variantData;
+    @NonNull private BaseVariantData variantData;
     @NonNull private final TransformManager transformManager;
+    @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final VariantType type;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
     @NonNull private BuildArtifactsHolder artifacts;
@@ -160,11 +162,13 @@ public class VariantScopeImpl implements VariantScope {
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
             @NonNull TransformManager transformManager,
-            @NonNull BaseVariantData variantData) {
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantType type) {
         this.globalScope = globalScope;
         this.transformManager = transformManager;
-        this.variantData = variantData;
-        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(getType());
+        this.variantDslInfo = variantDslInfo;
+        this.type = type;
+        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(type);
 
         if (globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
             throw new RuntimeException("InstantRun mode is not supported");
@@ -181,12 +185,22 @@ public class VariantScopeImpl implements VariantScope {
                                                         globalScope.getIntermediatesDir(),
                                                         "processing-tools",
                                                         "runtime-deps",
-                                                        getVariantDslInfo().getDirName(),
+                                                        variantDslInfo.getDirName(),
                                                         "desugar_try_with_resources.jar")));
         this.postProcessingOptions =
-                variantData
-                        .getVariantDslInfo()
-                        .createPostProcessingOptions(globalScope.getProject());
+                variantDslInfo.createPostProcessingOptions(globalScope.getProject());
+
+        configureNdk();
+    }
+
+    private void configureNdk() {
+        File objFolder =
+                new File(
+                        globalScope.getIntermediatesDir(),
+                        "ndk/" + variantDslInfo.getDirName() + "/obj");
+        for (Abi abi : Abi.values()) {
+            addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
+        }
     }
 
     protected Project getProject() {
@@ -253,10 +267,14 @@ public class VariantScopeImpl implements VariantScope {
         return variantData;
     }
 
+    public void setVariantData(@NonNull BaseVariantData variantData) {
+        this.variantData = variantData;
+    }
+
     @Override
     @NonNull
     public VariantDslInfo getVariantDslInfo() {
-        return variantData.getVariantDslInfo();
+        return variantDslInfo;
     }
 
     @NonNull
@@ -268,7 +286,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public String getFullVariantName() {
-        return getVariantDslInfo().getFullName();
+        return variantDslInfo.getFullName();
     }
 
     @Override
@@ -328,7 +346,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean isCrunchPngs() {
         // If set for this build type, respect that.
-        Boolean buildTypeOverride = getVariantDslInfo().isCrunchPngs();
+        Boolean buildTypeOverride = variantDslInfo.isCrunchPngs();
         if (buildTypeOverride != null) {
             return buildTypeOverride;
         }
@@ -340,13 +358,13 @@ public class VariantScopeImpl implements VariantScope {
         }
         // If not overridden, use the default from the build type.
         //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
-        return getVariantDslInfo().isCrunchPngsDefault();
+        return variantDslInfo.isCrunchPngsDefault();
     }
 
     @Override
     public boolean consumesFeatureJars() {
         return getType().isBaseModule()
-                && getVariantDslInfo().isMinifyEnabled()
+                && variantDslInfo.isMinifyEnabled()
                 && globalScope.hasDynamicFeatures();
     }
 
@@ -370,7 +388,7 @@ public class VariantScopeImpl implements VariantScope {
     public boolean getNeedsMainDexListForBundle() {
         return getType().isBaseModule()
                 && globalScope.hasDynamicFeatures()
-                && getVariantDslInfo().getDexingType().getNeedsMainDexList();
+                && variantDslInfo.getDexingType().getNeedsMainDexList();
     }
 
     @Nullable
@@ -447,8 +465,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     private List<File> gatherProguardFiles(ProguardFileType type) {
-        VariantDslInfo variantDslInfo = getVariantDslInfo();
-
         List<File> result = variantDslInfo.gatherProguardFiles(type);
         result.addAll(postProcessingOptions.getProguardFiles(type));
 
@@ -488,7 +504,7 @@ public class VariantScopeImpl implements VariantScope {
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
                 || getMinSdkVersion().getCodename() != null
-                || getVariantDslInfo().getTargetSdkVersion().getCodename() != null;
+                || variantDslInfo.getTargetSdkVersion().getCodename() != null;
     }
 
     private boolean isPreviewTargetPlatform() {
@@ -511,7 +527,7 @@ public class VariantScopeImpl implements VariantScope {
                 extension.getCompileOptions().getCoreLibraryDesugaringEnabled() != null
                         && extension.getCompileOptions().getCoreLibraryDesugaringEnabled();
 
-        boolean multidexEnabled = getVariantDslInfo().isMultiDexEnabled();
+        boolean multidexEnabled = variantDslInfo.isMultiDexEnabled();
 
         Java8LangSupport langSupportType = getJava8LangSupportType();
         boolean langDesugarEnabled =
@@ -556,13 +572,13 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public VariantType getType() {
-        return variantData.getType();
+        return type;
     }
 
     @NonNull
     @Override
     public DexingType getDexingType() {
-        return variantData.getVariantDslInfo().getDexingType();
+        return variantDslInfo.getDexingType();
     }
 
     @Override
@@ -573,19 +589,19 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public AndroidVersion getMinSdkVersion() {
-        return getVariantDslInfo().getMinSdkVersion();
+        return variantDslInfo.getMinSdkVersion();
     }
 
     @NonNull
     @Override
     public String getDirName() {
-        return getVariantDslInfo().getDirName();
+        return variantDslInfo.getDirName();
     }
 
     @NonNull
     @Override
     public Collection<String> getDirectorySegments() {
-        return getVariantDslInfo().getDirectorySegments();
+        return variantDslInfo.getDirectorySegments();
     }
 
     @NonNull
@@ -1356,7 +1372,7 @@ public class VariantScopeImpl implements VariantScope {
                                         + "gradle.properties file to enable Java 8 "
                                         + "language support.",
                                 missingFlag.name()),
-                        getVariantDslInfo().getFullName());
+                        variantDslInfo.getFullName());
         return Java8LangSupport.INVALID;
     }
 
@@ -1382,7 +1398,7 @@ public class VariantScopeImpl implements VariantScope {
             globalScope
                     .getDslScope()
                     .getIssueReporter()
-                    .reportError(Type.GENERIC, msg, getVariantDslInfo().getFullName());
+                    .reportError(Type.GENERIC, msg, variantDslInfo.getFullName());
             return false;
         }
     }
@@ -1436,8 +1452,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public File getSymbolTableFile() {
         return new File(
-                globalScope.getIntermediatesDir(),
-                "symbols/" + variantData.getVariantDslInfo().getDirName());
+                globalScope.getIntermediatesDir(), "symbols/" + variantDslInfo.getDirName());
     }
 
     @NonNull

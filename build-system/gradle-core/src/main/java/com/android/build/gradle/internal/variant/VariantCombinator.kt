@@ -35,6 +35,10 @@ class VariantCombinator(
     private val variantType: VariantType,
     private val flavorDimensionList: List<String>
 ) {
+    companion object {
+        // fake dimension in case a flavor does not have one
+        const val FAKE_DIMENSION = "agp-missing-dimension-for-sync-only"
+    }
 
     /**
      * Computes and returns the list of variants as [VariantConfiguration] objects.
@@ -108,14 +112,13 @@ class VariantCombinator(
         if (variantInputModel.buildTypes.isEmpty()) {
             // just convert the Accumulators to VariantConfiguration with no build type info
             return flavorCombos.map {
-                val flavorNames = it.getFlavorNames()
                 VariantConfigurationImpl(
                     variantName = computeVariantName(
-                        flavorNames = flavorNames,
+                        flavorNames = it.getFlavorNames(),
                         buildType = null,
                         type = variantType
                     ),
-                    flavors = flavorNames
+                    productFlavors = it.flavorPairs
                 )
             }
         } else {
@@ -123,13 +126,12 @@ class VariantCombinator(
 
             for (buildType in variantInputModel.buildTypes.keys) {
                 builder.addAll(flavorCombos.map {
-                    val flavors = it.getFlavorNames()
                     val isDebuggable =
                         variantInputModel.buildTypes[buildType]?.buildType?.isDebuggable ?: false
                     VariantConfigurationImpl(
-                        variantName = computeVariantName(flavors, buildType, variantType),
+                        variantName = computeVariantName(it.getFlavorNames(), buildType, variantType),
                         buildType = buildType,
-                        flavors = flavors,
+                        productFlavors = it.flavorPairs,
                         isDebuggable = isDebuggable
                     )
                 })
@@ -172,21 +174,18 @@ class VariantCombinator(
             // Use a set to de-duplicate values quickly, since the order does not matter.
             val dimensions = mutableSetOf<String>()
 
-            // fake dimension in case a flavor does not have one
-            val fakeDimension = "agp-missing-dimension-for-sync-only"
-
             for (flavor in variantInputModel.productFlavors.values) {
                 val productFlavor = flavor.productFlavor
                 val dim = productFlavor.dimension
                 if (dim == null) {
-                    productFlavor.setDimension(fakeDimension)
+                    productFlavor.setDimension(FAKE_DIMENSION)
                 } else {
                     dimensions.add(dim)
                 }
             }
 
             if (dimensions.isEmpty()) {
-                dimensions.add(fakeDimension)
+                dimensions.add(FAKE_DIMENSION)
             }
 
             // convert to list, see comment above regarding the order.
@@ -291,7 +290,7 @@ private class FlavorCombination(
      * The list of (dimension, value) pairs. The order is important and match the
      * dimension priority order.
      */
-    private val flavorPairs: ImmutableList<Pair<String, String>> = ImmutableList.of()) {
+    val flavorPairs: ImmutableList<Pair<String, String>> = ImmutableList.of()) {
 
     /**
      * Returns a new instance with the new pair information added to the existing list.

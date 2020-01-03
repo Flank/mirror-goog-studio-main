@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
@@ -60,7 +62,7 @@ open class BaseAppModuleExtension(
         SigningConfig,
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<AppVariant, AppVariantProperties> by publicExtensionImpl {
 
     override val dataBinding: DataBindingOptions =
         project.objects.newInstance(

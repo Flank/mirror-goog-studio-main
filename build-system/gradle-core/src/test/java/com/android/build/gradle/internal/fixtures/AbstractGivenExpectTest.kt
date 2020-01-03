@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.fixtures
 
+import com.google.common.truth.Truth
+
 /**
  * Abstract class allowing to write test using a given/expect DSL
  */
@@ -63,15 +65,19 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
 
         val actual = whenAction?.invoke(given) ?: defaultWhen(given)
 
-        compareResult(expectedProvider(), actual)
+        compareResult(expectedProvider(), actual, given)
 
         state = TestState.DONE
     }
 
     /**
      * This compares the actual result vs the expected result.
+     *
+     * Default implementation does assertThat.isEqual
      */
-    abstract fun compareResult(expected: ResultT?, actual: ResultT?)
+    open fun compareResult(expected: ResultT?, actual: ResultT?, given: GivenT) {
+        Truth.assertThat(expected).isEqualTo(actual)
+    }
 
     /**
      * A default implementation for the given -> result action
@@ -89,3 +95,9 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
         }
     }
 }
+
+/**
+ * infix function to create Pair<>, similar to 'to'.
+ * this can read better when GivenT is a pair.
+ */
+infix fun <A, B> A.on(that: B): Pair<A, B> = Pair(this, that)

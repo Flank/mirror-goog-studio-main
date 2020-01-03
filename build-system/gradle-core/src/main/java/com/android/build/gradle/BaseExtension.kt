@@ -108,7 +108,7 @@ abstract class BaseExtension protected constructor(
     private val sourceSetManager: SourceSetManager,
     private val extraModelInfo: ExtraModelInfo,
     private val isBaseModule: Boolean
-) : AndroidConfig, ActionableVariantObjectOperationsExecutor {
+) : AndroidConfig {
 
     private val _transforms: MutableList<Transform> = mutableListOf()
     /** Secondary dependencies for the custom transform. */

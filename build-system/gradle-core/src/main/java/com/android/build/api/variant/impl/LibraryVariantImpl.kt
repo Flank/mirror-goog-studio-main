@@ -19,6 +19,11 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.api.variant.VariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
+import javax.inject.Inject
 
-class LibraryVariantImpl(variantConfiguration: VariantConfiguration)
-    : VariantImpl<LibraryVariantProperties>(variantConfiguration), LibraryVariant
+open class LibraryVariantImpl @Inject constructor(
+    variantConfiguration: VariantConfiguration,
+    variantDslInfo: VariantDslInfo
+): VariantImpl<LibraryVariantProperties>(variantConfiguration), LibraryVariant {
+}

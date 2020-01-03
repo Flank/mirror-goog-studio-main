@@ -16,14 +16,15 @@
 package com.android.build.api.variant.impl
 import com.android.build.api.variant.ActionableVariantObject
 import com.android.build.api.variant.FlavoredVariantFilterBuilder
+import com.android.build.api.variant.VariantConfiguration
 import org.gradle.api.Action
 
-internal class FlavoredVariantQueryFilterImpl<T: ActionableVariantObject>(
-    private val operations: VariantOperations<in T>,
+internal class FlavoredVariantQueryFilterImpl<T>(
+    private val operations: VariantOperations<T>,
     private val flavorToDimension: Pair<String, String>,
     private val type: Class<T>
 )
-    : FlavoredVariantFilterBuilder<T> {
+    : FlavoredVariantFilterBuilder<T> where T: ActionableVariantObject, T: VariantConfiguration{
     override fun withBuildType(buildType: String, action: Action<T>) {
         operations.addFilteredAction(
             FilteredVariantOperation(

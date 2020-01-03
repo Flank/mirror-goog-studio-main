@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
@@ -96,5 +98,11 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
                                 defaultConfig,
                                 productFlavorContainer,
                                 signingConfigContainer));
+    }
+
+    @NonNull
+    @Override
+    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new DynamicFeatureVariantFactory(globalScope);
     }
 }

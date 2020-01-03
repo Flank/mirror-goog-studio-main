@@ -61,18 +61,17 @@ class ApplicationExtensionImpl(
             ProductFlavor,
             SigningConfig,
             TestOptions,
-            TestOptions.UnitTestOptions>,
-    ActionableVariantObjectOperationsExecutor {
+            TestOptions.UnitTestOptions> {
 
     override val buildFeatures: ApplicationBuildFeatures =
         dslScope.objectFactory.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variantScopes: List<VariantScope>) {
-        variantOperations.executeOperations<AppVariant>(variantScopes)
+    override fun executeVariantOperations(variant: AppVariant) {
+        variantOperations.executeActions(variant)
     }
 
-    override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
-        variantPropertiesOperations.executeOperations<AppVariantProperties>(variantScopes)
+    override fun executeVariantPropertiesOperations(variant: AppVariantProperties) {
+        variantPropertiesOperations.executeActions(variant)
     }
 
     override fun onVariants(): GenericVariantFilterBuilder<AppVariant> {

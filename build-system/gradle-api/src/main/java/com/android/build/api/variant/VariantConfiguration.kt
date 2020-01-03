@@ -34,8 +34,10 @@ interface VariantConfiguration: Named {
 
     /**
      * List of flavor names, might be replaced with access to locked DSL objects once ready
+     *
+     * The order is properly sorted based on the associated dimension order
      */
-    val flavors: List<String>
+    val productFlavors: List<Pair<String, String>>
 
     /** Whether this variant should generate a debuggable apk.  */
     val isDebuggable: Boolean

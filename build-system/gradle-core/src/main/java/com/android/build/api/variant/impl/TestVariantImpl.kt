@@ -19,7 +19,12 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.api.variant.VariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
+import javax.inject.Inject
 
-class TestVariantImpl(publicVariantConfiguration: VariantConfiguration) : VariantImpl<TestVariantProperties>(publicVariantConfiguration),
+open class TestVariantImpl @Inject constructor(
+    publicVariantConfiguration: VariantConfiguration,
+    variantDslInfo: VariantDslInfo
+): VariantImpl<TestVariantProperties>(publicVariantConfiguration),
     TestVariant {
 }

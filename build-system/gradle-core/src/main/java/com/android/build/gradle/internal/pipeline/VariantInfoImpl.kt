@@ -34,7 +34,7 @@ data class VariantInfoImpl(
                 _isTest = variantScope.variantDslInfo.variantType.isForTesting,
                 _variantName = variantScope.fullVariantName,
                 _buildTypeName = variantScope.variantDslInfo.buildType,
-                _flavorNames = variantScope.variantDslInfo.productFlavors.map { it.name }.toImmutableList(),
+                _flavorNames = variantScope.variantDslInfo.productFlavorList.map { it.name }.toImmutableList(),
                 _isDebuggable = variantScope.variantDslInfo.isDebuggable
             )
 

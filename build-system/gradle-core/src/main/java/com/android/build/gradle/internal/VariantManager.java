@@ -30,6 +30,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
@@ -48,11 +50,13 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker;
+import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -60,6 +64,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -90,6 +95,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import kotlin.Pair;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -168,7 +174,7 @@ public class VariantManager {
      * the same, but we'll try to gradually shift all the immutable state to VariantScope and
      * pretend that there's only an edge from scope to data.
      */
-    public void addVariant(BaseVariantData variantData) {
+    private void addVariant(BaseVariantData variantData) {
         variantScopes.add(variantData.getScope());
     }
 
@@ -190,6 +196,7 @@ public class VariantManager {
         // Create top level test tasks.
         taskManager.createTopLevelTestTasks(!variantInputModel.getProductFlavors().isEmpty());
 
+        // Create tasks for all variants (main and tests)
         for (final VariantScope variantScope : variantScopes) {
             createTasksForVariant(variantScope);
         }
@@ -200,7 +207,7 @@ public class VariantManager {
     }
 
     /** Create tasks for the specified variant. */
-    public void createTasksForVariant(final VariantScope variantScope) {
+    private void createTasksForVariant(final VariantScope variantScope) {
         final BaseVariantData variantData = variantScope.getVariantData();
         final VariantType variantType = variantData.getType();
         final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
@@ -223,7 +230,7 @@ public class VariantManager {
             // variant-specific, build type (, multi-flavor, flavor1, flavor2, ..., defaultConfig.
             // variant-specific if the full combo of flavors+build type. Does not exist if no flavors.
             // multi-flavor is the combination of all flavor dimensions. Does not exist if <2 dimension.
-            List<ProductFlavor> testProductFlavors = variantDslInfo.getProductFlavors();
+            List<ProductFlavor> testProductFlavors = variantDslInfo.getProductFlavorList();
             List<DefaultAndroidSourceSet> testVariantSourceSets =
                     Lists.newArrayListWithExpectedSize(4 + testProductFlavors.size());
 
@@ -471,7 +478,7 @@ public class VariantManager {
 
         // loop on all the new variant objects to create the legacy ones.
         for (VariantConfiguration variant : variants) {
-            createVariantDataForProductFlavors(variant, testBuildTypeData);
+            createVariantsFromConfiguration(variant, testBuildTypeData);
         }
 
         configureVariantArtifactTransforms(variantScopes);
@@ -495,12 +502,17 @@ public class VariantManager {
         return testBuildTypeData;
     }
 
-    private BaseVariantData createVariantDataForVariantType(
-            @NonNull com.android.builder.model.BuildType buildType,
+    @Nullable
+    private BaseVariantData createProdVariantData(
+            @NonNull VariantConfiguration variantConfiguration,
             @NonNull List<? extends ProductFlavor> productFlavorList,
             @NonNull VariantType variantType) {
 
-        BuildTypeData buildTypeData = variantInputModel.getBuildTypes().get(buildType.getName());
+        // entry point for a given buildType/Flavors/VariantType combo.
+        // Need to run the new variant API to selectively ignore variants.
+        // in order to do this, we need access to the VariantDslInfo, to create a
+        BuildTypeData buildTypeData =
+                variantInputModel.getBuildTypes().get(variantConfiguration.getBuildType());
         final Map<String, ProductFlavorData<ProductFlavor>> productFlavors =
                 variantInputModel.getProductFlavors();
 
@@ -524,15 +536,34 @@ public class VariantManager {
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
-        for (ProductFlavor productFlavor : productFlavorList) {
-            ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getName());
+        for (Pair<String, String> productFlavor : variantConfiguration.getProductFlavors()) {
+            ProductFlavorData<ProductFlavor> data = productFlavors.get(productFlavor.getSecond());
 
             variantBuilder.addProductFlavor(data.getProductFlavor(), data.getSourceSet());
         }
 
+        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
+
+        // create the Variant object so that we can run the action which may interrupt the creation
+        // (in case of enabled = false)
+        VariantImpl variant =
+                variantFactory.createVariantObject(variantConfiguration, variantDslInfo);
+
+        // HACK, we need access to the new type rather than the old. This will go away in the
+        // future
+        ActionableVariantObjectOperationsExecutor commonExtension =
+                (ActionableVariantObjectOperationsExecutor) extension;
+        //noinspection unchecked
+        commonExtension.executeVariantOperations(variant);
+
+        if (!variant.getEnabled()) {
+            return null;
+        }
+
+        // now that we have the result of the filter, we can continue configuring the variant
+
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
 
-        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
         VariantSources variantSources = variantBuilder.createVariantSources();
 
         // Only record release artifacts
@@ -573,12 +604,33 @@ public class VariantManager {
         // 5. The defaultConfig
         variantSourceSets.add(variantInputModel.getDefaultConfig().getSourceSet());
 
-        // Done. Create the variant and get its internal storage object.
+        // Done. Create the (too) many variant objects
+
+        final Project project = globalScope.getProject();
+        VariantScopeImpl variantScope =
+                new VariantScopeImpl(
+                        globalScope,
+                        new TransformManager(
+                                globalScope.getProject(),
+                                globalScope.getDslScope().getIssueReporter(),
+                                recorder),
+                        variantDslInfo,
+                        variantType);
+
+        VariantPropertiesImpl variantProperties =
+                variantFactory.createVariantPropertiesObject(variantDslInfo, variantScope);
+
         BaseVariantData variantData =
                 variantFactory.createVariantData(
-                        variantDslInfo, variantSources, taskManager, recorder);
+                        variantScope,
+                        variantDslInfo,
+                        variant,
+                        variantProperties,
+                        variantSources,
+                        taskManager);
 
-        VariantScope variantScope = variantData.getScope();
+        variantScope.setVariantData(variantData);
+
         VariantDependencies.Builder builder =
                 VariantDependencies.builder(
                                 project,
@@ -617,6 +669,10 @@ public class VariantManager {
             }
         }
 
+        // Run the VariantProperties actions
+        //noinspection unchecked
+        commonExtension.executeVariantPropertiesOperations(variantProperties);
+
         return variantData;
     }
 
@@ -649,7 +705,9 @@ public class VariantManager {
 
     /** Create a TestVariantData for the specified testedVariantData. */
     public TestVariantData createTestVariantData(
-            BaseVariantData testedVariantData, VariantType type) {
+            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull BaseVariantData testedVariantData,
+            @NonNull VariantType type) {
         BuildTypeData buildTypeData =
                 variantInputModel
                         .getBuildTypes()
@@ -684,7 +742,7 @@ public class VariantManager {
 
         variantBuilder.setTestedVariant(testedVariantDslInfo);
 
-        List<ProductFlavor> productFlavorList = testedVariantDslInfo.getProductFlavors();
+        List<ProductFlavor> productFlavorList = testedVariantDslInfo.getProductFlavorList();
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -697,32 +755,75 @@ public class VariantManager {
             variantBuilder.addProductFlavor(data.getProductFlavor(), data.getTestSourceSet(type));
         }
 
+        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
+
+        // create the Variant object so that we can run the action which may interrupt the creation
+        // (in case of enabled = false)
+        VariantImpl variant =
+                variantFactory.createVariantObject(variantConfiguration, variantDslInfo);
+
+        // HACK, we need access to the new type rather than the old. This will go away in the
+        // future
+        ActionableVariantObjectOperationsExecutor commonExtension =
+                (ActionableVariantObjectOperationsExecutor) extension;
+        //noinspection unchecked
+        commonExtension.executeVariantOperations(variant);
+
+        if (!variant.getEnabled()) {
+            return null;
+        }
+
+        // now that we have the result of the filter, we can continue configuring the variant
         createCompoundSourceSets(productFlavorList, variantBuilder, sourceSetManager);
+
+        VariantScopeImpl variantScope =
+                new VariantScopeImpl(
+                        globalScope,
+                        new TransformManager(
+                                globalScope.getProject(),
+                                globalScope.getDslScope().getIssueReporter(),
+                                recorder),
+                        variantDslInfo,
+                        type);
+
+        VariantPropertiesImpl variantProperties =
+                variantFactory.createVariantPropertiesObject(variantDslInfo, variantScope);
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =
                 new TestVariantData(
                         globalScope,
                         taskManager,
-                        variantBuilder.createVariantDslInfo(),
+                        variantScope,
+                        variantDslInfo,
+                        variant,
+                        variantProperties,
                         variantBuilder.createVariantSources(),
-                        (TestedVariantData) testedVariantData,
-                        recorder);
+                        (TestedVariantData) testedVariantData);
+        variantScope.setVariantData(testVariantData);
+
         // link the testVariant to the tested variant in the other direction
         ((TestedVariantData) testedVariantData).setTestVariantData(testVariantData, type);
+
+        // Run the VariantProperties actions
+        //noinspection unchecked
+        commonExtension.executeVariantPropertiesOperations(variantProperties);
 
         return testVariantData;
     }
 
-    /** Creates VariantData for a specific {@link VariantConfiguration} */
-    private void createVariantDataForProductFlavors(
+    /**
+     * Creates Variant objects for a specific {@link VariantConfiguration}
+     *
+     * <p>This will create both the prod and the androidTest/unitTest variants.
+     */
+    private void createVariantsFromConfiguration(
             @NonNull VariantConfiguration variantConfiguration,
             @Nullable BuildTypeData testBuildTypeData) {
         VariantType variantType = variantFactory.getVariantType();
 
-        // run the new variant callback first.
-
-        // first run the filter API
+        // first run the old variantFilter API
+        // This acts on buildtype/flavor only, and applies in one pass to prod/tests.
         Action<com.android.build.api.variant.VariantFilter> variantFilterAction =
                 extension.getVariantFilter();
 
@@ -735,9 +836,14 @@ public class VariantManager {
         // get the list of ProductFlavor from the list of flavor name
         List<ProductFlavor> productFlavorList =
                 variantConfiguration
-                        .getFlavors()
+                        .getProductFlavors()
                         .stream()
-                        .map(it -> variantInputModel.getProductFlavors().get(it).getProductFlavor())
+                        .map(
+                                it ->
+                                        variantInputModel
+                                                .getProductFlavors()
+                                                .get(it.getSecond())
+                                                .getProductFlavor())
                         .collect(Collectors.toList());
 
         boolean ignore = false;
@@ -754,91 +860,90 @@ public class VariantManager {
             ignore = variantFilter.getIgnore();
         }
 
-        BaseVariantData variantForAndroidTest = null;
-
         if (!ignore) {
+            // create the prod variant
             BaseVariantData variantData =
-                    createVariantDataForVariantType(buildType, productFlavorList, variantType);
-            addVariant(variantData);
+                    createProdVariantData(variantConfiguration, productFlavorList, variantType);
+            if (variantData != null) {
+                addVariant(variantData);
 
-            VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-            VariantScope variantScope = variantData.getScope();
+                VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+                VariantScope variantScope = variantData.getScope();
 
-            int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();
-            int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
-            if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
-                globalScope
-                        .getDslScope()
-                        .getIssueReporter()
-                        .reportWarning(
-                                IssueReporter.Type.GENERIC,
-                                String.format(
-                                        Locale.US,
-                                        "minSdkVersion (%d) is greater than targetSdkVersion"
-                                                + " (%d) for variant \"%s\". Please change the"
-                                                + " values such that minSdkVersion is less than or"
-                                                + " equal to targetSdkVersion.",
-                                        minSdkVersion,
-                                        targetSdkVersion,
-                                        variantData.getName()));
-            }
-
-            GradleBuildVariant.Builder profileBuilder =
-                    ProcessProfileWriter.getOrCreateVariant(
-                                    project.getPath(), variantData.getName())
-                            .setIsDebug(variantData.getPublicVariantApi().isDebuggable())
-                            .setMinSdkVersion(
-                                    AnalyticsUtil.toProto(variantDslInfo.getMinSdkVersion()))
-                            .setMinifyEnabled(variantScope.getCodeShrinker() != null)
-                            .setUseMultidex(variantDslInfo.isMultiDexEnabled())
-                            .setUseLegacyMultidex(variantDslInfo.isLegacyMultiDexMode())
-                            .setVariantType(variantData.getType().getAnalyticsVariantType())
-                            .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
-                            .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
-                            .setCoreLibraryDesugaringEnabled(
-                                    variantScope.isCoreLibraryDesugaringEnabled())
-                            .setTestExecution(
-                                    AnalyticsUtil.toProto(
-                                            globalScope
-                                                    .getExtension()
-                                                    .getTestOptions()
-                                                    .getExecutionEnum()));
-
-            if (variantScope.getCodeShrinker() != null) {
-                profileBuilder.setCodeShrinker(
-                        AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
-            }
-
-            if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
-                profileBuilder.setTargetSdkVersion(
-                        AnalyticsUtil.toProto(variantDslInfo.getTargetSdkVersion()));
-                }
-            if (variantDslInfo.getMaxSdkVersion() != null) {
-                profileBuilder.setMaxSdkVersion(
-                        ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
-            }
-
-            VariantScope.Java8LangSupport supportType =
-                    variantData.getScope().getJava8LangSupportType();
-            if (supportType != VariantScope.Java8LangSupport.INVALID
-                    && supportType != VariantScope.Java8LangSupport.UNUSED) {
-                profileBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
-            }
-
-            if (variantFactory.hasTestScope()) {
-                if (buildTypeData == testBuildTypeData) {
-                    variantForAndroidTest = variantData;
+                int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();
+                int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
+                if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
+                    globalScope
+                            .getDslScope()
+                            .getIssueReporter()
+                            .reportWarning(
+                                    IssueReporter.Type.GENERIC,
+                                    String.format(
+                                            Locale.US,
+                                            "minSdkVersion (%d) is greater than targetSdkVersion"
+                                                    + " (%d) for variant \"%s\". Please change the"
+                                                    + " values such that minSdkVersion is less than or"
+                                                    + " equal to targetSdkVersion.",
+                                            minSdkVersion,
+                                            targetSdkVersion,
+                                            variantData.getName()));
                 }
 
-                TestVariantData unitTestVariantData = createTestVariantData(variantData, UNIT_TEST);
-                addVariant(unitTestVariantData);
-            }
-        }
+                GradleBuildVariant.Builder profileBuilder =
+                        ProcessProfileWriter.getOrCreateVariant(
+                                        project.getPath(), variantData.getName())
+                                .setIsDebug(variantData.getPublicVariantApi().isDebuggable())
+                                .setMinSdkVersion(
+                                        AnalyticsUtil.toProto(variantDslInfo.getMinSdkVersion()))
+                                .setMinifyEnabled(variantScope.getCodeShrinker() != null)
+                                .setUseMultidex(variantDslInfo.isMultiDexEnabled())
+                                .setUseLegacyMultidex(variantDslInfo.isLegacyMultiDexMode())
+                                .setVariantType(variantData.getType().getAnalyticsVariantType())
+                                .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
+                                .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
+                                .setCoreLibraryDesugaringEnabled(
+                                        variantScope.isCoreLibraryDesugaringEnabled())
+                                .setTestExecution(
+                                        AnalyticsUtil.toProto(
+                                                globalScope
+                                                        .getExtension()
+                                                        .getTestOptions()
+                                                        .getExecutionEnum()));
 
-        if (variantForAndroidTest != null) {
-            TestVariantData androidTestVariantData =
-                    createTestVariantData(variantForAndroidTest, ANDROID_TEST);
-            addVariant(androidTestVariantData);
+                if (variantScope.getCodeShrinker() != null) {
+                    profileBuilder.setCodeShrinker(
+                            AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
+                }
+
+                if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
+                    profileBuilder.setTargetSdkVersion(
+                            AnalyticsUtil.toProto(variantDslInfo.getTargetSdkVersion()));
+                }
+                if (variantDslInfo.getMaxSdkVersion() != null) {
+                    profileBuilder.setMaxSdkVersion(
+                            ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
+                }
+
+                VariantScope.Java8LangSupport supportType =
+                        variantData.getScope().getJava8LangSupportType();
+                if (supportType != VariantScope.Java8LangSupport.INVALID
+                        && supportType != VariantScope.Java8LangSupport.UNUSED) {
+                    profileBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
+                }
+
+                if (variantFactory.hasTestScope()) {
+                    if (buildTypeData == testBuildTypeData) {
+                        TestVariantData androidTestVariantData =
+                                createTestVariantData(
+                                        variantConfiguration, variantData, ANDROID_TEST);
+                        addVariant(androidTestVariantData);
+                    }
+
+                    TestVariantData unitTestVariantData =
+                            createTestVariantData(variantConfiguration, variantData, UNIT_TEST);
+                    addVariant(unitTestVariantData);
+                }
+            }
         }
     }
 

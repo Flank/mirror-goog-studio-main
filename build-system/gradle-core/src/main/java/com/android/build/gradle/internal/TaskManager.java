@@ -63,7 +63,6 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -330,19 +329,6 @@ public abstract class TaskManager {
     /** Creates the tasks for a given BaseVariantData. */
     public abstract void createTasksForVariantScope(
             @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint);
-
-    /** Override to configure NDK data in the scope. */
-    public static void configureScopeForNdk(@NonNull VariantScope scope) {
-        final BaseVariantData variantData = scope.getVariantData();
-        File objFolder =
-                new File(
-                        scope.getGlobalScope().getIntermediatesDir(),
-                        "ndk/" + variantData.getVariantDslInfo().getDirName() + "/obj");
-        for (Abi abi : Abi.values()) {
-            scope.addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
-        }
-
-    }
 
     /**
      * Create tasks before the evaluation (on plugin apply). This is useful for tasks that could be
@@ -2574,7 +2560,7 @@ public abstract class TaskManager {
                         assembleMap.put(buildType, assembleTask);
                     }
 
-                    for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
+                    for (ProductFlavor flavor : variantDslInfo.getProductFlavorList()) {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
@@ -2591,7 +2577,7 @@ public abstract class TaskManager {
                             bundleMap.put(buildType, bundleTask);
                         }
 
-                        for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
+                        for (ProductFlavor flavor : variantDslInfo.getProductFlavorList()) {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 

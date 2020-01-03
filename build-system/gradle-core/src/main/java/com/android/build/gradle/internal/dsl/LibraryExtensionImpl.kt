@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
@@ -61,18 +63,17 @@ class LibraryExtensionImpl(
             ProductFlavor,
             SigningConfig,
             TestOptions,
-            TestOptions.UnitTestOptions>,
-    ActionableVariantObjectOperationsExecutor {
+            TestOptions.UnitTestOptions> {
 
     override val buildFeatures: LibraryBuildFeatures =
         dslScope.objectFactory.newInstance(LibraryBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variantScopes: List<VariantScope>) {
-        variantOperations.executeOperations<LibraryVariant>(variantScopes)
+    override fun executeVariantOperations(variant: LibraryVariant) {
+        variantOperations.executeActions(variant)
     }
 
-    override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
-        variantPropertiesOperations.executeOperations<LibraryVariantProperties>(variantScopes)
+    override fun executeVariantPropertiesOperations(variant: LibraryVariantProperties) {
+        variantPropertiesOperations.executeActions(variant)
     }
 
     override fun onVariants(): GenericVariantFilterBuilder<LibraryVariant> {

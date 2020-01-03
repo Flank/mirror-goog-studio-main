@@ -21,8 +21,13 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.AppVariantImpl;
+import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.api.variant.impl.VariantOutputList;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -38,6 +43,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -45,7 +51,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.android.builder.profile.Recorder;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.resources.Density;
 import com.android.utils.Pair;
@@ -64,22 +69,57 @@ import org.gradle.api.NamedDomainObjectContainer;
  *
  * <p>This can be an app project, or a test-only project, though the default behavior is app.
  */
-public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
+public class ApplicationVariantFactory extends BaseVariantFactory {
 
     public ApplicationVariantFactory(@NonNull GlobalScope globalScope) {
         super(globalScope);
     }
 
+    @NonNull
+    @Override
+    public VariantImpl createVariantObject(
+            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull VariantDslInfo variantDslInfo) {
+        return globalScope
+                .getDslScope()
+                .getObjectFactory()
+                .newInstance(AppVariantImpl.class, variantConfiguration, variantDslInfo);
+    }
+
+    @NonNull
+    @Override
+    public VariantPropertiesImpl createVariantPropertiesObject(
+            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull VariantScope variantScope) {
+        return globalScope
+                .getDslScope()
+                .getObjectFactory()
+                .newInstance(
+                        AppVariantPropertiesImpl.class,
+                        globalScope.getDslScope(),
+                        variantScope,
+                        variantScope.getArtifacts().getOperations(),
+                        variantConfiguration);
+    }
+
     @Override
     @NonNull
     public BaseVariantData createVariantData(
+            @NonNull VariantScope variantScope,
             @NonNull VariantDslInfoImpl variantDslInfo,
+            @NonNull VariantImpl publicVariantApi,
+            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
             @NonNull VariantSources variantSources,
-            @NonNull TaskManager taskManager,
-            @NonNull Recorder recorder) {
+            @NonNull TaskManager taskManager) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
-                        globalScope, taskManager, variantDslInfo, variantSources, recorder);
+                        globalScope,
+                        taskManager,
+                        variantScope,
+                        variantDslInfo,
+                        publicVariantApi,
+                        publicVariantPropertiesApi,
+                        variantSources);
         computeOutputs(variantDslInfo, variant, true);
 
         return variant;

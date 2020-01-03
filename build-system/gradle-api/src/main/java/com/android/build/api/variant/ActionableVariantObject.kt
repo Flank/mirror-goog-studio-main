@@ -24,4 +24,4 @@ import org.gradle.api.Named
  * [org.gradle.api.Action] or lambda in the Variant API.
  */
 @Incubating
-interface ActionableVariantObject: Named
+interface ActionableVariantObject

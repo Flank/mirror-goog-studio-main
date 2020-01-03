@@ -20,13 +20,14 @@ import com.android.build.api.variant.FlavoredVariantFilterBuilder
 import com.android.build.api.variant.BuildTypedVariantFilterBuilder
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.TypedVariantFilterBuilder
+import com.android.build.api.variant.VariantConfiguration
 import org.gradle.api.Action
 import java.util.regex.Pattern
 
-internal class GenericVariantFilterBuilderImpl<T: ActionableVariantObject>(
-    private val operations: VariantOperations<in T>,
+internal class GenericVariantFilterBuilderImpl<T>(
+    private val operations: VariantOperations<T>,
     private val type: Class<T>
-): GenericVariantFilterBuilder<T> {
+): GenericVariantFilterBuilder<T>  where T: ActionableVariantObject, T: VariantConfiguration {
 
     override fun withBuildType(buildType: String, action: Action<T>) {
         operations.addFilteredAction(

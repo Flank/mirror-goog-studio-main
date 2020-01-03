@@ -1,6 +1,8 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.TestBuildFeatures
+import com.android.build.api.variant.TestVariant
+import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
@@ -60,7 +62,7 @@ open class TestExtension(
             SigningConfig,
             TestOptions,
             TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<TestVariant, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         project.objects.domainObjectSet(ApplicationVariant::class.java)

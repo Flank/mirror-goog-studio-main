@@ -229,12 +229,12 @@ private class BuildAuthorSpecifiedDefaultsFlavorComparator constructor(
     override fun compare(v1: VariantScope, v2: VariantScope): Int {
         var f1Score = 0
         var f2Score = 0
-        for (flavor in v1.variantDslInfo.productFlavors) {
+        for (flavor in v1.variantDslInfo.productFlavorList) {
             if (flavor.name == defaultFlavors[flavor.dimension]) {
                 f1Score++
             }
         }
-        for (flavor in v2.variantDslInfo.productFlavors) {
+        for (flavor in v2.variantDslInfo.productFlavorList) {
             if (flavor.name == defaultFlavors[flavor.dimension]) {
                 f2Score++
             }
@@ -282,9 +282,9 @@ private class DefaultFlavorComparator : Comparator<VariantScope> {
         v1: VariantScope,
         v2: VariantScope
     ): Int { // Compare flavors left-to right.
-        for (i in v1.variantDslInfo.productFlavors.indices) {
-            val f1 = v1.variantDslInfo.productFlavors[i].name
-            val f2 = v2.variantDslInfo.productFlavors[i].name
+        for (i in v1.variantDslInfo.productFlavorList.indices) {
+            val f1 = v1.variantDslInfo.productFlavorList[i].name
+            val f2 = v2.variantDslInfo.productFlavorList[i].name
             val diff = f1.compareTo(f2)
             if (diff != 0) {
                 return diff

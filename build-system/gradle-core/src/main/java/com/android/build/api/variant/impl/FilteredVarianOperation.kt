@@ -17,11 +17,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.ActionableVariantObject
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.builder.model.ProductFlavor
-import com.google.common.base.Joiner
+import com.android.build.api.variant.VariantConfiguration
 import org.gradle.api.Action
-import java.lang.RuntimeException
 import java.util.regex.Pattern
 
 /**
@@ -30,48 +27,38 @@ import java.util.regex.Pattern
  * The filter can be based on either or both a build type of build flavor. Alternatively, the filter
  * can be named based either using strict [String] matching or using [Pattern] matching.
  */
-class FilteredVariantOperation<T: ActionableVariantObject>(
-    private val specificType: Class<T>,
+class FilteredVariantOperation<T>(
+    val specificType: Class<T>,
     private val buildType: String? = null,
     private val flavorToDimensionData: List<Pair<String, String>> = listOf(),
     private val variantNamePattern: Pattern? = null,
     private val variantName: String? = null,
     private val action: Action<T>
-) {
-    fun execute(transformer: VariantScopeTransformers, variants: List<VariantScope>) {
-        var currentVariants = variants
-        if (buildType != null) {
-            currentVariants = currentVariants.filter { variant -> variant.variantDslInfo.buildType == buildType }
+) where T: ActionableVariantObject, T: VariantConfiguration {
+
+    fun executeFor(variant: T) {
+        if (buildType != variant.buildType) {
+            return
         }
+
+        val flavorMap = variant.productFlavors.groupBy({ it.first }, { it.second })
         flavorToDimensionData.forEach {
-            currentVariants = currentVariants.filter { variant ->
-                matchFlavors(it, variant.variantDslInfo.productFlavors)
+            val values = flavorMap[it.first]
+            if (values == null || values.size != 1 || values[0] != it.second) {
+                return
             }
         }
+
         if (variantNamePattern != null) {
-            currentVariants = currentVariants.filter {
-                    variant ->  variantNamePattern.matcher(variant.fullVariantName).matches()
+            if (!variantNamePattern.matcher(variant.name).matches()) {
+                return
             }
         }
-        if (variantName != null) {
-            val variant = currentVariants.find { variant -> variant.fullVariantName == variantName }
-                ?: throw RuntimeException("""
-                    Cannot find variant with name $variantName, possible candidates are 
-                    ${Joiner.on(',').join(variants.map { variant -> variant.fullVariantName })}
-                """.trimIndent())
-            transformer.transform(variant, specificType)?.apply { action.execute(this) }
-        } else {
-            currentVariants.forEach { variant ->
-                transformer.transform(variant, specificType)?.apply { action.execute(this) }
-            }
+
+        if (variantName != null && variantName != variant.name) {
+            return
         }
-    }
-    private fun matchFlavors(match: Pair<String, String>, flavors: List<ProductFlavor>): Boolean {
-        flavors.forEach { productFlavor ->
-            if (productFlavor.name == match.first && productFlavor.dimension == match.second) {
-                return true
-            }
-        }
-        return false
+
+        action.execute(variant)
     }
 }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-8e51476b718635b9075d1e3a17fcb906ce2434a236d552bae117b91d6fd20b45
+5cbe9b482c8cde27a693088219c6868b53ab7df42f523329b812e652dfde3cd6
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -145,7 +145,7 @@ com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Func
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.UnitTestOptions
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
-com.android.build.api.variant.ActionableVariantObject implements org.gradle.api.Named
+com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.AppVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.AppVariant.getMinSdkVersion: int ()
 com.android.build.api.variant.AppVariant.setMinSdkVersion: void (int)
@@ -194,7 +194,7 @@ com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<
 com.android.build.api.variant.Variant.setEnabled: void (boolean)
 com.android.build.api.variant.VariantConfiguration implements org.gradle.api.Named
 com.android.build.api.variant.VariantConfiguration.getBuildType: java.lang.String ()
-com.android.build.api.variant.VariantConfiguration.getFlavors: java.util.List<java.lang.String> ()
+com.android.build.api.variant.VariantConfiguration.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.variant.VariantConfiguration.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()

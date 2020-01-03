@@ -675,20 +675,13 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
                 .configureDependencies();
 
+        // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =
-                new ApiObjectFactory(
-                        extension,
-                        variantFactory,
-                        project.getObjects());
+                new ApiObjectFactory(extension, variantFactory, project.getObjects());
         for (VariantScope variantScope : variantScopes) {
             BaseVariantData variantData = variantScope.getVariantData();
             apiObjectFactory.create(variantData);
         }
-
-        // now call the public Variant API.
-        // TODO: Move this before our task creation and support other extension than applications.
-        extension.executeVariantOperations(variantScopes);
-        extension.executeVariantPropertiesOperations(variantScopes);
 
         // Make sure no SourceSets were added through the DSL without being properly configured
         sourceSetManager.checkForUnconfiguredSourceSets();

@@ -1092,7 +1092,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private static List<String> getProductFlavorNames(@NonNull BaseVariantData variantData) {
         return variantData
                 .getVariantDslInfo()
-                .getProductFlavors()
+                .getProductFlavorList()
                 .stream()
                 .map((Function<ProductFlavor, String>) ProductFlavor::getName)
                 .collect(Collectors.toList());

@@ -470,7 +470,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         testBuildType = action()
     }
 
-    override fun compareResult(expected: String?, actual: String?) {
+    override fun compareResult(expected: String?, actual: String?, given: TestVariantInputModel) {
         assertThat(actual).named("Name of the default Variant").isEqualTo(expected)
     }
 
@@ -486,8 +486,8 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         val variantScopes = mutableListOf<VariantScope>()
 
         for (variant in variantComputer.computeVariants()) {
-            val flavors = variant.flavors.map { flavorName ->
-                given.productFlavors[flavorName]!!.productFlavor
+            val flavors = variant.productFlavors.map {
+                (given.productFlavors[it.second] ?: error("Cant find flavor ${it.second}")).productFlavor
             }
 
             // run the filter
@@ -517,7 +517,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
                 Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
                 Mockito.`when`(variantDslInfo.buildType).thenReturn(variant.buildType)
-                Mockito.`when`(variantDslInfo.productFlavors).thenReturn(flavors)
+                Mockito.`when`(variantDslInfo.productFlavorList).thenReturn(flavors)
             }
         }
 
